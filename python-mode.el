@@ -1863,12 +1863,14 @@ sent.  A trailing newline will be supplied if needed.
 See the `\\[py-execute-region]' docs for an account of some
 subtleties, including the use of the optional ASYNC argument."
   (interactive "P")
-  (if py-master-file
-      (let* ((filename (expand-file-name py-master-file))
-	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
-	(set-buffer buffer)))
-  (py-execute-region (point-min) (point-max) async))
+  (let ((old-buffer (current-buffer)))
+    (if py-master-file
+        (let* ((filename (expand-file-name py-master-file))
+               (buffer (or (get-file-buffer filename)
+                           (find-file-noselect filename))))
+          (set-buffer buffer)))
+    (py-execute-region (point-min) (point-max) async)
+       (pop-to-buffer old-buffer)))
 
 (defun py-execute-import-or-reload (&optional async)
   "Import the current buffer's file in a Python interpreter.
