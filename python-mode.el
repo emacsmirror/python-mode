@@ -364,25 +364,6 @@ to select the appropriate python interpreter mode for a file.")
   :type 'boolean
   :group 'python)
 
-(defcustom py-name-buffers-with-packages 'always
-  "Determines how buffers containing python modules are named.
-
-When `never', name buffers normally (i.e., use the file's name).
-
-When `always', include the name of a module's package in its buffer name.
-E.g., if module `module.py' is contained in a package whose dotted name
-is `a.b.c', then its buffer will be named \"module.py (a.b.c)\".
-
-When `init-only', include the name of an \"__init__.py\" module's
-package in its buffer name.  E.g., the buffer name for the
-\"__init__.py\" file in package `a.b.c' will be named
-\"__init__.py (a.b.c)\"."
-  :type '(choice
-	  (const :tag "always use package name" always)
-	  (const :tag "only use package name for __init__.py" only-init)
-	  (const :tag "never use package name" never))
-  :group 'python)
-
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
@@ -1335,68 +1316,6 @@ comment."
 	    (delete-horizontal-space)
 	    (indent-to (- indent outdent))
 	    )))))
-
-
-
-;; Buffer naming: include package in buffer names
-(defun py-package-containing-file (file)
-  "Return the dotted name of the python package that contains the
-given file; or nil if it's not contained in any package."
-  (let* ((dir (expand-file-name ".." file))
-         (pkg (file-name-nondirectory dir))
-         (init-file (expand-file-name "__init__.py" dir)))
-    (cond 
-     ((file-exists-p init-file)
-      (let ((base-pkg (py-package-containing-file dir)))
-        (if base-pkg
-            (concat base-pkg "." pkg)
-          pkg)))
-     (t nil))))
-
-(defun py-name-followed-by-package (file)
-  "Return a string consisting of the given file's name (without the
-directory), followed by its package in parentheses, if it has one."
-  (let ((pkg (py-package-containing-file file)) ; "<dotted.package.name>"
-        (name (file-name-nondirectory file)))  ; "<module.py>"
-    (if pkg
-        (concat name " (" pkg ")") ; "<module.py> (<dotted.package.name>)"
-      name)))                      ; "<module.py>"
-
-;;;###autoload
-(defun py-file-name-handler (operation &rest args)
-  "A file-name handler that is used to augment buffer names with
-package names.  In particular, when called for operation
-`create-file-buffer', use `py-name-followed-by-package' to generate
-the new buffer's name (unless `py-name-buffers-with-packages'
-indicates otherwise)."
-  (let (val)
-    ;; Perform the requested operation.  (All the mumbo-jumbo
-    ;; about inhibiting makes sure that we play nice with other
-    ;; handlers).  Store the return value in val.
-    (let ((inhibit-file-name-handlers
-           (cons 'py-file-name-handler
-                 (and (eq inhibit-file-name-operation operation)
-                      inhibit-file-name-handlers)))
-          (inhibit-file-name-operation operation))
-      (setq val (apply operation args)))
-    ;; When appropriate, rename the buffer.
-    (if (and (or (eq operation 'create-file-buffer)
-                 (eq operation 'get-file-buffer))
-             (or (eq py-name-buffers-with-packages 'always)
-                 (and (eq py-name-buffers-with-packages 'init-only)
-                      (equal (file-name-nondirectory (car args))
-                          "__init__.py")))
-             val)
-        (save-excursion
-          (set-buffer val)
-          (rename-buffer (py-name-followed-by-package (car args)) t)))
-    ;; Return the operation's return-value.
-    val))
-
-;; Register a new file-name-handler, that is used to implement
-;; py-name-buffers-with-packages.
-;;;###autoload
-(add-to-list 'file-name-handler-alist '("\\.py$" . py-file-name-handler))
 
 
 ;; Python subprocess utilities and filters
