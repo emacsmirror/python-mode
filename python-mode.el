@@ -447,13 +447,7 @@ support for features needed by `python-mode'.")
 Currently-active file is at the head of the list.")
 
 (defvar py-pdbtrack-is-tracking-p nil)
-(defvar py-pdbtrack-last-grubbed-buffer nil
-  "Record of the last buffer used when the source path was invalid.
 
-This buffer is consulted before the buffer-list history for satisfying
-`py-pdbtrack-grub-for-buffer', since it's the most often the likely
-prospect as debugging continues.")
-(make-variable-buffer-local 'py-pdbtrack-last-grubbed-buffer)
 (defvar py-pychecker-history nil)
 
 
@@ -1434,8 +1428,7 @@ problem as best as we can determine."
 (defun py-pdbtrack-grub-for-buffer (funcname lineno)
   "Find most recent buffer itself named or having function funcname.
 
-We first check the last buffer this function found, if any, then walk
-throught the buffer-list history for python-mode buffers that are
+We walk the buffer-list history for python-mode buffers that are
 named for funcname or define a function funcname."
   (let ((buffers (buffer-list))
         buf
@@ -1453,7 +1446,7 @@ named for funcname or define a function funcname."
                                    (buffer-substring (point-min)
                                                      (point-max))))))
           (setq got buf)))
-    (setq py-pdbtrack-last-grubbed-buffer got)))
+    buf))
 
 (defun py-postprocess-output-buffer (buf)
   "Highlight exceptions found in BUF.
@@ -3658,7 +3651,7 @@ These are Python temporary files awaiting execution."
 (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
 
 ;; Add a designator to the minor mode strings
-(or (assq 'py-pdbtrack-minor-mode-string minor-mode-alist)
+(or (assq 'py-pdbtrack-is-tracking-p minor-mode-alist)
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
 	  minor-mode-alist))
 
