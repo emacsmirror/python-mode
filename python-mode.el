@@ -2,7 +2,8 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 1995-2002 Barry A. Warsaw
+;; Author: 2003-     http://sf.net/projects/python-mode
+;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
 ;; Created:    Feb 1992
@@ -339,9 +340,17 @@ support for features needed by `python-mode'.")
   "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis.")
 (make-face 'py-pseudo-keyword-face)
 
+;; Face for builtins
+(defvar py-builtins-face 'py-builtins-face
+  "Face for builtins like TypeError, object, open, and exec.")
+(make-face 'py-builtins-face)
+
 (defun py-font-lock-mode-hook ()
   (or (face-differs-from-default-p 'py-pseudo-keyword-face)
-      (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face)))
+      (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
+  (or (face-differs-from-default-p 'py-builtins-face)
+      (copy-face 'font-lock-keyword-face 'py-builtins-face))
+  )
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
 
 (defvar python-font-lock-keywords
@@ -397,7 +406,7 @@ support for features needed by `python-mode'.")
      (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
      (list (concat "\\([^. \t]\\|^\\)[ \t]*\\b\\(" kw3 "\\)\\b[ \n\t(]") 2
-	   'py-pseudo-keyword-face)
+	   'py-builtins-face)
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
      (cons (concat "\\b\\(" kw2 "\\)[ \n\t(]") 1)
