@@ -36,6 +36,11 @@
 ;;
 ;;     http://sourceforge.net/projects/python
 
+;; INSTALLATION:
+
+;; To install, just drop into a directory on your load-path and byte-compile
+;; it.
+
 ;; FOR MORE INFORMATION:
 
 ;; There is some information on python-mode.el at
