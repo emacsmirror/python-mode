@@ -340,6 +340,11 @@ support for features needed by `python-mode'.")
   "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis.")
 (make-face 'py-pseudo-keyword-face)
 
+;; PEP 318 decorators
+(defvar py-decorators-face 'py-decorators-face
+  "Face method decorators.")
+(make-face 'py-decorators-face)
+
 ;; Face for builtins
 (defvar py-builtins-face 'py-builtins-face
   "Face for builtins like TypeError, object, open, and exec.")
@@ -350,6 +355,8 @@ support for features needed by `python-mode'.")
       (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
   (or (face-differs-from-default-p 'py-builtins-face)
       (copy-face 'font-lock-keyword-face 'py-builtins-face))
+  (or (face-differs-from-default-p 'py-decorators-face)
+      (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
   )
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
 
@@ -421,6 +428,9 @@ support for features needed by `python-mode'.")
      ;; functions
      '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
+     '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)[ \t]+\\(\\[\\(\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)\\(,[ \t]*\\)?\\)+\\]\\)"
+       (1 font-lock-function-name-face)
+       (2 py-decorators-face))
      ;; pseudo-keywords
      '("\\b\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\b"
        1 py-pseudo-keyword-face)
