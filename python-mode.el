@@ -2028,16 +2028,25 @@ This function is normally bound to `indent-line-function' so
   (interactive "P")
   (let* ((ci (current-indentation))
 	 (move-to-indentation-p (<= (current-column) ci))
-	 (need (py-compute-indentation (not arg))))
-    ;; see if we need to dedent
-    (if (py-outdent-p)
-	(setq need (- need py-indent-offset)))
-    (if (/= ci need)
-	(save-excursion
-	  (beginning-of-line)
-	  (delete-horizontal-space)
-	  (indent-to need)))
-    (if move-to-indentation-p (back-to-indentation))))
+	 (need (py-compute-indentation (not arg)))
+         (cc (current-column)))
+    ;; dedent out a level unless we're in column 1
+    (if (and (equal last-command this-command)
+             (/= cc 0))
+        (progn
+          (beginning-of-line)
+          (delete-horizontal-space)
+          (indent-to (* (/ (- cc 1) py-indent-offset) py-indent-offset)))
+      (progn
+	;; see if we need to dedent
+	(if (py-outdent-p)
+	    (setq need (- need py-indent-offset)))
+	(if (/= ci need)
+	    (save-excursion
+	      (beginning-of-line)
+	      (delete-horizontal-space)
+	      (indent-to need)))
+	(if move-to-indentation-p (back-to-indentation))))))
 
 (defun py-newline-and-indent ()
   "Strives to act like the Emacs `newline-and-indent'.
