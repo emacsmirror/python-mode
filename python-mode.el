@@ -1335,7 +1335,7 @@ script, and set to python-mode, and pdbtrack will find it.)"
                                            (- procmark
                                               py-pdbtrack-track-range))
                                       procmark))
-             target target_fname target_lineno)
+             target target_fname target_lineno target_buffer)
 
         (if (not (string-match (concat py-pdbtrack-input-prompt "$") block))
             (py-pdbtrack-overlay-arrow nil)
