@@ -1796,8 +1796,9 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (setq py-exception-buffer (cons file (current-buffer))))
      (t
       ;; TBD: a horrible hack, but why create new Custom variables?
-      (let ((cmd (concat shell (if (string-equal py-which-bufname "Jython")
-				   " -" ""))))
+      (let ((cmd (concat py-which-shell (if (string-equal py-which-bufname
+							  "Jython")
+					    " -" ""))))
 	;; otherwise either run it synchronously in a subprocess
 	(save-excursion
 	  (set-buffer buf)
