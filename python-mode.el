@@ -38,8 +38,19 @@
 
 ;; INSTALLATION:
 
-;; To install, just drop into a directory on your load-path and byte-compile
-;; it.
+;; To install, just drop this file into a directory on your load-path and
+;; byte-compile it.  To set up Emacs to automatically edit files ending in
+;; ".py" using python-mode add the following to your ~/.emacs file (GNU
+;; Emacs) or ~/.xemacs/init.el file (XEmacs):
+;;    (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
+;;    (setq interpreter-mode-alist (cons '("python" . python-mode)
+;;                                       interpreter-mode-alist))
+;;    (autoload 'python-mode "python-mode" "Python editing mode." t)
+;;
+;; In XEmacs syntax highlighting should be enabled automatically.  In GNU
+;; Emacs you may have to add these lines to your ~/.emacs file:
+;;    (global-font-lock-mode t)
+;;    (setq font-lock-maximum-decoration t)
 
 ;; FOR MORE INFORMATION:
 
