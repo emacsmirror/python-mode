@@ -412,6 +412,11 @@ support for features needed by `python-mode'.")
 			"\\|"))
 	)
     (list
+     ;; decorators -- this comes before keywords so "... [ staticmethod ]"
+     ;; decorators are colored in py-decorators-face not py-builtins-face
+     '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)[ \t]*(.*)[ \t]*\\(\\[[^]]*\\]\\)"
+       (1 font-lock-function-name-face)
+       (2 py-decorators-face))
      ;; keywords
      (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
@@ -428,9 +433,6 @@ support for features needed by `python-mode'.")
      ;; functions
      '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
-     '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)[ \t]+\\(\\[\\(\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)\\(,[ \t]*\\)?\\)+\\]\\)"
-       (1 font-lock-function-name-face)
-       (2 py-decorators-face))
      ;; pseudo-keywords
      '("\\b\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\b"
        1 py-pseudo-keyword-face)
