@@ -1204,6 +1204,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
 ;; can specify different `derived-modes' based on the #! line, but
 ;; with the latter, we can't.  So we just won't add them if they're
 ;; already added.
+;;;###autoload
 (let ((modes '(("jpython" . jpython-mode)
 	       ("jython" . jpython-mode)
 	       ("python" . python-mode))))
@@ -1211,7 +1212,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
     (when (not (assoc (car modes) interpreter-mode-alist))
       (push (car modes) interpreter-mode-alist))
     (setq modes (cdr modes))))
-
+;;;###autoload
 (when (not (or (rassq 'python-mode auto-mode-alist)
 	       (rassq 'jpython-mode auto-mode-alist)))
   (push '("\\.py$" . python-mode) auto-mode-alist))
