@@ -1425,7 +1425,7 @@ We first check the last buffer this function found, if any, then walk
 throught the buffer-list history for python-mode buffers that are
 named for funcname or define a function funcname."
   (let ((buffers (buffer-list))
-        curbuf
+        buf
         got)
     (while (and buffers (not got))
       (setq buf (car buffers)
