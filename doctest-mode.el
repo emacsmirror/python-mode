@@ -874,8 +874,8 @@ position."
               `((doctest-mode doctest-font-lock-keywords nil nil nil nil))))
 
 ;; Use doctest mode for files ending in .doctest
-(setq auto-mode-alist (cons '("\\.doctest\\'" . doctest-mode)
-                            auto-mode-alist))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.doctest$" . doctest-mode))
 
 ;;;###autoload
 (define-derived-mode doctest-mode text-mode "Doctest"
