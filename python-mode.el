@@ -496,19 +496,6 @@ prospect as debugging continues.")
 	  "\\)")
   "Regular expression matching lines not to dedent after.")
 
-(defconst py-defun-start-re
-  "^\\([ \t]*\\)def[ \t]+\\([a-zA-Z_0-9]+\\)\\|\\(^[a-zA-Z_0-9]+\\)[ \t]*="
-  ;; If you change this, you probably have to change py-current-defun
-  ;; as well.  This is only used by py-current-defun to find the name
-  ;; for add-log.el.
-  "Regular expression matching a function, method, or variable assignment.")
-
-(defconst py-class-start-re "^class[ \t]*\\([a-zA-Z_0-9]+\\)"
-  ;; If you change this, you probably have to change py-current-defun
-  ;; as well.  This is only used by py-current-defun to find the name
-  ;; for add-log.el.
-  "Regular expression for finding a class name.")
-
 (defconst py-traceback-line-re
   "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
   "Regular expression that describes tracebacks.")
@@ -3541,14 +3528,49 @@ Prefix with \"...\" if leading whitespace was skipped."
   "Python value for `add-log-current-defun-function'.
 This tells add-log.el how to find the current function/method/variable."
   (save-excursion
-    (if (re-search-backward py-defun-start-re nil t)
-	(or (match-string 3)
-	    (let ((method (match-string 2)))
-	      (if (and (not (zerop (length (match-string 1))))
-		       (re-search-backward py-class-start-re nil t))
-		  (concat (match-string 1) "." method)
-		method)))
-      nil)))
+
+    ;; Move back to start of the current statement.
+
+    (py-goto-initial-line)
+    (back-to-indentation)
+    (while (and (or (looking-at py-blank-or-comment-re)
+		    (py-in-literal))
+		(not (bobp)))
+      (backward-to-indentation 1))
+    (py-goto-initial-line)
+
+    (let ((scopes "")
+	  (sep "")
+	  dead assignment)
+
+      ;; Check for an assignment.  If this assignment exists inside a
+      ;; def, it will be overwritten inside the while loop.  If it
+      ;; exists at top lever or inside a class, it will be preserved.
+
+      (when (looking-at "[ \t]*\\([a-zA-Z0-9_]+\\)[ \t]*=")
+	(setq scopes (buffer-substring (match-beginning 1) (match-end 1)))
+	(setq assignment t)
+	(setq sep "."))
+
+      ;; Prepend the name of each outer socpe (def or class).
+
+      (while (not dead)
+	(if (and (py-go-up-tree-to-keyword "\\(class\\|def\\)")
+		 (looking-at
+		  "[ \t]*\\(class\\|def\\)[ \t]*\\([a-zA-Z0-9_]+\\)[ \t]*"))
+	    (let ((name (buffer-substring (match-beginning 2) (match-end 2))))
+	      (if (and assignment (looking-at "[ \t]*def"))
+		  (setq scopes name)
+		(setq scopes (concat name sep scopes))
+		(setq sep "."))))
+	(setq assignment nil)
+	(condition-case nil		; Terminate nicely at top level.
+	    (py-goto-block-up 'no-mark)
+	  (error (setq dead t))))
+      (if (string= scopes "")
+	  nil
+	scopes))))
+
 
 
 (defconst py-help-address "python-mode@python.org"
