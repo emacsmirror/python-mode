@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-     http://sf.net/projects/python-mode
+;; Author: 2003-2004 http://sf.net/projects/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -3794,6 +3794,18 @@ If point is inside a string, narrow to that string and fill.
      ;; are we inside a string?
      ((nth 3 pps)
       (py-fill-string (nth 8 pps)))
+     ;; are we at the opening quote of a string, or in the indentation?
+     ((save-excursion
+	(forward-word)
+	(eq (py-in-literal) 'string))
+      (save-excursion
+	(py-fill-string (py-point 'boi))))
+     ;; are we at or after the closing quote of a string?
+     ((save-excursion
+	(backward-word)
+	(eq (py-in-literal) 'string))
+      (save-excursion
+	(py-fill-string (py-point 'boi))))
      ;; otherwise use the default
      (t
       (fill-paragraph justify)))))
