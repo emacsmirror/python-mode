@@ -1449,7 +1449,7 @@ named for funcname or define a function funcname."
                                    (buffer-substring (point-min)
                                                      (point-max))))))
           (setq got buf)))
-    buf))
+    got))
 
 (defun py-postprocess-output-buffer (buf)
   "Highlight exceptions found in BUF.
