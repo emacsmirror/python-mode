@@ -561,8 +561,6 @@ prospect as debugging continues.")
   (define-key py-mode-map "\C-c\C-r"  'py-shift-region-right)
   (define-key py-mode-map "\C-c<"     'py-shift-region-left)
   (define-key py-mode-map "\C-c>"     'py-shift-region-right)
-  ;; paragraph and string filling
-  (define-key py-mode-map "\eq"       'py-fill-paragraph)
   ;; subprocess commands
   (define-key py-mode-map "\C-c\C-c"  'py-execute-buffer)
   (define-key py-mode-map "\C-c\C-m"  'py-execute-import-or-reload)
@@ -1117,6 +1115,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (make-local-variable 'indent-region-function)
   (make-local-variable 'indent-line-function)
   (make-local-variable 'add-log-current-defun-function)
+  (make-local-variable 'fill-paragraph-function)
   ;;
   (set-syntax-table py-mode-syntax-table)
   (setq major-mode              'python-mode
@@ -1135,6 +1134,8 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
 	indent-line-function    'py-indent-line
 	;; tell add-log.el how to find the current function/method/variable
 	add-log-current-defun-function 'py-current-defun
+
+	fill-paragraph-function 'py-fill-paragraph
 	)
   (use-local-map py-mode-map)
   ;; add the menu
