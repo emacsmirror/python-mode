@@ -20,13 +20,16 @@
 
 ;;; Commentary:
 
-;; This is a major mode for editing Python programs.  It was developed
-;; by Tim Peters after an original idea by Michael A. Guravage.  Tim
-;; subsequently left the net; in 1995, Barry Warsaw inherited the mode
-;; and is the current maintainer.  Tim's now back but disavows all
-;; responsibility for the mode.  Smart Tim :-)
+;; This is a major mode for editing Python programs.  It was developed by Tim
+;; Peters after an original idea by Michael A. Guravage.  Tim subsequently
+;; left the net and in 1995, Barry Warsaw inherited the mode.  Tim's now back
+;; but disavows all responsibility for the mode.  In fact, we suspect he
+;; doesn't even use Emacs any more.  In 2003, python-mode.el was moved to its
+;; own SourceForge project apart from the Python project, and now is
+;; maintained by the volunteers at the python-mode@python.org mailing list.
 
-;; pdbtrack support contributed by Ken Manheimer, April 2001.
+;; pdbtrack support contributed by Ken Manheimer, April 2001.  Skip Montanaro
+;; has also contributed significantly to python-mode's development.
 
 ;; Please use the SourceForge Python project to submit bugs or
 ;; patches:
