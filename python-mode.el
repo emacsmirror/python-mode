@@ -368,19 +368,22 @@ support for features needed by `python-mode'.")
 			'("else:" "except:" "finally:" "try:")
 			"\\|"))
 	(kw3 (mapconcat 'identity
+			;; Don't include True, False, None, or
+			;; Ellipsis in this list, since they are
+			;; already defined as pseudo keywords.
 			'("ArithmeticError" "AssertionError"
 			  "AttributeError" "DeprecationWarning" "EOFError"
-			  "Ellipsis" "EnvironmentError" "Exception" "False"
+			  "EnvironmentError" "Exception"
 			  "FloatingPointError" "FutureWarning" "IOError"
 			  "ImportError" "IndentationError" "IndexError"
 			  "KeyError" "KeyboardInterrupt" "LookupError"
-			  "MemoryError" "NameError" "None" "NotImplemented"
+			  "MemoryError" "NameError" "NotImplemented"
 			  "NotImplementedError" "OSError" "OverflowError"
 			  "OverflowWarning" "PendingDeprecationWarning"
 			  "ReferenceError" "RuntimeError" "RuntimeWarning"
 			  "StandardError" "StopIteration" "SyntaxError"
 			  "SyntaxWarning" "SystemError" "SystemExit"
-			  "TabError" "True" "TypeError" "UnboundLocalError"
+			  "TabError" "TypeError" "UnboundLocalError"
 			  "UnicodeDecodeError" "UnicodeEncodeError"
 			  "UnicodeError" "UnicodeTranslateError"
 			  "UserWarning" "ValueError" "Warning"
