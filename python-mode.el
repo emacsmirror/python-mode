@@ -378,6 +378,24 @@ support for features needed by `python-mode'.")
 			;; Don't include True, False, None, or
 			;; Ellipsis in this list, since they are
 			;; already defined as pseudo keywords.
+			'("__debug__"
+			  "__import__" "__name__" "abs" "apply" "basestring"
+			  "bool" "buffer" "callable" "chr" "classmethod"
+			  "cmp" "coerce" "compile" "complex" "copyright"
+			  "delattr" "dict" "dir" "divmod"
+			  "enumerate" "eval" "execfile" "exit" "file"
+			  "filter" "float" "getattr" "globals" "hasattr"
+			  "hash" "hex" "id" "input" "int" "intern"
+			  "isinstance" "issubclass" "iter" "len" "license"
+			  "list" "locals" "long" "map" "max" "min" "object"
+			  "oct" "open" "ord" "pow" "property" "range"
+			  "raw_input" "reduce" "reload" "repr" "round"
+			  "setattr" "slice" "staticmethod" "str" "sum"
+			  "super" "tuple" "type" "unichr" "unicode" "vars"
+			  "xrange" "zip")
+			"\\|"))
+	(kw4 (mapconcat 'identity
+			;; Exceptions and warnings
 			'("ArithmeticError" "AssertionError"
 			  "AttributeError" "DeprecationWarning" "EOFError"
 			  "EnvironmentError" "Exception"
@@ -394,25 +412,11 @@ support for features needed by `python-mode'.")
 			  "UnicodeDecodeError" "UnicodeEncodeError"
 			  "UnicodeError" "UnicodeTranslateError"
 			  "UserWarning" "ValueError" "Warning"
-			  "ZeroDivisionError" "__debug__"
-			  "__import__" "__name__" "abs" "apply" "basestring"
-			  "bool" "buffer" "callable" "chr" "classmethod"
-			  "cmp" "coerce" "compile" "complex" "copyright"
-			  "delattr" "dict" "dir" "divmod"
-			  "enumerate" "eval" "execfile" "exit" "file"
-			  "filter" "float" "getattr" "globals" "hasattr"
-			  "hash" "hex" "id" "input" "int" "intern"
-			  "isinstance" "issubclass" "iter" "len" "license"
-			  "list" "locals" "long" "map" "max" "min" "object"
-			  "oct" "open" "ord" "pow" "property" "range"
-			  "raw_input" "reduce" "reload" "repr" "round"
-			  "setattr" "slice" "staticmethod" "str" "sum"
-			  "super" "tuple" "type" "unichr" "unicode" "vars"
-			  "xrange" "zip")
+			  "ZeroDivisionError")
 			"\\|"))
 	)
     (list
-     '("[ \t]*\\(@.+\\)" 1 'py-decorators-face)
+     '("^[ \t]*\\(@.+\\)" 1 'py-decorators-face)
      ;; keywords
      (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
@@ -421,6 +425,8 @@ support for features needed by `python-mode'.")
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
      (cons (concat "\\b\\(" kw2 "\\)[ \n\t(]") 1)
+     ;; Exceptions
+     (list (concat "\\b\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
      ;; `as' but only in "import foo as bar"
      '("[ \t]*\\(\\bfrom\\b.*\\)?\\bimport\\b.*\\b\\(as\\)\\b" . 2)
      ;; classes
