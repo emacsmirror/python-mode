@@ -358,10 +358,45 @@ support for features needed by `python-mode'.")
 	(kw2 (mapconcat 'identity
 			'("else:" "except:" "finally:" "try:")
 			"\\|"))
+	(kw3 (mapconcat 'identity
+			'("ArithmeticError" "AssertionError"
+			  "AttributeError" "DeprecationWarning" "EOFError"
+			  "Ellipsis" "EnvironmentError" "Exception" "False"
+			  "FloatingPointError" "FutureWarning" "IOError"
+			  "ImportError" "IndentationError" "IndexError"
+			  "KeyError" "KeyboardInterrupt" "LookupError"
+			  "MemoryError" "NameError" "None" "NotImplemented"
+			  "NotImplementedError" "OSError" "OverflowError"
+			  "OverflowWarning" "PendingDeprecationWarning"
+			  "ReferenceError" "RuntimeError" "RuntimeWarning"
+			  "StandardError" "StopIteration" "SyntaxError"
+			  "SyntaxWarning" "SystemError" "SystemExit"
+			  "TabError" "True" "TypeError" "UnboundLocalError"
+			  "UnicodeDecodeError" "UnicodeEncodeError"
+			  "UnicodeError" "UnicodeTranslateError"
+			  "UserWarning" "ValueError" "Warning"
+			  "ZeroDivisionError" "__debug__"
+			  "__import__" "__name__" "abs" "apply" "basestring"
+			  "bool" "buffer" "callable" "chr" "classmethod"
+			  "cmp" "coerce" "compile" "complex" "copyright"
+			  "delattr" "dict" "dir" "divmod"
+			  "enumerate" "eval" "execfile" "exit" "file"
+			  "filter" "float" "getattr" "globals" "hasattr"
+			  "hash" "hex" "id" "input" "int" "intern"
+			  "isinstance" "issubclass" "iter" "len" "license"
+			  "list" "locals" "long" "map" "max" "min" "object"
+			  "oct" "open" "ord" "pow" "property" "range"
+			  "raw_input" "reduce" "reload" "repr" "round"
+			  "setattr" "slice" "staticmethod" "str" "sum"
+			  "super" "tuple" "type" "unichr" "unicode" "vars"
+			  "xrange" "zip")
+			"\\|"))
 	)
     (list
      ;; keywords
      (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
+     ;; builtins when they don't appear as object attributes
+     (cons (concat "[^\\B.]\\(" kw3 "\\)\\b[ \n\t(]") 1)
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
      (cons (concat "\\b\\(" kw2 "\\)[ \n\t(]") 1)
