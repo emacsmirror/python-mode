@@ -396,7 +396,7 @@ support for features needed by `python-mode'.")
      ;; keywords
      (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
-     (cons (concat "[^\\B.]\\(" kw3 "\\)\\b[ \n\t(]") 1)
+     (cons (concat "\\(\\b\\|[.]\\)\\(" kw3 "\\)\\b[ \n\t(]") 2)
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
      (cons (concat "\\b\\(" kw2 "\\)[ \n\t(]") 1)
