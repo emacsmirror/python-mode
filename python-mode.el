@@ -80,6 +80,7 @@
 (require 'custom)
 (require 'cl)
 (require 'compile)
+(require 'ansi-color)
 
 
 ;; user definable variables
@@ -344,6 +345,24 @@ buffer is prepended to come up with a file name.")
     ("python" . 'cpython))
   "*Alist of interpreters and python shells. Used by `py-choose-shell'
 to select the appropriate python interpreter mode for a file.")
+
+(defcustom py-shell-input-prompt-1-regexp "^>>> "
+  "*A regular expression to match the input prompt of the shell."
+  :type 'string
+  :group 'python)
+
+(defcustom py-shell-input-prompt-2-regexp "^[.][.][.] "
+  "*A regular expression to match the input prompt of the shell after the
+  first line of input."
+  :type 'string
+  :group 'python)
+
+(defcustom py-shell-switch-buffers-on-execute t
+  "*Controls switching to the Python buffer where commands are
+  executed.  When non-nil the buffer switches to the Python buffer, if
+  not no switching occurs."
+  :type 'boolean
+  :group 'python)
 
 (defcustom py-name-buffers-with-packages 'always
   "Determines how buffers containing python modules are named.
@@ -1390,7 +1409,8 @@ comint believe the user typed this string so that
 	(procbuf (process-buffer proc))
 ;	(comint-scroll-to-bottom-on-output t)
 	(msg (format "## working on region in file %s...\n" filename))
-	(cmd (format "execfile(r'%s')\n" filename)))
+        ;; add some comment, so that we can filter it out of history
+	(cmd (format "execfile(r'%s') # PYTHON-MODE\n" filename)))
     (unwind-protect
 	(save-excursion
 	  (set-buffer procbuf)
@@ -1403,12 +1423,13 @@ comint believe the user typed this string so that
 (defun py-comint-output-filter-function (string)
   "Watch output for Python prompt and exec next file waiting in queue.
 This function is appropriate for `comint-output-filter-functions'."
-  ;; TBD: this should probably use split-string
-  (when (and (or (string-equal string ">>> ")
-		 (and (>= (length string) 5)
-		      (string-equal (substring string -5) "\n>>> ")))
-	     py-file-queue)
-    (pop-to-buffer (current-buffer))
+  ;;remove ansi terminal escape sequences from string, not sure why they are
+  ;;still around...
+  (setq string (ansi-color-filter-apply string))
+  (when (and (string-match py-shell-input-prompt-1-regexp string)
+                   py-file-queue)
+    (if py-shell-switch-buffers-on-execute
+      (pop-to-buffer (current-buffer)))
     (py-safe (delete-file (car py-file-queue)))
     (setq py-file-queue (cdr py-file-queue))
     (if py-file-queue
@@ -1690,7 +1711,9 @@ filter."
     (switch-to-buffer-other-window
      (apply 'make-comint py-which-bufname py-which-shell nil args))
     (make-local-variable 'comint-prompt-regexp)
-    (setq comint-prompt-regexp "^>>> \\|^[.][.][.] \\|^(pdb) ")
+    (setq comint-prompt-regexp (concat py-shell-input-prompt-1-regexp "\\|"
+                                       py-shell-input-prompt-2-regexp "\\|"
+                                       "^([Pp]db) "))
     (add-hook 'comint-output-filter-functions
 	      'py-comint-output-filter-function)
     ;; pdbtrack
