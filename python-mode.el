@@ -368,6 +368,12 @@ package in its buffer name.  E.g., the buffer name for the
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
 
+(defvar py-line-number-offset 0
+  "When an exception occurs as a result of py-execute-region, a
+subsequent py-up-exception needs the line number where the region
+started, in order to jump to the correct file line.  This variable is
+set in py-execute-region and used in py-jump-to-exception.")
+
 (defconst py-emacs-features
   (let (features)
    features)
@@ -1755,11 +1761,13 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (setq start (point))
       (or (< start end)
 	  (error "Region is empty"))
+      (setq py-line-number-offset (count-lines 1 start))
       (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
 	(set-buffer buf)
 	(python-mode)
 	(when needs-if
-	  (insert "if 1:\n"))
+	  (insert "if 1:\n")
+	  (setq py-line-number-offset (- py-line-number-offset 1)))
 	(insert-buffer-substring cur start end)
 	;; Set the shell either to the #! line command, or to the
 	;; py-which-shell buffer local variable.
@@ -1933,6 +1941,9 @@ subtleties, including the use of the optional ASYNC argument."
 		      (t (find-file (read-file-name "Exception file: "
 						    nil
 						    file t))))))
+    ;; Fiddle about with line number
+    (setq line (+ py-line-number-offset line))
+
     (pop-to-buffer buffer)
     ;; Force Python mode
     (if (not (eq major-mode 'python-mode))
