@@ -95,29 +95,30 @@
   :type 'string
   :group 'python)
 
-(defcustom py-jpython-command "jpython"
-  "*Shell command used to start the JPython interpreter."
+(make-obsolete-variable 'py-jpython-command 'py-jython-command)
+(defcustom py-jython-command "jython"
+  "*Shell command used to start the Jython interpreter."
   :type 'string
   :group 'python
-  :tag "JPython Command")
+  :tag "Jython Command")
 
 (defcustom py-default-interpreter 'cpython
   "*Which Python interpreter is used by default.
-The value for this variable can be either `cpython' or `jpython'.
+The value for this variable can be either `cpython' or `jython'.
 
 When the value is `cpython', the variables `py-python-command' and
 `py-python-command-args' are consulted to determine the interpreter
 and arguments to use.
 
-When the value is `jpython', the variables `py-jpython-command' and
-`py-jpython-command-args' are consulted to determine the interpreter
+When the value is `jython', the variables `py-jython-command' and
+`py-jython-command-args' are consulted to determine the interpreter
 and arguments to use.
 
 Note that this variable is consulted only the first time that a Python
 mode buffer is visited during an Emacs session.  After that, use
 \\[py-toggle-shells] to change the interpreter shell."
   :type '(choice (const :tag "Python (a.k.a. CPython)" cpython)
-		 (const :tag "JPython" jpython))
+		 (const :tag "Jython" jython))
   :group 'python)
 
 (defcustom py-python-command-args '("-i")
@@ -125,11 +126,12 @@ mode buffer is visited during an Emacs session.  After that, use
   :type '(repeat string)
   :group 'python)
 
-(defcustom py-jpython-command-args '("-i")
-  "*List of string arguments to be used when starting a JPython shell."
+(make-obsolete-variable 'py-jpython-command-args 'py-jython-command-args)
+(defcustom py-jython-command-args '("-i")
+  "*List of string arguments to be used when starting a Jython shell."
   :type '(repeat string)
   :group 'python
-  :tag "JPython Command Args")
+  :tag "Jython Command Args")
 
 (defcustom py-indent-offset 4
   "*Amount of offset per level of indentation.
@@ -295,16 +297,17 @@ as gud-mode does for debugging C programs with gdb."
   20000
   "Maximum number of characters to search for a Java-ish import statement.
 When `python-mode' tries to calculate the shell to use (either a
-CPython or a JPython shell), it looks at the so-called `shebang' line
+CPython or a Jython shell), it looks at the so-called `shebang' line
 -- i.e. #! line.  If that's not available, it looks at some of the
 file heading imports to see if they look Java-like."
   :type 'integer
   :group 'python
   )
 
-(defcustom py-jpython-packages
+(make-obsolete-variable 'py-jpython-packages 'py-jython-packages)
+(defcustom py-jython-packages
   '("java" "javax" "org" "com")
-  "Imported packages that imply `jpython-mode'."
+  "Imported packages that imply `jython-mode'."
   :type '(repeat string)
   :group 'python)
   
@@ -337,8 +340,7 @@ buffer is prepended to come up with a file name.")
   :tag "Pychecker Command Args")
 
 (defvar py-shell-alist
-  '(("jpython" . 'jpython)
-    ("jython" . 'jpython)
+  '(("jython" . 'jython)
     ("python" . 'cpython))
   "*Alist of interpreters and python shells. Used by `py-choose-shell'
 to select the appropriate python interpreter mode for a file.")
@@ -562,8 +564,9 @@ Currently-active file is at the head of the list.")
 (defvar python-mode-hook nil
   "*Hook called by `python-mode'.")
 
-(defvar jpython-mode-hook nil
-  "*Hook called by `jpython-mode'. `jpython-mode' also calls
+(make-obsolete-variable 'jpython-mode-hook 'jython-mode-hook)
+(defvar jython-mode-hook nil
+  "*Hook called by `jython-mode'. `jython-mode' also calls
 `python-mode-hook'.")
 
 (defvar py-shell-hook nil
@@ -1049,7 +1052,7 @@ of the first definition found."
 
 
 (defun py-choose-shell-by-shebang ()
-  "Choose CPython or JPython mode by looking at #! on the first line.
+  "Choose CPython or Jython mode by looking at #! on the first line.
 Returns the appropriate mode function.
 Used by `py-choose-shell', and similar to but distinct from
 `set-auto-mode', though it uses `auto-mode-interpreter-regexp' (if available)."
@@ -1073,10 +1076,10 @@ Used by `py-choose-shell', and similar to but distinct from
 
 
 (defun py-choose-shell-by-import ()
-  "Choose CPython or JPython mode based imports.
-If a file imports any packages in `py-jpython-packages', within
+  "Choose CPython or Jython mode based imports.
+If a file imports any packages in `py-jython-packages', within
 `py-import-check-point-max' characters from the start of the file,
-return `jpython', otherwise return nil."
+return `jython', otherwise return nil."
   (let (mode)
     (save-excursion
       (goto-char (point-min))
@@ -1084,14 +1087,14 @@ return `jpython', otherwise return nil."
 		  (search-forward-regexp
 		   "^\\(\\(from\\)\\|\\(import\\)\\) \\([^ \t\n.]+\\)"
 		   py-import-check-point-max t))
-	(setq mode (and (member (match-string 4) py-jpython-packages)
-			'jpython
+	(setq mode (and (member (match-string 4) py-jython-packages)
+			'jython
 			))))
     mode))
 
 
 (defun py-choose-shell ()
-  "Choose CPython or JPython mode. Returns the appropriate mode function.
+  "Choose CPython or Jython mode. Returns the appropriate mode function.
 This does the following:
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
@@ -1200,17 +1203,18 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (py-toggle-shells (py-choose-shell))))
 
 
-(defun jpython-mode ()
-  "Major mode for editing JPython/Jython files.
+(make-obsolete 'jpython-mode 'jython-mode)
+(defun jython-mode ()
+  "Major mode for editing Jython/Jython files.
 This is a simple wrapper around `python-mode'.
-It runs `jpython-mode-hook' then calls `python-mode.'
+It runs `jython-mode-hook' then calls `python-mode.'
 It is added to `interpreter-mode-alist' and `py-choose-shell'.
 "
   (interactive)
   (python-mode)
-  (py-toggle-shells 'jpython)
-  (when jpython-mode-hook
-      (run-hooks 'jpython-mode-hook)))
+  (py-toggle-shells 'jython)
+  (when jython-mode-hook
+      (run-hooks 'jython-mode-hook)))
 
 
 ;; It's handy to add recognition of Python files to the
@@ -1219,8 +1223,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
 ;; with the latter, we can't.  So we just won't add them if they're
 ;; already added.
 ;;;###autoload
-(let ((modes '(("jpython" . jpython-mode)
-	       ("jython" . jpython-mode)
+(let ((modes '(("jython" . jython-mode)
 	       ("python" . python-mode))))
   (while modes
     (when (not (assoc (car modes) interpreter-mode-alist))
@@ -1228,7 +1231,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
     (setq modes (cdr modes))))
 ;;;###autoload
 (when (not (or (rassq 'python-mode auto-mode-alist)
-	       (rassq 'jpython-mode auto-mode-alist)))
+	       (rassq 'jython-mode auto-mode-alist)))
   (push '("\\.py$" . python-mode) auto-mode-alist))
 
 
@@ -1495,7 +1498,7 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (defconst py-output-buffer "*Python Output*")
 (make-variable-buffer-local 'py-output-buffer)
 
-;; for toggling between CPython and JPython
+;; for toggling between CPython and Jython
 (defvar py-which-shell nil)
 (defvar py-which-args  py-python-command-args)
 (defvar py-which-bufname "Python")
@@ -1504,14 +1507,14 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (make-variable-buffer-local 'py-which-bufname)
 
 (defun py-toggle-shells (arg)
-  "Toggles between the CPython and JPython shells.
+  "Toggles between the CPython and Jython shells.
 
 With positive argument ARG (interactively \\[universal-argument]),
-uses the CPython shell, with negative ARG uses the JPython shell, and
+uses the CPython shell, with negative ARG uses the Jython shell, and
 with a zero argument, toggles the shell.
 
 Programmatically, ARG can also be one of the symbols `cpython' or
-`jpython', equivalent to positive arg and negative arg respectively."
+`jython', equivalent to positive arg and negative arg respectively."
   (interactive "P")
   ;; default is to toggle
   (if (null arg)
@@ -1524,7 +1527,7 @@ Programmatically, ARG can also be one of the symbols `cpython' or
 	(setq arg -1)
       (setq arg 1)))
    ((equal arg 'cpython) (setq arg 1))
-   ((equal arg 'jpython) (setq arg -1)))
+   ((equal arg 'jython) (setq arg -1)))
   (let (msg)
     (cond
      ((< 0 arg)
@@ -1535,11 +1538,11 @@ Programmatically, ARG can also be one of the symbols `cpython' or
 	    msg "CPython"
 	    mode-name "Python"))
      ((> 0 arg)
-      (setq py-which-shell py-jpython-command
-	    py-which-args py-jpython-command-args
-	    py-which-bufname "JPython"
-	    msg "JPython"
-	    mode-name "JPython"))
+      (setq py-which-shell py-jython-command
+	    py-which-args py-jython-command-args
+	    py-which-bufname "Jython"
+	    msg "Jython"
+	    mode-name "Jython"))
      )
     (message "Using the %s shell" msg)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
@@ -1561,9 +1564,9 @@ prompt).  This argument is ignored when this function is called
 programmatically, or when running in Emacs 19.34 or older.
 
 Note: You can toggle between using the CPython interpreter and the
-JPython interpreter by hitting \\[py-toggle-shells].  This toggles
+Jython interpreter by hitting \\[py-toggle-shells].  This toggles
 buffer local variables which control whether all your subshell
-interactions happen to the `*JPython*' or `*Python*' buffers (the
+interactions happen to the `*Jython*' or `*Python*' buffers (the
 latter is the name used for the CPython buffer).
 
 Warning: Don't use an interactive Python if you change sys.ps1 or
@@ -1712,7 +1715,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (setq py-exception-buffer (cons file (current-buffer))))
      (t
       ;; TBD: a horrible hack, but why create new Custom variables?
-      (let ((cmd (concat shell (if (string-equal py-which-bufname "JPython")
+      (let ((cmd (concat shell (if (string-equal py-which-bufname "Jython")
 				   " -" ""))))
 	;; otherwise either run it synchronously in a subprocess
 	(save-excursion
