@@ -3796,13 +3796,13 @@ If point is inside a string, narrow to that string and fill.
       (py-fill-string (nth 8 pps)))
      ;; are we at the opening quote of a string, or in the indentation?
      ((save-excursion
-	(forward-word)
+	(forward-word 1)
 	(eq (py-in-literal) 'string))
       (save-excursion
 	(py-fill-string (py-point 'boi))))
      ;; are we at or after the closing quote of a string?
      ((save-excursion
-	(backward-word)
+	(backward-word 1)
 	(eq (py-in-literal) 'string))
       (save-excursion
 	(py-fill-string (py-point 'boi))))
