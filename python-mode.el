@@ -464,24 +464,24 @@ support for features needed by `python-mode'.")
     (list
      '("^[ \t]*\\(@.+\\)" 1 'py-decorators-face)
      ;; keywords
-     (cons (concat "\\b\\(" kw1 "\\)\\b[ \n\t(]") 1)
+     (cons (concat "\\<\\(" kw1 "\\)\\>[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
-     (list (concat "\\([^. \t]\\|^\\)[ \t]*\\b\\(" kw3 "\\)\\b[ \n\t(]") 2
+     (list (concat "\\([^. \t]\\|^\\)[ \t]*\\<\\(" kw3 "\\)\\>[ \n\t(]") 2
 	   'py-builtins-face)
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
-     (cons (concat "\\b\\(" kw2 "\\)[ \n\t(]") 1)
+     (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
-     (list (concat "\\b\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
+     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
      ;; `as' but only in "import foo as bar"
-     '("[ \t]*\\(\\bfrom\\b.*\\)?\\bimport\\b.*\\b\\(as\\)\\b" . 2)
+     '("[ \t]*\\(\\<from\\>.*\\)?\\<import\\>.*\\<\\(as\\)\\>" . 2)
      ;; classes
-     '("\\bclass[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
+     '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
      ;; functions
-     '("\\bdef[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
+     '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\b\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\b"
+     '("\\<\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\>"
        1 py-pseudo-keyword-face)
      ))
   "Additional expressions to highlight in Python mode.")
@@ -3574,7 +3574,7 @@ KEY is a regular expression describing a Python keyword.  Skip blank
 lines and non-indenting comments.  If the statement found starts with
 KEY, then stop, otherwise go back to first enclosing block starting
 with KEY.  If successful, leave point at the start of the KEY line and 
-return t.  Otherwise, leav point at an undefined place and return nil."
+return t.  Otherwise, leave point at an undefined place and return nil."
   ;; skip blanks and non-indenting #
   (py-goto-initial-line)
   (while (and
@@ -3582,7 +3582,7 @@ return t.  Otherwise, leav point at an undefined place and return nil."
 	  (zerop (forward-line -1)))	; go back
     nil)
   (py-goto-initial-line)
-  (let* ((re (concat "[ \t]*" key "\\b"))
+  (let* ((re (concat "[ \t]*" key "\\>"))
 	 (case-fold-search nil)		; let* so looking-at sees this
 	 (found (looking-at re))
 	 (dead nil))
