@@ -91,6 +91,12 @@
   :group 'languages
   :prefix "py-")
 
+(defcustom py-tab-always-indent t
+  "*Non-nil means TAB in Python mode should always reindent the current line,
+regardless of where in the line point is when the TAB command is used."
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-python-command "python"
   "*Shell command used to start Python interpreter."
   :type 'string
@@ -2082,12 +2088,15 @@ This function is normally bound to `indent-line-function' so
 	;; see if we need to dedent
 	(if (py-outdent-p)
 	    (setq need (- need py-indent-offset)))
-	(if (/= ci need)
-	    (save-excursion
-	      (beginning-of-line)
-	      (delete-horizontal-space)
-	      (indent-to need)))
-	(if move-to-indentation-p (back-to-indentation))))))
+	(if (or py-tab-always-indent
+		move-to-indentation-p)
+	    (progn (if (/= ci need)
+		       (save-excursion
+		       (beginning-of-line)
+		       (delete-horizontal-space)
+		       (indent-to need)))
+		   (if move-to-indentation-p (back-to-indentation)))
+	    (insert-tab))))))
 
 (defun py-newline-and-indent ()
   "Strives to act like the Emacs `newline-and-indent'.
