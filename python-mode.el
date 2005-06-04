@@ -1635,8 +1635,10 @@ filter."
 			       (concat
 				(mapconcat 'identity py-which-args " ") " ")
 			       ))))
-    (switch-to-buffer-other-window
-     (apply 'make-comint py-which-bufname py-which-shell nil args))
+    (if (not (equal (buffer-name) "*Python*"))
+        (switch-to-buffer-other-window
+         (apply 'make-comint py-which-bufname py-which-shell nil args))
+      (apply 'make-comint py-which-bufname py-which-shell nil args))
     (make-local-variable 'comint-prompt-regexp)
     (setq comint-prompt-regexp (concat py-shell-input-prompt-1-regexp "\\|"
                                        py-shell-input-prompt-2-regexp "\\|"
