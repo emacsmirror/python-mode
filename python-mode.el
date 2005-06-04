@@ -1568,14 +1568,16 @@ Programmatically, ARG can also be one of the symbols `cpython' or
       (setq py-which-shell py-python-command
 	    py-which-args py-python-command-args
 	    py-which-bufname "Python"
-	    msg "CPython"
-	    mode-name "Python"))
+	    msg "CPython")
+      (if (string-equal py-which-bufname "Jython")
+	  (setq mode-name "Python")))
      ((> 0 arg)
       (setq py-which-shell py-jython-command
 	    py-which-args py-jython-command-args
 	    py-which-bufname "Jython"
-	    msg "Jython"
-	    mode-name "Jython"))
+	    msg "Jython")
+      (if (string-equal py-which-bufname "Python")
+	  (setq mode-name "Jython")))
      )
     (message "Using the %s shell" msg)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
