@@ -3877,32 +3877,35 @@ and initial `#'s.
 If point is inside a string, narrow to that string and fill.
 "
   (interactive "P")
-  (let* ((bod (py-point 'bod))
-	 (pps (parse-partial-sexp bod (point))))
-    (cond
-     ;; are we inside a comment or on a line with only whitespace before
-     ;; the comment start?
-     ((or (nth 4 pps)
-	  (save-excursion (beginning-of-line) (looking-at "[ \t]*#")))
-      (py-fill-comment justify))
-     ;; are we inside a string?
-     ((nth 3 pps)
-      (py-fill-string (nth 8 pps)))
-     ;; are we at the opening quote of a string, or in the indentation?
-     ((save-excursion
-	(forward-word 1)
-	(eq (py-in-literal) 'string))
-      (save-excursion
-	(py-fill-string (py-point 'boi))))
-     ;; are we at or after the closing quote of a string?
-     ((save-excursion
-	(backward-word 1)
-	(eq (py-in-literal) 'string))
-      (save-excursion
-	(py-fill-string (py-point 'boi))))
-     ;; otherwise use the default
-     (t
-      (fill-paragraph justify)))))
+  ;; fill-paragraph will narrow incorrectly
+  (save-restriction
+    (widen)
+    (let* ((bod (py-point 'bod))
+	   (pps (parse-partial-sexp bod (point))))
+      (cond
+       ;; are we inside a comment or on a line with only whitespace before
+       ;; the comment start?
+       ((or (nth 4 pps)
+	    (save-excursion (beginning-of-line) (looking-at "[ \t]*#")))
+	(py-fill-comment justify))
+       ;; are we inside a string?
+       ((nth 3 pps)
+	(py-fill-string (nth 8 pps)))
+       ;; are we at the opening quote of a string, or in the indentation?
+       ((save-excursion
+	  (forward-word 1)
+	  (eq (py-in-literal) 'string))
+	(save-excursion
+	  (py-fill-string (py-point 'boi))))
+       ;; are we at or after the closing quote of a string?
+       ((save-excursion
+	  (backward-word 1)
+	  (eq (py-in-literal) 'string))
+	(save-excursion
+	  (py-fill-string (py-point 'boi))))
+       ;; otherwise use the default
+       (t
+	(fill-paragraph justify))))))
 
 
 
