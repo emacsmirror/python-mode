@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2004 http://sf.net/projects/python-mode
+;; Author: 2003-2006 http://sf.net/projects/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -402,6 +402,11 @@ support for features needed by `python-mode'.")
   "Face for builtins like TypeError, object, open, and exec.")
 (make-face 'py-builtins-face)
 
+;; XXX, TODO, and FIXME comments and such
+(defvar py-XXX-tag-face 'py-XXX-tag-face
+  "Face for XXX, TODO, and FIXME tags")
+(make-face 'py-XXX-tag-face)
+
 (defun py-font-lock-mode-hook ()
   (or (face-differs-from-default-p 'py-pseudo-keyword-face)
       (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
@@ -409,6 +414,8 @@ support for features needed by `python-mode'.")
       (copy-face 'font-lock-keyword-face 'py-builtins-face))
   (or (face-differs-from-default-p 'py-decorators-face)
       (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
+  (or (face-differs-from-default-p 'py-XXX-tag-face)
+      (copy-face 'py-XXX-tag-face 'font-lock-comment-face))
   )
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
 
@@ -490,6 +497,8 @@ support for features needed by `python-mode'.")
      ;; pseudo-keywords
      '("\\<\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\>"
        1 py-pseudo-keyword-face)
+     ;; XXX, TODO, and FIXME tags
+     '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
      ))
   "Additional expressions to highlight in Python mode.")
 (put 'python-mode 'font-lock-defaults '(python-font-lock-keywords))
