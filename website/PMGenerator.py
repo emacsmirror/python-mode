@@ -23,9 +23,9 @@ class PMGenerator(StandardGenerator):
 
     def get_banner(self):
         return '''\
-<table width="100%">
+<table width="100%%">
 <tr>
-<td><a href="docs/">Python-Mode Documentation</a></td>
+<td><a href="%(rootdir)s/docs/">Python-Mode Documentation</a></td>
 <td><a href="http://www.python.org/">Python</a></td>
 </tr>
 <tr>
@@ -33,7 +33,7 @@ class PMGenerator(StandardGenerator):
 <td><a href="http://www.xemacs.org/">XEmacs</a></td>
 </tr>
 </table>
-        '''
+        ''' % self.__dict__
 
     def _grokbody(self):
         if self.__body is None:
