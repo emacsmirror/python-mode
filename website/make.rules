@@ -58,11 +58,11 @@ GENERATED_HTML= $(SOURCES:.ht=.html)
 .SUFFIXES:	.ht .html
 
 %.html : %.ht
-		$(HT2HTML) $(HTFLAGS) $(HTRELDIR)/$<
+		PYTHONPATH=$(SCRIPTDIR) $(HT2HTML) $(HTFLAGS) $(HTRELDIR)/$<
 
 all: $(TARGETS)
 
-$(HTTARGETS): $(HT2HTML) $(HTSTYLE).py
+$(HTTARGETS): $(HT2HTML) $(SCRIPTDIR)/$(HTSTYLE).py
 
 clean:
 	-rm -f *~ .*~ *.py[co]
