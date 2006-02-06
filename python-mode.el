@@ -415,7 +415,7 @@ support for features needed by `python-mode'.")
   (or (face-differs-from-default-p 'py-decorators-face)
       (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
   (or (face-differs-from-default-p 'py-XXX-tag-face)
-      (copy-face 'py-XXX-tag-face 'font-lock-comment-face))
+      (copy-face 'font-lock-comment-face 'py-XXX-tag-face))
   )
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
 
