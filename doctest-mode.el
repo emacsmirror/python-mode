@@ -7,7 +7,7 @@
 ;; Created:    Aug 2004
 ;; Keywords:   python doctest unittest test docstring
 
-(defconst doctest-version "0.2"
+(defconst doctest-version "0.3"
   "`doctest-mode' version number.")
 
 ;; This software is provided as-is, without express or implied
@@ -79,7 +79,33 @@ failure in the results buffer."
   :group 'doctest)
 
 (defcustom doctest-python-command "python"
-  "Shell command used to start the python interpreter")
+  "Shell command used to start the python interpreter"
+  :type 'string
+  :group 'doctest)
+
+(defcustom doctest-results-buffer-name "*doctest-output*"
+  "The name of the buffer used to store the output of the doctest
+command."
+  :type 'string
+  :group 'doctest)
+
+(defcustom doctest-optionflags '()
+  "Option flags for doctest"
+  :group 'doctest
+  :type '(repeat (choice (const :tag "Select an option..." "")
+                         (const :tag "Normalize whitespace"
+                                "NORMALIZE_WHITESPACE")
+                         (const :tag "Ellipsis"
+                                "ELLIPSIS")
+                         (const :tag "Don't accept True for 1"
+                                DONT_ACCEPT_TRUE_FOR_1)
+                         (const :tag "Don't accept <BLANKLINE>"
+                                DONT_ACCEPT_BLANKLINE)
+                         (const :tag "Ignore Exception detail"
+                                IGNORE_EXCEPTION_DETAIL)
+                         (const :tag "Report only first failure"
+                                REPORT_ONLY_FIRST_FAILURE)
+                         )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fonts
@@ -533,24 +559,29 @@ whitespace to the left of the point before inserting a newline.
 ;; Code Execution
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Add support for options (eg diff!)
-(defun doctest-execute-buffer ()
+(defun doctest-execute-buffer (&optional diff)
   "Run doctest on the current buffer, and display the results in the 
 *doctest-output* buffer."
   (interactive "*")
-  (setq doctest-results-buffer (get-buffer-create "*doctest-output*"))
+  (setq doctest-results-buffer (get-buffer-create doctest-results-buffer-name))
   (let* ((temp (concat (doctest-temp-name) ".py"))
 	 (tempfile (expand-file-name temp doctest-temp-directory))
 	 (cur-buf (current-buffer))
 	 (in-buf (get-buffer-create "*doctest-input*"))
 	 (beg (point-min)) (end (point-max))
+         (flags (reduce (lambda (a b) (if (equal b "") a (concat a "|" b)))
+                        doctest-optionflags))
 	 (script (concat "from doctest import *\n"
 			 "doc = open('" tempfile "').read()\n"
 			 "test = DocTestParser().get_doctest("
 			         "doc, {}, '" (buffer-name) "', '"
 				 (buffer-file-name) "', 0)\n"
-			 "r = DocTestRunner()\n"
-			 "r.run(test)\n"))
+                         "r = DocTestRunner(optionflags=" flags
+                               (if diff "+REPORT_UDIFF" "")
+                               ")\n"
+			 "r.run(test)\n"
+                         "print\n" ;; <- so the buffer won't be empty
+                         ))
 	 (cmd (concat doctest-python-command " -c \"" script "\"")))
     ;; Write buffer to a file.
     (save-excursion
@@ -561,19 +592,30 @@ whitespace to the left of the point before inserting a newline.
     (shell-command cmd doctest-results-buffer)
     ;; Delete the temp file
     (delete-file tempfile)
+    ;; Delete the input buffer.
+    (if (buffer-live-p in-buf)
+        (kill-buffer in-buf))
     ;; Set mode on output buffer.
     (save-excursion
       (set-buffer doctest-results-buffer)
       (doctest-results-mode))
     ;; If any tests failed, display them.
-    (cond ((> (buffer-size doctest-results-buffer) 0)
-	   (message "Test failed!")
+    (cond ((> (buffer-size doctest-results-buffer) 1)
 	   (display-buffer doctest-results-buffer)
-	   (doctest-postprocess-results))
+	   (doctest-postprocess-results)
+	   (message "Test failed!"))
 	  (t
+	   (display-buffer doctest-results-buffer)
+           (if (get-buffer-window doctest-results-buffer)
+	       (delete-window (get-buffer-window doctest-results-buffer)))
 	   (message "Test passed!")
-	   (if (get-buffer-window doctest-results-buffer)
-	       (delete-window (get-buffer-window doctest-results-buffer)))))))
+           ))))
+
+(defun doctest-execute-buffer-with-diff ()
+  "Run doctest on the current buffer, and display the results in the 
+*doctest-output* buffer, using the diff format."
+  (interactive "*")
+  (doctest-execute-buffer t))
 
 (defun doctest-postprocess-results ()
   (doctest-next-failure 1)
@@ -589,9 +631,10 @@ example's failure description in *doctest-output*."
      ((not (buffer-live-p doctest-results-buffer))
       (message "Run doctest first! (C-c C-c)"))
      (t
-      (save-excursion
-        (let ((orig-window (selected-window))
-              (results-window (display-buffer doctest-results-buffer)))
+      (let ((orig-window (selected-window))
+            (results-window (display-buffer doctest-results-buffer)))
+        (save-excursion
+          (set-buffer doctest-results-buffer)
           ;; Switch to the results window (so its point gets updated)
           (if results-window (select-window results-window))
           ;; Pick up where we left off.
@@ -617,9 +660,9 @@ example's failure description in *doctest-output*."
               (doctest-fontify-line doctest-selected-failure)))
            ;; We didn't find a failure:
            (t
-            (message "No failures found!")))
+            (message "No failures found!"))))
           ;; Return to the original window
-          (select-window orig-window)))))
+          (select-window orig-window))))
 
     (when lineno
       ;; Move point to the selected failure.
@@ -671,6 +714,117 @@ easy enough to see them in the original buffer)"
       (replace-match "" nil nil))
     (toggle-read-only t)))
 
+
+;; Unfortunately, the `replace-regexp-in-string' is not provided by all
+;; versions of Emacs.  But this will do the job:
+(defun doctest-replace-regexp-in-string (regexp replacement text)
+  "Return the result of replacing all mtaches of REGEXP with
+REPLACEMENT in TEXT.  (Since replace-regexp-in-string is not available
+under all versions of emacs, and is called different names in
+different versions, this compatibility function will emulate it if
+it's not available."
+  (let ((start 0) (repl-len (length replacement)))
+    (while (string-match regexp text start)
+      (setq start (+ (match-beginning 0) repl-len 1))
+      (setq text (replace-match replacement t nil text)))
+    text))
+
+(defun doctest-results-next-header ()
+  (if (re-search-forward (concat doctest-results-header-re "\\|"
+                                 doctest-results-divider-re) nil t)
+      (let ((result (match-string 0)))
+        (if (string-match doctest-results-header-re result)
+            result
+          nil))
+    nil))
+          
+(defun doctest-replace-output ()
+  "Move to the top of the closest example, and replace its output
+with the 'got' output from the *doctest-output* buffer.  An error is
+displayed if the chosen example is not listed in *doctest-output*, or
+if the 'expected' output for the example does not exactly match the
+output listed in the source buffer.  The user is asked to confirm the
+replacement."
+  (interactive)
+  ;; Move to the beginning of the example.
+  (cond
+   ((not (buffer-live-p doctest-results-buffer))
+    (message "Run doctest first! (C-c C-c)"))
+   (t
+    (save-excursion
+      (let ((orig-buffer (current-buffer)))
+        ;; Find the doctest case closest to the cursor.
+        (end-of-line)
+        (re-search-backward "^\\( *\\)>>> " nil t)
+        ;; Find the corresponding doctest in the output buffer.
+        (let ((prompt-indent (match-string 1))
+              (output-re (format "^File .*, line %d," (line-number)))
+              (doctest-got nil) (doctest-expected nil) (header nil))
+          (set-buffer doctest-results-buffer)
+
+          ;; Find the corresponding example in the output.
+          (goto-char (point-min))
+          (if (not (re-search-forward output-re nil t))
+              (error "Could not find corresponding output"))
+
+          ;; Get the output's 'expected' & 'got' texts.
+          (while (setq header (doctest-results-next-header))
+            (cond
+             ((equal header "Failed example:")
+              t)
+             ((equal header "Expected nothing")
+              (setq doctest-expected ""))
+             ((equal header "Expected:")
+              (re-search-forward "^\\(\\(    \\).*\n\\)*")
+              (setq doctest-expected (doctest-replace-regexp-in-string
+                                 "^    " prompt-indent (match-string 0))))
+             ((equal header "Got nothing")
+              (setq doctest-got ""))
+             ((or (equal header "Got:") (equal header "Exception raised:"))
+              (re-search-forward "^\\(\\(    \\).*\n\\)*")
+              (setq doctest-got (doctest-replace-regexp-in-string
+                                 "^    " prompt-indent (match-string 0))))
+             (t (error "Unexpected header %s" header))))
+
+          ;; Go back to the source buffer.
+          (set-buffer orig-buffer)
+          
+          ;; Skip ahead to the output.
+          (re-search-forward "^ *>>>.*\n\\( *\\.\\.\\..*\n\\)*")
+          
+          ;; Check that the output matches.
+          (let ((start (point)) end)
+            (re-search-forward "^ *\\(>>>.*\\|$\\)")
+            (setq end (match-beginning 0))
+            (if doctest-expected
+                (if (not (equal (buffer-substring start end) doctest-expected))
+                    (error "Output does mot match 'expected'")))
+            (setq doctest-expected (buffer-substring start end))
+            (goto-char end))
+
+          (let ((confirm-buffer (get-buffer-create "*doctest-confirm*")))
+            (set-buffer confirm-buffer)
+            ;; Erase anything left over in the buffer.
+            (delete-region (point-min) (point-max))
+            ;; Write a confirmation message
+            (if (equal doctest-expected "")
+                (insert-string "Replace nothing\n")
+              (insert-string (concat "Replace:\n" doctest-expected)))
+            (if (equal doctest-got "")
+                (insert-string "With nothing\n")
+              (insert-string (concat "With:\n" doctest-got)))
+            (let ((confirm-window (display-buffer confirm-buffer nil nil t)))
+              ;; Get confirmation
+              (set-buffer orig-buffer)
+              ;; [XX]
+              (if doctest-expected
+                  (search-backward doctest-expected)
+                t)
+              (when (y-or-n-p "Ok to replace? ")
+                (replace-match doctest-got t t))
+              (kill-buffer confirm-buffer)
+              (delete-window confirm-window)))))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Doctest Results Mode (output of doctest-execute-buffer)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -687,7 +841,7 @@ easy enough to see them in the original buffer)"
   "^File \"\\([^\"]+\\)\", line \\([0-9]+\\), in \\([^\n]+\\)")
 
 (defconst doctest-results-header-re
-  "^\\([a-zA-Z0-9 ]+:\\)$")
+  "^\\([a-zA-Z0-9 ]+:\\|Expected nothing\\|Got nothing\\)$")
 
 (defconst doctest-results-font-lock-keywords
   `((,doctest-results-divider-re 
@@ -853,10 +1007,12 @@ position."
     (define-key map ":" 'doctest-electric-colon)
     (define-key map "\C-c\C-v" 'doctest-version)
     (define-key map "\C-c\C-c" 'doctest-execute-buffer)
+    (define-key map "\C-c\C-d" 'doctest-execute-buffer-with-diff)
     (define-key map "\C-c\C-n" 'doctest-next-failure)
     (define-key map "\C-c\C-p" 'doctest-prev-failure)
     (define-key map "\C-c\C-a" 'doctest-first-failure)
     (define-key map "\C-c\C-z" 'doctest-last-failure)
+    (define-key map "\C-c\C-r" 'doctest-replace-output)
     map) 
   "Keymap for doctest-mode.")
 
@@ -872,6 +1028,9 @@ position."
 (setq font-lock-defaults-alist
       (append font-lock-defaults-alist
               `((doctest-mode doctest-font-lock-keywords nil nil nil nil))))
+
+(defvar doctest-results-buffer nil
+  "The output buffer for doctest-mode")
 
 ;; Use doctest mode for files ending in .doctest
 ;;;###autoload
