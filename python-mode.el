@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2006 http://sf.net/projects/python-mode
+;; Author: 2003-2007 http://sf.net/projects/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -427,7 +427,7 @@ support for features needed by `python-mode'.")
 			  "from"     "global"   "if"      "import"
 			  "in"       "is"       "lambda"  "not"
 			  "or"       "pass"     "print"   "raise"
-			  "return"   "while"    "yield"
+			  "return"   "while"    "with"    "yield"
 			  )
 			"\\|"))
 	(kw2 (mapconcat 'identity
@@ -486,9 +486,9 @@ support for features needed by `python-mode'.")
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
      (list (concat "\\<\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
-     ;; `as' but only in "import foo as bar"
+     ;; `as' but only in "import foo as bar" or "with foo as bar"
      '("[ \t]*\\(\\<from\\>.*\\)?\\<import\\>.*\\<\\(as\\)\\>" . 2)
-
+     '("[ \t]*\\<with\\>.*\\<\\(as\\)\\>" . 1)
      ;; classes
      '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
      ;; functions
