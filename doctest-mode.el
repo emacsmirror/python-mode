@@ -429,7 +429,7 @@ sets `match-data' so that group 0 spans the current line."
   (when (find-doctest-output-line limit)
     ;; If we found one, then mark the entire line.
     (beginning-of-line)
-    (search-forward-regexp "[^\n]*" limit)))
+    (re-search-forward "[^\n]*" limit)))
 
 (defun doctest-traceback-line-matcher (limit)
   "A `font-lock-keyword' MATCHER that returns t if the current line is
@@ -698,7 +698,7 @@ copied from the most recent source line, or set to
     (beginning-of-line)
     (forward-line -1)
     (while (and (not (on-doctest-source-line))
-                (search-backward-regexp doctest-prompt-re nil t)))
+                (re-search-backward doctest-prompt-re nil t)))
     (if (looking-at doctest-prompt-re)
         (- (match-end 1) (match-beginning 1))
       doctest-default-margin)))
@@ -1152,7 +1152,7 @@ replacement."
            (set-buffer doctest-results-buffer)
            (goto-char (point-min))
            (let ((output-re (format "^File .*, line %s," lineno)))
-             (when (not (search-forward-regexp output-re nil t))
+             (when (not (re-search-forward output-re nil t))
                (message "This doctest example did not fail")
                (setq lineno nil)))))
 
@@ -1168,14 +1168,16 @@ replacement."
                ((equal header "Expected nothing")
                 (setq doctest-expected ""))
                ((equal header "Expected:")
-                (re-search-forward "^\\(\\(    \\).*\n\\)*")
+                (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
+                  (error "Error parsing doctest output"))
                 (setq doctest-expected (doctest-replace-regexp-in-string
                                         "^    " prompt-indent
                                         (match-string 0))))
                ((equal header "Got nothing")
                 (setq doctest-got ""))
                ((or (equal header "Got:") (equal header "Exception raised:"))
-                (re-search-forward "^\\(\\(    \\).*\n\\)*")
+                (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
+                  (error "Error parsing doctest output"))
                 (setq doctest-got (doctest-replace-regexp-in-string
                                    "^    " prompt-indent (match-string 0))))
                ((string-match "^Differences" header)
@@ -1188,12 +1190,17 @@ replacement."
           
             ;; Skip ahead to the output.
             (beginning-of-line)
-            (re-search-forward "^ *>>>.*\n\\( *\\.\\.\\..*\n\\)*")
-            
+            (unless (re-search-forward "^ *>>>.*")
+              (error "Error parsing doctest output"))
+            (if (looking-at "\n")
+                (re-search-forward "\n\\( *\\.\\.\\..*\n\\)*")
+              (insert-string "\n"))
+
             ;; Check that the output matches.
             (let ((start (point)) end)
-              (re-search-forward "^ *\\(>>>.*\\|$\\)")
-              (setq end (match-beginning 0))
+              (if (re-search-forward "^ *\\(>>>.*\\|$\\)" nil t)
+                  (setq end (match-beginning 0)) 
+                (setq end (point-max)))
               (when (and doctest-expected
                          (not (equal (buffer-substring start end)
                                      doctest-expected)))
@@ -1236,9 +1243,12 @@ replacement."
                     (search-backward doctest-expected))
                 (when (equal doctest-expected "") (backward-char 1))
                 ;; Get confirmation & do the replacement
-                (when (y-or-n-p "Ok to replace? ")
-                  (when (equal doctest-expected "") (forward-char 1))
-                  (replace-match doctest-got t t))
+                (cond ((y-or-n-p "Ok to replace? ")
+                       (when (equal doctest-expected "") (forward-char 1))
+                       (replace-match doctest-got t t)
+                       (message "Replaced."))
+                      (t
+                       (message "Replace cancelled.")))
                 ;; Clean up our confirm window
                 (kill-buffer confirm-buffer)
                 (delete-window confirm-window))))))))))
@@ -1264,7 +1274,7 @@ line.  This is used to highlight the currently selected failure."
 	     (<= (point) doctest-selected-failure)
 	     (< doctest-selected-failure limit))
     (goto-char doctest-selected-failure)
-    (search-forward-regexp "[^\n]+" limit)))
+    (re-search-forward "[^\n]+" limit)))
 
 ;; Register the font-lock keywords (xemacs)
 (put 'doctest-results-mode 'font-lock-defaults 
