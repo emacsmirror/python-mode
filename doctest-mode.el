@@ -1192,15 +1192,18 @@ replacement."
             (beginning-of-line)
             (unless (re-search-forward "^ *>>>.*")
               (error "Error parsing doctest output"))
-            (if (looking-at "\n")
-                (re-search-forward "\n\\( *\\.\\.\\..*\n\\)*")
-              (insert-string "\n"))
+            (re-search-forward "\\(\n *\\.\\.\\..*\\)*\n?")
+            (if (not (looking-at "^"))
+                (insert-string "\n"))
 
             ;; Check that the output matches.
             (let ((start (point)) end)
-              (if (re-search-forward "^ *\\(>>>.*\\|$\\)" nil t)
-                  (setq end (match-beginning 0)) 
-                (setq end (point-max)))
+              (cond ((re-search-forward "^ *\\(>>>.*\\|$\\)" nil t)
+                     (setq end (match-beginning 0)))
+                    (t
+                     (goto-char (point-max))
+                     (insert-string "\n")
+                     (setq end (point-max))))
               (when (and doctest-expected
                          (not (equal (buffer-substring start end)
                                      doctest-expected)))
