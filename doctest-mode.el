@@ -1432,7 +1432,7 @@ from scratch such that it works under both.)"
 (defun doctest-fontify-line (charpos)
   "Run font-lock-fontify-region on the line containing the given
 position."
-  (if charpos
+  (if (and charpos (functionp 'font-lock-fontify-region))
       (save-excursion
         (goto-char charpos)
         (let ((beg (progn (beginning-of-line) (point)))
