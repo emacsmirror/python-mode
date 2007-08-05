@@ -944,6 +944,7 @@ whitespace to the left of the point before inserting a newline.
                                            doctest-python-command
                                            "-c" script)))
                (setq doctest-async-process-tempfile tempfile)
+               (setq doctest-async-process-buffer cur-buf)
                (setq doctest-async-process process)
                (set-process-sentinel process 'doctest-async-process-sentinel)
                (display-buffer doctest-results-buffer)
@@ -958,10 +959,10 @@ whitespace to the left of the point before inserting a newline.
 
 (defun doctest-handle-output ()
   "This function, which is called after the 'doctest' process spawned
-by doctest-execute-buffer has finished, checks the
-doctest-results-buffer.  If that buffer is empty, it reports no errors
-and deletes it; if that buffer is not empty, it reports that errors
-occured, displays the buffer, and runs doctest-postprocess-results."
+by doctest-execute-buffer has finished, checks the doctest results
+buffer.  If that buffer is empty, it reports no errors and hides it;
+if that buffer is not empty, it reports that errors occured, displays
+the buffer, and runs doctest-postprocess-results."
   ;; If any tests failed, display them.
   (cond ((not (buffer-live-p doctest-results-buffer))
          (doctest-warn "Results buffer not found!"))
@@ -984,21 +985,24 @@ completes, which calls doctest-handle-output."
   ;; when we use doctest-cancel-async-process; this check keeps us
   ;; from trying to clean up after the same process twice (since we
   ;; set doctest-async-process to nil when we're done).
-  (when (equal process doctest-async-process)
-    (cond ((not (buffer-live-p doctest-results-buffer))
-           (doctest-warn "Results buffer not found!"))
-          ((equal state "finished\n")
-           (doctest-handle-output))
-          ((equal state "killed\n")
-           (message "Doctest killed."))
-          (t
-           (message "Doctest failed -- %s" state)
-           (display-buffer doctest-results-buffer)))
-    (doctest-update-mode-line "")
-    (when doctest-async-process-tempfile
-      (delete-file doctest-async-process-tempfile)
-      (setq doctest-async-process-tempfile nil))
-    (setq doctest-async-process nil)))
+  (when (and (equal process doctest-async-process)
+             (buffer-live-p doctest-async-process-buffer))
+    (save-excursion
+      (set-buffer doctest-async-process-buffer)
+      (cond ((not (buffer-live-p doctest-results-buffer))
+             (doctest-warn "Results buffer not found!"))
+            ((equal state "finished\n")
+             (doctest-handle-output))
+            ((equal state "killed\n")
+             (message "Doctest killed."))
+            (t
+             (message "Doctest failed -- %s" state)
+             (display-buffer doctest-results-buffer)))
+      (doctest-update-mode-line "")
+      (when doctest-async-process-tempfile
+        (delete-file doctest-async-process-tempfile)
+        (setq doctest-async-process-tempfile nil))
+      (setq doctest-async-process nil))))
 
 (defun doctest-cancel-async-process ()
   "If a doctest process is running, then kill it."
@@ -1014,6 +1018,11 @@ completes, which calls doctest-handle-output."
     ))
 
 (defun doctest-postprocess-results ()
+  "Post-process the doctest results buffer: check what version of
+doctest was used, and set doctest-results-are-pre-py24 accordingly;
+turn on read-only mode; filter the example markers; hide the example
+source (if `doctest-hide-example-source' is non-nil); and select the
+first failure."
   (save-excursion
     (set-buffer doctest-results-buffer)
     ;; Check if we're using an old doctest version.
@@ -1027,8 +1036,7 @@ completes, which calls doctest-handle-output."
   (doctest-filter-example-markers)
   (if doctest-hide-example-source
       (doctest-hide-example-source))
-  (if (eq (current-buffer) doctest-source-buffer)
-      (doctest-next-failure 1)))
+  (doctest-next-failure 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Markers
@@ -1101,7 +1109,7 @@ example's failure description in *doctest-output*."
   (cond
    ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
-   ((not (buffer-live-p doctest-results-buffer))
+   ((not (doctest-results-buffer-valid-p))
     (message "Run doctest first! (C-c C-c)"))
    (t
     (let ((marker nil) (orig-window (selected-window))
@@ -1187,10 +1195,10 @@ the example's failure description in *doctest-output*."
 example in the source buffer.  Intended for use in the results
 buffer."
   (interactive)
-  (set-buffer doctest-results-buffer)
   (re-search-backward doctest-results-divider-re)
   (let ((old-selected-failure doctest-selected-failure))
     (setq doctest-selected-failure (point))
+    (doctest-fontify-line doctest-selected-failure)
     (doctest-fontify-line old-selected-failure))
   (pop-to-buffer doctest-source-buffer)
   (doctest-next-failure 1))
@@ -1211,7 +1219,7 @@ replacement."
   (cond
    ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
-   ((not (buffer-live-p doctest-results-buffer))
+   ((not (doctest-results-buffer-valid-p))
     (message "Run doctest first! (C-c C-c)"))
    ((save-excursion (set-buffer doctest-results-buffer)
                     doctest-results-are-pre-py24)
@@ -1439,6 +1447,18 @@ easy enough to see them in the original buffer)"
       (replace-match "" nil nil))
     (toggle-read-only t)))
 
+(defun doctest-results-buffer-valid-p ()
+  "Return true if this buffer has a live results buffer; and that
+results buffer reports this buffer as its source buffer.  (Two
+buffers in doctest-mode might point to the same results buffer;
+but only one of them will be equal to that results buffer's
+source buffer."
+  (let ((cur-buf (current-buffer)))
+    (and (buffer-live-p doctest-results-buffer)
+         (save-excursion
+           (set-buffer doctest-results-buffer)
+           (equal cur-buf doctest-source-buffer)))))
+
 (defun doctest-version ()
   "Echo the current version of `doctest-mode' in the minibuffer."
   (interactive)
@@ -1552,14 +1572,15 @@ it's not available."
 
 (defvar doctest-selected-failure nil
   "The location of the currently selected failure.
- (local variable for doctest-results buffers)")
+This variable is uffer-local to doctest-results-mode buffers.")
 
 (defvar doctest-source-buffer nil
-  "The buffer that spawned this one.
- (this *should be* a local variable for doctest-results buffers)")
+  "The buffer that spawned this one.  (local to 
+This variable is uffer-local to doctest-results-mode buffers.")
 
 (defvar doctest-results-are-pre-py24 nil
-  "True if the results are generated by an old version of doctest")
+  "True if the results are generated by an old version of doctest
+This variable is uffer-local to doctest-results-mode buffers.")
 
 ;; Keymap for doctest-results-mode.
 (defconst doctest-results-mode-map 
@@ -1578,6 +1599,7 @@ See `doctest-mode'.
   ;; Set up local variables.
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'doctest-selected-failure)
+  (make-local-variable 'doctest-source-buffer)
   (make-local-variable 'doctest-results-are-pre-py24)
   
   ;; Enable font-lock mode.
@@ -1610,13 +1632,18 @@ See `doctest-mode'.
                               nil nil nil nil)))
   
 (defvar doctest-results-buffer nil
-  "The output buffer for doctest-mode")
+  "The output buffer for doctest-mode.
+ This variable is buffer-local to doctest-mode buffers.")
 
+;; These are global, since we only one run process at a time:
 (defvar doctest-async-process nil
   "The process object created by the asynchronous doctest process")
 
 (defvar doctest-async-process-tempfile nil
   "The name of the tempfile created by the asynchronous doctest process")
+
+(defvar doctest-async-process-buffer nil
+  "The source buffer for the asynchronous doctest process")
 
 (defvar doctest-mode-line-process ""
   "A string displayed on the modeline, to indicate when doctest is
@@ -1684,6 +1711,7 @@ treated differently:
 "
   ;; Set up local variables.
   (make-local-variable 'font-lock-defaults)
+  (make-local-variable 'doctest-results-buffer)
   
   ;; Enable auto-fill mode.
   (auto-fill-mode 1)
