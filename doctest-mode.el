@@ -902,8 +902,7 @@ occured, displays the buffer, and runs doctest-postprocess-results."
                     (if (= num 1) "" "s"))))
         (t
          (display-buffer doctest-results-buffer)
-         (let ((w (get-buffer-window doctest-results-buffer t)))
-           (when w (delete-window w)))
+         (delete-windows-on doctest-results-buffer)
          (message "All doctest examples passed!"))))
          
 (defun doctest-async-process-sentinel (process state)
