@@ -823,13 +823,13 @@ whitespace to the left of the point before inserting a newline.
 *doctest-output* buffer."
   (interactive "r")
   ;; If it's already running, give the user a chance to restart it.
-  (when (process-live-p doctest-async-process)
+  (when (doctest-process-live-p doctest-async-process)
     (when (y-or-n-p "Doctest is already running.  Restart it? ")
       (doctest-cancel-async-process)
       (message "Killing doctest...")
       (while doctest-async-process (sleep-for 0.1))))
   (cond
-   ((and doctest-async (process-live-p doctest-async-process))
+   ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Can't run two doctest processes at once!"))
    (t
     (setq doctest-results-buffer (get-buffer-create
@@ -929,7 +929,7 @@ completes, which calls doctest-handle-output."
 (defun doctest-cancel-async-process ()
   "If a doctest process is running, then kill it."
   (interactive "")
-  (when (process-live-p doctest-async-process)
+  (when (doctest-process-live-p doctest-async-process)
     ;; Update the modeline
     (doctest-update-mode-line ":killing")
     ;; Kill the process.  This will cause the process-sentinel to run,
@@ -1023,7 +1023,7 @@ found, return nil."
 example's failure description in *doctest-output*."
   (interactive "p")
   (cond
-   ((and doctest-async (process-live-p doctest-async-process))
+   ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
    ((not (buffer-live-p doctest-results-buffer))
     (message "Run doctest first! (C-c C-c)"))
@@ -1149,7 +1149,7 @@ replacement."
   (interactive)
   ;; Move to the beginning of the example.
   (cond
-   ((and doctest-async (process-live-p doctest-async-process))
+   ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
    ((not (buffer-live-p doctest-results-buffer))
     (message "Run doctest first! (C-c C-c)"))
@@ -1483,6 +1483,11 @@ it's not available."
         (t
          (1+ (count-lines 1
                (save-excursion (progn (beginning-of-line) (point))))))))
+
+(defun doctest-process-live-p (process)
+  (if (null process)
+      nil
+    (equal (process-status process) 'run)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Syntax Table
