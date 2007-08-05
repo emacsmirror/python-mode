@@ -1112,7 +1112,8 @@ example's failure description in *doctest-output*."
    ((not (doctest-results-buffer-valid-p))
     (message "Run doctest first! (C-c C-c)"))
    (t
-    (let ((marker nil) (orig-window (selected-window))
+    (let ((marker nil) (example-markers doctest-example-markers)
+          (orig-window (selected-window))
           (results-window (display-buffer doctest-results-buffer)))
       (save-excursion
         (set-buffer doctest-results-buffer)
@@ -1135,7 +1136,7 @@ example's failure description in *doctest-output*."
             (let ((orig-lineno (string-to-int (match-string 1))))
               (when (equal doctest-results-py-version 'py21)
                 (setq orig-lineno (+ orig-lineno 1)))
-              (dolist (marker-info doctest-example-markers)
+              (dolist (marker-info example-markers)
                 (when (= orig-lineno (cdr marker-info))
                   (setq marker (car marker-info)))))
               
@@ -1462,6 +1463,14 @@ source buffer."
            (set-buffer doctest-results-buffer)
            (equal cur-buf doctest-source-buffer)))))
 
+(defun doctest-update-mode-line (value)
+  "Update the doctest mode line with the given string value.  This
+is used to display information about asynchronous processes that
+are run by doctest-mode."
+  (setq doctest-mode-line-process
+        value)
+  (force-mode-line-update t))
+
 (defun doctest-version ()
   "Echo the current version of `doctest-mode' in the minibuffer."
   (interactive)
@@ -1638,33 +1647,26 @@ See `doctest-mode'.
   
 (defvar doctest-results-buffer nil
   "The output buffer for doctest-mode.
- This variable is buffer-local to doctest-mode buffers.")
-
-;; These are global, since we only one run process at a time:
-(defvar doctest-async-process nil
-  "The process object created by the asynchronous doctest process")
-
-(defvar doctest-async-process-tempfile nil
-  "The name of the tempfile created by the asynchronous doctest process")
-
-(defvar doctest-async-process-buffer nil
-  "The source buffer for the asynchronous doctest process")
-
-(defvar doctest-mode-line-process ""
-  "A string displayed on the modeline, to indicate when doctest is
-running asynchronously.")
-
-(defun doctest-update-mode-line (value)
-  (setq doctest-mode-line-process
-        value)
-  (force-mode-line-update t))
+This variable is buffer-local to doctest-mode buffers.")
 
 (defvar doctest-example-markers nil
   "A list mapping markers to the line numbers at which they appeared
 in the buffer at the time doctest was last run.  This is used to find
 'original' line numbers, which can be used to search the doctest
 output buffer.  It's encoded as a list of (MARKER . POS) tuples, in
-reverse POS order.")
+reverse POS order.
+This variable is buffer-local to doctest-mode buffers.")
+
+;; These are global, since we only one run process at a time:
+(defvar doctest-async-process nil
+  "The process object created by the asynchronous doctest process")
+(defvar doctest-async-process-tempfile nil
+  "The name of the tempfile created by the asynchronous doctest process")
+(defvar doctest-async-process-buffer nil
+  "The source buffer for the asynchronous doctest process")
+(defvar doctest-mode-line-process ""
+  "A string displayed on the modeline, to indicate when doctest is
+running asynchronously.")
 
 ;; Keymap for doctest-mode.
 (defconst doctest-mode-map 
@@ -1717,6 +1719,7 @@ treated differently:
   ;; Set up local variables.
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'doctest-results-buffer)
+  (make-local-variable 'doctest-example-markers)
   
   ;; Enable auto-fill mode.
   (auto-fill-mode 1)
