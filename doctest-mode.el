@@ -982,12 +982,15 @@ completes, which calls doctest-handle-output."
   ;; set doctest-async-process to nil when we're done).
   (when (and (equal process doctest-async-process)
              (buffer-live-p doctest-async-process-buffer))
-    (save-excursion
+    (save-current-buffer
       (set-buffer doctest-async-process-buffer)
       (cond ((not (buffer-live-p doctest-results-buffer))
              (doctest-warn "Results buffer not found!"))
             ((equal state "finished\n")
-             (doctest-handle-output))
+             (doctest-handle-output)
+             (let ((window (get-buffer-window
+                            doctest-async-process-buffer t)))
+               (when window (set-window-point window (point)))))
             ((equal state "killed\n")
              (message "Doctest killed."))
             (t
