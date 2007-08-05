@@ -826,8 +826,7 @@ whitespace to the left of the point before inserting a newline.
   (when (doctest-process-live-p doctest-async-process)
     (when (y-or-n-p "Doctest is already running.  Restart it? ")
       (doctest-cancel-async-process)
-      (message "Killing doctest...")
-      (while doctest-async-process (sleep-for 0.1))))
+      (message "Killing doctest...")))
   (cond
    ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Can't run two doctest processes at once!"))
@@ -911,20 +910,26 @@ occured, displays the buffer, and runs doctest-postprocess-results."
 (defun doctest-async-process-sentinel (process state)
   "A process sentinel, called when the asynchronous doctest process
 completes, which calls doctest-handle-output."
-  (cond ((not (buffer-live-p doctest-results-buffer))
-         (message "Results buffer not found!"))
-        ((equal state "finished\n")
-         (doctest-handle-output))
-        ((equal state "killed\n")
-         (message "Doctest killed."))
-        (t
-         (message "Doctest failed -- %s" state)
-         (display-buffer doctest-results-buffer)))
-  (doctest-update-mode-line "")
-  (when doctest-async-process-tempfile
-    (delete-file doctest-async-process-tempfile)
-    (setq doctest-async-process-tempfile nil))
-  (setq doctest-async-process nil))
+  ;; Check to make sure we got the process we're expecting.  On
+  ;; some operating systems, this will end up getting called twice
+  ;; when we use doctest-cancel-async-process; this check keeps us
+  ;; from trying to clean up after the same process twice (since we
+  ;; set doctest-async-process to nil when we're done).
+  (when (equal process doctest-async-process)
+    (cond ((not (buffer-live-p doctest-results-buffer))
+           (message "Results buffer not found!"))
+          ((equal state "finished\n")
+           (doctest-handle-output))
+          ((equal state "killed\n")
+           (message "Doctest killed."))
+          (t
+           (message "Doctest failed -- %s" state)
+           (display-buffer doctest-results-buffer)))
+    (doctest-update-mode-line "")
+    (when doctest-async-process-tempfile
+      (delete-file doctest-async-process-tempfile)
+      (setq doctest-async-process-tempfile nil))
+    (setq doctest-async-process nil)))
 
 (defun doctest-cancel-async-process ()
   "If a doctest process is running, then kill it."
@@ -932,9 +937,12 @@ completes, which calls doctest-handle-output."
   (when (doctest-process-live-p doctest-async-process)
     ;; Update the modeline
     (doctest-update-mode-line ":killing")
-    ;; Kill the process.  This will cause the process-sentinel to run,
-    ;; which will clean up for us.
-    (kill-process doctest-async-process)))
+    ;; Kill the process.
+    (kill-process doctest-async-process)
+    ;; Run the sentinel.  (Depending on what OS we're on, the sentinel
+    ;; may end up getting called once or twice.)
+    (doctest-async-process-sentinel doctest-async-process "killed\n")
+    ))
 
 (defun doctest-postprocess-results ()
   (save-excursion
