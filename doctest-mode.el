@@ -1308,12 +1308,11 @@ line.  This is used to highlight the currently selected failure."
 (put 'doctest-results-mode 'font-lock-defaults 
      '(doctest-results-font-lock-keywords))
 
-;; Register the font-lock keywords (gnu emacs)
+;; Register the font-lock keywords (older versions of gnu emacs)
 (when (boundp 'font-lock-defaults-alist)
   (add-to-list 'font-lock-defaults-alist
-               '(doctest-results-mode 
-		 doctest-results-font-lock-keywords 
-		 nil nil nil nil)))
+               '(doctest-results-mode doctest-results-font-lock-keywords 
+                                      nil nil nil nil)))
 
 (defvar doctest-selected-failure nil
   "The location of the currently selected failure.
@@ -1339,11 +1338,22 @@ See `doctest-mode'.
 
 \\{doctest-results-mode-map}
 "
+  ;; Set up local variables.
+  (make-local-variable 'font-lock-defaults)
+  (make-local-variable 'doctest-selected-failure)
+  (make-local-variable 'doctest-results-are-pre-py24)
+  
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
-  ;; Keep track of which failure is selected
-  (set (make-local-variable 'doctest-selected-failure) nil)
-  (set (make-local-variable 'doctest-results-are-pre-py24) nil)
+  (set font-lock-defaults '(doctest-results-font-lock-keywords
+                            nil nil nil nil))
+  
+  ;; The location of the most recently selected failure:
+  (setq doctest-selected-failure nil)
+  
+  ;; The version of doctest that was used:
+  (setq doctest-results-are-pre-24 nil)
+  
   ;; Display doctest-mode-line-process on the modeline.
   (setq mode-line-process 'doctest-mode-line-process)
   )
@@ -1552,12 +1562,11 @@ it's not available."
 (put 'doctest-mode 'font-lock-defaults '(doctest-font-lock-keywords
                                          nil nil nil nil))
 
-;; Register the font-lock keywords (gnu emacs)
+;; Register the font-lock keywords (older versions of gnu emacs)
 (when (boundp 'font-lock-defaults-alist)
-  (setq font-lock-defaults-alist
-        (append font-lock-defaults-alist
-                `((doctest-mode doctest-font-lock-keywords
-                                nil nil nil nil)))))
+  (add-to-list 'font-lock-defaults-alist
+               '(doctest-mode doctest-font-lock-keywords
+                              nil nil nil nil)))
   
 (defvar doctest-results-buffer nil
   "The output buffer for doctest-mode")
@@ -1611,12 +1620,16 @@ treated differently:
 
 \\{doctest-mode-map}
 "
+  ;; Set up local variables.
+  (make-local-variable 'font-lock-defaults)
+  
   ;; Enable auto-fill mode.
   (auto-fill-mode 1)
   (setq auto-fill-function 'doctest-do-auto-fill)
 
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
+  (set font-lock-defaults '(doctest-font-lock-keywords nil nil nil nil))
   
   ;; Display doctest-mode-line-process on the modeline.
   (setq mode-line-process 'doctest-mode-line-process)
