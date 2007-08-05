@@ -157,6 +157,13 @@ is responding slowly when you type, turning this off might help."
   :type 'boolean
   :group 'doctest)
 
+(defcustom doctest-follow-output t
+  "If true, then when doctest is run asynchronously, the output buffer
+will scroll to display its output as it is generated.  If false, then
+the output buffer not scroll."
+  :type 'boolean
+  :group 'doctest)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Fonts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -340,7 +347,7 @@ that matches `doctest-outdent-re', but does not follow a line matching
           "    r.run(test)\n"
           "else:\n"
           "    Tester(globs={}).runstring(doc, '%s')\n"
-          "print\n";; <- so the buffer won't be empty
+;;;          "print\n";; <- so the buffer won't be empty
           )
   "Python script used to run doctest.  It takes the following arguments,
 supplied by `format': TEMPFILE, BUFFER-NAME, BUFFER-FILE-NAME, FLAGS,
@@ -938,11 +945,26 @@ whitespace to the left of the point before inserting a newline.
              (let ((process (start-process "*doctest*" doctest-results-buffer
                                            doctest-python-command
                                            "-c" script)))
+               ;; Store some information about the process.
                (setq doctest-async-process-tempfile tempfile)
                (setq doctest-async-process-buffer cur-buf)
                (setq doctest-async-process process)
+               
+               ;; Set up a sentinel to respond when it's done running.
                (set-process-sentinel process 'doctest-async-process-sentinel)
-               (display-buffer doctest-results-buffer)
+
+               ;; Show the output window.
+               (let ((w (display-buffer doctest-results-buffer)))
+                 (when doctest-follow-output
+                   ;; Insert a newline, which will move the buffer's
+                   ;; point past the process's mark -- this causes the
+                   ;; window to scroll as new output is generated.
+                   (save-current-buffer
+                     (set-buffer doctest-results-buffer)
+                     (insert-string "\n")
+                     (set-window-point w (point)))))
+
+               ;; Let the user know the process is running.
                (doctest-update-mode-line ":running")
                (message "Running doctest...")))
             (t
