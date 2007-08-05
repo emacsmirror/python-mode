@@ -822,8 +822,14 @@ whitespace to the left of the point before inserting a newline.
   "Run doctest on the current buffer, and display the results in the 
 *doctest-output* buffer."
   (interactive "r")
+  ;; If it's already running, give the user a chance to restart it.
+  (when (process-live-p doctest-async-process)
+    (when (y-or-n-p "Doctest is already running.  Restart it? ")
+      (doctest-cancel-async-process)
+      (message "Killing doctest...")
+      (while doctest-async-process (sleep-for 0.1))))
   (cond
-   ((and doctest-async doctest-async-process-tempfile)
+   ((and doctest-async (process-live-p doctest-async-process))
     (message "Can't run two doctest processes at once!"))
    (t
     (setq doctest-results-buffer (get-buffer-create
@@ -869,24 +875,24 @@ whitespace to the left of the point before inserting a newline.
                                            doctest-python-command
                                            "-c" script)))
                (setq doctest-async-process-tempfile tempfile)
+               (setq doctest-async-process process)
                (set-process-sentinel process 'doctest-async-process-sentinel)
                (display-buffer doctest-results-buffer)
+               (doctest-update-mode-line ":running")
                (message "Running doctest...")))
             (t
              ;; Synchronous mode:
              (call-process doctest-python-command nil
                            doctest-results-buffer t "-c" script)
-             (doctest-handle-output tempfile)))))))
+             (doctest-handle-output)
+             (delete-file tempfile)))))))
 
-(defun doctest-handle-output (tempfile)  
+(defun doctest-handle-output ()
   "This function, which is called after the 'doctest' process spawned
-by doctest-execute-buffer has finished, deletes the tempfile and
-checks the doctest-results-buffer.  If that buffer is empty, it
-reports no errors and deletes it; if that buffer is not empty, it
-reports that errors occured, displays the buffer, and runs
-doctest-postprocess-results."
-  ;; Delete the temp file
-  (delete-file tempfile)
+by doctest-execute-buffer has finished, checks the
+doctest-results-buffer.  If that buffer is empty, it reports no errors
+and deletes it; if that buffer is not empty, it reports that errors
+occured, displays the buffer, and runs doctest-postprocess-results."
   ;; If any tests failed, display them.
   (cond ((not (buffer-live-p doctest-results-buffer))
          (message "Results buffer not found!"))
@@ -907,14 +913,28 @@ doctest-postprocess-results."
 completes, which calls doctest-handle-output."
   (cond ((not (buffer-live-p doctest-results-buffer))
          (message "Results buffer not found!"))
-        ((not (equal state "finished\n"))
+        ((equal state "finished\n")
+         (doctest-handle-output))
+        ((equal state "killed\n")
+         (message "Doctest killed."))
+        (t
          (message "Doctest failed -- %s" state)
-         (display-buffer doctest-results-buffer))
-        (doctest-async-process-tempfile
-         (let ((tempfile doctest-async-process-tempfile))
-           (setq doctest-async-process-tempfile nil)
-           (doctest-handle-output tempfile))))
-  (setq doctest-async-process-tempfile nil))
+         (display-buffer doctest-results-buffer)))
+  (doctest-update-mode-line "")
+  (when doctest-async-process-tempfile
+    (delete-file doctest-async-process-tempfile)
+    (setq doctest-async-process-tempfile nil))
+  (setq doctest-async-process nil))
+
+(defun doctest-cancel-async-process ()
+  "If a doctest process is running, then kill it."
+  (interactive "")
+  (when (process-live-p doctest-async-process)
+    ;; Update the modeline
+    (doctest-update-mode-line ":killing")
+    ;; Kill the process.  This will cause the process-sentinel to run,
+    ;; which will clean up for us.
+    (kill-process doctest-async-process)))
 
 (defun doctest-postprocess-results ()
   (save-excursion
@@ -1003,7 +1023,7 @@ found, return nil."
 example's failure description in *doctest-output*."
   (interactive "p")
   (cond
-   ((and doctest-async doctest-async-process-tempfile)
+   ((and doctest-async (process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
    ((not (buffer-live-p doctest-results-buffer))
     (message "Run doctest first! (C-c C-c)"))
@@ -1129,7 +1149,7 @@ replacement."
   (interactive)
   ;; Move to the beginning of the example.
   (cond
-   ((and doctest-async doctest-async-process-tempfile)
+   ((and doctest-async (process-live-p doctest-async-process))
     (message "Wait for doctest to finish running!"))
    ((not (buffer-live-p doctest-results-buffer))
     (message "Run doctest first! (C-c C-c)"))
@@ -1320,6 +1340,8 @@ See `doctest-mode'.
   ;; Keep track of which failure is selected
   (set (make-local-variable 'doctest-selected-failure) nil)
   (set (make-local-variable 'doctest-results-are-pre-py24) nil)
+  ;; Display doctest-mode-line-process on the modeline.
+  (setq mode-line-process 'doctest-mode-line-process)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1522,8 +1544,20 @@ it's not available."
 (defvar doctest-results-buffer nil
   "The output buffer for doctest-mode")
 
+(defvar doctest-async-process nil
+  "The process object created by the asynchronous doctest process")
+
 (defvar doctest-async-process-tempfile nil
   "The name of the tempfile created by the asynchronous doctest process")
+
+(defvar doctest-mode-line-process ""
+  "A string displayed on the modeline, to indicate when doctest is
+running asynchronously.")
+
+(defun doctest-update-mode-line (value)
+  (setq doctest-mode-line-process
+        value)
+  (force-mode-line-update t))
 
 (defvar doctest-example-markers nil
   "A list mapping markers to the line numbers at which they appeared
@@ -1568,6 +1602,10 @@ treated differently:
   ;; Register our indentation function.
   (set (make-local-variable 'indent-line-function) 
        'doctest-indent-source-line)
+
+  ;; Display doctest-mode-line-process on the modeline.
+  (setq mode-line-process 'doctest-mode-line-process)
+
   )
 
 (provide 'doctest-mode)
