@@ -964,7 +964,7 @@ and deletes it; if that buffer is not empty, it reports that errors
 occured, displays the buffer, and runs doctest-postprocess-results."
   ;; If any tests failed, display them.
   (cond ((not (buffer-live-p doctest-results-buffer))
-         (message "Results buffer not found!"))
+         (doctest-warn "Results buffer not found!"))
         ((> (buffer-size doctest-results-buffer) 1)
          (display-buffer doctest-results-buffer)
          (doctest-postprocess-results)
@@ -986,7 +986,7 @@ completes, which calls doctest-handle-output."
   ;; set doctest-async-process to nil when we're done).
   (when (equal process doctest-async-process)
     (cond ((not (buffer-live-p doctest-results-buffer))
-           (message "Results buffer not found!"))
+           (doctest-warn "Results buffer not found!"))
           ((equal state "finished\n")
            (doctest-handle-output))
           ((equal state "killed\n")
