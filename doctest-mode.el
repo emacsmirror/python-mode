@@ -1032,7 +1032,6 @@ completes, which calls doctest-handle-output."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Markers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; [xx] todo: delete markers when we're done w/ them (set buffer=nil)
 
 (defun doctest-mark-examples ()
   "Add a marker at the beginning of every (likely) example in the
@@ -1040,6 +1039,8 @@ input buffer; and create a list, `doctest-example-markers',
 which maps from markers to the line numbers they originally occured
 on.  This will allow us to find the corresponding example in the
 doctest output, even if the input buffer is edited."
+  (dolist (marker-info doctest-example-markers)
+    (set-marker (car marker-info) nil))
   (setq doctest-example-markers '())
   (save-excursion
     (goto-char (point-min))
@@ -1060,11 +1061,14 @@ correspond to a failed example."
           (when doctest-results-are-pre-py24
             (setq lineno (+ lineno 1)))
           (while (and markers (< lineno (cdar markers)))
+            (set-marker (caar markers) nil)
             (setq markers (cdr markers)))
           (if (and markers (= lineno (cdar markers)))
-              (push (car markers) filtered)
+              (push (pop markers) filtered)
             (warn "Example expected on line %d but not found %s" lineno
                   markers)))))
+    (dolist (marker-info markers)
+      (set-marker (car marker-info) nil))
     (setq doctest-example-markers filtered)))
                        
 (defun doctest-prev-example-marker ()
@@ -1614,7 +1618,8 @@ running asynchronously.")
   "A list mapping markers to the line numbers at which they appeared
 in the buffer at the time doctest was last run.  This is used to find
 'original' line numbers, which can be used to search the doctest
-output buffer.")
+output buffer.  It's encoded as a list of (MARKER . POS) tuples, in
+reverse POS order.")
 
 ;; Keymap for doctest-mode.
 (defconst doctest-mode-map 
