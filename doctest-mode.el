@@ -66,7 +66,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
   :type 'string
   :group 'doctest)
 
-(defcustom hide-example-source nil
+(defcustom doctest-hide-example-source nil
   "If true, then don't display the example source code for each 
 failure in the results buffer."
   :type 'boolean
@@ -425,8 +425,8 @@ BUFFER-FILE-NAME.")
   "A `font-lock-keyword' MATCHER that returns t if the current 
 line is the expected output for a doctest example, and if so, 
 sets `match-data' so that group 0 spans the current line."
-  ;; The real work is done by find-doctest-output-line.
-  (when (find-doctest-output-line limit)
+  ;; The real work is done by doctest-find-output-line.
+  (when (doctest-find-output-line limit)
     ;; If we found one, then mark the entire line.
     (beginning-of-line)
     (re-search-forward "[^\n]*" limit)))
@@ -606,10 +606,10 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
   (save-excursion
     (end-of-line)
     (let ((end (point)))
-      (while (and (on-doctest-source-line "...") (= (forward-line -1) 0)))
+      (while (and (doctest-on-source-line-p "...") (= (forward-line -1) 0)))
       (cond
        ;; If there's no previous >>> line, then give up.
-       ((not (on-doctest-source-line ">>>"))
+       ((not (doctest-on-source-line-p ">>>"))
         '(0 nil nil nil nil))
        
        ;; If there is a previous statement, walk through the source
@@ -696,7 +696,7 @@ copied from the most recent source line, or set to
   (save-excursion
     (beginning-of-line)
     (forward-line -1)
-    (while (and (not (on-doctest-source-line))
+    (while (and (not (doctest-on-source-line-p))
                 (re-search-backward doctest-prompt-re nil t)))
     (if (looking-at doctest-prompt-re)
         (- (match-end 1) (match-beginning 1))
@@ -780,15 +780,15 @@ whitespace to the left of the point before inserting a newline.
       (delete-char (- (skip-chars-backward " \t"))))     
   (cond 
    ;; If we're on an empty prompt, delete it.
-   ((on-empty-doctest-source-line)
+   ((doctest-on-empty-source-line-p)
     (delete-region (match-beginning 0) (match-end 0))
     (insert-char ?\n 1))
    ;; If we're on a doctest line, add a new prompt.
-   ((on-doctest-source-line)
+   ((doctest-on-source-line-p)
     (insert-char ?\n 1)
     (doctest-indent-source-line))
    ;; If we're in doctest output, indent to the margin.
-   ((on-doctest-output-line)
+   ((doctest-on-output-line-p)
     (insert-char ?\n 1)
     (insert-char ?\  (doctest-current-source-line-margin)))
    ;; Otherwise, just add a newline.
@@ -798,7 +798,7 @@ whitespace to the left of the point before inserting a newline.
   "Insert a colon, and dedent the line when appropriate."
   (interactive "*")
   (insert-char ?: 1)
-  (when (on-doctest-source-line)
+  (when (doctest-on-source-line-p)
     (doctest-indent-source-line t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -954,8 +954,8 @@ completes, which calls doctest-handle-output."
     (toggle-read-only t))
   
   (doctest-filter-example-markers)
-  (if hide-example-source
-      (hide-example-source))
+  (if doctest-hide-example-source
+      (doctest-hide-example-source))
   (if (eq (current-buffer) doctest-source-buffer)
       (doctest-next-failure 1)))
 
@@ -1107,7 +1107,7 @@ the example's failure description in *doctest-output*."
           (doctest-fontify-line old-selected-failure))))
   (doctest-next-failure -1))
 
-(defun hide-example-source ()
+(defun doctest-hide-example-source ()
   "Delete the source code listings from the results buffer (since it's
 easy enough to see them in the original buffer)"
   (save-excursion
@@ -1309,12 +1309,11 @@ line.  This is used to highlight the currently selected failure."
      '(doctest-results-font-lock-keywords))
 
 ;; Register the font-lock keywords (gnu emacs)
-(defvar font-lock-defaults-alist nil) ; in case we're in xemacs
-(setq font-lock-defaults-alist
-      (append font-lock-defaults-alist
-              `((doctest-results-mode 
+(when (boundp 'font-lock-defaults-alist)
+  (add-to-list 'font-lock-defaults-alist
+               '(doctest-results-mode 
 		 doctest-results-font-lock-keywords 
-		 nil nil nil nil))))
+		 nil nil nil nil)))
 
 (defvar doctest-selected-failure nil
   "The location of the currently selected failure.
@@ -1353,7 +1352,7 @@ See `doctest-mode'.
 ;; Helper functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun on-doctest-source-line (&optional prompt)
+(defun doctest-on-source-line-p (&optional prompt)
   "Return true if the current line is a source line.  The optional
 argument prompt can be used to specify which type of source
 line (... or >>>)."
@@ -1369,27 +1368,27 @@ line (... or >>>)."
         (forward-line -1))
       (looking-at "^[ \t]*>>>"))))
 
-(defun on-empty-doctest-source-line ()
+(defun doctest-on-empty-source-line-p ()
   "Return true if the current line contains a bare prompt."
   (save-excursion
     (beginning-of-line)
-    (and (on-doctest-source-line)
+    (and (doctest-on-source-line-p)
          (looking-at (concat doctest-prompt-re "$")))))
 
-(defun on-doctest-output-line ()
+(defun doctest-on-output-line-p ()
   "Return true if the current line is an output line."
   (save-excursion
     (beginning-of-line)
     ;; The line must not be blank or a source line.
-    (when (not (or (on-doctest-source-line) (looking-at "[ \t]*$")))
+    (when (not (or (doctest-on-source-line-p) (looking-at "[ \t]*$")))
       ;; The line must follow a source line, with no intervening blank
       ;; lines.
-      (while (not (or (on-doctest-source-line) (looking-at "[ \t]*$")
+      (while (not (or (doctest-on-source-line-p) (looking-at "[ \t]*$")
                       (= (point) (point-min))))
         (forward-line -1))
-      (on-doctest-source-line))))
+      (doctest-on-source-line-p))))
 
-(defun find-doctest-output-line (&optional limit)
+(defun doctest-find-output-line (&optional limit)
   "Move forward to the next doctest output line (staying within
 the given bounds).  Return the character position of the doctest
 output line if one was found, and false otherwise."
@@ -1399,7 +1398,7 @@ output line if one was found, and false otherwise."
       ;; Keep moving forward, one line at a time, until we find a
       ;; doctest output line.
       (while (and (not found-it) (< (point) limit) (not (eobp)))
-	(if (and (not (eolp)) (on-doctest-output-line))
+	(if (and (not (eolp)) (doctest-on-output-line-p))
 	    (setq found-it (point))
 	  (forward-line))))
     ;; If we found a doctest output line, then go to it.
@@ -1497,9 +1496,9 @@ it's not available."
 (defun doctest-do-auto-fill ()
   (cond
    ;; Don't wrap source lines.
-   ((on-doctest-source-line) nil)
+   ((doctest-on-source-line-p) nil)
    ;; Don't wrap output lines
-   ((on-doctest-output-line) nil)
+   ((doctest-on-output-line-p) nil)
    ;; Wrap all other lines
    (t (do-auto-fill))))
 
