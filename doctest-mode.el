@@ -1521,6 +1521,7 @@ it's not available."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Doctest Results Mode (output of doctest-execute-buffer)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; [xx] consider what should be local or not.
 
 ;; Register the font-lock keywords (xemacs)
 (put 'doctest-results-mode 'font-lock-defaults 
@@ -1564,8 +1565,8 @@ See `doctest-mode'.
   
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
-  (set font-lock-defaults '(doctest-results-font-lock-keywords
-                            nil nil nil nil))
+  (setq font-lock-defaults '(doctest-results-font-lock-keywords
+                             nil nil nil nil))
   
   ;; The location of the most recently selected failure:
   (setq doctest-selected-failure nil)
@@ -1672,7 +1673,7 @@ treated differently:
 
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
-  (set font-lock-defaults '(doctest-font-lock-keywords nil nil nil nil))
+  (setq font-lock-defaults '(doctest-font-lock-keywords nil nil nil nil))
   
   ;; Display doctest-mode-line-process on the modeline.
   (setq mode-line-process 'doctest-mode-line-process)
