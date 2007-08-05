@@ -547,17 +547,18 @@ very large statements."
   (let* ((stmt-info (doctest-statement-info))
          (quotes (reverse (nth 5 stmt-info)))
          (result nil))
-    (if debug (warn "quotes %s" quotes))
+    (if debug (doctest-debug "quotes %s" quotes))
     (while (and quotes (null result))
       (let* ((quote (pop quotes))
              (start (car quote))
              (end (min limit (or (cdr quote) limit))))
-        (if debug (warn "quote %s-%s pt=%s lim=%s" start end (point) limit))
+        (if debug (doctest-debug "quote %s-%s pt=%s lim=%s"
+                                 start end (point) limit))
         (when (or (and (<= (point) start) (< start limit))
                   (and (< start (point)) (< (point) end)))
           (setq start (max start (point)))
           (set-match-data (list start end))
-          (if debug (warn "marking string %s" (match-data)))
+          (if debug (doctest-debug "marking string %s" (match-data)))
           (goto-char end)
           (setq result t))))
     result))
@@ -700,7 +701,7 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
           (while (re-search-forward elt-re end t)
             (let* ((elt (match-string 0))
                    (elt-first-char (substring elt 0 1)))
-              (if debug (warn "Debug: %s" elt))
+              (if debug (doctest-debug "Debug: %s" elt))
               (cond
                ;; Close quote -- set quote-mark back to nil.  The
                ;; second case is for cases like: '  '''
@@ -756,7 +757,7 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
                   (list stmt-indent continuation-indent
                         stmt-opens-block stmt-closes-block
                         stmt-blocks-outdent quotes)))
-            (if debug (warn "Debug: %s" result))
+            (if debug (doctest-debug "Debug: %s" result))
             result)))))))
 
 (defun doctest-current-source-line-margin ()
@@ -1065,8 +1066,8 @@ correspond to a failed example."
             (setq markers (cdr markers)))
           (if (and markers (= lineno (cdar markers)))
               (push (pop markers) filtered)
-            (warn "Example expected on line %d but not found %s" lineno
-                  markers)))))
+            (doctest-warn "Example expected on line %d but not found %s"
+                          lineno markers)))))
     (dolist (marker-info markers)
       (set-marker (car marker-info) nil))
     (setq doctest-example-markers filtered)))
@@ -1449,6 +1450,18 @@ easy enough to see them in the original buffer)"
 ;; Many of these are defined for compatibility reasons.  E.g., if
 ;; they are available under different names depending on the emacs
 ;; version.
+
+(defun doctest-warn (msg &rest args)
+  "Display a doctest warning message."
+  (if (fboundp 'display-warning)
+      (display-warning 'doctest (apply 'format msg args))
+    (apply 'message msg args)))
+
+(defun doctest-debug (msg &rest args)
+  "Display a doctest debug message."
+  (if (fboundp 'display-warning)
+      (display-warning 'doctest (apply 'format msg args) 'debug)
+    (apply 'message msg args)))
 
 (defvar doctest-serial-number 0) ;used if broken-temp-names.
 (defun doctest-temp-name ()
