@@ -1160,7 +1160,7 @@ replacement."
     (message "Run doctest first! (C-c C-c)"))
    ((save-excursion (set-buffer doctest-results-buffer)
                     doctest-results-are-pre-py24)
-    (error "doctest-replace-output requires python 2.4+."))
+    (error "doctest-replace-output requires python 2.4+"))
    (t
     (save-excursion
       (let* ((orig-buffer (current-buffer))
@@ -1233,7 +1233,7 @@ replacement."
                          (not (equal (buffer-substring start end)
                                      doctest-expected)))
                 (error (concat "This example's output has been modified "
-                               "since doctest was last run.")))
+                               "since doctest was last run")))
               (setq doctest-expected (buffer-substring start end))
               (goto-char end))
 
@@ -1609,10 +1609,6 @@ treated differently:
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
   
-  ;; Register our indentation function.
-  (set (make-local-variable 'indent-line-function) 
-       'doctest-indent-source-line)
-
   ;; Display doctest-mode-line-process on the modeline.
   (setq mode-line-process 'doctest-mode-line-process)
 
