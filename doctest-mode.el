@@ -665,7 +665,7 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
                     (if at-eol
                         (setq indent (+ 4 (- (match-end 3) (match-end 2))))
                       (setq indent (- elt-pos (match-end 2))))
-                    (push indent indent-stack)
+                    (push indent indent-stack)))
                 (setq nesting (+ nesting 1)))
                ;; Close paren -- decrement nesting, and pop indent-stack.
                ((string-match ")\\|\\]\\|}" elt-first-char)
