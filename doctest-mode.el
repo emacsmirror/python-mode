@@ -1494,6 +1494,15 @@ it's not available."
       nil
     (equal (process-status process) 'run)))
 
+(defun doctest-do-auto-fill ()
+  (cond
+   ;; Don't wrap source lines.
+   ((on-doctest-source-line) nil)
+   ;; Don't wrap output lines
+   ((on-doctest-output-line) nil)
+   ;; Wrap all other lines
+   (t (do-auto-fill))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Syntax Table
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1605,6 +1614,7 @@ treated differently:
 "
   ;; Enable auto-fill mode.
   (auto-fill-mode 1)
+  (setq auto-fill-function 'doctest-do-auto-fill)
 
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
