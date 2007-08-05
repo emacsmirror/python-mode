@@ -1108,12 +1108,9 @@ example's failure description in *doctest-output*."
     (message "Run doctest first! (C-c C-c)"))
    (t
     (let ((marker nil) (example-markers doctest-example-markers)
-          (orig-window (selected-window))
           (results-window (display-buffer doctest-results-buffer)))
       (save-excursion
         (set-buffer doctest-results-buffer)
-        ;; Switch to the results window (so its point gets updated)
-        (if results-window (select-window results-window))
         ;; Pick up where we left off.
         ;; (nb: doctest-selected-failure is buffer-local)
         (goto-char (or doctest-selected-failure (point-min)))
@@ -1135,16 +1132,15 @@ example's failure description in *doctest-output*."
                 (when (= orig-lineno (cdr marker-info))
                   (setq marker (car marker-info)))))
               
-            ;; Store our position for next time.
+            ;; Update the window cursor.
             (beginning-of-line)
+            (set-window-point results-window (point))
+            ;; Store our position for next time.
             (setq doctest-selected-failure (point))
             ;; Update selection.
             (doctest-fontify-line old-selected-failure)
             (doctest-fontify-line doctest-selected-failure))))
       
-      ;; Return to the original window
-      (select-window orig-window)
-
       (cond
        ;; We found a failure -- move point to the selected failure.
        (marker
