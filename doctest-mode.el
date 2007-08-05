@@ -22,11 +22,6 @@
 ;; command.  For more information, see the Python library reference:
 ;; <http://docs.python.org/lib/module-doctest.html>
 
-;; Known bugs:
-;; - Some places assume prompts are 4 chars (but they can be 3
-;;   if they're bare).
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Table of Contents
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
