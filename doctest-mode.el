@@ -665,7 +665,7 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
                     (if at-eol
                         (setq indent (+ 4 (- (match-end 3) (match-end 2))))
                       (setq indent (- elt-pos (match-end 2))))
-                    (setq indent-stack (cons indent indent-stack))))
+                    (push indent indent-stack)
                 (setq nesting (+ nesting 1)))
                ;; Close paren -- decrement nesting, and pop indent-stack.
                ((string-match ")\\|\\]\\|}" elt-first-char)
@@ -673,8 +673,7 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
                 (setq nesting (max 0 (- nesting 1))))
                ;; Open quote -- set quote-mark.
                ((string-match "\"\\|\'" elt-first-char)
-                (setq quotes (cons (cons (- (point) (length elt)) nil)
-                                   quotes))
+                (push (cons (- (point) (length elt)) nil) quotes)
                 (setq quote-mark elt)))))
         
           (let* ((continuation-indent
@@ -981,9 +980,8 @@ doctest output, even if the input buffer is edited."
     (goto-char (point-min))
     (while (re-search-forward "^ *>>> " nil t)
       (backward-char 4)
-      (setq doctest-example-markers
-            (cons (cons (point-marker) (doctest-line-number))
-                    doctest-example-markers)))))
+      (push (cons (point-marker) (doctest-line-number))
+            doctest-example-markers))))
 
 (defun doctest-filter-example-markers ()
   "Remove any entries from `doctest-example-markers' that do not
@@ -999,7 +997,7 @@ correspond to a failed example."
           (while (and markers (< lineno (cdar markers)))
             (setq markers (cdr markers)))
           (if (and markers (= lineno (cdar markers)))
-              (setq filtered (cons (car markers) filtered))
+              (push (car markers) filtered)
             (warn "Example expected on line %d but not found %s" lineno
                   markers)))))
     (setq doctest-example-markers filtered)))
