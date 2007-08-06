@@ -116,9 +116,13 @@ failure in the results buffer."
   :type 'string
   :group 'doctest)
 
-(defcustom doctest-results-buffer-name "*doctest-output*"
+(defcustom doctest-results-buffer-name "*doctest-output (%N)*"
   "The name of the buffer used to store the output of the doctest
-command."
+command.  This name can contain the following special sequences:
+  %n -- replaced by the doctest buffer's name.
+  %N -- replaced by the doctest buffer's name, with '.doctest'
+        stripped off.
+  %f -- replaced by the doctest buffer's filename."
   :type 'string
   :group 'doctest)
 
@@ -903,9 +907,8 @@ whitespace to the left of the point before inserting a newline.
    ((and doctest-async (doctest-process-live-p doctest-async-process))
     (message "Can't run two doctest processes at once!"))
    (t
-    (setq doctest-results-buffer (get-buffer-create
-                                  doctest-results-buffer-name))
-    (let* ((temp (concat (doctest-temp-name) ".py"))
+    (let* ((results-buf-name (doctest-results-buffer-name))
+           (temp (concat (doctest-temp-name) ".py"))
            (tempfile (expand-file-name temp doctest-temp-directory))
            (cur-buf (current-buffer))
            (in-buf (get-buffer-create "*doctest-input*"))
@@ -926,8 +929,9 @@ whitespace to the left of the point before inserting a newline.
           (write-file tempfile)
           ;; Dispose of the buffer
           (kill-buffer in-buf)))
-      ;; Clear out the results buffer, if it contains anything;
-      ;; and set its mode.
+      ;; Prepare the results buffer.  Clear it, if it contains
+      ;; anything, and set its mode.
+      (setq doctest-results-buffer (get-buffer-create results-buf-name))
       (save-excursion
         (set-buffer doctest-results-buffer)
         (toggle-read-only 0)
@@ -1456,6 +1460,19 @@ doctest was used"
     doctest-py24-results-loc-re)
    (t (error "bad value for doctest-results-py-version"))))
 
+(defun doctest-results-buffer-name ()
+  "Return the buffer name that should be used for the doctest results
+buffer.  This is computed from the variable
+`doctest-results-buffer-name'."
+  (doctest-replace-regexp-in-string
+   "%[nfN]"
+   (lambda (sym)
+     (cond ((equal sym "%n") (buffer-name))
+           ((equal sym "%N") (doctest-replace-regexp-in-string
+                              "[.]doctest$" "" (buffer-name) t))
+           ((equal sym "%f") (buffer-file-name))))
+   doctest-results-buffer-name t))
+
 (defun doctest-hide-example-source ()
   "Delete the source code listings from the results buffer (since it's
 easy enough to see them in the original buffer)"
@@ -1545,18 +1562,25 @@ position."
         (let ((beg (progn (beginning-of-line) (point)))
               (end (progn (end-of-line) (point))))
           (font-lock-fontify-region beg end)))))
-  
-(defun doctest-replace-regexp-in-string (regexp replacement text)
-  "Return the result of replacing all mtaches of REGEXP with
-REPLACEMENT in TEXT.  (Since replace-regexp-in-string is not available
-under all versions of emacs, and is called different names in
-different versions, this compatibility function will emulate it if
-it's not available."
-  (let ((start 0) (repl-len (length replacement)))
-    (while (string-match regexp text start)
-      (setq start (+ (match-beginning 0) repl-len 1))
-      (setq text (replace-match replacement t nil text)))
-    text))
+
+;; Backwards compatibility: make sure replace-regexp-in-string is
+;; defined.
+(cond ((fboundp 'replace-regexp-in-string)
+       (defalias 'doctest-replace-regexp-in-string 'replace-regexp-in-string))
+      (t ;; XEmacs 21.x or Emacs 20.x
+       (defun doctest-replace-regexp-in-string
+         (regexp rep string &optional fixedcase literal)
+         "Replace all matches for REGEXP with REP in STRING."
+         (let ((start 0))
+           (while (and (< start (length string))
+                       (string-match regexp string start))
+             (let ((newtext (if (functionp rep)
+                                (funcall rep (match-string 0 string))
+                              rep)))
+               (setq start (+ (match-end 0) 1))
+               (setq string (replace-match newtext fixedcase
+                                           literal string)))))
+         string)))
 
 (defun doctest-line-number ()
   "Compatibility function: Equivalent to `line-number' or
