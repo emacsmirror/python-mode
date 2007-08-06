@@ -1139,6 +1139,8 @@ example's failure description in *doctest-output*."
     (message "Wait for doctest to finish running!"))
    ((not (doctest-results-buffer-valid-p))
     (message "Run doctest first! (C-c C-c)"))
+   ((equal count 0)
+    t)
    (t
     (let ((marker nil) (example-markers doctest-example-markers)
           (results-window (display-buffer doctest-results-buffer)))
@@ -1150,11 +1152,11 @@ example's failure description in *doctest-output*."
         ;; Skip past anything on *this* line.
         (if (>= count 0) (end-of-line) (beginning-of-line))
         ;; Look for the next failure
-        (if (>= count 0)
-            (re-search-forward (doctest-results-loc-re) nil t count)
-          (re-search-backward (doctest-results-loc-re) nil t (- count)))
-        ;; We found a failure:
-        (when (match-string 1)
+        (when 
+            (if (>= count 0)
+                (re-search-forward (doctest-results-loc-re) nil t count)
+              (re-search-backward (doctest-results-loc-re) nil t (- count)))
+          ;; We found a failure:
           (let ((old-selected-failure doctest-selected-failure))
             (beginning-of-line)
             ;; Extract the line number for the doctest file.
