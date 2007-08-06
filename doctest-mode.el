@@ -1603,10 +1603,11 @@ Otherwise, call (do-auto-fill)."
       ((fboundp 'line-number-at-pos) ;; Emacs 22.x
        (defalias 'doctest-line-number 'line-number-at-pos))
       (t ;; Emacs 21.x
-       (defun doctest-line-number (pos)
-         "Return the line number of POS"
+       (defun doctest-line-number (&optional pos)
+         "Return the line number of POS (default=point)."
          (1+ (count-lines 1
-               (save-excursion (progn (beginning-of-line) pos)))))))
+               (save-excursion (progn (beginning-of-line)
+                                      (or pos (point)))))))))
 
 ;; Backwards compatibility: process-live-p
 (cond ((fboundp 'process-live-p) ;; XEmacs
