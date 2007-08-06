@@ -169,6 +169,9 @@ the output buffer not scroll."
   :type 'boolean
   :group 'doctest)
 
+(defvar doctest-mode-hook nil
+  "Hook called by `doctest-mode'.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Fonts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1648,27 +1651,47 @@ This variable is uffer-local to doctest-results-mode buffers.")
     map) 
   "Keymap for doctest-results-mode.")
 
+;; Syntax table for doctest-results-mode.
+(defvar doctest-results-mode-syntax-table nil
+  "Syntax table used in `doctest-results-mode' buffers.")
+(when (not doctest-results-mode-syntax-table)
+  (setq doctest-results-mode-syntax-table (make-syntax-table))
+  (dolist (entry '(("(" . "()") ("[" . "(]") ("{" . "(}")
+                   (")" . ")(") ("]" . ")[") ("}" . "){")
+                   ("$%&*+-/<=>|'\"`" . ".") ("_" . "w")))
+    (dolist (char (string-to-list (car entry)))
+      (modify-syntax-entry char (cdr entry)
+                           doctest-results-mode-syntax-table))))
+
 ;; Define the mode
-(define-derived-mode doctest-results-mode text-mode "Doctest Results"
+(defun doctest-results-mode ()
   "A major mode used to display the results of running doctest.
 See `doctest-mode'.
 
-\\{doctest-results-mode-map}
-"
-  ;; Set up local variables.
+\\{doctest-results-mode-map}"
+  (interactive)
+  
+  ;; Declare local variables.
+  (kill-all-local-variables)
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'doctest-selected-failure)
   (make-local-variable 'doctest-source-buffer)
   (make-local-variable 'doctest-results-py-version)
   
-  ;; Enable font-lock mode.
-  (if (featurep 'font-lock) (font-lock-mode 1))
-  (setq font-lock-defaults '(doctest-results-font-lock-keywords
-                             nil nil nil nil))
+  ;; Define local variables.
+  (setq major-mode              'doctest-results-mode
+	mode-name               "Doctest-Results"
+        mode-line-process       'doctest-mode-line-process
+        font-lock-defaults      '(doctest-results-font-lock-keywords
+                                  nil nil nil nil))
+  ;; Define keymap.
+  (use-local-map doctest-results-mode-map)
   
-  ;; Display doctest-mode-line-process on the modeline.
-  (setq mode-line-process 'doctest-mode-line-process)
-  )
+  ;; Define the syntax table.
+  (set-syntax-table doctest-results-mode-syntax-table)
+  
+  ;; Enable font-lock mode.
+  (if (featurep 'font-lock) (font-lock-mode 1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Doctest Mode
@@ -1707,7 +1730,9 @@ This variable is buffer-local to doctest-mode buffers.")
   "A string displayed on the modeline, to indicate when doctest is
 running asynchronously.")
 
-;; Keymap for doctest-mode.
+;; Keymap for doctest-mode.  n.b.: we intentionally define [tab]
+;; rather than overriding indent-line-function, since we don't want
+;; doctest-indent-source-line to be called by do-auto-fill.
 (defconst doctest-mode-map 
   (let ((map (make-keymap)))
     (define-key map [backspace] 'doctest-electric-backspace)
@@ -1727,12 +1752,23 @@ running asynchronously.")
     map) 
   "Keymap for doctest-mode.")
 
+;; Syntax table for doctest-mode.
+(defvar doctest-mode-syntax-table nil
+  "Syntax table used in `doctest-mode' buffers.")
+(when (not doctest-mode-syntax-table)
+  (setq doctest-mode-syntax-table (make-syntax-table))
+  (dolist (entry '(("(" . "()") ("[" . "(]") ("{" . "(}")
+                   (")" . ")(") ("]" . ")[") ("}" . "){")
+                   ("$%&*+-/<=>|'\"`" . ".") ("_" . "w")))
+    (dolist (char (string-to-list (car entry)))
+      (modify-syntax-entry char (cdr entry) doctest-mode-syntax-table))))
+
 ;; Use doctest mode for files ending in .doctest
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.doctest$" . doctest-mode))
 
 ;;;###autoload
-(define-derived-mode doctest-mode text-mode "Doctest"
+(defun doctest-mode ()
   "A major mode for editing text files that contain Python
 doctest examples.  Doctest is a testing framework for Python that
 emulates an interactive session, and checks the result of each
@@ -1753,12 +1789,27 @@ treated differently:
   - 'Text lines' are any other lines.  They are not processed in
     any special way.
 
-\\{doctest-mode-map}
-"
-  ;; Set up local variables.
+\\{doctest-mode-map}"
+  (interactive)
+  
+  ;; Declare local variables.
+  (kill-all-local-variables)
   (make-local-variable 'font-lock-defaults)
   (make-local-variable 'doctest-results-buffer)
   (make-local-variable 'doctest-example-markers)
+  
+  ;; Define local variables.
+  (setq major-mode              'python-mode
+        mode-name               "Doctest"
+        mode-line-process       'doctest-mode-line-process
+        font-lock-defaults      '(doctest-font-lock-keywords
+                                  nil nil nil nil))
+  
+  ;; Define keymap.
+  (use-local-map doctest-mode-map)
+
+  ;; Define the syntax table.
+  (set-syntax-table doctest-mode-syntax-table)
   
   ;; Enable auto-fill mode.
   (auto-fill-mode 1)
@@ -1766,11 +1817,9 @@ treated differently:
 
   ;; Enable font-lock mode.
   (if (featurep 'font-lock) (font-lock-mode 1))
-  (setq font-lock-defaults '(doctest-font-lock-keywords nil nil nil nil))
-  
-  ;; Display doctest-mode-line-process on the modeline.
-  (setq mode-line-process 'doctest-mode-line-process)
-  )
+
+  ;; Run the mode hook.
+  (run-hooks 'doctest-mode-hook))
 
 (provide 'doctest-mode)
 ;;; doctest-mode.el ends here
