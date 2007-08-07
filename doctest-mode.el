@@ -7,7 +7,7 @@
 ;; Created:    Aug 2004
 ;; Keywords:   python doctest unittest test docstring
 
-(defconst doctest-version "0.4"
+(defconst doctest-version "0.5 alpha"
   "`doctest-mode' version number.")
 
 ;; This software is provided as-is, without express or implied
@@ -346,20 +346,34 @@ that matches `doctest-outdent-re', but does not follow a line matching
 `doctest-no-outdent-re', will be outdented.")
 
 (defconst doctest-script
-  (concat "from doctest import *\n"
-          "import sys\n"
-          "doc = open('%s').read()\n"
-          "if sys.version_info[:2] >= (2,4):\n"
-          "    test = DocTestParser().get_doctest(doc, {}, '%s', '%s', 0)\n"
-          "    r = DocTestRunner(optionflags=%s)\n"
-          "    r.run(test)\n"
-          "else:\n"
-          "    Tester(globs={}).runstring(doc, '%s')\n"
-;;;          "print\n";; <- so the buffer won't be empty
-          )
-  "Python script used to run doctest.  It takes the following arguments,
-supplied by `format': TEMPFILE, BUFFER-NAME, BUFFER-FILE-NAME, FLAGS,
-BUFFER-FILE-NAME.")
+  "\
+from doctest import *
+import sys
+if '%m':
+    import imp
+    try:
+        m = imp.load_source('__imported__', '%m')
+        globs = m.__dict__
+    except Exception, e:
+        raise ValueError('Error importing module for '
+                         'globs!  %s' % e)
+else:
+    globs = {}
+doc = open('%t').read()
+if sys.version_info[:2] >= (2,4):
+    test = DocTestParser().get_doctest(doc, globs, '%n', '%f', 0)
+    r = DocTestRunner(optionflags=%l)
+    r.run(test)
+else:
+    Tester(globs=globs).runstring(doc, '%f')"
+  ;; Docstring:
+  "Python script used to run doctest.
+The following special sequences are defined:
+  %n -- replaced by the doctest buffer's name.
+  %f -- replaced by the doctest buffer's filename.
+  %l -- replaced by the doctest flags string.
+  %t -- replaced by the name of the tempfile containing the doctests."
+  )
 
 (defconst doctest-keyword-re
   (let* ((kw1 (mapconcat 'identity
@@ -600,8 +614,8 @@ then don't increase the indentation level any."
             (line-had-prompt (looking-at doctest-prompt-re)))
         ;; Delete the old prompt (if any).
         (when line-had-prompt
-          (goto-char (match-end 1))
-          (delete-char 4))
+          (goto-char (match-beginning 2))
+          (delete-char (- (match-end 2) (match-beginning 2))))
         ;; Delete the old indentation.
         (delete-backward-char (skip-chars-forward " \t"))
         ;; If it's a continuation line, or a new PS1 prompt,
@@ -775,13 +789,19 @@ QUOTES -- A list of (START . END) pairs for all quotation strings.
 copied from the most recent source line, or set to
 `doctest-default-margin' if there are no preceeding source lines."
   (save-excursion
-    (beginning-of-line)
-    (forward-line -1)
-    (while (and (not (doctest-on-source-line-p))
-                (re-search-backward doctest-prompt-re nil t)))
-    (if (looking-at doctest-prompt-re)
-        (- (match-end 1) (match-beginning 1))
-      doctest-default-margin)))
+    (save-restriction
+      (when (doctest-in-mmm-docstring-overlay)
+        (doctest-narrow-to-mmm-overlay))
+      (beginning-of-line)
+      (forward-line -1)
+      (while (and (not (doctest-on-source-line-p))
+                  (re-search-backward doctest-prompt-re nil t))))
+    (cond ((looking-at doctest-prompt-re)
+           (- (match-end 1) (match-beginning 1)))
+          ((doctest-in-mmm-docstring-overlay)
+           (doctest-default-margin-in-mmm-docstring-overlay))
+          (t
+           doctest-default-margin))))
 
 (defun doctest-electric-backspace ()
   "Delete the preceeding character, level of indentation, or
@@ -886,19 +906,34 @@ whitespace to the left of the point before inserting a newline.
 ;;; Code Execution
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun doctest-execute ()
+  "Run doctest on the current buffer, or on the current docstring
+if the point is inside an `mmm-mode' `doctest-docstring' region.
+Display the results in the *doctest-output* buffer."
+  (interactive)
+  (doctest-execute-region (point-min) (point-max) nil t))
+  
+(defun doctest-execute-with-diff ()
+  "Run doctest on the current buffer, or on the current docstring
+if the point is inside an `mmm-mode' `doctest-docstring' region.
+Display the results in the *doctest-output* buffer, using diff format."
+  (interactive)
+  (doctest-execute-region (point-min) (point-max) t t))
+  
 (defun doctest-execute-buffer-with-diff ()
   "Run doctest on the current buffer, and display the results in the 
 *doctest-output* buffer, using the diff format."
   (interactive)
-  (doctest-execute-buffer t))
+  (doctest-execute-region (point-min) (point-max) t nil))
 
-(defun doctest-execute-buffer (&optional diff)
+(defun doctest-execute-buffer ()
   "Run doctest on the current buffer, and display the results in the 
 *doctest-output* buffer."
   (interactive)
-  (doctest-execute-region (point-min) (point-max) diff))
-  
-(defun doctest-execute-region (start end &optional diff)
+  (doctest-execute-region (point-min) (point-max) nil nil))
+
+(defun doctest-execute-region (start end &optional diff
+                                     check-for-mmm-docstring-overlay)
   "Run doctest on the current buffer, and display the results in the 
 *doctest-output* buffer."
   (interactive "r")
@@ -912,15 +947,21 @@ whitespace to the left of the point before inserting a newline.
     (message "Can't run two doctest processes at once!"))
    (t
     (let* ((results-buf-name (doctest-results-buffer-name))
-           (temp (concat (doctest-temp-name) ".py"))
-           (tempfile (expand-file-name temp doctest-temp-directory))
+           (in-docstring (and check-for-mmm-docstring-overlay
+                              (doctest-in-mmm-docstring-overlay)))
+           (temp (doctest-temp-name)) (dir doctest-temp-directory)
+           (input-file (expand-file-name (concat temp ".py") dir))
+           (globs-file (when in-docstring
+                         (expand-file-name (concat temp "-globs.py") dir)))
            (cur-buf (current-buffer))
            (in-buf (get-buffer-create "*doctest-input*"))
-           ;(beg (point-min)) (end (point-max))
-           (script (format doctest-script tempfile (buffer-name)
-                           (buffer-file-name) (doctest-optionflags diff)
-                           (buffer-file-name))))
-      ;; Write buffer to a file.
+           (script (doctest-script input-file globs-file diff)))
+      ;; If we're in a docstring, narrow start & end.
+      (when in-docstring
+        (let ((bounds (doctest-mmm-overlay-bounds)))
+          (setq start (max start (car bounds))
+                end (min end (cdr bounds)))))
+      ;; Write the doctests to a file.
       (save-excursion
         (goto-char (min start end))
         (let ((lineno (doctest-line-number)))
@@ -930,9 +971,17 @@ whitespace to the left of the point before inserting a newline.
           ;; Add the selected region
           (insert-buffer-substring cur-buf start end)
           ;; Write it to a file
-          (write-file tempfile)
-          ;; Dispose of the buffer
-          (kill-buffer in-buf)))
+          (write-file input-file)))
+      ;; If requested, write the buffer to a file for use as globs.
+      (when globs-file
+        (let ((cur-buf-start (point-min)) (cur-buf-end (point-max)))
+          (save-excursion
+            (set-buffer in-buf)
+            (delete-region (point-min) (point-max))
+            (insert-buffer-substring cur-buf cur-buf-start cur-buf-end)
+            (write-file globs-file))))
+      ;; Dispose of in-buf (we're done with it now.
+      (kill-buffer in-buf)
       ;; Prepare the results buffer.  Clear it, if it contains
       ;; anything, and set its mode.
       (setq doctest-results-buffer (get-buffer-create results-buf-name))
@@ -954,10 +1003,11 @@ whitespace to the left of the point before inserting a newline.
                                            doctest-python-command
                                            "-c" script)))
                ;; Store some information about the process.
-               (setq doctest-async-process-tempfile tempfile)
                (setq doctest-async-process-buffer cur-buf)
                (setq doctest-async-process process)
-               
+               (push input-file doctest-async-process-tempfiles)
+               (when globs-file
+                 (push globs-file doctest-async-process-tempfiles))
                ;; Set up a sentinel to respond when it's done running.
                (set-process-sentinel process 'doctest-async-process-sentinel)
 
@@ -980,7 +1030,9 @@ whitespace to the left of the point before inserting a newline.
              (call-process doctest-python-command nil
                            doctest-results-buffer t "-c" script)
              (doctest-handle-output)
-             (delete-file tempfile)))))))
+             (delete-file input-file)
+             (when globs-file
+               (delete-file globs-file))))))))
 
 (defun doctest-handle-output ()
   "This function, which is called after the 'doctest' process spawned
@@ -1027,9 +1079,8 @@ completes, which calls doctest-handle-output."
              (message "Doctest failed -- %s" state)
              (display-buffer doctest-results-buffer)))
       (doctest-update-mode-line "")
-      (when doctest-async-process-tempfile
-        (delete-file doctest-async-process-tempfile)
-        (setq doctest-async-process-tempfile nil))
+      (while doctest-async-process-tempfiles
+        (delete-file (pop doctest-async-process-tempfiles)))
       (setq doctest-async-process nil))))
 
 (defun doctest-cancel-async-process ()
@@ -1253,123 +1304,128 @@ replacement."
     (error "doctest-replace-output requires python 2.4+"))
    (t
     (save-excursion
-      (let* ((orig-buffer (current-buffer))
-             ;; Find an example, and look up its original lineno.
-             (lineno (doctest-prev-example-marker))
-             ;; Find the example's indentation.
-             (prompt-indent (doctest-line-indentation)))
+      (save-restriction
+        (when (doctest-in-mmm-docstring-overlay)
+          (doctest-narrow-to-mmm-overlay))
+            
+        (let* ((orig-buffer (current-buffer))
+               ;; Find an example, and look up its original lineno.
+               (lineno (doctest-prev-example-marker))
+               ;; Find the example's indentation.
+               (prompt-indent (doctest-line-indentation)))
         
-        ;; Switch to the output buffer, and look for the example.
-        ;; If we don't find one, complain.
-        (cond
-         ((null lineno) (message "Doctest example not found"))
-          (t
-           (set-buffer doctest-results-buffer)
-           (goto-char (point-min))
-           (let ((output-re (format "^File .*, line %s," lineno)))
-             (when (not (re-search-forward output-re nil t))
-               (message "This doctest example did not fail")
-               (setq lineno nil)))))
+          ;; Switch to the output buffer, and look for the example.
+          ;; If we don't find one, complain.
+          (cond
+           ((null lineno) (message "Doctest example not found"))
+           (t
+            (set-buffer doctest-results-buffer)
+            (goto-char (point-min))
+            (let ((output-re (format "^File .*, line %s," lineno)))
+              (when (not (re-search-forward output-re nil t))
+                (message "This doctest example did not fail")
+                (setq lineno nil)))))
 
-        ;; If we didn't find an example, give up.
-        (when (not (null lineno))
-                   
-          ;; Get the output's 'expected' & 'got' texts.
-          (let ((doctest-got nil) (doctest-expected nil) (header nil))
-            (while (setq header (doctest-results-next-header))
-              (cond
-               ((equal header "Failed example:")
-                t)
-               ((equal header "Expected nothing")
-                (setq doctest-expected ""))
-               ((equal header "Expected:")
-                (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
-                  (error "Error parsing doctest output"))
-                (setq doctest-expected (doctest-replace-regexp-in-string
-                                        "^    " prompt-indent
-                                        (match-string 0))))
-               ((equal header "Got nothing")
-                (setq doctest-got ""))
-               ((or (equal header "Got:") (equal header "Exception raised:"))
-                (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
-                  (error "Error parsing doctest output"))
-                (setq doctest-got (doctest-replace-regexp-in-string
-                                   "^    " prompt-indent (match-string 0))))
-               ((string-match "^Differences" header)
-                (error (concat "doctest-replace-output can not be used "
-                               "with diff style output")))
-               (t (error "Unexpected header %s" header))))
+          ;; If we didn't find an example, give up.
+          (when (not (null lineno))
+            ;; Get the output's 'expected' & 'got' texts.
+            (let ((doctest-got nil) (doctest-expected nil) (header nil))
+              (while (setq header (doctest-results-next-header))
+                (cond
+                 ((equal header "Failed example:")
+                  t)
+                 ((equal header "Expected nothing")
+                  (setq doctest-expected ""))
+                 ((equal header "Expected:")
+                  (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
+                    (error "Error parsing doctest output"))
+                  (setq doctest-expected (doctest-replace-regexp-in-string
+                                          "^    " prompt-indent
+                                          (match-string 0))))
+                 ((equal header "Got nothing")
+                  (setq doctest-got ""))
+                 ((or (equal header "Got:") (equal header "Exception raised:"))
+                  (unless (re-search-forward "^\\(\\(    \\).*\n\\)*" nil t)
+                    (error "Error parsing doctest output"))
+                  (setq doctest-got (doctest-replace-regexp-in-string
+                                     "^    " prompt-indent (match-string 0))))
+                 ((string-match "^Differences" header)
+                  (error (concat "doctest-replace-output can not be used "
+                                 "with diff style output")))
+                 (t (error "Unexpected header %s" header))))
 
-            ;; Go back to the source buffer.
-            (set-buffer orig-buffer)
+              ;; Go back to the source buffer.
+              (set-buffer orig-buffer)
           
-            ;; Skip ahead to the output.
-            (beginning-of-line)
-            (unless (re-search-forward "^ *>>>.*")
-              (error "Error parsing doctest output"))
-            (re-search-forward "\\(\n *\\.\\.\\..*\\)*\n?")
-            (if (not (looking-at "^"))
-                (insert-string "\n"))
+              ;; Skip ahead to the output.
+              (beginning-of-line)
+              (unless (re-search-forward "^ *>>>.*")
+                (error "Error parsing doctest output"))
+              (re-search-forward "\\(\n *\\.\\.\\..*\\)*\n?")
+              (when (looking-at "\\'") (insert-char ?\n))
 
-            ;; Check that the output matches.
-            (let ((start (point)) end)
-              (cond ((re-search-forward "^ *\\(>>>.*\\|$\\)" nil t)
-                     (setq end (match-beginning 0)))
-                    (t
-                     (goto-char (point-max))
-                     (insert-string "\n")
-                     (setq end (point-max))))
-              (when (and doctest-expected
-                         (not (equal (buffer-substring start end)
-                                     doctest-expected)))
-                (error (concat "This example's output has been modified "
-                               "since doctest was last run")))
-              (setq doctest-expected (buffer-substring start end))
-              (goto-char end))
-
-            ;; Trim exceptions
-            (when (and doctest-trim-exceptions
-                       (string-match doctest-traceback-re
-                                     doctest-got))
-              (let ((s1 0) (e1 (match-end 1))
-                    (s2 (match-beginning 2)) (e2 (match-end 2))
-                    (s3 (match-beginning 3)) (e3 (length doctest-got)))
-                (setq doctest-got
-                    (concat (substring doctest-got s1 e1)
-                            (substring doctest-got s2 e2) "  . . .\n"
-                            (substring doctest-got s3 e3)))))
-              
-            ;; Confirm it with the user.
-            (let ((confirm-buffer (get-buffer-create "*doctest-confirm*")))
-              (set-buffer confirm-buffer)
-              ;; Erase anything left over in the buffer.
-              (delete-region (point-min) (point-max))
-              ;; Write a confirmation message
-              (if (equal doctest-expected "")
-                  (insert-string "Replace nothing\n")
-                (insert-string (concat "Replace:\n" doctest-expected)))
-              (if (equal doctest-got "")
-                  (insert-string "With nothing\n")
-                (insert-string (concat "With:\n" doctest-got)))
-              (let ((confirm-window (display-buffer confirm-buffer)))
-                ;; Shrink the confirm window.
-                (shrink-window-if-larger-than-buffer confirm-window)
-                ;; Return to the original buffer.
-                (set-buffer orig-buffer)
-                ;; Match the old expected region.
-                (when doctest-expected
-                    (search-backward doctest-expected))
-                (when (equal doctest-expected "") (backward-char 1))
-                ;; Get confirmation & do the replacement
-                (cond ((y-or-n-p "Ok to replace? ")
-                       (when (equal doctest-expected "") (forward-char 1))
-                       (replace-match doctest-got t t)
-                       (message "Replaced."))
+              ;; Check that the output matches.
+              (let ((start (point)) end)
+                (cond ((re-search-forward "^ *\\(>>>.*\\|$\\)" nil t)
+                       (setq end (match-beginning 0)))
                       (t
-                       (message "Replace cancelled.")))
-                ;; Clean up our confirm window
-                (kill-buffer confirm-buffer)
-                (delete-window confirm-window))))))))))
+                       (goto-char (point-max))
+                       (insert-string "\n")
+                       (setq end (point-max))))
+                (when (and doctest-expected
+                           (not (equal (buffer-substring start end)
+                                       doctest-expected)))
+                  (warn "{%s} {%s}" (buffer-substring start end)
+                        doctest-expected)
+                  (error (concat "This example's output has been modified "
+                                 "since doctest was last run")))
+                (setq doctest-expected (buffer-substring start end))
+                (goto-char end))
+
+              ;; Trim exceptions
+              (when (and doctest-trim-exceptions
+                         (string-match doctest-traceback-re
+                                       doctest-got))
+                (let ((s1 0) (e1 (match-end 1))
+                      (s2 (match-beginning 2)) (e2 (match-end 2))
+                      (s3 (match-beginning 3)) (e3 (length doctest-got)))
+                  (setq doctest-got
+                        (concat (substring doctest-got s1 e1)
+                                (substring doctest-got s2 e2) "  . . .\n"
+                                (substring doctest-got s3 e3)))))
+              
+              ;; Confirm it with the user.
+              (let ((confirm-buffer (get-buffer-create "*doctest-confirm*")))
+                (set-buffer confirm-buffer)
+                ;; Erase anything left over in the buffer.
+                (delete-region (point-min) (point-max))
+                ;; Write a confirmation message
+                (if (equal doctest-expected "")
+                    (insert-string "Replace nothing\n")
+                  (insert-string (concat "Replace:\n" doctest-expected)))
+                (if (equal doctest-got "")
+                    (insert-string "With nothing\n")
+                  (insert-string (concat "With:\n" doctest-got)))
+                (let ((confirm-window (display-buffer confirm-buffer)))
+                  ;; Shrink the confirm window.
+                  (shrink-window-if-larger-than-buffer confirm-window)
+                  ;; Return to the original buffer.
+                  (set-buffer orig-buffer)
+                  ;; Match the old expected region.
+                  (when doctest-expected
+                    (search-backward doctest-expected))
+                  (when (equal doctest-expected "") (backward-char 1))
+                  ;; Get confirmation & do the replacement
+                  (widen)
+                  (cond ((y-or-n-p "Ok to replace? ")
+                         (when (equal doctest-expected "") (forward-char 1))
+                         (replace-match doctest-got t t)
+                         (message "Replaced."))
+                        (t
+                         (message "Replace cancelled.")))
+                  ;; Clean up our confirm window
+                  (kill-buffer confirm-buffer)
+                  (delete-window confirm-window)))))))))))
 
 (defun doctest-results-next-header ()
   "Move to the next header in the doctest results buffer, and return
@@ -1382,6 +1438,168 @@ nil."
             result
           nil))
     nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; mmm-mode support
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; MMM Mode is a minor mode for Emacs which allows Multiple Major
+;; Modes to coexist in a single buffer.  
+
+;;;###autoload
+(defun doctest-register-mmm-classes (&optional add-mode-ext-classes
+                                               fix-mmm-fontify-region-bug)
+  "Register doctest's mmm classes, allowing doctest to be used as a
+submode region in other major modes, such as python-mode and rst-mode.
+Two classes are registered:
+
+`doctest-docstring'
+
+    Used to edit docstrings containing doctest examples in python-
+    mode.  Docstring submode regions start and end with triple-quoted
+    strings (\"\"\").  In order to avoid confusing start-string
+    markers and end-string markers, all triple-quote strings in the
+    buffer are treated as submode regions (even if they're not
+    actually docstrings).  Use (C-c % C-d) to insert a new doctest-
+    docstring region.  When `doctest-execute' (C-c C-c) is called
+    inside a doctest- docstring region, it executes just the current
+    docstring.  The globals for this execution are constructed by
+    importing the current buffer's contents in Python.
+
+`doctest-example'
+
+    Used to edit doctest examples in text-editing modes, such as
+    `rst-mode' or `text-mode'.  Docstring submode regions start with
+    optionally indented prompts (>>>) and end with blank lines.  Use
+    (C-c % C-e) to insert a new doctest-example region.  When
+    `doctest-execute' (C-c C-c) is called inside a doctest- example
+    region, it executes all examples in the buffer.
+
+If ADD-MODE-EXT-CLASSES is true, then register the new classes in
+`mmm-mode-ext-classes-alist', which will cause them to be used by
+default in the following modes:
+
+    doctest-docstring:  python-mode
+    doctest-example:    rst-mode
+
+If FIX-MMM-FONTIFY-REGION-BUG is true, then register a hook that will
+fix a bug in `mmm-fontify-region' that affects some (but not all)
+versions of emacs.  (See `doctest-fixed-mmm-fontify-region' for more
+info.)"
+  (interactive)
+  (require 'mmm-auto)
+  (mmm-add-classes
+   '(
+     ;; === doctest-docstring ===
+     (doctest-docstring :submode doctest-mode
+      
+      ;; The front is any triple-quote.  Include it in the submode region,
+      ;; to prevent clashes between the two syntax tables over quotes.
+      :front "\\(\"\"\"\\|'''\\)" :include-front t
+      
+      ;; The back matches the front.  Include just the first character
+      ;; of the quote.  If we didn't include at least one quote, then
+      ;; the outer modes quote-counting would be thrown off.  But if
+      ;; we include all three, we run into a bug in mmm-mode.  See
+      ;; <http://tinyurl.com/2fa83w> for more info about the bug.
+      :save-matches t :back "~1" :back-offset 1 :end-not-begin t
+      
+      ;; Define a skeleton for entering new docstrings.
+      :insert ((?d docstring nil @ "\"\"" @ "\"" \n
+                   _ \n "\"" @ "\"\"" @)))
+     
+     ;; === doctest-example ===
+     (doctest-example
+      :submode doctest-mode
+      ;; The front is an optionally indented prompt.
+      :front "^[ \t]*>>>" :include-front t
+      ;; The back is a blank line.
+      :back "^[ \t]*$"
+      ;; Define a skeleton for entering new docstrings.
+      :insert ((?e doctest-example nil
+                   @ @ "    >>> " _ "\n\n" @ @)))))
+  
+  ;; Register some local variables that need to be saved.
+  (add-to-list 'mmm-save-local-variables
+               '(doctest-results-buffer buffer))
+  (add-to-list 'mmm-save-local-variables
+               '(doctest-example-markers buffer))
+
+  ;; Register association with modes, if requested.
+  (when add-mode-ext-classes
+    (mmm-add-mode-ext-class 'python-mode nil 'doctest-docstring)
+    (mmm-add-mode-ext-class 'rst-mode nil 'doctest-example))
+
+  ;; Fix the buggy mmm-fontify-region, if requested.
+  (when fix-mmm-fontify-region-bug
+    (add-hook 'mmm-mode-hook 'doctest-fix-mmm-fontify-region-bug)))
+
+(defvar doctest-old-mmm-fontify-region 'nil
+  "Used to hold the original definition of `mmm-fontify-region' when it
+is rebound by `doctest-fix-mmm-fontify-region-bug'.")
+
+(defun doctest-fix-mmm-fontify-region-bug ()
+  "A function for `mmm-mode-hook' which fixes a potential bug in
+`mmm-fontify-region' by using `doctest-fixed-mmm-fontify-region'
+instead.  (See `doctest-fixed-mmm-fontify-region' for more info.)"
+  (setq font-lock-fontify-region-function
+        'doctest-fixed-mmm-fontify-region))
+
+(defun doctest-fixed-mmm-fontify-region (start stop &optional loudly)
+  "A replacement for `mmm-fontify-region', which fixes a bug caused by
+versions of emacs where post-command-hooks are run *before*
+fontification.  `mmm-mode' assumes that its post-command-hook will be
+run after fontification; and if it's not, then mmm-mode can end up
+with the wrong local variables, keymap, etc. after fontification.  We
+fix that here by redefining `mmm-fontify-region' to remember what
+submode overlay it started in; and to return to that overlay after
+fontification is complete.  The original definition of
+`mmm-fontify-region' is stored in `doctest-old-mmm-fontify-region'."
+  (let ((overlay mmm-current-overlay))
+    (mmm-fontify-region start stop loudly)
+    (if (and overlay (or (< (point) (overlay-start overlay))
+                         (> (point) (overlay-end overlay))))
+        (goto-char (overlay-start overlay)))
+    (mmm-update-submode-region)))
+
+(defun doctest-in-mmm-docstring-overlay ()
+  (and (featurep 'mmm-auto)
+       (mmm-overlay-at (point))
+       (save-excursion
+         (goto-char (overlay-start (mmm-overlay-at (point))))
+         (looking-at "\"\"\"\\|\'\'\'"))))
+
+(defun doctest-narrow-to-mmm-overlay ()
+  "If we're in an mmm-mode overlay, then narrow to that overlay.
+This is useful, e.g., to keep from interpreting the close-quote of a
+docstring as part of the example's output."
+  (let ((bounds (doctest-mmm-overlay-bounds)))
+    (when bounds (narrow-to-region (car bounds) (cdr bounds)))))
+
+(defun doctest-default-margin-in-mmm-docstring-overlay ()
+  (save-excursion
+    (let ((pos (car (doctest-mmm-overlay-bounds))))
+      (goto-char pos)
+      (when (doctest-looking-back "\"\"\"\\|\'\'\'")
+        (setq pos (- pos 3)))
+      (beginning-of-line)
+      (- pos (point)))))
+
+(defun doctest-mmm-overlay-bounds ()
+  (when (featurep 'mmm-auto)
+    (let ((overlay (mmm-overlay-at (point))))
+      (when overlay
+        (let ((start (overlay-start overlay))
+              (end (overlay-end overlay)))
+          (when (doctest-in-mmm-docstring-overlay)
+            (save-excursion
+              (goto-char start)
+              (re-search-forward "[\"\']*")
+              (setq start (point))
+              (goto-char end)
+              (while (doctest-looking-back "[\"\']")
+                (backward-char 1))
+              (setq end (point))))
+          (cons start end))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper functions
@@ -1478,6 +1696,18 @@ buffer.  This is computed from the variable
                               "[.]doctest$" "" (buffer-name) t))
            ((equal sym "%f") (buffer-file-name))))
    doctest-results-buffer-name t))
+
+(defun doctest-script (input-file globs-file diff)
+  "..."
+  (doctest-replace-regexp-in-string
+   "%[tnflm]"
+   (lambda (sym)
+     (cond ((equal sym "%n") (buffer-name))
+           ((equal sym "%f") (buffer-file-name))
+           ((equal sym "%l") (doctest-optionflags diff))
+           ((equal sym "%t") input-file)
+           ((equal sym "%m") (or globs-file ""))))
+   doctest-script t))
 
 (defun doctest-hide-example-source ()
   "Delete the source code listings from the results buffer (since it's
@@ -1725,8 +1955,8 @@ This variable is buffer-local to doctest-mode buffers.")
 ;; These are global, since we only one run process at a time:
 (defvar doctest-async-process nil
   "The process object created by the asynchronous doctest process")
-(defvar doctest-async-process-tempfile nil
-  "The name of the tempfile created by the asynchronous doctest process")
+(defvar doctest-async-process-tempfiles nil
+  "A list of tempfile names created by the asynchronous doctest process")
 (defvar doctest-async-process-buffer nil
   "The source buffer for the asynchronous doctest process")
 (defvar doctest-mode-line-process ""
@@ -1743,8 +1973,8 @@ running asynchronously.")
     (define-key map [tab] 'doctest-indent-source-line)
     (define-key map ":" 'doctest-electric-colon)
     (define-key map "\C-c\C-v" 'doctest-version)
-    (define-key map "\C-c\C-c" 'doctest-execute-buffer)
-    (define-key map "\C-c\C-d" 'doctest-execute-buffer-with-diff)
+    (define-key map "\C-c\C-c" 'doctest-execute)
+    (define-key map "\C-c\C-d" 'doctest-execute-with-diff)
     (define-key map "\C-c\C-n" 'doctest-next-failure)
     (define-key map "\C-c\C-p" 'doctest-prev-failure)
     (define-key map "\C-c\C-a" 'doctest-first-failure)
@@ -1802,7 +2032,7 @@ treated differently:
   (make-local-variable 'doctest-example-markers)
   
   ;; Define local variables.
-  (setq major-mode              'python-mode
+  (setq major-mode              'doctest-mode
         mode-name               "Doctest"
         mode-line-process       'doctest-mode-line-process
         font-lock-defaults      '(doctest-font-lock-keywords
