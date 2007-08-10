@@ -355,8 +355,9 @@ if '%m':
         m = imp.load_source('__imported__', '%m')
         globs = m.__dict__
     except Exception, e:
-        raise ValueError('Error importing module for '
-                         'globs!  %s' % e)
+        print ('doctest-mode encountered an error while importing '
+               'the current buffer:\\n\\n  %s' % e)
+        sys.exit(1)
 else:
     globs = {}
 doc = open('%t').read()
@@ -996,6 +997,7 @@ Display the results in the *doctest-output* buffer, using diff format."
       ;; starts at.  That way, if the input buffer is edited, we can
       ;; still find corresponding examples in the output.
       (doctest-mark-examples)
+
       ;; Run doctest
       (cond (doctest-async
              ;; Asynchronous mode:
@@ -1135,7 +1137,8 @@ doctest output, even if the input buffer is edited."
     (while (re-search-forward "^ *>>> " nil t)
       (backward-char 4)
       (push (cons (point-marker) (doctest-line-number))
-            doctest-example-markers))))
+            doctest-example-markers)
+      (forward-char 4))))
 
 (defun doctest-filter-example-markers ()
   "Remove any entries from `doctest-example-markers' that do not
@@ -1461,7 +1464,7 @@ Two classes are registered:
     buffer are treated as submode regions (even if they're not
     actually docstrings).  Use (C-c % C-d) to insert a new doctest-
     docstring region.  When `doctest-execute' (C-c C-c) is called
-    inside a doctest- docstring region, it executes just the current
+    inside a doctest-docstring region, it executes just the current
     docstring.  The globals for this execution are constructed by
     importing the current buffer's contents in Python.
 
@@ -1471,7 +1474,7 @@ Two classes are registered:
     `rst-mode' or `text-mode'.  Docstring submode regions start with
     optionally indented prompts (>>>) and end with blank lines.  Use
     (C-c % C-e) to insert a new doctest-example region.  When
-    `doctest-execute' (C-c C-c) is called inside a doctest- example
+    `doctest-execute' (C-c C-c) is called inside a doctest-example
     region, it executes all examples in the buffer.
 
 If ADD-MODE-EXT-CLASSES is true, then register the new classes in
