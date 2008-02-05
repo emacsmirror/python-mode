@@ -423,53 +423,56 @@ support for features needed by `python-mode'.")
   (let ((kw1 (mapconcat 'identity
 			'("and"      "assert"   "break"   "class"
 			  "continue" "def"      "del"     "elif"
-			  "else"     "except"   "exec"    "for"
+			  "else"     "except"   "for"     "None"
 			  "from"     "global"   "if"      "import"
 			  "in"       "is"       "lambda"  "not"
-			  "or"       "pass"     "print"   "raise"
+			  "or"       "pass"     "raise"   "as"
 			  "return"   "while"    "with"    "yield"
+			  "True"     "False"
 			  )
 			"\\|"))
 	(kw2 (mapconcat 'identity
 			'("else:" "except:" "finally:" "try:")
 			"\\|"))
 	(kw3 (mapconcat 'identity
-			;; Don't include True, False, None, or
-			;; Ellipsis in this list, since they are
-			;; already defined as pseudo keywords.
+			;; Don't include Ellipsis in this list, since it is
+			;; already defined as a pseudo keyword.
 			'("__debug__"
-			  "__import__" "__name__" "abs" "apply" "basestring"
-			  "bool" "buffer" "callable" "chr" "classmethod"
-			  "cmp" "coerce" "compile" "complex" "copyright"
-			  "delattr" "dict" "dir" "divmod"
-			  "enumerate" "eval" "execfile" "exit" "file"
-			  "filter" "float" "getattr" "globals" "hasattr"
-			  "hash" "hex" "id" "input" "int" "intern"
-			  "isinstance" "issubclass" "iter" "len" "license"
-			  "list" "locals" "long" "map" "max" "min" "object"
-			  "oct" "open" "ord" "pow" "property" "range"
-			  "raw_input" "reduce" "reload" "repr" "round"
-			  "setattr" "slice" "staticmethod" "str" "sum"
-			  "super" "tuple" "type" "unichr" "unicode" "vars"
-			  "xrange" "zip")
+			  "__import__" "__name__" "abs" "all" "any" "apply"
+			  "basestring" "bin" "bool" "buffer" "bytearray"
+			  "callable" "chr" "classmethod" "cmp" "coerce"
+			  "compile" "complex" "copyright" "credits"
+			  "delattr" "dict" "dir" "divmod" "enumerate" "eval"
+			  "exec" "execfile" "exit" "file" "filter" "float"
+			  "format" "getattr" "globals" "hasattr" "hash" "help"
+			  "hex" "id" "input" "int" "intern" "isinstance"
+			  "issubclass" "iter" "len" "license" "list" "locals"
+			  "long" "map" "max" "memoryview" "min" "next"
+			  "object" "oct" "open" "ord" "pow" "print" "property"
+			  "quit" "range" "raw_input" "reduce" "reload" "repr"
+			  "round" "set" "setattr" "slice" "sorted"
+			  "staticmethod" "str" "sum" "super" "tuple" "type"
+			  "unichr" "unicode" "vars" "xrange" "zip")
 			"\\|"))
 	(kw4 (mapconcat 'identity
 			;; Exceptions and warnings
 			'("ArithmeticError" "AssertionError"
-			  "AttributeError" "DeprecationWarning" "EOFError"
+			  "AttributeError" "BaseException" "BufferError"
+			  "BytesWarning" "DeprecationWarning" "EOFError"
 			  "EnvironmentError" "Exception"
-			  "FloatingPointError" "FutureWarning" "IOError"
-			  "ImportError" "IndentationError" "IndexError"
+			  "FloatingPointError" "FutureWarning" "GeneratorExit"
+			  "IOError" "ImportError" "ImportWarning"
+			  "IndentationError" "IndexError"
 			  "KeyError" "KeyboardInterrupt" "LookupError"
 			  "MemoryError" "NameError" "NotImplemented"
 			  "NotImplementedError" "OSError" "OverflowError"
-			  "OverflowWarning" "PendingDeprecationWarning"
-			  "ReferenceError" "RuntimeError" "RuntimeWarning"
-			  "StandardError" "StopIteration" "SyntaxError"
-			  "SyntaxWarning" "SystemError" "SystemExit"
-			  "TabError" "TypeError" "UnboundLocalError"
-			  "UnicodeDecodeError" "UnicodeEncodeError"
-			  "UnicodeError" "UnicodeTranslateError"
+			  "PendingDeprecationWarning" "ReferenceError"
+			  "RuntimeError" "RuntimeWarning" "StandardError"
+			  "StopIteration" "SyntaxError" "SyntaxWarning"
+			  "SystemError" "SystemExit" "TabError" "TypeError"
+			  "UnboundLocalError" "UnicodeDecodeError"
+			  "UnicodeEncodeError" "UnicodeError"
+			  "UnicodeTranslateError" "UnicodeWarning"
 			  "UserWarning" "ValueError" "Warning"
 			  "ZeroDivisionError")
 			"\\|"))
@@ -486,16 +489,13 @@ support for features needed by `python-mode'.")
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
      (list (concat "\\<\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
-     ;; `as' but only in "import foo as bar" or "with foo as bar"
-     '("[ \t]*\\(\\<from\\>.*\\)?\\<import\\>.*\\<\\(as\\)\\>" . 2)
-     '("[ \t]*\\<with\\>.*\\<\\(as\\)\\>" . 1)
      ;; classes
      '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
      ;; functions
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\<\\(self\\|None\\|True\\|False\\|Ellipsis\\)\\>"
+     '("\\<\\(self\\|Ellipsis\\)\\>"
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
