@@ -1,7 +1,21 @@
 ;;; Complete symbols at point using Pymacs.
 
-;;; See pycomplete.py for the Python side of things and a short description
-;;; of what to expect.
+;; Copyright (C) 2007  Skip Montanaro
+
+;; Author:     Skip Montanaro
+;; Maintainer: skip@pobox.com
+;; Created:    Oct 2004
+;; Keywords:   python pymacs emacs
+
+;; This software is provided as-is, without express or implied warranty.
+;; Permission to use, copy, modify, distribute or sell this software,
+;; without fee, for any purpose and by any individual or organization, is
+;; hereby granted, provided that the above copyright notice and this
+;; paragraph appear in all copies.
+
+;; Along with pycomplete.py this file allows programmers to complete Python
+;; symbols within the current buffer.  See pycomplete.py for the Python side
+;; of things and a short description of what to expect.
 
 (require 'pymacs)
 (require 'python-mode)

@@ -21,6 +21,20 @@ do it right.
 See pycomplete.el for the Emacs Lisp side of things.
 """
 
+# Author:     Skip Montanaro
+# Maintainer: skip@pobox.com
+# Created:    Oct 2004
+# Keywords:   python pymacs emacs
+
+# This software is provided as-is, without express or implied warranty.
+# Permission to use, copy, modify, distribute or sell this software, without
+# fee, for any purpose and by any individual or organization, is hereby
+# granted, provided that the above copyright notice and this paragraph
+# appear in all copies.
+
+# Along with pycomplete.el this file allows programmers to complete Python
+# symbols within the current buffer.
+
 import sys
 import os.path
 
