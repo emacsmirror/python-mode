@@ -428,7 +428,6 @@ support for features needed by `python-mode'.")
 			  "in"       "is"       "lambda"  "not"
 			  "or"       "pass"     "raise"   "as"
 			  "return"   "while"    "with"    "yield"
-			  "True"     "False"
 			  )
 			"\\|"))
 	(kw2 (mapconcat 'identity
@@ -495,7 +494,7 @@ support for features needed by `python-mode'.")
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\<\\(self\\|Ellipsis\\)\\>"
+     '("\\<\\(self\\|Ellipsis\\|True\\|False\\)\\>"
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
