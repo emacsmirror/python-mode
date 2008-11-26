@@ -2546,6 +2546,9 @@ initial line; and comment lines beginning in column 1 are ignored."
     (mapconcat 'identity (nreverse lines) "\n")))
 
 (defun py-sort-imports ()
+  "Sort multiline imports.
+Put point inside the parentheses of a multiline import and hit
+\\[py-sort-imports] to sort the imports lexicographically"
   (interactive)
   (save-excursion
     (let ((open-paren (save-excursion (progn (up-list -1) (point))))
