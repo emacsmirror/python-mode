@@ -683,9 +683,9 @@ Currently-active file is at the head of the list.")
   ;; shadow global bindings for newline-and-indent w/ the py- version.
   ;; BAW - this is extremely bad form, but I'm not going to change it
   ;; for now.
-  (mapcar #'(lambda (key)
-              (define-key py-mode-map key 'py-newline-and-indent))
-          (where-is-internal 'newline-and-indent))
+  (mapc #'(lambda (key)
+            (define-key py-mode-map key 'py-newline-and-indent))
+        (where-is-internal 'newline-and-indent))
   ;; Force RET to be py-newline-and-indent even if it didn't get
   ;; mapped by the above code.  motivation: Emacs' default binding for
   ;; RET is `newline' and C-j is `newline-and-indent'.  Most Pythoneers
@@ -706,10 +706,10 @@ Currently-active file is at the head of the list.")
   (define-key py-mode-output-map "\C-c\C-c" 'py-goto-exception)
   ;; TBD: Disable all self-inserting keys.  This is bogus, we should
   ;; really implement this as *Python Output* buffer being read-only
-  (mapcar #' (lambda (key)
-               (define-key py-mode-output-map key
-                 #'(lambda () (interactive) (beep))))
-             (where-is-internal 'self-insert-command))
+  (mapc #' (lambda (key)
+             (define-key py-mode-output-map key
+               #'(lambda () (interactive) (beep))))
+           (where-is-internal 'self-insert-command))
   )
 
 (defvar py-shell-map nil
@@ -780,9 +780,9 @@ Currently-active file is at the head of the list.")
 ;; Utilities
 (defmacro py-safe (&rest body)
   "Safely execute BODY, return nil if an error occurred."
-  (` (condition-case nil
-         (progn (,@ body))
-       (error nil))))
+  `(condition-case nil
+       (progn ,@ body)
+     (error nil)))
 
 (defsubst py-keep-region-active ()
   "Keep the region active in XEmacs."
@@ -813,8 +813,8 @@ This function does not modify point or mark."
      ((eq position 'bod) (py-beginning-of-def-or-class 'either))
      ((eq position 'eod) (py-end-of-def-or-class 'either))
      ;; Kind of funny, I know, but useful for py-up-exception.
-     ((eq position 'bob) (beginning-of-buffer))
-     ((eq position 'eob) (end-of-buffer))
+     ((eq position 'bob) (goto-char (point-min)))
+     ((eq position 'eob) (goto-char (point-max)))
      ((eq position 'boi) (back-to-indentation))
      ((eq position 'bos) (py-goto-initial-line))
      (t (error "Unknown buffer position requested: %s" position))
@@ -1458,7 +1458,7 @@ problem as best as we can determine."
       "Traceback cue not found"
 
     (let* ((filename (match-string 1 block))
-           (lineno (string-to-int (match-string 2 block)))
+           (lineno (string-to-number (match-string 2 block)))
            (funcname (match-string 3 block))
            funcbuffer)
 
@@ -1518,10 +1518,10 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
   (let (line file bol err-p)
     (save-excursion
       (set-buffer buf)
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (while (re-search-forward py-traceback-line-re nil t)
         (setq file (match-string 1)
-              line (string-to-int (match-string 2))
+              line (string-to-number (match-string 2))
               bol (py-point 'bol))
         (py-highlight-line bol (py-point 'eol) file line)))
     (when (and py-jump-on-exception line)
@@ -1537,7 +1537,7 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 ;; only used when (memq 'broken-temp-names py-emacs-features)
 (defvar py-serial-number 0)
 (defvar py-exception-buffer nil)
-(defconst py-output-buffer "*Python Output*")
+(defvar py-output-buffer "*Python Output*")
 (make-variable-buffer-local 'py-output-buffer)
 
 ;; for toggling between CPython and Jython
@@ -1666,7 +1666,7 @@ filter."
   "Clear the queue of temporary files waiting to execute."
   (interactive)
   (let ((n (length py-file-queue)))
-    (mapcar 'delete-file py-file-queue)
+    (mapc 'delete-file py-file-queue)
     (setq py-file-queue nil)
     (message "%d pending files de-queued." n)))
 
@@ -1940,7 +1940,7 @@ EVENT is usually a mouse click."
       (beginning-of-line)
       (if (looking-at py-traceback-line-re)
           (setq file (match-string 1)
-                line (string-to-int (match-string 2)))))
+                line (string-to-number (match-string 2)))))
     (if (not file)
         (error "Not on a traceback line"))
     (py-jump-to-exception file line)))
@@ -1958,7 +1958,7 @@ bottom) of the trackback stack is encountered."
       (goto-char (py-point start))
       (if (funcall searchdir py-traceback-line-re nil t)
           (setq file (match-string 1)
-                line (string-to-int (match-string 2)))))
+                line (string-to-number (match-string 2)))))
     (if (and file line)
         (py-jump-to-exception file line)
       (error "%s of traceback" errwhere))))
@@ -3049,7 +3049,11 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
                      'py-pychecker-history))
         )))
   (save-some-buffers (not py-ask-about-save) nil)
-  (compile-internal command "No more errors"))
+  (if (fboundp 'compilation-start)
+      ;; Emacs.
+      (compilation-start command)
+    ;; XEmacs.
+    (compile-internal command "No more errors")))
 
 
 
@@ -3768,9 +3772,9 @@ to do so may mean a greater delay in fixing your bug.\n\n")
 (defun py-kill-emacs-hook ()
   "Delete files in `py-file-queue'.
 These are Python temporary files awaiting execution."
-  (mapcar #'(lambda (filename)
-              (py-safe (delete-file filename)))
-          py-file-queue))
+  (mapc #'(lambda (filename)
+            (py-safe (delete-file filename)))
+        py-file-queue))
 
 ;; arrange to kill temp files when Emacs exists
 (add-hook 'kill-emacs-hook 'py-kill-emacs-hook)
