@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2008 http://sf.net/projects/python-mode
+;; Author: 2003-2008 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -12,29 +12,29 @@
 (defconst py-version "5.0a1"
   "`python-mode' version number.")
 
-;; This software is provided as-is, without express or implied
-;; warranty.  Permission to use, copy, modify, distribute or sell this
-;; software, without fee, for any purpose and by any individual or
-;; organization, is hereby granted, provided that the above copyright
-;; notice and this paragraph appear in all copies.
+;; This software is provided as-is, without express or implied warranty.
+;; Permission to use, copy, modify, distribute or sell this software, without
+;; fee, for any purpose and by any individual or organization, is hereby
+;; granted, provided that the above copyright notice and this paragraph appear
+;; in all copies.
 
 ;;; Commentary:
 
 ;; This is a major mode for editing Python programs.  It was developed by Tim
 ;; Peters after an original idea by Michael A. Guravage.  Tim subsequently
-;; left the net and in 1995, Barry Warsaw inherited the mode.  Tim's now back
-;; but disavows all responsibility for the mode.  In fact, we suspect he
-;; doesn't even use Emacs any more.  In 2003, python-mode.el was moved to its
-;; own SourceForge project apart from the Python project, and now is
-;; maintained by the volunteers at the python-mode@python.org mailing list.
+;; left the net and in 1995, Barry Warsaw inherited the mode.  Tim came back
+;; but disavowed all responsibility for the mode.  In fact, we suspect he
+;; doesn't even use Emacs any more <wink>.  In 2003, python-mode.el was moved
+;; to its own SourceForge project apart from the Python project, and in 2008
+;; it was moved to Launchpad for all project administration.  python-mode.el
+;; is maintained by the volunteers at the python-mode@python.org mailing list.
 
 ;; pdbtrack support contributed by Ken Manheimer, April 2001.  Skip Montanaro
 ;; has also contributed significantly to python-mode's development.
 
-;; Please use the SourceForge Python project to submit bugs or
-;; patches:
+;; Please use Launchpad to submit bugs or patches:
 ;;
-;;     http://sourceforge.net/projects/python
+;;     https://launchpad.net/python-mode
 
 ;; INSTALLATION:
 
@@ -52,27 +52,18 @@
 ;;    (global-font-lock-mode t)
 ;;    (setq font-lock-maximum-decoration t)
 
-;; FOR MORE INFORMATION:
-
-;; There is some information on python-mode.el at
-
-;;     http://www.python.org/emacs/python-mode/
-;;
-;; It does contain links to other packages that you might find useful,
-;; such as pdb interfaces, OO-Browser links, etc.
-
 ;; BUG REPORTING:
 
-;; As mentioned above, please use the SourceForge Python project for
-;; submitting bug reports or patches.  The old recommendation, to use
-;; C-c C-b will still work, but those reports have a higher chance of
-;; getting buried in my mailbox.  Please include a complete, but
-;; concise code sample and a recipe for reproducing the bug.  Send
-;; suggestions and other comments to python-mode@python.org.
+;; As mentioned above, please use the Launchpad python-mode project for
+;; submitting bug reports or patches.  The old recommendation, to use C-c C-b
+;; will still work, but those reports have a higher chance of getting buried
+;; in our inboxes.  Please include a complete, but concise code sample and a
+;; recipe for reproducing the bug.  Send suggestions and other comments to
+;; python-mode@python.org.
 
-;; When in a Python mode buffer, do a C-h m for more help.  It's
-;; doubtful that a texinfo manual would be very useful, but if you
-;; want to contribute one, I'll certainly accept it!
+;; When in a Python mode buffer, do a C-h m for more help.  It's doubtful that
+;; a texinfo manual would be very useful, but if you want to contribute one,
+;; we'll certainly accept it!
 
 ;;; Code:
 
