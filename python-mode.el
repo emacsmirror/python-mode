@@ -9,7 +9,7 @@
 ;; Created:    Feb 1992
 ;; Keywords:   python languages oop
 
-(defconst py-version "5.0.0"
+(defconst py-version "5.0.0+"
   "`python-mode' version number.")
 
 ;; This software is provided as-is, without express or implied warranty.
@@ -27,7 +27,12 @@
 ;; doesn't even use Emacs any more <wink>.  In 2003, python-mode.el was moved
 ;; to its own SourceForge project apart from the Python project, and in 2008
 ;; it was moved to Launchpad for all project administration.  python-mode.el
-;; is maintained by the volunteers at the python-mode@python.org mailing list.
+;; is maintained by the volunteers at the python-mode@python.org mailing
+;; list.
+
+;; python-mode.el is different than, and pre-dates by many years, the
+;; python.el that comes with FSF Emacs.  We'd like to merge the two modes but
+;; have few cycles to do so.  Volunteers are welcome.
 
 ;; pdbtrack support contributed by Ken Manheimer, April 2001.  Skip Montanaro
 ;; has also contributed significantly to python-mode's development.
