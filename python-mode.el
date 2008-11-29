@@ -417,13 +417,13 @@ support for features needed by `python-mode'.")
 
 (defvar python-font-lock-keywords
   (let ((kw1 (mapconcat 'identity
-                        '("and"      "assert"   "break"   "class"
-                          "continue" "def"      "del"     "elif"
-                          "else"     "except"   "for"     "None"
-                          "from"     "global"   "if"      "import"
-                          "in"       "is"       "lambda"  "not"
-                          "or"       "pass"     "raise"   "as"
-                          "return"   "while"    "with"    "yield"
+                        '("and"      "assert"   "break"     "class"
+                          "continue" "def"      "del"       "elif"
+                          "else"     "except"   "for"       "from"
+                          "global"   "if"       "import"    "in"
+                          "is"       "lambda"   "not"       "or"
+                          "pass"     "raise"    "as"        "return"
+                          "while"    "with"    "yield"
                           )
                         "\\|"))
         (kw2 (mapconcat 'identity
@@ -490,7 +490,7 @@ support for features needed by `python-mode'.")
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\<\\(self\\|Ellipsis\\|True\\|False\\)\\>"
+     '("\\<\\(self\\|Ellipsis\\|True\\|False\\|None\\)\\>"
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
