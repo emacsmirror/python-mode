@@ -2,21 +2,30 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2008 https://launchpad.net/python-mode
+;; Author: 2003-2009 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
 ;; Created:    Feb 1992
 ;; Keywords:   python languages oop
 
-(defconst py-version "5.0.0+"
+(defconst py-version "5.1.0"
   "`python-mode' version number.")
 
-;; This software is provided as-is, without express or implied warranty.
-;; Permission to use, copy, modify, distribute or sell this software, without
-;; fee, for any purpose and by any individual or organization, is hereby
-;; granted, provided that the above copyright notice and this paragraph appear
-;; in all copies.
+;; This file is part of python-mode.el.
+;;
+;; python-mode.el is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the Free
+;; Software Foundation, either version 3 of the License, or (at your option)
+;; any later version.
+;;
+;; python-mode.el is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;; for more details.
+;;
+;; You should have received a copy of the GNU General Public License along
+;; with python-mode.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
