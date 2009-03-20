@@ -2403,7 +2403,8 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
     (goto-char start)
     (beginning-of-line)
     (setq start (point))
-    (indent-rigidly start end count)))
+    (let (deactivate-mark)
+      (indent-rigidly start end count))))
 
 (defun py-shift-region-left (start end &optional count)
   "Shift region of Python code to the left.
