@@ -1225,6 +1225,17 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name)))
     )
+
+  ;; Add support for HideShow
+  (unless (assoc 'python-mode hs-special-modes-alist)
+    (setq hs-special-modes-alist
+	  (cons (list 
+		 'python-mode "^\\s-*class\\>\\|^\\s-*def\\>" nil "#" 
+		 (lambda (arg)
+		   (py-end-of-def-or-class 'either)
+		   (skip-chars-backward " \t\n"))
+		 nil) hs-special-modes-alist)))
+  
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
       (run-hooks 'python-mode-hook)
