@@ -1230,9 +1230,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (unless (assoc 'python-mode hs-special-modes-alist)
     (setq hs-special-modes-alist
 	  (cons (list 
-		 'python-mode "^\\s-*class\\>\\|^\\s-*def\\>" nil "#" 
+		 'python-mode "^\\s-*class\\>\\|^\\s-*def\\>\\|^\\s-*if\\>\\|^\\s-*elif\\>\\|^\\s-*else\\>\\|^\\s-*try\\>\\|^\\s-*except\\>\\|^\\s-*finally\\>\\|^\\s-*with\\>\\|^\\s-*for\\>\\|^\\s-*while\\>\\|^\\s-*\"\"\"" nil "#" 
 		 (lambda (arg)
-		   (py-end-of-def-or-class 'either)
+		   (py-goto-beyond-block)
 		   (skip-chars-backward " \t\n"))
 		 nil) hs-special-modes-alist)))
   
