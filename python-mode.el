@@ -375,6 +375,21 @@ to select the appropriate python interpreter mode for a file.")
   :type 'boolean
   :group 'python)
 
+(defcustom py-hide-show-keywords '(
+                                   "class"    "def"    "elif"    "else"    "except"
+                                   "for"      "if"     "while"   "finally" "try"
+                                   "with"
+                                  )
+  "*Keywords that can be hiden by hide-show"
+  :type '(repeat string)
+  :group 'python)
+
+(defcustom py-hide-show-hide-docstrings t
+  "*Controls if doc strings can be hiden by hide-show"
+  :type 'boolean
+  :group 'python)
+
+
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
@@ -1227,14 +1242,13 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     )
 
   ;; Add support for HideShow
-  (unless (assoc 'python-mode hs-special-modes-alist)
-    (setq hs-special-modes-alist
-	  (cons (list 
-		 'python-mode "^\\s-*class\\>\\|^\\s-*def\\>\\|^\\s-*if\\>\\|^\\s-*elif\\>\\|^\\s-*else\\>\\|^\\s-*try\\>\\|^\\s-*except\\>\\|^\\s-*finally\\>\\|^\\s-*with\\>\\|^\\s-*for\\>\\|^\\s-*while\\>\\|^\\s-*\"\"\"" nil "#" 
-		 (lambda (arg)
-		   (py-goto-beyond-block)
-		   (skip-chars-backward " \t\n"))
-		 nil) hs-special-modes-alist)))
+  (setq hs-special-modes-alist
+        (cons (list
+               'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords ) "\\|")) nil "#"
+               (lambda (arg)
+                 (py-goto-beyond-block)
+                 (skip-chars-backward " \t\n"))
+               nil) hs-special-modes-alist))
   
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
