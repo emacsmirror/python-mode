@@ -375,6 +375,21 @@ to select the appropriate python interpreter mode for a file.")
   :type 'boolean
   :group 'python)
 
+(defcustom py-hide-show-keywords '(
+                                   "class"    "def"    "elif"    "else"    "except"
+                                   "for"      "if"     "while"   "finally" "try"
+                                   "with"
+                                  )
+  "*Keywords that can be hiden by hide-show"
+  :type '(repeat string)
+  :group 'python)
+
+(defcustom py-hide-show-hide-docstrings t
+  "*Controls if doc strings can be hiden by hide-show"
+  :type 'boolean
+  :group 'python)
+
+
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
@@ -1225,6 +1240,15 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name)))
     )
+
+  ;; Add support for HideShow
+  (add-to-list 'hs-special-modes-alist (list
+               'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords ) "\\|")) nil "#"
+               (lambda (arg)
+                 (py-goto-beyond-block)
+                 (skip-chars-backward " \t\n"))
+               nil))
+  
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
       (run-hooks 'python-mode-hook)
