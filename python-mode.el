@@ -375,11 +375,12 @@ to select the appropriate python interpreter mode for a file.")
   :type 'boolean
   :group 'python)
 
-(defcustom py-hide-show-keywords '(
-                                   "class"    "def"    "elif"    "else"    "except"
-                                   "for"      "if"     "while"   "finally" "try"
-                                   "with"
-                                  )
+(defcustom py-hide-show-keywords
+  '(
+    "class"    "def"    "elif"    "else"    "except"
+    "for"      "if"     "while"   "finally" "try"
+    "with"
+    )
   "*Keywords that can be hiden by hide-show"
   :type '(repeat string)
   :group 'python)
