@@ -2713,26 +2713,23 @@ start of the buffer each time.
 
 To mark the current `def', see `\\[py-mark-def-or-class]'."
   (interactive "P")                     ; raw prefix arg
-  (setq count (or count 1))
-  (let ((at-or-before-p (<= (current-column) (current-indentation)))
-        (start-of-line (goto-char (py-point 'bol)))
-        (start-of-stmt (goto-char (py-point 'bos)))
-        (start-re (cond ((eq class 'either) "^[ \t]*\\(class\\|def\\)\\>")
-                        (class "^[ \t]*class\\>")
-                        (t "^[ \t]*def\\>")))
-        )
-    ;; searching backward
-    (if (and (< 0 count)
-             (or (/= start-of-stmt start-of-line)
-                 (not at-or-before-p)))
+  (lexical-let* ((count (or count 1))
+                 (step (if (< 0 count) -1 1))
+                 (start-re (cond ((eq class 'either) "^[ \t]*\\(class\\|def\\)\\>")
+                                 (class "^[ \t]*class\\>")
+                                 (t "^[ \t]*def\\>"))))
+    (while (/= 0 count)
+      (if (< 0 count)
+          (unless (looking-at start-re) (end-of-line))
         (end-of-line))
-    ;; search forward
-    (if (and (> 0 count)
-             (zerop (current-column))
-             (looking-at start-re))
-        (end-of-line))
-    (if (re-search-backward start-re nil 'move count)
-        (goto-char (match-beginning 0)))))
+      (if 
+          (re-search-backward start-re nil 'move (- step))
+          (unless
+              ;; if inside a string
+              (nth 3 (parse-partial-sexp (point-min) (point)))
+            (goto-char (match-beginning 0))
+            (setq count (+ count step)))
+        (setq count 0)))))
 
 ;; Backwards compatibility
 (defalias 'beginning-of-python-def-or-class 'py-beginning-of-def-or-class)
