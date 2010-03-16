@@ -54,15 +54,22 @@
 
 ;; To install, just drop this file into a directory on your load-path and
 ;; byte-compile it.  To set up Emacs to automatically edit files ending in
-;; ".py" using python-mode add the following to your ~/.emacs file (GNU
-;; Emacs) or ~/.xemacs/init.el file (XEmacs):
+;; ".py" using python-mode, add to your emacs init file
+;;
+;; GNU Emacs: ~/.emacs, ~/.emacs.el, or ~/.emacs.d/init.el
+;;
+;; XEmacs: ~/.xemacs/init.el
+;;
+;; the following code:
+;;
 ;;    (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
 ;;    (setq interpreter-mode-alist (cons '("python" . python-mode)
 ;;                                       interpreter-mode-alist))
 ;;    (autoload 'python-mode "python-mode" "Python editing mode." t)
 ;;
 ;; In XEmacs syntax highlighting should be enabled automatically.  In GNU
-;; Emacs you may have to add these lines to your ~/.emacs file:
+;; Emacs you may have to add these lines to your init file:
+;;
 ;;    (global-font-lock-mode t)
 ;;    (setq font-lock-maximum-decoration t)
 
@@ -381,12 +388,12 @@ to select the appropriate python interpreter mode for a file.")
     "for"      "if"     "while"   "finally" "try"
     "with"
     )
-  "*Keywords that can be hiden by hide-show"
+  "*Keywords that can be hidden by hide-show"
   :type '(repeat string)
   :group 'python)
 
 (defcustom py-hide-show-hide-docstrings t
-  "*Controls if doc strings can be hiden by hide-show"
+  "*Controls if doc strings can be hidden by hide-show"
   :type 'boolean
   :group 'python)
 
