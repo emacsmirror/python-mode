@@ -2653,8 +2653,9 @@ do not include blank, comment, or continuation lines."
       (if (> count 0) (goto-char start)))
     count))
 
-(defun py-goto-block-up (&optional nomark)
-  "Move up to start of current block.
+(defalias 'py-goto-block-up 'py-beginning-of-block)
+(defun py-beginning-of-block (&optional nomark)
+  "Move to start of current block.
 Go to the statement that starts the smallest enclosing block; roughly
 speaking, this will be the closest preceding statement that ends with a
 colon and is indented less than the statement you started on.  If
