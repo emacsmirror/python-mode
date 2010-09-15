@@ -3545,7 +3545,7 @@ line of the block."
   ;;
   ;; Also, if we're sitting inside a triple quoted string, this will
   ;; drop us at the line that begins the string.
-  (let (open-bracket-pos)
+  (let (open-bracket-pos pos)
     (while (py-continuation-line-p)
       (beginning-of-line)
       (if (py-backslash-continuation-line-p)
@@ -3553,7 +3553,11 @@ line of the block."
             (forward-line -1))
         ;; else zip out of nested brackets/braces/parens
         (while (setq open-bracket-pos (py-nesting-level))
-          (goto-char open-bracket-pos)))))
+          (goto-char open-bracket-pos))))
+    (when (and (setq pos (python-in-string/comment))
+               (< pos (point)))
+      (goto-char pos)
+      (py-goto-initial-line)))
   (beginning-of-line))
 
 (defun py-goto-beyond-final-line ()
