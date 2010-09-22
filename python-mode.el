@@ -3644,9 +3644,8 @@ See: http://docs.python.org/reference/compound_stmts.html
   (beginning-of-line))
 
 (defun py-goto-beyond-final-line ()
-  "Go to the point just beyond the fine line of the current statement.
-Usually this is the start of the next line, but if this is a
-multi-line statement we need to skip over the continuation lines."
+  "Go to the point just beyond the final line of the current statement. "
+
   ;; Tricky: Again we need to be clever to avoid quadratic time
   ;; behavior.
   ;;
