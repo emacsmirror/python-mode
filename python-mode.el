@@ -3737,8 +3737,7 @@ does not include blank lines, comments, or continuation lines."
 
 (defun py-goto-statement-below ()
   "Go to start of the first statement following the statement containing point.
-Return t if there is such a statement, otherwise nil.  `Statement'
-does not include blank lines, comments, or continuation lines."
+Return t if there is such a statement, otherwise nil. "
   (beginning-of-line)
   (let ((start (point)))
     (py-goto-beyond-final-line)
