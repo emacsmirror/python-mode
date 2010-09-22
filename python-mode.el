@@ -3608,10 +3608,23 @@ for."
       (py-safe (search-backward skip)))))
 
 (defun py-goto-initial-line ()
-  "Go to the initial line of the current statement.
-Usually this is the line we're on, but if we're on the 2nd or
-following lines of a continuation block, we need to go up to the first
-line of the block."
+  "Go to the initial line of a simple or compound statement.
+If inside a compound statement, go to the line that introduces
+the suite, i.e. the clause header.
+
+The Python language reference: 
+
+    \"Compound statements consist of one or more ‘clauses.’ A clause consists
+    of a header and a ‘suite.’ The clause headers of a particular compound
+    statement are all at the same indentation level. Each clause header begins
+    with a uniquely identifying keyword and ends with a colon. A suite is a
+    group of statements controlled by a clause. A suite can be one or more
+    semicolon-separated simple statements on the same line as the header,
+    following the header’s colon, or it can be one or more indented statements
+    on subsequent lines. [...]\"
+
+See: http://docs.python.org/reference/compound_stmts.html
+"
   ;; Tricky: We want to avoid quadratic-time behavior for long
   ;; continued blocks, whether of the backslash or open-bracket
   ;; varieties, or a mix of the two.  The following manages to do that
