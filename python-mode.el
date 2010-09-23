@@ -3570,8 +3570,8 @@ If nesting level is zero, return nil."
         nil                             ; not in a nest
       (car (cdr status)))))             ; char# of open bracket
 
-(defun py-backslash-continuation-line-p ()
-  "Return t iff preceding line ends with backslash that is not in a comment."
+(defun py-backslash-continuation-preceding-line-p ()
+  "Return t if preceding line ends with backslash. "
   (save-excursion
     (beginning-of-line)
     (and
@@ -3586,7 +3586,7 @@ If nesting level is zero, return nil."
   "Return t iff current line is a continuation line."
   (save-excursion
     (beginning-of-line)
-    (or (py-backslash-continuation-line-p)
+    (or (py-backslash-continuation-preceding-line-p)
         (py-nesting-level))))
 
 (defun py-goto-beginning-of-tqs (delim)
@@ -3635,8 +3635,8 @@ See: http://docs.python.org/reference/compound_stmts.html
   (let (open-bracket-pos)
     (while (py-continuation-line-p)
       (beginning-of-line)
-      (if (py-backslash-continuation-line-p)
-          (while (py-backslash-continuation-line-p)
+      (if (py-backslash-continuation-preceding-line-p)
+          (while (py-backslash-continuation-preceding-line-p)
             (forward-line -1))
         ;; else zip out of nested brackets/braces/parens
         (while (setq open-bracket-pos (py-nesting-level))
@@ -3659,7 +3659,7 @@ See: http://docs.python.org/reference/compound_stmts.html
     (while (and (py-continuation-line-p)
                 (not (eobp)))
       ;; skip over the backslash flavor
-      (while (and (py-backslash-continuation-line-p)
+      (while (and (py-backslash-continuation-preceding-line-p)
                   (not (eobp)))
         (forward-line 1))
       ;; if in nest, zip to the end of the nest
