@@ -3039,7 +3039,10 @@ moves to the end of the block (& does not set mark or display a msg)."
       (push-mark (point) 'no-msg)
       (forward-line -1)
       (message "Mark set after: %s" (py-suck-up-leading-text))
-      (goto-char initial-pos))))
+      (goto-char initial-pos)
+      (exchange-point-and-mark)
+      (py-keep-region-active)
+      )))
 
 (defun py-mark-def-or-class (&optional class)
   "Set region to body of def (or class, with prefix arg) enclosing point.
