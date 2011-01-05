@@ -537,6 +537,11 @@ support for features needed by `python-mode'.")
   "Face for XXX, TODO, and FIXME tags")
 (make-face 'py-XXX-tag-face)
 
+;; Face for class names
+(defvar py-class-name-face 'py-class-name-face
+  "Face for Python class names.")
+(make-face 'py-class-name-face)
+
 (defun py-font-lock-mode-hook ()
   (or (face-differs-from-default-p 'py-pseudo-keyword-face)
       (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
@@ -546,6 +551,8 @@ support for features needed by `python-mode'.")
       (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
   (or (face-differs-from-default-p 'py-XXX-tag-face)
       (copy-face 'font-lock-comment-face 'py-XXX-tag-face))
+  (or (face-differs-from-default-p 'py-class-name-face)
+      (copy-face 'font-lock-type-face 'py-class-name-face))
   )
 
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
@@ -621,7 +628,7 @@ support for features needed by `python-mode'.")
      ;; Exceptions
      (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-builtins-face)
      ;; classes
-     '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
+     '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 py-class-name-face)
      ;; functions
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
