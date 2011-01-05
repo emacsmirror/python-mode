@@ -412,7 +412,7 @@ set in py-execute-region and used in py-jump-to-exception.")
 ;; from python.el, version "22.1"
 
 (defconst python-font-lock-syntactic-keywords
-  
+
 '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
   (2
    (7)))
@@ -479,7 +479,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
         ;; Give punctuation syntax to ASCII that normally has symbol
         ;; syntax or has word syntax and isn't a letter.
         (if (featurep 'xemacs)
-            (setq table (standard-syntax-table)) 
+            (setq table (standard-syntax-table))
           (let ((symbol (if (featurep 'xemacs) '(3)(string-to-syntax "_")))
                 ;; (symbol (string-to-syntax "_"))
                 (sst (standard-syntax-table)))
@@ -1322,7 +1322,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
        '(python-font-lock-keywords nil nil nil nil
 				   (font-lock-syntactic-keywords
 				    . python-font-lock-syntactic-keywords)))
-  ;; 2009-09-10 a.roehler@web.de changed section end 
+  ;; 2009-09-10 a.roehler@web.de changed section end
   (setq major-mode              'python-mode
         mode-name               "Python"
         local-abbrev-table      python-mode-abbrev-table
@@ -1376,7 +1376,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
                   (py-goto-beyond-block)
                   (skip-chars-backward " \t\n"))
                 nil))
-  
+
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
       (run-hooks 'python-mode-hook)
@@ -2849,7 +2849,7 @@ To mark the current `def', see `\\[py-mark-def-or-class]'."
       (if (< 0 count)
           (unless (looking-at start-re) (end-of-line))
         (end-of-line))
-      (if 
+      (if
           (re-search-backward start-re nil 'move (- step))
           (unless
               ;; if inside a string
@@ -3656,7 +3656,7 @@ for."
 If inside a compound statement, go to the line that introduces
 the suite, i.e. the clause header.
 
-The Python language reference: 
+The Python language reference:
 
     \"Compound statements consist of one or more ‘clauses.’ A clause consists
     of a header and a ‘suite.’ The clause headers of a particular compound
