@@ -648,6 +648,22 @@ support for features needed by `python-mode'.")
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
+     ;; special marking for string escapes and percent substitutes;
+     ;; loop adapted from lisp-mode in font-lock.el
+     '((lambda (bound)
+         (catch 'found
+           (while (re-search-forward
+                   (concat
+                    "\\(%[^(]\\|%([^)]*).\\)\\|"
+                    "\\(\\\\\\\\\\|\\\\x..\\|\\\\u....\\|\\\\U........\\|"
+                    "\\\\[0-9][0-9]*\\|\\\\[abfnrtv\"']\\)") bound t)
+             (let ((face (get-text-property (1- (point)) 'face)))
+               (when (or (and (listp face)
+                              (memq 'font-lock-string-face face))
+                         (eq 'font-lock-string-face face))
+                 (throw 'found t))))))
+       (1 'font-lock-regexp-grouping-construct prepend t)
+       (2 'font-lock-regexp-grouping-backslash prepend t))
      ))
   "Additional expressions to highlight in Python mode.")
 
