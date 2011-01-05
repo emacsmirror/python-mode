@@ -4046,7 +4046,7 @@ These are Python temporary files awaiting execution."
 
     (save-excursion
       (goto-char start)
-      (if (looking-at "\\('''\\|\"\"\"\\|'\\|\"\\)\\\\?\n?")
+      (if (looking-at "\\([urUR]*\\(?:'''\\|\"\"\"\\|'\\|\"\\)\\)\\\\?\n?")
           (setq string-start (match-end 0)
                 delim-length (- (match-end 1) (match-beginning 1))
                 delim (buffer-substring-no-properties (match-beginning 1)
