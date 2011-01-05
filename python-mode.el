@@ -542,6 +542,11 @@ support for features needed by `python-mode'.")
   "Face for Python class names.")
 (make-face 'py-class-name-face)
 
+;; Face for exception names
+(defvar py-exception-name-face 'py-exception-name-face
+  "Face for exception names like TypeError.")
+(make-face 'py-exception-name-face)
+
 (defun py-font-lock-mode-hook ()
   (or (face-differs-from-default-p 'py-pseudo-keyword-face)
       (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
@@ -553,6 +558,8 @@ support for features needed by `python-mode'.")
       (copy-face 'font-lock-comment-face 'py-XXX-tag-face))
   (or (face-differs-from-default-p 'py-class-name-face)
       (copy-face 'font-lock-type-face 'py-class-name-face))
+  (or (face-differs-from-default-p 'py-exception-name-face)
+      (copy-face 'font-lock-builtin-face 'py-exception-name-face))
   )
 
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
@@ -626,7 +633,11 @@ support for features needed by `python-mode'.")
      ;; Yes "except" is in both lists.
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
-     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-builtins-face)
+     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-exception-name-face)
+     ;; raise stmts
+     '("\\<raise[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_.]*\\)" 1 py-exception-name-face)
+     ;; except clauses
+     '("\\<except[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_.]*\\)" 1 py-exception-name-face)
      ;; classes
      '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 py-class-name-face)
      ;; functions
