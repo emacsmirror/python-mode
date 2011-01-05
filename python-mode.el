@@ -608,6 +608,7 @@ support for features needed by `python-mode'.")
                         "\\|"))
         )
     (list
+     ;; decorators
      '("^[ \t]*\\(@[a-zA-Z_][a-zA-Z_0-9]+\\)\\((.+)\\)?" 1 'py-decorators-face)
      ;; keywords
      (cons (concat "\\<\\(" kw1 "\\)\\>[ \n\t(]") 1)
@@ -618,7 +619,7 @@ support for features needed by `python-mode'.")
      ;; Yes "except" is in both lists.
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
-     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,(]") 1 'py-builtins-face)
+     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-builtins-face)
      ;; classes
      '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
      ;; functions
