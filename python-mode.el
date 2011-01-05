@@ -1357,12 +1357,25 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     )
 
   ;; Add support for HideShow
-  (add-to-list 'hs-special-modes-alist (list
-               'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords ) "\\|")) nil "#"
-               (lambda (arg)
-                 (py-goto-beyond-block)
-                 (skip-chars-backward " \t\n"))
-               nil))
+  (add-to-list 'hs-special-modes-alist
+               (list
+                'python-mode
+                ;; start regex
+                (concat (if py-hide-show-hide-docstrings
+                            "^\\s-*\"\"\"\\|" "")
+                        (mapconcat 'identity
+                                   (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>"))
+                                           py-hide-show-keywords)
+                                   "\\|"))
+                ;; end regex
+                nil
+                ;; comment-start regex
+                "#"
+                ;; forward-sexp function
+                (lambda (arg)
+                  (py-goto-beyond-block)
+                  (skip-chars-backward " \t\n"))
+                nil))
   
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
