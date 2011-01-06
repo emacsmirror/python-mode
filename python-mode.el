@@ -4124,9 +4124,8 @@ If point is inside a string, narrow to that string and fill.
           (eq (py-in-literal) 'string))
         (save-excursion
           (py-fill-string (py-point 'boi))))
-       ;; otherwise use the default
-       (t
-        (fill-paragraph justify))))))
+       ;; otherwise: do not ever fill code
+       (t nil)))))
 
 
 
