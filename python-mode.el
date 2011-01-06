@@ -502,11 +502,11 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     ;; We don't need to save the match data.
     (nth 8 (syntax-ppss)))
 
-  (defconst python-space-backslash-table
-    (let ((table (copy-syntax-table py-mode-syntax-table)))
-      (modify-syntax-entry ?\\ " " table)
-      table)
-    "`python-mode-syntax-table' with backslash given whitespace syntax.")
+(defconst python-space-backslash-table
+  (let ((table (copy-syntax-table py-mode-syntax-table)))
+    (modify-syntax-entry ?\\ " " table)
+    table)
+  "`python-mode-syntax-table' with backslash given whitespace syntax.")
 
 ;; 2009-09-10 a.roehler@web.de changed section end
 
