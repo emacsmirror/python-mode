@@ -4,6 +4,8 @@ Python Mode News
 New in version 5.2.0
 --------------------
 
+- Add new font-lock faces for class names and exception names.
+
 - Do not fill when calling fill-paragraph with point in a region of code.
 
 - Fixed font-locking of exception names in parenthesized lists.
