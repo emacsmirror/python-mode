@@ -537,6 +537,16 @@ support for features needed by `python-mode'.")
   "Face for XXX, TODO, and FIXME tags")
 (make-face 'py-XXX-tag-face)
 
+;; Face for class names
+(defvar py-class-name-face 'py-class-name-face
+  "Face for Python class names.")
+(make-face 'py-class-name-face)
+
+;; Face for exception names
+(defvar py-exception-name-face 'py-exception-name-face
+  "Face for exception names like TypeError.")
+(make-face 'py-exception-name-face)
+
 (defun py-font-lock-mode-hook ()
   (or (face-differs-from-default-p 'py-pseudo-keyword-face)
       (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
@@ -546,6 +556,10 @@ support for features needed by `python-mode'.")
       (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
   (or (face-differs-from-default-p 'py-XXX-tag-face)
       (copy-face 'font-lock-comment-face 'py-XXX-tag-face))
+  (or (face-differs-from-default-p 'py-class-name-face)
+      (copy-face 'font-lock-type-face 'py-class-name-face))
+  (or (face-differs-from-default-p 'py-exception-name-face)
+      (copy-face 'font-lock-builtin-face 'py-exception-name-face))
   )
 
 (add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
@@ -619,9 +633,13 @@ support for features needed by `python-mode'.")
      ;; Yes "except" is in both lists.
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
      ;; Exceptions
-     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-builtins-face)
+     (list (concat "\\<\\(" kw4 "\\)[ \n\t:,()]") 1 'py-exception-name-face)
+     ;; raise stmts
+     '("\\<raise[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_.]*\\)" 1 py-exception-name-face)
+     ;; except clauses
+     '("\\<except[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_.]*\\)" 1 py-exception-name-face)
      ;; classes
-     '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 font-lock-type-face)
+     '("\\<class[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)" 1 py-class-name-face)
      ;; functions
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
@@ -630,6 +648,27 @@ support for features needed by `python-mode'.")
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
+     ;; special marking for string escapes and percent substitutes;
+     ;; loops adapted from lisp-mode in font-lock.el
+     '((lambda (bound)
+         (catch 'found
+           (while (re-search-forward
+                   (concat
+                    "\\(\\\\\\\\\\|\\\\x..\\|\\\\u....\\|\\\\U........\\|"
+                    "\\\\[0-9][0-9]*\\|\\\\[abfnrtv\"']\\)") bound t)
+             (let ((face (get-text-property (1- (point)) 'face)))
+               (when (or (and (listp face) (memq 'font-lock-string-face face))
+                         (eq 'font-lock-string-face face))
+                 (throw 'found t))))))
+       (1 'font-lock-regexp-grouping-backslash prepend))
+     '((lambda (bound)
+         (catch 'found
+           (while (re-search-forward "\\(%[^(]\\|%([^)]*).\\)" bound t)
+             (let ((face (get-text-property (1- (point)) 'face)))
+               (when (or (and (listp face) (memq 'font-lock-string-face face))
+                         (eq 'font-lock-string-face face))
+                 (throw 'found t))))))
+       (1 'font-lock-regexp-grouping-construct prepend))
      ))
   "Additional expressions to highlight in Python mode.")
 
