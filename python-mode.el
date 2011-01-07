@@ -4104,14 +4104,10 @@ These are Python temporary files awaiting execution."
              (looking-at (concat "[ \t]*" delim))
              (setq string-start (point))))
 
-      (forward-sexp (if (= delim-length 3) 2 1))
-
-      ;; with both triple quoted strings and single/double quoted strings
-      ;; we're now directly behind the first char of the end delimiter
-      ;; (this doesn't work correctly when the triple quoted string
-      ;; contains the quote mark itself). The end of the string's contents
-      ;; is one less than point
-      (setq string-end (1- (point))))
+      ;; move until after end of string, then the end of the string's contents
+      ;; is delim-length characters before that
+      (forward-sexp)
+      (setq string-end (- (point) delim-length)))
 
     ;; Narrow to the string's contents and fill the current paragraph
     (save-restriction
