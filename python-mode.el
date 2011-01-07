@@ -412,17 +412,16 @@ set in py-execute-region and used in py-jump-to-exception.")
 ;; from python.el, version "22.1"
 
 (defconst python-font-lock-syntactic-keywords
-
-'(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
-  (2
-   (7)))
- ("\\([RUBrub]?\\)[Rr]?\\(\\s\"\\)\\2\\(\\2\\)"
-  (1
-   (python-quote-syntax 1))
-  (2
-   (python-quote-syntax 2))
-  (3
-   (python-quote-syntax 3)))))
+  '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
+     (2
+      (7)))
+    ("\\([RUBrub]?\\)[Rr]?\\(\\s\"\\)\\2\\(\\2\\)"
+     (1
+      (python-quote-syntax 1))
+     (2
+      (python-quote-syntax 2))
+     (3
+      (python-quote-syntax 3)))))
 
 (defun python-quote-syntax (n)
   "Put `syntax-table' property correctly on triple quote.
@@ -446,25 +445,25 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ((= n 3)
       (let* ((font-lock-syntactic-keywords nil)
              (syntax (syntax-ppss)))
-        (when (eq t (nth 3 syntax))	; after unclosed fence
-          (goto-char (nth 8 syntax))	; fence position
-          (skip-chars-forward "uUrRbB")	; skip any prefix
+        (when (eq t (nth 3 syntax))     ; after unclosed fence
+          (goto-char (nth 8 syntax))    ; fence position
+          (skip-chars-forward "uUrRbB") ; skip any prefix
           ;; Is it a matching sequence?
           (if (eq (char-after) (char-after (match-beginning 2)))
               (if (featurep 'xemacs)
-                '(15)
-            (eval-when-compile (string-to-syntax "|")))
+                  '(15)
+                (eval-when-compile (string-to-syntax "|")))
             ))))
      ;; Consider property for initial char, accounting for prefixes.
-     ((or (and (= n 2)			; leading quote (not prefix)
+     ((or (and (= n 2)                  ; leading quote (not prefix)
                (= (match-beginning 1) (match-end 1))) ; prefix is null
-          (and (= n 1)			; prefix
+          (and (= n 1)                  ; prefix
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
         (unless (eq 'string (syntax-ppss-context (syntax-ppss)))
           ;; (eval-when-compile (string-to-syntax "|"))
           (if (featurep 'xemacs)
-            '(15)
+              '(15)
             (eval-when-compile (string-to-syntax "|")))
           )))
      ;; Otherwise (we're in a non-matching string) the property is
@@ -474,8 +473,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (setq py-mode-syntax-table
       (let ((table (make-syntax-table))
             (tablelookup (if (featurep 'xemacs)
-                                     'get-char-table
-                                   'aref)))
+                             'get-char-table
+                           'aref)))
         ;; Give punctuation syntax to ASCII that normally has symbol
         ;; syntax or has word syntax and isn't a letter.
         (if (featurep 'xemacs)
@@ -1359,8 +1358,8 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; from python.el, version "22.1"
     (set (make-local-variable 'font-lock-defaults)
        '(python-font-lock-keywords nil nil nil nil
-				   (font-lock-syntactic-keywords
-				    . python-font-lock-syntactic-keywords)))
+                                   (font-lock-syntactic-keywords
+                                    . python-font-lock-syntactic-keywords)))
   ;; 2009-09-10 a.roehler@web.de changed section end
   (setq major-mode              'python-mode
         mode-name               "Python"
