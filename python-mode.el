@@ -416,7 +416,7 @@ set in py-execute-region and used in py-jump-to-exception.")
 '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
   (2
    (7)))
- ("\\([RUru]?\\)[Rr]?\\(\\s\"\\)\\2\\(\\2\\)"
+ ("\\([RUBrub]?\\)[Rr]?\\(\\s\"\\)\\2\\(\\2\\)"
   (1
    (python-quote-syntax 1))
   (2
@@ -448,7 +448,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
              (syntax (syntax-ppss)))
         (when (eq t (nth 3 syntax))	; after unclosed fence
           (goto-char (nth 8 syntax))	; fence position
-          (skip-chars-forward "uUrR")	; skip any prefix
+          (skip-chars-forward "uUrRbB")	; skip any prefix
           ;; Is it a matching sequence?
           (if (eq (char-after) (char-after (match-beginning 2)))
               (if (featurep 'xemacs)
@@ -693,15 +693,15 @@ Currently-active file is at the head of the list.")
    ;;
    ;; (maybe raw), long single quoted triple quoted strings (SQTQ),
    ;; with potential embedded single quotes
-   "[rR]?'''[^']*\\(\\('[^']\\|''[^']\\)[^']*\\)*'''"
+   "[rRuUbB]?'''[^']*\\(\\('[^']\\|''[^']\\)[^']*\\)*'''"
    "\\|"
    ;; (maybe raw), long double quoted triple quoted strings (DQTQ),
    ;; with potential embedded double quotes
-   "[rR]?\"\"\"[^\"]*\\(\\(\"[^\"]\\|\"\"[^\"]\\)[^\"]*\\)*\"\"\""
+   "[rRuUbB]?\"\"\"[^\"]*\\(\\(\"[^\"]\\|\"\"[^\"]\\)[^\"]*\\)*\"\"\""
    "\\|"
-   "[rR]?'\\([^'\n\\]\\|\\\\.\\)*'"     ; single-quoted
-   "\\|"                                ; or
-   "[rR]?\"\\([^\"\n\\]\\|\\\\.\\)*\""  ; double-quoted
+   "[rRuUbB]?'\\([^'\n\\]\\|\\\\.\\)*'"     ; single-quoted
+   "\\|"                                    ; or
+   "[rRuUbB]?\"\\([^\"\n\\]\\|\\\\.\\)*\""  ; double-quoted
    )
   "Regular expression matching a Python string literal.")
 
@@ -4088,7 +4088,7 @@ These are Python temporary files awaiting execution."
 
     (save-excursion
       (goto-char start)
-      (if (looking-at "\\([urUR]*\\(?:'''\\|\"\"\"\\|'\\|\"\\)\\)\\\\?\n?")
+      (if (looking-at "\\([urbURB]*\\(?:'''\\|\"\"\"\\|'\\|\"\\)\\)\\\\?\n?")
           (setq string-start (match-end 0)
                 delim-length (- (match-end 1) (match-beginning 1))
                 delim (buffer-substring-no-properties (match-beginning 1)
