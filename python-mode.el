@@ -9,7 +9,7 @@
 ;; Created:    Feb 1992
 ;; Keywords:   python languages oop
 
-(defconst py-version "5.1.0+"
+(defconst py-version "5.2"
   "`python-mode' version number.")
 
 ;; This file is part of python-mode.el.

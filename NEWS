@@ -1,8 +1,8 @@
 Python Mode News
 ================
 
-New in version 5.2.0
---------------------
+New in version 5.2
+------------------
 
 - Fixed filling of triple-quoted strings.
 
