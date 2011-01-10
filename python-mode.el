@@ -444,7 +444,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Consider property for the last char if in a fenced string.
      ((= n 3)
       (let* ((font-lock-syntactic-keywords nil)
-             (syntax (syntax-ppss)))
+             (syntax (parse-partial-sexp (point-min) (point))))
         (when (eq t (nth 3 syntax))     ; after unclosed fence
           (goto-char (nth 8 syntax))    ; fence position
           (skip-chars-forward "uUrRbB") ; skip any prefix
@@ -460,7 +460,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
           (and (= n 1)                  ; prefix
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
-        (unless (eq 'string (syntax-ppss-context (syntax-ppss)))
+        (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
           ;; (eval-when-compile (string-to-syntax "|"))
           (if (featurep 'xemacs)
               '(15)
@@ -499,7 +499,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (defsubst python-in-string/comment ()
     "Return non-nil if point is in a Python literal (a comment or string)."
     ;; We don't need to save the match data.
-    (nth 8 (syntax-ppss)))
+    (nth 8 (parse-partial-sexp (point-min) (point))))
 
 (defconst python-space-backslash-table
   (let ((table (copy-syntax-table py-mode-syntax-table)))
