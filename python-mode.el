@@ -423,6 +423,14 @@ set in py-execute-region and used in py-jump-to-exception.")
      (3
       (python-quote-syntax 3)))))
 
+(if (featurep 'xemacs)
+    (defun string-to-syntax (s)
+      (cond
+       ((equal s "|") '(15))
+       ((equal s "_") '(3))
+       (t (error "Unhandled string: %s" s))))
+  )
+
 (defun python-quote-syntax (n)
   "Put `syntax-table' property correctly on triple quote.
 Used for syntactic keywords.  N is the match number (1, 2 or 3)."
@@ -450,9 +458,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
           (skip-chars-forward "uUrRbB") ; skip any prefix
           ;; Is it a matching sequence?
           (if (eq (char-after) (char-after (match-beginning 2)))
-              (if (featurep 'xemacs)
-                  '(15)
-                (eval-when-compile (string-to-syntax "|")))
+                (string-to-syntax "|")
             ))))
      ;; Consider property for initial char, accounting for prefixes.
      ((or (and (= n 2)                  ; leading quote (not prefix)
@@ -461,10 +467,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
         (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
-          ;; (eval-when-compile (string-to-syntax "|"))
-          (if (featurep 'xemacs)
-              '(15)
-            (eval-when-compile (string-to-syntax "|")))
+            (eval-when-compile (string-to-syntax "|"))
           )))
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
@@ -477,15 +480,12 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                            'aref)))
         ;; Give punctuation syntax to ASCII that normally has symbol
         ;; syntax or has word syntax and isn't a letter.
-        (if (featurep 'xemacs)
-            (setq table (standard-syntax-table))
-          (let ((symbol (if (featurep 'xemacs) '(3)(string-to-syntax "_")))
-                ;; (symbol (string-to-syntax "_"))
+          (let ((symbol (string-to-syntax "_"))
                 (sst (standard-syntax-table)))
             (dotimes (i 128)
               (unless (= i ?_)
                 (if (equal symbol (funcall tablelookup sst i))
-                    (modify-syntax-entry i "." table))))))
+                    (modify-syntax-entry i "." table)))))
         (modify-syntax-entry ?$ "." table)
         (modify-syntax-entry ?% "." table)
         ;; exceptions
