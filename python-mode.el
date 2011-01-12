@@ -411,6 +411,13 @@ set in py-execute-region and used in py-jump-to-exception.")
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
 
+;; GNU's syntax-ppss-context
+((defsubst syntax-ppss-context (ppss)
+  (cond
+   ((nth 3 ppss) 'string)
+   ((nth 4 ppss) 'comment)
+   (t nil))))
+
 (defconst python-font-lock-syntactic-keywords
   '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
      (2
