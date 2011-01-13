@@ -410,7 +410,7 @@ set in py-execute-region and used in py-jump-to-exception.")
 
 ;; GNU's syntax-ppss-context
 (unless (fboundp 'syntax-ppss-context)
- (defsubst py-syntax-ppss-context (ppss)
+ (defsubst syntax-ppss-context (ppss)
   (cond
    ((nth 3 ppss) 'string)
    ((nth 4 ppss) 'comment)
@@ -475,7 +475,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
           (and (= n 1)                  ; prefix
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
-        (unless (eq 'string (py-syntax-ppss-context (parse-partial-sexp (point-min) (point))))
+        (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
           ;; (eval-when-compile (string-to-syntax "|"))
             (eval-when-compile (string-to-syntax "|"))
           )))
