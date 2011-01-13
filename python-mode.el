@@ -468,7 +468,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
           (and (= n 1)                  ; prefix
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
-        (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
+        (unless (eq 'string (py-syntax-ppss-context (parse-partial-sexp (point-min) (point))))
           ;; (eval-when-compile (string-to-syntax "|"))
           (if (featurep 'xemacs)
               '(15)
