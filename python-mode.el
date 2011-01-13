@@ -458,9 +458,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
           (skip-chars-forward "uUrRbB") ; skip any prefix
           ;; Is it a matching sequence?
           (if (eq (char-after) (char-after (match-beginning 2)))
-              (if (featurep 'xemacs)
-                  '(15)
-                (eval-when-compile (string-to-syntax "|")))
+                (eval-when-compile (string-to-syntax "|"))
             ))))
      ;; Consider property for initial char, accounting for prefixes.
      ((or (and (= n 2)                  ; leading quote (not prefix)
@@ -470,9 +468,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
       (let ((font-lock-syntactic-keywords nil))
         (unless (eq 'string (py-syntax-ppss-context (parse-partial-sexp (point-min) (point))))
           ;; (eval-when-compile (string-to-syntax "|"))
-          (if (featurep 'xemacs)
-              '(15)
-            (eval-when-compile (string-to-syntax "|")))
+            (eval-when-compile (string-to-syntax "|"))
           )))
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
@@ -487,7 +483,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
         ;; syntax or has word syntax and isn't a letter.
         (if (featurep 'xemacs)
             (setq table (standard-syntax-table))
-          (let ((symbol (if (featurep 'xemacs) '(3)(string-to-syntax "_")))
+          (let ((symbol (string-to-syntax "_"))
                 ;; (symbol (string-to-syntax "_"))
                 (sst (standard-syntax-table)))
             (dotimes (i 128)
