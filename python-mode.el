@@ -409,7 +409,7 @@ started, in order to jump to the correct file line.  This variable is
 set in py-execute-region and used in py-jump-to-exception.")
 
 ;; GNU's syntax-ppss-context
-(unless (fboundp 'syntax-ppss-context)
+(unless (functionp 'syntax-ppss-context)
  (defsubst syntax-ppss-context (ppss)
   (cond
    ((nth 3 ppss) 'string)
