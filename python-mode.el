@@ -416,6 +416,15 @@ set in py-execute-region and used in py-jump-to-exception.")
    ((nth 4 ppss) 'comment)
    (t nil))))
 
+;; Skip's XE workaround
+(unless (fboundp 'string-to-syntax)
+    (defun string-to-syntax (s)
+      (cond
+       ((equal s "|") '(15))
+       ((equal s "_") '(3))
+       (t (error "Unhandled string: %s" s))))
+  )
+
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
 
