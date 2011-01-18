@@ -417,7 +417,7 @@ set in py-execute-region and used in py-jump-to-exception.")
    (t nil))))
 
 ;; Skip's XE workaround
-(unless (fboundp 'string-to-syntax)
+(unless (functionp 'string-to-syntax)
     (defun string-to-syntax (s)
       (cond
        ((equal s "|") '(15))
