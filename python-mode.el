@@ -408,14 +408,6 @@ subsequent py-up-exception needs the line number where the region
 started, in order to jump to the correct file line.  This variable is
 set in py-execute-region and used in py-jump-to-exception.")
 
-;; GNU's syntax-ppss-context
-(unless (functionp 'syntax-ppss-context)
- (defsubst syntax-ppss-context (ppss)
-  (cond
-   ((nth 3 ppss) 'string)
-   ((nth 4 ppss) 'comment)
-   (t nil))))
-
 ;; Skip's XE workaround
 (unless (functionp 'string-to-syntax)
     (defun string-to-syntax (s)
@@ -424,6 +416,15 @@ set in py-execute-region and used in py-jump-to-exception.")
        ((equal s "_") '(3))
        (t (error "Unhandled string: %s" s))))
   )
+
+;; GNU's syntax-ppss-context
+(unless (functionp 'syntax-ppss-context)
+ (defsubst syntax-ppss-context (ppss)
+  (cond
+   ((nth 3 ppss) 'string)
+   ((nth 4 ppss) 'comment)
+   (t nil))))
+
 
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
