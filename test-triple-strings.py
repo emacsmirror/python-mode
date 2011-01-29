@@ -1,7 +1,3 @@
-# Source:
-# http://launchpadlibrarian.net/22565844/test-triple-strings.py
-# Author: Ed Loper
-
 # This file tests python-mode's ability to handle triple-quoted
 # string.  Here's how to tell if python-mode's doing the right thing:
 #
@@ -55,7 +51,7 @@
 
 """<">""" '''<'>'''
 
-Spanning multiple lines:
+# Spanning multiple lines:
 
 "<
 >"
