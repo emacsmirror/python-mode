@@ -1,6 +1,12 @@
 Python Mode News
 ================
 
+New in version 5.2.1
+--------------------
+
+- Syntax highlight as a keyword "lambda:" just like "lambda x:".  Given by Dan
+  Davison.
+
 New in version 5.2.0
 --------------------
 
