@@ -589,7 +589,7 @@ support for features needed by `python-mode'.")
                           )
                         "\\|"))
         (kw2 (mapconcat 'identity
-                        '("else:" "except:" "finally:" "try:")
+                        '("else:" "except:" "finally:" "try:" "lambda:")
                         "\\|"))
         (kw3 (mapconcat 'identity
                         ;; Don't include Ellipsis in this list, since it is
