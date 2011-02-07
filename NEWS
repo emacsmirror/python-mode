@@ -6,6 +6,8 @@ New in version 5.2.1
 
 - Syntax highlight as a keyword "lambda:" just like "lambda x:".  Given by Dan
   Davison.
+- Add "python3" as a key for python-mode in interpreter-mode-alist and
+  auto-mode-alist.
 
 New in version 5.2.0
 --------------------

@@ -1472,7 +1472,9 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
 ;; already added.
 ;;;###autoload
 (let ((modes '(("jython" . jython-mode)
-               ("python" . python-mode))))
+               ("python" . python-mode)
+               ("python3" . python-mode)
+               )))
   (while modes
     (when (not (assoc (car modes) interpreter-mode-alist))
       (push (car modes) interpreter-mode-alist))
