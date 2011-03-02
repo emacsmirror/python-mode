@@ -483,7 +483,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
-
+(defvar py-mode-syntax-table nil)
 (setq py-mode-syntax-table
       (let ((table (make-syntax-table))
             (tablelookup (if (featurep 'xemacs)
@@ -1329,8 +1329,8 @@ This does the following:
 ;      'cpython ;; don't use to py-default-interpreter, because default
 ;               ;; is only way to choose CPython
       ))
-
 
+(defvar py-which-shell nil)
 ;;;###autoload
 (defun python-mode ()
   "Major mode for editing Python files.
@@ -3264,8 +3264,8 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
       ;; Emacs.
       (compilation-start command)
     ;; XEmacs.
-    (compile-internal command "No more errors")))
-
+    (when (featurep 'xemacs)
+      (compile-internal command "No more errors"))))
 
 
 ;; pydoc commands. The guts of this function is stolen from XEmacs's
