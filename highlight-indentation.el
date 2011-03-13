@@ -1,6 +1,8 @@
 ;;; highlight-indentation.el --- Function for highlighting indentation
 ;; Author: Anton Johansson <anton.johansson@gmail.com> - http://antonj.se
-;; Created: Dec 15 23:42:04 2010
+;;
+;; Source:
+;; https://github.com/antonj/Highlight-Indentation-for-Emacs/blob/master/highlight-indentation.el
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
