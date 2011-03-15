@@ -3691,22 +3691,28 @@ If nesting level is zero, return nil."
         (py-nesting-level))))
 
 (defun py-goto-beginning-of-tqs (delim)
-  "Go to the beginning of the triple quoted string we find ourselves in.
-DELIM is the TQS string delimiter character we're searching backwards
-for."
-  (let ((skip (and delim (make-string 1 delim)))
-        (continue t))
-    (when skip
-      (save-excursion
-        (while continue
-          (py-safe (search-backward skip))
-          (setq continue (and (not (bobp))
-                              (= (char-before) ?\\))))
-        (if (and (= (char-before) delim)
-                 (= (char-before (1- (point))) delim))
-            (setq skip (make-string 3 delim))))
-      ;; we're looking at a triple-quoted string
-      (py-safe (search-backward skip)))))
+  "Go to the beginning of a triple quoted string at point.
+DELIM is the result of \"(nth 3 (parse-partial-sexp...\", i.e. the
+     character that will terminate the string, or `t' if the string
+     is terminated by a generic string delimiter.
+If syntax-table is set correctly, the latter should be the case. "
+  (if (numberp delim)
+      (let ((skip (and delim (make-string 1 delim)))
+            (continue t))
+        (when skip
+          (save-excursion
+            (while continue
+              (py-safe (search-backward skip))
+              (setq continue (and (not (bobp))
+                                  (= (char-before) ?\\))))
+            (if (and (= (char-before) delim)
+                     (= (char-before (1- (point))) delim))
+                (setq skip (make-string 3 delim))))
+          ;; we're looking at a triple-quoted string
+          (py-safe (search-backward skip))))
+    (when
+        (skip-syntax-backward "^|")
+      (forward-char 1))))
 
 (defun py-goto-initial-line ()
   "Go to the initial line of a simple or compound statement.
