@@ -1,4 +1,4 @@
->;;; py-bug-numbered-tests.el --- run single tests according to bug number
+;;; py-bug-numbered-tests.el --- run single tests according to bug number
 
 ;; Author: Andreas Roehler <andreas.roehler@online.de>
 ;; Keywords: languages
