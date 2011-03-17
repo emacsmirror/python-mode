@@ -1442,8 +1442,10 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
       (if (/= tab-width py-indent-offset)
           (setq indent-tabs-mode nil))))
   ;; Set the default shell if not already set
-  (when (null py-which-shell)
-    (py-toggle-shells (py-choose-shell))))
+  (unless py-which-shell
+    (py-toggle-shells (py-choose-shell)))
+;;  (message "python-mode loaded from: %s" )
+)
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
@@ -1762,7 +1764,7 @@ Programmatically, ARG can also be one of the symbols `cpython' or
 `jython', equivalent to positive arg and negative arg respectively."
   (interactive "P")
   ;; default is to toggle
-  (if (null arg)
+  (unless arg
       (setq arg 0))
   ;; preprocess arg
   (cond
