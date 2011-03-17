@@ -510,9 +510,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
         (modify-syntax-entry ?\_ "w" table)
         table))
 
-(defsubst python-in-string/comment ()
-    "Return non-nil if point is in a Python literal (a comment or string)."
-    ;; We don't need to save the match data.
+(defsubst py-in-string-or-comment ()
+    "Return beginning position if point is in a Python literal (a comment or string)."
     (nth 8 (parse-partial-sexp (point-min) (point))))
 
 (defconst python-space-backslash-table
@@ -2340,12 +2339,11 @@ dedenting."
     (beginning-of-line)
     (let* ((bod (py-point 'bod))
            (pps (parse-partial-sexp bod (point)))
-           (boipps (parse-partial-sexp bod (py-point 'boi)))
-           placeholder)
+           placeholder erg)
       (cond
        ;; are we inside a multi-line string or comment?
-       ((or (and (nth 3 pps) (nth 3 boipps))
-            (and (nth 4 pps) (nth 4 boipps)))
+       ((setq erg (nth 8 pps))
+        (goto-char erg)
         (save-excursion
           (if (not py-align-multiline-strings-p) 0
             ;; skip back over blank & non-indenting comment lines
@@ -2415,31 +2413,30 @@ dedenting."
               ;; statement, add some extra offset.
               (+ (current-column) (if (py-statement-opens-block-p)
                                       py-continuation-offset 0)
-                 1)
-              ))))
-
+                 1)))))
+       
        ;; not on a continuation line
        ((bobp) (current-indentation))
-
+       
        ;; Dfn: "Indenting comment line".  A line containing only a
        ;; comment, but which is treated like a statement for
        ;; indentation calculation purposes.  Such lines are only
        ;; treated specially by the mode; they are not treated
        ;; specially by the Python interpreter.
-
+       
        ;; The rules for indenting comment lines are a line where:
        ;;   - the first non-whitespace character is `#', and
        ;;   - the character following the `#' is whitespace, and
        ;;   - the line is dedented with respect to (i.e. to the left
        ;;     of) the indentation of the preceding non-blank line.
-
+       
        ;; The first non-blank line following an indenting comment
        ;; line is given the same amount of indentation as the
        ;; indenting comment line.
-
+       
        ;; All other comment-only lines are ignored for indentation
        ;; purposes.
-
+       
        ;; Are we looking at a comment-only line which is *not* an
        ;; indenting comment line?  If so, we assume that it's been
        ;; placed at the desired indentation, so leave it alone.
@@ -2453,7 +2450,7 @@ dedenting."
                    (forward-comment (- (point-max)))
                    (current-indentation))))
         (current-indentation))
-
+       
        ;; else indentation based on that of the statement that
        ;; precedes us; use the first line of that statement to
        ;; establish the base, in case the user forced a non-std
@@ -2474,37 +2471,36 @@ dedenting."
                              (and (eq py-honor-comment-indentation t)
                                   (save-excursion
                                     (back-to-indentation)
-                                    (not (looking-at prefix-re))
-                                    ))
+                                    (not (looking-at prefix-re))))
                              (and (not (eq py-honor-comment-indentation t))
                                   (save-excursion
                                     (back-to-indentation)
                                     (and (not (looking-at prefix-re))
                                          (or (looking-at "[^#]")
-                                             (not (zerop (current-column)))
-                                             ))
-                                    ))
-                             ))
-              )))
+                                             (not (zerop (current-column))))))))))))
         ;; if we landed inside a string, go to the beginning of that
         ;; string. this handles triple quoted, multi-line spanning
         ;; strings.
-        (py-goto-beginning-of-tqs (nth 3 (parse-partial-sexp bod (point))))
+        ;;        (py-goto-beginning-of-tqs (nth 3 (parse-partial-sexp bod (point))))
+        (when (setq erg (py-in-string-or-comment))
+          (goto-char erg))
         ;; now skip backward over continued lines
         (setq placeholder (point))
         (py-goto-initial-line)
         ;; we may *now* have landed in a TQS, so find the beginning of
         ;; this string.
-        (py-goto-beginning-of-tqs
-         (save-excursion (nth 3 (parse-partial-sexp
-                                 placeholder (point)))))
+        ;;        (py-goto-beginning-of-tqs
+        ;;         (save-excursion (nth 3 (parse-partial-sexp
+        ;;                                 placeholder (point)))))
+        (when (setq erg (py-in-string-or-comment))
+          (goto-char erg))
+        
         (+ (current-indentation)
            (if (py-statement-opens-block-p)
                py-indent-offset
              (if (and honor-block-close-p (py-statement-closes-block-p))
                  (- py-indent-offset)
-               0)))
-        )))))
+               0))))))))
 
 (defun py-guess-indent-offset (&optional global)
   "Guess a good value for, and change, `py-indent-offset'.
@@ -3686,29 +3682,31 @@ If nesting level is zero, return nil."
     (or (py-backslash-continuation-preceding-line-p)
         (py-nesting-level))))
 
-(defun py-goto-beginning-of-tqs (delim)
-  "Go to the beginning of a triple quoted string at point.
-DELIM is the result of \"(nth 3 (parse-partial-sexp...\", i.e. the
-     character that will terminate the string, or `t' if the string
-     is terminated by a generic string delimiter.
-If syntax-table is set correctly, the latter should be the case. "
-  (if (numberp delim)
-      (let ((skip (and delim (make-string 1 delim)))
-            (continue t))
-        (when skip
-          (save-excursion
-            (while continue
-              (ignore-errors (search-backward skip))
-              (setq continue (and (not (bobp))
-                                  (= (char-before) ?\\))))
-            (if (and (= (char-before) delim)
-                     (= (char-before (1- (point))) delim))
-                (setq skip (make-string 3 delim))))
-          ;; we're looking at a triple-quoted string
-          (ignore-errors (search-backward skip))))
-    (when
-        (skip-syntax-backward "^|")
-      (forward-char 1))))
+;; (defun py-goto-beginning-of-tqs (delim)
+;;   "Go to the beginning of a triple quoted string at point.
+;; DELIM is the result of \"(nth 3 (parse-partial-sexp...\", i.e. the
+;;      character that will terminate the string, or `t' if the string
+;;      is terminated by a generic string delimiter.
+;; If syntax-table is set correctly, the latter should be the case. "
+;;   (if (numberp delim)
+;;       (let ((skip (and delim (make-string 1 delim)))
+;;             (continue t))
+;;         (when skip
+;;           (save-excursion
+;;             (while continue
+;;               (ignore-errors (search-backward skip))
+;;               (setq continue (and (not (bobp))
+;;                                   (= (char-before) ?\\))))
+;;             (if (and (= (char-before) delim)
+;;                      (= (char-before (1- (point))) delim))
+;;                 (setq skip (make-string 3 delim))))
+;;           ;; we're looking at a triple-quoted string
+;;           (ignore-errors (search-backward skip))))
+;;     ;; not really in use; all this form nor for XEmacs' sake only
+;;     (when
+;;         (skip-syntax-backward "^|")
+;;       (forward-char 1))
+;;     ))
 
 (defun py-goto-initial-line ()
   "Go to the initial line of a simple or compound statement.
