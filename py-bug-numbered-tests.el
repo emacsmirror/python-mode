@@ -379,7 +379,6 @@ if x > 0:
   (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")
   (message "%s"  "indentation-of-continuation-lines-lp:691185-test passed"))
 
-
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
@@ -410,8 +409,7 @@ This docstring isn't indented, test should pass anyway.
   (forward-line 4)
   (indent-according-to-mode)
   (assert (eq 4 (current-column)) nil "goto-beginning-of-tqs-lp:735328-test failed")
-  (message "goto-beginning-of-tqs-lp:735328-test passed")) 
-
+  (message "goto-beginning-of-tqs-lp:735328-test passed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
