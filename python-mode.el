@@ -4206,6 +4206,16 @@ If point is inside a string, narrow to that string and fill.
           (py-fill-string (nth 8 pps)))
          (t nil))))))
 
+;; credits to python.el
+(defun py-beg-of-defun-function ()
+  (set (make-local-variable 'beginning-of-defun-function)
+       'py-beginning-of-def-or-class))
+
+(defun py-end-of-defun-function ()
+  (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
+
+(add-hook 'python-mode-hook 'py-beg-of-defun-function)
+(add-hook 'python-mode-hook 'py-end-of-defun-function)
 
 
 
