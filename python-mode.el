@@ -528,7 +528,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   "Return the beginning of current line's comment, if inside. "
   (save-restriction
     (widen)
-    (lexical-let* ((pps (parse-partial-sexp (line-beginning-position) (point)))
+    (let* ((pps (parse-partial-sexp (line-beginning-position) (point)))
                    (erg (when (nth 4 pps) (nth 8 pps))))
       (unless erg
         (when (looking-at (concat "^[ \t]*" comment-start-skip))
@@ -2793,6 +2793,7 @@ http://docs.python.org/reference/compound_stmts.html
                 (py-end-of-statement orig done)))
              ((and (eq orig (point))(looking-at "[ \t]*$"))
               (py-forward-line)
+              (setq done t)
               (py-end-of-statement orig done))
              ((eq orig (point))
               (py-forward-line)
@@ -2884,14 +2885,14 @@ http://docs.python.org/reference/compound_stmts.html"
 
 (defalias 'py-forward-block-or-clause 'py-end-of-block-or-clause)
 (defalias 'py-goto-beyond-block-or-clause 'py-end-of-block-or-clause)
-(defun py-end-of-block-or-clause (&optional arg)
+(defun py-end-of-block-or-clause (&optional arg orig)
   "Move point beyond clause.
 Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let* ((orig (point))
+  (let* ((orig (or orig (point)))
          (regexp (if arg
                      py-block-re
                    py-block-or-clause-re))
@@ -2901,12 +2902,14 @@ http://docs.python.org/reference/compound_stmts.html"
         (setq erg (py-end-of-statement))
       (unless (py-beginning-of-statement-p)
         (py-beginning-of-statement))
-      (if (py-statement-opens-block-p)
+      (if (py-statement-opens-block-p py-block-or-clause-re)
           (setq erg (py-travel-current-indent (cons (current-indentation) (point))))
         (py-travel-current-indent (py-go-to-keyword py-block-or-clause-re -1))
         (setq erg (py-travel-current-indent (cons (current-indentation) (point))))))
     (when (and (<= (point) orig)
-               (setq erg (progn (forward-line 1) (point)))))
+               ;;               (setq erg (progn (forward-line 1) (point)))
+               (py-end-of-statement)
+               (py-end-of-block-or-clause arg orig)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3026,12 +3029,13 @@ Takes a list, INDENT and START position. "
           (goto-char start)
           (forward-line 1)
           (while (and (not (eobp)) (setq pos (py-end-of-statement))
+                      (not (empty-line-p))
                       (py-beginning-of-statement) (setq erg (point))(setq cui (current-indentation))(goto-char pos)
                       (ignore-errors (< indent cui))))
           (when erg (goto-char erg)
                 (while
                     (or (< (skip-chars-backward " \t\r\n\f") 0)
-                        (and (setq pos (py-in-comment-p)) (goto-char (car pos)))))
+                        (and (setq pos (py-in-string-or-comment)) (goto-char pos))))
                 (setq erg (point)))
           (unless erg (setq erg (point)))
           erg))))
@@ -3123,8 +3127,10 @@ will work.
   "Return position if the current statement opens a block
 in stricter or wider sense.
 For stricter sense specify regexp. "
-  (let ((regexp (or regexp py-block-re)))
-    (py-statement-opens-base regexp)))
+  (let* ((regexp (or regexp py-block-re))
+        (erg (py-statement-opens-base regexp)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defun py-statement-opens-base (regexp)
   (let ((orig (point))
