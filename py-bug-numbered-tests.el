@@ -36,6 +36,7 @@
          'mark-block-region-lp:328806-test
          'nested-dictionaries-indent-lp:328791-test
          'triple-quoted-string-dq-lp:302834-test
+         'beg-end-of-defun-lp:303622-test
          'dq-in-tqs-string-lp:328813-test
          'bullet-lists-in-comments-lp:328782-test
          'fill-paragraph-problems-lp:710373-test
@@ -89,7 +90,6 @@
     class blah blah
     \"\"\"
     if a:
-
         ar_atpt_python_list_roh = ([
                 'python-expression',
 
@@ -104,6 +104,30 @@
   (forward-line -2)
   (py-mark-block)
   (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!"))
+
+(defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
+  (interactive "p")
+  (when load-branch-function (funcall load-branch-function))
+  (let ((teststring "def f():
+    \"\"\"
+    class blah blah
+    \"\"\"
+    if a:
+        ar_atpt_python_list_roh = ([
+                'python-expression',
+
+    #     def ar_thingatpt_write_lists (&optional datei):
+                'python-partial-expression',
+                'python-statement',
+                ])
+"))
+  (py-bug-numbered-tests-intern 'beg-end-of-defun-lp:303622 arg teststring)))
+
+(defun beg-end-of-defun-lp:303622 ()
+  (end-of-defun)
+  (assert (eq 288 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
+(beginning-of-defun)
+  (assert (eq 1 (point)) nil "beg-end-of-defun-lp:303622 test failed!"))
 
 (defun dq-in-tqs-string-lp:328813-test (&optional arg load-branch-function)
   (interactive "p")
