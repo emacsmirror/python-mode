@@ -3003,15 +3003,17 @@ With optional arg CLASS, move to the beginn of class definition. "
 With optional arg CLASS, move to the end of class exclusively. "
   (interactive "P")
   (let* ((orig (point))
-         (regexp (cond ((eq class 'either)
-                        py-def-or-class-re)
-                       (class py-class-re)
-                       (t py-def-re)))
-         erg)
-    (unless (and (eq (current-indentation) (current-column))(setq erg (py-statement-opens-block-p regexp)))
-      (setq erg (py-travel-current-indent (py-go-to-keyword regexp -1))))
+         (regexp
+          (cond (class py-class-re)
+                (t py-def-or-class-re)))
+         indent)
+    (unless (py-statement-opens-block-p regexp)    
+      (py-travel-current-indent (py-go-to-keyword regexp -1)))
+    (setq indent (current-indentation))
     (unless (< orig (point))
-      (setq erg (py-travel-current-indent (py-go-to-keyword regexp 1))))
+      (when (py-statement-opens-block-p regexp)
+        (forward-line 1))
+      (setq erg (py-travel-current-indent (cons indent (point)))))
     (when (and (< orig (point))(not (eobp)))
       (setq erg (point)))
     (when (interactive-p) (message "%s" erg))
@@ -3023,22 +3025,15 @@ With optional arg CLASS, move to the end of class exclusively. "
 Takes a list, INDENT and START position. "
   (let ((start (ignore-errors (cdr listing)))
         (indent (ignore-errors (car listing)))
-        erg pos cui old)
+        erg cui last this pos)
     (if start
         (progn
           (goto-char start)
-          (forward-line 1)
-          (while (and (not (eobp)) (setq pos (py-end-of-statement))
-                      (not (empty-line-p))
-                      (py-beginning-of-statement) (setq erg (point))(setq cui (current-indentation))(goto-char pos)
-                      (ignore-errors (< indent cui))))
-          (when erg (goto-char erg)
-                (while
-                    (or (< (skip-chars-backward " \t\r\n\f") 0)
-                        (and (setq pos (py-in-string-or-comment)) (goto-char pos))))
-                (setq erg (point)))
-          (unless erg (setq erg (point)))
-          erg))))
+          (while (and (not (eobp))(setq last (point))(setq this (py-end-of-statement))
+                      (ignore-errors (< indent (current-indentation)))))
+          (setq erg (point)))
+      (unless erg (setq erg (point)))
+      erg)))
 
 (defun py-close-clause ()
   "Insert a newline and dedent one level"
@@ -3209,10 +3204,14 @@ For stricter sense specify regexp. "
 (defun py-mark-base (form)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
          (endform (intern-soft (concat "py-end-of-" form)))
+         (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
          (orig (point))
-         (beg (funcall begform))
-         (end (funcall endform))
-         )
+         beg end)
+    (setq beg (if
+                  (setq erg (funcall begcheckform))
+                  erg
+                (funcall begform)))
+    (setq end (funcall endform))
     (if (<= beg orig)
         (progn
           (push-mark beg t t)
