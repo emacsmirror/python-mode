@@ -51,40 +51,40 @@
   (dolist (ele bug-numbered-tests)
     (funcall ele arg)))
 
-(defun nested-dictionaries-indent-lp:328791-test (&optional arg load-branch-function)
-  (interactive "p")
-  (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "
-    d = {'a':{'b':3,
-              'c':4}}
-"))
-    (nested-dictionaries-indent-lp:328791-intern arg teststring)))
-
-(defun nested-dictionaries-indent-lp:328791-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
+(defun py-bug-numbered-tests-intern (testname &optional arg teststring)
   (if arg
       (progn
-        (set-buffer (get-buffer-create "nested-dictionaries-indent-lp:328791"))
+        (set-buffer (get-buffer-create (prin1-to-string testname)))
         (switch-to-buffer (current-buffer))
         (erase-buffer)
         (insert teststring)
         (fundamental-mode)
-        (nested-dictionaries-indent-lp:328791-base))
+        (python-mode)
+        (funcall testname)
+        (message "%s" (concat (prin1-to-string testname) " test passed")))
     (with-temp-buffer
       (insert teststring)
-      (nested-dictionaries-indent-lp:328791-base))))
+      (funcall testname))))
 
-(defun nested-dictionaries-indent-lp:328791-base ()
-  (python-mode)
+(defun nested-dictionaries-indent-lp:328791-test (&optional arg load-branch-function)
+  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
+  (interactive "p")
+  (when load-branch-function (funcall load-branch-function))
+  (let ((teststring "
+    d = {'a':{'b':3,
+              'c':4}}
+"))
+    (py-bug-numbered-tests-intern 'nested-dictionaries-indent-lp:328791 arg teststring)))
+
+(defun nested-dictionaries-indent-lp:328791 ()
   (goto-char (point-min))
   (forward-line 2)
-  (assert (eq 14 (py-compute-indentation t)))
-  (message "%s" "nested-dictionaries-indent-lp:328791-test passed"))
+  (assert (eq 14 (py-compute-indentation t))))
 
 (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "def f():
+  (let ((teststring "def f():
     \"\"\"
     class blah blah
     \"\"\"
@@ -98,66 +98,42 @@
                 'python-statement',
                 ])
 "))
-  (mark-block-region-lp:328806-intern arg teststring)))
+  (py-bug-numbered-tests-intern 'mark-block-region-lp:328806 arg teststring)))
 
-(defun mark-block-region-lp:328806-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
-  (if arg
-      (progn
-        (set-buffer (get-buffer-create "mark-block-region-lp:328806"))
-        (switch-to-buffer (current-buffer))
-        (erase-buffer)
-        (insert teststring)
-        (fundamental-mode)
-        (mark-block-region-lp:328806-base))
-    (with-temp-buffer
-      (insert teststring)
-      (mark-block-region-lp:328806-base))))
-
-(defun mark-block-region-lp:328806-base ()
-  (python-mode)
+(defun mark-block-region-lp:328806 ()
   (forward-line -2)
   (py-mark-block)
-  (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!")
-  (message "%s" "mark-block-region-lp:328806 test passed"))
+  (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!"))
 
 (defun dq-in-tqs-string-lp:328813-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "
+  (let ((teststring "
 # Bug #328813 (sf1775975)
 print \"\"\" \"Hi!\" I'm a doc string\"\"\"
 print ''' 'Hi!' I'm a doc string'''
 print \"\"\" ''' \"Hi!\" I'm a doc string ''' \"\"\"
 print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
 "))
-    (dq-in-tqs-string-lp:328813-test-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'dq-in-tqs-string-lp:328813 arg teststring)))
 
-(defun dq-in-tqs-string-lp:328813-test-intern (&optional arg teststring)
-  (set-buffer (get-buffer-create "tqs-string-lp:328813-test"))
-  (erase-buffer)
-  (insert teststring)
-  (when arg (switch-to-buffer (current-buffer)))
-  (dq-in-tqs-string-lp:328813-test-base))
-
-(defun dq-in-tqs-string-lp:328813-test-base ()
-  (python-mode)
+(defun dq-in-tqs-string-lp:328813 ()
   (font-lock-mode 1)
   (font-lock-fontify-buffer)
   (goto-char 78)
-  (lexical-let ((erg (face-at-point)))
+  (let ((erg (get-char-property (point) 'face)))
+    (message "%s" erg)
     (insert "\"")
-    (assert (ar-triplequoted-in-p-atpt) nil "tqs-string-lp:328813 failed: In triplequoted string not recognised!")
     (font-lock-fontify-buffer)
-    (assert (eq erg (face-at-point)) "Being stuck inside triple-quoted-string 328813 test. "))
-  (goto-char 122)
-  (assert (ar-triplequoted-in-p-atpt) nil "tqs-string-lp:328813 failed: In triplequoted at point 122 not recognised!")
-  (when arg (message "%s" "dq-in-tqs-string-lp:328813-test passed")))
+    (message "%s" erg)
+    (message "%s" (get-char-property (point) 'face))
+    (assert (eq erg (get-char-property (point) 'face)) nil "dq-in-tqs-string-lp:328813 test failed ")
+    (goto-char 122)))
 
 (defun fill-paragraph-problems-lp:710373-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-(lexical-let ((teststring "
+(let ((teststring "
     \"\"\"
     triple-quoted string containing \"quotation\" marks.
     triple-quoted string containing \"quotation\" marks.
@@ -191,8 +167,7 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
         (fill-paragraph-problems-lp:710373-test-base tmp-dir fpp-exec-buffer diff-buffer)))))
   
 (defun fill-paragraph-problems-lp:710373-test-base (tmp-dir fpp-exec-buffer diff-buffer)
-  (python-mode)
-  (goto-char 48)
+    (goto-char 48)
   ;; the following lines work when called from edebug
   ;;  (message "%s" (get-text-property 6 'syntax-table))
   ;;  (assert (eq 15 (car (get-text-property 6 'syntax-table))))
@@ -214,55 +189,36 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
 (defun triple-quoted-string-dq-lp:302834-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "class OrderedDict1(dict):
+  (let ((teststring "class OrderedDict1(dict):
     \"\"\"
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
     \"\"\""))
-    (triple-quoted-string-dq-lp:302834-test-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'triple-quoted-string-dq-lp:302834 arg teststring)))
 
-(defun triple-quoted-string-dq-lp:302834-test-intern (&optional arg teststring)
-  (with-temp-buffer
-    (insert teststring)
-    (when arg (switch-to-buffer (current-buffer)))
-    (python-mode)
-    (font-lock-mode 1)
+(defun triple-quoted-string-dq-lp:302834 ()
+        (font-lock-mode 1)
     (font-lock-fontify-buffer)
     (goto-char 78)
-    (lexical-let ((erg (face-at-point)))
+    (let ((erg (get-char-property (point) 'face)))
       (insert "\"")
-      (assert (ar-triplequoted-dq-in-p-atpt) nil "In triplequoted string not recognised!")
       (font-lock-fontify-buffer)
-      (assert (eq erg (face-at-point)) "Being stuck inside triple-quoted-string. Did not reach beginning of class."))
-    (when arg (message "%s" "triple-quoted-string-dq-lp:302834-test passed"))))
+      (assert (eq erg (get-char-property (point) 'face)) "Being stuck inside triple-quoted-string. Did not reach beginning of class."))
+    )
 
 (defun multiline-assignment-indentation-lp:629916-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "foo_long_long_long_long = (
+  (let ((teststring "foo_long_long_long_long = (
     bar_long_long_long_long[
         (x_long_long_long_long == X) &
         (y_long_long_long_long == Y)])
 "))
-    (multiline-assignment-indentation-lp:629916-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'multiline-assignment-indentation-lp:629916 arg teststring)))
 
-(defun multiline-assignment-indentation-lp:629916-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
-  (if arg
-      (progn
-        (set-buffer (get-buffer-create "multiline-assignment-indentation-lp:629916-test"))
-        (switch-to-buffer (current-buffer))
-        (erase-buffer)
-        (insert teststring)
-        (fundamental-mode)
-        (multiline-assignment-indentation-lp:629916-base))
-    (with-temp-buffer
-      (insert teststring)
-      (multiline-assignment-indentation-lp:629916-base))))
 
-(defun multiline-assignment-indentation-lp:629916-base ()
-  (python-mode)
-  (goto-char (point-min))
+(defun multiline-assignment-indentation-lp:629916 ()
+    (goto-char (point-min))
   (forward-line 1)
   (indent-according-to-mode)
   (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
@@ -276,64 +232,52 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
   (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
-  (message "%s" "multiline-assignment-indentation-lp:629916-test passed"))
+  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails"))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring))
-    (previous-statement-lp:637955-test-intern arg teststring)))
-
-(defun previous-statement-lp:637955-test-intern (&optional arg teststring)
-  (set-buffer (get-buffer-create "previous-statement-lp:637955-test"))
-  (erase-buffer)
-  (insert "class OrderedDict1(dict):
+  (let ((teststring "class OrderedDict1(dict):
     \"\"\"
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
-    \"\"\"")
-  (when arg (switch-to-buffer (current-buffer)))
+    \"\"\""))
+    (py-bug-numbered-tests-intern 'previous-statement-lp:637955 arg teststring)))
+
+(defun previous-statement-lp:637955 ()
   (beginning-of-line)
   (py-previous-statement)
   (assert (eq 31 (point)) nil "Being stuck inside triple-quoted-string 637955 test. Did not reach beginning of class.")
-  (when arg (message "%s" "previous-statement-lp:637955-test passed")))
+  )
 
 (defun nested-indents-lp:328775-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring))
-    (nested-indents-lp:328775-test-intern arg teststring)))
-
-(defun nested-indents-lp:328775-test-intern (&optional arg teststring)
-  (set-buffer (get-buffer-create "nested-indents-lp:328775"))
-  (erase-buffer)
-  (when arg (switch-to-buffer (current-buffer)))
-  (insert "
+  (let ((teststring "
 if x > 0:
     for i in range(100):
         print i
-")
-  (save-excursion (insert "else:
-    print \"All done\""))
-  (when arg (switch-to-buffer (current-buffer)))
-  (python-mode)
+    else:
+    print \"All done\"
+elif x < 0:
+    print \"x is negative\"
+"))
+    (py-bug-numbered-tests-intern 'nested-indents-lp:328775 arg teststring)))
+
+(defun nested-indents-lp:328775 ()
   (font-lock-mode 1)
   (font-lock-fontify-buffer)
   (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
-  (indent-according-to-mode)
-  (goto-char (point-max))
-  (save-excursion (insert "\nelif x < 0:
-    print \"x is negative\""))
+  (goto-char 41)
   (assert (eq 8 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
   (forward-line 1)
-  (assert (eq 0 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
-  (message "%s" "nested-indents-lp:328775-test passed"))
+  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
+  )
 
 (defun bullet-lists-in-comments-lp:328782-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring))
+  (let ((teststring))
     (bullet-lists-in-comments-lp:328782-test-intern arg teststring)))
 
 (defun bullet-lists-in-comments-lp:328782-test-intern (&optional arg teststring)
@@ -346,8 +290,7 @@ if x > 0:
 ##   directory consisting of just .txt and .lorien files.
 ")
   (when arg (switch-to-buffer (current-buffer)))
-  (python-mode)
-  (font-lock-mode 1)
+    (font-lock-mode 1)
   (font-lock-fontify-buffer)
   (goto-char 100)
   (if (functionp 'py-fill-paragraph)
@@ -358,101 +301,55 @@ if x > 0:
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "    def f(val):
+  (let ((teststring "    def f(val):
         # current behavior - indent to just after the first space
         a_verry_loonng_variable_nammmee = \\
                                         val
 "))
-    (indentation-of-continuation-lines-lp:691185-test-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'indentation-of-continuation-lines-lp:691185 arg teststring)))
 
-(defun indentation-of-continuation-lines-lp:691185-test-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
-  (if arg
-      (progn
-        (set-buffer (get-buffer-create "indentation-of-continuation-lines-lp:691185-test"))
-        (switch-to-buffer (current-buffer))
-        (erase-buffer)
-        (insert teststring)
-        (fundamental-mode)
-        (indentation-of-continuation-lines-lp:691185-test-base))
-    (with-temp-buffer
-      (insert teststring)
-      (indentation-of-continuation-lines-lp:691185-test-base))))
-
-(defun indentation-of-continuation-lines-lp:691185-test-base ()
-  (python-mode)
+(defun indentation-of-continuation-lines-lp:691185 ()
   (goto-char (point-min))
   (forward-line 3)
   (indent-according-to-mode)
-  (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")
-  (message "%s"  "indentation-of-continuation-lines-lp:691185-test passed"))
+  (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!"))
 
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-(lexical-let ((teststring "class Foo(object):
+  (let ((teststring "class Foo(object):
 \"\"\"
 This docstring isn't indented, test should pass anyway.
 \"\"\"
 "))
-  (goto-beginning-of-tqs-lp:735328-test-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'goto-beginning-of-tqs-lp:735328 arg teststring)))
 
-(defun goto-beginning-of-tqs-lp:735328-test-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
-  (if arg
-      (progn
-        (set-buffer (get-buffer-create "goto-beginning-of-tqs-lp:735328-test"))
-        (switch-to-buffer (current-buffer))
-        (erase-buffer)
-        (insert teststring)
-        (fundamental-mode)
-        (goto-beginning-of-tqs-lp:735328-test-base))
-    (with-temp-buffer
-      (insert teststring)
-      (goto-beginning-of-tqs-lp:735328-test-base))))
-
-(defun goto-beginning-of-tqs-lp:735328-test-base ()
-  (python-mode)
+(defun goto-beginning-of-tqs-lp:735328 ()
   (goto-char (point-min))
   (forward-line 4)
   (indent-according-to-mode)
   (assert (eq 4 (current-column)) nil "goto-beginning-of-tqs-lp:735328-test failed")
-  (message "goto-beginning-of-tqs-lp:735328-test passed"))
+  )
 
 (defun class-treated-as-keyword-lp:709478-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (lexical-let ((teststring "foo = [
+  (let ((teststring "foo = [
     T.div(
         T.tabl(*trows),
 
         CLASS='blok',)
 ]
 "))
-    (class-treated-as-keyword-lp:709478-intern arg teststring)))
+    (py-bug-numbered-tests-intern 'class-treated-as-keyword-lp:709478 arg teststring)))
 
-(defun class-treated-as-keyword-lp:709478-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
-    (if arg
-        (progn
-          (set-buffer (get-buffer-create "class-treated-as-keyword-lp:709478"))
-          (switch-to-buffer (current-buffer))
-          (erase-buffer)
-          (insert teststring)
-          (fundamental-mode)
-          (class-treated-as-keyword-lp:709478-base))
-      (with-temp-buffer
-        (insert teststring)
-        (class-treated-as-keyword-lp:709478-base))))
-
-(defun class-treated-as-keyword-lp:709478-base ()
-  (python-mode)
+(defun class-treated-as-keyword-lp:709478 ()
   (font-lock-fontify-buffer)
   (goto-char 64)
   (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d- test failed")
   (goto-char 57)
   (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test failed")
-  (message "%s"  "class-treated-as-keyword-lp:709478-test passed"))
+  )
 
 
 (provide 'py-bug-numbered-tests)
