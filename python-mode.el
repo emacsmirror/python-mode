@@ -2991,7 +2991,7 @@ With optional arg CLASS, move to the beginn of class definition. "
                         py-def-or-class-re)
                        (class py-class-re)
                        (t py-def-re)))
-         (erg (car-safe (py-beginning-of-form-base regexp nil nil t count nil t 'py-in-comment-p))))
+         (erg (car-safe (py-beginning-of-form-base regexp nil nil t count nil t 'py-in-string-or-comment))))
     (when (interactive-p) (message "%s" erg))
     erg))
 

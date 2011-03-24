@@ -108,7 +108,8 @@
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (let ((teststring "def f():
+  (let ((teststring "
+class f():
     \"\"\"
     class blah blah
     \"\"\"
@@ -125,9 +126,9 @@
 
 (defun beg-end-of-defun-lp:303622 ()
   (end-of-defun)
-  (assert (eq 288 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
-(beginning-of-defun)
-  (assert (eq 1 (point)) nil "beg-end-of-defun-lp:303622 test failed!"))
+  (assert (eq 290 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
+  (beginning-of-defun)
+  (assert (eq 2 (point)) nil "beg-end-of-defun-lp:303622 test failed!"))
 
 (defun dq-in-tqs-string-lp:328813-test (&optional arg load-branch-function)
   (interactive "p")
