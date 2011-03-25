@@ -2875,7 +2875,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defun py-end-of-block (&optional count)
   "Move point beyond compound statement. "
   (interactive "p")
-  (py-end-of-block-or-clause t))
+  (py-end-of-block-or-clause))
 
 ;; Block or clause
 (defalias 'py-goto-initial-line 'py-beginning-of-block-or-clause)
@@ -2902,33 +2902,34 @@ http://docs.python.org/reference/compound_stmts.html"
 
 (defalias 'py-forward-block-or-clause 'py-end-of-block-or-clause)
 (defalias 'py-goto-beyond-block-or-clause 'py-end-of-block-or-clause)
-(defun py-end-of-block-or-clause (&optional arg orig)
-  "Move point beyond clause.
+(defun py-end-of-block-or-clause (&optional arg)
+  "Without arg, go to the end of a compound statement.  
+With arg , move point to end of clause at point.
+
 Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let* ((orig (or orig (point)))
-         (regexp (if arg
+  (let* ((regexp (if arg
                      py-block-re
                    py-block-or-clause-re))
-         erg)
-    ;; if compound statement at all
-    (if (and (eq 0 (py-compute-indentation t))(not (py-statement-opens-block-p)))
-        (setq erg (py-end-of-statement))
-      (unless (py-beginning-of-statement-p)
-        (py-beginning-of-statement))
-      (if (py-statement-opens-block-p py-block-or-clause-re)
-          (setq erg (py-travel-current-indent (cons (current-indentation) (point))))
-        (py-travel-current-indent (py-go-to-keyword py-block-or-clause-re -1))
-        (setq erg (py-travel-current-indent (cons (current-indentation) (point))))))
-    (when (and (<= (point) orig)
-               ;;               (setq erg (progn (forward-line 1) (point)))
-               (py-end-of-statement)
-               (py-end-of-block-or-clause arg orig)))
-    (when (interactive-p) (message "%s" erg))
-    erg))
+         (indent (py-compute-indentation t))
+         erg orig)
+    ;; in first line computed indent is that of previous block
+    (when (py-beginning-of-block-p)
+      (forward-line 1)
+      (setq indent (py-compute-indentation t)))
+    (setq erg (py-travel-current-indent (cons indent (point))))
+    (unless arg
+      (setq orig (point))
+      (py-end-of-statement)
+      (py-beginning-of-statement)
+      (if (looking-at py-clause-re)
+          (setq erg (py-end-of-block-or-clause))
+        (goto-char orig))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
 
 ;; Class
 (defalias 'beginning-of-class 'py-beginning-of-class)
