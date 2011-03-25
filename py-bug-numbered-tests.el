@@ -36,8 +36,9 @@
          'mark-block-region-lp:328806-test
          'nested-dictionaries-indent-lp:328791-test
          'triple-quoted-string-dq-lp:302834-test
-         'beg-end-of-defun-lp:303622-test
+         'fore-00007F-breaks-indentation-lp:328788-test
          'dq-in-tqs-string-lp:328813-test
+         'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
          'fill-paragraph-problems-lp:710373-test
          'nested-indents-lp:328775-test
@@ -126,7 +127,7 @@ class f():
 
 (defun beg-end-of-defun-lp:303622 ()
   (end-of-defun)
-  (assert (eq 290 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
+  (assert (eq 292 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
   (beginning-of-defun)
   (assert (eq 2 (point)) nil "beg-end-of-defun-lp:303622 test failed!"))
 
@@ -246,18 +247,18 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
     (goto-char (point-min))
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
+  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
   (end-of-line)
   (search-backward "[")
   (newline)
   (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
+  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails")
+  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916-test fails"))
+  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed"))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
   (interactive "p")
@@ -292,11 +293,11 @@ elif x < 0:
 (defun nested-indents-lp:328775 ()
   (font-lock-mode 1)
   (font-lock-fontify-buffer)
-  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
+  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
   (goto-char 41)
-  (assert (eq 8 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
+  (assert (eq 8 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
   (forward-line 1)
-  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775-test fails!")
+  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
   )
 
 (defun bullet-lists-in-comments-lp:328782-test (&optional arg load-branch-function)
@@ -371,11 +372,53 @@ This docstring isn't indented, test should pass anyway.
 (defun class-treated-as-keyword-lp:709478 ()
   (font-lock-fontify-buffer)
   (goto-char 64)
-  (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d- test failed")
+  (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d test failed")
   (goto-char 57)
   (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test failed")
   )
 
+
+(defun fore-00007F-breaks-indentation-lp:328788-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class a:
+    def __init__(self):
+        self.StyleSetSpec(self.STYLE_FIELD,
+\"fore:#00007F\" )
+            self.StyleSetSpec(self.STYLE_FIELD,
+\"fore:#00007F\" )
+                self.StyleSetSpec(self.STYLE_FIELD,
+\"fore:#00007F\" )
+                    self.StyleSetSpec(self.STYLE_FIELD,
+\"fore:#00007F\" )
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'fore-00007F-breaks-indentation-lp:328788 arg teststring)))
+
+(defun fore-00007F-breaks-indentation-lp:328788 ()
+    (goto-char (point-min))
+    (forward-line 1)
+    (indent-according-to-mode)
+    (forward-line 1)
+    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed") 
+    (indent-according-to-mode)
+    (forward-line 1)
+    (indent-according-to-mode)
+    (forward-line 1)
+    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (indent-according-to-mode)
+    (forward-line 1)
+    (indent-according-to-mode)
+    (forward-line 1)
+    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (indent-according-to-mode)
+    (forward-line 1)
+    (indent-according-to-mode)
+    (forward-line 1)
+    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (indent-according-to-mode)
+    (forward-line 1)
+    (indent-according-to-mode)
+    )
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
