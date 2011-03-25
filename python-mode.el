@@ -3127,6 +3127,12 @@ For stricter sense specify regexp. "
     (when (interactive-p) (message "%s" erg))
     erg))
 
+(defalias 'py-beginning-of-clause-p 'py-statement-opens-clause-p)
+(defun py-statement-opens-clause-p ()
+  "Return position if the current statement opens block or clause. "
+  (interactive)
+  (py-statement-opens-base py-clause-re))
+
 (defun py-statement-opens-base (regexp)
   (let ((orig (point))
         erg)
