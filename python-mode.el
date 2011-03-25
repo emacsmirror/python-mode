@@ -3227,6 +3227,63 @@ For stricter sense specify regexp. "
     (exchange-point-and-mark)
     (cons beg end)))
 
+;; Deleting
+(defun py-kill-expression ()
+  "Delete expression around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "expression")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-partial-expression ()
+  "Delete partial-expression around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "partial-expression")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-statement ()
+  "Delete statement around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "statement")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-block ()
+  "Delete block around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "block")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-block-or-clause ()
+  "Delete block-or-clause around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "block-or-clause")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-def-or-class ()
+  "Delete def-or-class around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "def-or-class")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-class ()
+  "Delete class around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "class")
+  (kill-region (region-beginning) (region-end)))
+
+(defun py-kill-clause ()
+  "Delete clause around point.
+  Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive)
+  (py-mark-base "clause")
+  (kill-region (region-beginning) (region-end)))
+
 
 ;; pdbtrack functions
 (defun py-pdbtrack-toggle-stack-tracking (arg)
