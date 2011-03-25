@@ -106,6 +106,28 @@
   (py-mark-block)
   (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!"))
 
+(defun flexible-indentation-lp:328842-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+\(long, sequence, of_items,
+    that, needs, to_be, wrapped) = input_list
+
+packed_entry = (long, sequence, of_items,
+that, needs, to_be, wrapped)
+"
+))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
+
+(defun flexible-indentation-lp:328842 ()
+    (goto-char (point-min))
+    (forward-line 3)
+    (indent-according-to-mode)
+    (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+    (forward-line 2)
+    (indent-according-to-mode)
+    (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
+
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
@@ -422,4 +444,5 @@ This docstring isn't indented, test should pass anyway.
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
+
 
