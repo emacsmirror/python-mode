@@ -3025,15 +3025,14 @@ With optional arg CLASS, move to the end of class exclusively. "
 Takes a list, INDENT and START position. "
   (let ((start (ignore-errors (cdr listing)))
         (indent (ignore-errors (car listing)))
-        erg cui last this pos)
+        last)
     (if start
         (progn
           (goto-char start)
-          (while (and (not (eobp))(setq last (point))(setq this (py-end-of-statement))
-                      (ignore-errors (< indent (current-indentation)))))
-          (setq erg (point)))
-      (unless erg (setq erg (point)))
-      erg)))
+          (while (and (not (eobp))(setq last (point))(py-end-of-statement)
+                      (ignore-errors (<= indent (current-indentation)))))
+          (when last (goto-char last))
+          last))))
 
 (defun py-close-clause ()
   "Insert a newline and dedent one level"
