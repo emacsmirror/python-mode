@@ -3231,21 +3231,13 @@ For stricter sense specify regexp. "
          (orig (point))
          beg end)
     (setq beg (if
-                  (setq erg (funcall begcheckform))
-                  erg
+                  (setq beg (funcall begcheckform))
+                  beg
                 (funcall begform)))
     (setq end (funcall endform))
-    (if (<= beg orig)
-        (progn
-          (push-mark beg t t)
-          (goto-char end))
-      (goto-char orig)
-      (setq beg
-            (funcall begform))
-      (setq end (funcall endform))
-      (when (and (<= beg orig)(<= end orig))
-        (push-mark end t t)
-        (goto-char beg)))
+    (progn
+      (push-mark beg t t)
+      (goto-char end))
     (when (interactive-p) (message "%s %s" beg end))
     (exchange-point-and-mark)
     (cons beg end)))
