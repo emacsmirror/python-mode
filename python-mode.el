@@ -436,6 +436,23 @@ set in py-execute-region and used in py-jump-to-exception.")
    ((nth 4 ppss) 'comment)
    (t nil))))
 
+(defcustom empty-line-p-chars "^[ \t\r]*$"
+  "Empty-line-p-chars."
+  :type 'regexp
+  :group 'convenience)
+
+;;;###autoload
+(defun empty-line-p (&optional iact)
+  "Returns t if cursor is at an empty line, nil otherwise."
+  (interactive "p")
+  (save-excursion
+    (let ((erg (progn
+                 (beginning-of-line)
+                 (looking-at empty-line-p-chars))))
+      (when iact
+        (message "%s" erg))
+      erg)))
+
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
 
