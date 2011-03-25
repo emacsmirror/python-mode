@@ -165,11 +165,23 @@ you're editing someone else's Python code."
   :type 'integer
   :group 'python)
 
-(defcustom py-indent-in-delimiter -1
-  "When inside a multiline-assignement: How many colums indent should be less than opening bracket, brace or parenthesis. "
+(defcustom py-backslashed-continuation-indent 2
+  "Indent of continuation-lines realised by backslashes. "
   :type 'integer
   :group 'python)
 (make-variable-buffer-local 'py-indent-in-delimiter)
+
+(defcustom py-lhs-inbound-indent 1
+  "When line starts a multiline-assignement: How many colums indent should be more than opening bracket, brace or parenthesis. "
+  :type 'integer
+  :group 'python)
+(make-variable-buffer-local 'py-lhs-inbound-indent)
+
+(defcustom py-rhs-inbound-indent 1
+  "When inside a multiline-assignement: How many colums indent should be more than opening bracket, brace or parenthesis. "
+  :type 'integer
+  :group 'python)
+(make-variable-buffer-local 'py-rhs-inbound-indent)
 
 (defcustom py-continuation-offset 4
   "*Additional amount of offset to give for some continuation lines.
