@@ -48,10 +48,11 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall bullet-lists-in-comments-lp:328782-test \
 --funcall nested-indents-lp:328775-test \
 --funcall previous-statement-lp:637955-test \
---funcall multiline-assignment-indentation-lp:629916-test \
+--funcall inbound-indentation-multiline-assignement-lp:629916-test \
 --funcall indentation-of-continuation-lines-lp:691185-test \
 --funcall goto-beginning-of-tqs-lp:735328-test \
---funcall class-treated-as-keyword-lp:709478-test 
+--funcall class-treated-as-keyword-lp:709478-test \
+--funcall backslashed-continuation-line-indent-lp:742993-test
 
 # fail as batch-skripts, but work from inside
 # --funcall mark-block-region-lp:328806-test \
