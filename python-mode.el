@@ -186,8 +186,7 @@ you're editing someone else's Python code."
 (defcustom py-continuation-offset 4
   "*Additional amount of offset to give for some continuation lines.
 Continuation lines are those that immediately follow a backslash
-terminated line.  Only those continuation lines for a block opening
-statement are given this extra offset."
+terminated line. "
   :type 'integer
   :group 'python)
 
@@ -2407,8 +2406,11 @@ the new line indented."
                          (goto-char (match-end 0)))
                        (current-column)))
                ((py-backslashed-continuation-line-p)
-                (progn (py-beginning-of-statement)
-                       (+ (current-indentation) py-continuation-offset)))
+                (progn
+                  ;; gets the backslash
+                  ;; (goto-char (nth 2 pps))
+                  (py-beginning-of-statement)
+                  (+ (current-indentation) py-continuation-offset)))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation honor-block-close-p orig origline))
