@@ -405,10 +405,11 @@ elif x < 0:
     (py-bug-numbered-tests-intern 'indentation-of-continuation-lines-lp:691185 arg teststring)))
 
 (defun indentation-of-continuation-lines-lp:691185 ()
-  (goto-char (point-min))
-  (forward-line 3)
-  (indent-according-to-mode)
-  (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!"))
+  (let ((py-continuation-offset 2))
+    (goto-char (point-min))
+    (forward-line 3)
+    (indent-according-to-mode)
+    (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")))
 
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
   (interactive "p")
