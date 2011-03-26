@@ -38,6 +38,7 @@
          'triple-quoted-string-dq-lp:302834-test
          'fore-00007F-breaks-indentation-lp:328788-test
          'dq-in-tqs-string-lp:328813-test
+         'flexible-indentation-lp:328842-test
          'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
          'fill-paragraph-problems-lp:710373-test
@@ -47,6 +48,7 @@
          'indentation-of-continuation-lines-lp:691185-test
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test)))
+
 
 (defun py-run-bug-numbered-tests (&optional arg)
   (interactive "p")
@@ -161,19 +163,23 @@ that, needs, to_be, wrapped)
 
 \( whitespaced, long, sequence, of_items,
     that, needs, to_be, wrapped) = input_list
-"
-))
+"))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
 
 (defun flexible-indentation-lp:328842 ()
-    (goto-char (point-min))
-    (forward-line 2)
-    (indent-according-to-mode)
-    (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
-    (forward-line 3)
-    (indent-according-to-mode)
-    (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
+  (goto-char (point-min))
+  (forward-line 2)
+  (indent-according-to-mode)
+  (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+  (forward-line 3)
+  (indent-according-to-mode)
+  (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+  (forward-line 3)
+  (indent-according-to-mode)
+  (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+  
+  )
 
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
   (interactive "p")
