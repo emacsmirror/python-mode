@@ -37,7 +37,7 @@
          'fill-paragraph-problems-lp:710373-test
          'nested-indents-lp:328775-test
          'previous-statement-lp:637955-test
-         'multiline-assignment-indentation-lp:629916-test
+         'inbound-indentation-multiline-assignement-lp:629916-test
          'indentation-of-continuation-lines-lp:691185-test
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test)))
@@ -302,7 +302,7 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
       (assert (eq erg (get-char-property (point) 'face)) "Being stuck inside triple-quoted-string. Did not reach beginning of class."))
     )
 
-(defun multiline-assignment-indentation-lp:629916-test (&optional arg load-branch-function)
+(defun inbound-indentation-multiline-assignement-lp:629916-test (&optional arg load-branch-function)
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "foo_long_long_long_long = (
@@ -310,25 +310,25 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
         (x_long_long_long_long == X) &
         (y_long_long_long_long == Y)])
 "))
-    (py-bug-numbered-tests-intern 'multiline-assignment-indentation-lp:629916 arg teststring)))
+    (py-bug-numbered-tests-intern 'inbound-indentation-multiline-assignement-lp:629916 arg teststring)))
 
 
-(defun multiline-assignment-indentation-lp:629916 ()
+(defun inbound-indentation-multiline-assignement-lp:629916 ()
     (goto-char (point-min))
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
+  (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
   (end-of-line)
   (search-backward "[")
   (newline)
   (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
+  (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed")
+  (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
   (forward-line 1)
   (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "multiline-assignment-indentation-lp:629916 test failed"))
+  (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed"))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
   (interactive "p")
@@ -408,7 +408,7 @@ elif x < 0:
   (let ((py-continuation-offset 2))
     (goto-char (point-min))
     (forward-line 3)
-    (indent-according-to-mode)
+    (indent-according-to-mode)  
     (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")))
 
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
@@ -490,6 +490,76 @@ This docstring isn't indented, test should pass anyway.
     (forward-line 1)
     (indent-according-to-mode)
     )
+
+(defun backslashed-continuation-line-indent-lp:742993-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+self.last_abc_attr = \
+self.last_xyz_attr = \
+self.last_abc_other = \
+self.last_xyz_other = None
+
+self.last_abc_attr = \\
+self.last_xyz_attr = \\
+self.last_abc_other = \\
+self.last_xyz_other = None
+
+self.last_abc_attr = \\
+self.last_xyz_attr = \\
+self.last_abc_other = \\
+self.last_xyz_other = None
+
+self.last_abc_attr = \\
+self.last_xyz_attr = \\
+self.last_abc_other = \\
+self.last_xyz_other = None
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'backslashed-continuation-line-indent-lp:742993 arg teststring)))
+
+(defun backslashed-continuation-line-indent-lp:742993 ()
+  (let ((py-continuation-offset 2))
+    (goto-char (point-min))
+    (forward-line 2)
+    (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
+    (forward-line 2)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    
+    (setq py-continuation-offset 4)
+    (forward-line 1)
+    (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
+    (forward-line 2)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+
+    (setq py-continuation-offset 6)
+    (forward-line 1)
+    (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
+    (forward-line 2)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
+))
+
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
