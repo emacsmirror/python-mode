@@ -159,7 +159,7 @@ def main(argv):
 packed_entry = (long, sequence, of_items,
 that, needs, to_be, wrapped)
 
-\( long, sequence, of_items,
+\( whitespaced, long, sequence, of_items,
     that, needs, to_be, wrapped) = input_list
 "
 ))
