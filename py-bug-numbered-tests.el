@@ -18,13 +18,6 @@
 
 (add-to-list 'load-path default-directory)
 
-(require 'thingatpt-utils-base)
-(require 'thing-at-point-utils)
-(require 'beg-end)
-(require 'ar-comment-lor)
-
-;; (require 'python-components-mode)
-
 (setq bug-numbered-tests
       (if (featurep 'xemacs)
           (list
@@ -201,6 +194,8 @@ class f():
   (py-bug-numbered-tests-intern 'beg-end-of-defun-lp:303622 arg teststring)))
 
 (defun beg-end-of-defun-lp:303622 ()
+  (goto-char (point-min))
+  (forward-line 2)
   (end-of-defun)
   (assert (eq 292 (point)) nil "beg-end-of-defun-lp:303622 test failed!")
   (beginning-of-defun)

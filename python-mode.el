@@ -3733,8 +3733,7 @@ local bindings to py-newline-and-indent."))
 ;; Helper functions
 (defun py-count-lines (&optional start end)
   "Count lines in accessible part of buffer.
-If no optional arguments are given but buffer is narrowed,
-use the narrowed part.
+
 If no optional arguments are given but region is active,
 use the region.
 Else count from point-min until curser position - (point)
@@ -3742,14 +3741,10 @@ Else count from point-min until curser position - (point)
 See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   (interactive)
   (lexical-let ((beg (cond (start)
-                           ((buffer-narrowed-p)
-                            (point-min))
                            ((region-active-p)
                             (region-beginning))
                            (t (point-min))))
                 (end (cond (end)
-                           ((buffer-narrowed-p)
-                            (point-max))
                            ((region-active-p)
                             (copy-marker (region-end)))
                            (t (point))))
