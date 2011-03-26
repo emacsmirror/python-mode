@@ -68,6 +68,50 @@
       (insert teststring)
       (funcall testname))))
 
+
+(defun sexp-commands-lp:328778-test (&optional arg load-branch-function)
+  "Reported by Montanaro on 2003-08-05
+\[ ... ]
+ You can kill balanced expressions on a
+ particular line but it's not possible to remove the
+ whole of an 'if' or 'while' block."
+  (interactive "p")
+  (let ((teststring "# Examples from http://diveintopython.org/
+
+def main(argv):                          
+    grammar = \"kant.xml\"                
+    try:                                
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:          
+        usage() 
+        sys.exit(2) 
+    for opt, arg in opts:                
+        if opt in (\"-h\", \"--help\"):      
+            usage() 
+            sys.exit() 
+        elif opt == '-d':                
+            global _debug 
+            _debug = 1 
+        elif opt in (\"-g\", \"--grammar\"): 
+            grammar = arg 
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'sexp-commands-lp:328778 arg teststring)))
+
+(defun sexp-commands-lp:328778 ()
+  (let ((size (buffer-size)))
+    (goto-char (point-min))
+    (forward-line 15)
+    (py-kill-clause)
+    (assert (< (buffer-size) size) nil "sexp-commands-lp:328778 test failed")
+    (assert (eq (buffer-size) 526) nil "sexp-commands-lp:328778 test failed")
+    (kill-line 1)
+    (indent-according-to-mode)
+    (forward-line -4)
+    (py-kill-block)
+    (assert (eq (buffer-size) 324) nil "sexp-commands-lp:328778 test failed")
+    ))
+
 (defun nested-dictionaries-indent-lp:328791-test (&optional arg load-branch-function)
   "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
   (interactive "p")
@@ -114,6 +158,9 @@
 
 packed_entry = (long, sequence, of_items,
 that, needs, to_be, wrapped)
+
+\( long, sequence, of_items,
+    that, needs, to_be, wrapped) = input_list
 "
 ))
   (when load-branch-function (funcall load-branch-function))
@@ -121,12 +168,12 @@ that, needs, to_be, wrapped)
 
 (defun flexible-indentation-lp:328842 ()
     (goto-char (point-min))
-    (forward-line 3)
-    (indent-according-to-mode)
-    (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
     (forward-line 2)
     (indent-according-to-mode)
-    (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
+    (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+    (forward-line 3)
+    (indent-according-to-mode)
+    (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
 
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
   (interactive "p")
