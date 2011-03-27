@@ -3196,49 +3196,57 @@ For stricter sense specify regexp. "
   "Mark expression around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "expression"))
+  (py-mark-base "expression")
+  (exchange-point-and-mark))
 
 (defun py-mark-partial-expression ()
   "Mark partial-expression around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "partial-expression"))
+  (py-mark-base "partial-expression")
+  (exchange-point-and-mark))
 
 (defun py-mark-statement ()
   "Mark statement around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "statement"))
+  (py-mark-base "statement")
+  (exchange-point-and-mark))
 
 (defun py-mark-block ()
   "Mark block around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "block"))
+  (py-mark-base "block")
+  (exchange-point-and-mark))
 
 (defun py-mark-block-or-clause ()
   "Mark block-or-clause around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "block-or-clause"))
+  (py-mark-base "block-or-clause")
+  (exchange-point-and-mark))
 
 (defun py-mark-def-or-class ()
   "Mark def-or-class around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "def-or-class"))
+  (py-mark-base "def-or-class")
+  (exchange-point-and-mark))
 
 (defun py-mark-class ()
   "Mark class around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "class"))
+  (py-mark-base "class")
+  (exchange-point-and-mark))
 
 (defun py-mark-clause ()
   "Mark clause around point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
-  (py-mark-base "clause"))
+  (py-mark-base "clause")
+  (exchange-point-and-mark))
 
 (defun py-mark-base (form)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
@@ -3255,7 +3263,6 @@ For stricter sense specify regexp. "
       (push-mark beg t t)
       (goto-char end))
     (when (interactive-p) (message "%s %s" beg end))
-    (exchange-point-and-mark)
     (cons beg end)))
 
 ;; Deleting
@@ -3263,57 +3270,57 @@ For stricter sense specify regexp. "
   "Delete expression around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "expression")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "expression")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-partial-expression ()
   "Delete partial-expression around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "partial-expression")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "partial-expression")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-statement ()
   "Delete statement around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "statement")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "statement")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block ()
   "Delete block around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "block")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "block")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block-or-clause ()
   "Delete block-or-clause around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "block-or-clause")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "block-or-clause")))
+    (kill-region (region-beginning) (region-end))))
 
 (defun py-kill-def-or-class ()
   "Delete def-or-class around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "def-or-class")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "def-or-class")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-class ()
   "Delete class around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "class")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "class")))
+    (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-clause ()
   "Delete clause around point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
-  (py-mark-base "clause")
-  (kill-region (region-beginning) (region-end)))
+  (let ((erg (py-mark-base "clause")))
+    (kill-region (car erg) (cdr erg))))
 
 
 ;; pdbtrack functions
