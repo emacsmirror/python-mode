@@ -442,10 +442,11 @@ This docstring isn't indented, test should pass anyway.
 
 (defun class-treated-as-keyword-lp:709478 ()
   (font-lock-fontify-buffer)
-  (goto-char 64)
-  (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d test failed")
+  (goto-char 63)
+  (sit-for 0.1)
+  (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d 1th test failed")
   (goto-char 57)
-  (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test failed")
+  (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test 2th failed")
   )
 
 
