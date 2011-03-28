@@ -2395,22 +2395,25 @@ the new line indented."
              erg indent)
         (back-to-indentation)
         (setq indent
-              (cond 
+              (cond
+               ;; comments and strings
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
                 (py-compute-indentation honor-block-close-p orig origline))
+               ;; lists
                ((nth 1 pps)
                 (progn (goto-char (+ py-lhs-inbound-indent (nth 1 pps)))
                        (when (looking-at "[ \t]+")
                          (goto-char (match-end 0)))
                        (current-column)))
                ((py-backslashed-continuation-line-p)
-                (progn
-                  ;; gets the backslash
-                  ;; (goto-char (nth 2 pps))
-                  (py-beginning-of-statement)
-                  (+ (current-indentation) py-continuation-offset)))
+                (progn (py-beginning-of-statement)
+                       (+ (current-indentation) py-continuation-offset)))
+               ((empty-line-p)
+                (forward-line -1)
+                (back-to-indentation)
+                (py-compute-indentation honor-block-close-p orig origline))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation honor-block-close-p orig origline))
