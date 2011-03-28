@@ -692,7 +692,7 @@ support for features needed by `python-mode'.")
         )
     (list
      ;; decorators
-     '("^[ \t]*\\(@[a-zA-Z_][a-zA-Z_0-9]+\\)\\((.+)\\)?" 1 'py-decorators-face)
+     '("^[ \t]*\\(@[a-zA-Z_][a-zA-Z_0-9.]+\\)\\((.+)\\)?" 1 'py-decorators-face)
      ;; keywords
      (cons (concat "\\<\\(" kw1 "\\)\\>[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
