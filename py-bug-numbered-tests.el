@@ -560,7 +560,20 @@ self.last_xyz_other = None
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993 test failed")
 ))
 
+(defun py-decorators-face-lp:744335-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "@foo.bar
+def baz():
+    pass
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'py-decorators-face-lp:744335 arg teststring)))
 
+(defun py-decorators-face-lp:744335 ()
+    (goto-char 7)
+      (sit-for 0.1)
+  (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed")
+    )
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
