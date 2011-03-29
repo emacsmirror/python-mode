@@ -40,7 +40,8 @@
          'inbound-indentation-multiline-assignement-lp:629916-test
          'indentation-of-continuation-lines-lp:691185-test
          'goto-beginning-of-tqs-lp:735328-test
-         'class-treated-as-keyword-lp:709478-test)))
+         'class-treated-as-keyword-lp:709478-test
+         'py-decorators-face-lp:744335-test)))
 
 
 (defun py-run-bug-numbered-tests (&optional arg)
@@ -570,10 +571,10 @@ def baz():
   (py-bug-numbered-tests-intern 'py-decorators-face-lp:744335 arg teststring)))
 
 (defun py-decorators-face-lp:744335 ()
-    (goto-char 7)
-      (sit-for 0.1)
-  (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed")
-    )
+  (goto-char 7)
+  (font-lock-fontify-buffer)
+  (sit-for 0.1)
+  (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

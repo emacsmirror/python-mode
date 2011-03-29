@@ -52,7 +52,8 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall indentation-of-continuation-lines-lp:691185-test \
 --funcall goto-beginning-of-tqs-lp:735328-test \
 --funcall class-treated-as-keyword-lp:709478-test \
---funcall backslashed-continuation-line-indent-lp:742993-test
+--funcall backslashed-continuation-line-indent-lp:742993-test \
+--funcall py-decorators-face-lp:744335-test
 
 # fail as batch-skripts, but work from inside
 # --funcall mark-block-region-lp:328806-test \
