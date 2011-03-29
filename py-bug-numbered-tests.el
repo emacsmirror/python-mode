@@ -34,6 +34,7 @@
          'flexible-indentation-lp:328842-test
          'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
+         'exceptions-not-highlighted-lp:473525-test
          'fill-paragraph-problems-lp:710373-test
          'nested-indents-lp:328775-test
          'previous-statement-lp:637955-test
@@ -493,6 +494,18 @@ This docstring isn't indented, test should pass anyway.
     (indent-according-to-mode)
     )
 
+(defun exceptions-not-highlighted-lp:473525-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "excs = (SystemExit, Exception, KeyboardInterrupt)"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'exceptions-not-highlighted-lp:473525 arg teststring)))
+
+(defun exceptions-not-highlighted-lp:473525 ()
+    (goto-char 39)
+    (font-lock-fontify-buffer)
+    (sit-for 0.1)
+    (assert (eq (get-char-property (point) 'face) 'py-exception-name-face) nil "exceptions-not-highlighted-lp:473525 test failed"))
+    
 (defun backslashed-continuation-line-indent-lp:742993-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "
@@ -575,6 +588,7 @@ def baz():
   (font-lock-fontify-buffer)
   (sit-for 0.1)
   (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
