@@ -754,7 +754,11 @@ Currently-active file is at the head of the list.")
 ;; Constants
 
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
-  "Matches the beginning of a compound statement. ")
+  "Matches the beginning of a class, method or compound statement. ")
+
+(defconst py-return-re
+  "[ \t]*\\<\\(return\\)\\>"
+  "Regular expression matching keyword which typically closes a function. ")
 
 (defconst py-class-re "[ \t]*\\<\\(class\\)\\>"
   "Matches the beginning of a class definition. ")
@@ -2424,6 +2428,9 @@ the new line indented."
                 (current-indentation))
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
+                (current-indentation))
+               ((looking-at py-return-re)
+                (py-beginning-of-def-or-class)
                 (current-indentation))
                ((looking-at py-block-closing-keywords-re)
                 (if (eq origline (py-count-lines))
