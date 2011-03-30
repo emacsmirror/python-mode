@@ -2868,7 +2868,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-beginning-of-form-base py-block-re nil nil t count nil t 'py-in-comment-p))))
+  (let ((erg (car-safe (py-go-to-keyword py-block-re -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2880,7 +2880,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-beginning-of-form-base py-if-block-re nil nil t count nil t 'py-in-comment-p))))
+  (let ((erg (car-safe (py-go-to-keyword py-if-block-re -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2892,7 +2892,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-beginning-of-form-base py-try-block-re nil nil t count nil t 'py-in-comment-p))))
+  (let ((erg (car-safe (py-go-to-keyword py-try-block-re -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2921,7 +2921,7 @@ http://docs.python.org/reference/compound_stmts.html"
   (let* ((regexp (if arg
                      py-block-re
                    py-block-or-clause-re))
-         (erg (car-safe (py-beginning-of-form-base regexp nil nil t count nil t 'py-in-comment-p))))
+         (erg (car-safe (py-go-to-keyword regexp -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2964,7 +2964,7 @@ http://docs.python.org/reference/compound_stmts.html"
   "Move point to start of next `class'.
 See also `py-beginning-of-def-or-class'. "
   (interactive "p")
-  (let ((erg (car-safe (py-beginning-of-form-base py-class-re nil nil t count nil t 'py-in-comment-p))))
+  (let ((erg (car-safe (py-go-to-keyword py-class-re -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2998,7 +2998,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-beginning-of-form-base py-clause-re nil nil t count nil t 'py-in-comment-p))))
+  (let ((erg (car-safe (py-go-to-keyword py-clause-re -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3034,7 +3034,7 @@ With optional arg CLASS, move to the beginn of class definition. "
                         py-def-or-class-re)
                        (class py-class-re)
                        (t py-def-re)))
-         (erg (car-safe (py-beginning-of-form-base regexp nil nil t count nil t 'py-in-string-or-comment))))
+         (erg (car-safe (py-go-to-keyword regexp -1))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3049,7 +3049,7 @@ With optional arg CLASS, move to the end of class exclusively. "
          (regexp
           (cond (class py-class-re)
                 (t py-def-or-class-re)))
-         indent)
+         indent erg)
     (unless (py-statement-opens-block-p regexp)    
       (py-travel-current-indent (py-go-to-keyword regexp -1)))
     (setq indent (current-indentation))
@@ -3772,123 +3772,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
       (setq erg (1+ (count-matches "[\n\C-m]" beg end))))
     (when (interactive-p) (message "%s" erg))
     erg))
-
-(defun py-beginning-of-form-base (begstr &optional endstr bound noerror count comment regexp condition)
-  "Goto opening of a programming structure in this level.
-Takes strings as arguments for search.
-Set comment to `t' if forms inside comments should match - also for processing comments itself.
-Set 7th argument REGEXP t, if beg/end-str are regular expressions.
-"
-  (let* ((searchform (cond ((and begstr endstr)
-                            (concat begstr "\\|" endstr))
-                           (begstr begstr)
-                           (endstr endstr)))
-         (count (or count 1))
-         (nesting count)
-         (orig (point))
-         (regexp regexp)
-         beg-pos-delimiter end-pos-delimiter)
-    (while
-        (and
-         (< 0 nesting) (not (bobp)))
-      (cond
-       ((and (looking-back searchform)
-             (goto-char (match-beginning 0))
-             (not (and condition (funcall condition))))
-        (py-beginning-of-form-base-intern begstr endstr comment condition))
-       ((and (or regexp (and begstr endstr))
-             (re-search-backward searchform bound noerror count))
-        (py-beginning-of-form-base-intern begstr endstr comment condition))
-       ((and (not regexp) (not (and begstr endstr))
-             (search-backward searchform bound noerror count)
-             (goto-char (match-beginning 0)))
-        (py-beginning-of-form-base-intern begstr endstr comment condition))
-       (t (goto-char (point-min)))))
-    (when (and beg-pos-delimiter end-pos-delimiter)
-      (list beg-pos-delimiter end-pos-delimiter))))
-
-(defun py-beginning-of-form-base-intern (begstr endstr comment condition)
-  (unless (and condition (save-match-data (funcall condition)))
-    (cond
-     ((save-match-data
-        (ignore-errors (string-match begstr (match-string-no-properties 0))))
-      (if comment
-          (progn
-            (setq nesting (1- nesting))
-            (setq beg-pos-delimiter (match-beginning 0))
-            (setq end-pos-delimiter (match-end 0)))
-        (unless (py-in-comment-p)
-          (setq nesting (1- nesting))
-          (setq beg-pos-delimiter (match-beginning 0))
-          (setq end-pos-delimiter (match-end 0)))))
-     ((save-match-data
-        (ignore-errors (string-match endstr (match-string-no-properties 0))))
-      (if comment
-          ;; non-nesting comments don't matter
-          (unless (or (string= "" comment-end)(eq 10 comment-end))
-            (setq nesting (1+ nesting))
-            ;;          (message "%s" nesting)
-            (setq beg-pos-delimiter (match-beginning 0))
-            (setq end-pos-delimiter (match-end 0)))
-        (unless (py-in-comment-p)
-          (setq nesting (1+ nesting))
-          (setq beg-pos-delimiter (match-beginning 0))
-          (setq end-pos-delimiter (match-end 0))))))))
-
-(defun py-end-of-form-base (begstr endstr &optional bound noerror count comment regexp condition)
-  "Goto closing of a programming structure in this level.
-As it stops one char after form, go one char back onto the last char of form.
-Set comment to `t' if forms inside comments should match - also for processing comments itself.
-If SHOW, display nesting and point in message buffer.
-Set 7th argument REGEXP t, if beg/end-strings are regular expressions.
-Optional arg CONDITION expects a function whose return value - `t' or a number - is checked for success, otherwise search continues.
-"
-  (let* ((searchform (cond ((and begstr endstr)
-                            (if (string= begstr endstr)
-                                begstr
-                              (concat begstr "\\|" endstr)))
-                           (begstr begstr)
-                           (endstr endstr)))
-         (count (or count 1))
-         (nesting count)
-         (orig (point))
-         beg-pos-delimiter end-pos-delimiter)
-    (while
-        (and
-         (< 0 nesting) (not (eobp)))
-      (if (and (looking-at searchform)
-               (goto-char (match-end 0))
-               (not (and condition (funcall condition))))
-          (progn
-            (setq beg-pos-delimiter (match-beginning 0))
-            (setq end-pos-delimiter (match-end 0))
-            (py-end-of-form-base-intern begstr endstr comment condition))
-        (if (and
-             (re-search-forward searchform bound noerror count)
-             (save-match-data
-               (not (and condition (funcall condition)))))
-            (progn
-              (setq beg-pos-delimiter (match-beginning 0))
-              (setq end-pos-delimiter (match-end 0))
-              (py-end-of-form-base-intern begstr endstr comment condition))
-          (goto-char (1+ (match-beginning 0))))))
-    (if (and beg-pos-delimiter end-pos-delimiter)
-        (list beg-pos-delimiter end-pos-delimiter)
-      (goto-char orig)
-      nil)))
-
-(defun py-end-of-form-base-intern (begstr endstr comment condition) 
-  (if
-      (string-match endstr (match-string-no-properties 0))
-      (if comment
-          (setq nesting (1- nesting))
-        (unless (py-in-comment-p)
-          (setq nesting (1- nesting))))
-    ;; got another beginning while moving down
-    (if comment
-        (setq nesting (1+ nesting))
-      (unless (py-in-comment-p)
-        (setq nesting (1+ nesting))))))
 
 (defun py-forward-line (&optional arg)
   "Goes to end of line after forward move.
