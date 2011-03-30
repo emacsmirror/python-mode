@@ -42,7 +42,8 @@
          'indentation-of-continuation-lines-lp:691185-test
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test
-         'py-decorators-face-lp:744335-test)))
+         'py-decorators-face-lp:744335-test
+         'indent-after-return-lp:745208-test)))
 
 
 (defun py-run-bug-numbered-tests (&optional arg)
@@ -589,6 +590,43 @@ def baz():
   (sit-for 0.1)
   (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed"))
 
+(defun indent-after-return-lp:745208-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class FOO\():
+    if len(sys.argv)==1:
+        usage\()
+        sys.exit\()
+
+    def build_extension\(self, ext):
+
+        if ext.name == '_ctypes':
+            if not self.configure_ctypes\(ext):
+                return
+
+        try:
+            build_ext.build_extension\(self, ext)
+        except \(CCompilerError, DistutilsError) as why:
+            self.announce\('WARNING: building of extension \"%s\"
+failed: %s' %
+                          \(ext.name, sys.exc_info()\[1]))
+            self.failed.append(ext.name)
+            return
+        # Workaround for Mac OS X: The Carbon-based modules cannot
+be
+        # reliably imported into a command-line Python
+        if 'Carbon' in ext.extra_link_args:
+            self.announce\(
+                'WARNING: skipping import check for Carbon-based
+\"%s\"' %
+                ext.name)
+            return
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-numbered-tests-intern 'indent-after-return-lp:745208 arg teststring)))
+
+(defun indent-after-return-lp:745208 ()
+    (goto-char (point-max))
+    (assert (eq 4 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
