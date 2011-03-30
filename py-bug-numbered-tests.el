@@ -611,8 +611,7 @@ failed: %s' %
                           \(ext.name, sys.exc_info()\[1]))
             self.failed.append(ext.name)
             return
-        # Workaround for Mac OS X: The Carbon-based modules cannot
-be
+        # Workaround for Mac OS X: The Carbon-based modules cannot be
         # reliably imported into a command-line Python
         if 'Carbon' in ext.extra_link_args:
             self.announce\(
@@ -626,7 +625,15 @@ be
 
 (defun indent-after-return-lp:745208 ()
     (goto-char (point-max))
-    (assert (eq 4 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed"))
+    (assert (eq 4 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed")
+    (py-beginning-of-statement)
+    (assert (looking-at py-return-re) nil "indent-after-return-lp:745208 test failed")
+    (py-beginning-of-block)
+    (assert (looking-at "if") nil "indent-after-return-lp:745208 test failed")
+    (py-backward-statement)
+    (assert (looking-at py-return-re) nil "indent-after-return-lp:745208 test failed")
+    )
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
