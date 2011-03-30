@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Commentary:
 
-# batch-script tests Emacs python-mode
+#  tests Emacs python-mode
 #
 # Code:
 
