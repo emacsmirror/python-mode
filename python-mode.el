@@ -2934,6 +2934,32 @@ http://docs.python.org/reference/compound_stmts.html"
       (when (interactive-p) (message "%s" erg))
       erg)))
 
+;; Def
+(defun py-beginning-of-def (&optional class)
+  "Move point to start of `def'. "
+  (interactive "P")
+  (let ((erg (car-safe (py-go-to-keyword py-def-re -1))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-end-of-def ()
+  "Move point beyond next `def' definition. "
+  (interactive)
+  (let* ((orig (point))
+         (regexp py-def-re)
+         indent erg)
+    (unless (py-statement-opens-block-p regexp)
+      (py-travel-current-indent (py-go-to-keyword regexp -1)))
+    (setq indent (current-indentation))
+    (unless (< orig (point))
+      (when (py-statement-opens-block-p regexp)
+        (forward-line 1))
+      (setq erg (py-travel-current-indent (cons indent (point)))))
+    (when (and (< orig (point))(not (eobp)))
+      (setq erg (point)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 ;; Class
 (defalias 'beginning-of-class 'py-beginning-of-class)
 (defalias 'py-backward-class 'py-beginning-of-class)
