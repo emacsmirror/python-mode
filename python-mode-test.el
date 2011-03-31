@@ -43,9 +43,7 @@
   (dolist (ele python-mode-tests)
     (funcall ele arg)))
 
-(defun py-beginning-of-block-test (&optional arg load-branch-function)
-  (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
+(defvar python-mode-test-string "class OrderedDict1(dict):
     \"\"\"
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
@@ -68,7 +66,12 @@
             'python-partial-expression',
             'python-statement',
             ])
-"))
+"
+  "String used for tests by python-mode-test.el")
+
+(defun py-beginning-of-block-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-numbered-tests-intern 'py-beginning-of-block-base arg teststring)))
 
@@ -79,30 +82,7 @@
 
 (defun py-end-of-block-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'py-end-of-block-base arg teststring)))
 
@@ -113,30 +93,7 @@
 
 (defun py-beginning-of-block-or-clause-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])"
-                    ))
+  (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-numbered-tests-intern 'py-beginning-of-block-or-clause-base arg teststring)))
 
@@ -148,30 +105,7 @@
 
 (defun py-end-of-block-or-clause-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'py-end-of-block-or-clause-base arg teststring)))
 
@@ -182,30 +116,7 @@
 
 (defun py-beginning-of-def-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'py-beginning-of-def-base arg teststring)))
 
@@ -216,30 +127,7 @@
 
 (defun py-end-of-def-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'py-end-of-def-base arg teststring)))
 
@@ -251,30 +139,7 @@
 
 (defun py-beginning-of-def-or-class-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-numbered-tests-intern 'py-beginning-of-def-or-class-base arg teststring)))
 
@@ -284,30 +149,7 @@
 
 (defun py-end-of-def-or-class-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "class OrderedDict1(dict):
-    \"\"\"
-    This implementation of a dictionary keeps track of the order
-    in which keys were inserted.
-    \"\"\"
-
-    def __init__(self, d={}):
-        self._keys = d.keys()
-        dict.__init__(self, d)
-
-    def f():
-        \"\"\"
-        class for in 'for in while with blah'
-        \"\"\"
-        if a:
-
-            ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-            'python-partial-expression',
-            'python-statement',
-            ])
-"))
+  (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-numbered-tests-intern 'py-end-of-def-or-class-base arg teststring)))
 
