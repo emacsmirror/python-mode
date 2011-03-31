@@ -389,13 +389,13 @@ elif x < 0:
 ##   directory consisting of just .txt and .lorien files.
 ")
   (when arg (switch-to-buffer (current-buffer)))
-    (font-lock-mode 1)
+  (python-mode)
+  (font-lock-mode 1)
   (font-lock-fontify-buffer)
   (goto-char 100)
   (if (functionp 'py-fill-paragraph)
       (py-fill-paragraph)
-    (python-fill-paragraph)
-    ))
+    (python-fill-paragraph)))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
   (interactive "p")
