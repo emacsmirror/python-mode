@@ -4123,8 +4123,7 @@ These are Python temporary files awaiting execution."
         ;; length of the string's delimiter
         delim-length
         ;; The string delimiter
-        delim
-        )
+        delim)
 
     (save-excursion
       (goto-char start)
@@ -4189,8 +4188,9 @@ If point is inside a string, narrow to that string and fill.
           (py-fill-string (nth 8 pps)))
          ;; opening quote of a string
          ((progn (save-excursion (forward-char 1)(nth 3 pps)))
-          (py-fill-string (nth 8 pps)))
-         (t nil))))))
+          (save-excursion
+            (forward-char 1)
+            (py-fill-string (nth 8 pps)))))))))
 
 ;; credits to python.el
 (defun py-beg-of-defun-function ()
