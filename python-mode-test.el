@@ -43,7 +43,7 @@
   (dolist (ele python-mode-tests)
     (funcall ele arg)))
 
-(defvar python-mode-test-string "class OrderedDict1(dict):
+(defvar python-mode-teststring "class OrderedDict1(dict):
     \"\"\"
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
