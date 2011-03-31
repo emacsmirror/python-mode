@@ -37,8 +37,9 @@ fi
 
 # file holding the tests
 TESTFILE="py-bug-numbered-tests.el"
+TESTFILE2="python-mode-test.el"
 
-$HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" \
+$HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
@@ -55,10 +56,16 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall class-treated-as-keyword-lp:709478-test \
 --funcall backslashed-continuation-line-indent-lp:742993-test \
 --funcall py-decorators-face-lp:744335-test \
---funcall indent-after-return-lp:745208-test
+--funcall indent-after-return-lp:745208-test \
+\
+--funcall py-beginning-of-block-test \
+--funcall py-end-of-block-test \
+--funcall py-beginning-of-block-or-clause-test \
+--funcall py-end-of-block-or-clause-test \
+--funcall py-beginning-of-def-test \
+--funcall py-end-of-def-test \
+--funcall py-beginning-of-def-or-class-test \
+--funcall py-end-of-def-or-class-test
 
-# fail as batch-skripts, but work from inside
-# --funcall mark-block-region-lp:328806-test \
-# fill-paragraph-problems-lp:710373-test
 
-# -load "$HOME/werkstatt/sh-beg-end.el" \
+

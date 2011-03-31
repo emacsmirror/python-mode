@@ -29,6 +29,7 @@
           (list
            'py-beginning-of-block-or-clause-test)
         (list
+
          'py-beginning-of-block-test
          'py-end-of-block-test
          'py-beginning-of-block-or-clause-test
@@ -36,7 +37,9 @@
          'py-beginning-of-def-test
          'py-end-of-def-test
          'py-beginning-of-def-or-class-test
-         'py-end-of-def-or-class-test)))
+         'py-end-of-def-or-class-test
+
+)))
 
 (defun py-run-tests (&optional arg)
   (interactive "p")
