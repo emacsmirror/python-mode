@@ -54,7 +54,7 @@
 (defun py-bug-numbered-tests-intern (testname &optional arg teststring)
   (if arg
       (progn
-        (set-buffer (get-buffer-create (prin1-to-string testname)))
+        (set-buffer (get-buffer-create (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname))))
         (switch-to-buffer (current-buffer))
         (erase-buffer)
         (insert teststring)
