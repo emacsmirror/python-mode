@@ -38,6 +38,8 @@
          'py-end-of-def-test
          'py-beginning-of-def-or-class-test
          'py-end-of-def-or-class-test
+         'py-electric-backspace-test
+         'py-electric-delete-test
 
 )))
 
@@ -76,7 +78,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
-    (py-bug-numbered-tests-intern 'py-beginning-of-block-base arg teststring)))
+    (py-bug-tests-intern 'py-beginning-of-block-base arg teststring)))
 
 (defun py-beginning-of-block-base ()
   (goto-char (point-max))
@@ -87,7 +89,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-end-of-block-base arg teststring)))
+  (py-bug-tests-intern 'py-end-of-block-base arg teststring)))
 
 (defun py-end-of-block-base ()
   (py-beginning-of-block)
@@ -98,7 +100,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
-    (py-bug-numbered-tests-intern 'py-beginning-of-block-or-clause-base arg teststring)))
+    (py-bug-tests-intern 'py-beginning-of-block-or-clause-base arg teststring)))
 
 (defun py-beginning-of-block-or-clause-base ()
     (goto-char (point-max))
@@ -110,7 +112,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-end-of-block-or-clause-base arg teststring)))
+  (py-bug-tests-intern 'py-end-of-block-or-clause-base arg teststring)))
 
 (defun py-end-of-block-or-clause-base ()
     (py-beginning-of-block-or-clause)
@@ -121,7 +123,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-beginning-of-def-base arg teststring)))
+  (py-bug-tests-intern 'py-beginning-of-def-base arg teststring)))
 
 (defun py-beginning-of-def-base ()
   (py-beginning-of-def)
@@ -132,7 +134,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-end-of-def-base arg teststring)))
+  (py-bug-tests-intern 'py-end-of-def-base arg teststring)))
 
 (defun py-end-of-def-base ()
     (py-beginning-of-def)
@@ -144,7 +146,7 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-beginning-of-def-or-class-base arg teststring)))
+  (py-bug-tests-intern 'py-beginning-of-def-or-class-base arg teststring)))
 
 (defun py-beginning-of-def-or-class-base ()
   (py-beginning-of-def-or-class t)
@@ -154,12 +156,49 @@
   (interactive "p")
   (let ((teststring python-mode-teststring))
     (when load-branch-function (funcall load-branch-function))
-    (py-bug-numbered-tests-intern 'py-end-of-def-or-class-base arg teststring)))
+    (py-bug-tests-intern 'py-end-of-def-or-class-base arg teststring)))
 
 (defun py-end-of-def-or-class-base ()
   (py-beginning-of-def-or-class t)
   (py-end-of-def-or-class t)
   (assert (eq (point) 556) nil "py-end-of-def-or-class test failed"))
+
+(defun py-electric-backspace-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-electric-backspace-base arg teststring)))
+
+(defun py-electric-backspace-base ()
+  (goto-char 232)
+  (py-newline-and-indent)
+  (assert (eq 241 (point)) nil "py-electric-backspace test #1 failed")
+  (py-electric-backspace)
+  (assert (eq 4 (current-column)) nil "py-electric-backspace test #2 failed")
+  (py-electric-backspace)
+  (assert (eq 0 (current-column)) nil "py-electric-backspace test #3 failed")
+  (py-electric-backspace)
+  (assert (eq 232 (point)) nil "py-electric-backspace test #4 failed"))
+
+
+(defun py-electric-delete-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-electric-delete-base arg teststring)))
+
+(defun py-electric-delete-base ()
+  (goto-char 202)
+  (py-electric-delete)
+  (assert (eq 4 (length (progn (looking-at "[ \t]+")(match-string-no-properties 0)))) nil "py-electric-delete test #1 failed")
+  (py-electric-delete)
+  (assert (not (looking-at "[ \t]+")) nil "py-electric-delete test #2 failed")
+  (py-electric-delete)
+  (assert (looking-at "ict") nil "py-electric-delete test #2 failed")
+  )
+
+
+
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

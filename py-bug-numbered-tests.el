@@ -51,7 +51,7 @@
   (dolist (ele bug-numbered-tests)
     (funcall ele arg)))
 
-(defun py-bug-numbered-tests-intern (testname &optional arg teststring)
+(defun py-bug-tests-intern (testname &optional arg teststring)
   (if arg
       (progn
         (set-buffer (get-buffer-create (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname))))
@@ -61,7 +61,7 @@
         (fundamental-mode)
         (python-mode)
         (funcall testname)
-        (message "%s" (concat (prin1-to-string testname) " test passed")))
+        (message "%s" (concat (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname)) " passed")))
     (with-temp-buffer
       (insert teststring)
       (funcall testname))))
@@ -94,7 +94,7 @@ def main(argv):
             grammar = arg 
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'sexp-commands-lp:328778 arg teststring)))
+  (py-bug-tests-intern 'sexp-commands-lp:328778 arg teststring)))
 
 (defun sexp-commands-lp:328778 ()
   (let ((size (buffer-size)))
@@ -118,7 +118,7 @@ def main(argv):
     d = {'a':{'b':3,
               'c':4}}
 "))
-    (py-bug-numbered-tests-intern 'nested-dictionaries-indent-lp:328791 arg teststring)))
+    (py-bug-tests-intern 'nested-dictionaries-indent-lp:328791 arg teststring)))
 
 (defun nested-dictionaries-indent-lp:328791 ()
   (goto-char (point-min))
@@ -141,7 +141,7 @@ def main(argv):
                 'python-statement',
                 ])
 "))
-  (py-bug-numbered-tests-intern 'mark-block-region-lp:328806 arg teststring)))
+  (py-bug-tests-intern 'mark-block-region-lp:328806 arg teststring)))
 
 (defun mark-block-region-lp:328806 ()
   (forward-line -2)
@@ -161,7 +161,7 @@ that, needs, to_be, wrapped)
     that, needs, to_be, wrapped) = input_list
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
+  (py-bug-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
 
 (defun flexible-indentation-lp:328842 ()
   (goto-char (point-min))
@@ -194,7 +194,7 @@ class f():
                 'python-statement',
                 ])
 "))
-  (py-bug-numbered-tests-intern 'beg-end-of-defun-lp:303622 arg teststring)))
+  (py-bug-tests-intern 'beg-end-of-defun-lp:303622 arg teststring)))
 
 (defun beg-end-of-defun-lp:303622 ()
   (goto-char (point-min))
@@ -214,7 +214,7 @@ print ''' 'Hi!' I'm a doc string'''
 print \"\"\" ''' \"Hi!\" I'm a doc string ''' \"\"\"
 print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
 "))
-    (py-bug-numbered-tests-intern 'dq-in-tqs-string-lp:328813 arg teststring)))
+    (py-bug-tests-intern 'dq-in-tqs-string-lp:328813 arg teststring)))
 
 (defun dq-in-tqs-string-lp:328813 ()
   (font-lock-mode 1)
@@ -293,7 +293,7 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
     \"\"\""))
-    (py-bug-numbered-tests-intern 'triple-quoted-string-dq-lp:302834 arg teststring)))
+    (py-bug-tests-intern 'triple-quoted-string-dq-lp:302834 arg teststring)))
 
 (defun triple-quoted-string-dq-lp:302834 ()
         (font-lock-mode 1)
@@ -313,7 +313,7 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
         (x_long_long_long_long == X) &
         (y_long_long_long_long == Y)])
 "))
-    (py-bug-numbered-tests-intern 'inbound-indentation-multiline-assignement-lp:629916 arg teststring)))
+    (py-bug-tests-intern 'inbound-indentation-multiline-assignement-lp:629916 arg teststring)))
 
 
 (defun inbound-indentation-multiline-assignement-lp:629916 ()
@@ -341,7 +341,7 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
     This implementation of a dictionary keeps track of the order
     in which keys were inserted.
     \"\"\""))
-    (py-bug-numbered-tests-intern 'previous-statement-lp:637955 arg teststring)))
+    (py-bug-tests-intern 'previous-statement-lp:637955 arg teststring)))
 
 (defun previous-statement-lp:637955 ()
   (beginning-of-line)
@@ -361,7 +361,7 @@ if x > 0:
 elif x < 0:
     print \"x is negative\"
 "))
-    (py-bug-numbered-tests-intern 'nested-indents-lp:328775 arg teststring)))
+    (py-bug-tests-intern 'nested-indents-lp:328775 arg teststring)))
 
 (defun nested-indents-lp:328775 ()
   (font-lock-mode 1)
@@ -405,7 +405,7 @@ elif x < 0:
         a_verry_loonng_variable_nammmee = \\
                                         val
 "))
-    (py-bug-numbered-tests-intern 'indentation-of-continuation-lines-lp:691185 arg teststring)))
+    (py-bug-tests-intern 'indentation-of-continuation-lines-lp:691185 arg teststring)))
 
 (defun indentation-of-continuation-lines-lp:691185 ()
   (let ((py-continuation-offset 2))
@@ -422,7 +422,7 @@ elif x < 0:
 This docstring isn't indented, test should pass anyway.
 \"\"\"
 "))
-    (py-bug-numbered-tests-intern 'goto-beginning-of-tqs-lp:735328 arg teststring)))
+    (py-bug-tests-intern 'goto-beginning-of-tqs-lp:735328 arg teststring)))
 
 (defun goto-beginning-of-tqs-lp:735328 ()
   (goto-char (point-min))
@@ -441,7 +441,7 @@ This docstring isn't indented, test should pass anyway.
         CLASS='blok',)
 ]
 "))
-    (py-bug-numbered-tests-intern 'class-treated-as-keyword-lp:709478 arg teststring)))
+    (py-bug-tests-intern 'class-treated-as-keyword-lp:709478 arg teststring)))
 
 (defun class-treated-as-keyword-lp:709478 ()
   (font-lock-fontify-buffer)
@@ -467,7 +467,7 @@ This docstring isn't indented, test should pass anyway.
 \"fore:#00007F\" )
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'fore-00007F-breaks-indentation-lp:328788 arg teststring)))
+  (py-bug-tests-intern 'fore-00007F-breaks-indentation-lp:328788 arg teststring)))
 
 (defun fore-00007F-breaks-indentation-lp:328788 ()
     (goto-char (point-min))
@@ -499,7 +499,7 @@ This docstring isn't indented, test should pass anyway.
   (interactive "p")
   (let ((teststring "excs = (SystemExit, Exception, KeyboardInterrupt)"))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'exceptions-not-highlighted-lp:473525 arg teststring)))
+  (py-bug-tests-intern 'exceptions-not-highlighted-lp:473525 arg teststring)))
 
 (defun exceptions-not-highlighted-lp:473525 ()
     (goto-char 39)
@@ -531,7 +531,7 @@ self.last_abc_other = \\
 self.last_xyz_other = None
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'backslashed-continuation-line-indent-lp:742993 arg teststring)))
+  (py-bug-tests-intern 'backslashed-continuation-line-indent-lp:742993 arg teststring)))
 
 (defun backslashed-continuation-line-indent-lp:742993 ()
   (let ((py-continuation-offset 2))
@@ -582,7 +582,7 @@ def baz():
     pass
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'py-decorators-face-lp:744335 arg teststring)))
+  (py-bug-tests-intern 'py-decorators-face-lp:744335 arg teststring)))
 
 (defun py-decorators-face-lp:744335 ()
   (goto-char 7)
@@ -621,7 +621,7 @@ failed: %s' %
             return
 "))
   (when load-branch-function (funcall load-branch-function))
-  (py-bug-numbered-tests-intern 'indent-after-return-lp:745208 arg teststring)))
+  (py-bug-tests-intern 'indent-after-return-lp:745208 arg teststring)))
 
 (defun indent-after-return-lp:745208 ()
     (goto-char (point-max))

@@ -65,7 +65,9 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall py-beginning-of-def-test \
 --funcall py-end-of-def-test \
 --funcall py-beginning-of-def-or-class-test \
---funcall py-end-of-def-or-class-test
+--funcall py-end-of-def-or-class-test \
+--funcall py-electric-backspace-test \
+--funcall py-electric-delete-test
 
 
 
