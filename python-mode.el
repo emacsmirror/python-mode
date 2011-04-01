@@ -2228,82 +2228,32 @@ jump to the top (outermost) exception in the exception stack."
 
 
 ;; Electric deletion
-(defun py-electric-backspace (arg)
-  "Delete preceding character or levels of indentation.
-Deletion is performed by calling the function in `py-backspace-function'
-with a single argument (the number of characters to delete).
-
-If point is at the leftmost column, delete the preceding newline.
-
-Otherwise, if point is at the leftmost non-whitespace character of a
-line that is neither a continuation line nor a non-indenting comment
-line, or if point is at the end of a blank line, this command reduces
-the indentation to match that of the line that opened the current
-block of code.  The line that opened the block is displayed in the
-echo area to help you keep track of where you are.  With
-\\[universal-argument] dedents that many blocks (but not past column
-zero).
-
-Otherwise the preceding character is deleted, converting a tab to
-spaces if needed so that only a single column position is deleted.
-\\[universal-argument] specifies how many characters to delete;
-default is 1.
-
-When used programmatically, argument ARG specifies the number of
-blocks to dedent, or the number of characters to delete, as indicated
-above."
+(defun py-electric-backspace (&optional arg)
+  "Delete preceding character or level of indentation.
+With ARG do that ARG times. "
   (interactive "*p")
-  (if (or (/= (current-indentation) (current-column))
-          (bolp)
-          (py-continuation-line-p)
-;         (not py-honor-comment-indentation)
-;         (looking-at "#[^ \t\n]")      ; non-indenting #
-          )
-      (funcall py-backspace-function arg)
-    ;; else indent the same as the colon line that opened the block
-    ;; force non-blank so py-goto-block-up doesn't ignore it
-    (insert-char ?* 1)
-    (backward-char)
-    (let ((base-indent 0)               ; indentation of base line
-          (base-text "")                ; and text of base line
-          (base-found-p nil))
-      (save-excursion
-        (while (< 0 arg)
-          (condition-case nil           ; in case no enclosing block
-              (progn
-                (py-goto-block-up)
-                (setq base-indent (current-indentation)
-                      base-text   (py-suck-up-leading-text)
-                      base-found-p t))
-            (error nil))
-          (setq arg (1- arg))))
-      (delete-char 1)                   ; toss the dummy character
-      (delete-horizontal-space)
-      (indent-to base-indent)
-      (if base-found-p
-          (message "Closes block: %s" base-text)))))
-
-(defun py-electric-delete (arg)
+  (let ((arg (or arg 1)))
+    (dotimes (i arg)
+      (if (looking-back "^[ \t]+")
+          (let* ((remains (% (current-column) py-indent-offset)))
+            (if (< 0 remains)
+                (delete-char (- remains))
+              (indent-line-to (- (current-indentation) py-indent-offset))))
+        (delete-char (- 1))))))
+    
+(defun py-electric-delete (&optional arg)
   "Delete preceding or following character or levels of whitespace.
 
-The behavior of this function depends on the variable
-`delete-key-deletes-forward'.  If this variable is nil (or does not
-exist, as in older Emacsen and non-XEmacs versions), then this
-function behaves identically to \\[c-electric-backspace].
-
-If `delete-key-deletes-forward' is non-nil and is supported in your
-Emacs, then deletion occurs in the forward direction, by calling the
-function in `py-delete-function'.
-
-\\[universal-argument] (programmatically, argument ARG) specifies the
-number of characters to delete (default is 1)."
+With ARG do that ARG times. "
   (interactive "*p")
-  (if (or (and (fboundp 'delete-forward-p) ;XEmacs 21
-               (delete-forward-p))
-          (and (boundp 'delete-key-deletes-forward) ;XEmacs 20
-               delete-key-deletes-forward))
-      (funcall py-delete-function arg)
-    (py-electric-backspace arg)))
+  (let ((arg (or arg 1)))
+    (dotimes (i arg)
+      (if (and (or (bobp)(looking-back "^[ \t]+")) (looking-at "[ \t]+"))
+          (let* ((remains (% (+ (current-column) (- (match-end 0)(match-beginning 0))) py-indent-offset)))
+            (if (< 0 remains)
+                (delete-char remains)
+              (delete-char py-indent-offset)))
+        (delete-char 1)))))
 
 ;; required for pending-del and delsel modes
 (put 'py-electric-colon 'delete-selection t) ;delsel
