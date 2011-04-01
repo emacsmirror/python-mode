@@ -2814,7 +2814,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-go-to-keyword py-block-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2826,7 +2826,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-go-to-keyword py-if-block-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-block-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2838,7 +2838,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-go-to-keyword py-try-block-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-try-block-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2867,7 +2867,7 @@ http://docs.python.org/reference/compound_stmts.html"
   (let* ((regexp (if arg
                      py-block-re
                    py-block-or-clause-re))
-         (erg (car-safe (py-go-to-keyword regexp -1))))
+         (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2904,14 +2904,16 @@ http://docs.python.org/reference/compound_stmts.html"
 
 ;; Def
 (defun py-beginning-of-def (&optional class)
-  "Move point to start of `def'. "
+  "Move point to start of `def'. 
+Returns position reached, if any, nil otherwise."
   (interactive "P")
-  (let ((erg (car-safe (py-go-to-keyword py-def-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-end-of-def ()
-  "Move point beyond next `def' definition. "
+  "Move point beyond next `def' definition. 
+Returns position reached, if any, nil otherwise."
   (interactive)
   (let* ((orig (point))
          (regexp py-def-re)
@@ -2934,9 +2936,10 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-previous-class 'py-beginning-of-class)
 (defun py-beginning-of-class (&optional count)
   "Move point to start of next `class'.
-See also `py-beginning-of-def-or-class'. "
+See also `py-beginning-of-def-or-class'. 
+Returns position reached, if any, nil otherwise."
   (interactive "p")
-  (let ((erg (car-safe (py-go-to-keyword py-class-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-class-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2945,7 +2948,8 @@ See also `py-beginning-of-def-or-class'. "
 (defalias 'py-next-class 'py-end-of-class)
 (defun py-end-of-class (&optional count)
   "Move point beyond next `class' definition.
-See also `py-end-of-def-or-class'. "
+See also `py-end-of-def-or-class'. 
+Returns position reached, if any, nil otherwise."
   (interactive "p")
   (let* ((orig (point))
          (regexp py-class-re)
@@ -2970,7 +2974,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (car-safe (py-go-to-keyword py-clause-re -1))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-clause-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3000,13 +3004,14 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-previous-def-or-class 'py-beginning-of-def-or-class)
 (defun py-beginning-of-def-or-class (&optional class count)
   "Move point to start of `def' or `class', whatever is next.
-With optional arg CLASS, move to the beginn of class definition. "
+With optional arg CLASS, move to the beginn of class definition. 
+Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let* ((regexp (cond ((eq class 'either)
                         py-def-or-class-re)
                        (class py-class-re)
                        (t py-def-re)))
-         (erg (car-safe (py-go-to-keyword regexp -1))))
+         (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3015,7 +3020,8 @@ With optional arg CLASS, move to the beginn of class definition. "
 (defalias 'py-next-def-or-class 'py-end-of-def-or-class)
 (defun py-end-of-def-or-class (&optional class)
   "Move point beyond next `def' or `class' definition.
-With optional arg CLASS, move to the end of class exclusively. "
+With optional arg CLASS, move to the end of class exclusively. 
+Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let* ((orig (point))
          (regexp
