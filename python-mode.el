@@ -98,6 +98,7 @@
 (require 'custom)
 (require 'compile)
 (require 'ansi-color)
+(require 'cl)
 
 
 ;; user definable variables
@@ -546,6 +547,32 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
         (modify-syntax-entry ?` "$" table)
         (modify-syntax-entry ?\_ "w" table)
         table))
+
+(defun py-in-comment-p ()
+  "Return the beginning of current line's comment, if inside. "
+  (save-restriction
+    (widen)
+    (let* ((pps (parse-partial-sexp (line-beginning-position) (point)))
+           (erg (when (nth 4 pps) (nth 8 pps))))
+      (unless erg
+        (when (looking-at (concat "^[ \t]*" comment-start-skip))
+          (setq erg (point))))
+      erg)))
+
+(defun py-in-string-p ()
+  "Returns character address of start of comment or string, nil if not inside. "
+  (interactive)
+  (let* ((pps (parse-partial-sexp (point-min) (point)))
+         (erg (when (nth 3 pps) (nth 8 pps))))
+    (save-excursion
+      (unless erg (setq erg
+                        (progn
+                          (when (looking-at "\"\\|'")
+                            (forward-char 1)
+                            (setq pps (parse-partial-sexp (point-min) (point)))
+                            (when (nth 3 pps) (nth 8 pps)))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defsubst py-in-string-or-comment ()
     "Return beginning position if point is in a Python literal (a comment or string)."
@@ -2247,7 +2274,7 @@ With ARG do that ARG times. "
   (interactive "*p")
   (let ((arg (or arg 1)))
     (dotimes (i arg)
-      (if (and (or (bobp)(looking-back "^[ \t]+")) (looking-at "[ \t]+"))
+      (if (and (or (bolp)(looking-back "^[ \t]+")) (looking-at "[ \t]+"))
           (let* ((remains (% (+ (current-column) (- (match-end 0)(match-beginning 0))) py-indent-offset)))
             (if (< 0 remains)
                 (delete-char remains)
