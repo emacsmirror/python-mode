@@ -625,13 +625,7 @@ failed: %s' %
 
 (defun indent-after-return-lp:745208 ()
     (goto-char (point-max))
-    (assert (eq 4 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed")
-    (py-beginning-of-statement)
-    (assert (looking-at py-return-re) nil "indent-after-return-lp:745208 test failed")
-    (py-beginning-of-block)
-    (assert (looking-at "if") nil "indent-after-return-lp:745208 test failed")
-    (py-backward-statement)
-    (assert (looking-at py-return-re) nil "indent-after-return-lp:745208 test failed")
+    (assert (eq 8 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed")
     )
 
 
