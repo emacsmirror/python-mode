@@ -96,7 +96,6 @@
 
 (require 'comint)
 (require 'custom)
-(require 'cl)
 (require 'compile)
 (require 'ansi-color)
 
@@ -2360,18 +2359,10 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re)
-                (py-beginning-of-def-or-class)
-                (current-indentation))
-               ((looking-at py-block-closing-keywords-re)
-                (if (eq origline (py-count-lines))
-                    (progn
-                      (py-beginning-of-block)
-                      (+ py-indent-offset (current-indentation)))
+               ((looking-at py-block-closing-keywords-re) 
+                (save-excursion
                   (py-beginning-of-block)
                   (current-indentation)))
-               ((and (looking-at py-block-closing-keywords-re) honor-block-close-p)
-                (- (current-indentation) py-indent-offset))
                ((and (eq origline (py-count-lines))
                      (setq erg (py-go-to-keyword py-block-or-clause-re -1)))
                 (+ (car erg) py-indent-offset))
