@@ -27,6 +27,7 @@
            'previous-statement-lp:637955-test)
         (list
          'mark-block-region-lp:328806-test
+         'mark-decorators-lp:328851-test
          'nested-dictionaries-indent-lp:328791-test
          'triple-quoted-string-dq-lp:302834-test
          'fore-00007F-breaks-indentation-lp:328788-test
@@ -176,9 +177,22 @@ that, needs, to_be, wrapped)
   (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
   (forward-line 3)
   (indent-according-to-mode)
-  (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
-  
-  )
+  (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
+
+
+(defun mark-decorators-lp:328851-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "@foo.bar
+def baz():
+    pass
+"))
+    (when load-branch-function (funcall load-branch-function))
+    (py-bug-tests-intern 'mark-decorators-lp:328851-base arg teststring)))
+
+(defun mark-decorators-lp:328851-base ()
+  (goto-char 10)
+  (py-mark-def t)
+  (assert (eq 28 (- (region-end)(region-beginning))) nil "mark-decorators-lp:328851 test failed"))
 
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
   (interactive "p")

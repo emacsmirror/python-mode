@@ -44,6 +44,7 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
 --funcall dq-in-tqs-string-lp:328813-test \
+--funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
 --funcall beg-end-of-defun-lp:303622-test \
 --funcall bullet-lists-in-comments-lp:328782-test \

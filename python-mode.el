@@ -420,6 +420,11 @@ to select the appropriate python interpreter mode for a file.")
   :type 'boolean
   :group 'python)
 
+(defcustom py-mark-decorators nil
+  "If py-mark-def-or-class functions should mark decorators too. Default is `nil'. "
+  :type 'boolean
+  :group 'python)
+
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
@@ -3234,19 +3239,37 @@ For stricter sense specify regexp. "
   (py-mark-base "block-or-clause")
   (exchange-point-and-mark))
 
-(defun py-mark-def-or-class ()
-  "Mark def-or-class around point.
-  Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (py-mark-base "def-or-class")
-  (exchange-point-and-mark))
+(defun py-mark-def (&optional arg)
+  "Mark def around point.
 
-(defun py-mark-class ()
+With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
+Returns beginning and end positions of marked area, a cons."
+
+  (interactive "P")
+    (let ((py-mark-decorators (or arg py-mark-decorators)))
+    (py-mark-base "def" py-mark-decorators)
+    (exchange-point-and-mark)))
+
+(defun py-mark-def-or-class (&optional arg)
+  "Mark def-or-class around point.
+
+With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
+Returns beginning and end positions of marked area, a cons."
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators)))
+    (py-mark-base "def-or-class" py-mark-decorators)
+    (exchange-point-and-mark)))
+
+(defun py-mark-class (&optional arg)
   "Mark class around point.
-  Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (py-mark-base "class")
-  (exchange-point-and-mark))
+
+With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
+Returns beginning and end positions of marked area, a cons."
+
+  (interactive "P")
+    (let ((py-mark-decorators (or arg py-mark-decorators)))
+    (py-mark-base "class" py-mark-decorators)
+    (exchange-point-and-mark)))
 
 (defun py-mark-clause ()
   "Mark clause around point.
@@ -3255,7 +3278,7 @@ For stricter sense specify regexp. "
   (py-mark-base "clause")
   (exchange-point-and-mark))
 
-(defun py-mark-base (form)
+(defun py-mark-base (form &optional py-mark-decorators)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
          (endform (intern-soft (concat "py-end-of-" form)))
          (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
@@ -3265,6 +3288,12 @@ For stricter sense specify regexp. "
                   (setq beg (funcall begcheckform))
                   beg
                 (funcall begform)))
+    (when py-mark-decorators
+      (save-excursion
+        (forward-line -1)
+      (back-to-indentation)
+      (when (looking-at "@\\w+")
+        (setq beg (match-beginning 0)))))
     (setq end (funcall endform))
     (progn
       (push-mark beg t t)
@@ -4197,6 +4226,7 @@ If point is inside a string, narrow to that string and fill.
 (add-hook 'python-mode-hook 'py-beg-of-defun-function)
 (add-hook 'python-mode-hook 'py-end-of-defun-function)
 
+(add-hook 'python-mode-hook 'py-font-lock-mode-hook)
 
 
 (provide 'python-mode)
