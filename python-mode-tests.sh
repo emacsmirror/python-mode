@@ -57,6 +57,7 @@ $HOME/emacs/src/emacs -Q --batch --eval "(message (emacs-version))" --eval "(whe
 --funcall backslashed-continuation-line-indent-lp:742993-test \
 --funcall py-decorators-face-lp:744335-test \
 --funcall indent-after-return-lp:745208-test \
+--funcall keep-assignements-column-lp:748198-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

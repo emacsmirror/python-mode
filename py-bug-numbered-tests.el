@@ -43,7 +43,10 @@
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test
          'py-decorators-face-lp:744335-test
-         'indent-after-return-lp:745208-test)))
+         'indent-after-return-lp:745208-test
+         'keep-assignements-column-lp:748198-test
+
+         )))
 
 
 (defun py-run-bug-numbered-tests (&optional arg)
@@ -474,22 +477,22 @@ This docstring isn't indented, test should pass anyway.
     (forward-line 1)
     (indent-according-to-mode)
     (forward-line 1)
-    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed") 
+    (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed") 
     (indent-according-to-mode)
     (forward-line 1)
     (indent-according-to-mode)
     (forward-line 1)
-    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
     (indent-according-to-mode)
     (forward-line 1)
     (indent-according-to-mode)
     (forward-line 1)
-    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
     (indent-according-to-mode)
     (forward-line 1)
     (indent-according-to-mode)
     (forward-line 1)
-    (assert (eq 8 (py-compute-indentation (point-min) (point))) nil "fore-00007F-breaks-indentation test failed")
+    (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
     (indent-according-to-mode)
     (forward-line 1)
     (indent-according-to-mode)
@@ -628,6 +631,19 @@ failed: %s' %
     (assert (eq 8 (py-compute-indentation)) nil "indent-after-return-lp:745208 test failed")
     )
 
+(defun keep-assignements-column-lp:748198-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "bar = foo(a=1,
+          b=2,
+          c=3)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'keep-assignements-column-lp:748198 arg teststring)))
+
+(defun keep-assignements-column-lp:748198 ()
+  (goto-char 45)
+  (py-newline-and-indent)
+  (assert (eq 0 (current-column)) nil "py-vor test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

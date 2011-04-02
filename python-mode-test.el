@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(require 'py-bug-numbered-tests)
+
 (setq python-mode-tests
       (if (featurep 'xemacs)
           (list
@@ -196,9 +198,6 @@
   (py-electric-delete)
   (assert (looking-at "ict") nil "py-electric-delete test #2 failed")
   )
-
-
-
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

@@ -759,6 +759,8 @@ Currently-active file is at the head of the list.")
 
 
 ;; Constants
+(defconst py-assignement-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
+  "If looking at the beginning of an assignement. ")
 
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
   "Matches the beginning of a class, method or compound statement. ")
@@ -2341,7 +2343,7 @@ the new line indented."
       (insert-char ?\n 1)
       (move-to-column ci))))
 
-(defun py-compute-indentation (&optional done orig origline)
+(defun py-compute-indentation (&optional orig origline)
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
 `raise', `break', `continue', and `pass' force one level of dedenting."
@@ -2360,7 +2362,7 @@ the new line indented."
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
-                (py-compute-indentation done orig origline))
+                (py-compute-indentation orig origline))
                ;; lists
                ((nth 1 pps)
                 (progn (goto-char (+ py-lhs-inbound-indent (nth 1 pps)))
@@ -2371,12 +2373,13 @@ the new line indented."
                 (progn (py-beginning-of-statement)
                        (+ (current-indentation) py-continuation-offset)))
                ((empty-line-p)
-                (forward-line -1)
-                (back-to-indentation)
-                (py-compute-indentation done orig origline))
+                (skip-chars-backward " \t\r\n\f")
+                (py-beginning-of-statement)
+                (py-compute-indentation orig origline)
+                )
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation done orig origline))
+                (py-compute-indentation orig origline))
                ((looking-at py-if-clause-re)
                 (py-beginning-of-if-block)
                 (current-indentation))
@@ -2390,6 +2393,8 @@ the new line indented."
                 (save-excursion
                   (py-beginning-of-block)
                   (current-indentation)))
+               ((looking-at py-assignement-re)
+                (current-indentation))
                ((and (eq origline (py-count-lines))
                      (setq erg (py-go-to-keyword py-block-or-clause-re -1)))
                 (+ (car erg) py-indent-offset))
