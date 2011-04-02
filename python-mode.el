@@ -2341,7 +2341,7 @@ the new line indented."
       (insert-char ?\n 1)
       (move-to-column ci))))
 
-(defun py-compute-indentation (&optional honor-block-close-p orig origline)
+(defun py-compute-indentation (&optional done orig origline)
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
 `raise', `break', `continue', and `pass' force one level of dedenting."
@@ -2360,7 +2360,7 @@ the new line indented."
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
-                (py-compute-indentation honor-block-close-p orig origline))
+                (py-compute-indentation done orig origline))
                ;; lists
                ((nth 1 pps)
                 (progn (goto-char (+ py-lhs-inbound-indent (nth 1 pps)))
@@ -2373,10 +2373,10 @@ the new line indented."
                ((empty-line-p)
                 (forward-line -1)
                 (back-to-indentation)
-                (py-compute-indentation honor-block-close-p orig origline))
+                (py-compute-indentation done orig origline))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation honor-block-close-p orig origline))
+                (py-compute-indentation done orig origline))
                ((looking-at py-if-clause-re)
                 (py-beginning-of-if-block)
                 (current-indentation))
