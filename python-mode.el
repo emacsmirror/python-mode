@@ -2936,7 +2936,6 @@ Returns position reached, if any, nil otherwise."
     erg))
 
 ;; Class
-(defalias 'beginning-of-class 'py-beginning-of-class)
 (defalias 'py-backward-class 'py-beginning-of-class)
 (defalias 'py-previous-class 'py-beginning-of-class)
 (defun py-beginning-of-class (&optional count)
@@ -2948,22 +2947,26 @@ Returns position reached, if any, nil otherwise."
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defalias 'end-of-class 'py-end-of-class)
 (defalias 'py-forward-class 'py-end-of-class)
 (defalias 'py-next-class 'py-end-of-class)
-(defun py-end-of-class (&optional count)
-  "Move point beyond next `class' definition.
-See also `py-end-of-def-or-class'. 
+(defun py-end-of-class ()
+  "Move point beyond next method definition.
+
 Returns position reached, if any, nil otherwise."
-  (interactive "p")
+  (interactive)
   (let* ((orig (point))
          (regexp py-class-re)
-         erg)
-    (py-travel-current-indent (py-go-to-keyword regexp -1))
-    (unless (< orig (point))
-      (py-travel-current-indent (py-go-to-keyword regexp 1)))
-    (when (and (< orig (point))(not (eobp)))
-      (setq erg (point)))
+         indent erg)
+    (unless (py-statement-opens-block-p regexp)
+      (py-go-to-keyword regexp -1))
+    (when (py-statement-opens-block-p regexp)
+      (forward-line 1)
+      (setq indent (current-indentation))
+      (setq erg (py-travel-current-indent (cons indent (point)))))
+    (if (eq orig (point))
+        (while (not (re-search-forward regexp nil (quote move) 1))(py-in-string-or-comment))
+      (when (and (< orig (point))(not (eobp)))
+        (setq erg (point))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -3004,7 +3007,6 @@ http://docs.python.org/reference/compound_stmts.html"
       erg)))
 
 ;; Defun or Class
-(defalias 'beginning-of-def-or-class 'py-beginning-of-def-or-class)
 (defalias 'py-backward-def-or-class 'py-beginning-of-def-or-class)
 (defalias 'py-previous-def-or-class 'py-beginning-of-def-or-class)
 (defun py-beginning-of-def-or-class (&optional class count)
@@ -3176,6 +3178,19 @@ For stricter sense specify regexp. "
   "Return position if the current statement opens block or clause. "
   (interactive)
   (py-statement-opens-base py-block-or-clause-re))
+
+
+(defalias 'py-beginning-of-class-p 'py-statement-opens-class-p)
+(defun py-statement-opens-class-p ()
+  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
+  (interactive)
+  (py-statement-opens-base py-class-re))
+
+(defalias 'py-beginning-of-def-p 'py-statement-opens-def-p)
+(defun py-statement-opens-def-p ()
+  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
+  (interactive)
+  (py-statement-opens-base py-def-re))
 
 (defalias 'py-beginning-of-def-or-class-p 'py-statement-opens-def-or-class-p)
 (defun py-statement-opens-def-or-class-p ()
