@@ -98,7 +98,7 @@
 (require 'custom)
 (require 'compile)
 (require 'ansi-color)
-(require 'cl)
+(eval-when-compile (require 'cl))
 
 
 ;; user definable variables
@@ -469,6 +469,16 @@ set in py-execute-region and used in py-jump-to-exception.")
         (message "%s" erg))
       erg)))
 
+(defalias 'py-in-list-p 'py-list-beginning-position)
+(defun py-list-beginning-position (&optional arg)
+  "Return lists beginning position, nil if not inside.
+Optional ARG indicates a start-position for `parse-partial-sexp'."
+  (interactive)
+  (let* ((ppstart (or arg (point-min)))
+         (erg (nth 1 (parse-partial-sexp ppstart (point)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
 
@@ -579,7 +589,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defsubst py-in-string-or-comment ()
+(defsubst py-in-string-or-comment-p ()
     "Return beginning position if point is in a Python literal (a comment or string)."
     (nth 8 (parse-partial-sexp (point-min) (point))))
 
@@ -1310,7 +1320,7 @@ of the first definition found."
       ;; or shallower indentation
       (cond
        ;; Skip code in comments and strings
-       ((py-in-string-or-comment))
+       ((py-in-string-or-comment-p))
        ;; at the same indent level, add it to the list...
        ((= start-indent cur-indent)
         (push (cons def-name def-pos) index-alist))
@@ -2884,7 +2894,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-forward-block-or-clause 'py-end-of-block-or-clause)
 (defalias 'py-goto-beyond-block-or-clause 'py-end-of-block-or-clause)
 (defun py-end-of-block-or-clause (&optional arg)
-  "Without arg, go to the end of a compound statement.  
+  "Without arg, go to the end of a compound statement.
 With arg , move point to end of clause at point.
 
 Returns position reached, if any, nil otherwise.
@@ -2892,25 +2902,11 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let* ((regexp (if arg
-                     py-block-re
-                   py-block-or-clause-re))
-         (indent (py-compute-indentation t))
-         erg orig)
-    ;; in first line computed indent is that of previous block
-    (when (py-beginning-of-block-p)
-      (forward-line 1)
-      (setq indent (py-compute-indentation t)))
-    (setq erg (py-travel-current-indent (cons indent (point))))
-    (unless arg
-      (setq orig (point))
-      (py-end-of-statement)
-      (py-beginning-of-statement)
-      (if (looking-at py-clause-re)
-          (setq erg (py-end-of-block-or-clause))
-        (goto-char orig))
-      (when (interactive-p) (message "%s" erg))
-      erg)))
+  (let ((regexp (if arg
+                    py-block-re
+                  py-block-or-clause-re))
+        (orig (point)))
+    (py-end-base regexp orig (interactive-p))))
 
 ;; Def
 (defun py-beginning-of-def (&optional class)
@@ -2921,23 +2917,14 @@ Returns position reached, if any, nil otherwise."
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defun py-end-of-def ()
-  "Move point beyond next `def' definition. 
+(defun py-end-of-def (&optional iact)
+  "Move point beyond next method definition.
+
 Returns position reached, if any, nil otherwise."
-  (interactive)
+  (interactive "p")
   (let* ((orig (point))
-         (regexp py-def-re)
-         erg)
-    (unless (py-statement-opens-block-p regexp)
-      (py-travel-current-indent (py-go-to-keyword regexp -1)))
-    (unless (< orig (point))
-      (when (py-statement-opens-block-p regexp)
-        (forward-line 1))
-      (setq erg (py-travel-current-indent (cons (current-indentation) (point)))))
-    (when (and (< orig (point))(not (eobp)))
-      (setq erg (point)))
-    (when (interactive-p) (message "%s" erg))
-    erg))
+         (regexp py-def-re))
+    (py-end-base regexp orig iact)))
 
 ;; Class
 (defalias 'py-backward-class 'py-beginning-of-class)
@@ -2953,26 +2940,14 @@ Returns position reached, if any, nil otherwise."
 
 (defalias 'py-forward-class 'py-end-of-class)
 (defalias 'py-next-class 'py-end-of-class)
-(defun py-end-of-class ()
+(defun py-end-of-class (&optional iact)
   "Move point beyond next method definition.
 
 Returns position reached, if any, nil otherwise."
-  (interactive)
-  (let* ((orig (point))
-         (regexp py-class-re)
-         indent erg)
-    (unless (py-statement-opens-block-p regexp)
-      (py-go-to-keyword regexp -1))
-    (when (py-statement-opens-block-p regexp)
-      (forward-line 1)
-      (setq indent (current-indentation))
-      (setq erg (py-travel-current-indent (cons indent (point)))))
-    (if (eq orig (point))
-        (while (not (re-search-forward regexp nil (quote move) 1))(py-in-string-or-comment))
-      (when (and (< orig (point))(not (eobp)))
-        (setq erg (point))))
-    (when (interactive-p) (message "%s" erg))
-    erg))
+  (interactive "p")
+  (let ((orig (point))
+        (regexp py-class-re))
+    (py-end-base regexp orig iact)))
 
 ;; Clause
 (defalias 'py-previous-clause 'py-beginning-of-clause)
@@ -2992,23 +2967,18 @@ http://docs.python.org/reference/compound_stmts.html"
 
 (defalias 'py-forward-clause 'py-end-of-clause)
 (defalias 'py-goto-beyond-clause 'py-end-of-clause)
-(defun py-end-of-clause (&optional count)
-  "Move to the closing of current clause. "
-  (interactive "p")
-  (unless (eobp)
-    (when (py-statement-opens-def-or-class-p) (back-to-indentation)(py-forward-statement))
-    (let ((cui (current-indentation))
-          (orig (point))
-          done erg)
-      (while (and (not (eobp))
-                  (py-end-of-statement)
-                  (or (not done) (<=  cui (current-indentation)))
-                  (setq done t)
-                  (setq cui (current-indentation))
-                  (setq erg (point))))
-      (when erg (if (eq orig erg) (setq erg nil) (goto-char erg)))
-      (when (interactive-p) (message "%s" erg))
-      erg)))
+(defun py-end-of-clause (&optional arg)
+  "Without arg, go to the end of a compound statement.
+With arg , move point to end of clause at point.
+
+Returns position reached, if any, nil otherwise.
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive "P")
+  (let ((regexp py-block-or-clause-re))
+    (orig (point))
+    (py-end-base regexp orig (interactive-p))))
 
 ;; Defun or Class
 (defalias 'py-backward-def-or-class 'py-beginning-of-def-or-class)
@@ -3031,25 +3001,14 @@ Returns position reached, if any, nil otherwise."
 (defalias 'py-next-def-or-class 'py-end-of-def-or-class)
 (defun py-end-of-def-or-class (&optional class)
   "Move point beyond next `def' or `class' definition.
-With optional arg CLASS, move to the end of class exclusively. 
+With optional arg CLASS, move to the end of class exclusively.
 Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let* ((orig (point))
          (regexp
           (cond (class py-class-re)
-                (t py-def-or-class-re)))
-         indent erg)
-    (unless (py-statement-opens-block-p regexp)    
-      (py-travel-current-indent (py-go-to-keyword regexp -1)))
-    (setq indent (current-indentation))
-    (unless (< orig (point))
-      (when (py-statement-opens-block-p regexp)
-        (forward-line 1))
-      (setq erg (py-travel-current-indent (cons indent (point)))))
-    (when (and (< orig (point))(not (eobp)))
-      (setq erg (point)))
-    (when (interactive-p) (message "%s" erg))
-    erg))
+                (t py-def-or-class-re))))
+    (py-end-base regexp orig (interactive-p))))
 
 (defun py-travel-current-indent (listing)
   "Moves down until clause is closed, i.e. current indentation is reached.
@@ -3087,6 +3046,28 @@ Takes a list, INDENT and START position. "
       (funcall function))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
+
+(defun py-end-base (regexp orig iact)
+  "Used internal by functions going to the end forms. "
+  (let (erg)
+    (unless (py-statement-opens-block-p regexp)
+      (py-go-to-keyword regexp -1))
+    (when (py-statement-opens-block-p regexp)
+      (setq erg (point))
+      (forward-line 1)
+      (setq erg (py-travel-current-indent (cons (current-indentation) (point))))
+      (if (eq orig (point))
+          (progn
+            (while (not (or
+                         (eobp)
+                         (and (setq erg (re-search-forward regexp nil (quote move) 1))
+                              (not (py-in-string-or-comment-p))
+                              (not (py-in-list-p))))))
+            (unless (eobp)(py-end-base regexp orig iact)))
+        (when (and (< orig (point))(not (eobp)))
+          (setq erg (point))))
+      (when iact (message "%s" erg))
+      erg)))
 
 ;; ripped from cc-mode
 (defun py-forward-into-nomenclature (&optional arg)
@@ -3375,28 +3356,6 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
-(defun py-mark-base (form &optional py-mark-decorators)
-  (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
-         (endform (intern-soft (concat "py-end-of-" form)))
-         (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
-         (orig (point))
-         beg end)
-    (setq beg (if
-                  (setq beg (funcall begcheckform))
-                  beg
-                (funcall begform)))
-    (when py-mark-decorators
-      (save-excursion
-        (forward-line -1)
-      (back-to-indentation)
-      (when (looking-at "@\\w+")
-        (setq beg (match-beginning 0)))))
-    (setq end (funcall endform))
-    (progn
-      (push-mark beg t t)
-      (goto-char end))
-    (when (interactive-p) (message "%s %s" beg end))
-    (cons beg end)))
 
 ;; Deleting
 (defun py-kill-expression ()
@@ -4063,7 +4022,7 @@ This tells add-log.el how to find the current function/method/variable."
     (py-goto-initial-line)
     (back-to-indentation)
     (while (and (or (looking-at py-blank-or-comment-re)
-                    (py-in-string-or-comment))
+                    (py-in-string-or-comment-p))
                 (not (bobp)))
       (backward-to-indentation 1))
     (py-goto-initial-line)
@@ -4322,7 +4281,6 @@ If point is inside a string, narrow to that string and fill.
 
 (add-hook 'python-mode-hook 'py-beg-of-defun-function)
 (add-hook 'python-mode-hook 'py-end-of-defun-function)
-
 (add-hook 'python-mode-hook 'py-font-lock-mode-hook)
 
 
