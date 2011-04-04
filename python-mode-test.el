@@ -199,5 +199,6 @@
   (assert (looking-at "ict") nil "py-electric-delete test #2 failed")
   )
 
+
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

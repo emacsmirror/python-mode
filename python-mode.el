@@ -2927,14 +2927,13 @@ Returns position reached, if any, nil otherwise."
   (interactive)
   (let* ((orig (point))
          (regexp py-def-re)
-         indent erg)
+         erg)
     (unless (py-statement-opens-block-p regexp)
       (py-travel-current-indent (py-go-to-keyword regexp -1)))
-    (setq indent (current-indentation))
     (unless (< orig (point))
       (when (py-statement-opens-block-p regexp)
         (forward-line 1))
-      (setq erg (py-travel-current-indent (cons indent (point)))))
+      (setq erg (py-travel-current-indent (cons (current-indentation) (point)))))
     (when (and (< orig (point))(not (eobp)))
       (setq erg (point)))
     (when (interactive-p) (message "%s" erg))
@@ -3277,6 +3276,104 @@ Returns beginning and end positions of marked area, a cons."
   (interactive)
   (py-mark-base "clause")
   (exchange-point-and-mark))
+
+(defun py-mark-base (form &optional py-mark-decorators)
+  (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
+         (endform (intern-soft (concat "py-end-of-" form)))
+         (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
+         (orig (point))
+         beg end)
+    (setq beg (if
+                  (setq beg (funcall begcheckform))
+                  beg
+                (funcall begform)))
+    (when py-mark-decorators
+      (save-excursion
+        (forward-line -1)
+      (back-to-indentation)
+      (when (looking-at "@\\w+")
+        (setq beg (match-beginning 0)))))
+    (setq end (funcall endform))
+    (progn
+      (push-mark beg t t)
+      (goto-char end))
+    (when (interactive-p) (message "%s %s" beg end))
+    (cons beg end)))
+
+;; Copying
+(defun py-copy-expression ()
+  "Mark expression around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "expression")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-partial-expression ()
+  "Mark partial-expression around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "partial-expression")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-statement ()
+  "Mark statement around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "statement")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-block ()
+  "Mark block around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "block")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-block-or-clause ()
+  "Mark block-or-clause around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "block-or-clause")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-def (&optional arg)
+  "Mark def around point.
+
+With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
+Returns beginning and end positions of marked area, a cons."
+  
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        (erg (py-mark-base "def" py-mark-decorators)))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-def-or-class (&optional arg)
+  "Mark def-or-class around point.
+
+With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
+Returns beginning and end positions of marked area, a cons."
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        (erg (py-mark-base "def-or-class" py-mark-decorators)))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-class (&optional arg)
+  "Mark class around point.
+
+With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
+Returns beginning and end positions of marked area, a cons."
+  
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        (erg (py-mark-base "class" py-mark-decorators)))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+
+(defun py-copy-clause ()
+  "Mark clause around point.
+  Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let ((erg (py-mark-base "clause")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-mark-base (form &optional py-mark-decorators)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
