@@ -608,52 +608,40 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 There are many flavors of Emacs out there, with different levels of
 support for features needed by `python-mode'.")
 
-;; Face for None, True, False, self, and Ellipsis
-(defvar py-pseudo-keyword-face 'py-pseudo-keyword-face
-  "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis.")
-(make-face 'py-pseudo-keyword-face)
+
+;; ;; Face for None, True, False, self, and Ellipsis
+(defface py-pseudo-keyword-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis."
+  :group 'python)
+(defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
 
 ;; PEP 318 decorators
-(defvar py-decorators-face 'py-decorators-face
-  "Face method decorators.")
-(make-face 'py-decorators-face)
+(defface py-decorators-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face method decorators."
+  :group 'python)
+(defvar py-decorators-face 'py-decorators-face)
 
 ;; Face for builtins
-(defvar py-builtins-face 'py-builtins-face
-  "Face for builtins like TypeError, object, open, and exec.")
-(make-face 'py-builtins-face)
+(defface py-builtins-face
+  '((t (:inherit font-lock-builtin-face)))
+  "Face for builtins like TypeError, object, open, and exec."
+  :group 'python)
+(defvar py-builtins-face 'py-builtins-face)
+
+(defface py-class-name-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Face for builtins like TypeError, object, open, and exec."
+  :group 'python)
+(defvar py-class-name-face 'py-class-name-face)
 
 ;; XXX, TODO, and FIXME comments and such
-(defvar py-XXX-tag-face 'py-XXX-tag-face
-  "Face for XXX, TODO, and FIXME tags")
-(make-face 'py-XXX-tag-face)
-
-;; Face for class names
-(defvar py-class-name-face 'py-class-name-face
-  "Face for Python class names.")
-(make-face 'py-class-name-face)
-
-;; Face for exception names
-(defvar py-exception-name-face 'py-exception-name-face
-  "Face for exception names like TypeError.")
-(make-face 'py-exception-name-face)
-
-(defun py-font-lock-mode-hook ()
-  (or (face-differs-from-default-p 'py-pseudo-keyword-face)
-      (copy-face 'font-lock-keyword-face 'py-pseudo-keyword-face))
-  (or (face-differs-from-default-p 'py-builtins-face)
-      (copy-face 'font-lock-keyword-face 'py-builtins-face))
-  (or (face-differs-from-default-p 'py-decorators-face)
-      (copy-face 'py-pseudo-keyword-face 'py-decorators-face))
-  (or (face-differs-from-default-p 'py-XXX-tag-face)
-      (copy-face 'font-lock-comment-face 'py-XXX-tag-face))
-  (or (face-differs-from-default-p 'py-class-name-face)
-      (copy-face 'font-lock-type-face 'py-class-name-face))
-  (or (face-differs-from-default-p 'py-exception-name-face)
-      (copy-face 'font-lock-builtin-face 'py-exception-name-face))
-  )
-
-(add-hook 'font-lock-mode-hook 'py-font-lock-mode-hook)
+(defface py-exception-name-face
+  '((t (:inherit font-lock-builtin-face)))
+  "."
+  :group 'python)
+(defvar py-exception-name-face 'py-exception-name-face)
 
 (defvar python-font-lock-keywords
   (let ((kw1 (mapconcat 'identity
@@ -2976,8 +2964,8 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let ((regexp py-block-or-clause-re))
-    (orig (point))
+  (let ((regexp py-block-or-clause-re)
+        (orig (point)))
     (py-end-base regexp orig (interactive-p))))
 
 ;; Defun or Class
@@ -4281,8 +4269,6 @@ If point is inside a string, narrow to that string and fill.
 
 (add-hook 'python-mode-hook 'py-beg-of-defun-function)
 (add-hook 'python-mode-hook 'py-end-of-defun-function)
-(add-hook 'python-mode-hook 'py-font-lock-mode-hook)
 
-
 (provide 'python-mode)
 ;;; python-mode.el ends here
