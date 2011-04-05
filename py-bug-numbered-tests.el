@@ -33,6 +33,8 @@
          'fore-00007F-breaks-indentation-lp:328788-test
          'dq-in-tqs-string-lp:328813-test
          'flexible-indentation-lp:328842-test
+         'py-hungry-delete-backwards-lp:328853-test
+         'py-hungry-delete-forward-lp:328853-test
          'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
          'exceptions-not-highlighted-lp:473525-test
@@ -413,6 +415,28 @@ elif x < 0:
   (if (functionp 'py-fill-paragraph)
       (py-fill-paragraph)
     (python-fill-paragraph)))
+
+(defun py-hungry-delete-backwards-lp:328853-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-hungry-delete-backwards-lp:328853 arg teststring)))
+
+(defun py-hungry-delete-backwards-lp:328853 ()
+  (goto-char 421)
+  (py-hungry-delete-backwards)
+  (assert (eq 416 (point)) nil "py-hungry-delete-backwards test failed"))
+
+(defun py-hungry-delete-forward-lp:328853-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-hungry-delete-forward-lp:328853 arg teststring)))
+
+(defun py-hungry-delete-forward-lp:328853 ()
+  (goto-char 409)
+  (py-hungry-delete-forward)
+  (assert (looking-at "#") nil "py-hungry-delete-backwards test failed"))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
   (interactive "p")

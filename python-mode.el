@@ -939,6 +939,10 @@ Currently-active file is at the head of the list.")
     ;; who cares?  XEmacs 20 does the right thing with these too).
     (define-key py-mode-map [delete]    'py-electric-delete)
     (define-key py-mode-map [backspace] 'py-electric-backspace))
+  ;; lp:328853
+  (define-key py-mode-map [?\C-c ?\d] 'py-hungry-delete-backwards)
+  (define-key py-mode-map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
+  (define-key py-mode-map [?\C-c delete] 'py-hungry-delete-forward)
   ;; Separate M-BS from C-M-h.  The former should remain
   ;; backward-kill-word.
   (define-key py-mode-map [(control meta h)] 'py-mark-def-or-class)
@@ -2674,6 +2678,8 @@ Put point inside the parentheses of a multiline import and hit
 
 
 ;; Functions for moving point
+(defalias 'py-hungry-delete-forward 'c-hungry-delete-forward)
+(defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
 
 ;; Statement
 (defalias 'py-backward-statement 'py-beginning-of-statement)

@@ -47,6 +47,8 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall dq-in-tqs-string-lp:328813-test \
 --funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
+--funcall py-hungry-delete-backwards-lp:328853-test \
+--funcall py-hungry-delete-forward-lp:328853-test \
 --funcall beg-end-of-defun-lp:303622-test \
 --funcall bullet-lists-in-comments-lp:328782-test \
 --funcall nested-indents-lp:328775-test \
