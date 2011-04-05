@@ -35,20 +35,21 @@ if [ -s "python-components-mode.el" ];
     PYTHONMODE="python-mode.el"
 fi
 
+CCCMDS="~/emacs-23.2.94/lisp/progmodes/cc-cmds.el"
 # file holding the tests
 TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 EMACS="/emacs-23.2.94/src/emacs"
 
-$HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" \
+$HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
 --funcall dq-in-tqs-string-lp:328813-test \
 --funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
---funcall py-hungry-delete-backwards-lp:328853-test \
---funcall py-hungry-delete-forward-lp:328853-test \
+--funcall hungry-delete-backwards-lp:328853-test \
+--funcall hungry-delete-forward-lp:328853-test \
 --funcall beg-end-of-defun-lp:303622-test \
 --funcall bullet-lists-in-comments-lp:328782-test \
 --funcall nested-indents-lp:328775-test \
