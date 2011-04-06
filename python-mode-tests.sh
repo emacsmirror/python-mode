@@ -46,6 +46,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
 --funcall dq-in-tqs-string-lp:328813-test \
+--funcall py-current-defun-lp:328846-test \
 --funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
 --funcall hungry-delete-backwards-lp:328853-test \

@@ -33,6 +33,7 @@
          'fore-00007F-breaks-indentation-lp:328788-test
          'dq-in-tqs-string-lp:328813-test
          'flexible-indentation-lp:328842-test
+         'py-current-defun-lp:328846-test
          'hungry-delete-backwards-lp:328853-test
          'hungry-delete-forward-lp:328853-test
          'beg-end-of-defun-lp:303622-test
@@ -182,6 +183,15 @@ that, needs, to_be, wrapped)
   (indent-according-to-mode)
   (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
 
+(defun py-current-defun-lp:328846-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring python-mode-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-current-defun-lp:328846-base arg teststring)))
+
+(defun py-current-defun-lp:328846-base ()
+  (goto-char 331)
+  (assert (string= "OrderedDict1" (py-current-defun)) nil "py-current-defun-lp:328846 test failed"))
 
 (defun mark-decorators-lp:328851-test (&optional arg load-branch-function)
   (interactive "p")

@@ -353,6 +353,20 @@ file heading imports to see if they look Java-like."
   :type '(repeat string)
   :group 'python)
 
+(defcustom py-which-func-show  t 
+ "If `py-current-defun' should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
+
+Default is `t'." 
+
+:type 'boolean
+:group 'python)
+
+(defcustom py-which-func-delay  2 
+ "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. " 
+
+:type 'number
+:group 'python)
+
 ;; Not customizable
 (defvar py-master-file nil
   "If non-nil, execute the named file instead of the buffer's file.
@@ -4024,52 +4038,29 @@ Prefix with \"...\" if leading whitespace was skipped."
         (intern (buffer-substring (match-beginning 1) (match-end 1)))
       nil)))
 
-(defun py-current-defun ()
-  "Python value for `add-log-current-defun-function'.
-This tells add-log.el how to find the current function/method/variable."
-  (save-excursion
+(defun py-current-defun (&optional arg)
+  "Go to the outermost method or class definition in current scope. 
 
-    ;; Move back to start of the current statement.
+Python value for `add-log-current-defun-function'.
+This tells add-log.el how to find the current function/method/variable.
+Returns name of class or methods definition, if found, nil otherwise.
 
-    (py-goto-initial-line)
-    (back-to-indentation)
-    (while (and (or (looking-at py-blank-or-comment-re)
-                    (py-in-string-or-comment-p))
-                (not (bobp)))
-      (backward-to-indentation 1))
-    (py-goto-initial-line)
-
-    (let ((scopes "")
-          (sep "")
-          dead assignment)
-
-      ;; Check for an assignment.  If this assignment exists inside a
-      ;; def, it will be overwritten inside the while loop.  If it
-      ;; exists at top lever or inside a class, it will be preserved.
-
-      (when (looking-at "[ \t]*\\([a-zA-Z0-9_]+\\)[ \t]*=")
-        (setq scopes (buffer-substring (match-beginning 1) (match-end 1)))
-        (setq assignment t)
-        (setq sep "."))
-
-      ;; Prepend the name of each outer socpe (def or class).
-
-      (while (not dead)
-        (if (and (py-go-up-tree-to-keyword "\\(class\\|def\\)")
-                 (looking-at
-                  "[ \t]*\\(class\\|def\\)[ \t]*\\([a-zA-Z0-9_]+\\)[ \t]*"))
-            (let ((name (buffer-substring (match-beginning 2) (match-end 2))))
-              (if (and assignment (looking-at "[ \t]*def"))
-                  (setq scopes name)
-                (setq scopes (concat name sep scopes))
-                (setq sep "."))))
-        (setq assignment nil)
-        (condition-case nil             ; Terminate nicely at top level.
-            (py-goto-block-up 'no-mark)
-          (error (setq dead t))))
-      (if (string= scopes "")
-          nil
-        scopes))))
+See customizable variables `py-which-func-show' and `py-which-func-delay'."
+  (interactive "p")
+  (save-restriction
+    (widen)
+    (save-excursion
+      (while
+          (or (not (py-beginning-of-def-or-class-p)) (< 0 (current-indentation)))
+        (py-beginning-of-def-or-class 'either))
+      (forward-word 1)
+      (skip-chars-forward " \t")
+      (let ((erg (prin1-to-string (symbol-at-point))))
+        (when arg (push-mark (point) t t) (skip-chars-forward "^ (")
+              (exchange-point-and-mark)
+              (sit-for py-which-func-delay))
+        (when arg (message erg))
+        erg))))
 
 
 (defconst py-help-address "python-mode@python.org"
