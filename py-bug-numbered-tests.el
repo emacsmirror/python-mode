@@ -48,6 +48,7 @@
          'py-decorators-face-lp:744335-test
          'indent-after-return-lp:745208-test
          'keep-assignements-column-lp:748198-test
+         'indent-triplequoted-to-itself-lp:752252-test
 
          )))
 
@@ -129,7 +130,7 @@ def main(argv):
 (defun nested-dictionaries-indent-lp:328791 ()
   (goto-char (point-min))
   (forward-line 2)
-  (assert (eq 14 (py-compute-indentation t))))
+  (assert (eq 14 (py-compute-indentation))))
 
 (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
   (interactive "p")
@@ -385,11 +386,11 @@ elif x < 0:
 (defun nested-indents-lp:328775 ()
   (font-lock-mode 1)
   (font-lock-fontify-buffer)
-  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
+  (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
   (goto-char 41)
-  (assert (eq 8 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
+  (assert (eq 8 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
   (forward-line 1)
-  (assert (eq 4 (py-compute-indentation t)) nil "nested-indents-lp:328775 test failed!")
+  (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
   )
 
 (defun bullet-lists-in-comments-lp:328782-test (&optional arg load-branch-function)
@@ -682,6 +683,16 @@ failed: %s' %
   (goto-char 45)
   (py-newline-and-indent)
   (assert (eq 0 (current-column)) nil "py-vor test failed"))
+
+(defun indent-triplequoted-to-itself-lp:752252-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    \"\"\"The real foo thing.\n"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-triplequoted-to-itself-lp:752252-base arg teststring)))
+
+(defun indent-triplequoted-to-itself-lp:752252-base ()
+  (assert (eq 4 (py-compute-indentation)) nil "indent-triplequoted-to-itself-lp:752252 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

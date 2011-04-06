@@ -593,6 +593,21 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     "Return beginning position if point is in a Python literal (a comment or string)."
     (nth 8 (parse-partial-sexp (point-min) (point))))
 
+(defun py-in-triplequoted-string-p ()
+  "Returns character address of start tqs-string, nil if not inside. "
+  (interactive)
+  (let* ((pps (parse-partial-sexp (point-min) (point)))
+         (erg (when (and (nth 3 pps) (nth 8 pps))(nth 2 pps))))
+    (save-excursion
+      (unless erg (setq erg
+                        (progn
+                          (when (looking-at "\"\"\"\\|''''")
+                            (forward-char 1)
+                            (setq pps (parse-partial-sexp (point-min) (point)))
+                            (when (and (nth 3 pps) (nth 8 pps)) (nth 2 pps)))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 (defconst python-space-backslash-table
   (let ((table (copy-syntax-table py-mode-syntax-table)))
     (modify-syntax-entry ?\\ " " table)
@@ -833,15 +848,8 @@ Currently-active file is at the head of the list.")
 (defconst py-block-or-clause-re "[ \t]*\\<\\(if\\|else\\|elif\\|while\\|for\\|def\\|class\\|try\\|except\\|finally\\|with\\)\\>"
   "Matches the beginning of a compound statement or it's clause. ")
 
-(defconst py-clause-re
-  (concat "\\(" (mapconcat 'identity
-                           '("else:"
-                             "except\\(\\s +.*\\)?:"
-                             "finally:"
-                             "elif\\s +.*:")
-                           "\\|")
-          "\\)")
-  "Regular expression matching statements to be dedented one level.")
+(defconst py-clause-re "[ \t]*\\<\\(else\\|except\\|finally\\|elif\\)\\>"
+  "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-block-closing-keywords-re
   "\\(return\\|raise\\|break\\|continue\\|pass\\)"
@@ -2369,9 +2377,13 @@ the new line indented."
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent)
-        (back-to-indentation)
+        ;;        (back-to-indentation)
         (setq indent
               (cond
+               ;; (py-in-triplequoted-string-p)
+               ((and (nth 3 pps)(nth 8 pps)(save-excursion  (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (py-count-lines)))))
+                (goto-char (nth 2 pps))
+                (current-column))
                ;; comments and strings
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
@@ -2389,8 +2401,7 @@ the new line indented."
                ((empty-line-p)
                 (skip-chars-backward " \t\r\n\f")
                 (py-beginning-of-statement)
-                (py-compute-indentation orig origline)
-                )
+                (py-compute-indentation orig origline))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline))
