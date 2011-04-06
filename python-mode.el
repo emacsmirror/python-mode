@@ -353,7 +353,7 @@ file heading imports to see if they look Java-like."
   :type '(repeat string)
   :group 'python)
 
-(defcustom py-which-func-show  t 
+(defcustom py-current-defun-show  t 
  "If `py-current-defun' should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
 
 Default is `t'." 
@@ -361,7 +361,7 @@ Default is `t'."
 :type 'boolean
 :group 'python)
 
-(defcustom py-which-func-delay  2 
+(defcustom py-current-defun-delay  2 
  "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. " 
 
 :type 'number
@@ -4045,7 +4045,7 @@ Python value for `add-log-current-defun-function'.
 This tells add-log.el how to find the current function/method/variable.
 Returns name of class or methods definition, if found, nil otherwise.
 
-See customizable variables `py-which-func-show' and `py-which-func-delay'."
+See customizable variables `py-current-defun-show' and `py-current-defun-delay'."
   (interactive "p")
   (save-restriction
     (widen)
@@ -4056,9 +4056,9 @@ See customizable variables `py-which-func-show' and `py-which-func-delay'."
       (forward-word 1)
       (skip-chars-forward " \t")
       (let ((erg (prin1-to-string (symbol-at-point))))
-        (when arg (push-mark (point) t t) (skip-chars-forward "^ (")
+        (when py-current-defun-show (push-mark (point) t t) (skip-chars-forward "^ (")
               (exchange-point-and-mark)
-              (sit-for py-which-func-delay))
+              (sit-for py-current-defun-delay))
         (when arg (message erg))
         erg))))
 
