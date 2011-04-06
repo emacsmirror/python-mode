@@ -482,7 +482,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 ;; 2009-09-10 a.roehler@web.de changed section start
 ;; from python.el, version "22.1"
 
-(defconst python-font-lock-syntactic-keywords
+(defconst py-font-lock-syntactic-keywords
   '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
      (2
       (7)))
@@ -643,7 +643,7 @@ support for features needed by `python-mode'.")
   :group 'python)
 (defvar py-exception-name-face 'py-exception-name-face)
 
-(defvar python-font-lock-keywords
+(defvar py-font-lock-keywords
   (let ((kw1 (mapconcat 'identity
                         '("and"      "assert"   "break"     "class"
                           "continue" "def"      "del"       "elif"
@@ -750,6 +750,7 @@ support for features needed by `python-mode'.")
      ;;   (1 'font-lock-regexp-grouping-construct prepend))
      ))
   "Additional expressions to highlight in Python mode.")
+
 
 ;; have to bind py-file-queue before installing the kill-emacs-hook
 (defvar py-file-queue nil
@@ -1401,7 +1402,7 @@ This does the following:
 
 (defvar py-which-shell nil)
 ;;;###autoload
-(defun python-mode ()
+(define-derived-mode python-mode fundamental-mode "Python"
   "Major mode for editing Python files.
 To submit a problem report, enter `\\[py-submit-bug-report]' from a
 `python-mode' buffer.  Do `\\[py-describe-mode]' for detailed
@@ -1420,48 +1421,93 @@ py-block-comment-prefix\t\tcomment string used by `comment-region'
 py-python-command\t\tshell command to invoke Python interpreter
 py-temp-directory\t\tdirectory used for temp files (if needed)
 py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
-  (interactive)
-  ;; set up local variables
-  (kill-all-local-variables)
-  (make-local-variable 'paragraph-separate)
-  (make-local-variable 'paragraph-start)
-  (make-local-variable 'require-final-newline)
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-end)
-  (make-local-variable 'comment-start-skip)
-  (make-local-variable 'comment-column)
-  (make-local-variable 'comment-indent-function)
-  (make-local-variable 'indent-region-function)
-  (make-local-variable 'indent-line-function)
-  (make-local-variable 'add-log-current-defun-function)
-  (make-local-variable 'fill-paragraph-function)
-  ;;
-  (set-syntax-table py-mode-syntax-table)
-  ;; 2009-09-10 a.roehler@web.de changed section start
-  ;; from python.el, version "22.1"
-    (set (make-local-variable 'font-lock-defaults)
-       '(python-font-lock-keywords nil nil nil nil
-                                   (font-lock-syntactic-keywords
-                                    . python-font-lock-syntactic-keywords)))
-  ;; 2009-09-10 a.roehler@web.de changed section end
-  (setq major-mode              'python-mode
-        mode-name               "Python"
-        local-abbrev-table      python-mode-abbrev-table
-        paragraph-separate      "^[ \t]*$"
-        paragraph-start         "^[ \t]*$"
-        require-final-newline   t
-        comment-start           "# "
-        comment-end             ""
-        comment-start-skip      "# *"
-        comment-column          40
-        comment-indent-function 'py-comment-indent-function
-        indent-region-function  'py-indent-region
-        indent-line-function    'py-indent-line
-        ;; tell add-log.el how to find the current function/method/variable
-        add-log-current-defun-function 'py-current-defun
+  (set (make-local-variable 'font-lock-defaults)
+       '(py-font-lock-keywords nil nil nil nil
+                               (font-lock-syntactic-keywords
+                                . py-font-lock-syntactic-keywords)))
+  (set (make-local-variable 'paragraph-separate) "^[ \t]*$")
+  (set (make-local-variable 'paragraph-start) "^[ \t]*$" )
+  (set (make-local-variable 'require-final-newline) t)
+  (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-end) "")
+  (set (make-local-variable 'comment-start-skip) "# *")
+  (set (make-local-variable 'comment-column) 40)
+  (set (make-local-variable 'comment-indent-function) 'py-comment-indent-function)
+  (set (make-local-variable 'indent-region-function) 'py-indent-region)
+  (set (make-local-variable 'indent-line-function) 'py-indent-line)
+  (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
+  (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
 
-        fill-paragraph-function 'py-fill-paragraph
-        )
+  (set-syntax-table py-mode-syntax-table)
+  (setq py-mode-map (make-sparse-keymap))
+  ;; electric keys
+  (define-key py-mode-map ":" 'py-electric-colon)
+  ;; indentation level modifiers
+  (define-key py-mode-map "\C-c\C-l"  'py-shift-region-left)
+  (define-key py-mode-map "\C-c\C-r"  'py-shift-region-right)
+  (define-key py-mode-map "\C-c<"     'py-shift-region-left)
+  (define-key py-mode-map "\C-c>"     'py-shift-region-right)
+  ;; subprocess commands
+  (define-key py-mode-map "\C-c\C-c"  'py-execute-buffer)
+  (define-key py-mode-map "\C-c\C-m"  'py-execute-import-or-reload)
+  (define-key py-mode-map "\C-c\C-s"  'py-execute-string)
+  (define-key py-mode-map "\C-c|"     'py-execute-region)
+  (define-key py-mode-map "\e\C-x"    'py-execute-def-or-class)
+  (define-key py-mode-map "\C-c!"     'py-shell)
+  (define-key py-mode-map "\C-c\C-t"  'py-toggle-shells)
+  (define-key py-mode-map [?\C-c ?\d] 'py-hungry-delete-backwards)
+  (define-key py-mode-map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
+  (define-key py-mode-map [?\C-c deletechar] 'py-hungry-delete-forward)
+  (if (not (boundp 'delete-key-deletes-forward))
+      (define-key py-mode-map "\177" 'py-electric-backspace)
+    ;; who cares?  XEmacs 20 does the right thing with these too).
+    (define-key py-mode-map [delete]    'py-electric-delete)
+    (define-key py-mode-map [backspace] 'py-electric-backspace))
+  ;; Separate M-BS from C-M-h.  The former should remain
+  ;; backward-kill-word.
+  (define-key py-mode-map [(control meta h)] 'py-mark-def-or-class)
+  (define-key py-mode-map "\C-c\C-k"  'py-mark-block-or-clause)
+  ;; Miscellaneous
+  (define-key py-mode-map "\C-c:"     'py-guess-indent-offset)
+  (define-key py-mode-map "\C-c\t"    'py-indent-region)
+  (define-key py-mode-map "\C-c\C-d"  'py-pdbtrack-toggle-stack-tracking)
+  (define-key py-mode-map "\C-c\C-f"  'py-sort-imports)
+  (define-key py-mode-map "\C-c\C-n"  'py-end-of-statement)
+  (define-key py-mode-map "\C-c\C-a"  'py-mark-statement)
+  (define-key py-mode-map "\C-c\C-p"  'py-beginning-of-statement)
+  (define-key py-mode-map "\C-c\C-u"  'py-beginning-of-block)
+  (define-key py-mode-map "\C-c\C-q"  'py-end-of-block)
+  (define-key py-mode-map "\C-c#"     'py-comment-region)
+  (define-key py-mode-map "\C-c?"     'py-describe-mode)
+  (define-key py-mode-map "\C-c\C-e"  'py-help-at-point)
+  (define-key py-mode-map "\e\C-a"    'py-beginning-of-def-or-class)
+  (define-key py-mode-map "\e\C-e"    'py-end-of-def-or-class)
+  (define-key py-mode-map "\C-c-"     'py-up-exception)
+  (define-key py-mode-map "\C-c="     'py-down-exception)
+  ;; stuff that is `standard' but doesn't interface well with
+  ;; python-mode, which forces us to rebind to special commands
+  (define-key py-mode-map "\C-xnd"    'py-narrow-to-defun)
+  ;; information
+  (define-key py-mode-map "\C-c\C-b" 'py-submit-bug-report)
+  (define-key py-mode-map "\C-c\C-b" 'py-submit-bug-report)
+  (define-key py-mode-map "\C-c\C-v" 'py-version)
+  (define-key py-mode-map "\C-c\C-w" 'py-pychecker-run)
+  ;; shadow global bindings for newline-and-indent w/ the py- version.
+  ;; BAW - this is extremely bad form, but I'm not going to change it
+  ;; for now.
+  (mapc #'(lambda (key)
+            (define-key py-mode-map key 'py-newline-and-indent))
+        (where-is-internal 'newline-and-indent))
+  ;; Force RET to be py-newline-and-indent even if it didn't get
+  ;; mapped by the above code.  motivation: Emacs' default binding for
+  ;; RET is `newline' and C-j is `newline-and-indent'.  Most Pythoneers
+  ;; expect RET to do a `py-newline-and-indent' and any Emacsers who
+  ;; dislike this are probably knowledgeable enough to do a rebind.
+  ;; However, we do *not* change C-j since many Emacsers have already
+  ;; swapped RET and C-j and they don't want C-j bound to `newline' to
+  ;; change.
+  (define-key py-mode-map "\C-m" 'py-newline-and-indent)
+  ;;)
   (use-local-map py-mode-map)
   ;; add the menu
   (if py-menu
@@ -1469,58 +1515,43 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Emacs 19 requires this
   (if (boundp 'comment-multi-line)
       (setq comment-multi-line nil))
-  ;; Install Imenu if available
-  (when (ignore-errors (require 'imenu))
-    (setq imenu-create-index-function #'py-imenu-create-index-function)
-    (setq imenu-generic-expression py-imenu-generic-expression)
-    (if (fboundp 'imenu-add-to-menubar)
-        (imenu-add-to-menubar (format "%s-%s" "IM" mode-name)))
-    )
-
+  
+  (set (make-local-variable 'skeleton-further-elements)
+       '((< '(backward-delete-char-untabify (min py-indent-offset
+						 (current-column))))
+	 (^ '(- (1+ (current-indentation))))))
   ;; Add support for HideShow
-  (add-to-list 'hs-special-modes-alist
-               (list
-                'python-mode
-                ;; start regex
-                (concat (if py-hide-show-hide-docstrings
-                            "^\\s-*\"\"\"\\|" "")
-                        (mapconcat 'identity
-                                   (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>"))
-                                           py-hide-show-keywords)
-                                   "\\|"))
-                ;; end regex
-                nil
-                ;; comment-start regex
-                "#"
-                ;; forward-sexp function
-                (lambda (arg)
-                  (py-goto-beyond-block)
-                  (skip-chars-backward " \t\n"))
-                nil))
-
-  ;; Run the mode hook.  Note that py-mode-hook is deprecated.
-  (if python-mode-hook
-      (run-mode-hooks 'python-mode-hook)
-    (run-mode-hooks 'py-mode-hook))
+  (add-to-list 'hs-special-modes-alist (list
+                                        'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords) "\\|")) nil "#"
+                                        (lambda (arg)
+                                          (py-goto-beyond-block)
+                                          (skip-chars-backward " \t\n"))
+                                        nil))
+  
+;; Hooks should be run be derived-mode now
+;;  (if python-mode-hook
+;;      (run-mode-hooks 'python-mode-hook)
+;;    (run-mode-hooks 'py-mode-hook))
   ;; Now do the automagical guessing
   (if py-smart-indentation
-    (let ((offset py-indent-offset))
-      ;; It's okay if this fails to guess a good value
-      (if (and (ignore-errors (py-guess-indent-offset))
-               (<= py-indent-offset 8)
-               (>= py-indent-offset 2))
-          (setq offset py-indent-offset))
-      (setq py-indent-offset offset)
-      ;; Only turn indent-tabs-mode off if tab-width !=
-      ;; py-indent-offset.  Never turn it on, because the user must
-      ;; have explicitly turned it off.
-      (if (/= tab-width py-indent-offset)
-          (setq indent-tabs-mode nil))))
+      (let ((offset py-indent-offset))
+        ;; It's okay if this fails to guess a good value
+        (if (and (ignore-errors (py-guess-indent-offset))
+                 (<= py-indent-offset 8)
+                 (>= py-indent-offset 2))
+            (setq offset py-indent-offset))
+        (setq py-indent-offset offset)
+        ;; Only turn indent-tabs-mode off if tab-width !=
+        ;; py-indent-offset.  Never turn it on, because the user must
+        ;; have explicitly turned it off.
+        (if (/= tab-width py-indent-offset)
+            (setq indent-tabs-mode nil))))
   ;; Set the default shell if not already set
   (unless py-which-shell
     (py-toggle-shells (py-choose-shell)))
-;;  (message "python-mode loaded from: %s" )
-)
+  (message "python-mode loaded from: %s" "components branch")
+  )
+
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
@@ -2300,40 +2331,16 @@ With ARG do that ARG times. "
 
 33333
 
-(defun py-indent-line (&optional arg)
+(defun py-indent-line ()
   "Fix the indentation of the current line according to Python rules.
-With \\[universal-argument] (programmatically, the optional argument
-ARG non-nil), ignore dedenting rules for block closing statements
-\(e.g. return, raise, break, continue, pass)
 
 This function is normally bound to `indent-line-function' so
 \\[indent-for-tab-command] will call it."
-  (interactive "P")
-  (let* ((ci (current-indentation))
-         (move-to-indentation-p (<= (current-column) ci))
-         (need (py-compute-indentation (not arg)))
-         (cc (current-column)))
-    ;; dedent out a level if previous command was the same unless we're in
-    ;; column 1
-    (if (and (equal last-command this-command)
-             (/= cc 0))
-        (progn
-          (beginning-of-line)
-          (delete-horizontal-space)
-          (indent-to (* (/ (- cc 1) py-indent-offset) py-indent-offset)))
-      (progn
-        ;; see if we need to dedent
-        (if (py-outdent-p)
-            (setq need (- need py-indent-offset)))
-        (if (or py-tab-always-indent
-                move-to-indentation-p)
-            (progn (if (/= ci need)
-                       (save-excursion
-                       (beginning-of-line)
-                       (delete-horizontal-space)
-                       (indent-to need)))
-                   (if move-to-indentation-p (back-to-indentation)))
-            (insert-tab))))))
+  (interactive)
+  (let* ((need (py-compute-indentation (point))))
+      (beginning-of-line)
+      (delete-horizontal-space)
+      (indent-to need)))
 
 (defun py-newline-and-indent ()
   "Strives to act like the Emacs `newline-and-indent'.
