@@ -2821,7 +2821,7 @@ Returns position reached, if any, nil otherwise."
   (let* ((regexp (cond ((eq class 'either)
                         py-def-or-class-re)
                        (class py-class-re)
-                       (t py-def-re)))
+                       (t py-def-or-class-re)))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))

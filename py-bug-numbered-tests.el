@@ -38,6 +38,7 @@
          'hungry-delete-forward-lp:328853-test
          'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
+         'imenu-matches-in-docstring-lp:436285-test
          'exceptions-not-highlighted-lp:473525-test
          'fill-paragraph-problems-lp:710373-test
          'nested-indents-lp:328775-test
@@ -258,6 +259,24 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
     (message "%s" (get-char-property (point) 'face))
     (assert (eq erg (get-char-property (point) 'face)) nil "dq-in-tqs-string-lp:328813 test failed ")
     (goto-char 122)))
+
+(defun imenu-matches-in-docstring-lp:436285-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+class foo():
+    \"\"\"
+    class hello(object):
+        def __init__(self):
+        ...
+    \"\"\"
+    pass
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'imenu-matches-in-docstring-lp:436285-base arg teststring)))
+
+(defun imenu-matches-in-docstring-lp:436285-base ()
+  (goto-char 40)  
+  (assert (eq (py-beginning-of-def-or-class) 2) nil "imenu-matches-in-docstring-lp:436285 test failed"))
 
 (defun fill-paragraph-problems-lp:710373-test (&optional arg load-branch-function)
   (interactive "p")
