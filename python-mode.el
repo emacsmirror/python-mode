@@ -164,6 +164,7 @@ mode buffer is visited during an Emacs session.  After that, use
 you're editing someone else's Python code."
   :type 'integer
   :group 'python)
+(make-variable-buffer-local 'py-indent-offset)
 
 (defcustom py-backslashed-continuation-indent 2
   "Indent of continuation-lines realised by backslashes. "
@@ -311,13 +312,6 @@ Otherwise, all modified buffers are saved without asking."
   "*Function called by `py-electric-delete' when deleting forwards."
   :type 'function
   :group 'python)
-
-(defcustom py-imenu-show-method-args-p nil
-  "*Controls echoing of arguments of functions & methods in the Imenu buffer.
-When non-nil, arguments are printed."
-  :type 'boolean
-  :group 'python)
-(make-variable-buffer-local 'py-indent-offset)
 
 (defcustom py-pdbtrack-do-tracking-p t
   "*Controls whether the pdbtrack feature is enabled or not.
@@ -909,8 +903,19 @@ Currently-active file is at the head of the list.")
   "Abbrev table in use in `python-mode' buffers.")
 (define-abbrev-table 'python-mode-abbrev-table nil)
 
-(defvar python-mode-hook nil
-  "*Hook called by `python-mode'.")
+(defcustom python-mode-hook nil
+  "Hook run when entering Python mode."
+  :group 'python
+  :type 'hook)
+
+(custom-add-option 'python-mode-hook 'imenu-add-menubar-index)
+(custom-add-option 'python-mode-hook
+		   (lambda ()
+		     "Turn off Indent Tabs mode."
+		     (setq indent-tabs-mode nil)))
+(custom-add-option 'python-mode-hook 'turn-on-eldoc-mode)
+(custom-add-option 'python-mode-hook 'abbrev-mode)
+;; (custom-add-option 'python-mode-hook 'python-setup-brm)
 
 (make-obsolete-variable 'jpython-mode-hook 'jython-mode-hook nil)
 (defvar jython-mode-hook nil
@@ -925,89 +930,117 @@ Currently-active file is at the head of the list.")
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
 
-(defvar py-mode-map ()
-  "Keymap used in `python-mode' buffers.")
-(if py-mode-map
-    nil
-  (setq py-mode-map (make-sparse-keymap))
-  ;; electric keys
-  (define-key py-mode-map ":" 'py-electric-colon)
-  ;; indentation level modifiers
-  (define-key py-mode-map "\C-c\C-l"  'py-shift-region-left)
-  (define-key py-mode-map "\C-c\C-r"  'py-shift-region-right)
-  (define-key py-mode-map "\C-c<"     'py-shift-region-left)
-  (define-key py-mode-map "\C-c>"     'py-shift-region-right)
-  ;; subprocess commands
-  (define-key py-mode-map "\C-c\C-c"  'py-execute-buffer)
-  (define-key py-mode-map "\C-c\C-m"  'py-execute-import-or-reload)
-  (define-key py-mode-map "\C-c\C-s"  'py-execute-string)
-  (define-key py-mode-map "\C-c|"     'py-execute-region)
-  (define-key py-mode-map "\e\C-x"    'py-execute-def-or-class)
-  (define-key py-mode-map "\C-c!"     'py-shell)
-  (define-key py-mode-map "\C-c\C-t"  'py-toggle-shells)
-  ;; Caution!  Enter here at your own risk.  We are trying to support
-  ;; several behaviors and it gets disgusting. :-( This logic ripped
-  ;; largely from CC Mode.
-  ;;
-  ;; In XEmacs 19, Emacs 19, and Emacs 20, we use this to bind
-  ;; backwards deletion behavior to DEL, which both Delete and
-  ;; Backspace get translated to.  There's no way to separate this
-  ;; behavior in a clean way, so deal with it!  Besides, it's been
-  ;; this way since the dawn of time.
-  (if (not (boundp 'delete-key-deletes-forward))
-      (define-key py-mode-map "\177" 'py-electric-backspace)
-    ;; However, XEmacs 20 actually achieved enlightenment.  It is
-    ;; possible to sanely define both backward and forward deletion
-    ;; behavior under X separately (TTYs are forever beyond hope, but
-    ;; who cares?  XEmacs 20 does the right thing with these too).
-    (define-key py-mode-map [delete]    'py-electric-delete)
-    (define-key py-mode-map [backspace] 'py-electric-backspace))
-  ;; lp:328853
-  (define-key py-mode-map [?\C-c ?\d] 'py-hungry-delete-backwards)
-  (define-key py-mode-map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
-  (define-key py-mode-map [?\C-c delete] 'py-hungry-delete-forward)
-  ;; Separate M-BS from C-M-h.  The former should remain
-  ;; backward-kill-word.
-  (define-key py-mode-map [(control meta h)] 'py-mark-def-or-class)
-  (define-key py-mode-map "\C-c\C-k"  'py-mark-block)
-  ;; Miscellaneous
-  (define-key py-mode-map "\C-c:"     'py-guess-indent-offset)
-  (define-key py-mode-map "\C-c\t"    'py-indent-region)
-  (define-key py-mode-map "\C-c\C-d"  'py-pdbtrack-toggle-stack-tracking)
-  (define-key py-mode-map "\C-c\C-f"  'py-sort-imports)
-  (define-key py-mode-map "\C-c\C-n"  'py-next-statement)
-  (define-key py-mode-map "\C-c\C-p"  'py-previous-statement)
-  (define-key py-mode-map "\C-c\C-u"  'py-goto-block-up)
-  (define-key py-mode-map "\C-c#"     'py-comment-region)
-  (define-key py-mode-map "\C-c?"     'py-describe-mode)
-  (define-key py-mode-map "\C-c\C-e"  'py-help-at-point)
-  (define-key py-mode-map "\e\C-a"    'py-beginning-of-def-or-class)
-  (define-key py-mode-map "\e\C-e"    'py-end-of-def-or-class)
-  (define-key py-mode-map "\C-c-"     'py-up-exception)
-  (define-key py-mode-map "\C-c="     'py-down-exception)
-  ;; stuff that is `standard' but doesn't interface well with
-  ;; python-mode, which forces us to rebind to special commands
-  (define-key py-mode-map "\C-xnd"    'py-narrow-to-defun)
-  ;; information
-  (define-key py-mode-map "\C-c\C-b" 'py-submit-bug-report)
-  (define-key py-mode-map "\C-c\C-v" 'py-version)
-  (define-key py-mode-map "\C-c\C-w" 'py-pychecker-run)
-  ;; shadow global bindings for newline-and-indent w/ the py- version.
-  ;; BAW - this is extremely bad form, but I'm not going to change it
-  ;; for now.
-  (mapc #'(lambda (key)
-            (define-key py-mode-map key 'py-newline-and-indent))
-        (where-is-internal 'newline-and-indent))
-  ;; Force RET to be py-newline-and-indent even if it didn't get
-  ;; mapped by the above code.  motivation: Emacs' default binding for
-  ;; RET is `newline' and C-j is `newline-and-indent'.  Most Pythoneers
-  ;; expect RET to do a `py-newline-and-indent' and any Emacsers who
-  ;; dislike this are probably knowledgeable enough to do a rebind.
-  ;; However, we do *not* change C-j since many Emacsers have already
-  ;; swapped RET and C-j and they don't want C-j bound to `newline' to
-  ;; change.
-  (define-key py-mode-map "\C-m" 'py-newline-and-indent)
-  )
+(defvar py-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; electric keys
+    (define-key map ":" 'py-electric-colon)
+    ;; indentation level modifiers
+    (define-key map "\C-c\C-l"  'py-shift-region-left)
+    (define-key map "\C-c\C-r"  'py-shift-region-right)
+    (define-key map "\C-c<"     'py-shift-region-left)
+    (define-key map "\C-c>"     'py-shift-region-right)
+    ;; subprocess commands
+    (define-key map "\C-c\C-c"  'py-execute-buffer)
+    (define-key map "\C-c\C-m"  'py-execute-import-or-reload)
+    (define-key map "\C-c\C-s"  'py-execute-string)
+    (define-key map "\C-c|"     'py-execute-region)
+    (define-key map "\e\C-x"    'py-execute-def-or-class)
+    (define-key map "\C-c!"     'py-shell)
+    (define-key map "\C-c\C-t"  'py-toggle-shells)
+    (define-key map [?\C-c ?\d] 'py-hungry-delete-backwards)
+    (define-key map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
+    (define-key map [?\C-c deletechar] 'py-hungry-delete-forward)
+    (if (not (boundp 'delete-key-deletes-forward))
+        (define-key map "\177" 'py-electric-backspace)
+      (define-key map [delete]    'py-electric-delete)
+      (define-key map [backspace] 'py-electric-backspace))
+    (define-key map [(control meta h)] 'py-mark-def-or-class)
+    (define-key map "\C-c\C-k"  'py-mark-block-or-clause)
+    ;; Miscellaneous
+    (define-key map "\C-c:"     'py-guess-indent-offset)
+    (define-key map "\C-c\t"    'py-indent-region)
+    (define-key map "\C-c\C-d"  'py-pdbtrack-toggle-stack-tracking)
+    (define-key map "\C-c\C-f"  'py-sort-imports)
+    (define-key map "\C-c\C-n"  'py-end-of-statement)
+    (define-key map "\C-c\C-a"  'py-mark-statement)
+    (define-key map "\C-c\C-p"  'py-beginning-of-statement)
+    (define-key map "\C-c\C-u"  'py-beginning-of-block)
+    (define-key map "\C-c\C-q"  'py-end-of-block)
+    (define-key map "\C-c#"     'py-comment-region)
+    (define-key map "\C-c?"     'py-describe-mode)
+    (define-key map "\C-c\C-e"  'py-help-at-point)
+    (define-key map "\e\C-a"    'py-beginning-of-def-or-class)
+    (define-key map "\e\C-e"    'py-end-of-def-or-class)
+    (define-key map "\C-c-"     'py-up-exception)
+    (define-key map "\C-c="     'py-down-exception)
+    ;; stuff that is `standard' but doesn't interface well with
+    ;; python-mode, which forces us to rebind to special commands
+    (define-key map "\C-xnd"    'py-narrow-to-defun)
+    ;; information
+    (define-key map "\C-c\C-b" 'py-submit-bug-report)
+    (define-key map "\C-c\C-b" 'py-submit-bug-report)
+    (define-key map "\C-c\C-v" 'py-version)
+    (define-key map "\C-c\C-w" 'py-pychecker-run)
+    ;; shadow global bindings for newline-and-indent w/ the py- version.
+    (mapc #'(lambda (key)
+              (define-key map key 'py-newline-and-indent))
+          (where-is-internal 'newline-and-indent))
+    ;; Most Pythoneers expect RET to do a `py-newline-and-indent' 
+    (define-key map "\C-m" 'py-newline-and-indent)
+    (easy-menu-define py-menu map "Python Mode menu"
+      `("Python"
+	:help "Python-specific Features"
+	["Shift region left" py-shift-left :active mark-active
+	 :help "Shift by a single indentation step"]
+	["Shift region right" py-shift-right :active mark-active
+	 :help "Shift by a single indentation step"]
+	"-"
+	["Mark block" py-mark-block
+	 :help "Mark innermost block around point"]
+	["Mark def/class" mark-defun
+	 :help "Mark innermost definition around point"]
+	"-"
+	["Start of block" py-beginning-of-block
+	 :help "Go to start of innermost definition around point"]
+	["End of block" py-end-of-block
+	 :help "Go to end of innermost definition around point"]
+	["Start of def/class" beginning-of-defun
+	 :help "Go to start of innermost definition around point"]
+	["End of def/class" end-of-defun
+	 :help "Go to end of innermost definition around point"]
+	"-"
+	("Templates..."
+	 :help "Expand templates for compound statements"
+	 :filter (lambda (&rest junk)
+                   (abbrev-table-menu python-mode-abbrev-table)))
+	"-"
+	["Start interpreter" py-shell
+	 :help "Run `inferior' Python in separate buffer"]
+	["Import/reload file" py-load-file
+	 :help "Load into inferior Python session"]
+	["Eval buffer" py-send-buffer
+	 :help "Evaluate buffer en bloc in inferior Python session"]
+	["Eval region" py-send-region :active mark-active
+	 :help "Evaluate region en bloc in inferior Python session"]
+	["Eval def/class" py-send-defun
+	 :help "Evaluate current definition in inferior Python session"]
+	["Switch to interpreter" py-switch-to-python
+	 :help "Switch to inferior Python buffer"]
+	["Set default process" py-set-proc
+	 :help "Make buffer's inferior process the default"
+	 :active (buffer-live-p py-buffer)]
+	["Check file" py-check :help "Run pychecker"]
+	["Debugger" pdb :help "Run pdb under GUD"]
+	"-"
+	["Help on symbol" py-describe-symbol
+	 :help "Use pydoc on symbol at point"]
+	["Complete symbol" completion-at-point
+	 :help "Complete (qualified) symbol before point"]
+	["Find function" py-find-function
+	 :help "Try to find source definition of function at point"]
+	["Update imports" py-find-imports
+	 :help "Update list of top-level imports for completion"]))
+    map))
 
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
@@ -1142,229 +1175,80 @@ This function does not modify point or mark."
      )))
 
 
-;; Menu definitions, only relevent if you have the easymenu.el package
-;; (standard in the latest Emacs 19 and XEmacs 19 distributions).
-(defvar py-menu nil
-  "Menu for Python Mode.
-This menu will get created automatically if you have the `easymenu'
-package.  Note that the latest X/Emacs releases contain this package.")
+;;;; Imenu.
 
-(and (ignore-errors (require 'easymenu) t)
-     (easy-menu-define
-      py-menu py-mode-map "Python Mode menu"
-      '("Python"
-        ["Comment Out Region"   py-comment-region  (mark)]
-        ["Uncomment Region"     (py-comment-region (point) (mark) '(4)) (mark)]
-        "-"
-        ["Mark current block"   py-mark-block t]
-        ["Mark current def"     py-mark-def-or-class t]
-        ["Mark current class"   (py-mark-def-or-class t) t]
-        "-"
-        ["Shift region left"    py-shift-region-left (mark)]
-        ["Shift region right"   py-shift-region-right (mark)]
-        "-"
-        ["Import/reload file"   py-execute-import-or-reload t]
-        ["Execute buffer"       py-execute-buffer t]
-        ["Execute region"       py-execute-region (mark)]
-        ["Execute def or class" py-execute-def-or-class (mark)]
-        ["Execute string"       py-execute-string t]
-        ["Start interpreter..." py-shell t]
-        "-"
-        ["Go to start of block" py-goto-block-up t]
-        ["Go to start of class" (py-beginning-of-def-or-class t) t]
-        ["Move to end of class" (py-end-of-def-or-class t) t]
-        ["Move to start of def" py-beginning-of-def-or-class t]
-        ["Move to end of def"   py-end-of-def-or-class t]
-        "-"
-        ["Describe mode"        py-describe-mode t]
-        )))
+;; For possibily speeding this up, here's the top of the ELP profile
+;; for rescanning pydoc.py (2.2k lines, 90kb):
+;; Function Name                         Call Count  Elapsed Time  Average Time
+;; ====================================  ==========  =============  ============
+;; python-imenu-create-index             156         2.430906      0.0155827307
+;; python-end-of-defun                   155         1.2718260000  0.0082053290
+;; python-end-of-block                   155         1.1898689999  0.0076765741
+;; python-next-statement                 2970        1.024717      0.0003450225
+;; python-end-of-statement               2970        0.4332190000  0.0001458649
+;; python-beginning-of-defun             265         0.0918479999  0.0003465962
+;; python-skip-comments/blanks           3125        0.0753319999  2.410...e-05
 
-
-;; Imenu definitions
-(defvar py-imenu-class-regexp
-  (concat                               ; <<classes>>
-   "\\("                                ;
-   "^[ \t]*"                            ; newline and maybe whitespace
-   "\\(class[ \t]+[a-zA-Z0-9_]+\\)"     ; class name
-                                        ; possibly multiple superclasses
-   "\\([ \t]*\\((\\([a-zA-Z0-9_,. \t\n]\\)*)\\)?\\)"
-   "[ \t]*:"                            ; and the final :
-   "\\)"                                ; >>classes<<
-   )
-  "Regexp for Python classes for use with the Imenu package."
-  )
+(defvar python-recursing)
+;; (defun python-imenu-create-index ()
+(defun py-imenu-create-index ()
+    "`imenu-create-index-function' for Python.
 
-(defvar py-imenu-method-regexp
-  (concat                               ; <<methods and functions>>
-   "\\("                                ;
-   "^[ \t]*"                            ; new line and maybe whitespace
-   "\\(def[ \t]+"                       ; function definitions start with def
-   "\\([a-zA-Z0-9_]+\\)"                ;   name is here
-                                        ;   function arguments...
-;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
-   "[ \t]*(\\([^:#]*\\))"
-   "\\)"                                ; end of def
-   "[ \t]*:"                            ; and then the :
-   "\\)"                                ; >>methods and functions<<
-   )
-  "Regexp for Python methods/functions for use with the Imenu package."
-  )
-
-(defvar py-imenu-method-no-arg-parens '(2 8)
-  "Indices into groups of the Python regexp for use with Imenu.
-
-Using these values will result in smaller Imenu lists, as arguments to
-functions are not listed.
-
-See the variable `py-imenu-show-method-args-p' for more
-information.")
-
-(defvar py-imenu-method-arg-parens '(2 7)
-  "Indices into groups of the Python regexp for use with imenu.
-Using these values will result in large Imenu lists, as arguments to
-functions are listed.
-
-See the variable `py-imenu-show-method-args-p' for more
-information.")
-
-;; Note that in this format, this variable can still be used with the
-;; imenu--generic-function. Otherwise, there is no real reason to have
-;; it.
-(defvar py-imenu-generic-expression
-  (cons
-   (concat
-    py-imenu-class-regexp
-    "\\|"                               ; or...
-    py-imenu-method-regexp
+Makes nested Imenu menus from nested `class' and `def' statements.
+The nested menus are headed by an item referencing the outer
+definition; it has a space prepended to the name so that it sorts
+first with `imenu--sort-by-name' (though, unfortunately, sub-menus
+precede it)."
+  (unless (boundp 'python-recursing)	; dynamically bound below
+    ;; Normal call from Imenu.
+    (goto-char (point-min))
+    ;; Without this, we can get an infloop if the buffer isn't all
+    ;; fontified.  I guess this is really a bug in syntax.el.  OTOH,
+    ;; _with_ this, imenu doesn't immediately work; I can't figure out
+    ;; what's going on, but it must be something to do with timers in
+    ;; font-lock.
+    ;; This can't be right, especially not when jit-lock is not used.  --Stef
+    ;; (unless (get-text-property (1- (point-max)) 'fontified)
+    ;;   (font-lock-fontify-region (point-min) (point-max)))
     )
-   py-imenu-method-no-arg-parens)
-  "Generic Python expression which may be used directly with Imenu.
-Used by setting the variable `imenu-generic-expression' to this value.
-Also, see the function \\[py-imenu-create-index] for a better
-alternative for finding the index.")
+  (let (index-alist)			; accumulated value to return
+    (while (re-search-forward
+	    (rx line-start (0+ space)	; leading space
+		(or (group "def") (group "class"))	   ; type
+		(1+ space) (group (1+ (or word ?_))))	   ; name
+	    nil t)
+      (unless (py-in-string-or-comment-p)
+	(let ((pos (match-beginning 0))
+	      (name (match-string-no-properties 3)))
+	  (if (match-beginning 2)	; def or class?
+	      (setq name (concat "class " name)))
+	  (save-restriction
+	    (narrow-to-defun)
+	    (let* ((python-recursing t)
+;; 		   (sublist (python-imenu-create-index)))
+	           (sublist (py-imenu-create-index)))
+              (if sublist
+		  (progn (push (cons (concat " " name) pos) sublist)
+			 (push (cons name sublist) index-alist))
+		(push (cons name pos) index-alist)))))))
+    (unless (boundp 'python-recursing)
+      ;; Look for module variables.
+      (let (vars)
+	(goto-char (point-min))
+	(while (re-search-forward
+		(rx line-start (group (1+ (or word ?_))) (0+ space) "=")
+		nil t)
+	  (unless (py-in-string-or-comment-p)
+	    (push (cons (match-string 1) (match-beginning 1))
+		  vars)))
+	(setq index-alist (nreverse index-alist))
+	(if vars
+	    (push (cons "Module variables"
+			(nreverse vars))
+		  index-alist))))
+    index-alist))
+
 
-;; These next two variables are used when searching for the Python
-;; class/definitions. Just saving some time in accessing the
-;; generic-python-expression, really.
-(defvar py-imenu-generic-regexp nil)
-(defvar py-imenu-generic-parens nil)
-
-(defun py-imenu-create-index-function ()
-  "Python interface function for the Imenu package.
-Finds all Python classes and functions/methods. Calls function
-\\[py-imenu-create-index-engine].  See that function for the details
-of how this works."
-  (setq py-imenu-generic-regexp (car py-imenu-generic-expression)
-        py-imenu-generic-parens (if py-imenu-show-method-args-p
-                                    py-imenu-method-arg-parens
-                                  py-imenu-method-no-arg-parens))
-  (goto-char (point-min))
-  ;; Warning: When the buffer has no classes or functions, this will
-  ;; return nil, which seems proper according to the Imenu API, but
-  ;; causes an error in the XEmacs port of Imenu.  Sigh.
-  (py-imenu-create-index-engine nil))
-
-(defun py-imenu-create-index-engine (&optional start-indent)
-  "Function for finding Imenu definitions in Python.
-
-Finds all definitions (classes, methods, or functions) in a Python
-file for the Imenu package.
-
-Returns a possibly nested alist of the form
-
-        (INDEX-NAME . INDEX-POSITION)
-
-The second element of the alist may be an alist, producing a nested
-list as in
-
-        (INDEX-NAME . INDEX-ALIST)
-
-This function should not be called directly, as it calls itself
-recursively and requires some setup.  Rather this is the engine for
-the function \\[py-imenu-create-index-function].
-
-It works recursively by looking for all definitions at the current
-indention level.  When it finds one, it adds it to the alist.  If it
-finds a definition at a greater indentation level, it removes the
-previous definition from the alist. In its place it adds all
-definitions found at the next indentation level.  When it finds a
-definition that is less indented then the current level, it returns
-the alist it has created thus far.
-
-The optional argument START-INDENT indicates the starting indentation
-at which to continue looking for Python classes, methods, or
-functions.  If this is not supplied, the function uses the indentation
-of the first definition found."
-  (let (index-alist
-        sub-method-alist
-        looking-p
-        def-name prev-name
-        cur-indent def-pos
-        (class-paren (first  py-imenu-generic-parens))
-        (def-paren   (second py-imenu-generic-parens)))
-    (setq looking-p
-          (re-search-forward py-imenu-generic-regexp (point-max) t))
-    (while looking-p
-      (save-excursion
-        ;; used to set def-name to this value but generic-extract-name
-        ;; is new to imenu-1.14. this way it still works with
-        ;; imenu-1.11
-        ;;(imenu--generic-extract-name py-imenu-generic-parens))
-        (let ((cur-paren (if (match-beginning class-paren)
-                             class-paren def-paren)))
-          (setq def-name
-                (buffer-substring-no-properties (match-beginning cur-paren)
-                                                (match-end cur-paren))))
-        (save-match-data
-          (py-beginning-of-def-or-class 'either))
-        (beginning-of-line)
-        (setq cur-indent (current-indentation)))
-      ;; HACK: want to go to the next correct definition location.  We
-      ;; explicitly list them here but it would be better to have them
-      ;; in a list.
-      (setq def-pos
-            (or (match-beginning class-paren)
-                (match-beginning def-paren)))
-      ;; if we don't have a starting indent level, take this one
-      (or start-indent
-          (setq start-indent cur-indent))
-      ;; if we don't have class name yet, take this one
-      (or prev-name
-          (setq prev-name def-name))
-      ;; what level is the next definition on?  must be same, deeper
-      ;; or shallower indentation
-      (cond
-       ;; Skip code in comments and strings
-       ((py-in-string-or-comment-p))
-       ;; at the same indent level, add it to the list...
-       ((= start-indent cur-indent)
-        (push (cons def-name def-pos) index-alist))
-       ;; deeper indented expression, recurse
-       ((< start-indent cur-indent)
-        ;; the point is currently on the expression we're supposed to
-        ;; start on, so go back to the last expression. The recursive
-        ;; call will find this place again and add it to the correct
-        ;; list
-        (re-search-backward py-imenu-generic-regexp (point-min) 'move)
-        (setq sub-method-alist (py-imenu-create-index-engine cur-indent))
-        (if sub-method-alist
-            ;; we put the last element on the index-alist on the start
-            ;; of the submethod alist so the user can still get to it.
-            (let ((save-elmt (pop index-alist)))
-              (push (cons prev-name
-                          (cons save-elmt sub-method-alist))
-                    index-alist))))
-       ;; found less indented expression, we're done.
-       (t
-        (setq looking-p nil)
-        (re-search-backward py-imenu-generic-regexp (point-min) t)))
-      ;; end-cond
-      (setq prev-name def-name)
-      (and looking-p
-           (setq looking-p
-                 (re-search-forward py-imenu-generic-regexp
-                                    (point-max) 'move))))
-    (nreverse index-alist)))
 
 
 (defun py-choose-shell-by-shebang ()
@@ -1459,85 +1343,11 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
   (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
-
   (set-syntax-table py-mode-syntax-table)
-  (setq py-mode-map (make-sparse-keymap))
-  ;; electric keys
-  (define-key py-mode-map ":" 'py-electric-colon)
-  ;; indentation level modifiers
-  (define-key py-mode-map "\C-c\C-l"  'py-shift-region-left)
-  (define-key py-mode-map "\C-c\C-r"  'py-shift-region-right)
-  (define-key py-mode-map "\C-c<"     'py-shift-region-left)
-  (define-key py-mode-map "\C-c>"     'py-shift-region-right)
-  ;; subprocess commands
-  (define-key py-mode-map "\C-c\C-c"  'py-execute-buffer)
-  (define-key py-mode-map "\C-c\C-m"  'py-execute-import-or-reload)
-  (define-key py-mode-map "\C-c\C-s"  'py-execute-string)
-  (define-key py-mode-map "\C-c|"     'py-execute-region)
-  (define-key py-mode-map "\e\C-x"    'py-execute-def-or-class)
-  (define-key py-mode-map "\C-c!"     'py-shell)
-  (define-key py-mode-map "\C-c\C-t"  'py-toggle-shells)
-  (define-key py-mode-map [?\C-c ?\d] 'py-hungry-delete-backwards)
-  (define-key py-mode-map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
-  (define-key py-mode-map [?\C-c deletechar] 'py-hungry-delete-forward)
-  (if (not (boundp 'delete-key-deletes-forward))
-      (define-key py-mode-map "\177" 'py-electric-backspace)
-    ;; who cares?  XEmacs 20 does the right thing with these too).
-    (define-key py-mode-map [delete]    'py-electric-delete)
-    (define-key py-mode-map [backspace] 'py-electric-backspace))
-  ;; Separate M-BS from C-M-h.  The former should remain
-  ;; backward-kill-word.
-  (define-key py-mode-map [(control meta h)] 'py-mark-def-or-class)
-  (define-key py-mode-map "\C-c\C-k"  'py-mark-block-or-clause)
-  ;; Miscellaneous
-  (define-key py-mode-map "\C-c:"     'py-guess-indent-offset)
-  (define-key py-mode-map "\C-c\t"    'py-indent-region)
-  (define-key py-mode-map "\C-c\C-d"  'py-pdbtrack-toggle-stack-tracking)
-  (define-key py-mode-map "\C-c\C-f"  'py-sort-imports)
-  (define-key py-mode-map "\C-c\C-n"  'py-end-of-statement)
-  (define-key py-mode-map "\C-c\C-a"  'py-mark-statement)
-  (define-key py-mode-map "\C-c\C-p"  'py-beginning-of-statement)
-  (define-key py-mode-map "\C-c\C-u"  'py-beginning-of-block)
-  (define-key py-mode-map "\C-c\C-q"  'py-end-of-block)
-  (define-key py-mode-map "\C-c#"     'py-comment-region)
-  (define-key py-mode-map "\C-c?"     'py-describe-mode)
-  (define-key py-mode-map "\C-c\C-e"  'py-help-at-point)
-  (define-key py-mode-map "\e\C-a"    'py-beginning-of-def-or-class)
-  (define-key py-mode-map "\e\C-e"    'py-end-of-def-or-class)
-  (define-key py-mode-map "\C-c-"     'py-up-exception)
-  (define-key py-mode-map "\C-c="     'py-down-exception)
-  ;; stuff that is `standard' but doesn't interface well with
-  ;; python-mode, which forces us to rebind to special commands
-  (define-key py-mode-map "\C-xnd"    'py-narrow-to-defun)
-  ;; information
-  (define-key py-mode-map "\C-c\C-b" 'py-submit-bug-report)
-  (define-key py-mode-map "\C-c\C-b" 'py-submit-bug-report)
-  (define-key py-mode-map "\C-c\C-v" 'py-version)
-  (define-key py-mode-map "\C-c\C-w" 'py-pychecker-run)
-  ;; shadow global bindings for newline-and-indent w/ the py- version.
-  ;; BAW - this is extremely bad form, but I'm not going to change it
-  ;; for now.
-  (mapc #'(lambda (key)
-            (define-key py-mode-map key 'py-newline-and-indent))
-        (where-is-internal 'newline-and-indent))
-  ;; Force RET to be py-newline-and-indent even if it didn't get
-  ;; mapped by the above code.  motivation: Emacs' default binding for
-  ;; RET is `newline' and C-j is `newline-and-indent'.  Most Pythoneers
-  ;; expect RET to do a `py-newline-and-indent' and any Emacsers who
-  ;; dislike this are probably knowledgeable enough to do a rebind.
-  ;; However, we do *not* change C-j since many Emacsers have already
-  ;; swapped RET and C-j and they don't want C-j bound to `newline' to
-  ;; change.
-  (define-key py-mode-map "\C-m" 'py-newline-and-indent)
-  ;;)
   (use-local-map py-mode-map)
-  ;; add the menu
-  (if py-menu
-      (easy-menu-add py-menu))
   ;; Emacs 19 requires this
   (if (boundp 'comment-multi-line)
       (setq comment-multi-line nil))
-  
   (set (make-local-variable 'skeleton-further-elements)
        '((< '(backward-delete-char-untabify (min py-indent-offset
 						 (current-column))))
@@ -1549,12 +1359,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
                                           (py-goto-beyond-block)
                                           (skip-chars-backward " \t\n"))
                                         nil))
-  
-;; Hooks should be run be derived-mode now
-;;  (if python-mode-hook
-;;      (run-mode-hooks 'python-mode-hook)
-;;    (run-mode-hooks 'py-mode-hook))
-  ;; Now do the automagical guessing
+    ;; Now do the automagical guessing
   (if py-smart-indentation
       (let ((offset py-indent-offset))
         ;; It's okay if this fails to guess a good value
@@ -1573,7 +1378,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (py-toggle-shells (py-choose-shell)))
   (message "python-mode loaded from: %s" "components branch")
   )
-
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
@@ -3992,51 +3796,6 @@ and `pass'.  This doesn't catch embedded statements."
       (when (nth 4 pps)
         (goto-char
          (nth 8 pps))))))
-
-(defun py-go-up-tree-to-keyword (key)
-  "Go to begining of statement starting with KEY, at or preceding point.
-
-KEY is a regular expression describing a Python keyword.  Skip blank
-lines and non-indenting comments.  If the statement found starts with
-KEY, then stop, otherwise go back to first enclosing block starting
-with KEY.  If successful, leave point at the start of the KEY line and
-return t.  Otherwise, leave point at an undefined place and return nil."
-  ;; skip blanks and non-indenting #
-  (py-goto-initial-line)
-  (while (and
-          (looking-at "[ \t]*\\($\\|#[^ \t\n]\\)")
-          (zerop (forward-line -1)))    ; go back
-    nil)
-  (py-goto-initial-line)
-  (let* ((re (concat "[ \t]*" key "\\>"))
-         (case-fold-search nil)         ; let* so looking-at sees this
-         (found (looking-at re))
-         (dead nil))
-    (while (not (or found dead))
-      (condition-case nil               ; in case no enclosing block
-          (py-goto-block-up 'no-mark)
-        (error (setq dead t)))
-      (or dead (setq found (looking-at re))))
-    (beginning-of-line)
-    found))
-
-(defun py-suck-up-leading-text ()
-  "Return string in buffer from start of indentation to end of line.
-Prefix with \"...\" if leading whitespace was skipped."
-  (save-excursion
-    (back-to-indentation)
-    (concat
-     (if (bolp) "" "...")
-     (buffer-substring (point) (progn (end-of-line) (point))))))
-
-(defun py-suck-up-first-keyword ()
-  "Return first keyword on the line as a Lisp symbol.
-`Keyword' is defined (essentially) as the regular expression
-([a-z]+).  Returns nil if none was found."
-  (let ((case-fold-search nil))
-    (if (looking-at "[ \t]*\\([a-z]+\\)\\>")
-        (intern (buffer-substring (match-beginning 1) (match-end 1)))
-      nil)))
 
 (defun py-current-defun (&optional arg)
   "Go to the outermost method or class definition in current scope. 
