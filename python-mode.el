@@ -1018,11 +1018,11 @@ Currently-active file is at the head of the list.")
 	 :help "Run `inferior' Python in separate buffer"]
 	["Import/reload file" py-load-file
 	 :help "Load into inferior Python session"]
-	["Eval buffer" py-send-buffer
+	["Eval buffer" py-execute-buffer
 	 :help "Evaluate buffer en bloc in inferior Python session"]
-	["Eval region" py-send-region :active mark-active
+	["Eval region" py-execute-region :active mark-active
 	 :help "Evaluate region en bloc in inferior Python session"]
-	["Eval def/class" py-send-defun
+	["Eval def/class" py-execute-defun
 	 :help "Evaluate current definition in inferior Python session"]
 	["Switch to interpreter" py-switch-to-python
 	 :help "Switch to inferior Python buffer"]
@@ -1376,7 +1376,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Set the default shell if not already set
   (unless py-which-shell
     (py-toggle-shells (py-choose-shell)))
-  (message "python-mode loaded from: %s" "components branch")
+  (message "python-mode loaded from: %s" "python-mode.el")
   )
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
