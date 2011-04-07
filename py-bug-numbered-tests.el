@@ -38,6 +38,7 @@
          'hungry-delete-forward-lp:328853-test
          'beg-end-of-defun-lp:303622-test
          'bullet-lists-in-comments-lp:328782-test
+         'imenu-newline-arglist-lp:328783-test
          'imenu-matches-in-docstring-lp:436285-test
          'exceptions-not-highlighted-lp:473525-test
          'fill-paragraph-problems-lp:710373-test
@@ -445,6 +446,19 @@ elif x < 0:
   (if (functionp 'py-fill-paragraph)
       (py-fill-paragraph)
     (python-fill-paragraph)))
+
+(defun imenu-newline-arglist-lp:328783-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def editor(db, db_name, table_name,
+    #api
+    dbapi,dbapi_exceptions):
+        pass"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'imenu-newline-arglist-lp:328783-base arg teststring)))
+
+(defun imenu-newline-arglist-lp:328783-base ()
+    (goto-char 60)
+    (assert (eq (py-beginning-of-def-or-class) 1) nil "imenu-newline-arglist-lp:328783 test failed"))
 
 (defun hungry-delete-backwards-lp:328853-test (&optional arg load-branch-function)
   (interactive "p")

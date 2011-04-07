@@ -53,6 +53,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall hungry-delete-forward-lp:328853-test \
 --funcall beg-end-of-defun-lp:303622-test \
 --funcall bullet-lists-in-comments-lp:328782-test \
+--funcall imenu-newline-arglist-lp:328783-test \
 --funcall nested-indents-lp:328775-test \
 --funcall imenu-matches-in-docstring-lp:436285-test \
 --funcall exceptions-not-highlighted-lp:473525-test \
