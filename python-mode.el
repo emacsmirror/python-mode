@@ -610,7 +610,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
       (unless erg (setq erg
                         (progn
                           (when (looking-at "\"\"\"\\|''''")
-                            (forward-char 1)
+                            (goto-char (match-end 0))
                             (setq pps (parse-partial-sexp (point-min) (point)))
                             (when (and (nth 3 pps) (nth 8 pps)) (nth 2 pps)))))))
     (when (interactive-p) (message "%s" erg))
