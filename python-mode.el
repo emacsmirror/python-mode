@@ -2824,15 +2824,14 @@ http://docs.python.org/reference/compound_stmts.html"
 ;; Defun or Class
 (defalias 'py-backward-def-or-class 'py-beginning-of-def-or-class)
 (defalias 'py-previous-def-or-class 'py-beginning-of-def-or-class)
-(defun py-beginning-of-def-or-class (&optional class count)
+(defun py-beginning-of-def-or-class (&optional class)
   "Move point to start of `def' or `class', whatever is next.
-With optional arg CLASS, move to the beginn of class definition. 
-Returns position reached, if any, nil otherwise."
+With optional arg CLASS, move to the beginn of class definition.
+Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (cond ((eq class 'either)
-                        py-def-or-class-re)
-                       (class py-class-re)
-                       (t py-def-or-class-re)))
+  (let* ((regexp (if (eq 4 (prefix-numeric-value class))
+                     py-class-re
+                   py-def-or-class-re))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
