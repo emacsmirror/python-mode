@@ -57,6 +57,7 @@
 
 
 (defun py-run-bug-numbered-tests (&optional arg)
+  "With ARG greater 1 keep test buffers open. "
   (interactive "p")
   (dolist (ele bug-numbered-tests)
     (funcall ele arg)))
@@ -71,14 +72,21 @@
         (fundamental-mode)
         (python-mode)
         (funcall testname)
-        (message "%s" (concat (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname)) " passed")))
+        (message "%s" (concat (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname)) " passed"))
+        (unless (< 1 arg)
+          (set-buffer-modified-p 'nil)
+          (kill-buffer (current-buffer))))
     (with-temp-buffer
-      (insert teststring)
-      (funcall testname))))
+      (let ((font-lock-verbose nil))
+        (insert teststring)
+        (funcall testname)))))
 
 
 (defun sexp-commands-lp:328778-test (&optional arg load-branch-function)
-  "Reported by Montanaro on 2003-08-05
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked.
+
+Reported by Montanaro on 2003-08-05
 \[ ... ]
  You can kill balanced expressions on a
  particular line but it's not possible to remove the
@@ -121,7 +129,9 @@ def main(argv):
     ))
 
 (defun nested-dictionaries-indent-lp:328791-test (&optional arg load-branch-function)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
+  "With ARG greater 1 keep test buffer open. 
+
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "
@@ -136,6 +146,8 @@ def main(argv):
   (assert (eq 14 (py-compute-indentation))))
 
 (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "def f():
@@ -159,6 +171,8 @@ def main(argv):
   (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!"))
 
 (defun flexible-indentation-lp:328842-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "
 \(long, sequence, of_items,
@@ -186,6 +200,8 @@ that, needs, to_be, wrapped)
   (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
 
 (defun py-current-defun-lp:328846-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
@@ -196,6 +212,8 @@ that, needs, to_be, wrapped)
   (assert (string= "OrderedDict1" (py-current-defun)) nil "py-current-defun-lp:328846 test failed"))
 
 (defun mark-decorators-lp:328851-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "@foo.bar
 def baz():
@@ -210,6 +228,8 @@ def baz():
   (assert (eq 28 (- (region-end)(region-beginning))) nil "mark-decorators-lp:328851 test failed"))
 
 (defun beg-end-of-defun-lp:303622-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "
@@ -237,6 +257,8 @@ class f():
   (assert (eq 2 (point)) nil "beg-end-of-defun-lp:303622 test failed!"))
 
 (defun dq-in-tqs-string-lp:328813-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "
@@ -249,19 +271,22 @@ print ''' \"\"\" \"Hi!\" I'm a doc string \"\"\" '''
     (py-bug-tests-intern 'dq-in-tqs-string-lp:328813 arg teststring)))
 
 (defun dq-in-tqs-string-lp:328813 ()
-  (font-lock-mode 1)
-  (font-lock-fontify-buffer)
-  (goto-char 78)
-  (let ((erg (get-char-property (point) 'face)))
-    (message "%s" erg)
-    (insert "\"")
+  (let ((font-lock-verbose nil))
+    (font-lock-mode 1)
     (font-lock-fontify-buffer)
-    (message "%s" erg)
-    (message "%s" (get-char-property (point) 'face))
-    (assert (eq erg (get-char-property (point) 'face)) nil "dq-in-tqs-string-lp:328813 test failed ")
-    (goto-char 122)))
+    (goto-char 78)
+    (let ((erg (get-char-property (point) 'face)))
+      (message "%s" erg)
+      (insert "\"")
+      (font-lock-fontify-buffer)
+      (message "%s" erg)
+      (message "%s" (get-char-property (point) 'face))
+      (assert (eq erg (get-char-property (point) 'face)) nil "dq-in-tqs-string-lp:328813 test failed ")
+      (goto-char 122))))
 
 (defun imenu-matches-in-docstring-lp:436285-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "
 class foo():
@@ -280,9 +305,11 @@ class foo():
   (assert (eq (py-beginning-of-def-or-class) 2) nil "imenu-matches-in-docstring-lp:436285 test failed"))
 
 (defun fill-paragraph-problems-lp:710373-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-(let ((teststring "
+  (let ((teststring "
     \"\"\"
     triple-quoted string containing \"quotation\" marks.
     triple-quoted string containing \"quotation\" marks.
@@ -291,10 +318,9 @@ class foo():
     triple-quoted string containing \"quotation\" marks.
     \"\"\"
 "))
-  (fill-paragraph-problems-lp:710373-test-intern arg teststring)))
+    (fill-paragraph-problems-lp:710373-test-intern arg teststring)))
 
-(defun fill-paragraph-problems-lp:710373-test-intern (&optional arg teststring)
-  "If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
+(defun fill-paragraph-problems-lp:710373-test-intern (arg teststring)
   (let ((tmp-dir "/tmp/")
         (fpp-exec-buffer "fill-paragraph-problems-lp:710373")
         (diff-buffer "fpp-lp:710373-old"))
@@ -310,17 +336,14 @@ class foo():
           (erase-buffer)
           (insert teststring)
           (fundamental-mode)
-          (fill-paragraph-problems-lp:710373-test-base tmp-dir fpp-exec-buffer diff-buffer))
+          (fill-paragraph-problems-lp:710373-test-base arg tmp-dir fpp-exec-buffer diff-buffer)
+          )
       (with-temp-buffer
         (insert teststring)
-        (fill-paragraph-problems-lp:710373-test-base tmp-dir fpp-exec-buffer diff-buffer)))))
+        (fill-paragraph-problems-lp:710373-test-base arg tmp-dir fpp-exec-buffer diff-buffer)))))
   
-(defun fill-paragraph-problems-lp:710373-test-base (tmp-dir fpp-exec-buffer diff-buffer)
+(defun fill-paragraph-problems-lp:710373-test-base (arg tmp-dir fpp-exec-buffer diff-buffer)
     (goto-char 48)
-  ;; the following lines work when called from edebug
-  ;;  (message "%s" (get-text-property 6 'syntax-table))
-  ;;  (assert (eq 15 (car (get-text-property 6 'syntax-table))))
-  ;;  (assert (eq 6 (nth 8 (parse-partial-sexp (point-min) (point)))))
   (if (functionp 'py-fill-paragraph)
       (py-fill-paragraph)
     (python-fill-paragraph))
@@ -333,9 +356,15 @@ class foo():
     (set-buffer "*Diff*")
     (sit-for 1)
     (assert (numberp (progn (goto-char (point-min))(search-forward "no differences" nil t 1))) t)
-    (message "%s" "fill-paragraph-problems-lp:710373 passed")))
+    (message "%s" "fill-paragraph-problems-lp:710373 passed"))
+  (set-buffer "fill-paragraph-problems-lp:710373")
+  (unless (< 1 arg)
+          (set-buffer-modified-p 'nil)
+          (kill-buffer (current-buffer))))
   
 (defun triple-quoted-string-dq-lp:302834-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "class OrderedDict1(dict):
@@ -346,16 +375,18 @@ class foo():
     (py-bug-tests-intern 'triple-quoted-string-dq-lp:302834 arg teststring)))
 
 (defun triple-quoted-string-dq-lp:302834 ()
-        (font-lock-mode 1)
+  (let ((font-lock-verbose nil))
+    (font-lock-mode 1)
     (font-lock-fontify-buffer)
     (goto-char 78)
     (let ((erg (get-char-property (point) 'face)))
       (insert "\"")
       (font-lock-fontify-buffer)
-      (assert (eq erg (get-char-property (point) 'face)) "Being stuck inside triple-quoted-string. Did not reach beginning of class."))
-    )
+      (assert (eq erg (get-char-property (point) 'face)) "Being stuck inside triple-quoted-string. Did not reach beginning of class."))))
 
 (defun inbound-indentation-multiline-assignement-lp:629916-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "foo_long_long_long_long = (
@@ -384,6 +415,8 @@ class foo():
   (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed"))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "class OrderedDict1(dict):
@@ -400,6 +433,8 @@ class foo():
   )
 
 (defun nested-indents-lp:328775-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "
@@ -414,40 +449,49 @@ elif x < 0:
     (py-bug-tests-intern 'nested-indents-lp:328775 arg teststring)))
 
 (defun nested-indents-lp:328775 ()
-  (font-lock-mode 1)
-  (font-lock-fontify-buffer)
-  (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
-  (goto-char 41)
-  (assert (eq 8 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
-  (forward-line 1)
-  (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
-  )
+  (let ((font-lock-verbose nil))
+    (font-lock-mode 1)
+    (font-lock-fontify-buffer)
+    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
+    (goto-char 41)
+    (assert (eq 8 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")
+    (forward-line 1)
+    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775 test failed!")))
 
 (defun bullet-lists-in-comments-lp:328782-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring))
     (bullet-lists-in-comments-lp:328782-test-intern arg teststring)))
 
 (defun bullet-lists-in-comments-lp:328782-test-intern (&optional arg teststring)
-  (set-buffer (get-buffer-create "bullet-lists-in-comments-lp:328782-test"))
-  (erase-buffer)
-  ;;     (with-temp-buffer
-  (insert "
+  (let ((font-lock-verbose nil))
+    (set-buffer (get-buffer-create "bullet-lists-in-comments-lp:328782-test"))
+    (erase-buffer)
+    ;;     (with-temp-buffer
+    (insert "
 ## * If the filename is a directory and not a Maildir nor
 ##   an MH Mailbox, it will be processed as a Mailbox --this bug named here: bullet-lists-in-comments-lp:328782.htm--
 ##   directory consisting of just .txt and .lorien files.
 ")
-  (when arg (switch-to-buffer (current-buffer)))
-  (python-mode)
-  (font-lock-mode 1)
-  (font-lock-fontify-buffer)
-  (goto-char 100)
-  (if (functionp 'py-fill-paragraph)
-      (py-fill-paragraph)
-    (python-fill-paragraph)))
+    (when arg (switch-to-buffer (current-buffer)))
+    (python-mode)
+    (font-lock-mode 1)
+    (font-lock-fontify-buffer)
+    (goto-char 100)
+    (if (functionp 'py-fill-paragraph)
+        (py-fill-paragraph)
+      (python-fill-paragraph)))
+  (set-buffer "bullet-lists-in-comments-lp:328782-test")
+  (unless (< 1 arg)
+    (set-buffer-modified-p 'nil)
+    (kill-buffer (current-buffer))))
 
 (defun imenu-newline-arglist-lp:328783-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "def editor(db, db_name, table_name,
     #api
@@ -461,6 +505,8 @@ elif x < 0:
     (assert (eq (py-beginning-of-def-or-class) 1) nil "imenu-newline-arglist-lp:328783 test failed"))
 
 (defun hungry-delete-backwards-lp:328853-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
@@ -472,6 +518,8 @@ elif x < 0:
   (assert (eq 416 (point)) nil "hungry-delete-backwards test failed"))
 
 (defun hungry-delete-forward-lp:328853-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring python-mode-teststring))
   (when load-branch-function (funcall load-branch-function))
@@ -483,6 +531,8 @@ elif x < 0:
   (assert (looking-at "#") nil "hungry-delete-backwards test failed"))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "    def f(val):
@@ -500,6 +550,8 @@ elif x < 0:
     (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")))
 
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "class Foo(object):
@@ -517,6 +569,8 @@ This docstring isn't indented, test should pass anyway.
   )
 
 (defun class-treated-as-keyword-lp:709478-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
   (let ((teststring "foo = [
@@ -529,16 +583,18 @@ This docstring isn't indented, test should pass anyway.
     (py-bug-tests-intern 'class-treated-as-keyword-lp:709478 arg teststring)))
 
 (defun class-treated-as-keyword-lp:709478 ()
-  (font-lock-fontify-buffer)
-  (goto-char 63)
-  (sit-for 0.1)
-  (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d 1th test failed")
-  (goto-char 57)
-  (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test 2th failed")
-  )
+  (let ((font-lock-verbose nil))
+    (font-lock-fontify-buffer)
+    (goto-char 63)
+    (sit-for 0.1)
+    (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d 1th test failed")
+    (goto-char 57)
+    (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test 2th failed")))
 
 
 (defun fore-00007F-breaks-indentation-lp:328788-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "class a:
     def __init__(self):
@@ -581,18 +637,23 @@ This docstring isn't indented, test should pass anyway.
     )
 
 (defun exceptions-not-highlighted-lp:473525-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "excs = (SystemExit, Exception, KeyboardInterrupt)"))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-tests-intern 'exceptions-not-highlighted-lp:473525 arg teststring)))
 
 (defun exceptions-not-highlighted-lp:473525 ()
+  (let ((font-lock-verbose nil))
     (goto-char 39)
     (font-lock-fontify-buffer)
     (sit-for 0.1)
-    (assert (eq (get-char-property (point) 'face) 'py-exception-name-face) nil "exceptions-not-highlighted-lp:473525 test failed"))
+    (assert (eq (get-char-property (point) 'face) 'py-exception-name-face) nil "exceptions-not-highlighted-lp:473525 test failed")))
     
 (defun backslashed-continuation-line-indent-lp:742993-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "
 self.last_abc_attr = \
@@ -661,6 +722,8 @@ self.last_xyz_other = None
 ))
 
 (defun py-decorators-face-lp:744335-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "@foo.bar
 def baz():
@@ -670,12 +733,15 @@ def baz():
   (py-bug-tests-intern 'py-decorators-face-lp:744335 arg teststring)))
 
 (defun py-decorators-face-lp:744335 ()
-  (goto-char 7)
-  (font-lock-fontify-buffer)
-  (sit-for 0.1)
-  (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed"))
+  (let ((font-lock-verbose nil))
+    (goto-char 7)
+    (font-lock-fontify-buffer)
+    (sit-for 0.1)
+    (assert (eq (get-char-property (point) 'face) 'py-decorators-face) nil "py-decorators-face-lp:744335 test failed")))
 
 (defun indent-after-return-lp:745208-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "class FOO\():
     if len(sys.argv)==1:
@@ -714,6 +780,8 @@ failed: %s' %
     )
 
 (defun keep-assignements-column-lp:748198-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "bar = foo(a=1,
           b=2,
@@ -728,6 +796,8 @@ failed: %s' %
   (assert (eq 0 (current-column)) nil "py-vor test failed"))
 
 (defun indent-triplequoted-to-itself-lp:752252-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
+If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
   (interactive "p")
   (let ((teststring "def foo():
     \"\"\"The real foo thing.\n"))
