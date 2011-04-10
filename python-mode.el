@@ -3318,36 +3318,11 @@ Returns beginning and end positions of marked area, a cons."
       (compile-internal command "No more errors"))))
 
 
-;; pydoc commands. The guts of this function is stolen from XEmacs's
-;; symbol-near-point, but without the useless regexp-quote call on the
-;; results, nor the interactive bit.  Also, we've added the temporary
-;; syntax table setting, which Skip originally had broken out into a
-;; separate function.  Note that Emacs doesn't have the original
-;; function.
-(defun py-symbol-near-point ()
-  "Return the first textual item to the nearest point."
-  ;; alg stolen from etag.el
-  (save-excursion
-    (with-syntax-table py-dotted-expression-syntax-table
-      (if (or (bobp) (not (memq (char-syntax (char-before)) '(?w ?_))))
-          (while (not (looking-at "\\sw\\|\\s_\\|\\'"))
-            (forward-char 1)))
-      (while (looking-at "\\sw\\|\\s_")
-        (forward-char 1))
-      (if (re-search-backward "\\sw\\|\\s_" nil t)
-          (progn (forward-char 1)
-                 (buffer-substring (point)
-                                   (progn (forward-sexp -1)
-                                          (while (looking-at "\\s'")
-                                            (forward-char 1))
-                                          (point))))
-        nil))))
-
 (defun py-help-at-point ()
   "Get help from Python based on the symbol nearest point."
   (interactive)
-  (let* ((sym (py-symbol-near-point))
-         (base (substring sym 0 (or (search "." sym :from-end t) 0)))
+  (let* ((sym (prin1-to-string (symbol-at-point)))
+         (base (substring sym 0 (or (string-match "\\." sym) 0)))
          cmd)
     (if (not (equal base ""))
         (setq cmd (concat "import " base "\n")))
