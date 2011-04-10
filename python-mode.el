@@ -3318,6 +3318,7 @@ Returns beginning and end positions of marked area, a cons."
       (compile-internal command "No more errors"))))
 
 
+(defalias 'py-describe-symbol 'py-help-at-point)
 (defun py-help-at-point ()
   "Get help from Python based on the symbol nearest point."
   (interactive)
