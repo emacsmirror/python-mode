@@ -478,7 +478,7 @@ set in py-execute-region and used in py-jump-to-exception.")
       erg)))
 
 (defalias 'py-in-list-p 'py-list-beginning-position)
-(defun py-list-beginning-position (&optional arg)
+(defun py-list-beginning-position ()
   "Return lists beginning position, nil if not inside.
 Optional ARG indicates a start-position for `parse-partial-sexp'."
   (interactive)
@@ -746,7 +746,7 @@ support for features needed by `python-mode'.")
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\<\\(self\\|Ellipsis\\|True\\|False\\|None\\)\\>"
+     '("\\<\\(self\\|cls\\|Ellipsis\\|True\\|False\\|None\\)\\>"
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
@@ -2597,20 +2597,21 @@ http://docs.python.org/reference/compound_stmts.html
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
 (defalias 'py-forward-statement 'py-end-of-statement)
-(defun py-end-of-statement (&optional orig done)
+(defun py-end-of-statement (&optional orig origline done)
   "Go to the point just beyond the final line of the current statement. "
   (interactive)
   (save-restriction
     (widen)
     (unless (eobp)
       (let* ((orig (or orig (point)))
+             (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point))))
         (cond
          ((and (empty-line-p)(not done)(not (eobp)))
           (while
               (and (empty-line-p)(not done)(not (eobp)))
             (forward-line 1)
-            (py-end-of-statement (point))))
+            (py-end-of-statement (point) origline done)))
          ;; start of comment or string; nil if not in one
          ((nth 8 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
@@ -2618,37 +2619,37 @@ http://docs.python.org/reference/compound_stmts.html
           (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
           (end-of-line)
           (skip-chars-backward " \t\r\n\f")
-          (py-end-of-statement orig done))
+          (py-end-of-statement orig origline done))
          ((looking-at "[ \t]*#")
           (while (looking-at "[ \t]*#")
             (forward-line 1)
             (beginning-of-line))
           (end-of-line)
           (skip-chars-backward " \t\r\n\f")
-          (py-end-of-statement orig done))
+          (py-end-of-statement orig origline done))
          ((py-backslashed-continuation-line-p)
           (py-forward-line)
-          (py-end-of-statement orig done))
+          (py-end-of-statement orig origline done))
          ;; start of innermost containing list; nil if none.
          ((nth 1 pps)
           (goto-char (nth 1 pps))
           (forward-list)
           (setq done t)
-          (py-end-of-statement orig done))
+          (py-end-of-statement orig origline done))
          ((and (eq (point) orig)(not (looking-at "[ \t]*$")))
           (end-of-line) (skip-chars-backward " \t")
           (py-beginning-of-comment)
           (skip-chars-backward " \t")
           (if (< orig (point))
-              (py-end-of-statement orig done)
+              (py-end-of-statement orig origline done)
             (py-forward-line)
-            (py-end-of-statement orig done)))
+            (py-end-of-statement orig origline done)))
          ((and (eq orig (point))(looking-at "[ \t]*$")(not (eobp)))
           (py-forward-line)
-          (py-end-of-statement orig done))
+          (py-end-of-statement orig origline done))
          ((and (eq orig (point))(not (eobp)))
           (py-forward-line)
-          (py-end-of-statement orig done))))
+          (py-end-of-statement orig origline done))))
       (when (interactive-p) (message "%s" (point)))
       (point))))
 
@@ -2715,7 +2716,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-goto-block-or-clause-up 'py-beginning-of-block-or-clause)
 (defalias 'py-backward-block-or-clause 'py-beginning-of-block-or-clause)
 
-(defun py-beginning-of-block-or-clause (&optional arg count)
+(defun py-beginning-of-block-or-clause (&optional arg)
   "Looks up for nearest opening clause or block.
 With universal argument looks for next compound statements
 i.e. blocks only.
@@ -2770,11 +2771,11 @@ Returns position reached, if any, nil otherwise."
 ;; Class
 (defalias 'py-backward-class 'py-beginning-of-class)
 (defalias 'py-previous-class 'py-beginning-of-class)
-(defun py-beginning-of-class (&optional count)
+(defun py-beginning-of-class ()
   "Move point to start of next `class'.
 See also `py-beginning-of-def-or-class'. 
 Returns position reached, if any, nil otherwise."
-  (interactive "p")
+  (interactive)
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-class-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
@@ -2794,7 +2795,7 @@ Returns position reached, if any, nil otherwise."
 (defalias 'py-previous-clause 'py-beginning-of-clause)
 (defalias 'py-goto-clause-up 'py-beginning-of-clause)
 (defalias 'py-backward-clause 'py-beginning-of-clause)
-(defun py-beginning-of-clause (&optional count)
+(defun py-beginning-of-clause ()
   "Looks up for nearest opening clause, i.e. a compound statements
 subform.
 Returns position reached, if any, nil otherwise.
@@ -2808,7 +2809,7 @@ http://docs.python.org/reference/compound_stmts.html"
 
 (defalias 'py-forward-clause 'py-end-of-clause)
 (defalias 'py-goto-beyond-clause 'py-end-of-clause)
-(defun py-end-of-clause (&optional arg)
+(defun py-end-of-clause ()
   "Without arg, go to the end of a compound statement.
 With arg , move point to end of clause at point.
 
@@ -2816,7 +2817,7 @@ Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive "P")
+  (interactive)
   (let ((regexp py-block-or-clause-re)
         (orig (point)))
     (py-end-base regexp orig (interactive-p))))
@@ -2826,7 +2827,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-previous-def-or-class 'py-beginning-of-def-or-class)
 (defun py-beginning-of-def-or-class (&optional class)
   "Move point to start of `def' or `class', whatever is next.
-With optional arg CLASS, move to the beginn of class definition.
+With optional CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
   (let* ((regexp (if (eq 4 (prefix-numeric-value class))
@@ -2841,7 +2842,7 @@ Returns position reached, if any, nil otherwise. "
 (defalias 'py-next-def-or-class 'py-end-of-def-or-class)
 (defun py-end-of-def-or-class (&optional class)
   "Move point beyond next `def' or `class' definition.
-With optional arg CLASS, move to the end of class exclusively.
+With optional CLASS, move to the end of class exclusively.
 Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let* ((orig (point))
@@ -3651,7 +3652,7 @@ local bindings to py-newline-and-indent."))
 (defun py-count-lines (&optional start end)
   "Count lines in accessible part of buffer.
 
-If no optional arguments are given but region is active,
+If no optional position arguments are given but region is active,
 use the region.
 Else count from point-min until curser position - (point)
 

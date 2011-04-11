@@ -16,7 +16,12 @@
 ;;
 ;;; Code:
 
+(require 'python-mode-test)
+
+
 (add-to-list 'load-path default-directory)
+(defvar bug-numbered-tests nil
+  "Tests following reports at https://bugs.launchpad.net/python-mode")
 
 (setq bug-numbered-tests
       (if (featurep 'xemacs)
@@ -34,6 +39,7 @@
          'dq-in-tqs-string-lp:328813-test
          'flexible-indentation-lp:328842-test
          'py-current-defun-lp:328846-test
+         'cls-pseudo-keyword-lp:328849-test
          'hungry-delete-backwards-lp:328853-test
          'hungry-delete-forward-lp:328853-test
          'beg-end-of-defun-lp:303622-test
@@ -210,6 +216,24 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 (defun py-current-defun-lp:328846-base ()
   (goto-char 331)
   (assert (string= "OrderedDict1" (py-current-defun)) nil "py-current-defun-lp:328846 test failed"))
+
+(defun cls-pseudo-keyword-lp:328849-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class Foo(object):
+    def summat(cls, x):
+          .....
+    summat = classmethod(summat)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'cls-pseudo-keyword-lp:328849-base arg teststring)))
+
+(defun cls-pseudo-keyword-lp:328849-base ()
+  (let ((font-lock-verbose nil))
+    (font-lock-mode 1)
+    (font-lock-fontify-buffer)
+    (goto-char 36)
+    (sit-for 0.1)
+    (assert (eq (get-char-property (point) 'face) 'py-pseudo-keyword-face) nil "cls-pseudo-keyword-lp:328849 test failed ")))
 
 (defun mark-decorators-lp:328851-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open. 
