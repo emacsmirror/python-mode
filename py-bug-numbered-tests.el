@@ -52,6 +52,7 @@
          'previous-statement-lp:637955-test
          'inbound-indentation-multiline-assignement-lp:629916-test
          'indentation-of-continuation-lines-lp:691185-test
+         'syntaxerror-on-py-execute-region-lp:691542-test
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test
          'py-decorators-face-lp:744335-test
@@ -674,7 +675,19 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (font-lock-fontify-buffer)
     (sit-for 0.1)
     (assert (eq (get-char-property (point) 'face) 'py-exception-name-face) nil "exceptions-not-highlighted-lp:473525 test failed")))
-    
+
+(defun syntaxerror-on-py-execute-region-lp:691542-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# -*- coding: utf-8 -*-
+print \"Poet Friedrich Hölderlin\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'syntaxerror-on-py-execute-region-lp:691542-base arg teststring)))
+
+(defun syntaxerror-on-py-execute-region-lp:691542-base ()
+  (forward-line -1)
+  (assert (py-execute-region (line-beginning-position) (line-end-position)) nil "syntaxerror-on-py-execute-region-lp:691542 test failed")) 
+
 (defun backslashed-continuation-line-indent-lp:742993-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open. 
 If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."

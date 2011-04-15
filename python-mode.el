@@ -478,11 +478,11 @@ set in py-execute-region and used in py-jump-to-exception.")
       erg)))
 
 (defalias 'py-in-list-p 'py-list-beginning-position)
-(defun py-list-beginning-position ()
+(defun py-list-beginning-position (&optional start)
   "Return lists beginning position, nil if not inside.
 Optional ARG indicates a start-position for `parse-partial-sexp'."
   (interactive)
-  (let* ((ppstart (or arg (point-min)))
+  (let* ((ppstart (or start (point-min)))
          (erg (nth 1 (parse-partial-sexp ppstart (point)))))
     (when (interactive-p) (message "%s" erg))
     erg))
@@ -1860,6 +1860,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
         (set-buffer buf)
         (python-mode)
+        (insert "#-*- coding: utf-8 -*-\n")
         (when needs-if
           (insert "if 1:\n")
           (setq py-line-number-offset (- py-line-number-offset 1)))

@@ -61,6 +61,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall previous-statement-lp:637955-test \
 --funcall inbound-indentation-multiline-assignement-lp:629916-test \
 --funcall indentation-of-continuation-lines-lp:691185-test \
+--funcall syntaxerror-on-py-execute-region-lp:691542-test \
 --funcall goto-beginning-of-tqs-lp:735328-test \
 --funcall class-treated-as-keyword-lp:709478-test \
 --funcall backslashed-continuation-line-indent-lp:742993-test \
