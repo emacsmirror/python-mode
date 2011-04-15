@@ -69,6 +69,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall indent-after-return-lp:745208-test \
 --funcall keep-assignements-column-lp:748198-test \
 --funcall indent-triplequoted-to-itself-lp:752252-test \
+--funcall multiline-listings-indent-lp:761946-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

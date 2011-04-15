@@ -59,6 +59,7 @@
          'indent-after-return-lp:745208-test
          'keep-assignements-column-lp:748198-test
          'indent-triplequoted-to-itself-lp:752252-test
+         'multiline-listings-indent-lp:761946-test
 
          )))
 
@@ -148,16 +149,17 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (py-bug-tests-intern 'nested-dictionaries-indent-lp:328791 arg teststring)))
 
 (defun nested-dictionaries-indent-lp:328791 ()
-  (goto-char (point-min))
-  (forward-line 2)
-  (assert (eq 14 (py-compute-indentation))))
-
-(defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
-  "With ARG greater 1 keep test buffer open. 
+  (let ((py-indent-honor-listing t))
+    (goto-char (point-min))
+    (forward-line 2)
+    (assert (eq 14 (py-compute-indentation))))
+  
+  (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
+    "With ARG greater 1 keep test buffer open. 
 If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
-  (interactive "p")
-  (when load-branch-function (funcall load-branch-function))
-  (let ((teststring "def f():
+    (interactive "p")
+    (when load-branch-function (funcall load-branch-function))
+    (let ((teststring "def f():
     \"\"\"
     class blah blah
     \"\"\"
@@ -170,7 +172,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
                 'python-statement',
                 ])
 "))
-  (py-bug-tests-intern 'mark-block-region-lp:328806 arg teststring)))
+      (py-bug-tests-intern 'mark-block-region-lp:328806 arg teststring))))
 
 (defun mark-block-region-lp:328806 ()
   (forward-line -2)
@@ -195,16 +197,17 @@ that, needs, to_be, wrapped)
   (py-bug-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
 
 (defun flexible-indentation-lp:328842 ()
-  (goto-char (point-min))
-  (forward-line 2)
-  (indent-according-to-mode)
-  (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
-  (forward-line 3)
-  (indent-according-to-mode)
-  (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
-  (forward-line 3)
-  (indent-according-to-mode)
-  (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed"))
+  (let ((py-indent-honor-listing t))
+    (goto-char (point-min))
+    (forward-line 2)
+    (indent-according-to-mode)
+    (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+    (forward-line 3)
+    (indent-according-to-mode)
+    (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")
+    (forward-line 3)
+    (indent-according-to-mode)
+    (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842 test failed")))
 
 (defun py-current-defun-lp:328846-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open. 
@@ -423,21 +426,22 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 
 (defun inbound-indentation-multiline-assignement-lp:629916 ()
+  (let ((py-indent-honor-listing t))
     (goto-char (point-min))
-  (forward-line 1)
-  (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
-  (end-of-line)
-  (search-backward "[")
-  (newline)
-  (indent-according-to-mode)
-  (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
-  (forward-line 1)
-  (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
-  (forward-line 1)
-  (indent-according-to-mode)
-  (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed"))
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
+    (end-of-line)
+    (search-backward "[")
+    (newline)
+    (indent-according-to-mode)
+    (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")
+    (forward-line 1)
+    (indent-according-to-mode)
+    (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916 test failed")))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open. 
@@ -843,6 +847,22 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun indent-triplequoted-to-itself-lp:752252-base ()
   (assert (eq 4 (py-compute-indentation)) nil "indent-triplequoted-to-itself-lp:752252 test failed"))
+
+(defun multiline-listings-indent-lp:761946-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    do_something_first(
+        a=1,
+                       b=2,
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'multiline-listings-indent-lp:761946-base arg teststring)))
+
+(defun multiline-listings-indent-lp:761946-base ()
+    (goto-char (point-min))
+    (forward-line 3)
+    (back-to-indentation)
+    (assert (eq 8 (py-compute-indentation)) nil "multiline-listings-indent-lp:761946 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

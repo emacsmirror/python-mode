@@ -115,6 +115,11 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-indent-honor-listing nil
+  "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-python-command "python"
   "*Shell command used to start Python interpreter."
   :type 'string
@@ -2213,14 +2218,22 @@ the new line indented."
                 (skip-chars-backward " \t\r\n\f")
                 (py-compute-indentation orig origline))
                ;; lists
-               ((nth 1 pps)
+               ((and (nth 1 pps) py-indent-honor-listing)
                 (progn (goto-char (+ py-lhs-inbound-indent (nth 1 pps)))
                        (when (looking-at "[ \t]+")
                          (goto-char (match-end 0)))
                        (current-column)))
+               ((nth 1 pps)
+                (save-excursion
+                  (py-beginning-of-statement)
+                  (+ (current-column) py-indent-offset)))
                ((py-backslashed-continuation-line-p)
                 (progn (py-beginning-of-statement)
                        (+ (current-indentation) py-continuation-offset)))
+               ;;               ((empty-line-p)
+               ;;                (skip-chars-backward " \t\r\n\f")
+               ;;                (py-beginning-of-statement)
+               ;;                (py-compute-indentation orig origline))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline))
@@ -2831,7 +2844,7 @@ http://docs.python.org/reference/compound_stmts.html"
 With optional CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (if (eq 4 (prefix-numeric-value class))
+  (let* ((regexp (if class
                      py-class-re
                    py-def-or-class-re))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
