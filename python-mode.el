@@ -990,6 +990,7 @@ Currently-active file is at the head of the list.")
           (where-is-internal 'newline-and-indent))
     ;; Most Pythoneers expect RET to do a `py-newline-and-indent' 
     (define-key map "\C-m" 'py-newline-and-indent)
+    (define-key map [(control return)] 'py-newline-and-dedent)
     (easy-menu-define py-menu map "Python Mode menu"
       `("Python"
 	:help "Python-specific Features"
@@ -2187,6 +2188,17 @@ the new line indented."
       (insert-char ?\n 1)
       (move-to-column ci))))
 
+(defalias 'py-newline-and-close-block 'py-newline-and-dedent)
+(defun py-newline-and-dedent ()
+  "Add a newline and indent to one level below current. "
+  (interactive "*")
+  (let ((cui (current-indentation))
+        goal)
+    (newline)
+    (when (< 0 cui)
+      (setq goal (py-compute-indentation))
+      (indent-to-column (- goal py-indent-offset)))))
+
 (defun py-compute-indentation (&optional orig origline)
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
@@ -2876,16 +2888,6 @@ Takes a list, INDENT and START position. "
                       (ignore-errors (<= indent (current-indentation)))))
           (when last (goto-char last))
           last))))
-
-(defun py-close-clause ()
-  "Insert a newline and dedent one level"
-  (interactive "*")
-  (let* ((erg (py-compute-indentation t))
-         (indent (if (< 0 erg)(- erg py-indent-offset) erg)))
-    (unless (empty-line-p) (end-of-line)
-            (forward-line 1))
-    (unless (empty-line-p)(newline)(forward-line -1))
-    (indent-to-column indent)))
 
 (defun py-go-to-keyword (regexp arg)
   "Returns a list, whose car is indentation, cdr position. "
