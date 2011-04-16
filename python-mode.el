@@ -3662,6 +3662,37 @@ local bindings to py-newline-and-indent."))
 
 
 ;; Helper functions
+(when (featurep 'xemacs) 
+  (unless (functionp 'looking-back)
+    ;; from GNU Emacs subr.el
+    (defun looking-back (regexp &optional limit greedy)
+      "Return non-nil if text before point matches regular expression REGEXP.
+    Like `looking-at' except matches before point, and is slower.
+    LIMIT if non-nil speeds up the search by specifying a minimum
+    starting position, to avoid checking matches that would start
+    before LIMIT.
+    If GREEDY is non-nil, extend the match backwards as far as possible,
+    stopping when a single additional previous character cannot be part
+    of a match for REGEXP."
+      (let ((start (point))
+            (pos
+             (save-excursion
+               (and (re-search-backward (concat "\\(?:" regexp "\\)\\=") limit t)
+                    (point)))))
+        (if (and greedy pos)
+            (save-restriction
+              (narrow-to-region (point-min) start)
+              (while (and (> pos (point-min))
+                          (save-excursion
+                            (goto-char pos)
+                            (backward-char 1)
+                            (looking-at (concat "\\(?:"  regexp "\\)\\'"))))
+                (setq pos (1- pos)))
+              (save-excursion
+                (goto-char pos)
+                (looking-at (concat "\\(?:"  regexp "\\)\\'")))))
+        (not (null pos))))))
+
 (defun py-count-lines (&optional start end)
   "Count lines in accessible part of buffer.
 
