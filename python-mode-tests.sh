@@ -70,6 +70,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall keep-assignements-column-lp:748198-test \
 --funcall indent-triplequoted-to-itself-lp:752252-test \
 --funcall multiline-listings-indent-lp:761946-test \
+--funcall new-page-char-causes-loop-lp:762498-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

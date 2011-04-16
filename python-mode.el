@@ -115,7 +115,7 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
-(defcustom py-indent-honor-listing nil
+(defcustom py-indent-honors-multiline-listing nil
   "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
   :type 'boolean
   :group 'python)
@@ -465,10 +465,8 @@ set in py-execute-region and used in py-jump-to-exception.")
    ((nth 4 ppss) 'comment)
    (t nil))))
 
-(defcustom empty-line-p-chars "^[ \t\r]*$"
-  "Empty-line-p-chars."
-  :type 'regexp
-  :group 'convenience)
+(defvar empty-line-p-chars "^[ \t\r\f]*$"
+  "Empty-line-p-chars.")
 
 ;;;###autoload
 (defun empty-line-p (&optional iact)
@@ -1362,7 +1360,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
                                         'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords) "\\|")) nil "#"
                                         (lambda (arg)
                                           (py-goto-beyond-block)
-                                          (skip-chars-backward " \t\n"))
+                                          (skip-chars-backward " \v\f\t\n"))
                                         nil))
     ;; Now do the automagical guessing
   (if py-smart-indentation
@@ -2218,7 +2216,7 @@ the new line indented."
                 (skip-chars-backward " \t\r\n\f")
                 (py-compute-indentation orig origline))
                ;; lists
-               ((and (nth 1 pps) py-indent-honor-listing)
+               ((and (nth 1 pps) py-indent-honors-multiline-listing)
                 (progn (goto-char (+ py-lhs-inbound-indent (nth 1 pps)))
                        (when (looking-at "[ \t]+")
                          (goto-char (match-end 0)))
@@ -2230,10 +2228,6 @@ the new line indented."
                ((py-backslashed-continuation-line-p)
                 (progn (py-beginning-of-statement)
                        (+ (current-indentation) py-continuation-offset)))
-               ;;               ((empty-line-p)
-               ;;                (skip-chars-backward " \t\r\n\f")
-               ;;                (py-beginning-of-statement)
-               ;;                (py-compute-indentation orig origline))
                ((not (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline))
@@ -2551,60 +2545,63 @@ http://docs.python.org/reference/compound_stmts.html
     (if (and (bobp) orig)
         (point)
       (unless (bobp)
-        (lexical-let* ((orig (or orig (point)))
-                       (cui (current-indentation))
-                       (origline (or origline (py-count-lines)))
-                       (pps (parse-partial-sexp (point-min) (point)))
-                       (erg
-                        (cond
-                         ((empty-line-p)
-                          (forward-line -1)
-                          (while (and (not (bobp))(empty-line-p))
-                            (forward-line -1))
-                          (end-of-line)
-                          (py-beginning-of-statement orig origline))
-                         ;; if in string
-                         ((and (nth 3 pps)(nth 8 pps)
-                               (save-excursion
-                                 (ignore-errors
-                                   (goto-char (nth 2 pps))) 
-                                 ;; (not (eq origline (py-count-lines)))
-                                 ))
-                          (goto-char (nth 2 pps))
-                          (py-beginning-of-statement orig origline))
-                         ;; comments left, as strings are done
-                         ((nth 8 pps)
-                          (goto-char (1- (nth 8 pps)))
-                          (py-beginning-of-statement orig origline))
-                         ((looking-at "[ \t]*#")
-                          (forward-line -1) (end-of-line)
-                          (py-beginning-of-statement orig origline))
-                         ((py-backslashed-continuation-line-p)
-                          (forward-line -1)
-                          (py-beginning-of-statement orig origline))
-                         ;; character address of start of innermost containing list; nil if none.
-                         ((nth 1 pps)
-                          (goto-char (nth 1 pps))
-                          (forward-char -1)
-                          (py-beginning-of-statement orig origline))
-                         ((and (eq (current-indentation) (current-column))
-                               (eq (point) orig) (not (bolp)))
-                          (beginning-of-line)
-                          (py-beginning-of-statement orig origline))
-                         ((and
-                           (not (string= "" (make-string (- orig (point)) ? )))
-                           (looking-at (make-string (- orig (point)) ? )))
-                          (forward-line -1)
-                          (py-beginning-of-statement orig origline))
-                         ((and (eq (point) orig)(or (bolp) (<= (current-column)(current-indentation))))
-                          (forward-line -1)
-                          (end-of-line)
-                          (skip-chars-backward " \t")
-                          (py-beginning-of-statement orig origline))
-                         ((not (eq (current-column) (current-indentation)))
-                          (back-to-indentation)
-                          (py-beginning-of-statement orig origline))
-                         (t (point)))))
+        (let ((orig (or orig (point)))
+              (cui (current-indentation))
+              (origline (or origline (py-count-lines)))
+              (pps (parse-partial-sexp (point-min) (point)))
+              erg)
+          (unless (< (point) orig)(skip-chars-backward " \t\r\n\f"))
+          
+          (setq erg
+                (cond
+                 ((empty-line-p)
+                  (forward-line -1)
+                  (while (and (not (bobp))(empty-line-p))
+                    (forward-line -1))
+                  (end-of-line)
+                  (py-beginning-of-statement orig origline))
+                 ;; if in string
+                 ((and (nth 3 pps)(nth 8 pps)
+                       (save-excursion
+                         (ignore-errors
+                           (goto-char (nth 2 pps))) 
+                         ;; (not (eq origline (py-count-lines)))
+                         ))
+                  (goto-char (nth 2 pps))
+                  (py-beginning-of-statement orig origline))
+                 ;; comments left, as strings are done
+                 ((nth 8 pps)
+                  (goto-char (1- (nth 8 pps)))
+                  (py-beginning-of-statement orig origline))
+                 ((looking-at "[ \t]*#")
+                  (forward-line -1) (end-of-line)
+                  (py-beginning-of-statement orig origline))
+                 ((py-backslashed-continuation-line-p)
+                  (forward-line -1)
+                  (py-beginning-of-statement orig origline))
+                 ;; character address of start of innermost containing list; nil if none.
+                 ((nth 1 pps)
+                  (goto-char (nth 1 pps))
+                  (forward-char -1)
+                  (py-beginning-of-statement orig origline))
+                 ((and (eq (current-indentation) (current-column))
+                       (eq (point) orig) (not (bolp)))
+                  (beginning-of-line)
+                  (py-beginning-of-statement orig origline))
+                 ((and
+                   (not (string= "" (make-string (- orig (point)) ? )))
+                   (looking-at (make-string (- orig (point)) ? )))
+                  (forward-line -1)
+                  (py-beginning-of-statement orig origline))
+                 ((not (eq (current-column) (current-indentation)))
+                  (back-to-indentation)
+                  (py-beginning-of-statement orig origline))
+                 ((and (eq (point) orig)(or (bolp) (<= (current-column)(current-indentation))))
+                  (forward-line -1)
+                  (end-of-line)
+                  (skip-chars-backward " \t")
+                  (py-beginning-of-statement orig origline))
+                 (t (point))))
           (when (interactive-p) (message "%s" erg))
           erg)))))
 

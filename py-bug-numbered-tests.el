@@ -60,6 +60,7 @@
          'keep-assignements-column-lp:748198-test
          'indent-triplequoted-to-itself-lp:752252-test
          'multiline-listings-indent-lp:761946-test
+         'new-page-char-causes-loop-lp:762498-test
 
          )))
 
@@ -149,7 +150,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (py-bug-tests-intern 'nested-dictionaries-indent-lp:328791 arg teststring)))
 
 (defun nested-dictionaries-indent-lp:328791 ()
-  (let ((py-indent-honor-listing t))
+  (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 2)
     (assert (eq 14 (py-compute-indentation))))
@@ -197,7 +198,7 @@ that, needs, to_be, wrapped)
   (py-bug-tests-intern 'flexible-indentation-lp:328842 arg teststring)))
 
 (defun flexible-indentation-lp:328842 ()
-  (let ((py-indent-honor-listing t))
+  (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 2)
     (indent-according-to-mode)
@@ -426,7 +427,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 
 (defun inbound-indentation-multiline-assignement-lp:629916 ()
-  (let ((py-indent-honor-listing t))
+  (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 1)
     (indent-according-to-mode)
@@ -863,6 +864,21 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (forward-line 3)
     (back-to-indentation)
     (assert (eq 8 (py-compute-indentation)) nil "multiline-listings-indent-lp:761946 test failed"))
+
+(defun new-page-char-causes-loop-lp:762498-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class Foo:
+    def baz(self):
+
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'new-page-char-causes-loop-lp:762498-base arg teststring)))
+
+(defun new-page-char-causes-loop-lp:762498-base ()
+    (goto-char (point-min))
+    (forward-line 2)
+    (assert (eq 8 (py-compute-indentation)) "new-page-char-causes-loop-lp:762498 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
