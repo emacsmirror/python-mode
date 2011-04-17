@@ -2236,7 +2236,7 @@ the new line indented."
                ((nth 1 pps)
                 (save-excursion
                   (py-beginning-of-statement)
-                  (+ (current-column) py-indent-offset)))
+                  (+ (current-column) (* (nth 0 pps) py-indent-offset))))
                ((py-backslashed-continuation-line-p)
                 (progn (py-beginning-of-statement)
                        (+ (current-indentation) py-continuation-offset)))

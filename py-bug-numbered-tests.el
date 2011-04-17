@@ -61,6 +61,7 @@
          'indent-triplequoted-to-itself-lp:752252-test
          'multiline-listings-indent-lp:761946-test
          'new-page-char-causes-loop-lp:762498-test
+         'nested-dicts-indent-lp:763756-test
 
          )))
 
@@ -879,6 +880,29 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (goto-char (point-min))
     (forward-line 2)
     (assert (eq 8 (py-compute-indentation)) "new-page-char-causes-loop-lp:762498 test failed"))
+
+(defun nested-dicts-indent-lp:763756-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "feature_operation_matrix = {
+    \"character\": {
+        \"kill\": \"{ctrl-k}\",{
+            }
+        }
+    }
+))
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'nested-dicts-indent-lp:763756-base arg teststring)))
+
+(defun nested-dicts-indent-lp:763756-base ()
+  (let ((py-indent-honors-multiline-listing nil))
+    (goto-char (point-min))
+    (forward-line 1)
+    (assert (eq 4 (py-compute-indentation)) nil "nested-dicts-indent-lp:763756 test failed")
+    (forward-line 1)
+    (assert (eq 8 (py-compute-indentation)) nil "nested-dicts-indent-lp:763756 test failed")
+    (forward-line 1)
+    (assert (eq 12 (py-compute-indentation)) nil "nested-dicts-indent-lp:763756 test failed")))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
