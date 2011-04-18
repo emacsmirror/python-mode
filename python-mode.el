@@ -627,14 +627,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 
 ;; 2009-09-10 a.roehler@web.de changed section end
 
-(defconst py-emacs-features
-  (let (features)
-   features)
-  "A list of features extant in the Emacs you are using.
-There are many flavors of Emacs out there, with different levels of
-support for features needed by `python-mode'.")
-
-
 ;; ;; Face for None, True, False, self, and Ellipsis
 (defface py-pseudo-keyword-face
   '((t (:inherit font-lock-keyword-face)))
@@ -1671,10 +1663,6 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 
 
 ;;; Subprocess commands
-
-;; only used when (memq 'broken-temp-names py-emacs-features)
-(defvar py-serial-number 0)
-(defvar py-exception-buffer nil)
 (defvar py-output-buffer "*Python Output*")
 (make-variable-buffer-local 'py-output-buffer)
 
@@ -1837,15 +1825,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
   ;; Skip ahead to the first non-blank line
   (let* ((proc (get-process py-which-bufname))
-         (temp (if (memq 'broken-temp-names py-emacs-features)
-                   (let
-                       ((sn py-serial-number)
-                        (pid (and (fboundp 'emacs-pid) (emacs-pid))))
-                     (setq py-serial-number (1+ py-serial-number))
-                     (if pid
-                         (format "python-%d-%d" sn pid)
-                       (format "python-%d" sn)))
-                 (make-temp-name "python-")))
+         (temp (make-temp-name "python-"))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (cur (current-buffer))
          (buf (get-buffer-create file))
