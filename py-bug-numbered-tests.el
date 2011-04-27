@@ -62,6 +62,7 @@
          'new-page-char-causes-loop-lp:762498-test
          'nested-dicts-indent-lp:763756-test
          'bad-indent-after-except-lp:771289-test
+         'indent-open-paren-not-last-lp:771291-test
          
          )))
 
@@ -156,14 +157,14 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
   (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 2)
-    (assert (eq 14 (py-compute-indentation))))
-  
-  (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
-    "With ARG greater 1 keep test buffer open. 
+    (assert (eq 14 (py-compute-indentation)))))
+
+(defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
+  "With ARG greater 1 keep test buffer open. 
 If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked."
-    (interactive "p")
-    (when load-branch-function (funcall load-branch-function))
-    (let ((teststring "def f():
+  (interactive "p")
+  (when load-branch-function (funcall load-branch-function))
+  (let ((teststring "def f():
     \"\"\"
     class blah blah
     \"\"\"
@@ -176,9 +177,9 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
                 'python-statement',
                 ])
 "))
-      (py-bug-tests-intern 'mark-block-region-lp:328806 arg teststring))))
+    (py-bug-tests-intern 'mark-block-region-lp:328806 arg teststring)))
 
-(defun mark-block-region-lp:328806 ()
+(defun mark-block-region-lp:328806-base ()
   (forward-line -2)
   (py-mark-block)
   (assert (< (region-beginning) (region-end)) nil "mark-block-region-lp:328806 test failed!"))
@@ -731,7 +732,6 @@ print \"Poet Friedrich Hölderlin\"
     (set-buffer oldbuf)
     (forward-line -1)
     (py-execute-region (line-beginning-position) (line-end-position))
-    (set-buffer "*Python Output*")
     (switch-to-buffer (current-buffer))
     (assert (search-forward "Hölderlin") nil "syntaxerror-on-py-execute-region-lp:691542 test failed")))
 
@@ -957,6 +957,16 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun bad-indent-after-except-lp:771289-base ()
   (assert (eq 8 (py-compute-indentation)) "bad-indent-after-except-lp:771289 test failed"))
+
+(defun indent-open-paren-not-last-lp:771291-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    thing = call_it(with_something,"))
+    (when load-branch-function (funcall load-branch-function))
+    (py-bug-tests-intern 'indent-open-paren-not-last-lp:771291-base arg teststring)))
+
+(defun indent-open-paren-not-last-lp:771291-base ()
+  (assert (eq 20 (py-compute-indentation)) nil "indent-open-paren-not-last-lp:771291 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

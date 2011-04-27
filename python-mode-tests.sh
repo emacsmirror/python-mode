@@ -74,6 +74,7 @@ $HOME/$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featur
 --funcall new-page-char-causes-loop-lp:762498-test \
 --funcall nested-dicts-indent-lp:763756-test \
 --funcall bad-indent-after-except-lp:771289-test \
+--funcall indent-open-paren-not-last-lp:771291-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \
