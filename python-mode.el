@@ -939,18 +939,18 @@ Currently-active file is at the head of the list.")
 	 :help "Shift by a single indentation step"]
 	"-"
 	["Mark block" py-mark-block
-	 :help "Mark innermost block around point"]
+	 :help "Mark innermost block at point"]
 	["Mark def/class" mark-defun
-	 :help "Mark innermost definition around point"]
+	 :help "Mark innermost definition at point"]
 	"-"
 	["Start of block" py-beginning-of-block
-	 :help "Go to start of innermost definition around point"]
+	 :help "Go to start of innermost definition at point"]
 	["End of block" py-end-of-block
-	 :help "Go to end of innermost definition around point"]
+	 :help "Go to end of innermost definition at point"]
 	["Start of def/class" beginning-of-defun
-	 :help "Go to start of innermost definition around point"]
+	 :help "Go to start of innermost definition at point"]
 	["End of def/class" end-of-defun
-	 :help "Go to end of innermost definition around point"]
+	 :help "Go to end of innermost definition at point"]
 	"-"
 	("Templates..."
 	 :help "Expand templates for compound statements"
@@ -1771,14 +1771,21 @@ window) so you can see it, and a comment of the form
 is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
   ;; Skip ahead to the first non-blank line
-  (let* ((proc (get-process py-which-bufname))
-         (temp (make-temp-name "python-"))
+  (let* ((cur (current-buffer))
+         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+                            (processp (get-process py-which-bufname))
+                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (procbuf (or first (progn
+                              (py-shell)
+                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (proc (get-process py-which-bufname))
+         (temp (make-temp-name py-which-bufname))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
-         (cur (current-buffer))
          (buf (get-buffer-create file))
          shell)
     ;; Write the contents of the buffer, watching out for indented regions.
     (save-excursion
+      (set-buffer cur)
       (goto-char start)
       (beginning-of-line)
       (while (and (looking-at "\\s *$")
@@ -1821,19 +1828,18 @@ is inserted at the end.  See also the command `py-clear-queue'."
      ;; execution there.
      (proc
       ;; use the existing python shell
-      (save-excursion
-        (set-buffer buf)
-        (write-region (point-min) (point-max) file nil 'nomsg))
-      (if (not py-file-queue)
-          (py-execute-file proc file)
-        (message "File %s queued for execution" file))
-      (setq py-file-queue (append py-file-queue (list file)))
-      (setq py-exception-buffer (cons file (current-buffer))))
+      (set-buffer buf)
+      (write-region (point-min) (point-max) file nil 'nomsg)
+      (py-execute-file proc file)
+      (setq py-exception-buffer (cons file (current-buffer)))
+      (switch-to-buffer procbuf))
      (t
       ;; TBD: a horrible hack, but why create new Custom variables?
-      (let ((cmd (concat py-which-shell (if (string-equal py-which-bufname
-                                                          "Jython")
-                                            " -" ""))))
+      (let ((cmd 
+             ;;             (concat py-which-shell (if (string-equal py-which-bufname
+             (concat shell (if (string-equal py-which-bufname
+                                             "Jython")
+                               " -" ""))))
         ;; otherwise either run it synchronously in a subprocess
         (save-excursion
           (set-buffer buf)
@@ -1847,9 +1853,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
           (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
             (pop-to-buffer py-output-buffer)
             (if err-p
-                (pop-to-buffer py-exception-buffer)))
-          ))
-      ))
+                (pop-to-buffer py-exception-buffer)))))))
     ;; Clean up after ourselves.
     (kill-buffer buf)))
 
@@ -3095,42 +3099,42 @@ For stricter sense specify regexp. "
 
 ;; Mark forms
 (defun py-mark-expression ()
-  "Mark expression around point.
+  "Mark expression at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "expression")
   (exchange-point-and-mark))
 
 (defun py-mark-partial-expression ()
-  "Mark partial-expression around point.
+  "Mark partial-expression at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "partial-expression")
   (exchange-point-and-mark))
 
 (defun py-mark-statement ()
-  "Mark statement around point.
+  "Mark statement at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "statement")
   (exchange-point-and-mark))
 
 (defun py-mark-block ()
-  "Mark block around point.
+  "Mark block at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "block")
   (exchange-point-and-mark))
 
 (defun py-mark-block-or-clause ()
-  "Mark block-or-clause around point.
+  "Mark block-or-clause at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "block-or-clause")
   (exchange-point-and-mark))
 
 (defun py-mark-def (&optional arg)
-  "Mark def around point.
+  "Mark def at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
 Returns beginning and end positions of marked area, a cons."
@@ -3141,7 +3145,7 @@ Returns beginning and end positions of marked area, a cons."
     (exchange-point-and-mark)))
 
 (defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class around point.
+  "Mark def-or-class at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
 Returns beginning and end positions of marked area, a cons."
@@ -3151,7 +3155,7 @@ Returns beginning and end positions of marked area, a cons."
     (exchange-point-and-mark)))
 
 (defun py-mark-class (&optional arg)
-  "Mark class around point.
+  "Mark class at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are marked too.
 Returns beginning and end positions of marked area, a cons."
@@ -3162,7 +3166,7 @@ Returns beginning and end positions of marked area, a cons."
     (exchange-point-and-mark)))
 
 (defun py-mark-clause ()
-  "Mark clause around point.
+  "Mark clause at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "clause")
@@ -3193,42 +3197,42 @@ Returns beginning and end positions of marked area, a cons."
 
 ;; Copying
 (defun py-copy-expression ()
-  "Mark expression around point.
+  "Mark expression at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "expression")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-partial-expression ()
-  "Mark partial-expression around point.
+  "Mark partial-expression at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "partial-expression")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-statement ()
-  "Mark statement around point.
+  "Mark statement at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "statement")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-block ()
-  "Mark block around point.
+  "Mark block at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "block")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-block-or-clause ()
-  "Mark block-or-clause around point.
+  "Mark block-or-clause at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "block-or-clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-def (&optional arg)
-  "Mark def around point.
+  "Mark def at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
 Returns beginning and end positions of marked area, a cons."
@@ -3239,7 +3243,7 @@ Returns beginning and end positions of marked area, a cons."
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-def-or-class (&optional arg)
-  "Mark def-or-class around point.
+  "Mark def-or-class at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
 Returns beginning and end positions of marked area, a cons."
@@ -3249,7 +3253,7 @@ Returns beginning and end positions of marked area, a cons."
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-class (&optional arg)
-  "Mark class around point.
+  "Mark class at point.
 
 With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
 Returns beginning and end positions of marked area, a cons."
@@ -3260,7 +3264,7 @@ Returns beginning and end positions of marked area, a cons."
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defun py-copy-clause ()
-  "Mark clause around point.
+  "Mark clause at point.
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let ((erg (py-mark-base "clause")))
@@ -3269,56 +3273,56 @@ Returns beginning and end positions of marked area, a cons."
 
 ;; Deleting
 (defun py-kill-expression ()
-  "Delete expression around point.
+  "Delete expression at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "expression")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-partial-expression ()
-  "Delete partial-expression around point.
+  "Delete partial-expression at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "partial-expression")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-statement ()
-  "Delete statement around point.
+  "Delete statement at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "statement")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block ()
-  "Delete block around point.
+  "Delete block at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "block")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block-or-clause ()
-  "Delete block-or-clause around point.
+  "Delete block-or-clause at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "block-or-clause")))
     (kill-region (region-beginning) (region-end))))
 
 (defun py-kill-def-or-class ()
-  "Delete def-or-class around point.
+  "Delete def-or-class at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "def-or-class")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-class ()
-  "Delete class around point.
+  "Delete class at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "class")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-clause ()
-  "Delete clause around point.
+  "Delete clause at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive)
   (let ((erg (py-mark-base "clause")))
@@ -3965,7 +3969,7 @@ These are Python temporary files awaiting execution."
 ;;; see http://mail.python.org/pipermail/python-list/2002-May/103189.html
 
 (defun py-fill-comment (&optional justify)
-  "Fill the comment paragraph around point"
+  "Fill the comment paragraph at point"
   (let (;; Non-nil if the current line contains a comment.
         has-comment
 

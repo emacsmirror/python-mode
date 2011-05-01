@@ -711,29 +711,23 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 (defun syntaxerror-on-py-execute-region-lp:691542-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "# -*- coding: utf-8 -*-
-print \"Poet Friedrich Hölderlin\"
-"))
+print \"Poet Friedrich Hölderlin\""))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-tests-intern 'syntaxerror-on-py-execute-region-lp:691542-base arg teststring)))
 
 (defun syntaxerror-on-py-execute-region-lp:691542-base ()
   (let ((oldbuf (current-buffer))
-        ;;        (default-directory "~/arbeit/emacs/python-modes/components-python-mode/")
         erg kill-buffer-query-functions py-switch-to-python)
-    (when (buffer-live-p (get-buffer "*Python*"))
-      (when (processp (get-process "Python"))
-        (set-process-query-on-exit-flag (get-process "Python") nil)
-        (process-kill-without-query (get-process "Python")))
-      (kill-process "*Python*")
-      (kill-buffer "*Python*"))
-    (py-shell)
-;;    (set-buffer-modified-p 'nil)
-    (set-buffer oldbuf)
-    (forward-line -1)
+    (when (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+      (when 
+          (processp (get-process py-which-bufname))
+        
+        (set-process-query-on-exit-flag (get-process py-which-bufname) nil))
+      (kill-buffer (concat "*" py-which-bufname "*")))
     (py-execute-region (line-beginning-position) (line-end-position))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
-    (assert (or (search-forward "Hölderlin")
-                (search-backward "Hölderlin")) nil "syntaxerror-on-py-execute-region-lp:691542 test failed")))
+    (assert (or (search-forward "Hölderlin" nil t 1)
+                (search-backward "Hölderlin" nil t 1)) nil "syntaxerror-on-py-execute-region-lp:691542 test failed")))
 
 (defun backslashed-continuation-line-indent-lp:742993-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open. 
