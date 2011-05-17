@@ -97,4 +97,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 
 
 # test not ready
+# passes only when run from edebug
+# assistance appreciated
+
 # --funcall syntaxerror-on-py-execute-region-lp:691542-test \

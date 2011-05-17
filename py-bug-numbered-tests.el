@@ -51,7 +51,9 @@
          'previous-statement-lp:637955-test
          'inbound-indentation-multiline-assignement-lp:629916-test
          'indentation-of-continuation-lines-lp:691185-test
-;;         'syntaxerror-on-py-execute-region-lp:691542-test
+         ;; test passes only when run from edebug
+         ;; assistance appreciated
+         ;; 'syntaxerror-on-py-execute-region-lp:691542-test
          'goto-beginning-of-tqs-lp:735328-test
          'class-treated-as-keyword-lp:709478-test
          'py-decorators-face-lp:744335-test
@@ -726,6 +728,7 @@ print \"Poet Friedrich Hölderlin\""))
       (kill-buffer (concat "*" py-which-bufname "*")))
     (py-execute-region (line-beginning-position) (line-end-position))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (set-buffer (get-buffer (concat "*" py-which-bufname "*")))
     (assert (or (search-forward "Hölderlin" nil t 1)
                 (search-backward "Hölderlin" nil t 1)) nil "syntaxerror-on-py-execute-region-lp:691542 test failed")))
 
