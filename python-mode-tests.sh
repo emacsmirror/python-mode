@@ -83,6 +83,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall bad-indent-after-except-lp:771289-test \
 --funcall indent-open-paren-not-last-lp:771291-test \
 --funcall wrong-indent-after-else-lp:772610-test \
+--funcall except-indents-wrong-lp:784432-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

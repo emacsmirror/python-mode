@@ -1744,6 +1744,7 @@ filter."
     (message "%d pending files de-queued." n)))
 
 
+(defvar py-exception-buffer nil)
 (defun py-execute-region (start end &optional async)
   "Execute the region in a Python interpreter.
 
@@ -2178,8 +2179,10 @@ the new line indented."
                ((looking-at py-if-clause-re)
                 (py-beginning-of-if-block)
                 (current-indentation))
-               ((looking-at py-try-clause-re)
+               ((and (looking-at py-try-clause-re)(eq origline (py-count-lines)))
                 (py-beginning-of-try-block)
+                (current-indentation))
+               ((looking-at py-try-clause-re)
                 (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-clause-re) (< (py-count-lines) origline))
                 (+ (current-indentation) py-indent-offset))
@@ -2325,45 +2328,6 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
           (setq erg (point))))
       (when iact (message "%s" erg))
       erg)))
-
-;; only called when py-use-parse-partial-sexp is nil
-(defun py-adapt-indent-of-multiline-assignments (indent)
-  "Compute indents when inside a multi-line assignment. "
-  (let ((orig (point)))
-    (cond
-     ((looking-at ")")
-      (let ((erg (progn
-                   (ar-beginning-of-parentized-atpt)
-                   (- (current-column) py-indent-in-delimiter))))
-        (setq indent erg)))
-     ((looking-at "]")
-      (let ((erg (progn
-                   (ar-beginning-of-bracketed-atpt)
-                   (- (current-column) py-indent-in-delimiter))))
-        (setq indent erg)))
-     (t
-      (let ((brackets-nesting (in-form-base "\[" "]" nil (point) nil nil t))
-            (parents-nesting (in-form-base "(" ")" nil (point) nil nil t)))
-        (let* ((brackets-beg (when (< 0 brackets-nesting)
-                               (ar-bracketed-beginning-position-atpt)))
-               (parents-beg (when (< 0 parents-nesting)
-                              (ar-parentized-beginning-position-atpt))))
-          (cond ((ignore-errors (< brackets-beg parents-beg))
-                 (goto-char brackets-beg)
-                 (setq indent (- (current-column) py-indent-in-delimiter)))
-                ((ignore-errors (> brackets-beg parents-beg))
-                 (goto-char parents-beg)
-                 (setq indent (- (current-column) py-indent-in-delimiter))
-                 (when brackets-beg
-                   (setq indent (+ py-indent-in-delimiter indent))))
-                (brackets-beg
-                 (goto-char brackets-beg)
-                 (setq indent (- (current-column) py-indent-in-delimiter)))
-                (parents-beg
-                 (goto-char parents-beg)
-                 (setq indent (- (current-column) py-indent-in-delimiter))))))))
-    (goto-char orig)
-    indent))
 
 (defun py-guess-indent-offset (&optional global)
   "Guess a value for, and change, `py-indent-offset'.
@@ -3849,6 +3813,21 @@ If nesting level is zero, return nil."
     (let ((erg (eq (char-before (point)) ?\\ )))
       (when (interactive-p) (message "%s" erg))
       erg)))
+
+(defun py-beginning-of-statement-p ()
+  (interactive)
+  "Returns position, if cursor is at the beginning of a statement, nil otherwise. "
+  (let ((orig (point)))
+    (save-excursion
+      (py-end-of-statement)
+      (py-beginning-of-statement)
+      (when
+          ;;          (or 
+          (eq orig (point))
+        ;;                (and (looking-back "^[ \t]+") (<=  (line-beginning-position) orig)(<= orig (point))))
+        (when (interactive-p)
+          (message "%s" orig))
+        orig))))
 
 (defun py-statement-closes-block-p ()
   "Return t iff the current statement closes a block.

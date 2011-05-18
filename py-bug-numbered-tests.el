@@ -66,6 +66,7 @@
          'bad-indent-after-except-lp:771289-test
          'indent-open-paren-not-last-lp:771291-test
          'wrong-indent-after-else-lp:772610-test
+         'except-indents-wrong-lp:784432-test
          
          )))
 
@@ -976,6 +977,21 @@ else:
 
 (defun wrong-indent-after-else-lp:772610-base ()
     (assert (eq 4 (py-compute-indentation)) nil "wrong-indent-after-else-lp:772610 test failed"))
+
+(defun except-indents-wrong-lp:784432-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "try:
+    block1
+except:
+    block2"))
+    (when load-branch-function (funcall load-branch-function))
+    (py-bug-tests-intern 'except-indents-wrong-lp:784432-base arg teststring)))
+
+(defun except-indents-wrong-lp:784432-base ()
+  (goto-char 17)
+  (assert (eq 0 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #1 test failed")
+  (goto-char 25)
+  (assert (eq 4 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #2 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
