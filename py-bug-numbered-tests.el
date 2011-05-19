@@ -69,6 +69,7 @@
          'except-indents-wrong-lp:784432-test
          'indent-explicitly-set-in-multiline-tqs-lp:784225-test
          'explicitly-indent-in-list-lp:785018-test
+         'explicit-backslashed-continuation-line-indent-lp:785091-test
          
          )))
 
@@ -1032,6 +1033,17 @@ except:
 
 (defun explicitly-indent-in-list-lp:785018-base ()
     (assert (eq 8 (py-compute-indentation)) nil "explicitly-dedented-in-list-lp:784225 test failed"))
+
+(defun explicit-backslashed-continuation-line-indent-lp:785091-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "        a_verry_loonng_variable_nammmee = \\
+                                        val \\
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'explicit-backslashed-continuation-line-indent-lp:785091-base arg teststring)))
+
+(defun explicit-backslashed-continuation-line-indent-lp:785091-base ()
+    (assert (eq 40 (py-compute-indentation)) nil "explicit-backslashed-continuation-line-indent-lp:785091  test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
