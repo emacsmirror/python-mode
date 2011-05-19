@@ -2142,14 +2142,18 @@ the new line indented."
       (let* ((orig (or orig (point))) 
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
-             erg indent)
+             erg indent this-line)
         ;;        (back-to-indentation)
         (setq indent
               (cond
                ;; (py-in-triplequoted-string-p)
-               ((and (nth 3 pps)(nth 8 pps)(save-excursion (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (py-count-lines)))))
-                (goto-char (nth 2 pps))
-                (current-column))
+               ((and (nth 3 pps)(nth 8 pps)(save-excursion (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (setq this-line (py-count-lines))))))
+                (if (< 1 (- origline this-line))
+                    (save-excursion
+                      (forward-line -1)
+                      (current-indentation))
+                  (goto-char (nth 2 pps))
+                  (current-column)))
                ;; beginning of statement from before got beginning
                ((looking-at "\"\"\"\\|'''")
                 (py-beginning-of-statement)
@@ -2168,11 +2172,18 @@ the new line indented."
                ((nth 1 pps)
                 (save-excursion
                   (goto-char (nth 1 pps))
-                  (if (looking-at "\\s([ \t]*$")
-                      (progn
-                        (back-to-indentation)
-                        (+ (current-column) py-indent-offset))
-                    (+ (current-column) (* (nth 0 pps))))))
+                  (setq this-line (py-count-lines))
+                  (if (< 1 (- origline this-line))
+                      (py-fetch-previous-indent orig)
+                    (if (nth 2 pps)
+                        (progn
+                          (goto-char (nth 2 pps))
+                          (current-column))
+                      (if (looking-at "\\s([ \t]*$")
+                          (progn
+                            (back-to-indentation)
+                            (+ (current-column) py-indent-offset))
+                        (+ (current-column) (* (nth 0 pps))))))))
                ((py-backslashed-continuation-line-p)
                 (progn (py-beginning-of-statement)
                        (+ (current-indentation) py-continuation-offset)))
@@ -2215,6 +2226,15 @@ the new line indented."
                (t (current-indentation))))
         (when (interactive-p) (message "%s" indent))
         indent))))
+
+(defun py-fetch-previous-indent (orig)
+  "Report the preceding indent. "
+  (save-excursion
+    (goto-char orig) 
+    (forward-line -1)
+    (end-of-line)
+    (skip-chars-backward " \t\r\n\f")
+    (current-indentation)))
 
 (defalias 'py-in-list-p 'py-list-beginning-position)
 (defun py-list-beginning-position (&optional start)

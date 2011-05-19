@@ -67,6 +67,8 @@
          'indent-open-paren-not-last-lp:771291-test
          'wrong-indent-after-else-lp:772610-test
          'except-indents-wrong-lp:784432-test
+         'indent-explicitly-set-in-multiline-tqs-lp:784225-test
+         'explicitly-indent-in-list-lp:785018-test
          
          )))
 
@@ -958,7 +960,18 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun indent-open-paren-not-last-lp:771291-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "def foo():
+  (let ((teststring "
+
+# Put point after the comma on the last line and hit return. You
+# end up in column 8 (i.e. under the 'g' in 'thing') when you
+# should end up in column 20 (under the 'w' in 'with_something').
+# Note that this is a different case than previously reported,
+# where the open paren was the last thing on the line. When the
+# open paren is *not* the last thing on the line, the next line's
+# indentation should line up under the first non-whitespace
+# character following the open paren.
+
+def foo():
     thing = call_it(with_something,"))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-tests-intern 'indent-open-paren-not-last-lp:771291-base arg teststring)))
@@ -992,6 +1005,33 @@ except:
   (assert (eq 0 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #1 test failed")
   (goto-char 25)
   (assert (eq 4 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #2 test failed"))
+
+(defun indent-explicitly-set-in-multiline-tqs-lp:784225-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    with bar('x', \"\"\"
+        [hello]
+"
+))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-explicitly-set-in-multiline-tqs-lp:784225-base arg teststring)))
+
+(defun indent-explicitly-set-in-multiline-tqs-lp:784225-base ()
+    (assert (eq 8 (py-compute-indentation)) nil "explicitly-dedented-in-list-lp:784225 test failed"))
+
+
+(defun explicitly-indent-in-list-lp:785018-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    with bar('x', 
+        [hello]
+"
+))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'explicitly-indent-in-list-lp:785018-base arg teststring)))
+
+(defun explicitly-indent-in-list-lp:785018-base ()
+    (assert (eq 8 (py-compute-indentation)) nil "explicitly-dedented-in-list-lp:784225 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
