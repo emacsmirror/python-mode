@@ -85,6 +85,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall wrong-indent-after-else-lp:772610-test \
 --funcall except-indents-wrong-lp:784432-test \
 --funcall indent-explicitly-set-in-multiline-tqs-lp:784225-test \
+--funcall unbalanced-parentheses-lp:784645-test \
 --funcall explicitly-indent-in-list-lp:785018-test \
 --funcall explicit-backslashed-continuation-line-indent-lp:785091-test \
 \

@@ -68,6 +68,7 @@
          'wrong-indent-after-else-lp:772610-test
          'except-indents-wrong-lp:784432-test
          'indent-explicitly-set-in-multiline-tqs-lp:784225-test
+         'unbalanced-parentheses-lp:784645-test
          'explicitly-indent-in-list-lp:785018-test
          'explicit-backslashed-continuation-line-indent-lp:785091-test
          
@@ -1020,6 +1021,19 @@ except:
 (defun indent-explicitly-set-in-multiline-tqs-lp:784225-base ()
     (assert (eq 8 (py-compute-indentation)) nil "explicitly-dedented-in-list-lp:784225 test failed"))
 
+(defun unbalanced-parentheses-lp:784645-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+    something()
+    another(
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'unbalanced-parentheses-lp:784645-base arg teststring)))
+
+(defun unbalanced-parentheses-lp:784645-base ()
+    (goto-char 27)
+    (newline-and-indent)
+    (assert (eq 4 (py-compute-indentation)) nil "unbalanced-parentheses-lp:784645 test failed"))
 
 (defun explicitly-indent-in-list-lp:785018-test (&optional arg load-branch-function)
   (interactive "p")

@@ -2715,8 +2715,8 @@ http://docs.python.org/reference/compound_stmts.html
          ((and (empty-line-p)(not done)(not (eobp)))
           (while
               (and (empty-line-p)(not done)(not (eobp)))
-            (forward-line 1)
-            (py-end-of-statement (point) origline done)))
+            (forward-line 1))
+          (py-end-of-statement orig origline done))
          ;; start of comment or string; nil if not in one
          ((nth 8 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
