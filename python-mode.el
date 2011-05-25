@@ -620,7 +620,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                           )
                         "\\|"))
         (kw2 (mapconcat 'identity
-                        '("else:" "except:" "finally:" "try:")
+                        '("else:" "except:" "finally:" "try:" "lambda:")
                         "\\|"))
         (kw3 (mapconcat 'identity
                         ;; Don't include Ellipsis in this list, since it is already defined as a pseudo keyword.
