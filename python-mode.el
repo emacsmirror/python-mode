@@ -620,13 +620,12 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                           )
                         "\\|"))
         (kw2 (mapconcat 'identity
-                        '("else:" "except:" "finally:" "try:" "lambda:")
+                        '("else:" "except:" "finally:" "try:")
                         "\\|"))
         (kw3 (mapconcat 'identity
-                        ;; Don't include Ellipsis in this list, since it is
-                        ;; already defined as a pseudo keyword.
-                        '("__debug__"
-                          "__import__" "__name__" "abs" "all" "any" "apply"
+                        ;; Don't include Ellipsis in this list, since it is already defined as a pseudo keyword.
+                        '("_" "__debug__" "__doc__" "__import__" "__name__" "__package__"
+                          "abs" "all" "any" "apply"
                           "basestring" "bin" "bool" "buffer" "bytearray"
                           "callable" "chr" "classmethod" "cmp" "coerce"
                           "compile" "complex" "copyright" "credits"
@@ -640,7 +639,11 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                           "quit" "range" "raw_input" "reduce" "reload" "repr"
                           "round" "set" "setattr" "slice" "sorted"
                           "staticmethod" "str" "sum" "super" "tuple" "type"
-                          "unichr" "unicode" "vars" "xrange" "zip")
+                          "unichr" "unicode" "vars" "xrange" "zip"
+
+                          "bin" "bytearray" "bytes" "format"
+
+                          "memoryview" "next" "print")
                         "\\|"))
         (kw4 (mapconcat 'identity
                         ;; Exceptions and warnings
@@ -662,7 +665,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
                           "UnicodeEncodeError" "UnicodeError"
                           "UnicodeTranslateError" "UnicodeWarning"
                           "UserWarning" "ValueError" "Warning"
-                          "ZeroDivisionError")
+                          "ZeroDivisionError" "WindowsError")
                         "\\|"))
         )
     (list
@@ -841,9 +844,9 @@ Currently-active file is at the head of the list.")
 ;; Major mode boilerplate
 
 ;; define a mode-specific abbrev table for those who use such things
-(defvar python-mode-abbrev-table nil
+(defvar py-mode-abbrev-table nil
   "Abbrev table in use in `python-mode' buffers.")
-(define-abbrev-table 'python-mode-abbrev-table nil)
+(define-abbrev-table 'py-mode-abbrev-table nil)
 
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
@@ -951,11 +954,11 @@ Currently-active file is at the head of the list.")
 	 :help "Go to start of innermost definition at point"]
 	["End of def/class" end-of-defun
 	 :help "Go to end of innermost definition at point"]
-	"-"
-	("Templates..."
-	 :help "Expand templates for compound statements"
-	 :filter (lambda (&rest junk)
-                   (abbrev-table-menu python-mode-abbrev-table)))
+;; 	"-"
+;; 	("Templates..."
+;; 	 :help "Expand templates for compound statements"
+;; 	 :filter (lambda (&rest junk)
+;;                   (abbrev-table-menu py-mode-abbrev-table)))
 	"-"
 	["Start interpreter" py-shell
 	 :help "Run `inferior' Python in separate buffer"]
@@ -1251,7 +1254,8 @@ This does the following:
 
 (defvar py-which-shell nil)
 ;;;###autoload
-(define-derived-mode python-mode fundamental-mode "Python"
+;; (define-derived-mode python-mode fundamental-mode "Python"
+(defun python-mode ()
   "Major mode for editing Python files.
 To submit a problem report, enter `\\[py-submit-bug-report]' from a
 `python-mode' buffer.  Do `\\[py-describe-mode]' for detailed
@@ -1270,6 +1274,14 @@ py-block-comment-prefix\t\tcomment string used by `comment-region'
 py-python-command\t\tshell command to invoke Python interpreter
 py-temp-directory\t\tdirectory used for temp files (if needed)
 py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
+;;  :abbrev-table py-mode-abbrev-table
+  (kill-all-local-variables)
+  (setq local-abbrev-table py-mode-abbrev-table)
+  (set-syntax-table py-mode-syntax-table)
+  
+  (add-hook 'python-mode-hook 'py-beg-of-defun-function)
+  (add-hook 'python-mode-hook 'py-end-of-defun-function)
+
   (set (make-local-variable 'font-lock-defaults)
        '(py-font-lock-keywords nil nil nil nil
                                (font-lock-syntactic-keywords
@@ -1286,7 +1298,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
   (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
-  (set-syntax-table py-mode-syntax-table)
   (use-local-map py-mode-map)
   ;; Emacs 19 requires this
   (if (boundp 'comment-multi-line)
@@ -1320,6 +1331,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (unless py-which-shell
     (py-toggle-shells (py-choose-shell)))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el"))
+  (run-hooks 'python-mode-hook)
   )
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
@@ -2930,12 +2942,12 @@ http://docs.python.org/reference/compound_stmts.html"
 ;; Defun or Class
 (defalias 'py-backward-def-or-class 'py-beginning-of-def-or-class)
 (defalias 'py-previous-def-or-class 'py-beginning-of-def-or-class)
-(defun py-beginning-of-def-or-class (&optional class)
+(defun py-beginning-of-def-or-class (&optional arg)
   "Move point to start of `def' or `class', whatever is next.
-With optional CLASS, move to the beginn of class definition.
+With optional universal arg CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (if class
+  (let* ((regexp (if (eq 4 (prefix-numeric-value arg)) 
                      py-class-re
                    py-def-or-class-re))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
@@ -2945,14 +2957,15 @@ Returns position reached, if any, nil otherwise. "
 (defalias 'end-of-def-or-class 'py-end-of-def-or-class)
 (defalias 'py-forward-def-or-class 'py-end-of-def-or-class)
 (defalias 'py-next-def-or-class 'py-end-of-def-or-class)
-(defun py-end-of-def-or-class (&optional class)
+(defun py-end-of-def-or-class (&optional arg)
   "Move point beyond next `def' or `class' definition.
-With optional CLASS, move to the end of class exclusively.
+With optional universal arg, move to the end of class exclusively.
 Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let* ((orig (point))
          (regexp
-          (cond (class py-class-re)
+          (cond ((eq 4 (prefix-numeric-value arg))
+                 py-class-re)
                 (t py-def-or-class-re))))
     (py-end-base regexp orig (interactive-p))))
 
@@ -3380,7 +3393,6 @@ Returns beginning and end positions of marked area, a cons."
       (compile-internal command "No more errors"))))
 
 
-(defalias 'py-describe-symbol 'py-help-at-point)
 (defun py-help-at-point ()
   "Get help from Python based on the symbol nearest point."
   (interactive)
@@ -3695,18 +3707,55 @@ Obscure:  When python-mode is first loaded, it looks for all bindings
 to newline-and-indent in the global keymap, and shadows them with
 local bindings to py-newline-and-indent."))
 
-(require 'info-look)
-;; The info-look package does not always provide this function (it
-;; appears this is the case with XEmacs 21.1)
-(when (fboundp 'info-lookup-maybe-add-help)
-  (info-lookup-maybe-add-help
-   :mode 'python-mode
-   :regexp "[a-zA-Z0-9_]+"
-   :doc-spec '(("(python-lib)Module Index")
-               ("(python-lib)Class-Exception-Object Index")
-               ("(python-lib)Function-Method-Variable Index")
-               ("(python-lib)Miscellaneous Index")))
-  )
+
+(defun python-after-info-look ()
+  "Set up info-look for Python.
+Used with `eval-after-load'."
+  (let* ((version (let ((s (shell-command-to-string (concat py-python-command
+							    " -V"))))
+		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
+		    (match-string 1 s)))
+	 ;; Whether info files have a Python version suffix, e.g. in Debian.
+	 (versioned
+	  (with-temp-buffer
+	    (with-no-warnings (Info-mode))
+	    (condition-case ()
+		;; Don't use `info' because it would pop-up a *info* buffer.
+		(with-no-warnings
+		  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
+					  version))
+		  t)
+	      (error nil)))))
+    (info-lookup-maybe-add-help
+     :mode 'python-mode
+     :regexp "[[:alnum:]_]+"
+     :doc-spec
+     ;; Fixme: Can this reasonably be made specific to indices with
+     ;; different rules?  Is the order of indices optimal?
+     ;; (Miscellaneous in -ref first prefers lookup of keywords, for
+     ;; instance.)
+     (if versioned
+	 ;; The empty prefix just gets us highlighted terms.
+	 `((,(concat "(python" version "-ref)Miscellaneous Index") nil "")
+	   (,(concat "(python" version "-ref)Module Index" nil ""))
+	   (,(concat "(python" version "-ref)Function-Method-Variable Index"
+		     nil ""))
+	   (,(concat "(python" version "-ref)Class-Exception-Object Index"
+		     nil ""))
+	   (,(concat "(python" version "-lib)Module Index" nil ""))
+	   (,(concat "(python" version "-lib)Class-Exception-Object Index"
+		     nil ""))
+	   (,(concat "(python" version "-lib)Function-Method-Variable Index"
+		     nil ""))
+	   (,(concat "(python" version "-lib)Miscellaneous Index" nil "")))
+       '(("(python-ref)Miscellaneous Index" nil "")
+	 ("(python-ref)Module Index" nil "")
+	 ("(python-ref)Function-Method-Variable Index" nil "")
+	 ("(python-ref)Class-Exception-Object Index" nil "")
+	 ("(python-lib)Module Index" nil "")
+	 ("(python-lib)Class-Exception-Object Index" nil "")
+	 ("(python-lib)Function-Method-Variable Index" nil "")
+	 ("(python-lib)Miscellaneous Index" nil ""))))))
 
 
 ;; Helper functions
@@ -4123,8 +4172,6 @@ If point is inside a string, narrow to that string and fill.
 (defun py-end-of-defun-function ()
   (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
 
-(add-hook 'python-mode-hook 'py-beg-of-defun-function)
-(add-hook 'python-mode-hook 'py-end-of-defun-function)
-
+(require 'info-look)
 (provide 'python-mode)
 ;;; python-mode.el ends here

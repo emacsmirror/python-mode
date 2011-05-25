@@ -149,7 +149,7 @@
   (py-bug-tests-intern 'py-beginning-of-def-or-class-base arg teststring)))
 
 (defun py-beginning-of-def-or-class-base ()
-  (py-beginning-of-def-or-class t)
+  (py-beginning-of-def-or-class 4)
   (assert (eq (point) 1) nil "py-beginning-of-def-or-class test failed"))
 
 (defun py-end-of-def-or-class-test (&optional arg load-branch-function)
