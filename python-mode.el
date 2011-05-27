@@ -2104,7 +2104,6 @@ With ARG do that ARG times. "
 (put 'py-electric-delete    'delete-selection 'supersede) ;delsel
 (put 'py-electric-delete    'pending-delete   'supersede) ;pending-del
 
-33333
 
 (defun py-indent-line ()
   "Fix the indentation of the current line according to Python rules.
