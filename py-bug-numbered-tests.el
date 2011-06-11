@@ -71,6 +71,7 @@
          'unbalanced-parentheses-lp:784645-test
          'explicitly-indent-in-list-lp:785018-test
          'explicit-backslashed-continuation-line-indent-lp:785091-test
+         'indentation-error-lp:795773-test
          
          )))
 
@@ -1058,6 +1059,30 @@ except:
 
 (defun explicit-backslashed-continuation-line-indent-lp:785091-base ()
     (assert (eq 40 (py-compute-indentation)) nil "explicit-backslashed-continuation-line-indent-lp:785091  test failed"))
+
+(defun indentation-error-lp:795773-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class MailTransportAgentAliases:
+    \"\"\"Utility for generating all the aliases of a mailing
+list.\"\"\"
+
+    implements(IMailTransportAgentAliases)
+
+    def aliases(self, mlist):
+        \"\"\"See `IMailTransportAgentAliases`.\"\"\"
+        # Always return
+        yield mlist.posting_address
+        for destination in SUBDESTINATIONS:
+            yield '{0}-{1}@{2}'.format(mlist.list_name,
+                                             destination,
+                                             mlist.host_name)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-error-lp:795773-base arg teststring)))
+
+(defun indentation-error-lp:795773-base ()
+  (goto-char 385)
+  (assert (eq 39 (py-compute-indentation)) nil "indentation-error-lp:795773 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

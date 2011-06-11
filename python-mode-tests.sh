@@ -88,6 +88,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall unbalanced-parentheses-lp:784645-test \
 --funcall explicitly-indent-in-list-lp:785018-test \
 --funcall explicit-backslashed-continuation-line-indent-lp:785091-test \
+--funcall indentation-error-lp:795773-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

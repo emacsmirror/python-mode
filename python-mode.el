@@ -2186,15 +2186,18 @@ the new line indented."
                   (setq this-line (py-count-lines))
                   (if (< 1 (- origline this-line))
                       (py-fetch-previous-indent orig)
-                    (if (nth 2 pps)
-                        (progn
-                          (goto-char (nth 2 pps))
-                          (current-column))
+                    ;; disabled fixing indentation-error-lp:795773
+;;                    (if (nth 2 pps)
+;;                        (progn
+;;                          (goto-char (nth 2 pps))
+;;                          (current-column))
                       (if (looking-at "\\s([ \t]*$")
                           (progn
                             (back-to-indentation)
                             (+ (current-column) py-indent-offset))
-                        (+ (current-column) (* (nth 0 pps))))))))
+                        (+ (current-column) (* (nth 0 pps))))
+;;                      )
+)))
                ((py-backslashed-continuation-line-p)
                 (progn
                   (py-beginning-of-statement)
