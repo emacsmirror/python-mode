@@ -1755,6 +1755,27 @@ filter."
     (setq py-file-queue nil)
     (message "%d pending files de-queued." n)))
 
+(defun py-which-python ()
+  "Returns version number of Python of current default environment. "
+  (interactive)
+  (let* ((cmd (shell-quote-argument "python"))
+         (res (shell-command-to-string
+               (concat cmd
+                       " -c \"from sys import version_info;\
+print version_info >= (2, 2) and version_info < (3, 0)\"")))
+         ;; an other way, just let's play with both
+         (erg (shell-command-to-string (concat cmd " --version")))
+         version)
+    (when (string-match "\\([0-9]\\.[0-9]+\\)" erg)
+      (setq version (substring erg 7 (1- (length erg)))))
+    (when (interactive-p)
+      (if version
+          (message "%s" version)
+        (message "%s" "Could not detect Python on your system")))
+    (unless (string-match "True" res)
+      (error "Only Python versions >= 2.2 and < 3.0 are supported"))
+    version))
+
 
 (defvar py-exception-buffer nil)
 (defun py-execute-region (start end &optional async)
@@ -2338,9 +2359,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
     (save-excursion
       (py-end-of-statement)
       (py-beginning-of-statement)
-      (when (or (eq orig (point))
-;; (and (looking-back "^[ \t]+") (<=  (line-beginning-position) orig)(<= orig (point)))
-)
+      (when (or (eq orig (point)))
         (when (interactive-p)
           (message "%s" orig))
         orig))))
@@ -3888,21 +3907,6 @@ If nesting level is zero, return nil."
     (let ((erg (eq (char-before (point)) ?\\ )))
       (when (interactive-p) (message "%s" erg))
       erg)))
-
-(defun py-beginning-of-statement-p ()
-  (interactive)
-  "Returns position, if cursor is at the beginning of a statement, nil otherwise. "
-  (let ((orig (point)))
-    (save-excursion
-      (py-end-of-statement)
-      (py-beginning-of-statement)
-      (when
-          ;;          (or 
-          (eq orig (point))
-        ;;                (and (looking-back "^[ \t]+") (<=  (line-beginning-position) orig)(<= orig (point))))
-        (when (interactive-p)
-          (message "%s" orig))
-        orig))))
 
 (defun py-statement-closes-block-p ()
   "Return t iff the current statement closes a block.
