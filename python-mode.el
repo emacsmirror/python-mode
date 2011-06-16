@@ -596,7 +596,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (defvar py-builtins-face 'py-builtins-face)
 
 (defface py-class-name-face
-  '((t (:inherit font-lock-keyword-face)))
+  '((t (:inherit font-lock-type-face)))
   "Face for builtins like TypeError, object, open, and exec."
   :group 'python)
 (defvar py-class-name-face 'py-class-name-face)
