@@ -1122,6 +1122,79 @@ This function does not modify point or mark."
 
 
 ;;;; Imenu.
+(defvar py-imenu-class-regexp
+  (concat                               ; <<classes>>
+   "\\("                                ;
+   "^[ \t]*"                            ; newline and maybe whitespace
+   "\\(class[ \t]+[a-zA-Z0-9_]+\\)"     ; class name
+                                        ; possibly multiple superclasses
+   "\\([ \t]*\\((\\([a-zA-Z0-9_,. \t\n]\\)*)\\)?\\)"
+   "[ \t]*:"                            ; and the final :
+   "\\)"                                ; >>classes<<
+   )
+  "Regexp for Python classes for use with the Imenu package."
+  )
+
+(defvar py-imenu-method-regexp
+  (concat                               ; <<methods and functions>>
+   "\\("                                ;
+   "^[ \t]*"                            ; new line and maybe whitespace
+   "\\(def[ \t]+"                       ; function definitions start with def
+   "\\([a-zA-Z0-9_]+\\)"                ;   name is here
+                                        ;   function arguments...
+   ;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
+   "[ \t]*(\\([^:#]*\\))"
+   "\\)"                                ; end of def
+   "[ \t]*:"                            ; and then the :
+   "\\)"                                ; >>methods and functions<<
+   )
+  "Regexp for Python methods/functions for use with the Imenu package."
+  )
+
+(defvar py-imenu-method-no-arg-parens '(2 8)
+  "Indices into groups of the Python regexp for use with Imenu.
+
+Using these values will result in smaller Imenu lists, as arguments to
+functions are not listed.
+
+See the variable `py-imenu-show-method-args-p' for more
+information.")
+
+(defvar py-imenu-method-arg-parens '(2 7)
+  "Indices into groups of the Python regexp for use with imenu.
+Using these values will result in large Imenu lists, as arguments to
+functions are listed.
+
+See the variable `py-imenu-show-method-args-p' for more
+information.")
+
+;; Note that in this format, this variable can still be used with the
+;; imenu--generic-function. Otherwise, there is no real reason to have
+;; it.
+(defvar py-imenu-generic-expression
+  (cons
+   (concat
+    py-imenu-class-regexp
+    "\\|"                               ; or...
+    py-imenu-method-regexp
+    )
+   py-imenu-method-no-arg-parens)
+  "Generic Python expression which may be used directly with Imenu.
+Used by setting the variable `imenu-generic-expression' to this value.
+Also, see the function \\[py-imenu-create-index] for a better
+alternative for finding the index.")
+
+;; These next two variables are used when searching for the Python
+;; class/definitions. Just saving some time in accessing the
+;; generic-python-expression, really.
+(defvar py-imenu-generic-regexp nil)
+(defvar py-imenu-generic-parens nil)
+
+(defcustom py-imenu-show-method-args-p nil
+  "*Controls echoing of arguments of functions & methods in the Imenu buffer.
+When non-nil, arguments are printed."
+  :type 'boolean
+  :group 'python)
 
 ;; For possibily speeding this up, here's the top of the ELP profile
 ;; for rescanning pydoc.py (2.2k lines, 90kb):
@@ -1193,8 +1266,6 @@ precede it)."
 			(nreverse vars))
 		  index-alist))))
     index-alist))
-
-
 
 
 (defun py-choose-shell-by-shebang ()
@@ -1274,46 +1345,88 @@ py-block-comment-prefix\t\tcomment string used by `comment-region'
 py-python-command\t\tshell command to invoke Python interpreter
 py-temp-directory\t\tdirectory used for temp files (if needed)
 py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
-;;  :abbrev-table py-mode-abbrev-table
+  (interactive)
+  ;; set up local variables
   (kill-all-local-variables)
-  (setq local-abbrev-table py-mode-abbrev-table)
+  (make-local-variable 'paragraph-separate)
+  (make-local-variable 'paragraph-start)
+  (make-local-variable 'require-final-newline)
+  (make-local-variable 'comment-start)
+  (make-local-variable 'comment-end)
+  (make-local-variable 'comment-start-skip)
+  (make-local-variable 'comment-column)
+  (make-local-variable 'comment-indent-function)
+  (make-local-variable 'indent-region-function)
+  (make-local-variable 'indent-line-function)
+  (make-local-variable 'add-log-current-defun-function)
+  (make-local-variable 'fill-paragraph-function)
+  ;;
   (set-syntax-table py-mode-syntax-table)
-  
-  (add-hook 'python-mode-hook 'py-beg-of-defun-function)
-  (add-hook 'python-mode-hook 'py-end-of-defun-function)
-
+  ;; 2009-09-10 a.roehler@web.de changed section start
+  ;; from python.el, version "22.1"
   (set (make-local-variable 'font-lock-defaults)
        '(py-font-lock-keywords nil nil nil nil
                                (font-lock-syntactic-keywords
                                 . py-font-lock-syntactic-keywords)))
-  (set (make-local-variable 'paragraph-separate) "^[ \t]*$")
-  (set (make-local-variable 'paragraph-start) "^[ \t]*$" )
-  (set (make-local-variable 'require-final-newline) t)
-  (set (make-local-variable 'comment-start) "#")
-  (set (make-local-variable 'comment-end) "")
-  (set (make-local-variable 'comment-start-skip) "# *")
-  (set (make-local-variable 'comment-column) 40)
-  (set (make-local-variable 'comment-indent-function) 'py-comment-indent-function)
-  (set (make-local-variable 'indent-region-function) 'py-indent-region)
-  (set (make-local-variable 'indent-line-function) 'py-indent-line)
-  (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
-  (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
+  ;; 2009-09-10 a.roehler@web.de changed section end
+  (setq major-mode 'python-mode
+        mode-name "Python"
+        local-abbrev-table py-mode-abbrev-table
+        paragraph-separate "^[ \t]*$"
+        paragraph-start "^[ \t]*$"
+        require-final-newline t
+        comment-start "# "
+        comment-end ""
+        comment-start-skip "# *"
+        comment-column 40
+        comment-indent-function 'py-comment-indent-function
+        indent-region-function 'py-indent-region
+        indent-line-function 'py-indent-line
+        ;; tell add-log.el how to find the current function/method/variable
+        add-log-current-defun-function 'py-current-defun
+        
+        fill-paragraph-function 'py-fill-paragraph)
   (use-local-map py-mode-map)
+  ;; add the menu
+  (if py-menu
+      (easy-menu-add py-menu))
   ;; Emacs 19 requires this
   (if (boundp 'comment-multi-line)
       (setq comment-multi-line nil))
-  (set (make-local-variable 'skeleton-further-elements)
-       '((< '(backward-delete-char-untabify (min py-indent-offset
-						 (current-column))))
-	 (^ '(- (1+ (current-indentation))))))
+  ;; Install Imenu if available
+  (when (ignore-errors (require 'imenu))
+    (setq imenu-create-index-function #'py-imenu-create-index-function)
+    (setq imenu-generic-expression py-imenu-generic-expression)
+    (if (fboundp 'imenu-add-to-menubar)
+        (imenu-add-to-menubar (format "%s-%s" "IM" mode-name))))
+  
   ;; Add support for HideShow
-  (add-to-list 'hs-special-modes-alist (list
-                                        'python-mode (concat (if py-hide-show-hide-docstrings "^\\s-*\"\"\"\\|" "") (mapconcat 'identity (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>")) py-hide-show-keywords) "\\|")) nil "#"
-                                        (lambda (arg)
-                                          (py-goto-beyond-block)
-                                          (skip-chars-backward " \v\f\t\n"))
-                                        nil))
-    ;; Now do the automagical guessing
+  (add-to-list 'hs-special-modes-alist
+               (list
+                'python-mode
+                ;; start regex
+                (concat (if py-hide-show-hide-docstrings
+                            "^\\s-*\"\"\"\\|" "")
+                        (mapconcat 'identity
+                                   (mapcar #'(lambda (x) (concat "^\\s-*" x "\\>"))
+                                           py-hide-show-keywords)
+                                   "\\|"))
+                ;; end regex
+                nil
+                ;; comment-start regex
+                "#"
+                ;; forward-sexp function
+                (lambda (arg)
+                  (py-goto-beyond-block)
+                  (skip-chars-backward " \t\n"))
+                nil))
+  (add-hook 'python-mode-hook 'py-beg-of-defun-function)
+  (add-hook 'python-mode-hook 'py-end-of-defun-function)
+  ;; Run the mode hook.  Note that py-mode-hook is deprecated.
+  (if python-mode-hook
+      (run-hooks 'python-mode-hook)
+    (run-hooks 'py-mode-hook))
+  ;; Now do the automagical guessing
   (if py-smart-indentation
       (let ((offset py-indent-offset))
         ;; It's okay if this fails to guess a good value
@@ -1328,11 +1441,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         (if (/= tab-width py-indent-offset)
             (setq indent-tabs-mode nil))))
   ;; Set the default shell if not already set
-  (unless py-which-shell
+  (when (null py-which-shell)
     (py-toggle-shells (py-choose-shell)))
-  (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el"))
-  (run-hooks 'python-mode-hook)
-  )
+  (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
