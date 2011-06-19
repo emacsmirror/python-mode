@@ -91,7 +91,6 @@
 ;; required indent may change throughout the buffer.
 ;; Rather may it be called by argument
 
-
 ;;; Code:
 
 (require 'comint)
@@ -354,16 +353,16 @@ file heading imports to see if they look Java-like."
   :type '(repeat string)
   :group 'python)
 
-(defcustom py-current-defun-show  t 
+(defcustom py-current-defun-show  t
  "If `py-current-defun' should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
 
-Default is `t'." 
+Default is `t'."
 
 :type 'boolean
 :group 'python)
 
-(defcustom py-current-defun-delay  2 
- "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. " 
+(defcustom py-current-defun-delay  2
+ "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. "
 
 :type 'number
 :group 'python)
@@ -581,6 +580,12 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   :group 'python)
 (defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
 
+(defface py-XXX-tag-face
+  '((t (:inherit font-lock-string-face)))
+  "XXX\\|TODO\\|FIXME "
+  :group 'python)
+(defvar py-XXX-tag-face 'py-XXX-tag-face)
+
 ;; PEP 318 decorators
 (defface py-decorators-face
   '((t (:inherit font-lock-keyword-face)))
@@ -718,7 +723,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;;   (1 'font-lock-regexp-grouping-construct prepend))
      ))
   "Additional expressions to highlight in Python mode.")
-
 
 ;; have to bind py-file-queue before installing the kill-emacs-hook
 (defvar py-file-queue nil
@@ -930,7 +934,7 @@ Currently-active file is at the head of the list.")
     (mapc #'(lambda (key)
               (define-key map key 'py-newline-and-indent))
           (where-is-internal 'newline-and-indent))
-    ;; Most Pythoneers expect RET to do a `py-newline-and-indent' 
+    ;; Most Pythoneers expect RET to do a `py-newline-and-indent'
     (define-key map "\C-m" 'py-newline-and-indent)
     (define-key map [(control return)] 'py-newline-and-dedent)
     (easy-menu-define py-menu map "Python Mode menu"
@@ -1384,7 +1388,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         indent-line-function 'py-indent-line
         ;; tell add-log.el how to find the current function/method/variable
         add-log-current-defun-function 'py-current-defun
-        
+
         fill-paragraph-function 'py-fill-paragraph)
   (use-local-map py-mode-map)
   ;; add the menu
@@ -1399,7 +1403,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (setq imenu-generic-expression py-imenu-generic-expression)
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name))))
-  
+
   ;; Add support for HideShow
   (add-to-list 'hs-special-modes-alist
                (list
@@ -1980,7 +1984,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (switch-to-buffer procbuf))
      (t
       ;; TBD: a horrible hack, but why create new Custom variables?
-      (let ((cmd 
+      (let ((cmd
              ;;             (concat py-which-shell (if (string-equal py-which-bufname
              (concat shell (if (string-equal py-which-bufname
                                              "Jython")
@@ -2213,7 +2217,7 @@ With ARG do that ARG times. "
                 (delete-char (- remains))
               (indent-line-to (- (current-indentation) py-indent-offset))))
         (delete-char (- 1))))))
-    
+
 (defun py-electric-delete (&optional arg)
   "Delete preceding or following character or levels of whitespace.
 
@@ -2282,7 +2286,7 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point))) 
+      (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
@@ -2350,13 +2354,13 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re) 
+               ((looking-at py-return-re)
                 (py-beginning-of-def-or-class)
                 (current-indentation))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re) 
+               ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
@@ -2380,7 +2384,7 @@ the new line indented."
 (defun py-fetch-previous-indent (orig)
   "Report the preceding indent. "
   (save-excursion
-    (goto-char orig) 
+    (goto-char orig)
     (forward-line -1)
     (end-of-line)
     (skip-chars-backward " \t\r\n\f")
@@ -2501,7 +2505,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
   "Guess a value for, and change, `py-indent-offset'.
 
 By default, make a buffer-local copy of `py-indent-offset' with the
-new value.  
+new value.
 With optional argument GLOBAL,
 change the global value of `py-indent-offset'. "
   (interactive "P")
@@ -2520,7 +2524,7 @@ change the global value of `py-indent-offset'. "
                 (setq done t))))
         (unless done
           ;; search downward
-          (goto-char orig) 
+          (goto-char orig)
           (while (and (not done) (not (eobp)))
             (setq first (progn (unless done (py-end-of-statement)(current-indentation))))
             (py-end-of-statement)
@@ -2528,7 +2532,7 @@ change the global value of `py-indent-offset'. "
               (py-beginning-of-statement)
               (setq indent (abs (- (current-indentation) first)))
               (if (and indent (>= indent 2) (<= indent 8)) ; sanity check
-                  (setq done t))))) 
+                  (setq done t)))))
 	(when done
 	  (when (/= indent (default-value 'py-indent-offset))
             (funcall (if global 'kill-local-variable 'make-local-variable)
@@ -2789,7 +2793,7 @@ http://docs.python.org/reference/compound_stmts.html
               (pps (parse-partial-sexp (point-min) (point)))
               erg)
           (unless (< (point) orig)(skip-chars-backward " \t\r\n\f"))
-          
+
           (setq erg
                 (cond
                  ((empty-line-p)
@@ -2802,7 +2806,7 @@ http://docs.python.org/reference/compound_stmts.html
                  ((and (nth 3 pps)(nth 8 pps)
                        (save-excursion
                          (ignore-errors
-                           (goto-char (nth 2 pps))) 
+                           (goto-char (nth 2 pps)))
                          ;; (not (eq origline (py-count-lines)))
                          ))
                   (goto-char (nth 2 pps))
@@ -3001,7 +3005,7 @@ http://docs.python.org/reference/compound_stmts.html"
 
 ;; Def
 (defun py-beginning-of-def (&optional class)
-  "Move point to start of `def'. 
+  "Move point to start of `def'.
 Returns position reached, if any, nil otherwise."
   (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-re -1)))))
@@ -3022,7 +3026,7 @@ Returns position reached, if any, nil otherwise."
 (defalias 'py-previous-class 'py-beginning-of-class)
 (defun py-beginning-of-class ()
   "Move point to start of next `class'.
-See also `py-beginning-of-def-or-class'. 
+See also `py-beginning-of-def-or-class'.
 Returns position reached, if any, nil otherwise."
   (interactive)
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-class-re -1)))))
@@ -3079,7 +3083,7 @@ http://docs.python.org/reference/compound_stmts.html"
 With optional universal arg CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (if (eq 4 (prefix-numeric-value arg)) 
+  (let* ((regexp (if (eq 4 (prefix-numeric-value arg))
                      py-class-re
                    py-def-or-class-re))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
@@ -3210,7 +3214,6 @@ For stricter sense specify regexp. "
   "Return position if the current statement opens block or clause. "
   (interactive)
   (py-statement-opens-base py-block-or-clause-re))
-
 
 (defalias 'py-beginning-of-class-p 'py-statement-opens-class-p)
 (defun py-statement-opens-class-p ()
@@ -3369,7 +3372,7 @@ Returns beginning and end positions of marked area, a cons."
 
 With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
 Returns beginning and end positions of marked area, a cons."
-  
+
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators))
         (erg (py-mark-base "def" py-mark-decorators)))
@@ -3390,7 +3393,7 @@ Returns beginning and end positions of marked area, a cons."
 
 With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
 Returns beginning and end positions of marked area, a cons."
-  
+
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators))
         (erg (py-mark-base "class" py-mark-decorators)))
@@ -3402,7 +3405,6 @@ Returns beginning and end positions of marked area, a cons."
   (interactive)
   (let ((erg (py-mark-base "clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
 
 ;; Deleting
 (defun py-kill-expression ()
@@ -3839,7 +3841,6 @@ Obscure:  When python-mode is first loaded, it looks for all bindings
 to newline-and-indent in the global keymap, and shadows them with
 local bindings to py-newline-and-indent."))
 
-
 (defun python-after-info-look ()
   "Set up info-look for Python.
 Used with `eval-after-load'."
@@ -3891,7 +3892,7 @@ Used with `eval-after-load'."
 
 
 ;; Helper functions
-(when (featurep 'xemacs) 
+(when (featurep 'xemacs)
   (unless (functionp 'looking-back)
     ;; from GNU Emacs subr.el
     (defun looking-back (regexp &optional limit greedy)
@@ -4046,7 +4047,7 @@ and `pass'.  This doesn't catch embedded statements."
          (nth 8 pps))))))
 
 (defun py-current-defun (&optional arg)
-  "Go to the outermost method or class definition in current scope. 
+  "Go to the outermost method or class definition in current scope.
 
 Python value for `add-log-current-defun-function'.
 This tells add-log.el how to find the current function/method/variable.
@@ -4266,7 +4267,7 @@ If point is inside a string, narrow to that string and fill.
       (widen)
       (let ((pps (parse-partial-sexp (point-min) (point))))
         (cond
-         ;; inside a comment 
+         ;; inside a comment
          ((nth 4 pps)
           (py-fill-comment justify))
          ;; only whitespace before the comment start
