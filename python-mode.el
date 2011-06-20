@@ -156,6 +156,9 @@ mode buffer is visited during an Emacs session.  After that, use
   "*List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python)
+(make-variable-buffer-local 'py-python-command-args)
+
+(set-default 'py-python-command-args  '("-i"))
 
 (make-obsolete-variable 'py-jpython-command-args 'py-jython-command-args nil)
 (defcustom py-jython-command-args '("-i")
@@ -879,7 +882,8 @@ Currently-active file is at the head of the list.")
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
 
-(defvar py-mode-map
+(defvar py-mode-map nil)
+(setq py-mode-map
   (let ((map (make-sparse-keymap)))
     ;; electric keys
     (define-key map ":" 'py-electric-colon)
@@ -1312,7 +1316,6 @@ return `jython', otherwise return nil."
                         ))))
     mode))
 
-
 (defun py-choose-shell ()
   "Choose CPython or Jython mode. Returns the appropriate mode function.
 This does the following:
