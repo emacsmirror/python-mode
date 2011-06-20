@@ -284,6 +284,13 @@ can write into: the value (if any) of the environment variable TMPDIR,
   :type 'string
   :group 'python)
 
+(defcustom py-cleanup-temporary  t
+ "If temporary buffers and files used by functions executing region  should be deleted afterwards. "
+
+:type 'boolean
+:group 'python
+)
+
 (defcustom py-beep-if-tab-change t
   "*Ring the bell if `tab-width' is changed.
 If a comment of the form
@@ -371,6 +378,10 @@ Default is `t'."
 :group 'python)
 
 ;; Not customizable
+(defvar py-exec-command nil
+  "Mode commands will set this. ") 
+(make-variable-buffer-local 'py-exec-command)
+
 (defvar py-master-file nil
   "If non-nil, execute the named file instead of the buffer's file.
 The intent is to allow you to set this variable in the file's local
@@ -1204,6 +1215,8 @@ When non-nil, arguments are printed."
   :type 'boolean
   :group 'python)
 
+;;;; Imenu.
+
 ;; For possibily speeding this up, here's the top of the ELP profile
 ;; for rescanning pydoc.py (2.2k lines, 90kb):
 ;; Function Name                         Call Count  Elapsed Time  Average Time
@@ -1298,7 +1311,6 @@ Used by `py-choose-shell', and similar to but distinct from
                      py-shell-alist))
     (and elt (caddr elt))))
 
-
 (defun py-choose-shell-by-import ()
   "Choose CPython or Jython mode based imports.
 If a file imports any packages in `py-jython-packages', within
@@ -1402,7 +1414,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
       (setq comment-multi-line nil))
   ;; Install Imenu if available
   (when (ignore-errors (require 'imenu))
-    (setq imenu-create-index-function #'py-imenu-create-index-function)
+    (setq imenu-create-index-function #'py-imenu-create-index)
     (setq imenu-generic-expression py-imenu-generic-expression)
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name))))
@@ -1452,6 +1464,11 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (py-toggle-shells (py-choose-shell)))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
+(define-derived-mode python3-mode python-mode "Python3"
+  "Edit and run code used by Python version 3 series. "
+  :group 'Python
+  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)))
+
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
   "Major mode for editing Jython/Jython files.
@@ -1484,7 +1501,6 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
                (rassq 'jython-mode auto-mode-alist)))
   (push '("\\.py$" . python-mode) auto-mode-alist))
 
-
 ;; electric characters
 (defun py-outdent-p ()
   "Returns non-nil if the current line should dedent one level."
@@ -1540,10 +1556,8 @@ comment."
             (indent-to (- indent outdent))
             )))))
 
-
-;; Python subprocess utilities and filters
 (defun py-execute-file (proc filename)
-  "Send to Python interpreter process PROC \"execfile('FILENAME')\".
+  "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 `kill-output-from-shell' does The Right Thing."
@@ -1561,6 +1575,10 @@ comint believe the user typed this string so that
           (funcall (process-filter proc) proc msg))
       (set-buffer curbuf))
     (process-send-string proc cmd)))
+
+
+;; Python subprocess utilities and filters
+(defvar py-exception-buffer nil)
 
 (defun py-comint-output-filter-function (string)
   "Watch output for Python prompt and exec next file waiting in queue.
@@ -1895,8 +1913,8 @@ print version_info >= (2, 2) and version_info < (3, 0)\"")))
     version))
 
 
-(defvar py-exception-buffer nil)
-(defun py-execute-region (start end &optional async)
+;; Code execution commands
+(defun py-execute-region (&optional start end async)
   "Execute the region in a Python interpreter.
 
 The region is first copied into a temporary file (in the directory
