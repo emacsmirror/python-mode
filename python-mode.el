@@ -1912,6 +1912,38 @@ print version_info >= (2, 2) and version_info < (3, 0)\"")))
       (error "Only Python versions >= 2.2 and < 3.0 are supported"))
     version))
 
+
+(defun py-cleanup (buf file)
+  "Deletes temporary buffer and file if `py-cleanup-temporary' is t. "
+  (save-excursion
+    (when py-cleanup-temporary
+      (set-buffer buf)
+      (set-buffer-modified-p nil)
+      (kill-buffer buf)
+      (delete-file file))))
+
+(defun py-if-needed-insert-if (buf)
+  "Internal use by py-execute... functions.
+Inserts an incentive true form \"if 1:\\n.\" "
+  (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
+    (when needs-if
+      (insert "if 1:\n")
+      (setq py-line-number-offset (- py-line-number-offset 1)))))
+
+(defun py-fix-start (end)
+  "Internal use by py-execute... functions.
+Avoid empty lines at the beginning. "
+  (goto-char start)
+  (beginning-of-line)
+  ;; Skip ahead to the first non-blank line
+  (while (and (looking-at "\\s *$")
+              (< (point) end))
+    (forward-line 1))
+  (setq start (point))
+  (or (< start end)
+      (error "Region is empty"))
+  (setq py-line-number-offset (count-lines 1 start)))
+
 
 ;; Code execution commands
 (defun py-execute-region (&optional start end async)
@@ -1940,92 +1972,210 @@ window) so you can see it, and a comment of the form
 
 is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
+  (py-execute-base start end async))
+
+(defun py-execute-base (start end &optional async)
   ;; Skip ahead to the first non-blank line
-  (let* ((cur (current-buffer))
-         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
-                            (processp (get-process py-which-bufname))
-                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
-         (procbuf (or first (progn
-                              (py-shell)
+  (let* ((regbuf (current-buffer))
+         (buf-and-proc (progn
+                         (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+                              (processp (get-process py-which-bufname))
                               (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (procbuf (or buf-and-proc
+                      (progn
+                        (py-shell)
+                        (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
          (proc (get-process py-which-bufname))
          (temp (make-temp-name py-which-bufname))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
-         (buf (get-buffer-create file))
-         shell)
-    ;; Write the contents of the buffer, watching out for indented regions.
-    (save-excursion
-      (set-buffer cur)
-      (goto-char start)
-      (beginning-of-line)
-      (while (and (looking-at "\\s *$")
-                  (< (point) end))
-        (forward-line 1))
-      (setq start (point))
-      (or (< start end)
-          (error "Region is empty"))
-      (setq py-line-number-offset (count-lines 1 start))
-      (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
-        (set-buffer buf)
-        (python-mode)
-        (insert "#-*- coding: utf-8 -*-\n")
-        (when needs-if
-          (insert "if 1:\n")
-          (setq py-line-number-offset (- py-line-number-offset 1)))
-        (insert-buffer-substring cur start end)
-        ;; Set the shell either to the #! line command, or to the
-        ;; py-which-shell buffer local variable.
-        (setq shell (or (py-choose-shell-by-shebang)
-                        (py-choose-shell-by-import)
-                        py-which-shell))))
+         (filebuf (get-buffer-create file)))
+    (set-buffer regbuf)
+    (py-fix-start end)
+    (py-execute-intern start end regbuf procbuf proc temp file filebuf async)))
+
+(defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf async)
+  (let (shell)
+    (set-buffer filebuf)
+    (py-if-needed-insert-if filebuf)
+    (insert-buffer-substring regbuf start end)
+    ;; Set the shell either to the #! line command, or to the
+    ;; py-which-shell buffer local variable.
+    (setq shell (or (py-choose-shell-by-shebang)
+                    (py-choose-shell-by-import)
+                    py-which-shell))
     (cond
      ;; always run the code in its own asynchronous subprocess
      (async
       ;; User explicitly wants this to run in its own async subprocess
       (save-excursion
-        (set-buffer buf)
+        (set-buffer filebuf)
         (write-region (point-min) (point-max) file nil 'nomsg))
-      (let* ((buf (generate-new-buffer-name py-output-buffer))
+      (let* ((tempbuf (generate-new-buffer-name py-output-buffer))
              ;; TBD: a horrible hack, but why create new Custom variables?
              (arg (if (string-equal py-which-bufname "Python")
                       "-u" "")))
-        (start-process py-which-bufname buf shell arg file)
-        (pop-to-buffer buf)
-        (py-postprocess-output-buffer buf)
+        (start-process py-which-bufname tempbuf shell arg file)
+        (pop-to-buffer tempbuf)
+        (py-postprocess-output-buffer tempbuf)
         ;; TBD: clean up the temporary file!
         ))
      ;; if the Python interpreter shell is running, queue it up for
      ;; execution there.
      (proc
       ;; use the existing python shell
-      (set-buffer buf)
-      (write-region (point-min) (point-max) file nil 'nomsg)
+      (set-buffer filebuf)
+      (message "Dieser Buffer: %s" (buffer-name))
+      (message "Schreibe Region in %s" file)
+      (write-region (point-min) (point-max) file nil t nil 'ask)
+      ;;      (find-file file)
+      (sit-for 0.1)
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
-      (switch-to-buffer procbuf))
-     (t
-      ;; TBD: a horrible hack, but why create new Custom variables?
-      (let ((cmd
-             ;;             (concat py-which-shell (if (string-equal py-which-bufname
-             (concat shell (if (string-equal py-which-bufname
-                                             "Jython")
-                               " -" ""))))
-        ;; otherwise either run it synchronously in a subprocess
-        (save-excursion
-          (set-buffer buf)
-          (shell-command-on-region (point-min) (point-max)
-                                   cmd py-output-buffer))
-        ;; shell-command-on-region kills the output buffer if it never
-        ;; existed and there's no output from the command
-        (if (not (get-buffer py-output-buffer))
-            (message "No output.")
-          (setq py-exception-buffer (current-buffer))
-          (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-            (pop-to-buffer py-output-buffer)
-            (if err-p
-                (pop-to-buffer py-exception-buffer)))))))
-    ;; Clean up after ourselves.
-    (kill-buffer buf)))
+      (switch-to-buffer procbuf)
+      (sit-for 0.1)
+      (py-cleanup filebuf file)))))
+
+(defun py-shell-command-on-region (start end)
+  "Execute region in a shell.
+Avoids writing to temporary files.
+
+Caveat: Can't be used for expressions containing
+Unicode strings like u'\xA9' "
+  (interactive "r")
+  (let* ((regbuf (current-buffer))
+         (shell (or (py-choose-shell-by-shebang)
+                    (py-choose-shell-by-import)
+                    py-which-shell))
+         (cmd (if (string-equal py-which-bufname
+                                "Jython")
+                  "jython -" "python")))
+    (with-temp-buffer
+      (insert-buffer-substring regbuf start end)
+      (switch-to-buffer (current-buffer))
+      (shell-command-on-region (point-min) (point-max)
+                               cmd py-output-buffer)
+      ;; shell-command-on-region kills the output buffer if it never
+      ;; existed and there's no output from the command
+      (if (not (get-buffer py-output-buffer))
+          (message "No output.")
+        (setq py-exception-buffer (current-buffer))
+        (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
+          (pop-to-buffer py-output-buffer)
+          (if err-p
+              (pop-to-buffer py-exception-buffer)))))))
+
+;; (defun py-execute-region (&optional start end async)
+;;   "Execute the region in a Python interpreter.
+;; 
+;; The region is first copied into a temporary file (in the directory
+;; `py-temp-directory').  If there is no Python interpreter shell
+;; running, this file is executed synchronously using
+;; `shell-command-on-region'.  If the program is long running, use
+;; \\[universal-argument] to run the command asynchronously in its own
+;; buffer.
+;; 
+;; When this function is used programmatically, arguments START and END
+;; specify the region to execute, and optional third argument ASYNC, if
+;; non-nil, specifies to run the command asynchronously in its own
+;; buffer.
+;; 
+;; If the Python interpreter shell is running, the region is execfile()'d
+;; in that shell.  If you try to execute regions too quickly,
+;; `python-mode' will queue them up and execute them one at a time when
+;; it sees a `>>> ' prompt from Python.  Each time this happens, the
+;; process buffer is popped into a window (if it's not already in some
+;; window) so you can see it, and a comment of the form
+;; 
+;;     \t## working on region in file <name>...
+;; 
+;; is inserted at the end.  See also the command `py-clear-queue'."
+;;   (interactive "r\nP")
+;;   ;; Skip ahead to the first non-blank line
+;;   (let* ((cur (current-buffer))
+;;          (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+;;                             (processp (get-process py-which-bufname))
+;;                             (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+;;          (procbuf (or first (progn
+;;                               (py-shell)
+;;                               (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+;;          (proc (get-process py-which-bufname))
+;;          (temp (make-temp-name py-which-bufname))
+;;          (file (concat (expand-file-name temp py-temp-directory) ".py"))
+;;          (buf (get-buffer-create file))
+;;          shell)
+;;     ;; Write the contents of the buffer, watching out for indented regions.
+;;     (save-excursion
+;;       (set-buffer cur)
+;;       (goto-char start)
+;;       (beginning-of-line)
+;;       (while (and (looking-at "\\s *$")
+;;                   (< (point) end))
+;;         (forward-line 1))
+;;       (setq start (point))
+;;       (or (< start end)
+;;           (error "Region is empty"))
+;;       (setq py-line-number-offset (count-lines 1 start))
+;;       (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
+;;         (set-buffer buf)
+;;         (python-mode)
+;;         (insert "#-*- coding: utf-8 -*-\n")
+;;         (when needs-if
+;;           (insert "if 1:\n")
+;;           (setq py-line-number-offset (- py-line-number-offset 1)))
+;;         (insert-buffer-substring cur start end)
+;;         ;; Set the shell either to the #! line command, or to the
+;;         ;; py-which-shell buffer local variable.
+;;         (setq shell (or (py-choose-shell-by-shebang)
+;;                         (py-choose-shell-by-import)
+;;                         py-which-shell))))
+;;     (cond
+;;      ;; always run the code in its own asynchronous subprocess
+;;      (async
+;;       ;; User explicitly wants this to run in its own async subprocess
+;;       (save-excursion
+;;         (set-buffer buf)
+;;         (write-region (point-min) (point-max) file nil 'nomsg))
+;;       (let* ((buf (generate-new-buffer-name py-output-buffer))
+;;              ;; TBD: a horrible hack, but why create new Custom variables?
+;;              (arg (if (string-equal py-which-bufname "Python")
+;;                       "-u" "")))
+;;         (start-process py-which-bufname buf shell arg file)
+;;         (pop-to-buffer buf)
+;;         (py-postprocess-output-buffer buf)
+;;         ;; TBD: clean up the temporary file!
+;;         ))
+;;      ;; if the Python interpreter shell is running, queue it up for
+;;      ;; execution there.
+;;      (proc
+;;       ;; use the existing python shell
+;;       (set-buffer buf)
+;;       (write-region (point-min) (point-max) file nil 'nomsg)
+;;       (py-execute-file proc file)
+;;       (setq py-exception-buffer (cons file (current-buffer)))
+;;       (switch-to-buffer procbuf))
+;;      (t
+;;       ;; TBD: a horrible hack, but why create new Custom variables?
+;;       (let ((cmd
+;;              ;;             (concat py-which-shell (if (string-equal py-which-bufname
+;;              (concat shell (if (string-equal py-which-bufname
+;;                                              "Jython")
+;;                                " -" ""))))
+;;         ;; otherwise either run it synchronously in a subprocess
+;;         (save-excursion
+;;           (set-buffer buf)
+;;           (shell-command-on-region (point-min) (point-max)
+;;                                    cmd py-output-buffer))
+;;         ;; shell-command-on-region kills the output buffer if it never
+;;         ;; existed and there's no output from the command
+;;         (if (not (get-buffer py-output-buffer))
+;;             (message "No output.")
+;;           (setq py-exception-buffer (current-buffer))
+;;           (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
+;;             (pop-to-buffer py-output-buffer)
+;;             (if err-p
+;;                 (pop-to-buffer py-exception-buffer)))))))
+;;     ;; Clean up after ourselves.
+;;     (kill-buffer buf)))
 
 
 ;; Code execution commands
@@ -2307,7 +2457,7 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point)))
+      (let* ((orig (or orig (point))) 
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
@@ -2344,17 +2494,25 @@ the new line indented."
                   (if (< 1 (- origline this-line))
                       (py-fetch-previous-indent orig)
                     ;; disabled fixing indentation-error-lp:795773
-;;                    (if (nth 2 pps)
-;;                        (progn
-;;                          (goto-char (nth 2 pps))
-;;                          (current-column))
-                      (if (looking-at "\\s([ \t]*$")
-                          (progn
-                            (back-to-indentation)
-                            (+ (current-column) py-indent-offset))
-                        (+ (current-column) (* (nth 0 pps))))
-;;                      )
-)))
+                    ;;                    (if (nth 2 pps)
+                    ;;                        (progn
+                    ;;                          (goto-char (nth 2 pps))
+                    ;;                          (current-column))
+                    (cond ((looking-at "\\s([ \t]*$")
+                           (if
+                               (progn
+                                 (save-excursion
+                                   (back-to-indentation)
+                                   (looking-at py-block-or-clause-re)))
+                               (progn
+                                 (back-to-indentation)
+                                 (+ (current-column) (* 2 py-indent-offset)))
+                             (progn
+                               (back-to-indentation)
+                               (+ (current-column) py-indent-offset))))
+                          (t (+ (current-column) (* (nth 0 pps)))))
+                    ;;)
+                    )))
                ((py-backslashed-continuation-line-p)
                 (progn
                   (py-beginning-of-statement)
@@ -2375,13 +2533,13 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re)
+               ((looking-at py-return-re) 
                 (py-beginning-of-def-or-class)
                 (current-indentation))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re)
+               ((looking-at py-block-closing-keywords-re) 
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))

@@ -72,6 +72,7 @@
          'explicitly-indent-in-list-lp:785018-test
          'explicit-backslashed-continuation-line-indent-lp:785091-test
          'indentation-error-lp:795773-test
+         'indent-function-arglist-lp:800088-test
 
          )))
 
@@ -587,10 +588,14 @@ print (\"b'\\xA9'\")")))
     (py-bug-tests-intern 'UnicodeEncodeError-lp:550661-base arg teststring)))
 
 (defun UnicodeEncodeError-lp:550661-base ()
+  (python-mode)
   (goto-char 48)
   (push-mark)
   (end-of-line)
-  (assert (py-execute-region (line-beginning-position) (point)) nil "UnicodeEncodeError-lp:550661 test failed"))
+  (py-execute-region (line-beginning-position) (point))
+  (when (looking-back comint-prompt-regexp)
+    (goto-char (1- (match-beginning 0))))
+  (assert (looking-back "©") nil "UnicodeEncodeError-lp:550661 test failed"))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1096,6 +1101,21 @@ list.\"\"\"
     (font-lock-fontify-buffer)
     (sit-for 0.1)
     (assert (eq (get-char-property (point) 'face) 'py-class-name-face) nil "class-highlighted-as-keywords-lp:798287 test failed")))
+
+(defun indent-function-arglist-lp:800088-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def long_function_name(
+        var_one, var_two, var_three,
+        var_four):
+     print(var_one)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-function-arglist-lp:800088-base arg teststring)))
+
+(defun indent-function-arglist-lp:800088-base ()
+  (goto-char 25)
+  (let ((py-indent-offset 4))
+    (assert (eq 8 (py-compute-indentation)) nil "indent-function-arglist-lp:800088 test failed")))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
