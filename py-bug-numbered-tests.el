@@ -574,7 +574,7 @@ print u'\\xA9'
 "
                       "#! /usr/bin/env python
 # -\*- coding: utf-8 -\*-
-print (\"b'\\xA9'\")")))
+print('\\xA9')")))
     (when (buffer-live-p (get-buffer "*Python*"))
       (set-buffer "*Python*")
       (when (processp (get-process "Python"))
