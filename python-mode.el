@@ -889,7 +889,7 @@ Currently-active file is at the head of the list.")
   :group 'python
   :type 'hook)
 
-(custom-add-option 'python-mode-hook 'imenu-add-menubar-index)
+(custom-add-option 'python-mode-hook 'py-imenu-create-index)
 (custom-add-option 'python-mode-hook
 		   (lambda ()
 		     "Turn off Indent Tabs mode."
