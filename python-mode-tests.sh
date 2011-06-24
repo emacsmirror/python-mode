@@ -101,8 +101,8 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-beginning-of-def-or-class-test \
 --funcall py-end-of-def-or-class-test \
 --funcall py-electric-backspace-test \
---funcall py-electric-delete-test
-
+--funcall py-electric-delete-test \
+--funcall UnicodeEncodeError-python3
 
 # test not ready
 # passes only when run from edebug

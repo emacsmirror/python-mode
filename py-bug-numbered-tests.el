@@ -18,6 +18,7 @@
 
 (add-to-list 'load-path default-directory)
 (require 'python-mode)
+(require 'python-mode-test)
 (defvar bug-numbered-tests nil
   "Tests following reports at https://bugs.launchpad.net/python-mode")
 
@@ -94,8 +95,9 @@
         (funcall testname)
         (message "%s" (concat (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname)) " passed"))
         (unless (< 1 arg)
+;;          (switch-to-buffer (current-buffer))
           (set-buffer-modified-p 'nil)
-          (when (get-process py-which-bufname)
+          (when (get-process (buffer-name))
             (kill-process (get-process py-which-bufname)))
           (kill-buffer (current-buffer))))
     (with-temp-buffer
@@ -567,23 +569,10 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun UnicodeEncodeError-lp:550661-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring (if (string-match "\\(2\\.[0-9]+\\)" (py-which-python))
-                        "#! /usr/bin/env python
+  (let ((teststring "#! /usr/bin/env python
 # -\*- coding: utf-8 -\*-
 print u'\\xA9'
-"
-                      "#! /usr/bin/env python
-# -\*- coding: utf-8 -\*-
-print('\\xA9')")))
-    (when (buffer-live-p (get-buffer "*Python*"))
-      (set-buffer "*Python*")
-      (when (processp (get-process "Python"))
-        (set-process-query-on-exit-flag (get-process "Python") nil)
-        ;;        (process-kill-without-query (get-process "Python"))
-        )
-      ;;      (kill-process "*Python*")
-      (set-buffer-modified-p 'nil)
-      (kill-buffer "*Python*"))
+"))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-tests-intern 'UnicodeEncodeError-lp:550661-base arg teststring)))
 
@@ -595,6 +584,7 @@ print('\\xA9')")))
   (py-execute-region (line-beginning-position) (point))
   (when (looking-back comint-prompt-regexp)
     (goto-char (1- (match-beginning 0))))
+  (sit-for 0.1)
   (assert (looking-back "©") nil "UnicodeEncodeError-lp:550661 test failed"))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)

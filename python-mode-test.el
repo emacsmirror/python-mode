@@ -197,6 +197,26 @@
   (assert (looking-at "ict") nil "py-electric-delete test #2 failed")
   )
 
+(defun UnicodeEncodeError-python3 (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python3
+# -\*- coding: utf-8 -\*-\n
+print('\\xA9')"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'UnicodeEncodeError-python3-base arg teststring)))
+
+(defun UnicodeEncodeError-python3-base ()
+    (goto-char 50)
+    (push-mark)
+    (end-of-line)
+    (py-choose-shell)
+    (py-execute-region (line-beginning-position) (point))
+    (when (looking-back comint-prompt-regexp)
+      (goto-char (1- (match-beginning 0))))
+    (sit-for 0.1)
+    (assert (looking-back "©") nil "UnicodeEncodeError-python3 test failed"))
+
+
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

@@ -110,6 +110,22 @@
   :group 'languages
   :prefix "py-")
 
+(defcustom py-activate-versions-mode  t
+ "If python-mode should start with versions-mode, default is t. "
+
+:type 'boolean
+:group 'python
+)
+
+(defcustom py-set-python-edit-version  2.7
+ "If python-mode should start a versions-mode displaying the Python default version, edits are presumly intendet to.
+
+If you don't wont to display the default,  set it to nil.
+See also `py-activate-versions-mode'. "
+:type 'float
+:group 'python
+)
+
 (defcustom py-tab-always-indent t
   "*Non-nil means TAB in Python mode should always reindent the current line,
 regardless of where in the line point is when the TAB command is used."
@@ -121,6 +137,7 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+;; Execute stuff start
 (defcustom py-python-command "python"
   "*Shell command used to start Python interpreter."
   :type 'string
@@ -133,23 +150,37 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python
   :tag "Jython Command")
 
-(defcustom py-default-interpreter 'cpython
-  "*Which Python interpreter is used by default.
-The value for this variable can be either `cpython' or `jython'.
+(defcustom py-encoding-string " # -*- coding: utf-8 -*-"
+  "Detecting the shell in head of file. "
+  :type 'string
+  :group 'convenience)
 
-When the value is `cpython', the variables `py-python-command' and
+(defcustom py-shebang-startstring "#! /bin/env"
+  "Detecting the shell in head of file. "
+  :type 'string
+  :group 'convenience)
+
+(defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([pj]ython[^ \t\n]*\\)"
+  "Detecting the shell in head of file. "
+  :type 'regexp
+  :group 'convenience)
+
+(defcustom py-default-interpreter "python"
+  "*Which Python interpreter is used by default.
+The value for this variable can be any installed Python'.
+
+When the value containes `python', the variables `py-python-command' and
 `py-python-command-args' are consulted to determine the interpreter
 and arguments to use.
 
-When the value is `jython', the variables `py-jython-command' and
+When the value containes `jython', the variables `py-jython-command' and
 `py-jython-command-args' are consulted to determine the interpreter
 and arguments to use.
 
 Note that this variable is consulted only the first time that a Python
 mode buffer is visited during an Emacs session.  After that, use
 \\[py-toggle-shells] to change the interpreter shell."
-  :type '(choice (const :tag "Python (a.k.a. CPython)" cpython)
-                 (const :tag "Jython" jython))
+  :type 'string
   :group 'python)
 
 (defcustom py-python-command-args '("-i")
@@ -166,6 +197,61 @@ mode buffer is visited during an Emacs session.  After that, use
   :type '(repeat string)
   :group 'python
   :tag "Jython Command Args")
+
+(defcustom py-execute-file-command ""
+  "Only specify a command like
+\"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\"
+here, if you want use it exclusively.
+
+Per default python-mode will choose the appropriate command depending on your installed Python default version.
+If code is send to an altnative Python version, the appropriate `py-execute-file-command' will be selected too.
+
+Beside Python-versioned minor-mode exist, which will override this setting. "
+  :type 'string
+  :group 'python)
+(make-variable-buffer-local 'py-execute-file-command)
+
+(defcustom py-cleanup-temporary  t
+ "If temporary buffers and files used by functions executing region  should be deleted afterwards. "
+
+:type 'boolean
+:group 'python
+)
+
+;; Execute stuff end
+
+;; Output stuff start
+(defcustom py-jump-on-exception t
+  "*Jump to innermost exception frame in *Python Output* buffer.
+When this variable is non-nil and an exception occurs when running
+Python code synchronously in a subprocess, jump immediately to the
+source code of the innermost traceback frame."
+  :type 'boolean
+  :group 'python)
+
+(defvar py-shell-alist
+  '(("jython" . 'jython)
+    ("python" . 'cpython))
+  "*Alist of interpreters and python shells. Used by `py-choose-shell'
+to select the appropriate python interpreter mode for a file.")
+
+(defcustom py-shell-input-prompt-1-regexp "^>>> "
+  "*A regular expression to match the input prompt of the shell."
+  :type 'string
+  :group 'python)
+
+(defcustom py-shell-input-prompt-2-regexp "^[.][.][.] "
+  "*A regular expression to match the input prompt of the shell after the
+  first line of input."
+  :type 'string
+  :group 'python)
+
+(defcustom py-shell-switch-buffers-on-execute t
+  "*Controls switching to the Python buffer where commands are
+  executed.  When non-nil the buffer switches to the Python buffer, if
+  not no switching occurs."
+  :type 'boolean
+  :group 'python)
 
 (defcustom py-indent-offset 4
   "*Amount of offset per level of indentation.
@@ -284,13 +370,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
   :type 'string
   :group 'python)
 
-(defcustom py-cleanup-temporary  t
- "If temporary buffers and files used by functions executing region  should be deleted afterwards. "
-
-:type 'boolean
-:group 'python
-)
-
 (defcustom py-beep-if-tab-change t
   "*Ring the bell if `tab-width' is changed.
 If a comment of the form
@@ -302,14 +381,6 @@ current value of (the general Emacs variable) `tab-width' does not
 equal <number>, `tab-width' is set to <number>, a message saying so is
 displayed in the echo area, and if `py-beep-if-tab-change' is non-nil
 the Emacs bell is also rung as a warning."
-  :type 'boolean
-  :group 'python)
-
-(defcustom py-jump-on-exception t
-  "*Jump to innermost exception frame in *Python Output* buffer.
-When this variable is non-nil and an exception occurs when running
-Python code synchronously in a subprocess, jump immediately to the
-source code of the innermost traceback frame."
   :type 'boolean
   :group 'python)
 
@@ -379,7 +450,7 @@ Default is `t'."
 
 ;; Not customizable
 (defvar py-exec-command nil
-  "Mode commands will set this. ") 
+  "Mode commands will set this. ")
 (make-variable-buffer-local 'py-exec-command)
 
 (defvar py-master-file nil
@@ -408,30 +479,6 @@ buffer is prepended to come up with a file name.")
   :type '(repeat string)
   :group 'python
   :tag "Pychecker Command Args")
-
-(defvar py-shell-alist
-  '(("jython" . 'jython)
-    ("python" . 'cpython))
-  "*Alist of interpreters and python shells. Used by `py-choose-shell'
-to select the appropriate python interpreter mode for a file.")
-
-(defcustom py-shell-input-prompt-1-regexp "^>>> "
-  "*A regular expression to match the input prompt of the shell."
-  :type 'string
-  :group 'python)
-
-(defcustom py-shell-input-prompt-2-regexp "^[.][.][.] "
-  "*A regular expression to match the input prompt of the shell after the
-  first line of input."
-  :type 'string
-  :group 'python)
-
-(defcustom py-shell-switch-buffers-on-execute t
-  "*Controls switching to the Python buffer where commands are
-  executed.  When non-nil the buffer switches to the Python buffer, if
-  not no switching occurs."
-  :type 'boolean
-  :group 'python)
 
 (defcustom py-hide-show-keywords
   '(
@@ -862,9 +909,9 @@ Currently-active file is at the head of the list.")
 ;; Major mode boilerplate
 
 ;; define a mode-specific abbrev table for those who use such things
-(defvar py-mode-abbrev-table nil
+(defvar python-mode-abbrev-table nil
   "Abbrev table in use in `python-mode' buffers.")
-(define-abbrev-table 'py-mode-abbrev-table nil)
+(define-abbrev-table 'python-mode-abbrev-table nil)
 
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
@@ -892,6 +939,13 @@ Currently-active file is at the head of the list.")
 ;; called py-mode-hook, and was not defvar'd.  Deprecate its use.
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
+
+;; Menu definitions, only relevent if you have the easymenu.el package
+;; (standard in the latest Emacs 19 and XEmacs 19 distributions).
+(defvar py-menu nil
+  "Menu for Python Mode.
+This menu will get created automatically if you have the `easymenu'
+package.  Note that the latest X/Emacs releases contain this package.")
 
 (defvar py-mode-map nil)
 (setq py-mode-map
@@ -973,11 +1027,11 @@ Currently-active file is at the head of the list.")
 	 :help "Go to start of innermost definition at point"]
 	["End of def/class" end-of-defun
 	 :help "Go to end of innermost definition at point"]
-;; 	"-"
-;; 	("Templates..."
-;; 	 :help "Expand templates for compound statements"
-;; 	 :filter (lambda (&rest junk)
-;;                   (abbrev-table-menu py-mode-abbrev-table)))
+	"-"
+        ("Templates..."
+         :help "Expand templates for compound statements"
+         :filter (lambda (&rest junk)
+                   (abbrev-table-menu python-mode-abbrev-table)))
 	"-"
 	["Start interpreter" py-shell
 	 :help "Run `inferior' Python in separate buffer"]
@@ -1031,48 +1085,6 @@ Currently-active file is at the head of the list.")
   (define-key py-shell-map "\C-c-" 'py-up-exception)
   (define-key py-shell-map "\C-c=" 'py-down-exception)
   )
-
-;; (when (featurep 'xemacs) (defvar py-mode-syntax-table nil))
-;; (when (featurep 'xemacs)
-;;   (when (not py-mode-syntax-table)
-;;     (setq py-mode-syntax-table (make-syntax-table))
-;;     (modify-syntax-entry ?\( "()" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\) ")(" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\[ "(]" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\] ")[" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\{ "(}" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\} "){" py-mode-syntax-table)
-;;     ;; Add operator symbols misassigned in the std table
-;;     (modify-syntax-entry ?\$ "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\% "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\& "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\* "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\+ "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\- "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\/ "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\< "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\= "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\> "."  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\| "."  py-mode-syntax-table)
-;;     ;; For historical reasons, underscore is word class instead of
-;;     ;; symbol class.  GNU conventions say it should be symbol class, but
-;;     ;; there's a natural conflict between what major mode authors want
-;;     ;; and what users expect from `forward-word' and `backward-word'.
-;;     ;; Guido and I have hashed this out and have decided to keep
-;;     ;; underscore in word class.  If you're tempted to change it, try
-;;     ;; binding M-f and M-b to py-forward-into-nomenclature and
-;;     ;; py-backward-into-nomenclature instead.  This doesn't help in all
-;;     ;; situations where you'd want the different behavior
-;;     ;; (e.g. backward-kill-word).
-;;     (modify-syntax-entry ?\_ "w"  py-mode-syntax-table)
-;;     ;; Both single quote and double quote are string delimiters
-;;     (modify-syntax-entry ?\' "\"" py-mode-syntax-table)
-;;     (modify-syntax-entry ?\" "|" py-mode-syntax-table)
-;;     ;; backquote is open and close paren
-;;     (modify-syntax-entry ?\` "$"  py-mode-syntax-table)
-;;     ;; comment delimiters
-;;     (modify-syntax-entry ?\# "<"  py-mode-syntax-table)
-;;     (modify-syntax-entry ?\n ">"  py-mode-syntax-table)))
 
 ;; An auxiliary syntax table which places underscore and dot in the
 ;; symbol class for simplicity
@@ -1215,6 +1227,10 @@ When non-nil, arguments are printed."
   :type 'boolean
   :group 'python)
 
+(defsubst py-in-string-or-comment-p ()
+    "Return beginning position if point is in a Python literal (a comment or string)."
+    (nth 8 (parse-partial-sexp (point-min) (point))))
+
 ;;;; Imenu.
 
 ;; For possibily speeding this up, here's the top of the ELP profile
@@ -1250,7 +1266,7 @@ precede it)."
     ;; This can't be right, especially not when jit-lock is not used.  --Stef
     ;; (unless (get-text-property (1- (point-max)) 'fontified)
     ;;   (font-lock-fontify-region (point-min) (point-max)))
-    )
+)
   (let (index-alist)			; accumulated value to return
     (while (re-search-forward
 	    (rx line-start (0+ space)	; leading space
@@ -1290,26 +1306,16 @@ precede it)."
 
 
 (defun py-choose-shell-by-shebang ()
-  "Choose CPython or Jython mode by looking at #! on the first line.
-Returns the appropriate mode function.
-Used by `py-choose-shell', and similar to but distinct from
-`set-auto-mode', though it uses `auto-mode-interpreter-regexp' (if available)."
+  "Choose shell by looking at #! on the first line.
+Returns the specified Python resp. Jython shell command name. "
+  (interactive)
   ;; look for an interpreter specified in the first line
   ;; similar to set-auto-mode (files.el)
-  (let* ((re (if (boundp 'auto-mode-interpreter-regexp)
-                 auto-mode-interpreter-regexp
-               ;; stolen from Emacs 21.2
-               "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([^ \t\n]+\\)"))
-         (interpreter (save-excursion
-                        (goto-char (point-min))
-                        (if (looking-at re)
-                            (match-string 2)
-                          "")))
-         elt)
-    ;; Map interpreter name to a mode.
-    (setq elt (assoc (file-name-nondirectory interpreter)
-                     py-shell-alist))
-    (and elt (caddr elt))))
+  (let ((interpreter (save-excursion
+                       (goto-char (point-min))
+                       (when (looking-at py-shebang-regexp)
+                         (match-string-no-properties 2)))))
+    interpreter))
 
 (defun py-choose-shell-by-import ()
   "Choose CPython or Jython mode based imports.
@@ -1335,13 +1341,37 @@ This does the following:
  - examine imports using `py-choose-shell-by-import'
  - default to the variable `py-default-interpreter'"
   (interactive)
-  (or (py-choose-shell-by-shebang)
-      (py-choose-shell-by-import)
-      py-default-interpreter
-;      'cpython ;; don't use to py-default-interpreter, because default
-;               ;; is only way to choose CPython
-      ))
-
+  (let ((erg (or (py-choose-shell-by-shebang)
+                 (py-choose-shell-by-import)
+                 py-default-interpreter)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(define-derived-mode python2-mode python-mode "Python2"
+  "Edit and run code used by Python version 2 series. "
+  :group 'Python
+  :abbrev nil
+  (set (make-local-variable 'py-exec-command) '(format "execfile(r'%s') # PYTHON-MODE\n" filename)))
+
+(define-derived-mode python3-mode python-mode "Python3"
+  "Edit and run code used by Python version 3 series. "
+  :group 'Python
+  :abbrev nil
+  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)))
+
+(defun py-versions-mode ()
+  (interactive)
+  (when py-activate-versions-mode
+    ;; when set, overrides the guessing of py-which-python
+    (if py-set-python-edit-version
+        (cond ((< py-set-python-edit-version 3.0)
+               (python2-mode))
+              (t (python3-mode)))
+      (let ((erg (py-which-python)))
+        (cond ((< erg 3.0)
+               (python2-mode))
+              (t (python3-mode)))))))
+
 (defvar py-which-shell nil)
 ;;;###autoload
 ;; (define-derived-mode python-mode fundamental-mode "Python"
@@ -1390,7 +1420,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; 2009-09-10 a.roehler@web.de changed section end
   (setq major-mode 'python-mode
         mode-name "Python"
-        local-abbrev-table py-mode-abbrev-table
+        local-abbrev-table python-mode-abbrev-table
         paragraph-separate "^[ \t]*$"
         paragraph-start "^[ \t]*$"
         require-final-newline t
@@ -1441,6 +1471,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
                 nil))
   (add-hook 'python-mode-hook 'py-beg-of-defun-function)
   (add-hook 'python-mode-hook 'py-end-of-defun-function)
+;;  (add-hook 'python-mode-hook 'py-versions-mode)
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (if python-mode-hook
       (run-hooks 'python-mode-hook)
@@ -1448,7 +1479,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Now do the automagical guessing
   (if py-smart-indentation
       (let ((offset py-indent-offset))
-        ;; It's okay if this fails to guess a good value
+        ;; Nil if this fails to guess a good value
         (if (and (ignore-errors (py-guess-indent-offset))
                  (<= py-indent-offset 8)
                  (>= py-indent-offset 2))
@@ -1464,11 +1495,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (py-toggle-shells (py-choose-shell)))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
-(define-derived-mode python3-mode python-mode "Python3"
-  "Edit and run code used by Python version 3 series. "
-  :group 'Python
-  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)))
-
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
   "Major mode for editing Jython/Jython files.
@@ -1478,7 +1504,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
 "
   (interactive)
   (python-mode)
-  (py-toggle-shells 'jython)
+  (py-toggle-shells "jython")
   (when jython-mode-hook
       (run-hooks 'jython-mode-hook)))
 
@@ -1540,8 +1566,7 @@ comment."
                    (py-outdent-p)
                    (= indent (save-excursion
                                (py-next-statement -1)
-                               (py-compute-indentation t)))
-                   )
+                               (py-compute-indentation t))))
               (setq outdent py-indent-offset))
           ;; Don't indent, only dedent.  This assumes that any lines
           ;; that are already dedented relative to
@@ -1553,20 +1578,21 @@ comment."
             (goto-char here)
             (beginning-of-line)
             (delete-horizontal-space)
-            (indent-to (- indent outdent))
-            )))))
+            (indent-to (- indent outdent)))))))
 
-(defun py-execute-file (proc filename)
+(defun py-execute-file (proc filename &optional cmd)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 `kill-output-from-shell' does The Right Thing."
   (let ((curbuf (current-buffer))
         (procbuf (process-buffer proc))
-;       (comint-scroll-to-bottom-on-output t)
-        (msg (format "## working on region in file %s...\n" filename))
-        ;; add some comment, so that we can filter it out of history
-        (cmd (format "execfile(r'%s') # PYTHON-MODE\n" filename)))
+                                        ;       (comint-scroll-to-bottom-on-output t)
+        (msg (format "## executing temporary file %s...\n" filename))
+        (cmd (cond (cmd)
+                   ((not (string= "" py-execute-file-command))
+                    py-execute-file-command)
+                   (t (py-which-execute-file-command filename)))))
     (unwind-protect
         (save-excursion
           (set-buffer procbuf)
@@ -1769,47 +1795,35 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (make-variable-buffer-local 'py-which-args)
 (make-variable-buffer-local 'py-which-bufname)
 
-(defun py-toggle-shells (arg)
-  "Toggles between the CPython and Jython shells.
+(defun py-toggle-shells (&optional arg)
+  "Toggles between the CPython and Jython default shells.
 
-With positive argument ARG (interactively \\[universal-argument]),
-uses the CPython shell, with negative ARG uses the Jython shell, and
-with a zero argument, toggles the shell.
-
-Programmatically, ARG can also be one of the symbols `cpython' or
-`jython', equivalent to positive arg and negative arg respectively."
+With \\[universal-argument]) user is prompted to specify a reachable Python version.
+If no arg given and py-which-shell not set yet, shell is set according to `py-default-interpreter' "
   (interactive "P")
-  ;; default is to toggle
-  (unless arg
-      (setq arg 0))
-  ;; preprocess arg
-  (cond
-   ((equal arg 0)
-    ;; toggle
-    (if (string-equal py-which-bufname "Python")
-        (setq arg -1)
-      (setq arg 1)))
-   ((equal arg 'cpython) (setq arg 1))
-   ((equal arg 'jython) (setq arg -1)))
-  (let (msg)
-    (cond
-     ((< 0 arg)
-      ;; set to CPython
-      (setq py-which-shell py-python-command
-            py-which-args py-python-command-args
-            py-which-bufname "Python"
-            msg "CPython")
-      (if (string-equal py-which-bufname "Jython")
-          (setq mode-name "Python")))
-     ((> 0 arg)
-      (setq py-which-shell py-jython-command
+  (let ((name (cond ((eq 4 (prefix-numeric-value arg))
+                     (read-from-minibuffer "Python Shell: "))
+                    ((ignore-errors (stringp arg))
+                     arg)
+                    (py-which-shell
+                     (if (string-match "python" py-which-shell)
+                         "jython"
+                       "python"))
+                    (t py-default-interpreter)))
+        )
+    (if (string-match "python" name)
+        (setq py-which-shell name
+              py-which-args py-python-command-args
+              py-which-bufname (capitalize name)
+              msg "CPython"
+              mode-name (capitalize name))
+      (setq py-which-shell name
             py-which-args py-jython-command-args
-            py-which-bufname "Jython"
-            msg "Jython")
-      (if (string-equal py-which-bufname "Python")
-          (setq mode-name "Jython")))
-     )
-    (message "Using the %s shell" msg)
+            py-which-bufname (capitalize name)
+            msg "Jython"
+            mode-name (capitalize name)))
+    (force-mode-line-update)
+    (message "Using the %s shell" py-which-shell)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
 
 ;;;###autoload
@@ -1892,60 +1906,33 @@ filter."
     (message "%d pending files de-queued." n)))
 
 (defun py-which-python ()
-  "Returns version number of Python of current default environment. "
+  "Returns version of Python of current default environment, a number. "
   (interactive)
-  (let* ((cmd (shell-quote-argument "python"))
-         (res (shell-command-to-string
-               (concat cmd
-                       " -c \"from sys import version_info;\
-print version_info >= (2, 2) and version_info < (3, 0)\"")))
-         ;; an other way, just let's play with both
+  (let* ((cmd (or py-which-shell
+                  (py-choose-shell)))
          (erg (shell-command-to-string (concat cmd " --version")))
-         version)
-    (when (string-match "\\([0-9]\\.[0-9]+\\)" erg)
-      (setq version (substring erg 7 (1- (length erg)))))
+         (version (when (string-match "\\([0-9]\\.[0-9]+\\)" erg)
+                    (substring erg 7 (1- (length erg))))))
     (when (interactive-p)
-      (if version
-          (message "%s" version)
+      (if erg
+          (message "%s" erg)
         (message "%s" "Could not detect Python on your system")))
-    (unless (string-match "True" res)
-      (error "Only Python versions >= 2.2 and < 3.0 are supported"))
-    version))
+    (string-to-number version)))
 
-
-(defun py-cleanup (buf file)
-  "Deletes temporary buffer and file if `py-cleanup-temporary' is t. "
-  (save-excursion
-    (when py-cleanup-temporary
-      (set-buffer buf)
-      (set-buffer-modified-p nil)
-      (kill-buffer buf)
-      (delete-file file))))
-
-(defun py-if-needed-insert-if (buf)
-  "Internal use by py-execute... functions.
-Inserts an incentive true form \"if 1:\\n.\" "
-  (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
-    (when needs-if
-      (insert "if 1:\n")
-      (setq py-line-number-offset (- py-line-number-offset 1)))))
-
-(defun py-fix-start (end)
-  "Internal use by py-execute... functions.
-Avoid empty lines at the beginning. "
-  (goto-char start)
-  (beginning-of-line)
-  ;; Skip ahead to the first non-blank line
-  (while (and (looking-at "\\s *$")
-              (< (point) end))
-    (forward-line 1))
-  (setq start (point))
-  (or (< start end)
-      (error "Region is empty"))
-  (setq py-line-number-offset (count-lines 1 start)))
+(defun py-which-execute-file-command (filename)
+  "Return the command appropriate to Python version.
+Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for Python 2 series."
+  (interactive)
+  (let* ((erg (py-which-python))
+         (cmd (if (< erg 3)
+                  (format "execfile(r'%s') # PYTHON-MODE\n" filename)
+                (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename))))
+    (when (interactive-p) (message "%s" (prin1-to-string cmd)))
+    cmd))
 
 
 ;; Code execution commands
+
 (defun py-execute-region (&optional start end async)
   "Execute the region in a Python interpreter.
 
@@ -1974,37 +1961,35 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
   (py-execute-base start end async))
 
-(defun py-execute-base (start end &optional async)
+(defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
+         (name (capitalize (or py-which-shell py-which-bufname)))
          (buf-and-proc (progn
-                         (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
-                              (processp (get-process py-which-bufname))
-                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+                         (and (buffer-live-p (get-buffer (concat "*" name "*")))
+                              (processp (get-process name))
+                              (buffer-name (get-buffer (concat "*" name "*"))))))
          (procbuf (or buf-and-proc
                       (progn
                         (py-shell)
-                        (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
-         (proc (get-process py-which-bufname))
-         (temp (make-temp-name py-which-bufname))
+                        (buffer-name (get-buffer (concat "*" name "*"))))))
+         (proc (get-process name))
+         (temp (make-temp-name name))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
     (py-fix-start end)
-    (py-execute-intern start end regbuf procbuf proc temp file filebuf async)))
+    (py-execute-intern start end regbuf procbuf proc temp file filebuf name)))
 
-(defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf async)
+(defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf name)
   (let (shell)
     (set-buffer filebuf)
-    (py-if-needed-insert-if filebuf)
+    (switch-to-buffer (current-buffer))
     (insert-buffer-substring regbuf start end)
-    ;; Set the shell either to the #! line command, or to the
-    ;; py-which-shell buffer local variable.
-    (setq shell (or (py-choose-shell-by-shebang)
-                    (py-choose-shell-by-import)
-                    py-which-shell))
+    (py-if-needed-insert-if filebuf)
+    (py-insert-coding)
+    (py-if-needed-insert-shell name)
     (cond
-     ;; always run the code in its own asynchronous subprocess
      (async
       ;; User explicitly wants this to run in its own async subprocess
       (save-excursion
@@ -2024,14 +2009,13 @@ is inserted at the end.  See also the command `py-clear-queue'."
      (proc
       ;; use the existing python shell
       (set-buffer filebuf)
-      (message "Dieser Buffer: %s" (buffer-name))
-      (message "Schreibe Region in %s" file)
       (write-region (point-min) (point-max) file nil t nil 'ask)
       ;;      (find-file file)
       (sit-for 0.1)
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
-      (switch-to-buffer procbuf)
+      (set-buffer procbuf)
+      (switch-to-buffer (current-buffer))
       (sit-for 0.1)
       (py-cleanup filebuf file)))))
 
@@ -2064,121 +2048,129 @@ Unicode strings like u'\xA9' "
           (if err-p
               (pop-to-buffer py-exception-buffer)))))))
 
-;; (defun py-execute-region (&optional start end async)
-;;   "Execute the region in a Python interpreter.
-;; 
-;; The region is first copied into a temporary file (in the directory
-;; `py-temp-directory').  If there is no Python interpreter shell
-;; running, this file is executed synchronously using
-;; `shell-command-on-region'.  If the program is long running, use
-;; \\[universal-argument] to run the command asynchronously in its own
-;; buffer.
-;; 
-;; When this function is used programmatically, arguments START and END
-;; specify the region to execute, and optional third argument ASYNC, if
-;; non-nil, specifies to run the command asynchronously in its own
-;; buffer.
-;; 
-;; If the Python interpreter shell is running, the region is execfile()'d
-;; in that shell.  If you try to execute regions too quickly,
-;; `python-mode' will queue them up and execute them one at a time when
-;; it sees a `>>> ' prompt from Python.  Each time this happens, the
-;; process buffer is popped into a window (if it's not already in some
-;; window) so you can see it, and a comment of the form
-;; 
-;;     \t## working on region in file <name>...
-;; 
-;; is inserted at the end.  See also the command `py-clear-queue'."
-;;   (interactive "r\nP")
-;;   ;; Skip ahead to the first non-blank line
-;;   (let* ((cur (current-buffer))
-;;          (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
-;;                             (processp (get-process py-which-bufname))
-;;                             (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
-;;          (procbuf (or first (progn
-;;                               (py-shell)
-;;                               (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
-;;          (proc (get-process py-which-bufname))
-;;          (temp (make-temp-name py-which-bufname))
-;;          (file (concat (expand-file-name temp py-temp-directory) ".py"))
-;;          (buf (get-buffer-create file))
-;;          shell)
-;;     ;; Write the contents of the buffer, watching out for indented regions.
-;;     (save-excursion
-;;       (set-buffer cur)
-;;       (goto-char start)
-;;       (beginning-of-line)
-;;       (while (and (looking-at "\\s *$")
-;;                   (< (point) end))
-;;         (forward-line 1))
-;;       (setq start (point))
-;;       (or (< start end)
-;;           (error "Region is empty"))
-;;       (setq py-line-number-offset (count-lines 1 start))
-;;       (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
-;;         (set-buffer buf)
-;;         (python-mode)
-;;         (insert "#-*- coding: utf-8 -*-\n")
-;;         (when needs-if
-;;           (insert "if 1:\n")
-;;           (setq py-line-number-offset (- py-line-number-offset 1)))
-;;         (insert-buffer-substring cur start end)
-;;         ;; Set the shell either to the #! line command, or to the
-;;         ;; py-which-shell buffer local variable.
-;;         (setq shell (or (py-choose-shell-by-shebang)
-;;                         (py-choose-shell-by-import)
-;;                         py-which-shell))))
-;;     (cond
-;;      ;; always run the code in its own asynchronous subprocess
-;;      (async
-;;       ;; User explicitly wants this to run in its own async subprocess
-;;       (save-excursion
-;;         (set-buffer buf)
-;;         (write-region (point-min) (point-max) file nil 'nomsg))
-;;       (let* ((buf (generate-new-buffer-name py-output-buffer))
-;;              ;; TBD: a horrible hack, but why create new Custom variables?
-;;              (arg (if (string-equal py-which-bufname "Python")
-;;                       "-u" "")))
-;;         (start-process py-which-bufname buf shell arg file)
-;;         (pop-to-buffer buf)
-;;         (py-postprocess-output-buffer buf)
-;;         ;; TBD: clean up the temporary file!
-;;         ))
-;;      ;; if the Python interpreter shell is running, queue it up for
-;;      ;; execution there.
-;;      (proc
-;;       ;; use the existing python shell
-;;       (set-buffer buf)
-;;       (write-region (point-min) (point-max) file nil 'nomsg)
-;;       (py-execute-file proc file)
-;;       (setq py-exception-buffer (cons file (current-buffer)))
-;;       (switch-to-buffer procbuf))
-;;      (t
-;;       ;; TBD: a horrible hack, but why create new Custom variables?
-;;       (let ((cmd
-;;              ;;             (concat py-which-shell (if (string-equal py-which-bufname
-;;              (concat shell (if (string-equal py-which-bufname
-;;                                              "Jython")
-;;                                " -" ""))))
-;;         ;; otherwise either run it synchronously in a subprocess
-;;         (save-excursion
-;;           (set-buffer buf)
-;;           (shell-command-on-region (point-min) (point-max)
-;;                                    cmd py-output-buffer))
-;;         ;; shell-command-on-region kills the output buffer if it never
-;;         ;; existed and there's no output from the command
-;;         (if (not (get-buffer py-output-buffer))
-;;             (message "No output.")
-;;           (setq py-exception-buffer (current-buffer))
-;;           (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-;;             (pop-to-buffer py-output-buffer)
-;;             (if err-p
-;;                 (pop-to-buffer py-exception-buffer)))))))
-;;     ;; Clean up after ourselves.
-;;     (kill-buffer buf)))
+(defun py-send-region-ipython (start end)
+  "Execute the region through an ipython shell. "
+  (interactive "r")
+  ;; Skip ahead to the first non-blank line
+  (let* ((regbuf (current-buffer))
+         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+                            (processp (get-process py-which-bufname))
+                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (procbuf (or first (progn
+                              (py-shell)
+                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (cmd "#-*- coding: utf-8 -*-\n")
+         (lines (count-lines start end))
+         shell)
+    (setq cmd (concat cmd (buffer-substring-no-properties start end)))
+    ;; Set the shell either to the #! line command, or to the
+    ;; py-which-shell buffer local variable.
+    (setq shell (or (py-choose-shell-by-shebang)
+                    (py-choose-shell-by-import)
+                    py-which-shell))
+    (set-buffer procbuf)
+    (goto-char (point-max))
+    (switch-to-buffer procbuf)
+    (insert cmd)
+    (comint-send-input)
+;;    (ipython-send-and-indent)
+    (when (< 1 lines)
+;;      (goto-char (point-max))
+      (comint-send-input))
+    ))
 
-
-;; Code execution commands
+(defun py-execute-region-in-shell (start end &optional async)
+  "Execute the region in a Python shell. "
+  (interactive "r\nP")
+  (let* ((regbuf (current-buffer))
+         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
+                            (processp (get-process py-which-bufname))
+                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (procbuf (or first (progn
+                              (py-shell)
+                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (proc (get-process py-which-bufname))
+         (temp (make-temp-name py-which-bufname))
+         (file (concat (expand-file-name temp py-temp-directory) ".py"))
+         (temp (get-buffer-create file))
+         (py-line-number-offset 0)
+         shell cmd)
+    ;; Write the contents of the buffer, watching out for indented regions.
+    (save-excursion
+      (set-buffer regbuf)
+      (goto-char start)
+      (beginning-of-line)
+      (while (and (looking-at "\\s *$")
+                  (< (point) end))
+        (forward-line 1))
+      (setq start (point))
+      (or (< start end)
+          (error "Region is empty"))
+      (setq py-line-number-offset (count-lines 1 start))
+      (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
+        (setq cmd "#-*- coding: utf-8 -*-\n")
+        (when needs-if
+          (setq cmd (concat cmd "if 1:\n"))
+          (setq py-line-number-offset (- py-line-number-offset 1)))
+        (setq cmd (concat cmd (buffer-substring-no-properties start end)))
+        ;; Set the shell either to the #! line command, or to the
+        ;; py-which-shell buffer local variable.
+        (setq shell (or (py-choose-shell-by-shebang)
+                        (py-choose-shell-by-import)
+                        py-which-shell))))
+    (cond
+     ;; always run the code in its own asynchronous subprocess
+     (async
+      ;; User explicitly wants this to run in its own async subprocess
+      (save-excursion
+        (set-buffer temp)
+        (write-region (point-min) (point-max) file nil 'nomsg))
+      (let* ((temp (generate-new-buffer-name py-output-buffer))
+             ;; TBD: a horrible hack, but why create new Custom variables?
+             (arg (if (string-equal py-which-bufname "Python")
+                      "-u" "")))
+        (start-process py-which-bufname temp shell arg file)
+        (pop-to-buffer temp)
+        (py-postprocess-output-buffer temp)
+        ;; TBD: clean up the temporary file!
+        ))
+     ;; if the Python interpreter shell is running, queue it up for
+     ;; execution there.
+     (proc
+      ;; use the existing python shell
+      (set-buffer procbuf)
+      (goto-char (point-max))
+      (insert cmd)
+      (switch-to-buffer (current-buffer))
+      (if (functionp 'ipython-send-and-indent)
+          (ipython-send-and-indent)
+        (comint-send-input))
+      (setq py-exception-buffer (cons file (current-buffer)))
+      (switch-to-buffer procbuf))
+     (t
+      ;; this part is in py-shell-command-on-region now.
+      (let ((cmd
+             ;;             (concat py-which-shell (if (string-equal py-which-bufname
+             (concat shell (if (string-equal py-which-bufname
+                                             "Jython")
+                               " -" ""))))
+        ;; otherwise either run it synchronously in a subprocess
+        (save-excursion
+          (set-buffer temp)
+          (shell-command-on-region (point-min) (point-max)
+                                   cmd py-output-buffer))
+        ;; shell-command-on-region kills the output buffer if it never
+        ;; existed and there's no output from the command
+        (if (not (get-buffer py-output-buffer))
+            (message "No output.")
+          (setq py-exception-buffer (current-buffer))
+          (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
+            (pop-to-buffer py-output-buffer)
+            (if err-p
+                (pop-to-buffer py-exception-buffer)))))))
+    ;; Clean up after ourselves.
+    (kill-buffer temp)))
+
 (defun py-execute-buffer (&optional async)
   "Send the contents of the buffer to a Python interpreter.
 If the file local variable `py-master-file' is non-nil, execute the
@@ -2274,6 +2266,54 @@ subtleties, including the use of the optional ASYNC argument."
                  (generate-new-buffer-name " *Python Command*")))
     (insert string)
     (py-execute-region (point-min) (point-max) async)))
+
+(defun py-if-needed-insert-shell (&optional name)
+  (unless (py-choose-shell-by-shebang)
+    (let ((erg (or (downcase name)
+                   (py-choose-shell-by-import)
+                   py-which-shell
+                   py-default-interpreter)))
+      (goto-char (point-min))
+      (insert (concat py-shebang-startstring " " erg "\n")))))
+
+(defun py-if-needed-insert-if (buf)
+  "Internal use by py-execute... functions.
+Inserts an incentive true form \"if 1:\\n.\" "
+  (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
+    (when needs-if
+      (insert "if 1:\n")
+      (setq py-line-number-offset (- py-line-number-offset 1)))))
+
+(defun py-insert-coding ()
+  (goto-char (point-min))
+  (unless (re-search-forward (concat "^" (regexp-quote py-encoding-string)) nil t 1)
+    (if (re-search-forward py-shebang-regexp nil t 1)
+        (progn
+          (newline)
+          (insert (concat py-encoding-string "\n")))
+      (insert (concat py-encoding-string "\n")))))
+
+(defun py-cleanup (buf file)
+  "Deletes temporary buffer and file if `py-cleanup-temporary' is t. "
+  (save-excursion
+    (when py-cleanup-temporary
+      (set-buffer buf)
+      (set-buffer-modified-p nil)
+      (kill-buffer buf)
+      (delete-file file))))
+(defun py-fix-start (end)
+  "Internal use by py-execute... functions.
+Avoid empty lines at the beginning. "
+  (goto-char start)
+  (beginning-of-line)
+  ;; Skip ahead to the first non-blank line
+  (while (and (looking-at "\\s *$")
+              (< (point) end))
+    (forward-line 1))
+  (setq start (point))
+  (or (< start end)
+      (error "Region is empty"))
+  (setq py-line-number-offset (count-lines 1 start)))
 
 
 (defun py-jump-to-exception (file line)
@@ -2457,7 +2497,7 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point))) 
+      (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
@@ -2533,13 +2573,13 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re) 
+               ((looking-at py-return-re)
                 (py-beginning-of-def-or-class)
                 (current-indentation))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re) 
+               ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
@@ -2641,10 +2681,6 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
                             (when (nth 3 pps) (nth 8 pps)))))))
     (when (interactive-p) (message "%s" erg))
     erg))
-
-(defsubst py-in-string-or-comment-p ()
-    "Return beginning position if point is in a Python literal (a comment or string)."
-    (nth 8 (parse-partial-sexp (point-min) (point))))
 
 (defun py-beginning-of-statement-p ()
   (interactive)
@@ -3705,7 +3741,6 @@ Returns beginning and end positions of marked area, a cons."
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-
 (defun py-help-at-point ()
   "Get help from Python based on the symbol nearest point."
   (interactive)
@@ -3724,7 +3759,6 @@ Returns beginning and end positions of marked area, a cons."
     ;; BAW: Should we really be leaving the output buffer in help-mode?
     (help-mode)))
 
-
 ;; Documentation functions
 
 ;; dump the long form of the mode blurb; does the usual doc escapes,
@@ -4249,7 +4283,6 @@ See customizable variables `py-current-defun-show' and `py-current-defun-delay'.
         (when arg (message erg))
         erg))))
 
-
 (defconst py-help-address "python-mode@python.org"
   "Address accepting submission of bug reports.")
 
@@ -4296,7 +4329,6 @@ to do so may mean a greater delay in fixing your bug.\n\n")
       (exchange-point-and-mark)
       (py-keep-region-active))))
 
-
 (defun py-kill-emacs-hook ()
   "Delete files in `py-file-queue'.
 These are Python temporary files awaiting execution."
@@ -4313,7 +4345,6 @@ These are Python temporary files awaiting execution."
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
           minor-mode-alist))
 
-
 ;;; paragraph and string filling code from Bernhard Herzog
 ;;; see http://mail.python.org/pipermail/python-list/2002-May/103189.html
 
