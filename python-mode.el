@@ -110,22 +110,6 @@
   :group 'languages
   :prefix "py-")
 
-(defcustom py-activate-versions-mode  t
- "If python-mode should start with versions-mode, default is t. "
-
-:type 'boolean
-:group 'python
-)
-
-(defcustom py-set-python-edit-version  2.7
- "If python-mode should start a versions-mode displaying the Python default version, edits are presumly intendet to.
-
-If you don't wont to display the default,  set it to nil.
-See also `py-activate-versions-mode'. "
-:type 'float
-:group 'python
-)
-
 (defcustom py-tab-always-indent t
   "*Non-nil means TAB in Python mode should always reindent the current line,
 regardless of where in the line point is when the TAB command is used."
@@ -197,19 +181,6 @@ mode buffer is visited during an Emacs session.  After that, use
   :type '(repeat string)
   :group 'python
   :tag "Jython Command Args")
-
-(defcustom py-execute-file-command ""
-  "Only specify a command like
-\"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\"
-here, if you want use it exclusively.
-
-Per default python-mode will choose the appropriate command depending on your installed Python default version.
-If code is send to an altnative Python version, the appropriate `py-execute-file-command' will be selected too.
-
-Beside Python-versioned minor-mode exist, which will override this setting. "
-  :type 'string
-  :group 'python)
-(make-variable-buffer-local 'py-execute-file-command)
 
 (defcustom py-cleanup-temporary  t
  "If temporary buffers and files used by functions executing region  should be deleted afterwards. "
@@ -1351,26 +1322,15 @@ This does the following:
   "Edit and run code used by Python version 2 series. "
   :group 'Python
   :abbrev nil
-  (set (make-local-variable 'py-exec-command) '(format "execfile(r'%s') # PYTHON-MODE\n" filename)))
+  (set (make-local-variable 'py-exec-command) '(format "execfile(r'%s') # PYTHON-MODE\n" filename))
+  (py-toggle-shells "python2"))
 
 (define-derived-mode python3-mode python-mode "Python3"
   "Edit and run code used by Python version 3 series. "
   :group 'Python
   :abbrev nil
-  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)))
-
-(defun py-versions-mode ()
-  (interactive)
-  (when py-activate-versions-mode
-    ;; when set, overrides the guessing of py-which-python
-    (if py-set-python-edit-version
-        (cond ((< py-set-python-edit-version 3.0)
-               (python2-mode))
-              (t (python3-mode)))
-      (let ((erg (py-which-python)))
-        (cond ((< erg 3.0)
-               (python2-mode))
-              (t (python3-mode)))))))
+  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file))
+  (py-toggle-shells "python3"))
 
 (defvar py-which-shell nil)
 ;;;###autoload
@@ -1590,8 +1550,7 @@ comint believe the user typed this string so that
                                         ;       (comint-scroll-to-bottom-on-output t)
         (msg (format "## executing temporary file %s...\n" filename))
         (cmd (cond (cmd)
-                   ((not (string= "" py-execute-file-command))
-                    py-execute-file-command)
+                   (py-exec-command)
                    (t (py-which-execute-file-command filename)))))
     (unwind-protect
         (save-excursion
