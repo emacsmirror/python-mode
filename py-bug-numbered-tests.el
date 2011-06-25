@@ -74,6 +74,7 @@
          'explicit-backslashed-continuation-line-indent-lp:785091-test
          'indentation-error-lp:795773-test
          'indent-function-arglist-lp:800088-test
+         'python-mode-hangs-lp:801780-test
 
          )))
 
@@ -1106,6 +1107,23 @@ list.\"\"\"
   (goto-char 25)
   (let ((py-indent-offset 4))
     (assert (eq 8 (py-compute-indentation)) nil "indent-function-arglist-lp:800088 test failed")))
+
+(defun python-mode-hangs-lp:801780-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "@jit.unroll_safe
+def pushrevvalues(self, n, values_w): # n should be len(values_w)
+    make_sure_not_resized(values_w)
+    while True:
+        n -= 1
+        if n < 0:
+            break
+        self.pushvalue(values_w[n])
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'python-mode-hangs-lp:801780-base arg teststring)))
+
+(defun python-mode-hangs-lp:801780-base ()
+    (assert (eq 18 (py-beginning-of-def-or-class)) nil "python-mode-hangs-lp:801780 test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
