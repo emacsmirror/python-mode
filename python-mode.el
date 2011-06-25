@@ -400,7 +400,7 @@ file heading imports to see if they look Java-like."
 
 (make-obsolete-variable 'py-jpython-packages 'py-jython-packages nil)
 (defcustom py-jython-packages
-  '("java" "javax" "org" "com")
+  '("java" "javax")
   "Imported packages that imply `jython-mode'."
   :type '(repeat string)
   :group 'python)
