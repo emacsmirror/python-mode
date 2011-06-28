@@ -75,6 +75,8 @@
          'indentation-error-lp:795773-test
          'indent-function-arglist-lp:800088-test
          'python-mode-hangs-lp:801780-test
+         'stops-backslashed-line-lp:802504-test
+         'stops-backslashed-line-lp:802504-test2
 
          )))
 
@@ -1125,5 +1127,40 @@ def pushrevvalues(self, n, values_w): # n should be len(values_w)
 (defun python-mode-hangs-lp:801780-base ()
     (assert (eq 18 (py-beginning-of-def-or-class)) nil "python-mode-hangs-lp:801780 test failed"))
 
+(defun stops-backslashed-line-lp:802504-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if bar == 1 or bar == 2 or bar == 3 or bar == 4 or bar == 5 or bar == 6 or bar == 7 \\
+  or bar == 8 or bar == 9 or bar == 10 or bar == 11 or bar == 12 or bar == 13 \\
+  or bar == 14 or bar == 15 or bar == 16 or bar == 17 or bar == 18:
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'stops-backslashed-line-lp:802504-base arg teststring)))
+
+(defun stops-backslashed-line-lp:802504-base ()
+    (goto-char 49)
+    (assert (eq 282 (py-end-of-statement)) nil "stops-backslashed-line-lp:802504 test failed"))
+
+(defun stops-backslashed-line-lp:802504-test2 (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if x>1 and x<100 and y>1 and y<200:
+  if bar == 1 or bar == 2 or bar == 3 or bar == 4 or bar == 5 or bar == 6 or bar == 7 \\
+  or bar == 8 or bar == 9 or bar == 10 or bar == 11 or bar == 12 or bar == 13 or \\
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'stops-backslashed-line2-lp:802504-base arg teststring)))
+
+(defun stops-backslashed-line2-lp:802504-base ()
+    (assert (eq 87 (py-beginning-of-statement)) nil "stops-backslashed-line-lp:802504 test failed"))
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
+
+
+
+

@@ -190,7 +190,6 @@ mode buffer is visited during an Emacs session.  After that, use
 )
 
 ;; Execute stuff end
-
 ;; Output stuff start
 (defcustom py-jump-on-exception t
   "*Jump to innermost exception frame in *Python Output* buffer.
@@ -1305,17 +1304,24 @@ return `jython', otherwise return nil."
                         ))))
     mode))
 
-(defun py-choose-shell ()
-  "Choose CPython or Jython mode. Returns the appropriate mode function.
+(defun py-choose-shell (&optional arg)
+  "Looks for an appropriate mode function.
 This does the following:
+ - reads py-which-shell 
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
- - default to the variable `py-default-interpreter'"
-  (interactive)
-  (let ((erg (or (py-choose-shell-by-shebang)
-                 (py-choose-shell-by-import)
-                 py-default-interpreter)))
+ - default to the variable `py-default-interpreter'
+
+With \\[universal-argument]) user is prompted to specify a reachable Python version."
+  (interactive "P")
+  (let ((erg (cond ((eq 4 (prefix-numeric-value arg))
+                    (read-from-minibuffer "Python Shell: " py-which-shell))
+                   (py-which-shell)
+                   ((py-choose-shell-by-shebang))
+                   ((py-choose-shell-by-import))
+                   (t py-default-interpreter))))
     (when (interactive-p) (message "%s" erg))
+    (setq py-which-shell erg)
     erg))
 
 (define-derived-mode python2-mode python-mode "Python2"
@@ -2512,7 +2518,7 @@ the new line indented."
                           (t (+ (current-column) (* (nth 0 pps)))))
                     ;;)
                     )))
-               ((py-backslashed-continuation-line-p)
+               ((py-preceding-line-backslashed-p)
                 (progn
                   (py-beginning-of-statement)
                   (setq this-line (py-count-lines))
@@ -2594,11 +2600,16 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
     (when (interactive-p) (message "%s" end))
     end))
 
-(defun py-backslash-continuation-preceding-line-p ()
-  "Return t if preceding line ends with backslash that is not in a comment."
+(defun py-preceding-line-backslashed-p ()
+  (interactive)
+  "Return t if preceding line is a backslashed continuation line. "
   (save-excursion
     (beginning-of-line)
-    (eq (char-after (- (point) 2)) ?\\ )))
+    (skip-chars-backward " \t\r\n\f")
+    (let ((erg (and (eq (char-before (point)) ?\\ )
+                    (py-escaped)))) 
+      (when (interactive-p) (message "%s" erg))
+      erg)))
 
 (defun py-in-comment-p ()
   "Return the beginning of current line's comment, if inside. "
@@ -2992,7 +3003,7 @@ http://docs.python.org/reference/compound_stmts.html
                  ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
                   (forward-line -1) (end-of-line)
                   (py-beginning-of-statement orig origline))
-                 ((py-backslashed-continuation-line-p)
+                 ((py-continuation-line-p)
                   (forward-line -1)
                   (py-beginning-of-statement orig origline))
                  ;; character address of start of innermost containing list; nil if none.
@@ -3054,7 +3065,7 @@ http://docs.python.org/reference/compound_stmts.html
           (end-of-line)
           (skip-chars-backward " \t\r\n\f")
           (py-end-of-statement orig origline done))
-         ((py-backslashed-continuation-line-p)
+         ((py-current-line-backslashed-p)
           (py-forward-line)
           (py-end-of-statement orig origline done))
          ;; start of innermost containing list; nil if none.
@@ -3095,14 +3106,14 @@ http://docs.python.org/reference/compound_stmts.html
 (defalias 'py-previous-block 'py-beginning-of-block)
 (defalias 'py-goto-block-up 'py-beginning-of-block)
 (defalias 'py-backward-block 'py-beginning-of-block)
-(defun py-beginning-of-block (&optional count)
+(defun py-beginning-of-block ()
   "Looks up for nearest opening block, i.e. compound statement
 
 Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive "p")
+  (interactive)
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
@@ -4167,30 +4178,41 @@ Travels right-margin comments. "
             (goto-char (point-min))))
       pps)))
 
-(defun py-nesting-level ()
-  "Return the buffer position of the last unclosed enclosing list.
-If nesting level is zero, return nil."
-  (let ((status (py-parse-state)))
-    (if (zerop (car status))
-        nil                             ; not in a nest
-      (car (cdr status)))))             ; char# of open bracket
+(defun py-nesting-level (&optional pps)
+  "Accepts the output of `parse-partial-sexp'. "
+  (interactive)
+  (let ((erg (or (ignore-errors (nth 0 pps))
+                 (nth 0 (parse-partial-sexp (point-min) (point))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defun py-continuation-line-p ()
   "Return t iff current line is a continuation line."
   (save-excursion
     (beginning-of-line)
-    (or (py-backslash-continuation-preceding-line-p)
-        (py-nesting-level))))
+    (or (py-preceding-line-backslashed-p) 
+        (< 0 (py-nesting-level)))))
 
-(defun py-backslashed-continuation-line-p ()
+(defun py-current-line-backslashed-p ()
   (interactive)
   "Return t if current line is a backslashed continuation line. "
   (save-excursion
-    (beginning-of-line)
+    (end-of-line)
     (skip-chars-backward " \t\r\n\f")
-    (let ((erg (eq (char-before (point)) ?\\ )))
+    (let ((erg (and (eq (char-before (point)) ?\\ )
+                    (py-escaped)))) 
       (when (interactive-p) (message "%s" erg))
       erg)))
+
+(defun py-escaped (&optional iact)
+  "Return t if char is preceded by an odd number of backslashes. "
+  (interactive "p")
+    (lexical-let ((orig (point))
+                  erg)
+      (setq erg (< 0 (abs (% (skip-chars-backward "\\\\")2))))
+      (goto-char orig) 
+      (when iact (message "%s" erg))
+      erg))
 
 (defun py-statement-closes-block-p ()
   "Return t iff the current statement closes a block.
@@ -4373,13 +4395,8 @@ These are Python temporary files awaiting execution."
 
 (defun py-fill-string (start &optional justify)
   "Fill the paragraph around (point) in the string starting at start"
-  ;; basic strategy: narrow to the string and call the default
-  ;; implementation
-  (let (;; the start of the string's contents
-        string-start
-        ;; the end of the string's contents
+  (let (string-start
         string-end
-        ;; length of the string's delimiter
         delim-length
         ;; The string delimiter
         delim)

@@ -92,6 +92,8 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall class-highlighted-as-keywords-lp:798287-test \
 --funcall indent-function-arglist-lp:800088-test \
 --funcall python-mode-hangs-lp:801780-test \
+--funcall stops-backslashed-line-lp:802504-test \
+--funcall stops-backslashed-line-lp:802504-test2 \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \
