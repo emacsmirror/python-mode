@@ -2666,25 +2666,32 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 
 (defun py-end-base (regexp orig iact)
   "Used internal by functions going to the end forms. "
-  (let (erg)
-    (unless (py-statement-opens-block-p regexp)
-      (py-go-to-keyword regexp -1))
-    (when (py-statement-opens-block-p regexp)
-      (setq erg (point))
-      (forward-line 1)
-      (setq erg (py-travel-current-indent (cons (current-indentation) (point))))
-      (if (eq orig (point))
-          (progn
-            (while (not (or
-                         (eobp)
-                         (and (setq erg (re-search-forward regexp nil (quote move) 1))
-                              (not (py-in-string-or-comment-p))
-                              (not (py-in-list-p))))))
-            (unless (eobp)(py-end-base regexp orig iact)))
-        (when (and (< orig (point))(not (eobp)))
-          (setq erg (point))))
-      (when iact (message "%s" erg))
-      erg)))
+  (let ((erg (if (py-statement-opens-block-p regexp)
+                 (setq erg (point))
+               (py-go-to-keyword regexp -1)
+               (when (py-statement-opens-block-p regexp)
+                 (setq erg (point))))))
+    (if erg
+        (progn
+          (forward-line 1)
+          (setq erg (py-travel-current-indent (cons (current-indentation) (point)))))
+      (py-look-downward-for-beginning regexp)
+      (unless (eobp)(py-end-base regexp orig iact)))
+    (if (and (< orig (point))(not (eobp)))
+        (setq erg (point))
+      (setq erg (py-look-downward-for-beginning regexp))
+      (when erg (py-end-base regexp orig iact)))
+    (when iact (message "%s" erg))
+    erg))
+
+(defun py-look-downward-for-beginning (regexp)
+  "When above any beginning of FORM, search downward. "
+  (let ((erg (re-search-forward regexp nil (quote move) 1)))
+    (if (and erg (not (py-in-string-or-comment-p))
+             (not (py-in-list-p)))
+        erg
+      (unless (eobp)
+        (py-look-downward-for-beginning regexp)))))
 
 (defun py-guess-indent-offset (&optional global)
   "Guess a value for, and change, `py-indent-offset'.
@@ -3050,19 +3057,24 @@ http://docs.python.org/reference/compound_stmts.html
               (and (empty-line-p)(not done)(not (eobp)))
             (forward-line 1))
           (py-end-of-statement orig origline done))
-         ;; start of comment or string; nil if not in one
-         ((nth 8 pps)
+         ;; inside string
+         ((nth 3 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
             (goto-char (match-end 0)))
           (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
           (end-of-line)
           (skip-chars-backward " \t\r\n\f")
           (py-end-of-statement orig origline done))
+         ;; in comment
+         ((nth 4 pps)
+          (forward-line 1)
+          (py-end-of-statement orig origline done)) 
          ((and (looking-at "[ \t]*#")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
             (beginning-of-line))
           (end-of-line)
+;;          (setq done t)
           (skip-chars-backward " \t\r\n\f")
           (py-end-of-statement orig origline done))
          ((py-current-line-backslashed-p)
@@ -3087,7 +3099,12 @@ http://docs.python.org/reference/compound_stmts.html
           (py-end-of-statement orig origline done))
          ((and (eq orig (point))(not (eobp)))
           (py-forward-line)
-          (py-end-of-statement orig origline done))))
+          (py-end-of-statement orig origline done))
+         ((and (bolp) (not (empty-line-p)))
+          (end-of-line)
+          (skip-chars-backward " \t\r\n\f"))
+
+         ))
       (when (interactive-p) (message "%s" (point)))
       (point))))
 
@@ -3268,11 +3285,14 @@ http://docs.python.org/reference/compound_stmts.html"
 With optional universal arg CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (if (eq 4 (prefix-numeric-value arg))
+  (let* ((regexp (if (eq 4 (prefix-numeric-value arg)) 
                      py-class-re
                    py-def-or-class-re))
-         (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
-    (when (interactive-p) (message "%s" erg))
+         (res (ignore-errors (cdr (py-go-to-keyword regexp -1))))
+         (erg
+          (when (looking-at regexp)
+            res)))
+    (when (interactive-p) (message "%s" (prin1-to-string erg)))
     erg))
 
 (defalias 'end-of-def-or-class 'py-end-of-def-or-class)
@@ -4240,8 +4260,8 @@ and `pass'.  This doesn't catch embedded statements."
         (goto-char
          (nth 8 pps))))))
 
-(defun py-current-defun (&optional arg)
-  "Go to the outermost method or class definition in current scope.
+(defun py-current-defun (&optional iact)
+  "Go to the outermost method or class definition in current scope. 
 
 Python value for `add-log-current-defun-function'.
 This tells add-log.el how to find the current function/method/variable.
@@ -4252,16 +4272,14 @@ See customizable variables `py-current-defun-show' and `py-current-defun-delay'.
   (save-restriction
     (widen)
     (save-excursion
-      (while
-          (or (not (py-beginning-of-def-or-class-p)) (< 0 (current-indentation)))
-        (py-beginning-of-def-or-class 'either))
-      (forward-word 1)
-      (skip-chars-forward " \t")
-      (let ((erg (prin1-to-string (symbol-at-point))))
-        (when py-current-defun-show (push-mark (point) t t) (skip-chars-forward "^ (")
-              (exchange-point-and-mark)
-              (sit-for py-current-defun-delay))
-        (when arg (message erg))
+      (let ((erg (when (py-beginning-of-def-or-class 'either)
+                   (forward-word 1)
+                   (skip-chars-forward " \t")
+                   (prin1-to-string (symbol-at-point)))))
+        (when (and erg py-current-defun-show (push-mark (point) t t) (skip-chars-forward "^ (")
+                   (exchange-point-and-mark)
+                   (sit-for py-current-defun-delay)))
+        (when iact (message (prin1-to-string erg)))
         erg))))
 
 (defconst py-help-address "python-mode@python.org"

@@ -237,7 +237,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun py-current-defun-lp:328846-base ()
   (goto-char 331)
-  (assert (string= "OrderedDict1" (py-current-defun)) nil "py-current-defun-lp:328846 test failed"))
+  (assert (string= "f" (py-current-defun)) nil "py-current-defun-lp:328846 test failed"))
 
 (defun cls-pseudo-keyword-lp:328849-test (&optional arg load-branch-function)
   (interactive "p")
