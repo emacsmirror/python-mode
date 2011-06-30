@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'thingatpt-python-expressions)
-
 (defun python-mode-provide-test-buffer (&optional arg)
   (interactive "P")
   (when arg

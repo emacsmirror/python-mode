@@ -40,6 +40,7 @@
          'py-end-of-def-or-class-test
          'py-electric-backspace-test
          'py-electric-delete-test
+         'UnicodeEncodeError-python3-test
 
 )))
 
@@ -197,7 +198,7 @@
   (assert (looking-at "ict") nil "py-electric-delete test #2 failed")
   )
 
-(defun UnicodeEncodeError-python3 (&optional arg load-branch-function)
+(defun UnicodeEncodeError-python3-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python3
 # -\*- coding: utf-8 -\*-\n

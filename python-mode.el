@@ -888,7 +888,7 @@ Currently-active file is at the head of the list.")
   :group 'python
   :type 'hook)
 
-(custom-add-option 'python-mode-hook 'py-imenu-create-index)
+(custom-add-option 'python-mode-hook 'py-imenu-create-index-new)
 (custom-add-option 'python-mode-hook
 		   (lambda ()
 		     "Turn off Indent Tabs mode."
@@ -1066,6 +1066,14 @@ package.  Note that the latest X/Emacs releases contain this package.")
   (modify-syntax-entry ?_ "_" py-dotted-expression-syntax-table)
   (modify-syntax-entry ?. "_" py-dotted-expression-syntax-table))
 
+;; credits to python.el
+(defun py-beg-of-defun-function ()
+  (set (make-local-variable 'beginning-of-defun-function)
+       'py-beginning-of-def-or-class))
+
+(defun py-end-of-defun-function ()
+  (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
+
 
 ;; Utilities
 (defsubst py-keep-region-active ()
@@ -1182,7 +1190,7 @@ information.")
    py-imenu-method-no-arg-parens)
   "Generic Python expression which may be used directly with Imenu.
 Used by setting the variable `imenu-generic-expression' to this value.
-Also, see the function \\[py-imenu-create-index] for a better
+Also, see the function \\[py-imenu-create-index-new] for a better
 alternative for finding the index.")
 
 ;; These next two variables are used when searching for the Python
@@ -1215,63 +1223,104 @@ When non-nil, arguments are printed."
 ;; python-beginning-of-defun             265         0.0918479999  0.0003465962
 ;; python-skip-comments/blanks           3125        0.0753319999  2.410...e-05
 
-(defvar python-recursing)
+;; (defvar python-recursing)
 ;; (defun python-imenu-create-index ()
-(defun py-imenu-create-index ()
-    "`imenu-create-index-function' for Python.
+;; (defun py-imenu-create-index ()
+;;     "`imenu-create-index-function' for Python.
+;; 
+;; Makes nested Imenu menus from nested `class' and `def' statements.
+;; The nested menus are headed by an item referencing the outer
+;; definition; it has a space prepended to the name so that it sorts
+;; first with `imenu--sort-by-name' (though, unfortunately, sub-menus
+;; precede it)."
+;;   (unless (boundp 'python-recursing)	; dynamically bound below
+;;     ;; Normal call from Imenu.
+;;     (goto-char (point-min))
+;;     ;; Without this, we can get an infloop if the buffer isn't all
+;;     ;; fontified.  I guess this is really a bug in syntax.el.  OTOH,
+;;     ;; _with_ this, imenu doesn't immediately work; I can't figure out
+;;     ;; what's going on, but it must be something to do with timers in
+;;     ;; font-lock.
+;;     ;; This can't be right, especially not when jit-lock is not used.  --Stef
+;;     ;; (unless (get-text-property (1- (point-max)) 'fontified)
+;;     ;;   (font-lock-fontify-region (point-min) (point-max)))
+;; )
+;;   (let (index-alist)			; accumulated value to return
+;;     (while (re-search-forward
+;; 	    (rx line-start (0+ space)	; leading space
+;; 		(or (group "def") (group "class"))	   ; type
+;; 		(1+ space) (group (1+ (or word ?_))))	   ; name
+;; 	    nil t)
+;;       (unless (py-in-string-or-comment-p)
+;; 	(let ((pos (match-beginning 0))
+;; 	      (name (match-string-no-properties 3)))
+;; 	  (if (match-beginning 2)	; def or class?
+;; 	      (setq name (concat "class " name)))
+;; 	  (save-restriction
+;; 	    (narrow-to-defun)
+;; 	    (let* ((python-recursing t)
+;; ;; 		   (sublist (python-imenu-create-index)))
+;; 	           (sublist (py-imenu-create-index)))
+;;               (if sublist
+;; 		  (progn (push (cons (concat " " name) pos) sublist)
+;; 			 (push (cons name sublist) index-alist))
+;; 		(push (cons name pos) index-alist)))))))
+;;     (unless (boundp 'python-recursing)
+;;       ;; Look for module variables.
+;;       (let (vars)
+;; 	(goto-char (point-min))
+;; 	(while (re-search-forward
+;; 		(rx line-start (group (1+ (or word ?_))) (0+ space) "=")
+;; 		nil t)
+;; 	  (unless (py-in-string-or-comment-p)
+;; 	    (push (cons (match-string 1) (match-beginning 1))
+;; 		  vars)))
+;; 	(setq index-alist (nreverse index-alist))
+;; 	(if vars
+;; 	    (push (cons "Module variables"
+;; 			(nreverse vars))
+;; 		  index-alist))))
+;;     index-alist))
 
-Makes nested Imenu menus from nested `class' and `def' statements.
-The nested menus are headed by an item referencing the outer
-definition; it has a space prepended to the name so that it sorts
-first with `imenu--sort-by-name' (though, unfortunately, sub-menus
-precede it)."
-  (unless (boundp 'python-recursing)	; dynamically bound below
-    ;; Normal call from Imenu.
+(defun py-imenu-create-index-new (&optional beg end)
+  "`imenu-create-index-function' for Python. "
+  (let ((beg (cond (beg)
+                   ((region-active-p)
+                    (region-beginning))
+                   (t (point-min))))
+        (end (cond (end)
+                   ((region-active-p)
+                    (region-end))
+                   (t (point-max))))
+        (first t)
+        inside-class index-alist sublist vars)
+    (goto-char beg)
+;;    (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(_\\{0,2\\}\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
+    (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
+        (let ((pos (match-beginning 0))
+            (name (match-string-no-properties 2)))
+        (when (string= "class" (match-string-no-properties 1))
+          (setq name (concat "class " name)
+                inside-class t))
+        (cond ((and first inside-class)
+               (push (cons name pos) index-alist)
+               (setq first nil))
+              (inside-class
+               (progn (push (cons (concat " " name) pos) sublist)
+                      (push (cons name sublist) index-alist)))
+              (t (push (cons name pos) index-alist)))))
+    (message "Funktionen und Klassen: %s" index-alist)
+    ;; Look for module variables.
     (goto-char (point-min))
-    ;; Without this, we can get an infloop if the buffer isn't all
-    ;; fontified.  I guess this is really a bug in syntax.el.  OTOH,
-    ;; _with_ this, imenu doesn't immediately work; I can't figure out
-    ;; what's going on, but it must be something to do with timers in
-    ;; font-lock.
-    ;; This can't be right, especially not when jit-lock is not used.  --Stef
-    ;; (unless (get-text-property (1- (point-max)) 'fontified)
-    ;;   (font-lock-fontify-region (point-min) (point-max)))
-)
-  (let (index-alist)			; accumulated value to return
-    (while (re-search-forward
-	    (rx line-start (0+ space)	; leading space
-		(or (group "def") (group "class"))	   ; type
-		(1+ space) (group (1+ (or word ?_))))	   ; name
-	    nil t)
+    (while (re-search-forward "^\\(?:\\sw+\\)[ \t]*=" end t)
       (unless (py-in-string-or-comment-p)
-	(let ((pos (match-beginning 0))
-	      (name (match-string-no-properties 3)))
-	  (if (match-beginning 2)	; def or class?
-	      (setq name (concat "class " name)))
-	  (save-restriction
-	    (narrow-to-defun)
-	    (let* ((python-recursing t)
-;; 		   (sublist (python-imenu-create-index)))
-	           (sublist (py-imenu-create-index)))
-              (if sublist
-		  (progn (push (cons (concat " " name) pos) sublist)
-			 (push (cons name sublist) index-alist))
-		(push (cons name pos) index-alist)))))))
-    (unless (boundp 'python-recursing)
-      ;; Look for module variables.
-      (let (vars)
-	(goto-char (point-min))
-	(while (re-search-forward
-		(rx line-start (group (1+ (or word ?_))) (0+ space) "=")
-		nil t)
-	  (unless (py-in-string-or-comment-p)
-	    (push (cons (match-string 1) (match-beginning 1))
-		  vars)))
-	(setq index-alist (nreverse index-alist))
-	(if vars
-	    (push (cons "Module variables"
-			(nreverse vars))
-		  index-alist))))
+        (push (cons (match-string 1) (match-beginning 1))
+              vars)))
+    (setq index-alist (nreverse index-alist))
+    (when vars
+      (push (cons "Module variables"
+                  (nreverse vars))
+            index-alist))
     index-alist))
 
 
@@ -1410,11 +1459,10 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
       (setq comment-multi-line nil))
   ;; Install Imenu if available
   (when (ignore-errors (require 'imenu))
-    (setq imenu-create-index-function #'py-imenu-create-index)
+    (setq imenu-create-index-function #'py-imenu-create-index-new)
     (setq imenu-generic-expression py-imenu-generic-expression)
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name))))
-
   ;; Add support for HideShow
   (add-to-list 'hs-special-modes-alist
                (list
@@ -2670,17 +2718,21 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
                  (setq erg (point))
                (py-go-to-keyword regexp -1)
                (when (py-statement-opens-block-p regexp)
-                 (setq erg (point))))))
+                 (setq erg (point)))))
+        ind)
     (if erg
         (progn
+          (setq ind (+ py-indent-offset (current-indentation)))
+          (py-end-of-statement)
           (forward-line 1)
-          (setq erg (py-travel-current-indent (cons (current-indentation) (point)))))
+          (setq erg (py-travel-current-indent (cons ind (point)))))
       (py-look-downward-for-beginning regexp)
       (unless (eobp)(py-end-base regexp orig iact)))
     (if (and (< orig (point))(not (eobp)))
-        (setq erg (point))
+      (setq erg (point))
       (setq erg (py-look-downward-for-beginning regexp))
-      (when erg (py-end-base regexp orig iact)))
+      (when erg (py-end-base regexp orig iact))
+      )
     (when iact (message "%s" erg))
     erg))
 
@@ -3050,7 +3102,8 @@ http://docs.python.org/reference/compound_stmts.html
     (unless (eobp)
       (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
-             (pps (parse-partial-sexp (point-min) (point))))
+             (pps (parse-partial-sexp (point-min) (point)))
+             erg)
         (cond
          ((and (empty-line-p)(not done)(not (eobp)))
           (while
@@ -3061,20 +3114,21 @@ http://docs.python.org/reference/compound_stmts.html
          ((nth 3 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
             (goto-char (match-end 0)))
-          (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
-          (end-of-line)
-          (skip-chars-backward " \t\r\n\f")
+          (while (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)(nth 3 (parse-partial-sexp (point-min) (point)))))
+          ;;          (goto-char (match-end 0))
+          ;;          (end-of-line)
+          ;;          (skip-chars-backward " \t\r\n\f")
           (py-end-of-statement orig origline done))
          ;; in comment
          ((nth 4 pps)
           (forward-line 1)
           (py-end-of-statement orig origline done)) 
-         ((and (looking-at "[ \t]*#")(not done))
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
             (beginning-of-line))
           (end-of-line)
-;;          (setq done t)
+          ;;          (setq done t)
           (skip-chars-backward " \t\r\n\f")
           (py-end-of-statement orig origline done))
          ((py-current-line-backslashed-p)
@@ -3084,6 +3138,8 @@ http://docs.python.org/reference/compound_stmts.html
          ((nth 1 pps)
           (goto-char (nth 1 pps))
           (forward-list)
+          (when (looking-at ":[ \t]*$")
+            (forward-char 1))
           (setq done t)
           (py-end-of-statement orig origline done))
          ((and (eq (point) orig)(not (looking-at "[ \t]*$")))
@@ -3102,11 +3158,11 @@ http://docs.python.org/reference/compound_stmts.html
           (py-end-of-statement orig origline done))
          ((and (bolp) (not (empty-line-p)))
           (end-of-line)
-          (skip-chars-backward " \t\r\n\f"))
-
-         ))
-      (when (interactive-p) (message "%s" (point)))
-      (point))))
+          (skip-chars-backward " \t\r\n\f")))
+        (unless (or (nth 4 pps)(eq 0 (current-column)))
+          (setq erg (point)))
+        (when (interactive-p) (message "%s" erg))
+        erg))))
 
 (defun py-goto-statement-below ()
   "Goto beginning of next statement. "
@@ -3320,8 +3376,9 @@ Takes a list, INDENT and START position. "
     (if start
         (progn
           (goto-char start)
-          (while (and (not (eobp))(setq last (point))(py-end-of-statement)
-                      (ignore-errors (<= indent (current-indentation)))))
+          (while (and (setq last (point))(not (eobp))(py-end-of-statement)
+                      (and (ignore-errors (<= indent (current-indentation)))(<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation)))))
+))
           (when last (goto-char last))
           last))))
 
@@ -4486,13 +4543,6 @@ If point is inside a string, narrow to that string and fill.
             (forward-char 1)
             (py-fill-string (nth 8 pps)))))))))
 
-;; credits to python.el
-(defun py-beg-of-defun-function ()
-  (set (make-local-variable 'beginning-of-defun-function)
-       'py-beginning-of-def-or-class))
-
-(defun py-end-of-defun-function ()
-  (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
 
 (require 'info-look)
 (provide 'python-mode)
