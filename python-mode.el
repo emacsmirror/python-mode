@@ -1129,6 +1129,21 @@ This function does not modify point or mark."
       )
      )))
 
+(defun py-in-literal (&optional lim)
+  "Return non-nil if point is in a Python literal (a comment or string).
+Optional argument LIM indicates the beginning of the containing form,
+i.e. the limit on how far back to scan."
+  ;; This is the version used for non-XEmacs, which has a nicer
+  ;; interface.
+  ;;
+  ;; WARNING: Watch out for infinite recursion.
+  (let* ((lim (or lim (py-point 'bod)))
+         (state (parse-partial-sexp lim (point))))
+    (cond
+     ((nth 3 state) 'string)
+     ((nth 4 state) 'comment)
+     (t nil))))
+
 
 ;;;; Imenu.
 (defvar py-imenu-class-regexp
@@ -1205,82 +1220,137 @@ When non-nil, arguments are printed."
   :type 'boolean
   :group 'python)
 
-(defsubst py-in-string-or-comment-p ()
-    "Return beginning position if point is in a Python literal (a comment or string)."
-    (nth 8 (parse-partial-sexp (point-min) (point))))
+(defun py-switch-imenu-index-function ()
+  "For development only. Good old renamed `py-imenu-create-index'-function hangs with medium size files already. Working `py-imenu-create-index-new' is active by default.
 
-;;;; Imenu.
+Switch between classic index machine `py-imenu-create-index' and new `py-imenu-create-index-new'. 
 
-;; For possibily speeding this up, here's the top of the ELP profile
-;; for rescanning pydoc.py (2.2k lines, 90kb):
-;; Function Name                         Call Count  Elapsed Time  Average Time
-;; ====================================  ==========  =============  ============
-;; python-imenu-create-index             156         2.430906      0.0155827307
-;; python-end-of-defun                   155         1.2718260000  0.0082053290
-;; python-end-of-block                   155         1.1898689999  0.0076765741
-;; python-next-statement                 2970        1.024717      0.0003450225
-;; python-end-of-statement               2970        0.4332190000  0.0001458649
-;; python-beginning-of-defun             265         0.0918479999  0.0003465962
-;; python-skip-comments/blanks           3125        0.0753319999  2.410...e-05
+The former may provide a more detailed report, thus maintaining two different index-machines is considered. "
+  (interactive)
+  (if (eq major-mode 'python-mode)
+      (progn
+        (if (eq imenu-create-index-function 'py-imenu-create-index-new)
+            (setq imenu-create-index-function #'py-imenu-create-index)
+          (setq imenu-create-index-function #'py-imenu-create-index-new))
+        (when (interactive-p) (message "imenu-create-index-function: %s" (prin1-to-string imenu-create-index-function))))
+    (error "%s" "Only available in buffers set to python-mode")))
 
-;; (defvar python-recursing)
-;; (defun python-imenu-create-index ()
-;; (defun py-imenu-create-index ()
-;;     "`imenu-create-index-function' for Python.
-;; 
-;; Makes nested Imenu menus from nested `class' and `def' statements.
-;; The nested menus are headed by an item referencing the outer
-;; definition; it has a space prepended to the name so that it sorts
-;; first with `imenu--sort-by-name' (though, unfortunately, sub-menus
-;; precede it)."
-;;   (unless (boundp 'python-recursing)	; dynamically bound below
-;;     ;; Normal call from Imenu.
-;;     (goto-char (point-min))
-;;     ;; Without this, we can get an infloop if the buffer isn't all
-;;     ;; fontified.  I guess this is really a bug in syntax.el.  OTOH,
-;;     ;; _with_ this, imenu doesn't immediately work; I can't figure out
-;;     ;; what's going on, but it must be something to do with timers in
-;;     ;; font-lock.
-;;     ;; This can't be right, especially not when jit-lock is not used.  --Stef
-;;     ;; (unless (get-text-property (1- (point-max)) 'fontified)
-;;     ;;   (font-lock-fontify-region (point-min) (point-max)))
-;; )
-;;   (let (index-alist)			; accumulated value to return
-;;     (while (re-search-forward
-;; 	    (rx line-start (0+ space)	; leading space
-;; 		(or (group "def") (group "class"))	   ; type
-;; 		(1+ space) (group (1+ (or word ?_))))	   ; name
-;; 	    nil t)
-;;       (unless (py-in-string-or-comment-p)
-;; 	(let ((pos (match-beginning 0))
-;; 	      (name (match-string-no-properties 3)))
-;; 	  (if (match-beginning 2)	; def or class?
-;; 	      (setq name (concat "class " name)))
-;; 	  (save-restriction
-;; 	    (narrow-to-defun)
-;; 	    (let* ((python-recursing t)
-;; ;; 		   (sublist (python-imenu-create-index)))
-;; 	           (sublist (py-imenu-create-index)))
-;;               (if sublist
-;; 		  (progn (push (cons (concat " " name) pos) sublist)
-;; 			 (push (cons name sublist) index-alist))
-;; 		(push (cons name pos) index-alist)))))))
-;;     (unless (boundp 'python-recursing)
-;;       ;; Look for module variables.
-;;       (let (vars)
-;; 	(goto-char (point-min))
-;; 	(while (re-search-forward
-;; 		(rx line-start (group (1+ (or word ?_))) (0+ space) "=")
-;; 		nil t)
-;; 	  (unless (py-in-string-or-comment-p)
-;; 	    (push (cons (match-string 1) (match-beginning 1))
-;; 		  vars)))
-;; 	(setq index-alist (nreverse index-alist))
-;; 	(if vars
-;; 	    (push (cons "Module variables"
-;; 			(nreverse vars))
-;; 		  index-alist))))
-;;     index-alist))
+(defun py-imenu-create-index ()
+  "Python interface function for the Imenu package.
+Finds all Python classes and functions/methods. Calls function
+\\[py-imenu-create-index-engine].  See that function for the details
+of how this works."
+  (setq py-imenu-generic-regexp (car py-imenu-generic-expression)
+        py-imenu-generic-parens (if py-imenu-show-method-args-p
+                                    py-imenu-method-arg-parens
+                                  py-imenu-method-no-arg-parens))
+  (goto-char (point-min))
+  ;; Warning: When the buffer has no classes or functions, this will
+  ;; return nil, which seems proper according to the Imenu API, but
+  ;; causes an error in the XEmacs port of Imenu.  Sigh.
+  (py-imenu-create-index-engine nil))
+
+(defun py-imenu-create-index-engine (&optional start-indent)
+  "Function for finding Imenu definitions in Python.
+
+Finds all definitions (classes, methods, or functions) in a Python
+file for the Imenu package.
+
+Returns a possibly nested alist of the form
+
+        (INDEX-NAME . INDEX-POSITION)
+
+The second element of the alist may be an alist, producing a nested
+list as in
+
+        (INDEX-NAME . INDEX-ALIST)
+
+This function should not be called directly, as it calls itself
+recursively and requires some setup.  Rather this is the engine for
+the function \\[py-imenu-create-index-function].
+
+It works recursively by looking for all definitions at the current
+indention level.  When it finds one, it adds it to the alist.  If it
+finds a definition at a greater indentation level, it removes the
+previous definition from the alist. In its place it adds all
+definitions found at the next indentation level.  When it finds a
+definition that is less indented then the current level, it returns
+the alist it has created thus far.
+
+The optional argument START-INDENT indicates the starting indentation
+at which to continue looking for Python classes, methods, or
+functions.  If this is not supplied, the function uses the indentation
+of the first definition found."
+  (let (index-alist
+        sub-method-alist
+        looking-p
+        def-name prev-name
+        cur-indent def-pos
+        (class-paren (first py-imenu-generic-parens))
+        (def-paren (second py-imenu-generic-parens)))
+    (setq looking-p
+          (re-search-forward py-imenu-generic-regexp (point-max) t))
+    (while looking-p
+      (save-excursion
+        ;; used to set def-name to this value but generic-extract-name
+        ;; is new to imenu-1.14. this way it still works with
+        ;; imenu-1.11
+        ;;(imenu--generic-extract-name py-imenu-generic-parens))
+        (let ((cur-paren (if (match-beginning class-paren)
+                             class-paren def-paren)))
+          (setq def-name
+                (buffer-substring-no-properties (match-beginning cur-paren)
+                                                (match-end cur-paren))))
+        (save-match-data
+          (py-beginning-of-def-or-class))
+        (beginning-of-line)
+        (setq cur-indent (current-indentation)))
+      ;; HACK: want to go to the next correct definition location.  We
+      ;; explicitly list them here but it would be better to have them
+      ;; in a list.
+      (setq def-pos
+            (or (match-beginning class-paren)
+                (match-beginning def-paren)))
+      ;; if we don't have a starting indent level, take this one
+      (or start-indent
+          (setq start-indent cur-indent))
+      ;; if we don't have class name yet, take this one
+      (or prev-name
+          (setq prev-name def-name))
+      ;; what level is the next definition on?  must be same, deeper
+      ;; or shallower indentation
+      (cond
+       ;; Skip code in comments and strings
+       ((py-in-literal))
+       ;; at the same indent level, add it to the list...
+       ((= start-indent cur-indent)
+        (push (cons def-name def-pos) index-alist))
+       ;; deeper indented expression, recurse
+       ((< start-indent cur-indent)
+        ;; the point is currently on the expression we're supposed to
+        ;; start on, so go back to the last expression. The recursive
+        ;; call will find this place again and add it to the correct
+        ;; list
+        (re-search-backward py-imenu-generic-regexp (point-min) 'move)
+        (setq sub-method-alist (py-imenu-create-index-engine cur-indent))
+        (if sub-method-alist
+            ;; we put the last element on the index-alist on the start
+            ;; of the submethod alist so the user can still get to it.
+            (let ((save-elmt (pop index-alist)))
+              (push (cons prev-name
+                          (cons save-elmt sub-method-alist))
+                    index-alist))))
+       ;; found less indented expression, we're done.
+       (t
+        (setq looking-p nil)
+        (re-search-backward py-imenu-generic-regexp (point-min) t)))
+      ;; end-cond
+      (setq prev-name def-name)
+      (and looking-p
+           (setq looking-p
+                 (re-search-forward py-imenu-generic-regexp
+                                    (point-max) 'move))))
+    (nreverse index-alist)))
 
 (defun py-imenu-create-index-new (&optional beg end)
   "`imenu-create-index-function' for Python. "
@@ -1295,7 +1365,6 @@ When non-nil, arguments are printed."
         (first t)
         inside-class index-alist sublist vars)
     (goto-char beg)
-;;    (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(_\\{0,2\\}\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
     (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
         (let ((pos (match-beginning 0))
             (name (match-string-no-properties 2)))
@@ -1309,7 +1378,7 @@ When non-nil, arguments are printed."
                (progn (push (cons (concat " " name) pos) sublist)
                       (push (cons name sublist) index-alist)))
               (t (push (cons name pos) index-alist)))))
-    (message "Funktionen und Klassen: %s" index-alist)
+;;    (message "Funktionen und Klassen: %s" index-alist)
     ;; Look for module variables.
     (goto-char (point-min))
     (while (re-search-forward "^\\(?:\\sw+\\)[ \t]*=" end t)
@@ -1387,6 +1456,10 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
   (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file))
   (py-toggle-shells "python3"))
 
+(defsubst py-in-string-or-comment-p ()
+    "Return beginning position if point is in a Python literal (a comment or string)."
+    (nth 8 (parse-partial-sexp (point-min) (point))))
+
 (defvar py-which-shell nil)
 ;;;###autoload
 ;; (define-derived-mode python-mode fundamental-mode "Python"
@@ -1460,6 +1533,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Install Imenu if available
   (when (ignore-errors (require 'imenu))
     (setq imenu-create-index-function #'py-imenu-create-index-new)
+;;    (setq imenu-create-index-function #'py-imenu-create-index)
     (setq imenu-generic-expression py-imenu-generic-expression)
     (if (fboundp 'imenu-add-to-menubar)
         (imenu-add-to-menubar (format "%s-%s" "IM" mode-name))))
