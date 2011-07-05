@@ -49,7 +49,7 @@ TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 EMACS="${EMACS_VERZEICHNIS}/src/emacs"
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS \
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
@@ -106,7 +106,10 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-end-of-def-or-class-test \
 --funcall py-electric-backspace-test \
 --funcall py-electric-delete-test \
---funcall UnicodeEncodeError-python3-test
+--funcall py-expand-abbrev-pst-pdb.set_trace-test \
+--funcall near-bob-beginning-of-statement-test \
+--funcall dict-error-test \
+--funcall UnicodeEncodeError-python3-test \
 
 # test not ready
 # passes only when run from edebug

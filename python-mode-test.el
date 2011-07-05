@@ -41,6 +41,9 @@
          'py-electric-backspace-test
          'py-electric-delete-test
          'UnicodeEncodeError-python3-test
+         'dict-error-test
+         'py-expand-abbrev-pst-pdb.set_trace-test
+         'near-bob-beginning-of-statement-test
 
 )))
 
@@ -218,7 +221,62 @@ print('\\xA9')"))
       (sit-for 0.1))
   (assert (looking-back "©") nil "UnicodeEncodeError-python3 test failed"))
 
+(defun dict-error-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python3
+ # -*- coding: utf-8 -*-
 
+class foo(bar):
+	\"\"\"baz\"\"\"
+       	_some_extensions = {
+
+		'38': 'asd', #  whatever
+		'43': 'ddd',
+		'45': 'ddd',
+	}
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'dict-error-base arg teststring)))
+
+(defun dict-error-base ()
+    (goto-char 78)
+    (assert (eq 167 (py-end-of-statement)) nil "dict-error test failed"))
+
+(defun py-expand-abbrev-pst-pdb.set_trace-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+print('\xA9')
+pst
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-expand-abbrev-pst-pdb.set_trace-base arg teststring)))
+
+(defun py-expand-abbrev-pst-pdb.set_trace-base ()
+  (forward-char -1)
+  (expand-abbrev)
+  (sit-for 1)
+  ;;  (assert (string= (expand-abbrev) "pst") nil "py-expand-abbrev-pst-pdb.set_trace test failed"))
+  ;; (assert (expand-abbrev) nil "py-expand-abbrev-pst-pdb.set_trace test failed"))
+  (progn (looking-back "pdb.set_trace()")
+      (message "Looking back: %s" (match-string-no-properties 0)))
+  (assert (looking-back "pdb.set_trace()")
+          ;;          (message "%s" (match-string-no-properties 1))
+          nil "py-expand-abbrev-pst-pdb.set_trace test failed"))
+
+(defun near-bob-beginning-of-statement-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+ # -*- coding: utf-8 -*-
+
+print u'\xA9'
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'near-bob-beginning-of-statement-base arg teststring)))
+
+(defun near-bob-beginning-of-statement-base ()
+    (goto-char 50)
+    (assert (eq 0 (py-compute-indentation)) nil "near-bob-beginning-of-statement test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

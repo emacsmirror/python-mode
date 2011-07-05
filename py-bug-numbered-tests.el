@@ -99,10 +99,10 @@
         (funcall testname)
         (message "%s" (concat (replace-regexp-in-string "-base$" "-test" (prin1-to-string testname)) " passed"))
         (unless (< 1 arg)
-;;          (switch-to-buffer (current-buffer))
           (set-buffer-modified-p 'nil)
-          (when (get-process (buffer-name))
-            (kill-process (get-process py-which-bufname)))
+          (cond ((processp (get-process "Python3")) (kill-process "Python3"))
+                ((processp (get-process "Python2")) (kill-process "Python2"))
+                ((processp (get-process "Python")) (kill-process "Python")))
           (kill-buffer (current-buffer))))
     (with-temp-buffer
       (let ((font-lock-verbose nil))
