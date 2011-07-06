@@ -108,6 +108,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-electric-delete-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 --funcall near-bob-beginning-of-statement-test \
+--funcall bob-beginning-of-statement-test \
 --funcall dict-error-test \
 --funcall UnicodeEncodeError-python3-test \
 

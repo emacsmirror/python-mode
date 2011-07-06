@@ -44,6 +44,7 @@
          'dict-error-test
          'py-expand-abbrev-pst-pdb.set_trace-test
          'near-bob-beginning-of-statement-test
+         'bob-beginning-of-statement-test
 
 )))
 
@@ -277,6 +278,18 @@ print u'\xA9'
 (defun near-bob-beginning-of-statement-base ()
     (goto-char 50)
     (assert (eq 0 (py-compute-indentation)) nil "near-bob-beginning-of-statement test failed"))
+
+
+(defun bob-beginning-of-statement-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "    #Foo.py
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'bob-beginning-of-statement-base arg teststring)))
+
+(defun bob-beginning-of-statement-base ()
+    (py-beginning-of-statement) 
+    (assert (eq 1 (point))  "bob-beginning-of-statement test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

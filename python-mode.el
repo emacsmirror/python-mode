@@ -1074,6 +1074,15 @@ package.  Note that the latest X/Emacs releases contain this package.")
   (modify-syntax-entry ?_ "_" py-dotted-expression-syntax-table)
   (modify-syntax-entry ?. "_" py-dotted-expression-syntax-table))
 
+(defvar py-help-mode-syntax-table
+  (let ((st (make-syntax-table py-mode-syntax-table)))
+    ;; Don't get confused by apostrophes in the process's output (e.g. if
+    ;; you execute "help(os)").
+    (modify-syntax-entry ?\' "." st)
+    ;; Maybe we should do the same for double quotes?
+    (modify-syntax-entry ?\" "." st)
+    st))
+
 ;; credits to python.el
 (defun py-beg-of-defun-function ()
   (set (make-local-variable 'beginning-of-defun-function)
@@ -3114,7 +3123,7 @@ http://docs.python.org/reference/compound_stmts.html
               (pps (parse-partial-sexp (point-min) (point)))
               erg)
           (unless (< (point) orig)(skip-chars-backward " \t\r\n\f"))
-
+          
           (setq erg
                 (cond
                  ((empty-line-p)
@@ -3137,8 +3146,10 @@ http://docs.python.org/reference/compound_stmts.html
                   (goto-char (1- (nth 8 pps)))
                   (py-beginning-of-statement orig origline))
                  ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
-                  (forward-line -1) (end-of-line)
-                  (py-beginning-of-statement orig origline))
+                  (forward-line -1)
+                  (unless (bobp)
+                    (end-of-line)
+                    (py-beginning-of-statement orig origline)))
                  ((py-continuation-line-p)
                   (forward-line -1)
                   (py-beginning-of-statement orig origline))
@@ -3856,8 +3867,7 @@ Returns beginning and end positions of marked area, a cons."
                      (if last
                          last
                        default)
-                     'py-pychecker-history))
-        )))
+                     'py-pychecker-history)))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -3879,10 +3889,14 @@ Returns beginning and end positions of marked area, a cons."
                       "try: pydoc.help('" sym "')\n"
                       "except: print 'No help available on:', \"" sym "\""))
     (message cmd)
-    (py-execute-string cmd)
-    (set-buffer "*Python Output*")
-    ;; BAW: Should we really be leaving the output buffer in help-mode?
-    (help-mode)))
+    (with-temp-buffer 
+      (insert cmd)
+      (py-execute-region (point-min) (point-max)))))
+
+;;      (py-execute-string cmd)
+;;      (set-buffer "*Python Output*")
+      ;; BAW: Should we really be leaving the output buffer in help-mode?
+;;      (help-mode)))
 
 ;; Documentation functions
 
@@ -3895,9 +3909,9 @@ Returns beginning and end positions of marked area, a cons."
     (let ((locals (buffer-local-variables))
           funckind funcname func funcdoc
           (start 0) mstart end
-          keys )
+          keys)
       (while (string-match "^%\\([vc]\\):\\(.+\\)\n" str start)
-        (setq mstart (match-beginning 0)  end (match-end 0)
+        (setq mstart (match-beginning 0) end (match-end 0)
               funckind (substring str (match-beginning 1) (match-end 1))
               funcname (substring str (match-beginning 2) (match-end 2))
               func (intern funcname))

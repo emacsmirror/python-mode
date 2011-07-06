@@ -543,7 +543,8 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun imenu-newline-arglist-lp:328783-base ()
   (goto-char 60)
-  (assert (eq (py-beginning-of-def-or-class) 1) nil "imenu-newline-arglist-lp:328783 test failed"))
+  (py-beginning-of-def-or-class)
+  (assert (eq (point) 1) nil "imenu-newline-arglist-lp:328783 test failed"))
 
 (defun hungry-delete-backwards-lp:328853-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
