@@ -107,9 +107,11 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-electric-backspace-test \
 --funcall py-electric-delete-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
---funcall near-bob-beginning-of-statement-test \
---funcall bob-beginning-of-statement-test \
 --funcall dict-error-test \
+--funcall near-bob-beginning-of-statement-test \
+--funcall honor-comments-indent-test \
+--funcall bob-beginning-of-statement-test \
+--funcall first-line-offset-test \
 --funcall UnicodeEncodeError-python3-test \
 
 # test not ready

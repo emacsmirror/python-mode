@@ -2606,7 +2606,7 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point)))
+      (let* ((orig (or orig (point))) 
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
@@ -2625,10 +2625,17 @@ the new line indented."
                ((looking-at "\"\"\"\\|'''")
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline))
-               ;; comments and strings
+               ;; comments
+               ((and (nth 8 pps) (< (py-count-lines) origline))
+                (goto-char (nth 8 pps))
+                (current-column)) 
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
+                (py-compute-indentation orig origline))
+               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
+                (forward-line -1)
+                (end-of-line)
                 (py-compute-indentation orig origline))
                ;; lists
                ((and (nth 1 pps) py-indent-honors-multiline-listing)
@@ -2642,11 +2649,6 @@ the new line indented."
                   (setq this-line (py-count-lines))
                   (if (< 1 (- origline this-line))
                       (py-fetch-previous-indent orig)
-                    ;; disabled fixing indentation-error-lp:795773
-                    ;;                    (if (nth 2 pps)
-                    ;;                        (progn
-                    ;;                          (goto-char (nth 2 pps))
-                    ;;                          (current-column))
                     (cond ((looking-at "\\s([ \t]*$")
                            (if
                                (progn
@@ -2682,18 +2684,20 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re)
+               ((looking-at py-return-re) 
                 (py-beginning-of-def-or-class)
                 (current-indentation))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re)
+               ((looking-at py-block-closing-keywords-re) 
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
-                (py-beginning-of-statement)
-                (py-compute-indentation orig origline))
+                (if (bobp)
+                    (current-column) 
+                  (py-beginning-of-statement)
+                  (py-compute-indentation orig origline)))
                ((looking-at py-assignement-re)
                 (current-indentation))
                ((looking-at py-block-or-clause-re)

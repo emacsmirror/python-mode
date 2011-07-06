@@ -304,5 +304,17 @@ print u'\xA9'
     (goto-char 19)
     (assert (eq 4 (py-compute-indentation)) nil "honor-comments-indent test failed"))
 
+(defun first-line-offset-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "    #Something.py
+    # The purpose of this program is uncertain.
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'first-line-offset-base arg teststring)))
+
+(defun first-line-offset-base ()
+    (goto-char 18)
+    (assert (eq 4 (py-compute-indentation)) nil "first-line-offset test failed"))
+
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
