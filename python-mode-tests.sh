@@ -112,6 +112,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall honor-comments-indent-test \
 --funcall bob-beginning-of-statement-test \
 --funcall first-line-offset-test \
+--funcall assignement-indent-test \
 --funcall UnicodeEncodeError-python3-test \
 
 # test not ready

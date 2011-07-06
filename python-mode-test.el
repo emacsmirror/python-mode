@@ -46,6 +46,7 @@
          'near-bob-beginning-of-statement-test
          'bob-beginning-of-statement-test
          'honor-comments-indent-test
+         'assignement-indent-test
 
 )))
 
@@ -315,6 +316,18 @@ print u'\xA9'
 (defun first-line-offset-base ()
     (goto-char 18)
     (assert (eq 4 (py-compute-indentation)) nil "first-line-offset test failed"))
+
+(defun assignement-indent-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo():
+sammlung = []
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'assignement-indent-base arg teststring)))
+
+(defun assignement-indent-base ()
+    (goto-char 12)
+    (assert (eq 4 (py-compute-indentation)) nil "assignement-indent test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
