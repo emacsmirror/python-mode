@@ -45,6 +45,7 @@
          'py-expand-abbrev-pst-pdb.set_trace-test
          'near-bob-beginning-of-statement-test
          'bob-beginning-of-statement-test
+         'honor-comments-indent-test
 
 )))
 
@@ -290,6 +291,18 @@ print u'\xA9'
 (defun bob-beginning-of-statement-base ()
     (py-beginning-of-statement) 
     (assert (eq 1 (point))  "bob-beginning-of-statement test failed"))
+
+(defun honor-comments-indent-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "    #Something.py
+    # The purpose of this program is uncertain.
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'honor-comments-indent-base arg teststring)))
+
+(defun honor-comments-indent-base ()
+    (goto-char 19)
+    (assert (eq 4 (py-compute-indentation)) nil "honor-comments-indent test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
