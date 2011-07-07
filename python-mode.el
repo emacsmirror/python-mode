@@ -423,19 +423,22 @@ Default is `t'."
   "Mode commands will set this. ")
 (make-variable-buffer-local 'py-exec-command)
 
-(defvar py-master-file nil
-  "If non-nil, execute the named file instead of the buffer's file.
-The intent is to allow you to set this variable in the file's local
+(defcustom py-master-file nil
+  "If non-nil, \\[py-execute-buffer] executes the named
+master file instead of the buffer's file.  If the file name has a
+relative path, the value of variable `default-directory' for the
+buffer is prepended to come up with a file name.
+
+Beside you may set this variable in the file's local
 variable section, e.g.:
 
     # Local Variables:
     # py-master-file: \"master.py\"
     # End:
 
-so that typing \\[py-execute-buffer] in that buffer executes the named
-master file instead of the buffer's file.  If the file name has a
-relative path, the value of variable `default-directory' for the
-buffer is prepended to come up with a file name.")
+"
+  :type 'string
+  :group 'python)
 (make-variable-buffer-local 'py-master-file)
 
 (defcustom py-pychecker-command "pychecker"
@@ -2279,6 +2282,20 @@ Unicode strings like u'\xA9' "
     ;; Clean up after ourselves.
     (kill-buffer temp)))
 
+(defun py-fetch-py-master-file ()
+  "Lookup if a `py-master-file' is specified.
+See also doku of variable `py-master-file' "
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min)) 
+      (when (re-search-forward "^ *# Local Variables:" nil (quote move) 1)
+        (when
+            (re-search-forward (concat "^\\( *# py-master-file: *\\)\"\\([^ \t]+\\)\" *$") nil t 1)
+          (setq py-master-file (match-string-no-properties 2))))))
+  (when (interactive-p) (message "%s" py-master-file)))
+
 (defun py-execute-buffer (&optional async)
   "Send the contents of the buffer to a Python interpreter.
 If the file local variable `py-master-file' is non-nil, execute the
@@ -2291,14 +2308,16 @@ sent.  A trailing newline will be supplied if needed.
 See the `\\[py-execute-region]' docs for an account of some
 subtleties, including the use of the optional ASYNC argument."
   (interactive "P")
-  (let ((old-buffer (current-buffer)))
-    (if py-master-file
-        (let* ((filename (expand-file-name py-master-file))
-               (buffer (or (get-file-buffer filename)
-                           (find-file-noselect filename))))
-          (set-buffer buffer)))
-    (py-execute-region (point-min) (point-max) async)
-       (pop-to-buffer old-buffer)))
+  (save-excursion
+    (let ((old-buffer (current-buffer)))
+      (or py-master-file (py-fetch-py-master-file))
+      (if py-master-file
+          (let* ((filename (expand-file-name py-master-file))
+                 (buffer (or (get-file-buffer filename)
+                             (find-file-noselect filename))))
+            (set-buffer buffer)))
+      (py-execute-region (point-min) (point-max) async)
+      (pop-to-buffer old-buffer))))
 
 (defun py-execute-import-or-reload (&optional async)
   "Import the current buffer's file in a Python interpreter.
