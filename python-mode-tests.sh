@@ -106,14 +106,16 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-end-of-def-or-class-test \
 --funcall py-electric-backspace-test \
 --funcall py-electric-delete-test \
---funcall py-expand-abbrev-pst-pdb.set_trace-test \
 --funcall dict-error-test \
 --funcall near-bob-beginning-of-statement-test \
 --funcall honor-comments-indent-test \
 --funcall bob-beginning-of-statement-test \
 --funcall first-line-offset-test \
 --funcall assignement-indent-test \
+--funcall if-elif-test \
+--funcall if-elif-bob-test \
 --funcall UnicodeEncodeError-python3-test \
+--funcall py-expand-abbrev-pst-pdb.set_trace-test \
 
 # test not ready
 # passes only when run from edebug

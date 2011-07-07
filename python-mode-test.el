@@ -47,6 +47,8 @@
          'bob-beginning-of-statement-test
          'honor-comments-indent-test
          'assignement-indent-test
+         'if-elif-test
+         'if-elif-bob-test
 
 )))
 
@@ -328,6 +330,37 @@ sammlung = []
 (defun assignement-indent-base ()
     (goto-char 12)
     (assert (eq 4 (py-compute-indentation)) nil "assignement-indent test failed"))
+
+
+(defun if-elif-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "if bar in baz:
+    print \"0, baz\"
+    abc[1] = \"x\"
+    
+elif barr in bazz:
+    print \"\" 
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'if-elif-base arg teststring)))
+
+(defun if-elif-base ()
+    (goto-char 76)
+    (assert (eq 4 (py-compute-indentation)) nil "if-elif.py test failed"))
+
+(defun if-elif-bob-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "if bar in baz:
+    print \"0, baz\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'if-elif-bob-base arg teststring)))
+
+(defun if-elif-bob-base ()
+    (goto-char (point-min))
+    (assert (eq 0 (py-compute-indentation)) nil "if-elif-bob.py test failed"))
+
+
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
