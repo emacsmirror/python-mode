@@ -50,6 +50,7 @@
          'if-elif-test
          'if-elif-bob-test
          'try-else-clause-test
+         'try-except-test
 
 )))
 
@@ -117,7 +118,6 @@
     (py-beginning-of-block-or-clause)
     (assert (looking-at "if") nil "py-beginning-of-block-or-clause test failed"))
 
-
 (defun py-end-of-block-or-clause-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring python-mode-teststring))
@@ -149,7 +149,7 @@
 (defun py-end-of-def-base ()
     (py-beginning-of-def)
     (py-end-of-def)
-    (assert (eq (point) 556) nil "py-end-of-def test failed")  
+    (assert (eq (point) 556) nil "py-end-of-def test failed")
     )
 
 (defun py-beginning-of-def-or-class-test (&optional arg load-branch-function)
@@ -189,7 +189,6 @@
   (assert (eq 0 (current-column)) nil "py-electric-backspace test #3 failed")
   (py-electric-backspace)
   (assert (eq 232 (point)) nil "py-electric-backspace test #4 failed"))
-
 
 (defun py-electric-delete-test (&optional arg load-branch-function)
   (interactive "p")
@@ -284,7 +283,6 @@ print u'\xA9'
     (goto-char 50)
     (assert (eq 0 (py-compute-indentation)) nil "near-bob-beginning-of-statement test failed"))
 
-
 (defun bob-beginning-of-statement-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "    #Foo.py
@@ -293,7 +291,7 @@ print u'\xA9'
   (py-bug-tests-intern 'bob-beginning-of-statement-base arg teststring)))
 
 (defun bob-beginning-of-statement-base ()
-    (py-beginning-of-statement) 
+    (py-beginning-of-statement)
     (assert (eq 1 (point))  "bob-beginning-of-statement test failed"))
 
 (defun honor-comments-indent-test (&optional arg load-branch-function)
@@ -332,15 +330,14 @@ sammlung = []
     (goto-char 12)
     (assert (eq 4 (py-compute-indentation)) nil "assignement-indent test failed"))
 
-
 (defun if-elif-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "if bar in baz:
     print \"0, baz\"
     abc[1] = \"x\"
-    
+
 elif barr in bazz:
-    print \"\" 
+    print \"\"
 "))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-tests-intern 'if-elif-base arg teststring)))
@@ -365,7 +362,7 @@ elif barr in bazz:
   (interactive "p")
   (let ((teststring "
 # an example from http://www.thomas-guettler.de
-# © 2002-2008 Thomas Güttler. Der Text darf nach belieben kopiert und modifiziert werden, solange dieser Hinweis zum Copyright und ein Links zu dem Original unter www.thomas-guettler.de erhalten bleibt. Es wäre nett, wenn Sie mir Verbesserungsvorschläge mitteilen: guettli@thomas-guettler.de 
+# © 2002-2008 Thomas Güttler. Der Text darf nach belieben kopiert und modifiziert werden, solange dieser Hinweis zum Copyright und ein Links zu dem Original unter www.thomas-guettler.de erhalten bleibt. Es wäre nett, wenn Sie mir Verbesserungsvorschläge mitteilen: guettli@thomas-guettler.de
 
 def _commit_on_success(*args, **kw):
     begin()
@@ -382,9 +379,32 @@ def _commit_on_success(*args, **kw):
   (py-bug-tests-intern 'try-else-clause-base arg teststring)))
 
 (defun try-else-clause-base ()
-  (forward-char -1) 
+  (forward-char -1)
   (assert (eq 4 (py-compute-indentation)) nil "try-else-clause test failed"))
 
+(defun try-except-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+# an example from http://www.thomas-guettler.de
+# © 2002-2008 Thomas Güttler. Der Text darf nach belieben kopiert und modifiziert werden, solange dieser Hinweis zum Copyright und ein Links zu dem Original unter www.thomas-guettler.de erhalten bleibt. Es wäre nett, wenn Sie mir Verbesserungsvorschläge mitteilen: guettli@thomas-guettler.de
+
+def _commit_on_success(*args, **kw):
+    begin()
+    try:
+        res = func(*args, **kw)
+    except Exception, e:
+        rollback()
+        raise # Re-raise (aufgefangene Exception erneut werfen)
+    else:
+        commit()
+    return res
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'try-except-base arg teststring)))
+
+(defun try-except-base ()
+  (goto-char 434)
+  (assert (eq 4 (py-compute-indentation)) nil "try-else-clause test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

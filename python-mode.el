@@ -886,6 +886,10 @@ Currently-active file is at the head of the list.")
   "Abbrev table in use in `python-mode' buffers.")
 (define-abbrev-table 'python-mode-abbrev-table nil)
 
+(defvar py-mode-abbrev-table nil
+  "Abbrev table in use in `python-mode' buffers.")
+(define-abbrev-table 'py-mode-abbrev-table nil)
+
 (defvar inferior-python-mode-abbrev-table nil
   "Abbrev table in use in `python-mode' buffers.")
 (define-abbrev-table 'inferior-python-mode-abbrev-table nil)
@@ -2696,8 +2700,8 @@ the new line indented."
                ((looking-at py-if-clause-re)
                 (+ (current-indentation) py-indent-offset)) 
                ((and (looking-at py-try-clause-re)(eq origline (py-count-lines))
-                     (save-excursion (py-beginning-of-try-block)))
-                (current-indentation))
+                     (save-excursion (prog1 (py-beginning-of-try-block)(setq erg (current-indentation)))))
+                erg)
                ((and (looking-at py-try-clause-re)(not (eq origline (py-count-lines))))
                 (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-clause-re) (< (py-count-lines) origline))
