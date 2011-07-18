@@ -49,6 +49,7 @@
          'assignement-indent-test
          'if-elif-test
          'if-elif-bob-test
+         'try-else-clause-test
 
 )))
 
@@ -360,6 +361,29 @@ elif barr in bazz:
     (goto-char (point-min))
     (assert (eq 0 (py-compute-indentation)) nil "if-elif-bob.py test failed"))
 
+(defun try-else-clause-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+# an example from http://www.thomas-guettler.de
+# © 2002-2008 Thomas Güttler. Der Text darf nach belieben kopiert und modifiziert werden, solange dieser Hinweis zum Copyright und ein Links zu dem Original unter www.thomas-guettler.de erhalten bleibt. Es wäre nett, wenn Sie mir Verbesserungsvorschläge mitteilen: guettli@thomas-guettler.de 
+
+def _commit_on_success(*args, **kw):
+    begin()
+    try:
+        res = func(*args, **kw)
+    except Exception, e:
+        rollback()
+        raise # Re-raise (aufgefangene Exception erneut werfen)
+    else:
+        commit()
+    return res
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'try-else-clause-base arg teststring)))
+
+(defun try-else-clause-base ()
+  (forward-char -1) 
+  (assert (eq 4 (py-compute-indentation)) nil "try-else-clause test failed"))
 
 
 (provide 'python-mode-test)

@@ -94,6 +94,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall python-mode-hangs-lp:801780-test \
 --funcall stops-backslashed-line-lp:802504-test \
 --funcall stops-backslashed-line-lp:802504-test2 \
+--funcall py-master-file-not-honored-lp:794850-test \
 --funcall python-mode-slow-lp:803275-test \
 \
 --funcall py-beginning-of-block-test \
@@ -114,6 +115,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall assignement-indent-test \
 --funcall if-elif-test \
 --funcall if-elif-bob-test \
+--funcall try-else-clause-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 
