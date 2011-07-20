@@ -117,6 +117,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall if-elif-bob-test \
 --funcall try-else-clause-test \
 --funcall try-except-test \
+--funcall assignement-after-block-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 

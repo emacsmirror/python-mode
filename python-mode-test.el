@@ -51,6 +51,7 @@
          'if-elif-bob-test
          'try-else-clause-test
          'try-except-test
+         'assignement-after-block-test
 
 )))
 
@@ -405,6 +406,25 @@ def _commit_on_success(*args, **kw):
 (defun try-except-base ()
   (goto-char 434)
   (assert (eq 4 (py-compute-indentation)) nil "try-else-clause test failed"))
+
+(defun assignement-after-block-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+if x > 0:
+    for i in range(100):
+        print i
+    else:
+    print \"All done\"
+
+a = \"asdf\"
+b = \"asdf\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'assignement-after-block-base arg teststring)))
+
+(defun assignement-after-block-base ()
+    (forward-line -1) 
+    (assert (eq 0 (py-compute-indentation)) nil "assignement-after-block test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

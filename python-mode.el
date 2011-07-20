@@ -1253,7 +1253,7 @@ When non-nil, arguments are printed."
 (defun py-switch-imenu-index-function ()
   "For development only. Good old renamed `py-imenu-create-index'-function hangs with medium size files already. Working `py-imenu-create-index-new' is active by default.
 
-Switch between classic index machine `py-imenu-create-index' and new `py-imenu-create-index-new'. 
+Switch between classic index machine `py-imenu-create-index' and new `py-imenu-create-index-new'.
 
 The former may provide a more detailed report, thus maintaining two different index-machines is considered. "
   (interactive)
@@ -1384,7 +1384,7 @@ of the first definition found."
 
 (defun py-imenu-create-index-new (&optional beg end)
   "`imenu-create-index-function' for Python. "
-  (let ((orig (point)) 
+  (let ((orig (point))
         (beg (cond (beg)
                    ((region-active-p)
                     (region-beginning))
@@ -1422,7 +1422,7 @@ of the first definition found."
       (push (cons "Module variables"
                   (nreverse vars))
             index-alist))
-    (goto-char orig) 
+    (goto-char orig)
     index-alist))
 
 
@@ -1458,7 +1458,7 @@ return `jython', otherwise return nil."
 (defun py-choose-shell (&optional arg)
   "Looks for an appropriate mode function.
 This does the following:
- - reads py-which-shell 
+ - reads py-which-shell
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
  - default to the variable `py-default-interpreter'
@@ -1550,7 +1550,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         indent-line-function 'py-indent-line
         ;; tell add-log.el how to find the current function/method/variable
         add-log-current-defun-function 'py-current-defun
-        
+
         fill-paragraph-function 'py-fill-paragraph)
   (use-local-map py-mode-map)
   ;; add the menu
@@ -2293,7 +2293,7 @@ See also doku of variable `py-master-file' "
   (save-excursion
     (save-restriction
       (widen)
-      (goto-char (point-min)) 
+      (goto-char (point-min))
       (when (re-search-forward "^ *# Local Variables:" nil (quote move) 1)
         (when
             (re-search-forward (concat "^\\( *# py-master-file: *\\)\"\\([^ \t]+\\)\" *$") nil t 1)
@@ -2629,14 +2629,14 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point))) 
+      (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
         ;;        (back-to-indentation)
         (setq indent
               (cond
-               ((and (bobp) (eq (point) orig)) 
+               ((and (bobp) (eq (point) orig))
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps)(save-excursion (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (setq this-line (py-count-lines))))))
@@ -2653,7 +2653,7 @@ the new line indented."
                ;; comments
                ((and (nth 8 pps) (< (py-count-lines) origline))
                 (goto-char (nth 8 pps))
-                (current-column)) 
+                (current-column))
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
@@ -2698,7 +2698,7 @@ the new line indented."
                 (py-beginning-of-if-block)
                 (current-indentation))
                ((looking-at py-if-clause-re)
-                (+ (current-indentation) py-indent-offset)) 
+                (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-try-clause-re)(eq origline (py-count-lines))
                      (save-excursion (prog1 (py-beginning-of-try-block)(setq erg (current-indentation)))))
                 erg)
@@ -2709,18 +2709,18 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re) 
+               ((looking-at py-return-re)
                 (py-beginning-of-block)
                 (current-indentation))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re) 
+               ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
                 (if (bobp)
-                    (current-column) 
+                    (current-column)
                   (py-beginning-of-statement)
                   (py-compute-indentation orig origline)))
                ((and (< (point) orig)(looking-at py-assignement-re))
@@ -2728,13 +2728,14 @@ the new line indented."
                ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
                ((and (eq origline (py-count-lines))
-                     (setq erg (py-go-to-keyword py-block-or-clause-re -1)))
+                     (save-excursion (progn (setq erg (py-go-to-keyword py-block-or-clause-re -1)))
+                                     (ignore-errors (< orig (py-end-of-block-or-clause)))))
                 (+ (car erg) py-indent-offset))
                ((py-statement-opens-block-p)
                 (+ py-indent-offset (current-indentation)))
                ((and (eq (point) orig) (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation orig origline)) 
+                (py-compute-indentation orig origline))
                (t (current-indentation))))
         (when (interactive-p) (message "%s" indent))
         indent))))
@@ -2781,7 +2782,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
     (beginning-of-line)
     (skip-chars-backward " \t\r\n\f")
     (let ((erg (and (eq (char-before (point)) ?\\ )
-                    (py-escaped)))) 
+                    (py-escaped))))
       (when (interactive-p) (message "%s" erg))
       erg)))
 
@@ -2825,8 +2826,6 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
                             (when (nth 3 pps) (nth 8 pps)))))))
     (when (interactive-p) (message "%s" erg))
     erg))
-
-
 
 (defun py-end-base (regexp orig iact)
   "Used internal by functions going to the end forms. "
@@ -3153,7 +3152,7 @@ http://docs.python.org/reference/compound_stmts.html
               (pps (parse-partial-sexp (point-min) (point)))
               erg)
           (unless (< (point) orig)(skip-chars-backward " \t\r\n\f"))
-          
+
           (setq erg
                 (cond
                  ((empty-line-p)
@@ -3175,7 +3174,7 @@ http://docs.python.org/reference/compound_stmts.html
                  ((nth 8 pps)
                   (goto-char (1- (nth 8 pps)))
                   (py-beginning-of-statement orig origline))
-                 ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
+                 ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
                   (forward-line -1)
                   (unless (bobp)
                     (end-of-line)
@@ -3218,7 +3217,7 @@ http://docs.python.org/reference/compound_stmts.html
   (save-restriction
     (widen)
     (unless (eobp)
-      (let* 
+      (let*
           ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
            (pps (parse-partial-sexp (point-min) (point)))
@@ -3240,7 +3239,7 @@ http://docs.python.org/reference/compound_stmts.html
          ;; in comment
          ((nth 4 pps)
           (forward-line 1)
-          (py-end-of-statement orig origline done)) 
+          (py-end-of-statement orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
@@ -3460,7 +3459,7 @@ http://docs.python.org/reference/compound_stmts.html"
 With optional universal arg CLASS, move to the beginn of class definition.
 Returns position reached, if any, nil otherwise. "
   (interactive "P")
-  (let* ((regexp (if (eq 4 (prefix-numeric-value arg)) 
+  (let* ((regexp (if (eq 4 (prefix-numeric-value arg))
                      py-class-re
                    py-def-or-class-re))
          (res (ignore-errors (cdr (py-go-to-keyword regexp -1))))
@@ -3919,7 +3918,7 @@ Returns beginning and end positions of marked area, a cons."
                       "try: pydoc.help('" sym "')\n"
                       "except: print 'No help available on:', \"" sym "\""))
     (message cmd)
-    (with-temp-buffer 
+    (with-temp-buffer
       (insert cmd)
       (py-execute-region (point-min) (point-max)))))
 
@@ -4401,7 +4400,7 @@ Travels right-margin comments. "
   "Return t iff current line is a continuation line."
   (save-excursion
     (beginning-of-line)
-    (or (py-preceding-line-backslashed-p) 
+    (or (py-preceding-line-backslashed-p)
         (< 0 (py-nesting-level)))))
 
 (defun py-current-line-backslashed-p ()
@@ -4411,7 +4410,7 @@ Travels right-margin comments. "
     (end-of-line)
     (skip-chars-backward " \t\r\n\f")
     (let ((erg (and (eq (char-before (point)) ?\\ )
-                    (py-escaped)))) 
+                    (py-escaped))))
       (when (interactive-p) (message "%s" erg))
       erg)))
 
@@ -4421,7 +4420,7 @@ Travels right-margin comments. "
     (lexical-let ((orig (point))
                   erg)
       (setq erg (< 0 (abs (% (skip-chars-backward "\\\\")2))))
-      (goto-char orig) 
+      (goto-char orig)
       (when iact (message "%s" erg))
       erg))
 
@@ -4452,7 +4451,7 @@ and `pass'.  This doesn't catch embedded statements."
          (nth 8 pps))))))
 
 (defun py-current-defun (&optional iact)
-  "Go to the outermost method or class definition in current scope. 
+  "Go to the outermost method or class definition in current scope.
 
 Python value for `add-log-current-defun-function'.
 This tells add-log.el how to find the current function/method/variable.
