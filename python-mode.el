@@ -9,7 +9,7 @@
 ;; Created:    Feb 1992
 ;; Keywords:   python languages oop
 
-(defconst py-version "5.2.0+"
+(defconst py-version "6.0"
   "`python-mode' version number.")
 
 ;; This file is part of python-mode.el.
@@ -3619,13 +3619,6 @@ For stricter sense specify regexp. "
   Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (py-mark-base "expression")
-  (exchange-point-and-mark))
-
-(defun py-mark-partial-expression ()
-  "Mark partial-expression at point.
-  Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (py-mark-base "partial-expression")
   (exchange-point-and-mark))
 
 (defun py-mark-statement ()
