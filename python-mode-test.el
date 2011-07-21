@@ -52,6 +52,8 @@
          'try-else-clause-test
          'try-except-test
          'assignement-after-block-test
+         'py-beginning-of-clause-test
+         'py-end-of-clause-test
 
 )))
 
@@ -425,6 +427,62 @@ b = \"asdf\"
 (defun assignement-after-block-base ()
     (forward-line -1) 
     (assert (eq 0 (py-compute-indentation)) nil "assignement-after-block test failed"))
+
+(defun py-beginning-of-clause-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# Examples from http://diveintopython.org/
+
+def main(argv):
+    grammar = \"kant.xml\"
+    try:
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in (\"-h\", \"--help\"):
+            usage()
+            sys.exit()
+        elif opt == '-d':
+            global _debug
+            _debug = 1
+        elif opt in (\"-g\", \"--grammar\"):
+            grammar = arg
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-beginning-of-clause-base arg teststring)))
+
+(defun py-beginning-of-clause-base ()
+    (goto-char 295)
+    (assert (eq 267 (py-beginning-of-clause)) "py-beginning-of-clause test failed"))
+
+(defun py-end-of-clause-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# Examples from http://diveintopython.org/
+
+def main(argv):
+    grammar = \"kant.xml\"
+    try:
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in (\"-h\", \"--help\"):
+            usage()
+            sys.exit()
+        elif opt == '-d':
+            global _debug
+            _debug = 1
+        elif opt in (\"-g\", \"--grammar\"):
+            grammar = arg
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-end-of-clause-base arg teststring)))
+
+(defun py-end-of-clause-base ()
+    (goto-char 295)
+    (assert (eq 337 (py-end-of-clause)) "py-end-of-clause test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

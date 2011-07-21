@@ -3431,8 +3431,8 @@ Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive "p")
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-clause-re -1)))))
+  (interactive)
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-or-clause-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
