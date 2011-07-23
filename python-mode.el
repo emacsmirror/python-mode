@@ -4669,6 +4669,14 @@ If point is inside a string, narrow to that string and fill.
             (forward-char 1)
             (py-fill-string (nth 8 pps)))))))))
 
+(unless (featurep 'xemacs)
+  (unless (functionp 'region-active-p)
+    (defun region-active-p ()
+      "and mark-active transient-mark-mode
+ (not (eq (region-beginning) (region-end)"
+      (and mark-active transient-mark-mode
+           (not (eq (condition-case nil (region-beginning)(error nil)) (condition-case nil (region-end) (error nil))))))))
+
 (require 'info-look)
 (provide 'python-mode)
 ;;; python-mode.el ends here
