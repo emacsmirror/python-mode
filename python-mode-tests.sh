@@ -123,6 +123,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-end-of-clause-test \
 --funcall py-beginning-of-expression-test \
 --funcall py-end-of-expression-test \
+--funcall py-expression-index-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 

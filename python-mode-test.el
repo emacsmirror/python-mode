@@ -56,6 +56,7 @@
          'py-end-of-clause-test
          'py-beginning-of-expression-test
          'py-end-of-expression-test
+         'py-expression-index-test
 
 )))
 
@@ -522,6 +523,19 @@ def main(argv):
 (defun py-end-of-expression-base ()
   (goto-char 225)
   (assert (eq 232 (py-end-of-expression)) nil "py-beginning-of-expression test failed"))
+
+(defun py-expression-index-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+ # -\*- coding: utf-8 -\*-
+b = a[0].split(':')[1]
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-expression-index-base arg teststring)))
+
+(defun py-expression-index-base ()
+    (goto-char 58)
+    (assert (eq 71 (py-end-of-expression)) nil "py-expression-index test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
