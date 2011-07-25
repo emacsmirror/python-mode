@@ -94,8 +94,9 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall python-mode-hangs-lp:801780-test \
 --funcall stops-backslashed-line-lp:802504-test \
 --funcall stops-backslashed-line-lp:802504-test2 \
---funcall py-master-file-not-honored-lp:794850-test \
+--funcall master-file-not-honored-lp:794850-test \
 --funcall python-mode-slow-lp:803275-test \
+--funcall font-lock-variable-name-face-lp:798538-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

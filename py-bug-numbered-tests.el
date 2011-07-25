@@ -78,7 +78,8 @@
          'stops-backslashed-line-lp:802504-test
          'stops-backslashed-line-lp:802504-test2
          'python-mode-slow-lp:803275-test
-         'py-master-file-not-honored-lp:794850-test
+         'master-file-not-honored-lp:794850-test
+         'font-lock-variable-name-face-lp:798538-test
 
          )))
 
@@ -652,7 +653,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (sit-for 0.1)
     (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d 1th test failed")
     (goto-char 57)
-    (assert (not (get-char-property (point) 'face)) nil "class-treated-as-keyword-lp:709478-test 2th failed")))
+    (assert (eq (get-char-property (point) 'face) 'font-lock-variable-name-face) nil "class-treated-as-keyword-lp:709478-test 2th failed")))
 
 (defun fore-00007F-breaks-indentation-lp:328788-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1338,7 +1339,7 @@ def add(ui, repo, \*pats, \*\*opts):
     (goto-char (point-min))
     (assert (eq 5430 (py-end-of-def-or-class)) nil "python-mode-slow-lp:803275 test failed"))
 
-(defun py-master-file-not-honored-lp:794850-test (&optional arg load-branch-function)
+(defun master-file-not-honored-lp:794850-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
  # -*- coding: utf-8 -*-
@@ -1350,9 +1351,9 @@ def add(ui, repo, \*pats, \*\*opts):
 print u'\xA9'
 "))
     (when load-branch-function (funcall load-branch-function))
-    (py-bug-tests-intern 'py-master-file-not-honored-lp:794850-base arg teststring)))
+    (py-bug-tests-intern 'master-file-not-honored-lp:794850-base arg teststring)))
 
-(defun py-master-file-not-honored-lp:794850-base ()
+(defun master-file-not-honored-lp:794850-base ()
   (save-excursion 
     (set-buffer (get-buffer-create "lp:794850-test-master.py"))
     (erase-buffer)
@@ -1364,7 +1365,23 @@ print \"Hello, I'm your master!\"
     (write-file "/var/tmp/my-master.py"))
   (py-execute-buffer))
 
-;;    (assert nil "py-master-file-not-honored-lp:794850 test failed"))
+(defun font-lock-variable-name-face-lp:798538-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "class Foo(object):
+    def summat(cls, x):
+          .....
+    summat = classmethod(summat)
+"))
+    (when load-branch-function (funcall load-branch-function))
+    (py-bug-tests-intern 'font-lock-variable-name-face-lp:798538-base arg teststring)))
+
+(defun font-lock-variable-name-face-lp:798538-base ()
+  (let ((font-lock-verbose nil))
+    (font-lock-mode 1)
+    (font-lock-fontify-buffer)
+    (goto-char 64)
+    (sit-for 0.1)
+    (assert (eq (get-char-property (point) 'face) 'font-lock-variable-name-face) nil "font-lock-variable-name-face-lp:798538 test failed ")))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
