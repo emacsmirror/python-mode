@@ -3762,6 +3762,7 @@ For stricter sense specify regexp. "
   (py-statement-opens-base py-def-or-class-re))
 
 ;; Mark forms
+(defalias 'py-expression 'py-mark-expression)
 (defun py-mark-expression ()
   "Mark expression at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -3769,6 +3770,7 @@ For stricter sense specify regexp. "
   (py-mark-base "expression")
   (exchange-point-and-mark))
 
+(defalias 'py-statement 'py-mark-statement)
 (defun py-mark-statement ()
   "Mark statement at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -3776,6 +3778,7 @@ For stricter sense specify regexp. "
   (py-mark-base "statement")
   (exchange-point-and-mark))
 
+(defalias 'py-block 'py-mark-block)
 (defun py-mark-block ()
   "Mark block at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -3783,6 +3786,7 @@ For stricter sense specify regexp. "
   (py-mark-base "block")
   (exchange-point-and-mark))
 
+(defalias 'py-block-or-clause 'py-mark-block-or-clause)
 (defun py-mark-block-or-clause ()
   "Mark block-or-clause at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -3801,6 +3805,7 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "def" py-mark-decorators)
     (exchange-point-and-mark)))
 
+(defalias 'py-def-or-class 'py-mark-def-or-class)
 (defun py-mark-def-or-class (&optional arg)
   "Mark def-or-class at point.
 
@@ -3811,6 +3816,7 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "def-or-class" py-mark-decorators)
     (exchange-point-and-mark)))
 
+(defalias 'py-class 'py-mark-class)
 (defun py-mark-class (&optional arg)
   "Mark class at point.
 
@@ -3822,6 +3828,7 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "class" py-mark-decorators)
     (exchange-point-and-mark)))
 
+(defalias 'py-clause 'py-mark-clause)
 (defun py-mark-clause ()
   "Mark clause at point.
   Returns beginning and end positions of marked area, a cons. "
