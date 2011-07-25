@@ -121,6 +121,8 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall assignement-after-block-test \
 --funcall py-beginning-of-clause-test \
 --funcall py-end-of-clause-test \
+--funcall py-beginning-of-expression-test \
+--funcall py-end-of-expression-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 

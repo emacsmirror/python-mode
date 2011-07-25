@@ -477,6 +477,15 @@ variable section, e.g.:
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
 
+(defvar py-expression-skip-regexp "^[ .,=:#;\t\r\n\f)]"
+  "py-expression assumes chars indicated possible composing a py-expression, skipping it. ")
+
+(defvar py-expression-looking-regexp "[^ .,=:#;\t\r\n\f)]"
+  "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
+
+(defvar py-not-expression-regexp "[ .,=:#;\t\r\n\f)]"
+  "py-expression assumes chars indicated probably will not compose a py-expression. ")
+
 (defvar py-line-number-offset 0
   "When an exception occurs as a result of py-execute-region, a
 subsequent py-up-exception needs the line number where the region
@@ -3128,6 +3137,143 @@ Put point inside the parentheses of a multiline import and hit
 (defalias 'py-hungry-delete-forward 'c-hungry-delete-forward)
 (defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
 
+;; Expression
+(defalias 'py-backward-expression 'py-beginning-of-expression)
+(defun py-beginning-of-expression (&optional orig origline done)
+  "Go to the beginning of a python expression.
+Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
+Operators however are left aside resp. limit py-expression designed for edit-purposes. 
+"
+  (interactive)
+  (save-restriction
+    (widen)
+    (unless (bobp)
+      (when (looking-at "[ \t]+\\|$")
+        (skip-chars-backward " \t\r\n\f")
+        (forward-char -1)))
+    (when (looking-at "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)")
+      (message "%s" (match-string-no-properties 0))
+      (goto-char (1- (match-beginning 0)))
+      (skip-chars-backward " \t\r\n\f")
+      (forward-char -1)) 
+    (let ((orig (or orig (point)))
+          (cui (current-indentation))
+          (origline (or origline (py-count-lines)))
+          (pps (parse-partial-sexp (point-min) (point)))
+          (done done)
+          erg)
+      (setq erg
+            (cond
+             ((empty-line-p)
+              (skip-chars-backward " \t\r\n\f")
+              (forward-char -1)
+              (py-beginning-of-expression orig origline))
+             ;; if in string
+             ((and (nth 3 pps)(nth 8 pps)
+                   (save-excursion
+                     (ignore-errors
+                       (goto-char (nth 2 pps)))))
+              (goto-char (nth 2 pps))
+              (py-beginning-of-expression orig origline))
+             ;; comments left, as strings are done
+             ((nth 8 pps)
+              (goto-char (1- (nth 8 pps)))
+              (py-beginning-of-expression orig origline))
+             ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
+              (forward-line -1)
+              (unless (bobp)
+                (end-of-line)
+                (py-beginning-of-expression orig origline)))
+             ;; character address of start of innermost containing list; nil if none.
+             ((nth 1 pps)
+              (goto-char (nth 1 pps))
+              (when 
+                  (not (looking-back "[ \t]+"))
+                (skip-chars-backward py-expression-skip-regexp))
+              (py-beginning-of-expression orig origline))
+             ;; inside expression
+             ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
+              (skip-chars-backward py-expression-skip-regexp)
+              (py-beginning-of-expression orig origline))
+             ((and (eq (point) orig) (not (bobp))
+                   (looking-at py-expression-looking-regexp))
+              (skip-chars-backward py-expression-looking-regexp)
+              (py-beginning-of-expression orig origline))
+             ((and (not (bobp))
+                   (looking-back py-expression-looking-regexp))
+              (skip-chars-backward py-expression-skip-regexp)
+              (py-beginning-of-expression orig origline))
+             (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(point)))))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
+
+(defalias 'py-forward-expression 'py-end-of-expression)
+(defun py-end-of-expression (&optional orig origline done)
+  "Go to the end of a python expression.
+
+Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
+
+Operators however are left aside resp. limit py-expression designed for edit-purposes. "
+  (interactive)
+  (save-restriction
+    (widen)
+    (unless (eobp)
+      (let* 
+          ((orig (or orig (point)))
+           (origline (or origline (py-count-lines)))
+           (pps (parse-partial-sexp (point-min) (point)))
+           (done done)
+           erg
+           ;; use by scan-lists
+           parse-sexp-ignore-comments)
+        (cond
+         ((and (empty-line-p)(not done)(not (eobp)))
+          (while
+              (and (empty-line-p)(not done)(not (eobp)))
+            (forward-line 1))
+          (py-end-of-expression orig origline done))
+         ;; inside string
+         ((nth 3 pps)
+          (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
+            (goto-char (match-end 0)))
+          (while (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)(nth 3 (parse-partial-sexp (point-min) (point)))))
+          (py-end-of-expression orig origline done))
+         ;; in comment
+         ((nth 4 pps)
+          (forward-line 1)
+          (py-end-of-expression orig origline done)) 
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
+          (while (looking-at "[ \t]*#")
+            (forward-line 1)
+            (beginning-of-line))
+          (end-of-line)
+          ;;          (setq done t)
+          (skip-chars-backward " \t\r\n\f")
+          (py-end-of-expression orig origline done))
+         ;; start of innermost containing list; nil if none.
+         ((nth 1 pps)
+          (goto-char (nth 1 pps))
+          (let ((parse-sexp-ignore-comments t))
+            (forward-list)
+            (setq done t)
+            (py-end-of-expression orig origline done)))
+         ((and (not done)(looking-at py-not-expression-regexp)(not (eobp)))
+          (skip-chars-forward py-not-expression-regexp)
+          (py-end-of-expression orig origline done))
+         ((and (not done)(looking-at py-expression-skip-regexp)(not (eobp)))
+          (skip-chars-forward py-not-expression-regexp)
+          (forward-char -1) 
+          (py-end-of-expression orig origline done))
+         ((and (not done)(looking-at py-expression-looking-regexp)(not (eobp)))
+          (forward-char 1) 
+          (setq done (< 0 (skip-chars-forward py-expression-skip-regexp)))
+          (when done (forward-char -1)) 
+          (py-end-of-expression orig origline done)))
+        (unless (eq (point) orig)
+          (setq erg (point)))
+        (when (interactive-p) (message "%s" erg))
+        erg))))
+
 ;; Statement
 (defalias 'py-backward-statement 'py-beginning-of-statement)
 (defalias 'py-previous-statement 'py-beginning-of-statement)
@@ -4268,6 +4414,18 @@ Used with `eval-after-load'."
 
 
 ;; Helper functions
+(defun py-beginning-of-expression-p ()
+  (interactive)
+  "Returns position, if cursor is at the beginning of a expression, nil otherwise. "
+  (let ((orig (point)))
+    (save-excursion
+      (py-end-of-expression)
+      (py-beginning-of-expression)
+      (when (or (eq orig (point)))
+        (when (interactive-p)
+          (message "%s" orig))
+        orig))))
+
 (defun py-beginning-of-statement-p ()
   (interactive)
   "Returns position, if cursor is at the beginning of a statement, nil otherwise. "

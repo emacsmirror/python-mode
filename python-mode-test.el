@@ -54,6 +54,8 @@
          'assignement-after-block-test
          'py-beginning-of-clause-test
          'py-end-of-clause-test
+         'py-beginning-of-expression-test
+         'py-end-of-expression-test
 
 )))
 
@@ -483,6 +485,43 @@ def main(argv):
 (defun py-end-of-clause-base ()
     (goto-char 295)
     (assert (eq 337 (py-end-of-clause)) "py-end-of-clause test failed"))
+
+(defun py-beginning-of-expression-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# Examples from http://diveintopython.org/
+
+def main(argv):
+    grammar = \"kant.xml\"
+    try:
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-beginning-of-expression-base arg teststring)))
+
+(defun py-beginning-of-expression-base ()
+    (assert (eq 225 (py-beginning-of-expression)) nil "py-beginning-of-expression test failed"))
+
+(defun py-end-of-expression-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# Examples from http://diveintopython.org/
+
+def main(argv):
+    grammar = \"kant.xml\"
+    try:
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-end-of-expression-base arg teststring)))
+
+(defun py-end-of-expression-base ()
+  (goto-char 225)
+  (assert (eq 232 (py-end-of-expression)) nil "py-beginning-of-expression test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
