@@ -2055,6 +2055,24 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
     (when (interactive-p) (message "%s" (prin1-to-string cmd)))
     cmd))
 
+(defun py-which-function ()
+  "Return the name of the function or class, if curser is in, return nil otherwise. "
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen) 
+      (let ((orig (point)) 
+            (erg (if (and (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+")) (not (py-in-string-or-comment-p)))
+                     (match-string-no-properties 2)
+                   (progn
+                     (py-beginning-of-def-or-class)
+                     (when (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+"))
+                       (match-string-no-properties 2))))))
+        (if (and erg (< orig (py-end-of-def-or-class)))
+            (when (interactive-p) (message "%s" erg))
+          (setq erg nil)
+          (when (interactive-p) (message "%s" "Not inside a function or class"))
+          erg)))))
 
 ;; Code execution commands
 
