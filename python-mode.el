@@ -1394,7 +1394,7 @@ of the first definition found."
 
 (defun py-imenu-create-index-new (&optional beg end)
   "`imenu-create-index-function' for Python. "
-  (let ((orig (point))
+  (let ((orig (point)) 
         (beg (cond (beg)
                    ((region-active-p)
                     (region-beginning))
@@ -1406,21 +1406,21 @@ of the first definition found."
         (first t)
         inside-class index-alist sublist vars)
     (goto-char beg)
-;;    (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(_\\{0,2\\}\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
-    (while (and (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(\\sw+\\)\\)" end 'move 1) (not (py-in-string-or-comment-p)))
+    (while (re-search-forward "^[ \t]*\\(?:\\(def\\|class\\)\\)[ \t]+\\(?:\\(\\sw+\\)\\)" end 'move 1)
+      (unless (py-in-string-or-comment-p)
         (let ((pos (match-beginning 0))
-            (name (match-string-no-properties 2)))
-        (when (string= "class" (match-string-no-properties 1))
-          (setq name (concat "class " name)
-                inside-class t))
-        (cond ((and first inside-class)
-               (push (cons name pos) index-alist)
-               (setq first nil))
-              (inside-class
-               (progn (push (cons (concat " " name) pos) sublist)
-                      (push (cons name sublist) index-alist)))
-              (t (push (cons name pos) index-alist)))))
-;;    (message "Funktionen und Klassen: %s" index-alist)
+              (name (match-string-no-properties 2)))
+          (when (string= "class" (match-string-no-properties 1))
+            (setq name (concat "class " name)
+                  inside-class t))
+          (cond ((and first inside-class)
+                 (push (cons name pos) index-alist)
+                 (setq first nil))
+                (inside-class
+                 (progn (push (cons (concat " " name) pos) sublist)
+                        (push (cons name sublist) index-alist)))
+                (t (push (cons name pos) index-alist))))))
+    ;;    (message "Funktionen und Klassen: %s" index-alist)
     ;; Look for module variables.
     (goto-char (point-min))
     (while (re-search-forward "^\\(?:\\sw+\\)[ \t]*=" end t)
@@ -1432,7 +1432,7 @@ of the first definition found."
       (push (cons "Module variables"
                   (nreverse vars))
             index-alist))
-    (goto-char orig)
+    (goto-char orig) 
     index-alist))
 
 
