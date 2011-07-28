@@ -523,9 +523,6 @@ set in py-execute-region and used in py-jump-to-exception.")
         (message "%s" erg))
       erg)))
 
-;; 2009-09-10 a.roehler@web.de changed section start
-;; from python.el, version "22.1"
-
 (defconst py-font-lock-syntactic-keywords
   '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
      (2
@@ -613,7 +610,11 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     table)
   "`python-mode-syntax-table' with backslash given whitespace syntax.")
 
-;; 2009-09-10 a.roehler@web.de changed section end
+(defface py-variable-name-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face method decorators."
+  :group 'python)
+(defvar py-variable-name-face 'py-variable-name-face)
 
 ;; ;; Face for None, True, False, self, and Ellipsis
 (defface py-pseudo-keyword-face
@@ -741,7 +742,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      '("\\<\\(self\\|cls\\|Ellipsis\\|True\\|False\\|None\\)\\>"
        1 py-pseudo-keyword-face)
      '("^[ \t]*\\(_\\{0,2\\}[a-zA-Z][a-zA-Z_0-9.]+_\\{0,2\\}\\) *\\(+\\|-\\|*\\|**\\|/\\|//\\|&\\|%\\||\\|^\\|>>\\|<<\\)? ?="
-       1 font-lock-variable-name-face)
+       1 py-variable-name-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
      ;; special marking for string escapes and percent substitutes;
@@ -1538,13 +1539,11 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (make-local-variable 'fill-paragraph-function)
   ;;
   (set-syntax-table py-mode-syntax-table)
-  ;; 2009-09-10 a.roehler@web.de changed section start
   ;; from python.el, version "22.1"
   (set (make-local-variable 'font-lock-defaults)
        '(py-font-lock-keywords nil nil nil nil
                                (font-lock-syntactic-keywords
                                 . py-font-lock-syntactic-keywords)))
-  ;; 2009-09-10 a.roehler@web.de changed section end
   (setq major-mode 'python-mode
         mode-name "Python"
         local-abbrev-table python-mode-abbrev-table
