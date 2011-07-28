@@ -1028,8 +1028,8 @@ package.  Note that the latest X/Emacs releases contain this package.")
          :filter (lambda (&rest junk)
                    (abbrev-table-menu python-mode-abbrev-table)))
 	"-"
-	["Start interpreter" py-shell
-	 :help "Run `inferior' Python in separate buffer"]
+;; 	["Start interpreter" py-shell
+;; 	 :help "Run `inferior' Python in separate buffer"]
 	["Import/reload file" py-load-file
 	 :help "Load into inferior Python session"]
 	["Eval buffer" py-execute-buffer
@@ -1038,8 +1038,8 @@ package.  Note that the latest X/Emacs releases contain this package.")
 	 :help "Evaluate region en bloc in inferior Python session"]
 	["Eval def/class" py-execute-defun
 	 :help "Evaluate current definition in inferior Python session"]
-	["Switch to interpreter" py-switch-to-python
-	 :help "Switch to inferior Python buffer"]
+	["Switch to interpreter" py-shell
+	 :help "Switch to `inferior' Python in separate buffer"]
 	["Set default process" py-set-proc
 	 :help "Make buffer's inferior process the default"
 	 :active (buffer-live-p py-buffer)]
