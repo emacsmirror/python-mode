@@ -58,6 +58,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall cls-pseudo-keyword-lp:328849-test \
 --funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
+--funcall py-insert-super-lp:328843-test \
 --funcall hungry-delete-backwards-lp:328853-test \
 --funcall hungry-delete-forward-lp:328853-test \
 --funcall beg-end-of-defun-lp:303622-test \

@@ -1708,6 +1708,24 @@ comment."
             (delete-horizontal-space)
             (indent-to (- indent outdent)))))))
 
+(defun py-insert-super ()
+  "Insert a function \"super()\" from current environment.
+As example given in Python v3.1 documentation » The Python Standard Library »
+
+class C(B):
+    def method(self, arg):
+        super().method(arg)    # This does the same thing as:
+                               # super(C, self).method(arg)"
+  (interactive "*")
+  (let* ((orig (point))
+         (name (progn
+                 (py-beginning-of-def-or-class)
+                 (when (looking-at (concat py-def-or-class-re " *\\([^(]+\\) *(\\(?:[^),]*\\),? *\\([^)]*\\))"))
+                   (match-string-no-properties 2))))
+         (args (match-string-no-properties 3)))
+    (goto-char orig)
+    (insert (concat "super()." name "(" args ")"))))
+
 (defun py-execute-file (proc filename &optional cmd)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 Make that process's buffer visible and force display.  Also make
