@@ -654,7 +654,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (sit-for 0.1)
     (assert (eq (get-char-property (point) 'face) 'font-lock-string-face) nil "class-treated-as-keyword-lp:709478d 1th test failed")
     (goto-char 57)
-    (assert (eq (get-char-property (point) 'face) 'font-lock-variable-name-face) nil "class-treated-as-keyword-lp:709478-test 2th failed")))
+    (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "class-treated-as-keyword-lp:709478-test 2th failed")))
 
 (defun fore-00007F-breaks-indentation-lp:328788-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
