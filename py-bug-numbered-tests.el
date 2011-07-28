@@ -80,7 +80,7 @@
          'stops-backslashed-line-lp:802504-test2
          'python-mode-slow-lp:803275-test
          'master-file-not-honored-lp:794850-test
-         'font-lock-variable-name-face-lp:798538-test
+         'py-variable-name-face-lp:798538-test
 
          )))
 
@@ -1366,7 +1366,7 @@ print \"Hello, I'm your master!\"
     (write-file "/var/tmp/my-master.py"))
   (py-execute-buffer))
 
-(defun font-lock-variable-name-face-lp:798538-test (&optional arg load-branch-function)
+(defun py-variable-name-face-lp:798538-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "class Foo(object):
     def summat(cls, x):
@@ -1374,15 +1374,15 @@ print \"Hello, I'm your master!\"
     summat = classmethod(summat)
 "))
     (when load-branch-function (funcall load-branch-function))
-    (py-bug-tests-intern 'font-lock-variable-name-face-lp:798538-base arg teststring)))
+    (py-bug-tests-intern 'py-variable-name-face-lp:798538-base arg teststring)))
 
-(defun font-lock-variable-name-face-lp:798538-base ()
+(defun py-variable-name-face-lp:798538-base ()
   (let ((font-lock-verbose nil))
     (font-lock-mode 1)
     (font-lock-fontify-buffer)
     (goto-char 64)
     (sit-for 0.1)
-    (assert (eq (get-char-property (point) 'face) 'font-lock-variable-name-face) nil "font-lock-variable-name-face-lp:798538-test failed ")))
+    (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "py-variable-name-face-lp:798538-test failed ")))
 
 (defun py-insert-super-lp:328843-test (&optional arg load-branch-function)
   (interactive "p")
