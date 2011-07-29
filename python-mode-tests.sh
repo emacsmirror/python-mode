@@ -58,7 +58,6 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall cls-pseudo-keyword-lp:328849-test \
 --funcall mark-decorators-lp:328851-test \
 --funcall flexible-indentation-lp:328842-test \
---funcall py-insert-super-lp:328843-test \
 --funcall hungry-delete-backwards-lp:328853-test \
 --funcall hungry-delete-forward-lp:328853-test \
 --funcall beg-end-of-defun-lp:303622-test \
@@ -125,11 +124,9 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-beginning-of-expression-test \
 --funcall py-end-of-expression-test \
 --funcall py-expression-index-test \
+--funcall py-insert-super-python2-test \
+--funcall py-insert-super-python3-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall py-expand-abbrev-pst-pdb.set_trace-test \
 
-# test not ready
-# passes only when run from edebug
-# assistance appreciated
 
-# --funcall syntaxerror-on-py-execute-region-lp:691542-test \

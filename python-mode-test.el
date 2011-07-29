@@ -57,6 +57,8 @@
          'py-beginning-of-expression-test
          'py-end-of-expression-test
          'py-expression-index-test
+         'py-insert-super-python2-test
+         'py-insert-super-python3-test
 
 )))
 
@@ -536,6 +538,52 @@ b = a[0].split(':')[1]
 (defun py-expression-index-base ()
     (goto-char 58)
     (assert (eq 71 (py-end-of-expression)) nil "py-expression-index-test failed"))
+
+(defun py-insert-super-python2-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+class OrderedDict1(dict):
+    \"\"\"
+    This implementation of a dictionary keeps track of the order
+    in which keys were inserted.
+    \"\"\"
+
+    def __init__(self, d={}):
+        self._keys = d.keys()
+        dict.__init__(self, d)
+         "))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-insert-super-python2-base arg teststring)))
+
+(defun py-insert-super-python2-base ()
+    (py-insert-super)
+    (back-to-indentation) 
+    (assert (looking-at "super(OrderedDict1, self).__init__(d={})") nil "py-insert-super-python2-test failed"))
+
+(defun py-insert-super-python3-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+class OrderedDict1(dict):
+    \"\"\"
+    This implementation of a dictionary keeps track of the order
+    in which keys were inserted.
+    \"\"\"
+
+    def __init__(self, d={}):
+        self._keys = d.keys()
+        dict.__init__(self, d)
+         "))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-insert-super-python3-base arg teststring)))
+
+(defun py-insert-super-python3-base ()
+    (py-insert-super)
+    (back-to-indentation) 
+    (assert (looking-at "super().__init__(d={})") nil "py-insert-super-python3-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

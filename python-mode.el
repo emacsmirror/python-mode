@@ -1183,7 +1183,8 @@ i.e. the limit on how far back to scan."
     "Return beginning position if point is in a Python literal (a comment or string)."
     (nth 8 (parse-partial-sexp (point-min) (point))))
 
-(defvar py-which-shell nil)
+(defvar py-shell-name nil)
+(make-variable-buffer-local 'py-which-shell)
 
 
 ;;;; Imenu.
@@ -1466,10 +1467,11 @@ return `jython', otherwise return nil."
                         ))))
     mode))
 
+(defalias 'py-which-shell 'py-choose-shell)
 (defun py-choose-shell (&optional arg)
   "Looks for an appropriate mode function.
 This does the following:
- - reads py-which-shell
+ - reads py-shell-name
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
  - default to the variable `py-default-interpreter'
@@ -1477,13 +1479,13 @@ This does the following:
 With \\[universal-argument]) user is prompted to specify a reachable Python version."
   (interactive "P")
   (let ((erg (cond ((eq 4 (prefix-numeric-value arg))
-                    (read-from-minibuffer "Python Shell: " py-which-shell))
-                   (py-which-shell)
+                    (read-from-minibuffer "Python Shell: " py-shell-name))
+                   (py-shell-name)
                    ((py-choose-shell-by-shebang))
                    ((py-choose-shell-by-import))
                    (t py-default-interpreter))))
     (when (interactive-p) (message "%s" erg))
-    (setq py-which-shell erg)
+    (setq py-shell-name erg)
     erg))
 
 (define-derived-mode python2-mode python-mode "Python2"
@@ -1618,7 +1620,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         (if (/= tab-width py-indent-offset)
             (setq indent-tabs-mode nil))))
   ;; Set the default shell if not already set
-  (when (null py-which-shell)
+  (when (null py-shell-name)
     (py-toggle-shells (py-choose-shell)))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
@@ -1713,17 +1715,27 @@ As example given in Python v3.1 documentation » The Python Standard Library »
 
 class C(B):
     def method(self, arg):
-        super().method(arg)    # This does the same thing as:
+        super().method(arg) # This does the same thing as:
                                # super(C, self).method(arg)"
   (interactive "*")
   (let* ((orig (point))
-         (name (progn
-                 (py-beginning-of-def-or-class)
-                 (when (looking-at (concat py-def-or-class-re " *\\([^(]+\\) *(\\(?:[^),]*\\),? *\\([^)]*\\))"))
+         (funcname (progn
+                 (py-beginning-of-def)
+                 (when (looking-at (concat py-def-re " *\\([^(]+\\) *(\\(?:[^),]*\\),? *\\([^)]*\\))"))
                    (match-string-no-properties 2))))
-         (args (match-string-no-properties 3)))
-    (goto-char orig)
-    (insert (concat "super()." name "(" args ")"))))
+         (args (match-string-no-properties 3))
+         (erg (py-which-python))
+         classname)
+    (if (< erg 3)
+        (progn 
+          (py-beginning-of-class)
+          (when (looking-at (concat py-class-re " *\\([^( ]+\\)"))
+            (setq classname (match-string-no-properties 2)))
+          (goto-char orig)
+          ;; super(C, self).method(arg)"
+          (insert (concat "super(" classname ", self)." funcname "(" args ")")))
+      (goto-char orig)
+      (insert (concat "super()." funcname "(" args ")")))))
 
 (defun py-execute-file (proc filename &optional cmd)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
@@ -1932,10 +1944,8 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (make-variable-buffer-local 'py-output-buffer)
 
 ;; for toggling between CPython and Jython
-(defvar py-which-shell nil)
 (defvar py-which-args  py-python-command-args)
 (defvar py-which-bufname "Python")
-(make-variable-buffer-local 'py-which-shell)
 (make-variable-buffer-local 'py-which-args)
 (make-variable-buffer-local 'py-which-bufname)
 
@@ -1943,29 +1953,29 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
   "Toggles between the CPython and Jython default shells.
 
 With \\[universal-argument]) user is prompted to specify a reachable Python version.
-If no arg given and py-which-shell not set yet, shell is set according to `py-default-interpreter' "
+If no arg given and py-shell-name not set yet, shell is set according to `py-default-interpreter' "
   (interactive "P")
   (let ((name (cond ((eq 4 (prefix-numeric-value arg))
                      (read-from-minibuffer "Python Shell: "))
                     ((ignore-errors (stringp arg))
                      arg)
-                    (py-which-shell
-                     (if (string-match "python" py-which-shell)
+                    (py-shell-name
+                     (if (string-match "python" py-shell-name)
                          "jython"
                        "python"))
                     (t py-default-interpreter)))
         )
     (if (string-match "python" name)
-        (setq py-which-shell name
+        (setq py-shell-name name
               py-which-args py-python-command-args
               py-which-bufname (capitalize name)
               mode-name (capitalize name))
-      (setq py-which-shell name
+      (setq py-shell-name name
             py-which-args py-jython-command-args
             py-which-bufname (capitalize name)
             mode-name (capitalize name)))
     (force-mode-line-update)
-    (message "Using the %s shell" py-which-shell)
+    (message "Using the %s shell" py-shell-name)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
 
 ;;;###autoload
@@ -2008,7 +2018,7 @@ non-Python process buffers using the default (Emacs-supplied) process
 filter."
   (interactive "P")
   ;; Set the default shell if not already set
-  (when (null py-which-shell)
+  (when (null py-shell-name)
     (py-toggle-shells py-default-interpreter))
   (let ((args py-which-args))
     (when (and argprompt
@@ -2023,8 +2033,8 @@ filter."
                                ))))
     (if (not (equal (buffer-name) "*Python*"))
         (switch-to-buffer-other-window
-         (apply 'make-comint py-which-bufname py-which-shell nil args))
-      (apply 'make-comint py-which-bufname py-which-shell nil args))
+         (apply 'make-comint py-which-bufname py-shell-name nil args))
+      (apply 'make-comint py-which-bufname py-shell-name nil args))
     (make-local-variable 'comint-prompt-regexp)
     (setq comint-prompt-regexp (concat py-shell-input-prompt-1-regexp "\\|"
                                        py-shell-input-prompt-2-regexp "\\|"
@@ -2050,7 +2060,7 @@ filter."
 (defun py-which-python ()
   "Returns version of Python of current default environment, a number. "
   (interactive)
-  (let* ((cmd (or py-which-shell
+  (let* ((cmd (or py-shell-name
                   (py-choose-shell)))
          (erg (shell-command-to-string (concat cmd " --version")))
          (version (when (string-match "\\([0-9]\\.[0-9]+\\)" erg)
@@ -2124,7 +2134,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
 (defun py-execute-base (start end)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-         (name (capitalize (or py-which-shell py-which-bufname)))
+         (name (capitalize (or py-shell-name py-which-bufname)))
          (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
@@ -2189,7 +2199,7 @@ Unicode strings like u'\xA9' "
   (let* ((regbuf (current-buffer))
          (shell (or (py-choose-shell-by-shebang)
                     (py-choose-shell-by-import)
-                    py-which-shell))
+                    py-shell-name))
          (cmd (if (string-equal py-which-bufname
                                 "Jython")
                   "jython -" "python")))
@@ -2224,10 +2234,10 @@ Unicode strings like u'\xA9' "
          shell)
     (setq cmd (concat cmd (buffer-substring-no-properties start end)))
     ;; Set the shell either to the #! line command, or to the
-    ;; py-which-shell buffer local variable.
+    ;; py-shell-name buffer local variable.
     (setq shell (or (py-choose-shell-by-shebang)
                     (py-choose-shell-by-import)
-                    py-which-shell))
+                    py-shell-name))
     (set-buffer procbuf)
     (goto-char (point-max))
     (switch-to-buffer procbuf)
@@ -2274,10 +2284,10 @@ Unicode strings like u'\xA9' "
           (setq py-line-number-offset (- py-line-number-offset 1)))
         (setq cmd (concat cmd (buffer-substring-no-properties start end)))
         ;; Set the shell either to the #! line command, or to the
-        ;; py-which-shell buffer local variable.
+        ;; py-shell-name buffer local variable.
         (setq shell (or (py-choose-shell-by-shebang)
                         (py-choose-shell-by-import)
-                        py-which-shell))))
+                        py-shell-name))))
     (cond
      ;; always run the code in its own asynchronous subprocess
      (async
@@ -2310,7 +2320,7 @@ Unicode strings like u'\xA9' "
      (t
       ;; this part is in py-shell-command-on-region now.
       (let ((cmd
-             ;;             (concat py-which-shell (if (string-equal py-which-bufname
+             ;;             (concat py-shell-name (if (string-equal py-which-bufname
              (concat shell (if (string-equal py-which-bufname
                                              "Jython")
                                " -" ""))))
@@ -2447,7 +2457,7 @@ subtleties, including the use of the optional ASYNC argument."
   (unless (py-choose-shell-by-shebang)
     (let ((erg (or (downcase name)
                    (py-choose-shell-by-import)
-                   py-which-shell
+                   py-shell-name
                    py-default-interpreter)))
       (goto-char (point-min))
       (insert (concat py-shebang-startstring " " erg "\n")))))
