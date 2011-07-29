@@ -1480,9 +1480,9 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
   (interactive "P")
   (let ((erg (cond ((eq 4 (prefix-numeric-value arg))
                     (read-from-minibuffer "Python Shell: " py-shell-name))
-                   (py-shell-name)
                    ((py-choose-shell-by-shebang))
                    ((py-choose-shell-by-import))
+                   (py-shell-name)
                    (t py-default-interpreter))))
     (when (interactive-p) (message "%s" erg))
     (setq py-shell-name erg)
@@ -2060,8 +2060,7 @@ filter."
 (defun py-which-python ()
   "Returns version of Python of current default environment, a number. "
   (interactive)
-  (let* ((cmd (or py-shell-name
-                  (py-choose-shell)))
+  (let* ((cmd (py-choose-shell))
          (erg (shell-command-to-string (concat cmd " --version")))
          (version (when (string-match "\\([0-9]\\.[0-9]+\\)" erg)
                     (substring erg 7 (1- (length erg))))))
@@ -2442,14 +2441,10 @@ subtleties, including the use of the optional ASYNC argument."
 (defun py-execute-string (string &optional async)
   "Send the argument STRING to a Python interpreter.
 
-If there is a *Python* process buffer it is used.
-
 See the `\\[py-execute-region]' docs for an account of some
 subtleties, including the use of the optional ASYNC argument."
   (interactive "sExecute Python command: ")
-  (save-excursion
-    (set-buffer (get-buffer-create
-                 (generate-new-buffer-name " *Python Command*")))
+  (with-temp-buffer 
     (insert string)
     (py-execute-region (point-min) (point-max) async)))
 
