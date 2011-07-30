@@ -982,7 +982,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map "\C-c\C-q"  'py-end-of-block)
     (define-key map "\C-c#"     'py-comment-region)
     (define-key map "\C-c?"     'py-describe-mode)
-    (define-key map "\C-c\C-e"  'py-help-at-point)
+    (define-key map "\C-c\C-e"  'py-describe-symbol)
     (define-key map "\e\C-a"    'py-beginning-of-def-or-class)
     (define-key map "\e\C-e"    'py-end-of-def-or-class)
     (define-key map "\C-c-"     'py-up-exception)
@@ -1396,7 +1396,7 @@ of the first definition found."
 
 (defun py-imenu-create-index-new (&optional beg end)
   "`imenu-create-index-function' for Python. "
-  (let ((orig (point)) 
+  (let ((orig (point))
         (beg (cond (beg)
                    ((region-active-p)
                     (region-beginning))
@@ -1434,7 +1434,7 @@ of the first definition found."
       (push (cons "Module variables"
                   (nreverse vars))
             index-alist))
-    (goto-char orig) 
+    (goto-char orig)
     index-alist))
 
 
@@ -1727,7 +1727,7 @@ class C(B):
          (erg (py-which-python))
          classname)
     (if (< erg 3)
-        (progn 
+        (progn
           (py-beginning-of-class)
           (when (looking-at (concat py-class-re " *\\([^( ]+\\)"))
             (setq classname (match-string-no-properties 2)))
@@ -2086,8 +2086,8 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   (interactive)
   (save-excursion
     (save-restriction
-      (widen) 
-      (let ((orig (point)) 
+      (widen)
+      (let ((orig (point))
             (erg (if (and (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+")) (not (py-in-string-or-comment-p)))
                      (match-string-no-properties 2)
                    (progn
@@ -2101,6 +2101,18 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
           erg)))))
 
 ;; Code execution commands
+(defun py-process-file (filename &optional output-buffer error-buffer)
+  "Process \"python filename\",
+Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
+"
+  (interactive "fDatei:")
+  (if output-buffer
+      (progn 
+        (set-buffer (get-buffer-create output-buffer))
+        (erase-buffer) 
+          (shell-command (concat "python " filename) output-buffer error-buffer))
+    (with-temp-buffer
+      (shell-command (concat "python " filename) output-buffer error-buffer))))
 
 (defun py-execute-region (&optional start end async)
   "Execute the region in a Python interpreter.
@@ -2444,7 +2456,7 @@ subtleties, including the use of the optional ASYNC argument."
 See the `\\[py-execute-region]' docs for an account of some
 subtleties, including the use of the optional ASYNC argument."
   (interactive "sExecute Python command: ")
-  (with-temp-buffer 
+  (with-temp-buffer
     (insert string)
     (py-execute-region (point-min) (point-max) async)))
 
@@ -3181,7 +3193,7 @@ Put point inside the parentheses of a multiline import and hit
 (defun py-beginning-of-expression (&optional orig origline done)
   "Go to the beginning of a python expression.
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
-Operators however are left aside resp. limit py-expression designed for edit-purposes. 
+Operators however are left aside resp. limit py-expression designed for edit-purposes.
 "
   (interactive)
   (save-restriction
@@ -3194,7 +3206,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
       (message "%s" (match-string-no-properties 0))
       (goto-char (1- (match-beginning 0)))
       (skip-chars-backward " \t\r\n\f")
-      (forward-char -1)) 
+      (forward-char -1))
     (let ((orig (or orig (point)))
           (cui (current-indentation))
           (origline (or origline (py-count-lines)))
@@ -3218,7 +3230,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
              ((nth 8 pps)
               (goto-char (1- (nth 8 pps)))
               (py-beginning-of-expression orig origline))
-             ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
+             ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
               (forward-line -1)
               (unless (bobp)
                 (end-of-line)
@@ -3226,7 +3238,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
              ;; character address of start of innermost containing list; nil if none.
              ((nth 1 pps)
               (goto-char (nth 1 pps))
-              (when 
+              (when
                   (not (looking-back "[ \t]+"))
                 (skip-chars-backward py-expression-skip-regexp))
               (py-beginning-of-expression orig origline))
@@ -3257,7 +3269,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
   (save-restriction
     (widen)
     (unless (eobp)
-      (let* 
+      (let*
           ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
            (pps (parse-partial-sexp (point-min) (point)))
@@ -3280,7 +3292,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
          ;; in comment
          ((nth 4 pps)
           (forward-line 1)
-          (py-end-of-expression orig origline done)) 
+          (py-end-of-expression orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
@@ -3300,12 +3312,12 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (py-end-of-expression orig origline done))
          ((and (not done)(looking-at py-expression-skip-regexp)(not (eobp)))
           (skip-chars-forward py-not-expression-regexp)
-          (forward-char -1) 
+          (forward-char -1)
           (py-end-of-expression orig origline done))
          ((and (looking-at py-expression-looking-regexp)(not (eobp)))
-          (forward-char 1) 
+          (forward-char 1)
           (setq done (< 0 (skip-chars-forward py-expression-skip-regexp)))
-          (when done (forward-char -1)) 
+          (when done (forward-char -1))
           (py-end-of-expression orig origline done)))
         (unless (eq (point) orig)
           (setq erg (point)))
@@ -4091,27 +4103,44 @@ Returns beginning and end positions of marked area, a cons."
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-(defun py-help-at-point ()
-  "Get help from Python based on the symbol nearest point."
+(defun py-find-imports ()
+  (let (imports)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+              "^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9]+ +import .*" nil t)
+        (setq imports
+              (concat
+               imports
+               (buffer-substring-no-properties (match-beginning 0) (match-end 0)) "\n"))))
+    imports))
+
+(defalias 'py-help-at-point 'py-describe-symbol)
+(defun py-describe-symbol ()
   (interactive)
-  (let* ((sym (prin1-to-string (symbol-at-point)))
-         (base (substring sym 0 (or (string-match "\\." sym) 0)))
-         cmd)
-    (if (not (equal base ""))
-        (setq cmd (concat "import " base "\n")))
+  (lexical-let* ((sym (prin1-to-string (symbol-at-point)))
+         (temp (make-temp-name (buffer-name)))
+         (file (concat (expand-file-name temp py-temp-directory) ".py"))
+         (cmd (py-find-imports))
+         (no-quotes (save-excursion
+                      (skip-chars-backward "A-Za-z_0-9.")
+                      (and (looking-at "[A-Za-z_0-9.]+")
+                           (string-match "\\." (match-string-no-properties 0)))))) 
     (setq cmd (concat "import pydoc\n"
-                      cmd
-                      "try: pydoc.help('" sym "')\n"
-                      "except: print 'No help available on:', \"" sym "\""))
-    (message cmd)
+                      cmd))
+    (if no-quotes
+        (setq cmd (concat cmd
+                          "try: pydoc.help(" sym ")\n"))
+      (setq cmd (concat cmd "try: pydoc.help('" sym "')\n")))
+    (setq cmd (concat cmd
+                      "except:
+    print 'No help available on:', \"" sym "\""))
     (with-temp-buffer
       (insert cmd)
-      (py-execute-region (point-min) (point-max)))))
-
-;;      (py-execute-string cmd)
-;;      (set-buffer "*Python Output*")
-      ;; BAW: Should we really be leaving the output buffer in help-mode?
-;;      (help-mode)))
+      (write-file file))
+    (py-process-file file "*Python-Help*")
+    (when (file-readable-p file)
+      (delete-file file))))
 
 ;; Documentation functions
 
