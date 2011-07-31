@@ -80,6 +80,7 @@
          'python-mode-slow-lp:803275-test
          'master-file-not-honored-lp:794850-test
          'py-variable-name-face-lp:798538-test
+         'colon-causes-error-lp:818665-test
 
          )))
 
@@ -1382,6 +1383,21 @@ print \"Hello, I'm your master!\"
     (goto-char 64)
     (sit-for 0.1)
     (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "py-variable-name-face-lp:798538-test failed ")))
+
+(defun colon-causes-error-lp:818665-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+ # -*- coding: utf-8 -*-
+
+print \"Hello!\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'colon-causes-error-lp:818665-base arg teststring)))
+
+(defun colon-causes-error-lp:818665-base ()
+    (insert ":")
+    (forward-char -1)
+    (assert (looking-at ":") nil "colon-causes-error-lp:818665-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

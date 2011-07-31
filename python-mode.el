@@ -1690,12 +1690,12 @@ comment."
       (save-excursion
         (let ((here (point))
               (outdent 0)
-              (indent (py-compute-indentation t)))
+              (indent (py-compute-indentation)))
           (if (and (not arg)
                    (py-outdent-p)
                    (= indent (save-excursion
                                (py-next-statement -1)
-                               (py-compute-indentation t))))
+                               (py-compute-indentation))))
               (setq outdent py-indent-offset))
           ;; Don't indent, only dedent.  This assumes that any lines
           ;; that are already dedented relative to
@@ -3098,7 +3098,7 @@ initial line; and comment lines beginning in column 1 are ignored."
           (target-column 0)             ; column to which to indent
           (base-shifted-by 0)           ; amount last base line was shifted
           (indent-base (if (looking-at "[ \t\n]")
-                           (py-compute-indentation t)
+                           (py-compute-indentation)
                          0))
           ci)
       (while (< (point) end)
