@@ -4104,7 +4104,7 @@ Returns beginning and end positions of marked area, a cons."
       (compile-internal command "No more errors"))))
 
 (defun py-find-imports ()
-  (let (imports)
+  (let ((imports ""))
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
