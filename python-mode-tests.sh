@@ -98,6 +98,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall python-mode-slow-lp:803275-test \
 --funcall py-variable-name-face-lp:798538-test \
 --funcall colon-causes-error-lp:818665-test \
+--funcall if-indentation-lp:818720-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

@@ -81,6 +81,7 @@
          'master-file-not-honored-lp:794850-test
          'py-variable-name-face-lp:798538-test
          'colon-causes-error-lp:818665-test
+         'if-indentation-lp:818720-test
 
          )))
 
@@ -1398,6 +1399,29 @@ print \"Hello!\"
     (insert ":")
     (forward-char -1)
     (assert (looking-at ":") nil "colon-causes-error-lp:818665-test failed"))
+
+(defun if-indentation-lp:818720-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+ # -*- coding: utf-8 -*-
+
+class X():
+    def __init__( self ):
+        self.lookup = {}
+
+    def y( self, p ):
+        p = p.foo()
+        if p in self.lookup:
+            return self.lookup[ foo ]
+        else:
+            return None
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'if-indentation-lp:818720-base arg teststring)))
+
+(defun if-indentation-lp:818720-base ()
+    (goto-char 196)
+    (assert (eq 12 (py-compute-indentation)) nil "in-indentation-lp:818720-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

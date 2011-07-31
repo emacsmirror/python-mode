@@ -947,7 +947,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
 (setq py-mode-map
   (let ((map (make-sparse-keymap)))
     ;; electric keys
-    (define-key map ":" 'py-electric-colon)
+    ;; (define-key map ":" 'py-electric-colon)
     ;; indentation level modifiers
     (define-key map "\C-c\C-l"  'py-shift-region-left)
     (define-key map "\C-c\C-r"  'py-shift-region-right)
@@ -2683,7 +2683,7 @@ the new line indented."
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
 
-(defun py-compute-indentation (&optional orig origline)
+(defun py-compute-indentation (&optional orig origline) 
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
 `raise', `break', `continue', and `pass' force one level of dedenting."
@@ -2691,14 +2691,14 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point)))
+      (let* ((orig (or orig (point))) 
              (origline (or origline (py-count-lines)))
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
         ;;        (back-to-indentation)
         (setq indent
               (cond
-               ((and (bobp) (eq (point) orig))
+               ((and (bobp) (eq (point) orig)) 
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps)(save-excursion (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (setq this-line (py-count-lines))))))
@@ -2715,7 +2715,7 @@ the new line indented."
                ;; comments
                ((and (nth 8 pps) (< (py-count-lines) origline))
                 (goto-char (nth 8 pps))
-                (current-column))
+                (current-column)) 
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
@@ -2760,7 +2760,7 @@ the new line indented."
                 (py-beginning-of-if-block)
                 (current-indentation))
                ((looking-at py-if-clause-re)
-                (+ (current-indentation) py-indent-offset))
+                (+ (current-indentation) py-indent-offset)) 
                ((and (looking-at py-try-clause-re)(eq origline (py-count-lines))
                      (save-excursion (prog1 (py-beginning-of-try-block)(setq erg (current-indentation)))))
                 erg)
@@ -2771,18 +2771,18 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re)
+               ((looking-at py-return-re) 
                 (py-beginning-of-block)
-                (current-indentation))
+                (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re)
+               ((looking-at py-block-closing-keywords-re) 
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
                 (if (bobp)
-                    (current-column)
+                    (current-column) 
                   (py-beginning-of-statement)
                   (py-compute-indentation orig origline)))
                ((and (< (point) orig)(looking-at py-assignement-re))
@@ -2797,7 +2797,7 @@ the new line indented."
                 (+ py-indent-offset (current-indentation)))
                ((and (eq (point) orig) (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation orig origline))
+                (py-compute-indentation orig origline)) 
                (t (current-indentation))))
         (when (interactive-p) (message "%s" indent))
         indent))))
