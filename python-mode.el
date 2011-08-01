@@ -947,7 +947,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
 (setq py-mode-map
   (let ((map (make-sparse-keymap)))
     ;; electric keys
-    ;; (define-key map ":" 'py-electric-colon)
+    (define-key map ":" 'py-electric-colon)
     ;; indentation level modifiers
     (define-key map "\C-c\C-l"  'py-shift-region-left)
     (define-key map "\C-c\C-r"  'py-shift-region-right)
