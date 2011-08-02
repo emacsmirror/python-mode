@@ -2142,10 +2142,10 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
   (py-execute-base start end))
 
-(defun py-execute-base (start end)
+(defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-         (name (capitalize (or py-shell-name py-which-bufname)))
+         (name (capitalize (or py-shell-name (py-choose-shell))))
          (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
@@ -2159,15 +2159,18 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
+    (when (one-window-p)
+      (split-window-vertically))
+    (save-excursion (other-window 1)
+                    (set-buffer procbuf))
     (setq start (py-fix-start start end))
     (py-execute-intern start end regbuf procbuf proc temp file filebuf name)))
 
 (defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf name)
   (let (shell)
     (set-buffer filebuf)
-    (switch-to-buffer (current-buffer))
     (insert-buffer-substring regbuf start end)
-    (py-if-needed-insert-if filebuf)
+    (py-if-needed-insert-if)
     (py-insert-coding)
     (py-if-needed-insert-shell name)
     (cond
@@ -2184,18 +2187,18 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (pop-to-buffer tempbuf)
         (py-postprocess-output-buffer tempbuf)
         ;; TBD: clean up the temporary file!
-        ))
+))
      ;; if the Python interpreter shell is running, queue it up for
      ;; execution there.
      (proc
       ;; use the existing python shell
       (set-buffer filebuf)
       (write-region (point-min) (point-max) file nil t nil 'ask)
-      ;;      (find-file file)
       (sit-for 0.1)
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
       (set-buffer procbuf)
+      (goto-char (point-max)) 
       (switch-to-buffer (current-buffer))
       (sit-for 0.1)
       (py-cleanup filebuf file)))))
@@ -2469,7 +2472,7 @@ subtleties, including the use of the optional ASYNC argument."
       (goto-char (point-min))
       (insert (concat py-shebang-startstring " " erg "\n")))))
 
-(defun py-if-needed-insert-if (buf)
+(defun py-if-needed-insert-if ()
   "Internal use by py-execute... functions.
 Inserts an incentive true form \"if 1:\\n.\" "
   (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
