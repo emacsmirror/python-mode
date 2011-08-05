@@ -101,6 +101,9 @@
 
 (eval-when-compile (require 'cl))
 
+(add-to-list 'load-path (concat default-directory "test"))
+(add-to-list 'load-path (concat default-directory "completion"))
+
 
 ;; user definable variables
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
