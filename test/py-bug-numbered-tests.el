@@ -82,6 +82,7 @@
          'py-variable-name-face-lp:798538-test
          'colon-causes-error-lp:818665-test
          'if-indentation-lp:818720-test
+         'closing-parentesis-indent-lp:821820-test
 
          )))
 
@@ -591,6 +592,7 @@ print u'\\xA9'
   (push-mark)
   (end-of-line)
   (py-execute-region (line-beginning-position) (point))
+  (sit-for 0.2) 
   (when (looking-back comint-prompt-regexp)
     (goto-char (1- (match-beginning 0))))
   (sit-for 0.1)
@@ -1423,9 +1425,27 @@ class X():
     (goto-char 196)
     (assert (eq 12 (py-compute-indentation)) nil "in-indentation-lp:818720-test failed"))
 
+(defun closing-parentesis-indent-lp:821820-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo:
+    bar.append(
+        ht(
+            T.a('Sorted Foo', href='#Blub', ),
+            ' -- foo bar baz--',
+            self.Tasdf( afsd ),
+            self.Tasdf( asdf ),
+            )
+    )
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'closing-parentesis-indent-lp:821820-base arg teststring)))
+
+(defun closing-parentesis-indent-lp:821820-base ()
+  (forward-line -1) 
+  (assert (eq 4 (py-compute-indentation)) nil "closing-parentesis-indent-lp:821820-test failed"))
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
-
-
-
-

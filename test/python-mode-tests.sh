@@ -28,12 +28,15 @@
 PDIR=`pwd`
 
 # python-mode file to load
-if [ -s "python-components-mode.el" ];
+if [ -s "../python-components-mode.el" ];
     then
-    PYTHONMODE="python-components-mode.el"
+    PYTHONMODE="../python-components-mode.el"
     else
-    PYTHONMODE="python-mode.el"
+    PYTHONMODE="../python-mode.el"
 fi
+
+MODEDIR=${PDIR%%/test}
+echo "\$MODEDIR: $MODEDIR"
 
 ERG=$(echo $LOGNAME | sed 's/^s\(.*\)/m/')
 
@@ -49,7 +52,7 @@ TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 EMACS="${EMACS_VERZEICHNIS}/src/emacs"
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$MODEDIR/\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
@@ -99,6 +102,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-variable-name-face-lp:798538-test \
 --funcall colon-causes-error-lp:818665-test \
 --funcall if-indentation-lp:818720-test \
+--funcall closing-parentesis-indent-lp:821820-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

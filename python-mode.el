@@ -793,6 +793,10 @@ Currently-active file is at the head of the list.")
   "[ \t]*\\<\\(return\\)\\>"
   "Regular expression matching keyword which typically closes a function. ")
 
+(defconst py-closing-re
+  "[ \t]*\\_<)\\_>"
+  "Regular expression matching keyword which typically closes a function. ")
+
 (defconst py-class-re "[ \t]*\\<\\(class\\)\\>"
   "Matches the beginning of a class definition. ")
 
@@ -2143,7 +2147,7 @@ window) so you can see it, and a comment of the form
 
 is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
-  (py-execute-base start end))
+  (py-execute-base start end async))
 
 (defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
@@ -2689,7 +2693,7 @@ the new line indented."
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
 
-(defun py-compute-indentation (&optional orig origline) 
+(defun py-compute-indentation (&optional orig origline closing) 
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
 `raise', `break', `continue', and `pass' force one level of dedenting."
@@ -2699,6 +2703,7 @@ the new line indented."
       (widen)
       (let* ((orig (or orig (point))) 
              (origline (or origline (py-count-lines)))
+             (closing closing)
              (pps (parse-partial-sexp (point-min) (point)))
              erg indent this-line)
         ;;        (back-to-indentation)
@@ -2737,11 +2742,17 @@ the new line indented."
                          (goto-char (match-end 0)))
                        (current-column)))
                ((nth 1 pps)
+                (when (looking-at ".*\\()\\)[ \t]*$")
+                  (setq closing (match-beginning 0))) 
                 (save-excursion
                   (goto-char (nth 1 pps))
                   (setq this-line (py-count-lines))
+                  (cond
+                   ((< 0 (- origline this-line))
                   (if (< 1 (- origline this-line))
-                      (py-fetch-previous-indent orig)
+                        (if closing
+                            (current-indentation) 
+                          (py-fetch-previous-indent orig))
                     (cond ((looking-at "\\s([ \t]*$")
                            (if
                                (progn
@@ -2751,10 +2762,15 @@ the new line indented."
                                (progn
                                  (back-to-indentation)
                                  (+ (current-column) (* 2 py-indent-offset)))
-                             (progn
                                (back-to-indentation)
-                               (+ (current-column) py-indent-offset))))
-                          (t (+ (current-column) (* (nth 0 pps))))))))
+                               (+ (current-column) py-indent-offset)))
+                            (t (+ (current-column) (* (nth 0 pps)))))))
+                   ((looking-at "\\([ \t]+\\)\\([^ \t]+\\)")
+                    (goto-char (match-beginning 2))
+                    (current-column))
+                   ((looking-at "\\([^ \t]+\\)")
+                    (1+ (current-column)))
+                   (t (py-fetch-previous-indent orig)))))
                ((py-preceding-line-backslashed-p)
                 (progn
                   (py-beginning-of-statement)
@@ -2777,7 +2793,9 @@ the new line indented."
                ((looking-at py-clause-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-return-re) 
+               ((and (looking-at py-return-re)(not (eq origline (py-count-lines))))
+                (- (current-indentation) py-indent-offset))
+               ((looking-at py-return-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))

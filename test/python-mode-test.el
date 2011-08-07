@@ -228,6 +228,8 @@ print('\\xA9')"))
   (end-of-line)
   (py-choose-shell)
   (py-execute-region (line-beginning-position) (point))
+  (goto-char (point-max))
+  (sit-for 0.1)
   (or (looking-at "©")
       (when (looking-back comint-prompt-regexp)
         (goto-char (1- (match-beginning 0))))
@@ -387,7 +389,7 @@ def _commit_on_success(*args, **kw):
   (py-bug-tests-intern 'try-else-clause-base arg teststring)))
 
 (defun try-else-clause-base ()
-  (forward-char -1)
+  (forward-line -3)
   (assert (eq 4 (py-compute-indentation)) nil "try-else-clause-test failed"))
 
 (defun try-except-test (&optional arg load-branch-function)
