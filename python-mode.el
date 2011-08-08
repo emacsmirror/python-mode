@@ -1038,7 +1038,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
 	"-"
 ;; 	["Start interpreter" py-shell
 ;; 	 :help "Run `inferior' Python in separate buffer"]
-	["Import/reload file" py-load-file
+	["Import/reload file" py-execute-import-or-reload
 	 :help "Load into inferior Python session"]
 	["Eval buffer" py-execute-buffer
 	 :help "Evaluate buffer en bloc in inferior Python session"]
