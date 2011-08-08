@@ -103,6 +103,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall colon-causes-error-lp:818665-test \
 --funcall if-indentation-lp:818720-test \
 --funcall closing-parentesis-indent-lp:821820-test \
+--funcall py-indent-line-lp:822532-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

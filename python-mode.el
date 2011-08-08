@@ -2663,9 +2663,11 @@ This function is normally bound to `indent-line-function' so
 \\[indent-for-tab-command] will call it."
   (interactive)
   (let* ((need (py-compute-indentation (point))))
+    (if (eq need (current-indentation))
+        (back-to-indentation) 
       (beginning-of-line)
       (delete-horizontal-space)
-      (indent-to need)))
+      (indent-to need))))
 
 (defun py-newline-and-indent ()
   "Strives to act like the Emacs `newline-and-indent'.

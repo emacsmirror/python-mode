@@ -83,6 +83,7 @@
          'colon-causes-error-lp:818665-test
          'if-indentation-lp:818720-test
          'closing-parentesis-indent-lp:821820-test
+         'py-indent-line-lp:822532-test
 
          )))
 
@@ -1446,6 +1447,29 @@ if foo:
 (defun closing-parentesis-indent-lp:821820-base ()
   (forward-line -1) 
   (assert (eq 4 (py-compute-indentation)) nil "closing-parentesis-indent-lp:821820-test failed"))
+
+(defun py-indent-line-lp:822532-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+if x > 0:
+    for i in range(100):
+        print i
+    else:
+    print \"All done\"
+elif x < 0:
+    print \"x is negative\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-indent-line-lp:822532-base arg teststring)))
+
+(defun py-indent-line-lp:822532-base ()
+    (goto-char 53)
+    (set-buffer-modified-p nil)
+    (py-indent-line)
+    (assert (eq 57 (point)) nil "py-xcindent-line-lp:822532-test #1 failed")
+    (assert (not (buffer-modified-p)) nil "py-indent-line-lp:822532-test #2 failed")
+    )
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
