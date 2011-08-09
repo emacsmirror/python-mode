@@ -57,6 +57,7 @@
          'py-beginning-of-expression-test
          'py-end-of-expression-test
          'py-expression-index-test
+         'py-indent-after-assigment-test
          'py-insert-super-python2-test
          'py-insert-super-python3-test
 
@@ -586,6 +587,24 @@ class OrderedDict1(dict):
     (py-insert-super)
     (back-to-indentation) 
     (assert (looking-at "super().__init__(d={})") nil "py-insert-super-python3-test failed"))
+
+(defun py-indent-after-assigment-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#####################################
+def foo( self, bar=False ):  # version 12345
+    title = self.barz.attrs['file'].split('.')[ -1 ]
+    if asdf:
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-after-assigment-base arg teststring)))
+
+(defun indent-after-assigment-base ()
+    (forward-line -1)
+    (py-indent-line)
+    (assert (eq 4 (current-column)) nil "indent-after-assigment-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

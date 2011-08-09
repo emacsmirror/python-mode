@@ -104,6 +104,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall if-indentation-lp:818720-test \
 --funcall closing-parentesis-indent-lp:821820-test \
 --funcall py-indent-line-lp:822532-test \
+--funcall indent-honor-arglist-whitespaces-lp:822540-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \
@@ -131,6 +132,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-beginning-of-expression-test \
 --funcall py-end-of-expression-test \
 --funcall py-expression-index-test \
+--funcall py-indent-after-assigment-test \
 --funcall py-insert-super-python2-test \
 --funcall py-insert-super-python3-test \
 --funcall UnicodeEncodeError-python3-test \

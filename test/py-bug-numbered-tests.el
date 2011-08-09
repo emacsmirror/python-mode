@@ -84,6 +84,7 @@
          'if-indentation-lp:818720-test
          'closing-parentesis-indent-lp:821820-test
          'py-indent-line-lp:822532-test
+         'indent-honor-arglist-whitespaces-lp:822540-test
 
          )))
 
@@ -292,22 +293,22 @@ class f():
     \"\"\"
     if a:
         ar_atpt_python_list_roh = ([
-                'python-expression',
-
-    #     def ar_thingatpt_write_lists (&optional datei):
-                'python-partial-expression',
-                'python-statement',
-                ])
+            'python-expression',
+            
+            # def ar_thingatpt_write_lists (&optional datei):
+            'python-partial-expression',
+            'python-statement',
+        ])
 "))
     (py-bug-tests-intern 'beg-end-of-defun-lp:303622 arg teststring)))
 
 (defun beg-end-of-defun-lp:303622 ()
   (goto-char (point-min))
   (forward-line 2)
-  (end-of-defun)
-  (assert (eq 292 (point)) nil "beg-end-of-defun-lp:303622-test failed!")
+  (py-end-of-def-or-class)
+  (assert (eq 287 (point)) nil "beg-end-of-defun-lp:303622-test #1 failed!")
   (beginning-of-defun)
-  (assert (eq 2 (point)) nil "beg-end-of-defun-lp:303622-test failed!"))
+  (assert (eq 2 (point)) nil "beg-end-of-defun-lp:303622-test #2 failed!"))
 
 (defun dq-in-tqs-string-lp:328813-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1022,7 +1023,7 @@ except:
   (py-bug-tests-intern 'indent-explicitly-set-in-multiline-tqs-lp:784225-base arg teststring)))
 
 (defun indent-explicitly-set-in-multiline-tqs-lp:784225-base ()
-    (assert (eq 8 (py-compute-indentation)) nil "explicitly-dedented-in-list-lp:784225-test failed"))
+    (assert (eq 8 (py-compute-indentation)) nil "indent-explicitly-set-in-multiline-tqs-lp:784225-test failed"))
 
 (defun unbalanced-parentheses-lp:784645-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1470,6 +1471,20 @@ elif x < 0:
     (assert (not (buffer-modified-p)) nil "py-indent-line-lp:822532-test #2 failed")
     )
 
+(defun indent-honor-arglist-whitespaces-lp:822540-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+abc( ghi,
+    jkl
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-honor-arglist-whitespaces-lp:822540-base arg teststring)))
+
+(defun indent-honor-arglist-whitespaces-lp:822540-base ()
+  (forward-line -1) 
+  (assert (eq 5 (py-compute-indentation)) nil "indent-honor-arglist-whitespaces-lp:822540-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

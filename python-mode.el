@@ -560,24 +560,26 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Consider property for the last char if in a fenced string.
      ((= n 3)
       (let* ((font-lock-syntactic-keywords nil)
-             (syntax (parse-partial-sexp (point-min) (point))))
+             (syntax (if (featurep 'xemacs)
+                         (parse-partial-sexp (point-min) (point))
+                       (syntax-ppss))))
         (when (eq t (nth 3 syntax))     ; after unclosed fence
           (goto-char (nth 8 syntax))    ; fence position
           (skip-chars-forward "uUrRbB") ; skip any prefix
           ;; Is it a matching sequence?
           (if (eq (char-after) (char-after (match-beginning 2)))
-                (eval-when-compile (string-to-syntax "|"))
-            ))))
+              (eval-when-compile (string-to-syntax "|"))))))
      ;; Consider property for initial char, accounting for prefixes.
      ((or (and (= n 2)                  ; leading quote (not prefix)
                (= (match-beginning 1) (match-end 1))) ; prefix is null
           (and (= n 1)                  ; prefix
                (/= (match-beginning 1) (match-end 1)))) ; non-empty
       (let ((font-lock-syntactic-keywords nil))
-        (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
+        (unless (eq 'string (syntax-ppss-context (if (featurep 'xemacs)
+                                                     (parse-partial-sexp (point-min) (point))
+                                                   (syntax-ppss))))
           ;; (eval-when-compile (string-to-syntax "|"))
-            (eval-when-compile (string-to-syntax "|"))
-          )))
+          (eval-when-compile (string-to-syntax "|")))))
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
@@ -1176,20 +1178,19 @@ This function does not modify point or mark."
   "Return non-nil if point is in a Python literal (a comment or string).
 Optional argument LIM indicates the beginning of the containing form,
 i.e. the limit on how far back to scan."
-  ;; This is the version used for non-XEmacs, which has a nicer
-  ;; interface.
-  ;;
-  ;; WARNING: Watch out for infinite recursion.
-  (let* ((lim (or lim (py-point 'bod)))
-         (state (parse-partial-sexp lim (point))))
+  (let* ((lim (or lim (point-min)))
+         (state (if (featurep 'xemacs)
+                    (parse-partial-sexp lim (point))
+                  (syntax-ppss))))
     (cond
      ((nth 3 state) 'string)
-     ((nth 4 state) 'comment)
-     (t nil))))
+     ((nth 4 state) 'comment))))
 
 (defsubst py-in-string-or-comment-p ()
-    "Return beginning position if point is in a Python literal (a comment or string)."
-    (nth 8 (parse-partial-sexp (point-min) (point))))
+  "Return beginning position if point is in a Python literal (a comment or string)."
+  (nth 8 (if (featurep 'xemacs)
+             (parse-partial-sexp (point-min) (point))
+           (syntax-ppss))))
 
 (defvar py-shell-name nil)
 (make-variable-buffer-local 'py-which-shell)
@@ -1690,10 +1691,12 @@ comment."
   (self-insert-command (prefix-numeric-value arg))
   ;; are we in a string or comment?
   (if (save-excursion
-        (let ((pps (parse-partial-sexp (save-excursion
+        (let ((pps (if (featurep 'xemacs)
+               (parse-partial-sexp (save-excursion
                                          (py-beginning-of-def-or-class)
                                          (point))
-                                       (point))))
+                                       (point))
+               (syntax-ppss))))
           (not (or (nth 3 pps) (nth 4 pps)))))
       (save-excursion
         (let ((here (point))
@@ -2115,9 +2118,9 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
 "
   (interactive "fDatei:")
   (if output-buffer
-      (progn 
+      (progn
         (set-buffer (get-buffer-create output-buffer))
-        (erase-buffer) 
+        (erase-buffer)
           (shell-command (concat "python " filename) output-buffer error-buffer))
     (with-temp-buffer
       (shell-command (concat "python " filename) output-buffer error-buffer))))
@@ -2212,7 +2215,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
       (set-buffer procbuf)
-      (goto-char (point-max)) 
+      (goto-char (point-max))
       (switch-to-buffer (current-buffer))
       (sit-for 0.1)
       (py-cleanup filebuf file)))))
@@ -2671,7 +2674,7 @@ This function is normally bound to `indent-line-function' so
   (interactive)
   (let* ((need (py-compute-indentation (point))))
     (if (eq need (current-indentation))
-        (back-to-indentation) 
+        (back-to-indentation)
       (beginning-of-line)
       (delete-horizontal-space)
       (indent-to need))))
@@ -2702,7 +2705,7 @@ the new line indented."
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
 
-(defun py-compute-indentation (&optional orig origline closing) 
+(defun py-compute-indentation (&optional orig origline closing)
   "Compute Python indentation.
  When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
 `raise', `break', `continue', and `pass' force one level of dedenting."
@@ -2710,24 +2713,28 @@ the new line indented."
   (save-excursion
     (save-restriction
       (widen)
-      (let* ((orig (or orig (point))) 
+      (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
              (closing closing)
-             (pps (parse-partial-sexp (point-min) (point)))
+             (pps (if (featurep 'xemacs)
+                   (parse-partial-sexp (point-min) (point))
+                    (syntax-ppss)))
              erg indent this-line)
         ;;        (back-to-indentation)
         (setq indent
               (cond
-               ((and (bobp) (eq (point) orig)) 
+               ((and (bobp) (eq (point) orig))
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
-               ((and (nth 3 pps)(nth 8 pps)(save-excursion (ignore-errors (goto-char (nth 2 pps))) (not (eq origline (setq this-line (py-count-lines))))))
-                (if (< 1 (- origline this-line))
-                    (save-excursion
-                      (forward-line -1)
+               ((and (nth 3 pps)(nth 8 pps))
+                (ignore-errors (goto-char (nth 2 pps)))
+                (if (< 1 (- origline (py-count-lines)))
+                        (progn 
+                      (goto-char orig)
+                      (skip-chars-backward " \t\r\n\f") 
                       (current-indentation))
                   (goto-char (nth 2 pps))
-                  (current-column)))
+                  (current-indentation)))
                ;; beginning of statement from before got beginning
                ((looking-at "\"\"\"\\|'''")
                 (py-beginning-of-statement)
@@ -2735,7 +2742,7 @@ the new line indented."
                ;; comments
                ((and (nth 8 pps) (< (py-count-lines) origline))
                 (goto-char (nth 8 pps))
-                (current-column)) 
+                (current-column))
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
@@ -2752,30 +2759,30 @@ the new line indented."
                        (current-column)))
                ((nth 1 pps)
                 (when (looking-at ".*\\()\\)[ \t]*$")
-                  (setq closing (match-beginning 0))) 
+                  (setq closing (match-beginning 0)))
                 (save-excursion
                   (goto-char (nth 1 pps))
                   (setq this-line (py-count-lines))
                   (cond
                    ((< 0 (- origline this-line))
-                  (if (< 1 (- origline this-line))
+                    (if (< 1 (- origline this-line))
                         (if closing
-                            (current-indentation) 
+                            (current-indentation)
                           (py-fetch-previous-indent orig))
-                    (cond ((looking-at "\\s([ \t]*$")
-                           (if
-                               (progn
-                                 (save-excursion
+                      (cond ((looking-at "\\s([ \t]*$")
+                             (if
+                                 (progn
+                                   (save-excursion
+                                     (back-to-indentation)
+                                     (looking-at py-block-or-clause-re)))
+                                 (progn
                                    (back-to-indentation)
-                                   (looking-at py-block-or-clause-re)))
-                               (progn
-                                 (back-to-indentation)
-                                 (+ (current-column) (* 2 py-indent-offset)))
+                                   (+ (current-column) (* 2 py-indent-offset)))
                                (back-to-indentation)
                                (+ (current-column) py-indent-offset)))
                             ((looking-at "\\s([ \t]+\\([^ \t]+\\)$")
                              (goto-char (match-beginning 1))
-                             (current-column)) 
+                             (current-column))
                             (t (+ (current-column) (* (nth 0 pps)))))))
                    ((looking-at "\\([ \t]+\\)\\([^ \t]+\\)")
                     (goto-char (match-beginning 2))
@@ -2794,7 +2801,7 @@ the new line indented."
                 (py-beginning-of-if-block)
                 (current-indentation))
                ((looking-at py-if-clause-re)
-                (+ (current-indentation) py-indent-offset)) 
+                (+ (current-indentation) py-indent-offset))
                ((and (looking-at py-try-clause-re)(eq origline (py-count-lines))
                      (save-excursion (prog1 (py-beginning-of-try-block)(setq erg (current-indentation)))))
                 erg)
@@ -2813,15 +2820,17 @@ the new line indented."
                ((and (looking-at py-block-closing-keywords-re) (< (py-count-lines) origline))
                 (py-beginning-of-block)
                 (current-indentation))
-               ((looking-at py-block-closing-keywords-re) 
+               ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
                ((not (py-beginning-of-statement-p))
                 (if (bobp)
-                    (current-column) 
+                    (current-column)
                   (py-beginning-of-statement)
                   (py-compute-indentation orig origline)))
                ((and (< (point) orig)(looking-at py-assignement-re))
+                (current-indentation))
+               ((and (looking-at py-block-or-clause-re)(eq origline (py-count-lines)))
                 (current-indentation))
                ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
@@ -2833,7 +2842,7 @@ the new line indented."
                 (+ py-indent-offset (current-indentation)))
                ((and (eq (point) orig) (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation orig origline)) 
+                (py-compute-indentation orig origline))
                (t (current-indentation))))
         (when (interactive-p) (message "%s" indent))
         indent))))
@@ -2853,7 +2862,11 @@ the new line indented."
 Optional ARG indicates a start-position for `parse-partial-sexp'."
   (interactive)
   (let* ((ppstart (or start (point-min)))
-         (erg (nth 1 (parse-partial-sexp ppstart (point)))))
+         (erg
+          (if (featurep 'xemacs)
+              (nth 1 (parse-partial-sexp ppstart (point)))
+            (nth 1 (syntax-ppss)))
+          ))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -2862,7 +2875,9 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 Optional ARG indicates a start-position for `parse-partial-sexp'."
   (interactive)
   (let* ((ppstart (or arg (point-min)))
-         (erg (parse-partial-sexp ppstart (point)))
+         (erg (if (featurep 'xemacs)
+                  (parse-partial-sexp ppstart (point))
+                (syntax-ppss)))
          (beg (nth 1 erg))
          end)
     (when beg
@@ -2888,8 +2903,11 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
   "Return the beginning of current line's comment, if inside. "
   (save-restriction
     (widen)
-    (let* ((pps (parse-partial-sexp (line-beginning-position) (point)))
-                   (erg (when (nth 4 pps) (nth 8 pps))))
+    (let* ((pps
+            (if (featurep 'xemacs)
+                (parse-partial-sexp (line-beginning-position) (point))
+              (syntax-ppss)))
+           (erg (when (nth 4 pps) (nth 8 pps))))
       (unless erg
         (when (looking-at (concat "^[ \t]*" comment-start-skip))
           (setq erg (point))))
@@ -2898,14 +2916,19 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 (defun py-in-triplequoted-string-p ()
   "Returns character address of start tqs-string, nil if not inside. "
   (interactive)
-  (let* ((pps (parse-partial-sexp (point-min) (point)))
+  (let* (((pps
+           (if (featurep 'xemacs)
+               (parse-partial-sexp (point-min) (point))
+             (syntax-ppss))))
          (erg (when (and (nth 3 pps) (nth 8 pps))(nth 2 pps))))
     (save-excursion
       (unless erg (setq erg
                         (progn
                           (when (looking-at "\"\"\"\\|''''")
                             (goto-char (match-end 0))
-                            (setq pps (parse-partial-sexp (point-min) (point)))
+                            (setq pps (if (featurep 'xemacs)
+                                          (parse-partial-sexp (point-min) (point))
+                                        (syntax-ppss)))
                             (when (and (nth 3 pps) (nth 8 pps)) (nth 2 pps)))))))
     (when (interactive-p) (message "%s" erg))
     erg))
@@ -2913,14 +2936,19 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 (defun py-in-string-p ()
   "Returns character address of start of string, nil if not inside. "
   (interactive)
-  (let* ((pps (parse-partial-sexp (point-min) (point)))
+  (let* ((pps
+          (if (featurep 'xemacs)
+              (parse-partial-sexp (point-min) (point))
+            (syntax-ppss)))
          (erg (when (nth 3 pps) (nth 8 pps))))
     (save-excursion
       (unless erg (setq erg
                         (progn
                           (when (looking-at "\"\\|'")
                             (forward-char 1)
-                            (setq pps (parse-partial-sexp (point-min) (point)))
+                            (setq pps (if (featurep 'xemacs)
+                                          (parse-partial-sexp (point-min) (point))
+                                        (syntax-ppss)))
                             (when (nth 3 pps) (nth 8 pps)))))))
     (when (interactive-p) (message "%s" erg))
     erg))
@@ -3246,7 +3274,9 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
     (let ((orig (or orig (point)))
           (cui (current-indentation))
           (origline (or origline (py-count-lines)))
-          (pps (parse-partial-sexp (point-min) (point)))
+          (pps (if (featurep 'xemacs)
+                (parse-partial-sexp (point-min) (point))
+                 (syntax-ppss)))
           (done done)
           erg)
       (setq erg
@@ -3308,7 +3338,9 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
       (let*
           ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
-           (pps (parse-partial-sexp (point-min) (point)))
+           (pps (if (featurep 'xemacs)
+                 (parse-partial-sexp (point-min) (point))
+                  (syntax-ppss)))
            (done done)
            erg
            ;; use by scan-lists
@@ -3323,7 +3355,12 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
          ((nth 3 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
             (goto-char (match-end 0)))
-          (while (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)(nth 3 (parse-partial-sexp (point-min) (point)))))
+          (while
+              (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
+                   (nth 3
+                        (if (featurep 'xemacs)
+                            (parse-partial-sexp (point-min) (point))
+                          (syntax-ppss)))))
           (py-end-of-expression orig origline done))
          ;; in comment
          ((nth 4 pps)
@@ -3383,10 +3420,12 @@ http://docs.python.org/reference/compound_stmts.html
         (let ((orig (or orig (point)))
               (cui (current-indentation))
               (origline (or origline (py-count-lines)))
-              (pps (parse-partial-sexp (point-min) (point)))
+              (pps
+                (if (featurep 'xemacs)
+                    (parse-partial-sexp (point-min) (point))
+                 (syntax-ppss)))
               erg)
           (unless (< (point) orig)(skip-chars-backward " \t\r\n\f"))
-
           (setq erg
                 (cond
                  ((empty-line-p)
@@ -3451,10 +3490,13 @@ http://docs.python.org/reference/compound_stmts.html
   (save-restriction
     (widen)
     (unless (eobp)
-      (let*
+      (let* 
           ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
-           (pps (parse-partial-sexp (point-min) (point)))
+           (pps
+            (if (featurep 'xemacs)
+                (parse-partial-sexp (point-min) (point))
+              (syntax-ppss)))
            erg
            ;; use by scan-lists
            parse-sexp-ignore-comments)
@@ -3468,12 +3510,16 @@ http://docs.python.org/reference/compound_stmts.html
          ((nth 3 pps)
           (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
             (goto-char (match-end 0)))
-          (while (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)(nth 3 (parse-partial-sexp (point-min) (point)))))
+          (while (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
+                      (nth 3
+                           (if (featurep 'xemacs)
+                               (parse-partial-sexp (point-min) (point))
+                             (syntax-ppss)))))
           (py-end-of-statement orig origline done))
          ;; in comment
          ((nth 4 pps)
           (forward-line 1)
-          (py-end-of-statement orig origline done))
+          (py-end-of-statement orig origline done)) 
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
@@ -4161,7 +4207,7 @@ Returns beginning and end positions of marked area, a cons."
          (no-quotes (save-excursion
                       (skip-chars-backward "A-Za-z_0-9.")
                       (and (looking-at "[A-Za-z_0-9.]+")
-                           (string-match "\\." (match-string-no-properties 0)))))) 
+                           (string-match "\\." (match-string-no-properties 0))))))
     (setq cmd (concat "import pydoc\n"
                       cmd))
     (if no-quotes
@@ -4639,7 +4685,9 @@ Travels right-margin comments. "
         ;; have this built-in function, which is its loss because
         ;; without scanning from the beginning of the buffer, there's
         ;; no accurate way to determine this otherwise.
-        (save-excursion (setq pps (parse-partial-sexp (point) here)))
+        (save-excursion (setq pps (if (featurep 'xemacs)
+                                      (parse-partial-sexp (point) here)
+                                    (syntax-ppss))))
         ;; make sure we don't land inside a triple-quoted string
         (setq done (or (not (nth 3 pps))
                        (bobp)))
@@ -4654,8 +4702,11 @@ Travels right-margin comments. "
 (defun py-nesting-level (&optional pps)
   "Accepts the output of `parse-partial-sexp'. "
   (interactive)
-  (let ((erg (or (ignore-errors (nth 0 pps))
-                 (nth 0 (parse-partial-sexp (point-min) (point))))))
+  (let* ((pps (or (ignore-errors (nth 0 pps))
+                 (if (featurep 'xemacs)
+                     (parse-partial-sexp (point-min) (point))
+                   (syntax-ppss))))
+        (erg (nth 0 pps)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -4708,7 +4759,10 @@ and `pass'.  This doesn't catch embedded statements."
   (interactive)
   (save-restriction
     (widen)
-    (lexical-let ((pps (parse-partial-sexp (line-beginning-position) (point))))
+    (lexical-let ((pps
+                   (if (featurep 'xemacs)
+                       (parse-partial-sexp (line-beginning-position) (point))
+                     (syntax-ppss))))
       (when (nth 4 pps)
         (goto-char
          (nth 8 pps))))))
@@ -4922,7 +4976,9 @@ If point is inside a string, narrow to that string and fill.
   (save-excursion
     (save-restriction
       (widen)
-      (let ((pps (parse-partial-sexp (point-min) (point))))
+      (let ((pps (if (featurep 'xemacs)
+                     (parse-partial-sexp (point-min) (point))
+                   (syntax-ppss))))
         (cond
          ;; inside a comment
          ((nth 4 pps)
