@@ -99,6 +99,7 @@
 (require 'ansi-color)
 (require 'highlight-indentation)
 
+
 (eval-when-compile (require 'cl))
 
 (add-to-list 'load-path (concat default-directory "test"))
@@ -2187,14 +2188,20 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (set-buffer filebuf)
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((tempbuf (generate-new-buffer-name py-output-buffer))
-             ;; TBD: a horrible hack, but why create new Custom variables?
+             ;; TBD: a horrible hack, but why create new Custom variables?Hi
              (arg (if (string-equal py-which-bufname "Python")
                       "-u" "")))
-        (start-process py-which-bufname tempbuf shell arg file)
-        (pop-to-buffer tempbuf)
-        (py-postprocess-output-buffer tempbuf)
-        ;; TBD: clean up the temporary file!
-))
+        (if (not py-file-queue)
+            (py-execute-file proc file)
+          (message "File %s queued for execution" file)
+          (setq py-file-queue (append py-file-queue (list file)))
+          (while py-file-queue
+            (dolist (file py-file-queue)
+              (start-process py-which-bufname tempbuf shell arg file)
+              (pop-to-buffer tempbuf)
+              (py-postprocess-output-buffer tempbuf)
+              ;; TBD: clean up the temporary file!
+              )))))
      ;; if the Python interpreter shell is running, queue it up for
      ;; execution there.
      (proc
