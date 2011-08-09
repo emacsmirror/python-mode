@@ -97,8 +97,8 @@
 (require 'custom)
 (require 'compile)
 (require 'ansi-color)
-(require 'highlight-indentation)
-
+(when (featurep 'xemacs)
+  (require 'highlight-indentation))
 
 (eval-when-compile (require 'cl))
 
