@@ -133,6 +133,8 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-end-of-expression-test \
 --funcall py-expression-index-test \
 --funcall py-indent-after-assigment-test \
+--funcall leave-dict-test \
+--funcall eofs-attribut-test \
 --funcall py-insert-super-python2-test \
 --funcall py-insert-super-python3-test \
 --funcall UnicodeEncodeError-python3-test \

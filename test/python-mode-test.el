@@ -58,6 +58,8 @@
          'py-end-of-expression-test
          'py-expression-index-test
          'py-indent-after-assigment-test
+         'leave-dict-test
+         'eofs-attribut-test
          'py-insert-super-python2-test
          'py-insert-super-python3-test
 
@@ -605,6 +607,40 @@ def foo( self, bar=False ):  # version 12345
     (forward-line -1)
     (py-indent-line)
     (assert (eq 4 (current-column)) nil "indent-after-assigment-test failed"))
+
+(defun leave-dict-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "
+foo = {
+    b\"yyyyt\": \"bxxk\",
+    \"bxxk\": { \"yyer\": [\"wxrddef\", \"yytem\", \"hym\",],
+              \"wfter\": [], \"xbject\": BxxkTwg, },
+    \"yytem\": { \"yyer\": [], \"wfter\": [\"yytem\"], \"xbject\": ItemTwg, },
+    \"hym\": { \"yyer\": [], \"wfter\": [\"hym\"], \"xbject\": ItemTwg, },
+    \"yyfx\": { \"yyer\": [], \"wfter\": [\"yytem\", \"hym\"], \"xbject\": IfxTwg, },
+    \"wxrddef\": { \"yyer\": [], \"wfter\": [\"yyfx\", \"yytem\", \"hym\"], \"xbject\": WxrddefTwg, },
+}
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'leave-dict-base arg teststring)))
+
+(defun leave-dict-base ()
+    (goto-char (point-min))
+    (py-end-of-statement) 
+    (assert (eq 431 (point)) nil "leave-dict-test failed"))
+
+(defun eofs-attribut-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "def foo( baz ):  # version 
+    return baz.replace(\"\+\",\"§\").replace(\"_\", \" \").replace(\"ﬁ\",\"fr\").replace(
+        \"ﬂ\", \"fg\").replace(\"--\", \"ü\")
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'eofs-attribut-base arg teststring)))
+
+(defun eofs-attribut-base ()
+    (forward-line -2)
+    (assert (eq 143 (py-end-of-statement))  nil "eofs-attribut-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
