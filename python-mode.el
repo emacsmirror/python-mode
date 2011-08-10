@@ -2666,18 +2666,60 @@ With ARG do that ARG times. "
 (put 'py-electric-delete    'pending-delete   'supersede) ;pending-del
 
 
-(defun py-indent-line ()
+(defun py-indent-line-new (&optional arg) 
+  "Indent the current line according to Python rules.
+With optional universal ARG C-u an indent with length `py-indent-offset' is inserted unconditionally.  
+write
+
+for example.
+"
+  (interactive "*P")
+  (let* ((need (py-compute-indentation (point)))
+         (cui (current-indentation))
+         (cuc (current-column)))
+    (cond ((eq 4 (prefix-numeric-value arg))
+           (insert (make-string py-indent-offset ?\ )))
+          (t
+           (if (and (eq need cui)(not (eq cuc cui))) 
+               (back-to-indentation)
+             (beginning-of-line)
+             (delete-horizontal-space)
+             (indent-to need))))))
+
+(defun py-indent-line (&optional arg)
   "Fix the indentation of the current line according to Python rules.
+With \\[universal-argument] (programmatically, the optional argument
+ARG non-nil), ignore dedenting rules for block closing statements
+\(e.g. return, raise, break, continue, pass)
 
 This function is normally bound to `indent-line-function' so
 \\[indent-for-tab-command] will call it."
-  (interactive)
-  (let* ((need (py-compute-indentation (point))))
-    (if (eq need (current-indentation))
-        (back-to-indentation)
-      (beginning-of-line)
-      (delete-horizontal-space)
-      (indent-to need))))
+  (interactive "P")
+  (let* ((ci (current-indentation))
+         (move-to-indentation-p (<= (current-column) ci))
+         (need (py-compute-indentation))
+         (cc (current-column)))
+    ;; dedent out a level if previous command was the same unless we're in
+    ;; column 1
+    (if (and (equal last-command this-command)
+             (/= cc 0))
+        (progn
+          (beginning-of-line)
+          (delete-horizontal-space)
+          (indent-to (* (/ (- cc 1) py-indent-offset) py-indent-offset)))
+      (progn
+        ;; see if we need to dedent
+        (if (py-outdent-p)
+            (setq need (- need py-indent-offset)))
+        (if (or py-tab-always-indent
+                move-to-indentation-p)
+            (progn (if (/= ci need)
+                       (save-excursion
+                       (beginning-of-line)
+                       (delete-horizontal-space)
+                       (indent-to need)))
+                   (if move-to-indentation-p (back-to-indentation)))
+            (insert-tab))))))
 
 (defun py-newline-and-indent ()
   "Strives to act like the Emacs `newline-and-indent'.
@@ -2916,10 +2958,10 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 (defun py-in-triplequoted-string-p ()
   "Returns character address of start tqs-string, nil if not inside. "
   (interactive)
-  (let* (((pps
-           (if (featurep 'xemacs)
-               (parse-partial-sexp (point-min) (point))
-             (syntax-ppss))))
+  (let* ((pps
+          (if (featurep 'xemacs)
+              (parse-partial-sexp (point-min) (point))
+            (syntax-ppss)))
          (erg (when (and (nth 3 pps) (nth 8 pps))(nth 2 pps))))
     (save-excursion
       (unless erg (setq erg
