@@ -3830,8 +3830,7 @@ Takes a list, INDENT and START position. "
         (progn
           (goto-char start)
           (while (and (setq last (point))(not (eobp))(py-end-of-statement)
-                      (and (ignore-errors (<= indent (current-indentation)))(<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation)))))
-))
+                      (<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation))))))
           (when last (goto-char last))
           last))))
 
