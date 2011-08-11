@@ -958,6 +958,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
   (let ((map (make-sparse-keymap)))
     ;; electric keys
     (define-key map ":" 'py-electric-colon)
+    (define-key map "#" 'py-electric-rhombus)
     ;; indentation level modifiers
     (define-key map "\C-c\C-l"  'py-shift-region-left)
     (define-key map "\C-c\C-r"  'py-shift-region-right)
@@ -1680,6 +1681,46 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
                   (backward-to-indentation 1))
                 (not (looking-at py-no-outdent-re)))
          )))
+
+(defun py-electric-rhombus (arg)
+  "Insert a rhombus. If starting a comment, indent accordingly.
+If a numeric
+argument ARG is provided, that many colons are inserted
+non-electrically.  Electric behavior is inhibited inside a string or
+comment."
+  (interactive "*P")
+  (self-insert-command (prefix-numeric-value arg))
+  ;; are we in a string or comment?
+  (if (save-excursion
+        (let ((pps
+               (if (featurep 'xemacs) 
+                   (parse-partial-sexp (save-excursion
+                                         (py-beginning-of-def-or-class)
+                                         (point))
+                                       (point))
+                 (syntax-ppss))))
+          (or (nth 3 pps) (nth 4 pps))))
+      (save-excursion
+        (let ((here (point))
+              (outdent 0)
+              (indent (py-compute-indentation)))
+          (if (and (not arg)
+                   (py-outdent-p)
+                   (= indent (save-excursion
+                               (py-next-statement -1)
+                               (py-compute-indentation))))
+              (setq outdent py-indent-offset))
+          ;; Don't indent, only dedent.  This assumes that any lines
+          ;; that are already dedented relative to
+          ;; py-compute-indentation were put there on purpose.  It's
+          ;; highly annoying to have `:' indent for you.  Use TAB, C-c
+          ;; C-l or C-c C-r to adjust.  TBD: Is there a better way to
+          ;; determine this???
+          (if (< (current-indentation) indent) nil
+            (goto-char here)
+            (beginning-of-line)
+            (delete-horizontal-space)
+            (indent-to (- indent outdent)))))))
 
 (defun py-electric-colon (arg)
   "Insert a colon.
