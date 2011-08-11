@@ -3294,6 +3294,40 @@ Put point inside the parentheses of a multiline import and hit
 (defalias 'py-hungry-delete-forward 'c-hungry-delete-forward)
 (defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
 
+;; Decorator
+(defun py-beginning-of-decorator () 
+  (interactive)
+  (back-to-indentation)
+  (while (and (not (looking-at "@\\w+"))(not (empty-line-p))(not (bobp))(forward-line -1))
+    (back-to-indentation))
+  (let ((erg (when (looking-at "@\\w+")(match-beginning 0))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-end-of-decorator () 
+  (interactive)
+  (let ((orig (point)) erg)
+    (unless (looking-at "@\\w+")
+      (setq erg (py-beginning-of-decorator)))
+    (when erg
+      (if
+          (re-search-forward py-def-or-class-re nil t)
+          (progn 
+            (back-to-indentation) 
+            (skip-chars-backward " \t\r\n\f")
+            (py-leave-comment-or-string-backward)
+            (skip-chars-backward " \t\r\n\f")
+            (setq erg (point)))
+        (goto-char orig)
+        (end-of-line)
+        (skip-chars-backward " \t\r\n\f")
+        (when (ignore-errors (goto-char (py-in-list-p)))
+          (forward-list))
+        (when (< orig (point))
+          (setq erg (point)))) 
+      (when (interactive-p) (message "%s" erg))
+      erg)))
+
 ;; Expression
 (defalias 'py-backward-expression 'py-beginning-of-expression)
 (defun py-beginning-of-expression (&optional orig origline done)
@@ -4034,10 +4068,7 @@ Returns beginning and end positions of marked area, a cons."
                 (funcall begform)))
     (when py-mark-decorators
       (save-excursion
-        (forward-line -1)
-      (back-to-indentation)
-      (when (looking-at "@\\w+")
-        (setq beg (match-beginning 0)))))
+        (setq beg (py-beginning-of-decorator))))
     (setq end (funcall endform))
     (progn
       (push-mark beg t t)
