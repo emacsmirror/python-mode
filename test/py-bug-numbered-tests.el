@@ -85,6 +85,7 @@
          'closing-parentesis-indent-lp:821820-test
          'py-indent-line-lp:822532-test
          'indent-honor-arglist-whitespaces-lp:822540-test
+         'comments-indent-honor-setting-lp:824427-test
 
          )))
 
@@ -1485,6 +1486,27 @@ abc( ghi,
 (defun indent-honor-arglist-whitespaces-lp:822540-base ()
   (forward-line -1) 
   (assert (eq 5 (py-compute-indentation)) nil "indent-honor-arglist-whitespaces-lp:822540-test failed"))
+
+(defun comments-indent-honor-setting-lp:824427-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -\*- coding: utf-8 -\*-
+
+if __name__ == '__main__':
+    from foo import \*
+    foo([\"baz\"]) # list of foo's development directories
+
+# limitations:
+#
+#   Some comments on limitations:
+# asdf
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'comments-indent-honor-setting-lp:824427-base arg teststring)))
+
+(defun comments-indent-honor-setting-lp:824427-base ()
+    (goto-char 206)
+    (assert (eq 0 (py-compute-indentation)) nil "comments-indent-honor-setting-lp:824427-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
