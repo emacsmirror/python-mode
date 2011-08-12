@@ -480,13 +480,15 @@ variable section, e.g.:
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
-(defvar py-expression-skip-regexp "^ .,=:#;\t\r\n\f"
+(defvar py-expression-skip-regexp "^ .=:#\t\r\n\f"
   "py-expression assumes chars indicated possible composing a py-expression, skipping it. ")
 
-(defvar py-expression-looking-regexp "[^ .,=:#;\t\r\n\f)]"
+;; (setq py-expression-skip-regexp "^ .=:#\t\r\n\f")
+
+(defvar py-expression-looking-regexp "[^ .=:#\t\r\n\f)]"
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
 
-(defvar py-not-expression-regexp "[ .,=:#;\t\r\n\f)]"
+(defvar py-not-expression-regexp "[ .=:#\t\r\n\f)]"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 
 (defvar py-line-number-offset 0
@@ -3508,6 +3510,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (forward-char 1)
           (setq done (< 0 (skip-chars-forward py-expression-skip-regexp)))
           (when done (forward-char -1))
+          (setq done t) 
           (py-end-of-expression orig origline done)))
         (unless (eq (point) orig)
           (setq erg (point)))
