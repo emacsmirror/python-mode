@@ -510,7 +510,8 @@ def main(argv):
   (py-bug-tests-intern 'py-beginning-of-expression-base arg teststring)))
 
 (defun py-beginning-of-expression-base ()
-    (assert (eq 225 (py-beginning-of-expression)) nil "py-beginning-of-expression-test failed"))
+  (goto-char 227)
+  (assert (eq 221 (py-beginning-of-expression)) nil "py-beginning-of-expression-test failed"))
 
 (defun py-end-of-expression-test (&optional arg load-branch-function)
   (interactive "p")

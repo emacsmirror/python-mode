@@ -480,15 +480,15 @@ variable section, e.g.:
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
-(defvar py-expression-skip-regexp "^ .=:#\t\r\n\f"
+(defvar py-expression-skip-regexp "^ =:#\t\r\n\f"
   "py-expression assumes chars indicated possible composing a py-expression, skipping it. ")
 
 ;; (setq py-expression-skip-regexp "^ .=:#\t\r\n\f")
 
-(defvar py-expression-looking-regexp "[^ .=:#\t\r\n\f)]"
+(defvar py-expression-looking-regexp "[^ =:#\t\r\n\f)]"
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
 
-(defvar py-not-expression-regexp "[ .=:#\t\r\n\f)]"
+(defvar py-not-expression-regexp "[ =:#\t\r\n\f)]"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 
 (defvar py-line-number-offset 0
@@ -3382,11 +3382,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
   (save-restriction
     (widen)
     (unless (bobp)
-      (when (looking-at "[ \t]+\\|$")
-        (skip-chars-backward " \t\r\n\f")
-        (forward-char -1)))
     (when (looking-at "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)")
-      (message "%s" (match-string-no-properties 0))
       (goto-char (1- (match-beginning 0)))
       (skip-chars-backward " \t\r\n\f")
       (forward-char -1))
@@ -3400,10 +3396,6 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           erg)
       (setq erg
             (cond
-             ((empty-line-p)
-              (skip-chars-backward " \t\r\n\f")
-              (forward-char -1)
-              (py-beginning-of-expression orig origline))
              ;; if in string
              ((and (nth 3 pps)(nth 8 pps)
                    (save-excursion
@@ -3431,17 +3423,11 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
              ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
               (skip-chars-backward py-expression-skip-regexp)
               (py-beginning-of-expression orig origline))
-             ((and (eq (point) orig) (not (bobp))
-                   (looking-at py-expression-looking-regexp))
-              (skip-chars-backward py-expression-looking-regexp)
-              (py-beginning-of-expression orig origline))
-             ((and (not (bobp))
-                   (looking-back py-expression-looking-regexp))
-              (skip-chars-backward py-expression-skip-regexp)
-              (py-beginning-of-expression orig origline))
+               ((looking-at py-expression-looking-regexp)
+                (point)) 
              (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(point)))))
       (when (interactive-p) (message "%s" erg))
-      erg)))
+        erg))))
 
 (defalias 'py-forward-expression 'py-end-of-expression)
 (defun py-end-of-expression (&optional orig origline done)
