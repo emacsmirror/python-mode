@@ -2165,6 +2165,25 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
     (with-temp-buffer
       (shell-command (concat "python " filename) output-buffer error-buffer))))
 
+
+(defun py-execute-region-no-switch (start end &optional async)
+  "Send the region to a common shell calling a Python interpreter.
+
+Ignores setting of `py-shell-switch-buffers-on-execute', buffer with region stays current. 
+ "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute nil))
+  (py-execute-base start end async)))
+
+(defun py-execute-region-switch (start end &optional async)
+  "Send the region to a common shell calling a Python interpreter.
+
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to.
+"
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+  (py-execute-base start end async)))
+
 (defun py-execute-region (&optional start end async)
   "Execute the region in a Python interpreter.
 
@@ -2231,22 +2250,13 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (set-buffer filebuf)
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((tempbuf (generate-new-buffer-name py-output-buffer))
-             ;; TBD: a horrible hack, but why create new Custom variables?Hi
              (arg (if (string-equal py-which-bufname "Python")
                       "-u" "")))
-        (if (not py-file-queue)
-            (py-execute-file proc file)
-          (message "File %s queued for execution" file)
-          (setq py-file-queue (append py-file-queue (list file)))
-          (while py-file-queue
-            (dolist (file py-file-queue)
               (start-process py-which-bufname tempbuf shell arg file)
               (pop-to-buffer tempbuf)
               (py-postprocess-output-buffer tempbuf)
               ;; TBD: clean up the temporary file!
-              )))))
-     ;; if the Python interpreter shell is running, queue it up for
-     ;; execution there.
+        ))
      (proc
       ;; use the existing python shell
       (set-buffer filebuf)
@@ -2254,9 +2264,12 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (sit-for 0.1)
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
-      (set-buffer procbuf)
-      (goto-char (point-max))
-      (switch-to-buffer (current-buffer))
+      (if py-shell-switch-buffers-on-execute
+          (progn
+            (pop-to-buffer procbuf)
+            (goto-char (point-max)))
+        (pop-to-buffer regbuf)
+        (message "Output buffer: %s" procbuf))
       (sit-for 0.1)
       (py-cleanup filebuf file)))))
 
@@ -2425,6 +2438,32 @@ See also doku of variable `py-master-file' "
             (re-search-forward (concat "^\\( *# py-master-file: *\\)\"\\([^ \t]+\\)\" *$") nil t 1)
           (setq py-master-file (match-string-no-properties 2))))))
   (when (interactive-p) (message "%s" py-master-file)))
+
+(defun py-execute-buffer-no-switch (&optional async)
+  "Like `py-execute-buffer', but ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to."
+  (interactive "P")
+  (save-excursion
+    (let ((old-buffer (current-buffer)))
+      (or py-master-file (py-fetch-py-master-file))
+      (if py-master-file
+          (let* ((filename (expand-file-name py-master-file))
+                 (buffer (or (get-file-buffer filename)
+                             (find-file-noselect filename))))
+            (set-buffer buffer)))
+      (py-execute-region-no-switch (point-min) (point-max) async))))
+
+(defun py-execute-buffer-switch (&optional async)
+  "Like `py-execute-buffer', but ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "P")
+  (save-excursion
+    (let ((old-buffer (current-buffer)))
+      (or py-master-file (py-fetch-py-master-file))
+      (if py-master-file
+          (let* ((filename (expand-file-name py-master-file))
+                 (buffer (or (get-file-buffer filename)
+                             (find-file-noselect filename))))
+            (set-buffer buffer)))
+      (py-execute-region-switch (point-min) (point-max) async))))
 
 (defun py-execute-buffer (&optional async)
   "Send the contents of the buffer to a Python interpreter.
