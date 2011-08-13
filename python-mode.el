@@ -1156,7 +1156,7 @@ POSITION can be one of the following symbols:
   bos  -- beginning of statement
 
 This function does not modify point or mark."
-  (let ((here (point)))
+  (let ((orig (point)))
     (cond
      ((eq position 'bol) (beginning-of-line))
      ((eq position 'eol) (end-of-line))
@@ -1171,7 +1171,7 @@ This function does not modify point or mark."
      )
     (prog1
         (point)
-      (goto-char here))))
+      (goto-char orig))))
 
 (when (featurep 'xemacs)
   (defsubst py-highlight-line (from to file line)
@@ -1705,39 +1705,21 @@ comment."
   (if py-electric-rhombus-t
       (if (ignore-errors (eq 4 (car-safe arg)))
           (insert "#")
+        (when (and (eq last-command 'py-electric-rhombus) py-electric-rhombus-add-space (looking-back " "))
+          (forward-char -1)) 
         (self-insert-command (prefix-numeric-value arg))
-        ;; are we in a string or comment?
-        (if (save-excursion
-              (let ((pps
-                     (if (featurep 'xemacs)
-                         (parse-partial-sexp
-                          (save-excursion
-                            (py-beginning-of-def-or-class)
-                            (point))
-                          (point))
-                       (syntax-ppss))))
-                (or (nth 3 pps) (nth 4 pps))))
-            (save-excursion
-              (let ((here (point))
-                    (outdent 0)
+        (let ((orig (copy-marker (point)))
                     (indent (py-compute-indentation)))
-                (if (and (not arg)
-                         (py-outdent-p)
-                         (= indent (save-excursion
-                                     (py-next-statement -1)
-                                     (py-compute-indentation))))
-                    (setq outdent py-indent-offset))
-                (if (< (current-indentation) indent) nil
-                  (goto-char here)
+          (unless (eq (current-indentation) indent)
+                (goto-char orig)
                   (beginning-of-line)
                   (delete-horizontal-space)
-                  (indent-to (- indent outdent))
+            (indent-to indent))
                   (when py-electric-rhombus-add-space
-                    (when (looking-at "#+\\([ \t]+\\)#")
-                      (goto-char (match-beginning 1))
-                      (delete-horizontal-space))
-                    (skip-chars-forward "#")
-                    (insert " ")))))))))
+            (unless (looking-back "[ \t]")
+              (insert " "))))
+        (setq last-command this-command))
+    (self-insert-command (prefix-numeric-value arg))))
 
 (defun py-electric-colon (arg)
   "Insert a colon.
@@ -1757,7 +1739,7 @@ comment."
                (syntax-ppss))))
           (not (or (nth 3 pps) (nth 4 pps)))))
       (save-excursion
-        (let ((here (point))
+        (let ((orig (point))
               (outdent 0)
               (indent (py-compute-indentation)))
           (if (and (not arg)
@@ -1773,7 +1755,7 @@ comment."
           ;; C-l or C-c C-r to adjust.  TBD: Is there a better way to
           ;; determine this???
           (if (< (current-indentation) indent) nil
-            (goto-char here)
+            (goto-char orig)
             (beginning-of-line)
             (delete-horizontal-space)
             (indent-to (- indent outdent)))))))
@@ -3487,9 +3469,8 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (forward-line 1)
           (py-end-of-expression orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
-          (while (looking-at "[ \t]*#")
-            (forward-line 1)
-            (beginning-of-line))
+          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp))
+                      (beginning-of-line)))
           (end-of-line)
           ;;          (setq done t)
           (skip-chars-backward " \t\r\n\f")
@@ -3642,9 +3623,8 @@ http://docs.python.org/reference/compound_stmts.html
           (forward-line 1)
           (py-end-of-statement orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
-          (while (looking-at "[ \t]*#")
-            (forward-line 1)
-            (beginning-of-line)
+          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp)) 
+                      (beginning-of-line))
             (setq done t))
           (end-of-line)
           (when (and done (looking-at "[ \t]*$") (not (looking-back "^[ \t]*")))
@@ -4799,7 +4779,7 @@ Travels right-margin comments. "
 (defun py-parse-state ()
   "Return the parse state at point (see `parse-partial-sexp' docs)."
   (save-excursion
-    (let ((here (point))
+    (let ((orig (point))
           pps done)
       (while (not done)
         ;; back up to the first preceding line (if any; else start of
@@ -4816,7 +4796,7 @@ Travels right-margin comments. "
         ;; without scanning from the beginning of the buffer, there's
         ;; no accurate way to determine this otherwise.
         (save-excursion (setq pps (if (featurep 'xemacs)
-                                      (parse-partial-sexp (point) here)
+                                      (parse-partial-sexp (point) orig)
                                     (syntax-ppss))))
         ;; make sure we don't land inside a triple-quoted string
         (setq done (or (not (nth 3 pps))
@@ -4872,12 +4852,12 @@ Travels right-margin comments. "
   "Return t iff the current statement closes a block.
 I.e., if the line starts with `return', `raise', `break', `continue',
 and `pass'.  This doesn't catch embedded statements."
-  (let ((here (point)))
+  (let ((orig (point)))
     (py-goto-initial-line)
     (back-to-indentation)
     (prog1
         (looking-at (concat py-block-closing-keywords-re "\\>"))
-      (goto-char here))))
+      (goto-char orig))))
 
 (defun py-goto-beyond-block ()
   "Go to point just beyond the final line of block begun by the current line. "

@@ -17,10 +17,16 @@
 ;;; Code:
 
 (add-to-list 'load-path default-directory)
-(require 'python-mode)
+
 (require 'python-mode-test)
 (defvar bug-numbered-tests nil
   "Tests following reports at https://bugs.launchpad.net/python-mode")
+
+(defun py-run-bug-numbered-tests (&optional arg)
+  "With ARG greater 1 keep test buffers open. "
+  (interactive "p")
+  (dolist (ele bug-numbered-tests)
+    (funcall ele arg)))
 
 (setq bug-numbered-tests
       (if (featurep 'xemacs)
@@ -89,11 +95,6 @@
 
          )))
 
-(defun py-run-bug-numbered-tests (&optional arg)
-  "With ARG greater 1 keep test buffers open. "
-  (interactive "p")
-  (dolist (ele bug-numbered-tests)
-    (funcall ele arg)))
 
 (defun py-bug-tests-intern (testname &optional arg teststring)
   (if arg
