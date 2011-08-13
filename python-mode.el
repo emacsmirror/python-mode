@@ -120,6 +120,16 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-electric-rhombus-t t
+  "If \"#\" should call `py-electric-rhombus'. Default is `t'. "
+  :type 'boolean
+  :group 'python)
+
+(defcustom py-electric-rhombus-add-space t
+  "If py-electric-rhombus should add a space.  Default is `t'. "
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-indent-honors-multiline-listing nil
   "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
   :type 'boolean
@@ -1681,48 +1691,53 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
                 (back-to-indentation)
                 (when (looking-at py-blank-or-comment-re)
                   (backward-to-indentation 1))
-                (not (looking-at py-no-outdent-re)))
-         )))
+                (not (looking-at py-no-outdent-re))))))
 
 (defun py-electric-rhombus (arg)
   "Insert a rhombus. If starting a comment, indent accordingly.
 If a numeric
 argument ARG is provided, that many colons are inserted
-non-electrically.  Electric behavior is inhibited inside a string or
+non-electrically.
+With universal-prefix-key C-u a \"#\"
+Electric behavior is inhibited inside a string or
 comment."
   (interactive "*P")
-  (self-insert-command (prefix-numeric-value arg))
-  ;; are we in a string or comment?
-  (if (save-excursion
-        (let ((pps
-               (if (featurep 'xemacs) 
-                   (parse-partial-sexp (save-excursion
-                                         (py-beginning-of-def-or-class)
-                                         (point))
-                                       (point))
-                 (syntax-ppss))))
-          (or (nth 3 pps) (nth 4 pps))))
-      (save-excursion
-        (let ((here (point))
-              (outdent 0)
-              (indent (py-compute-indentation)))
-          (if (and (not arg)
-                   (py-outdent-p)
-                   (= indent (save-excursion
-                               (py-next-statement -1)
-                               (py-compute-indentation))))
-              (setq outdent py-indent-offset))
-          ;; Don't indent, only dedent.  This assumes that any lines
-          ;; that are already dedented relative to
-          ;; py-compute-indentation were put there on purpose.  It's
-          ;; highly annoying to have `:' indent for you.  Use TAB, C-c
-          ;; C-l or C-c C-r to adjust.  TBD: Is there a better way to
-          ;; determine this???
-          (if (< (current-indentation) indent) nil
-            (goto-char here)
-            (beginning-of-line)
-            (delete-horizontal-space)
-            (indent-to (- indent outdent)))))))
+  (if py-electric-rhombus-t
+      (if (ignore-errors (eq 4 (car-safe arg)))
+          (insert "#")
+        (self-insert-command (prefix-numeric-value arg))
+        ;; are we in a string or comment?
+        (if (save-excursion
+              (let ((pps
+                     (if (featurep 'xemacs)
+                         (parse-partial-sexp
+                          (save-excursion
+                            (py-beginning-of-def-or-class)
+                            (point))
+                          (point))
+                       (syntax-ppss))))
+                (or (nth 3 pps) (nth 4 pps))))
+            (save-excursion
+              (let ((here (point))
+                    (outdent 0)
+                    (indent (py-compute-indentation)))
+                (if (and (not arg)
+                         (py-outdent-p)
+                         (= indent (save-excursion
+                                     (py-next-statement -1)
+                                     (py-compute-indentation))))
+                    (setq outdent py-indent-offset))
+                (if (< (current-indentation) indent) nil
+                  (goto-char here)
+                  (beginning-of-line)
+                  (delete-horizontal-space)
+                  (indent-to (- indent outdent))
+                  (when py-electric-rhombus-add-space
+                    (when (looking-at "#+\\([ \t]+\\)#")
+                      (goto-char (match-beginning 1))
+                      (delete-horizontal-space))
+                    (skip-chars-forward "#")
+                    (insert " ")))))))))
 
 (defun py-electric-colon (arg)
   "Insert a colon.
@@ -2709,9 +2724,9 @@ With ARG do that ARG times. "
 (put 'py-electric-delete    'pending-delete   'supersede) ;pending-del
 
 
-(defun py-indent-line-new (&optional arg) 
+(defun py-indent-line-new (&optional arg)
   "Indent the current line according to Python rules.
-With optional universal ARG C-u an indent with length `py-indent-offset' is inserted unconditionally.  
+With optional universal ARG C-u an indent with length `py-indent-offset' is inserted unconditionally.
 write
 
 for example.
@@ -2723,7 +2738,7 @@ for example.
     (cond ((eq 4 (prefix-numeric-value arg))
            (insert (make-string py-indent-offset ?\ )))
           (t
-           (if (and (eq need cui)(not (eq cuc cui))) 
+           (if (and (eq need cui)(not (eq cuc cui)))
                (back-to-indentation)
              (beginning-of-line)
              (delete-horizontal-space)
@@ -2814,9 +2829,9 @@ the new line indented."
                ((and (nth 3 pps)(nth 8 pps))
                 (ignore-errors (goto-char (nth 2 pps)))
                 (if (< 1 (- origline (py-count-lines)))
-                        (progn 
+                        (progn
                       (goto-char orig)
-                      (skip-chars-backward " \t\r\n\f") 
+                      (skip-chars-backward " \t\r\n\f")
                       (current-indentation))
                   (goto-char (nth 2 pps))
                   (current-indentation)))
@@ -2825,13 +2840,13 @@ the new line indented."
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline))
                ;; comments
-               ((and (nth 8 pps) (eq (py-count-lines) origline)) 
+               ((and (nth 8 pps) (eq (py-count-lines) origline))
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
                 (py-compute-indentation orig origline))
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
-                (current-column)) 
+                (current-column))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
                 (forward-line -1)
                 (end-of-line)
@@ -3338,7 +3353,7 @@ Put point inside the parentheses of a multiline import and hit
 (defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
 
 ;; Decorator
-(defun py-beginning-of-decorator () 
+(defun py-beginning-of-decorator ()
   (interactive)
   (back-to-indentation)
   (while (and (not (looking-at "@\\w+"))(not (empty-line-p))(not (bobp))(forward-line -1))
@@ -3347,7 +3362,7 @@ Put point inside the parentheses of a multiline import and hit
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defun py-end-of-decorator () 
+(defun py-end-of-decorator ()
   (interactive)
   (let ((orig (point)) erg)
     (unless (looking-at "@\\w+")
@@ -3355,8 +3370,8 @@ Put point inside the parentheses of a multiline import and hit
     (when erg
       (if
           (re-search-forward py-def-or-class-re nil t)
-          (progn 
-            (back-to-indentation) 
+          (progn
+            (back-to-indentation)
             (skip-chars-backward " \t\r\n\f")
             (py-leave-comment-or-string-backward)
             (skip-chars-backward " \t\r\n\f")
@@ -3367,7 +3382,7 @@ Put point inside the parentheses of a multiline import and hit
         (when (ignore-errors (goto-char (py-in-list-p)))
           (forward-list))
         (when (< orig (point))
-          (setq erg (point)))) 
+          (setq erg (point))))
       (when (interactive-p) (message "%s" erg))
       erg)))
 
@@ -3424,7 +3439,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
               (skip-chars-backward py-expression-skip-regexp)
               (py-beginning-of-expression orig origline))
                ((looking-at py-expression-looking-regexp)
-                (point)) 
+                (point))
              (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(point)))))
       (when (interactive-p) (message "%s" erg))
         erg))))
@@ -3496,7 +3511,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (forward-char 1)
           (setq done (< 0 (skip-chars-forward py-expression-skip-regexp)))
           (when done (forward-char -1))
-          (setq done t) 
+          (setq done t)
           (py-end-of-expression orig origline done)))
         (unless (eq (point) orig)
           (setq erg (point)))
@@ -3596,7 +3611,7 @@ http://docs.python.org/reference/compound_stmts.html
   (save-restriction
     (widen)
     (unless (eobp)
-      (let* 
+      (let*
           ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
            (pps
@@ -3625,7 +3640,7 @@ http://docs.python.org/reference/compound_stmts.html
          ;; in comment
          ((nth 4 pps)
           (forward-line 1)
-          (py-end-of-statement orig origline done)) 
+          (py-end-of-statement orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
           (while (looking-at "[ \t]*#")
             (forward-line 1)
@@ -3645,8 +3660,8 @@ http://docs.python.org/reference/compound_stmts.html
           (goto-char (nth 1 pps))
           (let ((parse-sexp-ignore-comments t))
             (if (ignore-errors (forward-list))
-                (progn 
-                  (setq erg (point)) 
+                (progn
+                  (setq erg (point))
             (when (looking-at ":[ \t]*$")
               (forward-char 1))
             (setq done t)
@@ -3672,9 +3687,9 @@ http://docs.python.org/reference/compound_stmts.html
           (setq done t)
           (py-end-of-statement orig origline done))
          ((looking-at "\\.\\([A-Za-z_][A-Za-z_0-9]*\\)")
-          (forward-char 1) 
+          (forward-char 1)
           (skip-chars-forward "A-Za-z_0-9")
-          (forward-char 1) 
+          (forward-char 1)
           (py-end-of-statement orig origline done)))
         (unless (or (nth 4 pps)(eq 0 (current-column)))
           (setq erg (point)))
