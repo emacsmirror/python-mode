@@ -2229,7 +2229,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
-    (when (one-window-p)
+    (when (and py-shell-switch-buffers-on-execute (one-window-p))
       (split-window-vertically))
     (save-excursion (other-window 1)
                     (set-buffer procbuf))
