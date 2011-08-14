@@ -106,6 +106,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-indent-line-lp:822532-test \
 --funcall indent-honor-arglist-whitespaces-lp:822540-test \
 --funcall comments-indent-honor-setting-lp:824427-test \
+--funcall infinite-loop-after-tqs-lp:826044-test \
 \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \

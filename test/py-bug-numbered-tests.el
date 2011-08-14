@@ -92,6 +92,7 @@
          'py-indent-line-lp:822532-test
          'indent-honor-arglist-whitespaces-lp:822540-test
          'comments-indent-honor-setting-lp:824427-test
+         'infinite-loop-after-tqs-lp:826044-test
 
          )))
 
@@ -1508,6 +1509,18 @@ if __name__ == '__main__':
 (defun comments-indent-honor-setting-lp:824427-base ()
     (goto-char 206)
     (assert (eq 0 (py-compute-indentation)) nil "comments-indent-honor-setting-lp:824427-test failed"))
+
+(defun infinite-loop-after-tqs-lp:826044-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "\"\"\"
+hey
+\"\"\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'infinite-loop-after-tqs-lp:826044-base arg teststring)))
+
+(defun infinite-loop-after-tqs-lp:826044-base ()
+    (assert (eq 0 (py-newline-and-indent)) nil "infinite-loop-after-tqs-lp:826044-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
