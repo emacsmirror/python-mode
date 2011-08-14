@@ -62,6 +62,7 @@
          'eofs-attribut-test
          'py-insert-super-python2-test
          'py-insert-super-python3-test
+         'args-list-first-line-indent-test
 
 )))
 
@@ -642,6 +643,28 @@ foo = {
 (defun eofs-attribut-base ()
     (forward-line -2)
     (assert (eq 143 (py-end-of-statement))  nil "eofs-attribut-test failed"))
+
+(defun args-list-first-line-indent-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo:
+    bar.append(
+        ht(
+            T.a('Sorted Foo', href='#Blub', ),
+            ' -- foo bar baz--',
+            self.Tasdf( afsd ),
+            self.Tasdf( asdf ),
+            )
+    )
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'args-list-first-line-indent-base arg teststring)))
+
+(defun args-list-first-line-indent-base ()
+    (goto-char 72)
+    (assert (eq 4 (py-compute-indentation)) nil "args-list-first-line-indent-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

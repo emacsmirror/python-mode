@@ -986,6 +986,7 @@ def foo():
     (py-bug-tests-intern 'indent-open-paren-not-last-lp:771291-base arg teststring)))
 
 (defun indent-open-paren-not-last-lp:771291-base ()
+  (newline-and-indent)
   (assert (eq 20 (py-compute-indentation)) nil "indent-open-paren-not-last-lp:771291-test failed"))
 
 (defun wrong-indent-after-else-lp:772610-test (&optional arg load-branch-function)
