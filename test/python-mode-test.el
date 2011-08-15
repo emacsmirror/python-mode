@@ -63,6 +63,7 @@
          'py-insert-super-python2-test
          'py-insert-super-python3-test
          'args-list-first-line-indent-test
+         'py-partial-expression-test
 
 )))
 
@@ -665,6 +666,33 @@ if foo:
 (defun args-list-first-line-indent-base ()
     (goto-char 72)
     (assert (eq 4 (py-compute-indentation)) nil "args-list-first-line-indent-test failed"))
+
+(defun py-partial-expression-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo:
+    bar.append(
+        ht(
+            T.a('Sorted Foo', href='#Blub', ),
+            ' -- foo bar baz--',
+            self.Tasdf( afsd ),
+            self.Tasdf( asdf ),
+            )
+    )
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-partial-expression-base arg teststring)))
+
+(defun py-partial-expression-base ()
+    (goto-char 99)
+    (assert (eq 99 (py-beginning-of-partial-expression)) nil "py-partial-expression-test #1 failed")
+    (assert (eq 130 (py-end-of-partial-expression)) nil "py-partial-expression-test #2 failed")
+    (goto-char 178)
+    (assert (eq 177 (py-beginning-of-partial-expression)) nil "py-partial-expression-test #3 failed")
+    (assert (eq 181 (py-end-of-partial-expression)) nil "py-partial-expression-test #3 failed")
+)
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

@@ -491,15 +491,37 @@ variable section, e.g.:
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; NO USER DEFINABLE VARIABLES BEYOND THIS POINT
 (defvar py-expression-skip-regexp "^ =:#\t\r\n\f"
-  "py-expression assumes chars indicated possible composing a py-expression, skipping it. ")
-
-;; (setq py-expression-skip-regexp "^ .=:#\t\r\n\f")
+  "py-expression assumes chars indicated possible composing a py-expression, skip it. ")
+;; (setq py-expression-skip-regexp "^ =:#\t\r\n\f")
 
 (defvar py-expression-looking-regexp "[^ =:#\t\r\n\f)]"
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
+;; (setq py-expression-looking-regexp "[^ =:#\t\r\n\f)]")
 
-(defvar py-not-expression-regexp "[ =:#\t\r\n\f)]"
+(defvar py-not-expression-regexp "[ .=:#\t\r\n\f)]"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
+;; (setq py-not-expression-regexp "[ .=:#\t\r\n\f)]")
+
+(defvar py-minor-expression-skip-regexp "^ .()[]{}=:#\t\r\n\f"
+  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
+;; (setq py-minor-expression-skip-regexp "^ .(){}=:#\t\r\n\f")
+
+(defvar py-minor-expression-forward-regexp "^ .)}=:#\t\r\n\f"
+  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
+
+(defvar py-minor-expression-backward-regexp "^ .({=:#\t\r\n\f"
+  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
+
+(defvar py-not-minor-expression-skip-regexp " \\.=:#\t\r\n\f"
+  "py-minor-expression assumes chars indicated may not compose a py-minor-expression, skip it. ")
+
+(defvar py-minor-expression-looking-regexp "[^ .=:#\t\r\n\f)]"
+  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, when looking-at or -back. ")
+;; (setq py-minor-expression-looking-regexp "[^ .=:#\t\r\n\f)]")
+
+(defvar py-not-minor-expression-regexp "[ .=:#\t\r\n\f)]"
+  "py-minor-expression assumes chars indicated probably will not compose a py-minor-expression. ")
+;; (setq py-not-minor-expression-regexp "[ .=:#\t\r\n\f)]")
 
 (defvar py-line-number-offset 0
   "When an exception occurs as a result of py-execute-region, a
@@ -1706,7 +1728,7 @@ comment."
       (if (ignore-errors (eq 4 (car-safe arg)))
           (insert "#")
         (when (and (eq last-command 'py-electric-rhombus) py-electric-rhombus-add-space (looking-back " "))
-          (forward-char -1)) 
+          (forward-char -1))
         (self-insert-command (prefix-numeric-value arg))
         (let ((orig (copy-marker (point)))
                     (indent (py-compute-indentation)))
@@ -2165,11 +2187,10 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
     (with-temp-buffer
       (shell-command (concat "python " filename) output-buffer error-buffer))))
 
-
 (defun py-execute-region-no-switch (start end &optional async)
   "Send the region to a common shell calling a Python interpreter.
 
-Ignores setting of `py-shell-switch-buffers-on-execute', buffer with region stays current. 
+Ignores setting of `py-shell-switch-buffers-on-execute', buffer with region stays current.
  "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute nil))
@@ -2261,7 +2282,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (write-region (point-min) (point-max) file nil t nil 'ask)
       (sit-for 0.1)
       (if (file-readable-p file)
-          (progn 
+          (progn
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
       (if py-shell-switch-buffers-on-execute
@@ -2844,8 +2865,8 @@ the new line indented."
              erg indent this-line)
         (setq indent
               (cond
-               ((and (bobp) 
-                     (eq origline (py-count-lines))) 
+               ((and (bobp)
+                     (eq origline (py-count-lines)))
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps))
@@ -2858,11 +2879,11 @@ the new line indented."
                   (goto-char (nth 2 pps))
                   (current-indentation)))
                ;; beginning of statement from before got beginning
-               ((and (looking-at "\"\"\"\\|'''")(not (bobp))) 
+               ((and (looking-at "\"\"\"\\|'''")(not (bobp)))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing))
                ;; comments
-               ((and (nth 8 pps) (eq origline (py-count-lines))) 
+               ((and (nth 8 pps) (eq origline (py-count-lines)))
                 (goto-char (nth 8 pps))
                 (skip-chars-backward " \t\r\n\f")
                 (py-compute-indentation orig origline closing))
@@ -2951,7 +2972,7 @@ the new line indented."
                ((and (< (point) orig)(looking-at py-assignement-re))
                 (current-indentation))
                ((and (looking-at py-block-or-clause-re)(eq origline (py-count-lines)))
-                (py-beginning-of-statement) 
+                (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing))
                ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
@@ -2964,7 +2985,7 @@ the new line indented."
                ((and (eq origline (py-count-lines))
                      (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
-                (py-compute-indentation orig origline closing)) 
+                (py-compute-indentation orig origline closing))
                (t (current-indentation))))
         (when (interactive-p) (message "%s" indent))
         indent))))
@@ -3411,7 +3432,9 @@ Put point inside the parentheses of a multiline import and hit
 ;; Expression
 (defalias 'py-backward-expression 'py-beginning-of-expression)
 (defun py-beginning-of-expression (&optional orig origline done)
-  "Go to the beginning of a python expression.
+  "Go to the beginning of a compound python expression.
+A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
+
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes.
 "
@@ -3468,7 +3491,8 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
 
 (defalias 'py-forward-expression 'py-end-of-expression)
 (defun py-end-of-expression (&optional orig origline done)
-  "Go to the end of a python expression.
+  "Go to the end of a compound python expression.
+A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 
@@ -3534,6 +3558,141 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (when done (forward-char -1))
           (setq done t)
           (py-end-of-expression orig origline done)))
+        (unless (eq (point) orig)
+          (setq erg (point)))
+        (when (interactive-p) (message "%s" erg))
+        erg))))
+
+;; Partial- or Minor Expression
+(defalias 'py-backward-partial-expression 'py-beginning-of-partial-expression)
+(defalias 'py-beginning-of-minor-expression 'py-beginning-of-partial-expression)
+(defun py-beginning-of-partial-expression (&optional orig origline done)
+  "Go to the beginning of a minor python expression.
+\".\" operators delimit a minor expression on their level.
+
+Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
+Operators however are left aside resp. limit py-expression designed for edit-purposes. 
+"
+  (interactive)
+  (save-restriction
+    (widen)
+    (unless (bobp)
+      (when (looking-at "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)")
+        (goto-char (1- (match-beginning 0)))
+        (skip-chars-backward " \t\r\n\f")
+        (forward-char -1)) 
+      (let ((orig (or orig (point)))
+            (cui (current-indentation))
+            (origline (or origline (py-count-lines)))
+            (pps (if (featurep 'xemacs)
+                     (parse-partial-sexp (point-min) (point))
+                   (syntax-ppss)))
+            (done done)
+            erg)
+        (setq erg
+              (cond
+               ;; if in string
+               ((and (nth 3 pps)(nth 8 pps)
+                     (save-excursion
+                       (ignore-errors
+                         (goto-char (nth 2 pps)))))
+                (goto-char (nth 2 pps))
+                (py-beginning-of-partial-expression orig origline))
+               ;; comments left, as strings are done
+               ((nth 8 pps)
+                (goto-char (1- (nth 8 pps)))
+                (py-beginning-of-partial-expression orig origline))
+               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")) 
+                (forward-line -1)
+                (unless (bobp)
+                  (end-of-line)
+                  (py-beginning-of-partial-expression orig origline)))
+               ((nth 1 pps)
+                (skip-chars-backward py-minor-expression-backward-regexp)
+                (point))
+               ((and (eq (point) orig) (not (bobp)) (looking-back py-minor-expression-looking-regexp))
+                (skip-chars-backward py-minor-expression-skip-regexp)
+                (py-beginning-of-partial-expression orig origline))
+               ((looking-at py-minor-expression-looking-regexp)
+                (point)) 
+               (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(point)))))
+        (when (interactive-p) (message "%s" erg))
+        erg))))
+
+(defalias 'py-forward-partial-expression 'py-end-of-partial-expression)
+(defalias 'py-end-of-minor-expression 'py-end-of-partial-expression)
+(defun py-end-of-partial-expression (&optional orig origline done)
+  "Go to the end of a minor python expression.
+\".\" operators delimit a minor expression on their level.
+
+Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
+
+Operators however are left aside resp. limit py-expression designed for edit-purposes. "
+  (interactive)
+  (save-restriction
+    (widen)
+    (unless (eobp)
+      (let*
+          ((orig (or orig (point)))
+           (origline (or origline (py-count-lines)))
+           (pps (if (featurep 'xemacs)
+                    (parse-partial-sexp (point-min) (point))
+                  (syntax-ppss)))
+           (done done)
+           erg
+           ;; use by scan-lists
+           parse-sexp-ignore-comments)
+        (cond
+         ((and (empty-line-p)(not done)(not (eobp)))
+          (while
+              (and (empty-line-p)(not done)(not (eobp)))
+            (forward-line 1))
+          (py-end-of-partial-expression orig origline done))
+         ;; inside string
+         ((nth 3 pps)
+          (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
+            (goto-char (match-end 0)))
+          (while
+              (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
+                   (nth 3
+                        (if (featurep 'xemacs)
+                            (parse-partial-sexp (point-min) (point))
+                          (syntax-ppss)))))
+          (py-end-of-partial-expression orig origline done))
+         ;; in comment
+         ((nth 4 pps)
+          (forward-line 1)
+          (py-end-of-partial-expression orig origline done))
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
+          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp))
+                      (beginning-of-line)))
+          (end-of-line)
+          ;;          (setq done t)
+          (skip-chars-backward " \t\r\n\f")
+          (py-end-of-partial-expression orig origline done))
+         ((and (nth 1 pps) (<= orig (nth 1 pps))) 
+          (goto-char (nth 1 pps))
+          (let ((parse-sexp-ignore-comments t))
+            (forward-list)
+            (setq done t) 
+            (py-end-of-partial-expression orig origline done)))
+         ((and (looking-at "\\.")(< orig (point)))
+          (point))
+         ((and (not done)(looking-at "\\.\\|=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!="))
+          (goto-char (match-end 0))
+          (when (< 0 (skip-chars-forward " \t\r\n\f"))
+            (forward-char 1))
+          (py-end-of-partial-expression orig origline done))
+         ((and (not done)(looking-at py-minor-expression-looking-regexp)(not (eobp)))
+          (skip-chars-forward py-minor-expression-forward-regexp)
+          (setq done t)
+          (py-end-of-partial-expression orig origline done))
+         ((and (not done)(looking-at py-not-minor-expression-regexp)(not (eobp)))
+          (skip-chars-forward py-not-minor-expression-skip-regexp)
+          (py-end-of-partial-expression orig origline done))
+         ((and (eq (point) orig) (not (eobp)))
+          (forward-char 1)
+          (py-end-of-partial-expression orig origline done)))
         (unless (eq (point) orig)
           (setq erg (point)))
         (when (interactive-p) (message "%s" erg))
@@ -3663,7 +3822,7 @@ http://docs.python.org/reference/compound_stmts.html
           (forward-line 1)
           (py-end-of-statement orig origline done))
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
-          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp)) 
+          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp))
                       (beginning-of-line))
             (setq done t))
           (end-of-line)
@@ -4047,7 +4206,7 @@ For stricter sense specify regexp. "
   (py-statement-opens-base py-def-or-class-re))
 
 ;; Mark forms
-(defalias 'py-expression 'py-mark-expression)
+
 (defun py-mark-expression ()
   "Mark expression at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4055,7 +4214,15 @@ For stricter sense specify regexp. "
   (py-mark-base "expression")
   (exchange-point-and-mark))
 
-(defalias 'py-statement 'py-mark-statement)
+(defun py-mark-partial-expression ()
+  "Mark partial-expression at point.
+  Returns beginning and end positions of marked area, a cons.
+\".\" operators delimit a partial-expression expression on it's level, that's the difference to compound expressions.
+ "
+  (interactive)
+  (py-mark-base "partial-expression")
+  (exchange-point-and-mark))
+
 (defun py-mark-statement ()
   "Mark statement at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4063,7 +4230,6 @@ For stricter sense specify regexp. "
   (py-mark-base "statement")
   (exchange-point-and-mark))
 
-(defalias 'py-block 'py-mark-block)
 (defun py-mark-block ()
   "Mark block at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4071,7 +4237,6 @@ For stricter sense specify regexp. "
   (py-mark-base "block")
   (exchange-point-and-mark))
 
-(defalias 'py-block-or-clause 'py-mark-block-or-clause)
 (defun py-mark-block-or-clause ()
   "Mark block-or-clause at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4090,7 +4255,6 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "def" py-mark-decorators)
     (exchange-point-and-mark)))
 
-(defalias 'py-def-or-class 'py-mark-def-or-class)
 (defun py-mark-def-or-class (&optional arg)
   "Mark def-or-class at point.
 
@@ -4101,7 +4265,6 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "def-or-class" py-mark-decorators)
     (exchange-point-and-mark)))
 
-(defalias 'py-class 'py-mark-class)
 (defun py-mark-class (&optional arg)
   "Mark class at point.
 
@@ -4113,7 +4276,6 @@ Returns beginning and end positions of marked area, a cons."
     (py-mark-base "class" py-mark-decorators)
     (exchange-point-and-mark)))
 
-(defalias 'py-clause 'py-mark-clause)
 (defun py-mark-clause ()
   "Mark clause at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4141,7 +4303,8 @@ Returns beginning and end positions of marked area, a cons."
     (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
 
-;; Copying
+;; Copy
+(defalias 'py-expression 'py-copy-expression)
 (defun py-copy-expression ()
   "Mark expression at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4149,13 +4312,18 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "expression")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-partial-expression 'py-copy-partial-expression)
+(defalias 'py-minor-expression 'py-partial-expression)
 (defun py-copy-partial-expression ()
   "Mark partial-expression at point.
-  Returns beginning and end positions of marked area, a cons. "
+  Returns beginning and end positions of marked area, a cons.
+
+\".\" operators delimit a partial-expression expression on it's level, that's the difference to compound expressions."
   (interactive)
   (let ((erg (py-mark-base "partial-expression")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-statement 'py-copy-statement)
 (defun py-copy-statement ()
   "Mark statement at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4170,6 +4338,7 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "block")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-block-or-clause 'py-copy-block-or-clause)
 (defun py-copy-block-or-clause ()
   "Mark block-or-clause at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4177,6 +4346,7 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "block-or-clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-def 'py-copy-def)
 (defun py-copy-def (&optional arg)
   "Mark def at point.
 
@@ -4188,6 +4358,7 @@ Returns beginning and end positions of marked area, a cons."
         (erg (py-mark-base "def" py-mark-decorators)))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-def-or-class 'py-copy-def-or-class)
 (defun py-copy-def-or-class (&optional arg)
   "Mark def-or-class at point.
 
@@ -4198,6 +4369,7 @@ Returns beginning and end positions of marked area, a cons."
         (erg (py-mark-base "def-or-class" py-mark-decorators)))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-class 'py-copy-class)
 (defun py-copy-class (&optional arg)
   "Mark class at point.
 
@@ -4209,6 +4381,7 @@ Returns beginning and end positions of marked area, a cons."
         (erg (py-mark-base "class" py-mark-decorators)))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
+(defalias 'py-clause 'py-copy-clause)
 (defun py-copy-clause ()
   "Mark clause at point.
   Returns beginning and end positions of marked area, a cons. "
@@ -4727,6 +4900,18 @@ Used with `eval-after-load'."
     (save-excursion
       (py-end-of-expression)
       (py-beginning-of-expression)
+      (when (or (eq orig (point)))
+        (when (interactive-p)
+          (message "%s" orig))
+        orig))))
+
+(defun py-beginning-of-partial-expression-p ()
+  (interactive)
+  "Returns position, if cursor is at the beginning of a expression, nil otherwise. "
+  (let ((orig (point)))
+    (save-excursion
+      (py-end-of-partial-expression)
+      (py-beginning-of-partial-expression)
       (when (or (eq orig (point)))
         (when (interactive-p)
           (message "%s" orig))
