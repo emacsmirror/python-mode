@@ -2229,8 +2229,6 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
-    (when (and py-shell-switch-buffers-on-execute (one-window-p))
-      (split-window-vertically))
     (save-excursion (other-window 1)
                     (set-buffer procbuf))
     (setq start (py-fix-start start end))
@@ -2262,6 +2260,8 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (set-buffer filebuf)
       (write-region (point-min) (point-max) file nil t nil 'ask)
       (sit-for 0.1)
+      (if (file-readable-p file)
+          (progn 
       (py-execute-file proc file)
       (setq py-exception-buffer (cons file (current-buffer)))
       (if py-shell-switch-buffers-on-execute
@@ -2271,7 +2271,8 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (pop-to-buffer regbuf)
         (message "Output buffer: %s" procbuf))
       (sit-for 0.1)
-      (py-cleanup filebuf file)))))
+            (py-cleanup filebuf file))
+        (message "File not readable: %s" "Do you have write permissions?"))))))
 
 (defun py-shell-command-on-region (start end)
   "Execute region in a shell.
