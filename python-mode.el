@@ -2250,8 +2250,6 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
-    (save-excursion (other-window 1)
-                    (set-buffer procbuf))
     (setq start (py-fix-start start end))
     (py-execute-intern start end regbuf procbuf proc temp file filebuf name)))
 
@@ -4297,9 +4295,9 @@ Returns beginning and end positions of marked area, a cons."
       (save-excursion
         (setq beg (py-beginning-of-decorator))))
     (setq end (funcall endform))
-    (progn
       (push-mark beg t t)
-      (goto-char end))
+    (unless end (when (< beg (point))
+                  (setq end (point)))) 
     (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
 
