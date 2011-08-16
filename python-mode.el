@@ -3110,11 +3110,10 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
           (setq erg (py-travel-current-indent (cons ind (point)))))
       (py-look-downward-for-beginning regexp)
       (unless (eobp)(py-end-base regexp orig iact)))
-    (if (and (< orig (point))(not (eobp)))
+    (if (< orig (point))
       (setq erg (point))
       (setq erg (py-look-downward-for-beginning regexp))
-      (when erg (py-end-base regexp orig iact))
-      )
+      (when erg (py-end-base regexp orig iact)))
     (when iact (message "%s" erg))
     erg))
 
