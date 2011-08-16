@@ -681,7 +681,7 @@ if foo:
             self.Tasdf( afsd ),
             self.Tasdf( asdf ),
             )
-    )
+        )
 "))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-tests-intern 'py-partial-expression-base arg teststring)))

@@ -135,6 +135,11 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-closing-list-dedents-bos nil
+  "If non-nil, closing parentesis dedents onto column of statement, otherwise keeps additional `py-indent-offset', default is nil "
+  :type 'boolean
+  :group 'python)
+
 ;; Execute stuff start
 (defcustom py-python-command "python"
   "*Shell command used to start Python interpreter."
@@ -3011,7 +3016,9 @@ the new line indented."
                    ((< 0 (- origline this-line))
                     (if (< 1 (- origline this-line))
                         (if closing
+                            (if py-closing-list-dedents-bos
                             (current-indentation)
+                              (+ (current-indentation) py-indent-offset)) 
                           (py-fetch-previous-indent orig))
                       (cond ((looking-at "\\s([ \t]*$")
                              (if

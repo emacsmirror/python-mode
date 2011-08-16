@@ -93,6 +93,7 @@
          'indent-honor-arglist-whitespaces-lp:822540-test
          'comments-indent-honor-setting-lp:824427-test
          'infinite-loop-after-tqs-lp:826044-test
+         'closing-list-lp:826144-test
 
          )))
 
@@ -1443,15 +1444,16 @@ if foo:
             ' -- foo bar baz--',
             self.Tasdf( afsd ),
             self.Tasdf( asdf ),
-            )
+        )
     )
 "))
   (when load-branch-function (funcall load-branch-function))
   (py-bug-tests-intern 'closing-parentesis-indent-lp:821820-base arg teststring)))
 
 (defun closing-parentesis-indent-lp:821820-base ()
-  (forward-line -1) 
-  (assert (eq 4 (py-compute-indentation)) nil "closing-parentesis-indent-lp:821820-test failed"))
+  (let ((py-closing-list-dedents-bos t))
+    (forward-line -1) 
+    (assert (eq 4 (py-compute-indentation)) nil "closing-parentesis-indent-lp:821820-test failed")))
 
 (defun py-indent-line-lp:822532-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1522,6 +1524,32 @@ hey
 
 (defun infinite-loop-after-tqs-lp:826044-base ()
     (assert (eq 0 (py-newline-and-indent)) nil "infinite-loop-after-tqs-lp:826044-test failed"))
+
+
+(defun closing-list-lp:826144-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo:
+    bar.append(
+        ht(
+            T.a('Sorted Foo', href='#Blub', ),
+            ' -- foo bar baz--',
+            self.Tasdf( afsd ),
+            self.Tasdf( asdf ),
+            )
+        )
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'closing-list-lp:826144-base arg teststring)))
+
+(defun closing-list-lp:826144-base ()
+  (goto-char 241)
+  (assert (eq 12 (py-compute-indentation)) nil "infinite-loop-after-tqs-lp:826044-test failed")
+  (goto-char 251)
+  (assert (eq 8 (py-compute-indentation)) nil "infinite-loop-after-tqs-lp:826044-test failed")
+)
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
