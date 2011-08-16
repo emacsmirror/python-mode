@@ -42,7 +42,7 @@
          'py-electric-delete-test
          'UnicodeEncodeError-python3-test
          'dict-error-test
-         'py-expand-abbrev-pst-pdb.set_trace-test
+;;         'py-expand-abbrev-pst-pdb.set_trace-test
          'near-bob-beginning-of-statement-test
          'bob-beginning-of-statement-test
          'honor-comments-indent-test
@@ -64,6 +64,7 @@
          'py-insert-super-python3-test
          'args-list-first-line-indent-test
          'py-partial-expression-test
+         'py-execute-block-test
 
 )))
 
@@ -693,6 +694,17 @@ if foo:
     (assert (eq 177 (py-beginning-of-partial-expression)) nil "py-partial-expression-test #3 failed")
     (assert (eq 181 (py-end-of-partial-expression)) nil "py-partial-expression-test #3 failed")
 )
+
+(defun py-execute-block-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "if True:
+    print \"asdf\""))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-execute-block-base arg teststring)))
+
+(defun py-execute-block-base ()
+  (beginning-of-line) 
+  (assert (eq nil (py-execute-block)) nil "py-execute-block-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

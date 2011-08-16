@@ -2257,7 +2257,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (let (shell)
     (set-buffer filebuf)
     (insert-buffer-substring regbuf start end)
-    (py-if-needed-insert-if)
+;;    (py-if-needed-insert-if)
     (py-insert-coding)
     (py-if-needed-insert-shell name)
     (cond
@@ -2579,6 +2579,105 @@ subtleties, including the use of the optional ASYNC argument."
     (insert string)
     (py-execute-region (point-min) (point-max) async)))
 
+(defun py-execute-block ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-p)
+                       (py-beginning-of-block))
+                 (push-mark)))
+          (end (py-end-of-block)))
+      (py-execute-region beg end))))
+
+(defun py-execute-block-or-clause ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-or-clause-p)
+                       (py-beginning-of-block-or-clause))
+                 (push-mark)))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end))))
+
+(defun py-execute-class ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-class-p)
+                       (py-beginning-of-class))
+                 (push-mark)))
+          (end (py-end-of-class)))
+      (py-execute-region beg end))))
+
+(defun py-execute-clause ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-clause-p)
+                       (py-beginning-of-clause))
+                 (push-mark)))
+          (end (py-end-of-clause)))
+      (py-execute-region beg end))))
+
+(defun py-execute-def ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-p)
+                       (py-beginning-of-def))
+                 (push-mark)))
+          (end (py-end-of-def)))
+      (py-execute-region beg end))))
+
+(defun py-execute-def-or-class ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-or-class-p)
+                       (py-beginning-of-def-or-class))
+                 (push-mark)))
+          (end (py-end-of-def-or-class)))
+      (py-execute-region beg end))))
+
+(defun py-execute-expression ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-expression-p)
+                       (py-beginning-of-expression))
+                 (push-mark)))
+          (end (py-end-of-expression)))
+      (py-execute-region beg end))))
+
+(defun py-execute-partial-expression ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-partial-expression-p)
+                       (py-beginning-of-partial-expression))
+                 (push-mark)))
+          (end (py-end-of-partial-expression)))
+      (py-execute-region beg end))))
+
+(defun py-execute-statement ()
+  "Send python-form at point as is to Python interpreter. "
+  (interactive "*")
+  (save-excursion 
+    (let ((beg (prog1
+                   (or (py-beginning-of-statement-p)
+                       (py-beginning-of-statement))
+                 (push-mark)))
+          (end (py-end-of-statement)))
+      (py-execute-region beg end))))
+
 (defun py-if-needed-insert-shell (&optional name)
   (unless (py-choose-shell-by-shebang)
     (let ((erg (or (downcase name)
@@ -2866,6 +2965,10 @@ the new line indented."
                ((and (bobp)
                      (eq origline (py-count-lines)))
                 (current-indentation))
+               ((and (bobp)(py-statement-opens-block-p))
+                (+ py-indent-offset (current-indentation)))
+               ((and (bobp)(not (py-statement-opens-block-p)))
+                (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps))
                 (ignore-errors (goto-char (nth 2 pps)))
@@ -2975,8 +3078,8 @@ the new line indented."
                ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
                ((and (eq origline (py-count-lines))
-                     (save-excursion (progn (setq erg (py-go-to-keyword py-block-or-clause-re -1)))
-                                     (ignore-errors (< orig (py-end-of-block-or-clause)))))
+                     (save-excursion (and (setq erg (py-go-to-keyword py-block-or-clause-re -1))
+                                          (ignore-errors (< orig (py-end-of-block-or-clause))))))
                 (+ (car erg) py-indent-offset))
                ((py-statement-opens-block-p)
                 (+ py-indent-offset (current-indentation)))
