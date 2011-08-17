@@ -65,6 +65,7 @@
          'args-list-first-line-indent-test
          'py-partial-expression-test
          'py-execute-block-test
+         'multiline-list-indent-test
 
 )))
 
@@ -705,6 +706,16 @@ if foo:
 (defun py-execute-block-base ()
   (beginning-of-line) 
   (assert (eq nil (py-execute-block)) nil "py-execute-block-test failed"))
+
+(defun multiline-list-indent-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "print [1, 2,
+    3, 4]"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'multiline-list-indent-base arg teststring)))
+
+(defun multiline-list-indent-base ()
+    (assert (eq 7 (py-compute-indentation)) nil "multiline-list-indent-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

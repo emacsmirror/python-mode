@@ -1233,7 +1233,7 @@ i.e. the limit on how far back to scan."
            (syntax-ppss))))
 
 (defvar py-shell-name nil)
-(make-variable-buffer-local 'py-shell-name)
+(make-variable-buffer-local 'py-which-shell)
 
 
 ;;;; Imenu.
@@ -3031,7 +3031,7 @@ the new line indented."
                                    (+ (current-column) (* 2 py-indent-offset)))
                                (back-to-indentation)
                                (+ (current-column) py-indent-offset)))
-                            ((looking-at "\\s([ \t]+\\([^ \t]+\\)$")
+                            ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
                              (goto-char (match-beginning 1))
                              (current-column))
                             (t (+ (current-column) (* (nth 0 pps)))))))
@@ -3072,6 +3072,9 @@ the new line indented."
                ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (+ (current-indentation) py-indent-offset))
+               ((and (< (current-indentation) (current-column)))
+                (back-to-indentation) 
+                (py-compute-indentation orig origline closing))
                ((not (py-beginning-of-statement-p))
                 (if (bobp)
                     (current-column)
