@@ -1233,7 +1233,7 @@ i.e. the limit on how far back to scan."
            (syntax-ppss))))
 
 (defvar py-shell-name nil)
-(make-variable-buffer-local 'py-which-shell)
+(make-variable-buffer-local 'py-shell-name)
 
 
 ;;;; Imenu.
