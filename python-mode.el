@@ -154,19 +154,19 @@ regardless of where in the line point is when the TAB command is used."
   :tag "Jython Command")
 
 (defcustom py-encoding-string " # -*- coding: utf-8 -*-"
-  "Detecting the shell in head of file. "
+  "Default string specifying encoding in the heading of file. "
   :type 'string
-  :group 'convenience)
+  :group 'python)
 
 (defcustom py-shebang-startstring "#! /bin/env"
   "Detecting the shell in head of file. "
   :type 'string
-  :group 'convenience)
+  :group 'python)
 
 (defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([pj]ython[^ \t\n]*\\)"
   "Detecting the shell in head of file. "
   :type 'regexp
-  :group 'convenience)
+  :group 'python)
 
 (defcustom py-default-interpreter "python"
   "*Which Python interpreter is used by default.
