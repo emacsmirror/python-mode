@@ -120,13 +120,13 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
-(defcustom py-electric-rhombus-t t
-  "If \"#\" should call `py-electric-rhombus'. Default is `t'. "
+(defcustom py-electric-comment-p t
+  "If \"#\" should call `py-electric-comment'. Default is `t'. "
   :type 'boolean
   :group 'python)
 
-(defcustom py-electric-rhombus-add-space t
-  "If py-electric-rhombus should add a space.  Default is `t'. "
+(defcustom py-electric-comment-add-space-p t
+  "If py-electric-comment should add a space.  Default is `t'. "
   :type 'boolean
   :group 'python)
 
@@ -997,7 +997,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
   (let ((map (make-sparse-keymap)))
     ;; electric keys
     (define-key map ":" 'py-electric-colon)
-    (define-key map "#" 'py-electric-rhombus)
+    (define-key map "#" 'py-electric-comment)
     ;; indentation level modifiers
     (define-key map "\C-c\C-l"  'py-shift-region-left)
     (define-key map "\C-c\C-r"  'py-shift-region-right)
@@ -1720,8 +1720,8 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
                   (backward-to-indentation 1))
                 (not (looking-at py-no-outdent-re))))))
 
-(defun py-electric-rhombus (arg)
-  "Insert a rhombus. If starting a comment, indent accordingly.
+(defun py-electric-comment (arg)
+  "Insert a comment. If starting a comment, indent accordingly.
 If a numeric
 argument ARG is provided, that many colons are inserted
 non-electrically.
@@ -1729,20 +1729,22 @@ With universal-prefix-key C-u a \"#\"
 Electric behavior is inhibited inside a string or
 comment."
   (interactive "*P")
-  (if py-electric-rhombus-t
+  (if py-electric-comment-p
       (if (ignore-errors (eq 4 (car-safe arg)))
           (insert "#")
-        (when (and (eq last-command 'py-electric-rhombus) py-electric-rhombus-add-space (looking-back " "))
+        (when (and (eq last-command 'py-electric-comment) (looking-back " "))
           (forward-char -1))
-        (self-insert-command (prefix-numeric-value arg))
+        (if (interactive-p) (self-insert-command (prefix-numeric-value arg))
+          (insert "#"))
         (let ((orig (copy-marker (point)))
                     (indent (py-compute-indentation)))
           (unless (eq (current-indentation) indent)
                 (goto-char orig)
                   (beginning-of-line)
                   (delete-horizontal-space)
-            (indent-to indent))
-                  (when py-electric-rhombus-add-space
+            (indent-to indent)
+            (goto-char (1+ orig)))
+                  (when py-electric-comment-add-space-p
             (unless (looking-back "[ \t]")
               (insert " "))))
         (setq last-command this-command))

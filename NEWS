@@ -4,9 +4,9 @@ Python Mode News
 New in version 6.0.2
 --------------------
 
-- py-electric-rhombus
+- py-electric-comment
 
-  "Insert a rhombus. If starting a comment, indent
+  "Insert a comment. If starting a comment, indent
    accordingly. If a numeric argument ARG is provided,
    that many colons are inserted non-electrically. With
    universal-prefix-key C-u a \"#\" Electric behavior

@@ -108,8 +108,10 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall comments-indent-honor-setting-lp:824427-test \
 --funcall infinite-loop-after-tqs-lp:826044-test \
 --funcall closing-list-lp:826144-test \
---funcall multiline-list-indent-test \
+--funcall py-electric-comment-add-space-lp:828398-test \
+--funcall py-electric-comment-add-space-t-lp:828398-test \
 \
+--funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \
 --funcall py-end-of-block-test \
 --funcall py-beginning-of-block-or-clause-test \

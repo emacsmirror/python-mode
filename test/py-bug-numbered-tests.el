@@ -94,6 +94,8 @@
          'comments-indent-honor-setting-lp:824427-test
          'infinite-loop-after-tqs-lp:826044-test
          'closing-list-lp:826144-test
+         'py-electric-comment-add-space-lp:828398-test
+         'py-electric-comment-add-space-t-lp:828398-test
 
          )))
 
@@ -1550,6 +1552,28 @@ if foo:
   (goto-char 251)
   (assert (eq 8 (py-compute-indentation)) nil "infinite-loop-after-tqs-lp:826044-test failed")
 )
+
+(defun py-electric-comment-add-space-lp:828398-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring ""))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-electric-comment-add-space-lp:828398-base arg teststring)))
+
+(defun py-electric-comment-add-space-lp:828398-base ()
+  (let ((py-electric-comment-add-space-p nil))
+    (py-electric-comment 1)
+    (assert (looking-back "#") nil "py-electric-comment-add-space-lp:828398-test failed")))
+
+(defun py-electric-comment-add-space-t-lp:828398-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring ""))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-electric-comment-add-space-t-lp:828398-base arg teststring)))
+
+(defun py-electric-comment-add-space-t-lp:828398-base ()
+  (let ((py-electric-comment-add-space-p t))
+    (py-electric-comment 1)
+    (assert (looking-back " ") nil "py-electric-comment-add-space-lp:828398-test failed")))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
