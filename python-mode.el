@@ -122,8 +122,8 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
-(defcustom py-electric-comment-add-space-p t
-  "If py-electric-comment should add a space.  Default is `t'. "
+(defcustom py-electric-comment-add-space-p nil
+  "If py-electric-comment should add a space.  Default is `nil'. "
   :type 'boolean
   :group 'python)
 
