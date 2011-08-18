@@ -160,7 +160,7 @@ regardless of where in the line point is when the TAB command is used."
   :type 'string
   :group 'python)
 
-(defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*/bin/env[ \t]\\)?\\([pj]ython[^ \t\n]*\\)"
+(defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*[ \t]\\)?[^ \t\n]*\\([pj]ython[^ \t\n]*\\)"
   "Detecting the shell in head of file. "
   :type 'regexp
   :group 'python)
