@@ -2711,25 +2711,20 @@ Inserts an incentive true form \"if 1:\\n.\" "
 (defun py-cleanup (buf file)
   "Deletes temporary buffer and file if `py-cleanup-temporary' is t. "
   (save-excursion
-    (when py-cleanup-temporary
       (set-buffer buf)
       (set-buffer-modified-p nil)
-      (kill-buffer buf)
-      (delete-file file))))
+    ;;      (kill-buffer buf)
+    (delete-file file)))
 
 (defun py-fix-start (start end)
   "Internal use by py-execute... functions.
 Avoid empty lines at the beginning. "
   (goto-char start)
-  (beginning-of-line)
-  ;; Skip ahead to the first non-blank line
-  (while (and (looking-at "\\s *$")
-              (< (point) end))
-    (forward-line 1))
-  (or (< start end)
-      (error "Region is empty"))
+  (let ((beg (copy-marker start)))
+    (while (empty-line-p)
+      (delete-region (line-beginning-position) (1+ (line-end-position))))
   (setq py-line-number-offset (count-lines 1 start))
-  (point))
+    beg))
 
 
 (defun py-jump-to-exception (file line)

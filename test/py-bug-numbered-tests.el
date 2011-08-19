@@ -96,6 +96,7 @@
          'closing-list-lp:826144-test
          'py-electric-comment-add-space-lp:828398-test
          'py-electric-comment-add-space-t-lp:828398-test
+         'execute-indented-code-lp:828314-test
 
          )))
 
@@ -1575,5 +1576,19 @@ if foo:
     (py-electric-comment 1)
     (assert (looking-back " ") nil "py-electric-comment-add-space-lp:828398-test failed")))
 
+(defun execute-indented-code-lp:828314-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "if __name__ == \"__main__\":
+    print \"hello\"
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'execute-indented-code-lp:828314-base arg teststring)))
+
+(defun execute-indented-code-lp:828314-base ()
+  (goto-char 32)
+  (push-mark)
+  (assert (eq nil (py-execute-region (point) (progn (end-of-line)(point)))) nil "execute-indented-code-lp:828314-test failed"))
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
+

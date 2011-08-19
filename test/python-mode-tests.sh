@@ -110,6 +110,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall closing-list-lp:826144-test \
 --funcall py-electric-comment-add-space-lp:828398-test \
 --funcall py-electric-comment-add-space-t-lp:828398-test \
+--funcall execute-indented-code-lp:828314-test \
 \
 --funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \
@@ -143,9 +144,9 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall eofs-attribut-test \
 --funcall args-list-first-line-indent-test \
 --funcall py-partial-expression-test \
+--funcall py-execute-block-test \
 --funcall py-insert-super-python2-test \
 --funcall py-insert-super-python3-test \
---funcall py-execute-block-test \
 --funcall UnicodeEncodeError-python3-test 
 
 
