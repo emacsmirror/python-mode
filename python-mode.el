@@ -198,7 +198,7 @@ mode buffer is visited during an Emacs session.  After that, use
   :group 'python
   :tag "Jython Command Args")
 
-(defcustom py-cleanup-temporary  t
+(defcustom py-cleanup-temporary  nil
  "If temporary buffers and files used by functions executing region  should be deleted afterwards. "
 
 :type 'boolean
@@ -430,6 +430,12 @@ Default is `t'."
 
 (defcustom py-current-defun-delay  2
  "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. "
+
+:type 'number
+:group 'python)
+
+(defcustom py-send-receive-delay  5
+ "Seconds to wait for output, used by `python-send-receive'. "
 
 :type 'number
 :group 'python)
@@ -2585,7 +2591,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-block ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-block-p)
@@ -2596,7 +2602,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-block-or-clause ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-block-or-clause-p)
@@ -2607,7 +2613,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-class ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-class-p)
@@ -2618,7 +2624,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-clause ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-clause-p)
@@ -2629,7 +2635,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-def ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-def-p)
@@ -2640,7 +2646,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-def-or-class ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-def-or-class-p)
@@ -2651,7 +2657,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-expression ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-expression-p)
@@ -2662,7 +2668,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-partial-expression ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-partial-expression-p)
@@ -2673,7 +2679,7 @@ subtleties, including the use of the optional ASYNC argument."
 
 (defun py-execute-statement ()
   "Send python-form at point as is to Python interpreter. "
-  (interactive "*")
+  (interactive)
   (save-excursion 
     (let ((beg (prog1
                    (or (py-beginning-of-statement-p)
@@ -2891,7 +2897,7 @@ ARG non-nil), ignore dedenting rules for block closing statements
 
 This function is normally bound to `indent-line-function' so
 \\[indent-for-tab-command] will call it."
-  (interactive "P")
+  (interactive "*P")
   (let* ((ci (current-indentation))
          (move-to-indentation-p (<= (current-column) ci))
          (need (py-compute-indentation))
@@ -2924,7 +2930,7 @@ This is just `strives to' because correct indentation can't be computed
 from scratch for Python code.  In general, deletes the whitespace before
 point, inserts a newline, and takes an educated guess as to how you want
 the new line indented."
-  (interactive)
+  (interactive "*")
   (let ((ci (current-indentation)))
     (if (< ci (current-column))         ; if point beyond indentation
         (newline-and-indent)
@@ -4051,8 +4057,8 @@ Returns position reached, if any, nil otherwise.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive "P\\np")
-  (let* ((regexp (if arg
+  (interactive "P")
+  (let* ((regexp (if (eq 4 (prefix-numeric-value arg)) 
                      py-block-re
                    py-block-or-clause-re))
          (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
@@ -4392,14 +4398,15 @@ Returns beginning and end positions of marked area, a cons."
          (endform (intern-soft (concat "py-end-of-" form)))
          (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
          (orig (point))
-         beg end)
+         beg end erg)
     (setq beg (if
                   (setq beg (funcall begcheckform))
                   beg
                 (funcall begform)))
     (when py-mark-decorators
       (save-excursion
-        (setq beg (py-beginning-of-decorator))))
+        (when (setq erg (py-beginning-of-decorator)) 
+        (setq beg erg))))
     (setq end (funcall endform))
       (push-mark beg t t)
     (unless end (when (< beg (point))

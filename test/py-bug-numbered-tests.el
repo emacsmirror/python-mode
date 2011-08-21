@@ -16,9 +16,6 @@
 ;;
 ;;; Code:
 
-(add-to-list 'load-path default-directory)
-
-(require 'python-mode-test)
 (defvar bug-numbered-tests nil
   "Tests following reports at https://bugs.launchpad.net/python-mode")
 
@@ -1587,7 +1584,7 @@ if foo:
 (defun execute-indented-code-lp:828314-base ()
   (goto-char 32)
   (push-mark)
-  (assert (eq nil (py-execute-region (point) (progn (end-of-line)(point)))) nil "execute-indented-code-lp:828314-test failed"))
+  (assert (py-execute-region (point) (progn (end-of-line)(point))) nil "execute-indented-code-lp:828314-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
