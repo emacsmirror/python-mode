@@ -4619,17 +4619,18 @@ Returns beginning and end positions of marked area, a cons."
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-(defun py-find-imports ()
-  (let ((imports ""))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9]+ +import .*" nil t)
-        (setq imports
-              (concat
-               imports
-               (buffer-substring-no-properties (match-beginning 0) (match-end 0)) "\n"))))
-    imports))
+;; Documentation functions
+;; (defun ar-py-find-imports ()
+;;   (let ((imports ""))
+;;     (save-excursion
+;;       (goto-char (point-min))
+;;       (while (re-search-forward
+;;               "^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9]+ +import .*" nil t)
+;;         (setq imports
+;;               (concat
+;;                imports
+;;                (buffer-substring-no-properties (match-beginning 0) (match-end 0)) "\n"))))
+;;     imports))
 
 (defalias 'py-help-at-point 'py-describe-symbol)
 (defun py-describe-symbol ()
@@ -4658,12 +4659,6 @@ Returns beginning and end positions of marked area, a cons."
     (when (file-readable-p file)
       (delete-file file))))
 
-;; Documentation functions
-
-;; dump the long form of the mode blurb; does the usual doc escapes,
-;; plus lines of the form ^[vc]:name$ to suck variable & command docs
-;; out of the right places, along with the keys they're on & current
-;; values
 (defun py-dump-help-string (str)
   (with-output-to-temp-buffer "*Help*"
     (let ((locals (buffer-local-variables))
@@ -5001,6 +4996,35 @@ Used with `eval-after-load'."
 	 ("(python-lib)Class-Exception-Object Index" nil "")
 	 ("(python-lib)Function-Method-Variable Index" nil "")
 	 ("(python-lib)Miscellaneous Index" nil ""))))))
+
+(defun py-find-imports ()
+  "Find top-level imports, updating `python-imports'."
+  (interactive)
+  (save-excursion
+      (let (lines)
+	(goto-char (point-min))
+	(while (re-search-forward "^import\\>\\|^from\\>" nil t)
+	  (unless (syntax-ppss-context (syntax-ppss))
+	    (let ((start (line-beginning-position)))
+	      ;; Skip over continued lines.
+	      (while (and (eq ?\\ (char-before (line-end-position)))
+			  (= 0 (forward-line 1)))
+		t)
+	      (push (buffer-substring start (line-beginning-position 2))
+		    lines))))
+	(setq python-imports
+	      (if lines
+		  (apply #'concat
+			 (nreverse lines))
+		"None"))
+	(when lines
+	  (set-text-properties 0 (length python-imports) nil python-imports)
+	  ;; The output ends up in the wrong place if the string we
+	  ;; send contains newlines (from the imports).
+	  (setq python-imports
+		(replace-regexp-in-string "\n" "\\n"
+					  (format "%S" python-imports) t t)))))
+  (when (interactive-p) (message "%s" (car (read-from-string python-imports)))))
 
 
 ;; Helper functions
