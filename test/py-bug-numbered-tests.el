@@ -1582,9 +1582,12 @@ if foo:
   (py-bug-tests-intern 'execute-indented-code-lp:828314-base arg teststring)))
 
 (defun execute-indented-code-lp:828314-base ()
-  (goto-char 32)
-  (push-mark)
-  (assert (py-execute-region (point) (progn (end-of-line)(point))) nil "execute-indented-code-lp:828314-test failed"))
+  (let ((debug-on-error t))
+    (goto-char 32)
+    (push-mark)
+    (progn
+      (py-execute-region (point) (progn (end-of-line)(point)))
+      (when (interactive-p) (message "%s" "execute-indented-code-lp:828314-test passed")))))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
