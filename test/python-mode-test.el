@@ -439,7 +439,7 @@ b = \"asdf\"
   (py-bug-tests-intern 'assignement-after-block-base arg teststring)))
 
 (defun assignement-after-block-base ()
-    (forward-line -1) 
+    (forward-line -1)
     (assert (eq 0 (py-compute-indentation)) nil "assignement-after-block-test failed"))
 
 (defun py-beginning-of-clause-test (&optional arg load-branch-function)
@@ -569,7 +569,7 @@ class OrderedDict1(dict):
 
 (defun py-insert-super-python2-base ()
     (py-insert-super)
-    (back-to-indentation) 
+    (back-to-indentation)
     (assert (looking-at "super(OrderedDict1, self).__init__(d={})") nil "py-insert-super-python2-test failed"))
 
 (defun py-insert-super-python3-test (&optional arg load-branch-function)
@@ -592,7 +592,7 @@ class OrderedDict1(dict):
 
 (defun py-insert-super-python3-base ()
     (py-insert-super)
-    (back-to-indentation) 
+    (back-to-indentation)
     (assert (looking-at "super().__init__(d={})") nil "py-insert-super-python3-test failed"))
 
 (defun py-indent-after-assigment-test (&optional arg load-branch-function)
@@ -631,12 +631,12 @@ foo = {
 
 (defun leave-dict-base ()
     (goto-char (point-min))
-    (py-end-of-statement) 
+    (py-end-of-statement)
     (assert (eq 431 (point)) nil "leave-dict-test failed"))
 
 (defun eofs-attribut-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "def foo( baz ):  # version 
+  (let ((teststring "def foo( baz ):  # version
     return baz.replace(\"\+\",\"§\").replace(\"_\", \" \").replace(\"ﬁ\",\"fr\").replace(
         \"ﬂ\", \"fg\").replace(\"--\", \"ü\")
 "))
@@ -645,7 +645,7 @@ foo = {
 
 (defun eofs-attribut-base ()
     (forward-line -2)
-    (assert (eq 143 (py-end-of-statement))  nil "eofs-attribut-test failed"))
+    (assert (eq 142 (py-end-of-statement))  nil "eofs-attribut-test failed"))
 
 (defun args-list-first-line-indent-test (&optional arg load-branch-function)
   (interactive "p")
@@ -719,6 +719,25 @@ if foo:
 (defun multiline-list-indent-base ()
     (assert (eq 7 (py-compute-indentation)) nil "multiline-list-indent-test failed"))
 
+(defun no-switch-no-split-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+print u'\\xA9'
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'no-switch-no-split-base arg teststring)))
+
+(defun no-switch-no-split-base ()
+  (let ((oldbuf (current-buffer))
+        py-split-windows-on-execute py-shell-switch-buffers-on-execute)
+    (goto-char 49)
+    (push-mark)
+    (end-of-line)
+    (py-execute-region (line-beginning-position) (point))
+    (assert (window-full-height-p) "no-switch-no-split-test failed")
+    (assert (eq (current-buffer) oldbuf))))
+
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
-

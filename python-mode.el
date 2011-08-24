@@ -1057,47 +1057,55 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map [(control return)] 'py-newline-and-dedent)
     (easy-menu-define py-menu map "Python Mode menu"
       `("Python"
-	:help "Python-specific Features"
-	["Shift region left" py-shift-left :active mark-active
-	 :help "Shift by a single indentation step"]
-	["Shift region right" py-shift-right :active mark-active
-	 :help "Shift by a single indentation step"]
+	:help "Python-specific features"
+	["Execute statement" py-execute-statement 
+	 :help "Send statement at point to Python interpreter. "]
+	["Execute block" py-execute-block
+	 :help "Send compound statement at point to Python interpreter. "]
+        ["Execute def" py-execute-def
+	 :help "Send function at point to Python interpreter. "]
+        ["Execute region" py-execute-region
+	 :help "Send region to Python interpreter. "]
+        ["Execute buffer" py-execute-buffer
+	 :help "Send buffer to Python interpreter. "]
 	"-"
-	["Mark block" py-mark-block
-	 :help "Mark innermost block at point"]
-	["Mark def/class" mark-defun
-	 :help "Mark innermost definition at point"]
+	["Copy block" py-copy-block
+	 :help "Copy innermost compound statement at point"]
+	["Copy def-or-class" py-copy-def-or-class
+	 :help "Copy innermost definition at point"]
+       	["Copy statement" py-copy-statement
+	 :help "Copy statement at point"]
+	["Copy expression" py-copy-expression
+	 :help "Copy expression at point"]
+	["Copy partial-expression" py-copy-partial-expression
+	 :help "\".\" operators delimit a partial-expression expression on it's level"]
 	"-"
-	["Start of block" py-beginning-of-block
-	 :help "Go to start of innermost definition at point"]
+	["Beginning of block" py-beginning-of-block
+	 :help "Go to start of innermost compound statement at point"]
 	["End of block" py-end-of-block
-	 :help "Go to end of innermost definition at point"]
-	["Start of def/class" beginning-of-defun
+	 :help "Go to end of innermost compound statement at point"]
+	["Beginning of Def-or-Class" py-beginning-of-def-or-class
 	 :help "Go to start of innermost definition at point"]
-	["End of def/class" end-of-defun
-	 :help "Go to end of innermost definition at point"]
+	["End of Def-or-Class" py-end-of-def-or-class
+	 :help "Go to end of innermost function definition at point"]
+	["Beginning of-class" beginning-of-class
+	 :help "Go to start of class definition "]
+	["End of Class" py-end-of-class
+	 :help "Go to end of class definition "]
 	"-"
         ("Templates..."
          :help "Expand templates for compound statements"
          :filter (lambda (&rest junk)
                    (abbrev-table-menu python-mode-abbrev-table)))
 	"-"
-;; 	["Start interpreter" py-shell
-;; 	 :help "Run `inferior' Python in separate buffer"]
-	["Import/reload file" py-execute-import-or-reload
-	 :help "Load into inferior Python session"]
-	["Eval buffer" py-execute-buffer
-	 :help "Evaluate buffer en bloc in inferior Python session"]
-	["Eval region" py-execute-region :active mark-active
-	 :help "Evaluate region en bloc in inferior Python session"]
-	["Eval def/class" py-execute-defun
-	 :help "Evaluate current definition in inferior Python session"]
 	["Switch to interpreter" py-shell
 	 :help "Switch to `inferior' Python in separate buffer"]
+	["Import/reload file" py-execute-import-or-reload
+	 :help "Load into inferior Python session"]
 	["Set default process" py-set-proc
 	 :help "Make buffer's inferior process the default"
 	 :active (buffer-live-p py-buffer)]
-	["Check file" py-check :help "Run pychecker"]
+        ["pychecker-run" py-pychecker-run :help "Run pychecker"]
 	["Debugger" pdb :help "Run pdb under GUD"]
 	"-"
 	["Help on symbol" py-describe-symbol
@@ -4037,10 +4045,15 @@ http://docs.python.org/reference/compound_stmts.html"
     erg))
 
 (defalias 'py-forward-block 'py-end-of-block)
-(defun py-end-of-block (&optional count)
-  "Move point beyond compound statement. "
-  (interactive "p")
-  (py-end-of-block-or-clause))
+(defun py-end-of-block ()
+  "Go to the end of a compound statement.
+Returns position reached, if any, nil otherwise.
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (let ((orig (point)))
+    (py-end-base py-block-re orig (interactive-p))))
 
 ;; Block or clause
 (defalias 'py-goto-initial-line 'py-beginning-of-block-or-clause)
@@ -4411,7 +4424,6 @@ Returns beginning and end positions of marked area, a cons."
       (push-mark beg t t)
     (unless end (when (< beg (point))
                   (setq end (point)))) 
-    (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
 
 ;; Copy
@@ -5383,8 +5395,6 @@ These are Python temporary files awaiting execution."
         (let ((paragraph-start (concat paragraph-start "\\|[ \t#]*$"))
               (paragraph-separate (concat paragraph-separate "\\|[ \t#]*$"))
               (fill-prefix comment-fill-prefix))
-          ;;(message "paragraph-start %S paragraph-separate %S"
-          ;;paragraph-start paragraph-separate)
           (fill-paragraph justify))))
     t))
 

@@ -593,16 +593,17 @@ print u'\\xA9'
     (py-bug-tests-intern 'UnicodeEncodeError-lp:550661-base arg teststring)))
 
 (defun UnicodeEncodeError-lp:550661-base ()
-  (python-mode)
-  (goto-char 48)
-  (push-mark)
-  (end-of-line)
-  (py-execute-region (line-beginning-position) (point))
-  (sit-for 0.2) 
-  (when (looking-back comint-prompt-regexp)
-    (goto-char (1- (match-beginning 0))))
-  (sit-for 0.1)
-  (assert (looking-back "©") nil "UnicodeEncodeError-lp:550661-test failed"))
+  (let ((py-shell-switch-buffers-on-execute t))
+    (python-mode)
+    (goto-char 48)
+    (push-mark)
+    (end-of-line)
+    (py-execute-region (line-beginning-position) (point))
+    (sit-for 0.2) 
+    (when (looking-back comint-prompt-regexp)
+      (goto-char (1- (match-beginning 0))))
+    (sit-for 0.1)
+    (assert (looking-back "©") nil "UnicodeEncodeError-lp:550661-test failed")))
 
 (defun indentation-of-continuation-lines-lp:691185-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1588,6 +1589,17 @@ if foo:
     (progn
       (py-execute-region (point) (progn (end-of-line)(point)))
       (when (interactive-p) (message "%s" "execute-indented-code-lp:828314-test passed")))))
+
+(defun create-shebang-from-environment-lp-827949-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring create-shebang-from-environment-lp-827949-teststring))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'create-shebang-from-environment-lp-827949-base arg teststring)))
+
+(defun create-shebang-from-environment-lp-827949-base ()
+    (goto-char 40)
+    (assert nil "create-shebang-from-environment-lp-827949-test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
