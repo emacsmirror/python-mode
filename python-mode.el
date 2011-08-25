@@ -1175,7 +1175,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
 (defsubst py-keep-region-active ()
   "Keep the region active in XEmacs."
   ;; Ignore byte-compiler warnings you might see.  Also note that
-  ;; FSF's Emacs 19 does it differently; its policy doesn't require us
+  ;; FSF's Emacs does it differently; its policy doesn't require us
   ;; to take explicit action.
   (and (boundp 'zmacs-region-stays)
        (setq zmacs-region-stays t)))
@@ -1762,43 +1762,22 @@ comment."
     (self-insert-command (prefix-numeric-value arg))))
 
 (defun py-electric-colon (arg)
-  "Insert a colon.
-In certain cases the line is dedented appropriately.  If a numeric
-argument ARG is provided, that many colons are inserted
-non-electrically.  Electric behavior is inhibited inside a string or
-comment."
+  "Insert a colon and indent accordingly.
+If a numeric argument ARG is provided, that many colons are inserted
+non-electrically. 
+
+Electric behavior is inhibited inside a string or
+comment or by universal prefix C-u."
   (interactive "*P")
+  (if (eq 4 (prefix-numeric-value arg))
+      (self-insert-command 1)
   (self-insert-command (prefix-numeric-value arg))
-  ;; are we in a string or comment?
-  (if (save-excursion
-        (let ((pps (if (featurep 'xemacs)
-               (parse-partial-sexp (save-excursion
-                                         (py-beginning-of-def-or-class)
-                                         (point))
-                                       (point))
-               (syntax-ppss))))
-          (not (or (nth 3 pps) (nth 4 pps)))))
-      (save-excursion
-        (let ((orig (point))
-              (outdent 0)
-              (indent (py-compute-indentation)))
-          (if (and (not arg)
-                   (py-outdent-p)
-                   (= indent (save-excursion
-                               (py-next-statement -1)
-                               (py-compute-indentation))))
-              (setq outdent py-indent-offset))
-          ;; Don't indent, only dedent.  This assumes that any lines
-          ;; that are already dedented relative to
-          ;; py-compute-indentation were put there on purpose.  It's
-          ;; highly annoying to have `:' indent for you.  Use TAB, C-c
-          ;; C-l or C-c C-r to adjust.  TBD: Is there a better way to
-          ;; determine this???
-          (if (< (current-indentation) indent) nil
-            (goto-char orig)
+    (unless (py-in-string-or-comment-p)
+      (let ((indent (py-compute-indentation)))
+        (unless (eq (current-indentation) indent)
             (beginning-of-line)
             (delete-horizontal-space)
-            (indent-to (- indent outdent)))))))
+          (indent-to indent))))))
 
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
