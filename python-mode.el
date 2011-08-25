@@ -995,128 +995,126 @@ Currently-active file is at the head of the list.")
 This menu will get created automatically if you have the `easymenu'
 package.  Note that the latest X/Emacs releases contain this package.")
 
-(defvar py-mode-map nil)
-(setq py-mode-map
+(defvar py-mode-map
   (let ((map (make-sparse-keymap)))
     ;; electric keys
-    (define-key map ":" 'py-electric-colon)
-    (define-key map "#" 'py-electric-comment)
+    (define-key map [(:)] 'py-electric-colon)
+    (define-key map [(\#)] 'py-electric-comment)
+    (define-key map [(delete)] 'py-electric-delete)
+    (define-key map [(backspace)] 'py-electric-backspace)
+    (define-key map [(control backspace)] 'py-hungry-delete-backwards)
+    ;; moving point
+    (define-key map [(control c)(control n)] 'py-end-of-statement)
+    (define-key map [(control c)(control a)] 'py-mark-statement)
+    (define-key map [(control c)(control p)] 'py-beginning-of-statement)
+    (define-key map [(control c)(control u)] 'py-beginning-of-block)
+    (define-key map [(control c)(control q)] 'py-end-of-block)
+    (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
+    (define-key map [(control meta e)] 'py-end-of-def-or-class)
+    (define-key map [(control j)] 'py-newline-and-indent)
+    ;; Most Pythoneers expect RET `py-newline-and-indent'
+    (define-key map [(return)] 'py-newline-and-dedent)
+    ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
-    (define-key map "\C-c\C-l"  'py-shift-region-left)
-    (define-key map "\C-c\C-r"  'py-shift-region-right)
-    (define-key map "\C-c<"     'py-shift-region-left)
-    (define-key map "\C-c>"     'py-shift-region-right)
+    (define-key map [(meta i)] 'py-indent-line-new)
+    (define-key map [(control c)(control l)] 'py-shift-region-left)
+    (define-key map [(control c)(control r)] 'py-shift-region-right)
+    (define-key map [(control c)(<)] 'py-shift-region-left)
+    (define-key map [(control c)(>)] 'py-shift-region-right)
+    (define-key map [(control c)(tab)] 'py-indent-region)
+    (define-key map [(control c)(:)] 'py-guess-indent-offset)
     ;; subprocess commands
-    (define-key map "\C-c\C-c"  'py-execute-buffer)
-    (define-key map "\C-c\C-m"  'py-execute-import-or-reload)
-    (define-key map "\C-c\C-s"  'py-execute-string)
-    (define-key map "\C-c|"     'py-execute-region)
-    (define-key map "\e\C-x"    'py-execute-def-or-class)
-    (define-key map "\C-c!"     'py-shell)
-    (define-key map "\C-c\C-t"  'py-toggle-shells)
-    (define-key map [?\C-c ?\d] 'py-hungry-delete-backwards)
-    (define-key map [?\C-c ?\C-\d] 'py-hungry-delete-backwards)
-    (define-key map [?\C-c deletechar] 'py-hungry-delete-forward)
-    (if (not (boundp 'delete-key-deletes-forward))
-        (define-key map "\177" 'py-electric-backspace)
-      (define-key map [delete]    'py-electric-delete)
-      (define-key map [backspace] 'py-electric-backspace))
+    (define-key map [(control c)(control c)] 'py-execute-buffer)
+    (define-key map [(control c)(control m)] 'py-execute-import-or-reload)
+    (define-key map [(control c)(control s)] 'py-execute-string)
+    (define-key map [(control c)(|)] 'py-execute-region)
+    (define-key map [(control meta x)] 'py-execute-def-or-class)
+    (define-key map [(control c)(!)] 'py-shell)
+    (define-key map [(control c)(control t)] 'py-toggle-shells)
     (define-key map [(control meta h)] 'py-mark-def-or-class)
-    (define-key map "\C-c\C-k"  'py-mark-block-or-clause)
+    (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
     ;; Miscellaneous
-    (define-key map "\C-c:"     'py-guess-indent-offset)
-    (define-key map "\C-c\t"    'py-indent-region)
-    (define-key map "\C-c\C-d"  'py-pdbtrack-toggle-stack-tracking)
-    (define-key map "\C-c\C-f"  'py-sort-imports)
-    (define-key map "\C-c\C-n"  'py-end-of-statement)
-    (define-key map "\C-c\C-a"  'py-mark-statement)
-    (define-key map "\C-c\C-p"  'py-beginning-of-statement)
-    (define-key map "\C-c\C-u"  'py-beginning-of-block)
-    (define-key map "\C-c\C-q"  'py-end-of-block)
-    (define-key map "\C-c#"     'py-comment-region)
-    (define-key map "\C-c?"     'py-describe-mode)
-    (define-key map "\C-c\C-e"  'py-describe-symbol)
-    (define-key map "\e\C-a"    'py-beginning-of-def-or-class)
-    (define-key map "\e\C-e"    'py-end-of-def-or-class)
-    (define-key map "\C-c-"     'py-up-exception)
-    (define-key map "\C-c="     'py-down-exception)
-    ;; stuff that is `standard' but doesn't interface well with
-    ;; python-mode, which forces us to rebind to special commands
-    (define-key map "\C-xnd"    'py-narrow-to-defun)
+    (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
+    (define-key map [(control c)(control f)] 'py-sort-imports)
+    (define-key map [(control c)(\#)] 'py-comment-region)
+    (define-key map [(control c)(\?)] 'py-describe-mode)
+    (define-key map [(control c)(control e)] 'py-describe-symbol)
+    (define-key map [(control meta a)] 'py-beginning-of-def-or-class)
+    (define-key map [(control c)(-)] 'py-up-exception)
+    (define-key map [(control c)(=)] 'py-down-exception)
+    (define-key map [(control x) (n) (d)] 'py-narrow-to-defun)
     ;; information
-    (define-key map "\C-c\C-b" 'py-submit-bug-report)
-    (define-key map "\C-c\C-b" 'py-submit-bug-report)
-    (define-key map "\C-c\C-v" 'py-version)
-    (define-key map "\C-c\C-w" 'py-pychecker-run)
-    ;; shadow global bindings for newline-and-indent w/ the py- version.
+    (define-key map [(control c)(control b)] 'py-submit-bug-report)
+    (define-key map [(control c)(control v)] 'py-version)
+    (define-key map [(control c)(control w)] 'py-pychecker-run)
+    (define-key map [(control c)(c)] 'py-compute-indentation)
+    ;; shadow global bindings for newline-and-indent 
     (mapc #'(lambda (key)
               (define-key map key 'py-newline-and-indent))
           (where-is-internal 'newline-and-indent))
-    ;; Most Pythoneers expect RET to do a `py-newline-and-indent'
-    (define-key map "\C-m" 'py-newline-and-indent)
-    (define-key map [(control return)] 'py-newline-and-dedent)
     (easy-menu-define py-menu map "Python Mode menu"
       `("Python"
-	:help "Python-specific features"
-	["Execute statement" py-execute-statement 
-	 :help "Send statement at point to Python interpreter. "]
-	["Execute block" py-execute-block
-	 :help "Send compound statement at point to Python interpreter. "]
+        :help "Python-specific features"
+        ["Execute statement" py-execute-statement 
+         :help "Send statement at point to Python interpreter. "]
+        ["Execute block" py-execute-block
+         :help "Send compound statement at point to Python interpreter. "]
         ["Execute def" py-execute-def
-	 :help "Send function at point to Python interpreter. "]
+         :help "Send function at point to Python interpreter. "]
         ["Execute region" py-execute-region
-	 :help "Send region to Python interpreter. "]
+         :help "Send region to Python interpreter. "]
         ["Execute buffer" py-execute-buffer
-	 :help "Send buffer to Python interpreter. "]
-	"-"
-	["Copy block" py-copy-block
-	 :help "Copy innermost compound statement at point"]
-	["Copy def-or-class" py-copy-def-or-class
-	 :help "Copy innermost definition at point"]
-       	["Copy statement" py-copy-statement
-	 :help "Copy statement at point"]
-	["Copy expression" py-copy-expression
-	 :help "Copy expression at point"]
-	["Copy partial-expression" py-copy-partial-expression
-	 :help "\".\" operators delimit a partial-expression expression on it's level"]
-	"-"
-	["Beginning of block" py-beginning-of-block
-	 :help "Go to start of innermost compound statement at point"]
-	["End of block" py-end-of-block
-	 :help "Go to end of innermost compound statement at point"]
-	["Beginning of Def-or-Class" py-beginning-of-def-or-class
-	 :help "Go to start of innermost definition at point"]
-	["End of Def-or-Class" py-end-of-def-or-class
-	 :help "Go to end of innermost function definition at point"]
-	["Beginning of-class" beginning-of-class
-	 :help "Go to start of class definition "]
-	["End of Class" py-end-of-class
-	 :help "Go to end of class definition "]
-	"-"
+         :help "Send buffer to Python interpreter. "]
+        "-"
+        ["Copy block" py-copy-block
+         :help "Copy innermost compound statement at point"]
+        ["Copy def-or-class" py-copy-def-or-class
+         :help "Copy innermost definition at point"]
+        ["Copy statement" py-copy-statement
+         :help "Copy statement at point"]
+        ["Copy expression" py-copy-expression
+         :help "Copy expression at point"]
+        ["Copy partial-expression" py-copy-partial-expression
+         :help "\".\" operators delimit a partial-expression expression on it's level"]
+        "-"
+        ["Beginning of block" py-beginning-of-block
+         :help "Go to start of innermost compound statement at point"]
+        ["End of block" py-end-of-block
+         :help "Go to end of innermost compound statement at point"]
+        ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+         :help "Go to start of innermost definition at point"]
+        ["End of Def-or-Class" py-end-of-def-or-class
+         :help "Go to end of innermost function definition at point"]
+        ["Beginning of-class" beginning-of-class
+         :help "Go to start of class definition "]
+        ["End of Class" py-end-of-class
+         :help "Go to end of class definition "]
+        "-"
         ("Templates..."
          :help "Expand templates for compound statements"
          :filter (lambda (&rest junk)
                    (abbrev-table-menu python-mode-abbrev-table)))
-	"-"
-	["Switch to interpreter" py-shell
-	 :help "Switch to `inferior' Python in separate buffer"]
-	["Import/reload file" py-execute-import-or-reload
-	 :help "Load into inferior Python session"]
-	["Set default process" py-set-proc
-	 :help "Make buffer's inferior process the default"
-	 :active (buffer-live-p py-buffer)]
+        "-"
+        ["Switch to interpreter" py-shell
+         :help "Switch to `inferior' Python in separate buffer"]
+        ["Import/reload file" py-execute-import-or-reload
+         :help "Load into inferior Python session"]
+        ["Set default process" py-set-proc
+         :help "Make buffer's inferior process the default"
+         :active (buffer-live-p py-buffer)]
         ["pychecker-run" py-pychecker-run :help "Run pychecker"]
-	["Debugger" pdb :help "Run pdb under GUD"]
-	"-"
-	["Help on symbol" py-describe-symbol
-	 :help "Use pydoc on symbol at point"]
-	["Complete symbol" completion-at-point
-	 :help "Complete (qualified) symbol before point"]
-	["Find function" py-find-function
-	 :help "Try to find source definition of function at point"]
-	["Update imports" py-find-imports
-	 :help "Update list of top-level imports for completion"]))
-    map))
+        ["Debugger" pdb :help "Run pdb under GUD"]
+        "-"
+        ["Help on symbol" py-describe-symbol
+         :help "Use pydoc on symbol at point"]
+        ["Complete symbol" completion-at-point
+         :help "Complete (qualified) symbol before point"]
+        ["Find function" py-find-function
+         :help "Try to find source definition of function at point"]
+        ["Update imports" py-find-imports
+         :help "Update list of top-level imports for completion"]))
+    map)
+  "Keys and menu set for python-mode. ")
 
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
