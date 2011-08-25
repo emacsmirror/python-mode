@@ -3265,11 +3265,12 @@ change the global value of `py-indent-offset'. "
             (setq py-indent-offset indent)
 	    (unless (= tab-width py-indent-offset)
 	      (setq indent-tabs-mode nil)))
-          (unless (and (eq old-value py-indent-offset) (eq py-indent-offset (default-value 'py-indent-offset)))
-          (message "%s value of py-indent-offset:  %d"
-                   (if global "Global" "Local")
-                   py-indent-offset)))
-        py-indent-offset))))
+          (when (or (not (and (eq old-value py-indent-offset) (eq py-indent-offset (default-value 'py-indent-offset))))
+                    (interactive-p)) 
+            (message "%s value of py-indent-offset:  %d"
+                     (if global "Global" "Local")
+                     py-indent-offset))
+          py-indent-offset)))))
 
 (defun py-comment-indent-function ()
   "Python version of `comment-indent-function'."
