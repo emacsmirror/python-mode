@@ -1590,17 +1590,6 @@ if foo:
       (py-execute-region (point) (progn (end-of-line)(point)))
       (when (interactive-p) (message "%s" "execute-indented-code-lp:828314-test passed")))))
 
-(defun create-shebang-from-environment-lp-827949-test (&optional arg load-branch-function)
-  (interactive "p")
-  (let ((teststring create-shebang-from-environment-lp-827949-teststring))
-  (when load-branch-function (funcall load-branch-function))
-  (py-bug-tests-intern 'create-shebang-from-environment-lp-827949-base arg teststring)))
-
-(defun create-shebang-from-environment-lp-827949-base ()
-    (goto-char 40)
-    (assert nil "create-shebang-from-environment-lp-827949-test failed"))
-
-
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
 

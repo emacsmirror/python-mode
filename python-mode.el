@@ -1546,6 +1546,25 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
     (setq py-shell-name erg)
     erg))
 
+(defun py-python-default-environment ()
+  "Returns path of Python default installation. "
+  (interactive)
+  (let* ((cmd (py-choose-shell))
+         (denv (shell-command-to-string (concat "type " cmd)))
+         (erg (substring denv (string-match "/" denv))))
+    (when (interactive-p)
+      (if erg
+          (message "%s" erg)
+        (message "%s" "Could not detect Python on your system")))
+    erg))
+
+(defun py-insert-default-shebang ()
+  "Insert in buffer shebang of installed default Python. "
+  (interactive "*") 
+  (let* ((erg (py-python-default-environment))
+         (sheb (concat "#! " erg)))
+    (insert sheb)))
+
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
   :group 'Python
