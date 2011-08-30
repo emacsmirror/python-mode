@@ -2105,7 +2105,7 @@ filter."
   (interactive "P")
   ;; Set the default shell if not already set
   (when (null py-shell-name)
-    (py-toggle-shells py-default-interpreter))
+    (py-choose-shell py-default-interpreter))
   (let ((args py-which-args))
     (when (and argprompt
                (interactive-p)
