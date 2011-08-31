@@ -1015,7 +1015,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map [(return)] 'py-newline-and-indent)
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
-    (define-key map [(meta i)] 'py-indent-line-new)
+    (define-key map [(control c)(\/)] 'py-indent-line-outmost)
     (define-key map [(control c)(control l)] 'py-shift-region-left)
     (define-key map [(control c)(control r)] 'py-shift-region-right)
     (define-key map [(control c)(<)] 'py-shift-region-left)
@@ -2872,8 +2872,8 @@ With ARG do that ARG times. "
 (put 'py-electric-delete    'pending-delete   'supersede) ;pending-del
 
 
-(defun py-indent-line-new (&optional arg)
-  "Indent the current line according to Python rules.
+(defun py-indent-line-outmost (&optional arg)
+  "Indent the current line to the outmost reasonable indent according to Python rules.
 With optional universal ARG C-u an indent with length `py-indent-offset' is inserted unconditionally.
 write
 
