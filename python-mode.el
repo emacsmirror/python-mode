@@ -2286,14 +2286,14 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file)))
     (set-buffer regbuf)
-    (setq start (py-fix-start start end))
     (py-execute-intern start end regbuf procbuf proc temp file filebuf name)))
 
 (defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf name)
   (let (shell)
     (set-buffer filebuf)
+    (switch-to-buffer (current-buffer)) 
     (insert-buffer-substring regbuf start end)
-;;    (py-if-needed-insert-if)
+    (setq start (py-fix-start (point-min)(point-max)))
     (py-insert-coding)
     (py-if-needed-insert-shell name)
     (cond
@@ -2752,10 +2752,13 @@ Inserts an incentive true form \"if 1:\\n.\" "
   "Internal use by py-execute... functions.
 Avoid empty lines at the beginning. "
   (goto-char start)
-  (let ((beg (copy-marker start)))
+  (let ((beg (copy-marker start))) 
     (while (empty-line-p)
       (delete-region (line-beginning-position) (1+ (line-end-position))))
-  (setq py-line-number-offset (count-lines 1 start))
+    (back-to-indentation)
+    (unless (eq (current-indentation) 0)
+      (py-shift-region-left start end (current-indentation))) 
+    (setq py-line-number-offset (count-lines 1 start))
     beg))
 
 
@@ -3342,15 +3345,8 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 
 (defun py-shift-region (start end count)
   "Indent lines from START to END by COUNT spaces."
-  (save-excursion
-    (goto-char end)
-    (beginning-of-line)
-    (setq end (point))
-    (goto-char start)
-    (beginning-of-line)
-    (setq start (point))
-    (let (deactivate-mark)
-      (indent-rigidly start end count))))
+  (let (deactivate-mark)
+    (indent-rigidly start end count)))
 
 (defun py-shift-region-left (start end &optional count)
   "Shift region of Python code to the left.

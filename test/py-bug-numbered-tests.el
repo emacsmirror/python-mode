@@ -1584,7 +1584,7 @@ if foo:
 
 (defun execute-indented-code-lp:828314-base ()
   (let ((debug-on-error t))
-    (goto-char 32)
+    (goto-char 28)
     (push-mark)
     (progn
       (py-execute-region (point) (progn (end-of-line)(point)))
