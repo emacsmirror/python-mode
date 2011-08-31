@@ -127,6 +127,11 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-electric-colon-active-p nil
+  "`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions. "
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-indent-honors-multiline-listing nil
   "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
   :type 'boolean
@@ -1778,22 +1783,25 @@ comment."
     (self-insert-command (prefix-numeric-value arg))))
 
 (defun py-electric-colon (arg)
-  "Insert a colon and indent accordingly.
+  "If `py-electric-colon-active-p' is non-nil only:
+Insert a colon and indent accordingly.
 If a numeric argument ARG is provided, that many colons are inserted
 non-electrically. 
 
 Electric behavior is inhibited inside a string or
 comment or by universal prefix C-u."
   (interactive "*P")
-  (if (eq 4 (prefix-numeric-value arg))
-      (self-insert-command 1)
-  (self-insert-command (prefix-numeric-value arg))
-    (unless (py-in-string-or-comment-p)
-      (let ((indent (py-compute-indentation)))
-        (unless (eq (current-indentation) indent)
-            (beginning-of-line)
-            (delete-horizontal-space)
-          (indent-to indent))))))
+  (cond ((not py-electric-colon-active-p)
+         (self-insert-command (prefix-numeric-value arg)))
+        ((eq 4 (prefix-numeric-value arg))
+         (self-insert-command 1))
+        (t (self-insert-command (prefix-numeric-value arg))
+           (unless (py-in-string-or-comment-p)
+             (let ((indent (py-compute-indentation)))
+               (unless (eq (current-indentation) indent)
+                 (beginning-of-line)
+                 (delete-horizontal-space)
+                 (indent-to indent)))))))
 
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
