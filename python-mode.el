@@ -111,6 +111,11 @@
   :group 'languages
   :prefix "py-")
 
+(defcustom py-install-directory nil
+  "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
+  :type 'string
+  :group 'python)
+
 (defcustom py-tab-always-indent t
   "*Non-nil means TAB in Python mode should always reindent the current line,
 regardless of where in the line point is when the TAB command is used."
@@ -1569,6 +1574,15 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
          (sheb (concat "#! " erg)))
     (insert sheb)))
 
+(defun py-set-load-path ()
+  "Include the python-mode directory inclusiv needed subdirs. "
+  (interactive)
+  (when py-install-directory
+    (add-to-list 'load-path (expand-file-name py-install-directory))
+    (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
+    (add-to-list 'load-path (concat py-install-directory "/pymacs"))
+    (when (interactive-p) (message "%s" load-path))))
+
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
   :group 'Python
@@ -1642,7 +1656,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         indent-line-function 'py-indent-line
         ;; tell add-log.el how to find the current function/method/variable
         add-log-current-defun-function 'py-current-defun
-
+        
         fill-paragraph-function 'py-fill-paragraph)
   (use-local-map py-mode-map)
   ;; add the menu
@@ -1700,6 +1714,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         ;; have explicitly turned it off.
         (if (/= tab-width py-indent-offset)
             (setq indent-tabs-mode nil))))
+  (py-set-load-path)
   ;; Set the default shell if not already set
   (when (null py-shell-name)
     (py-toggle-shells (py-choose-shell)))
