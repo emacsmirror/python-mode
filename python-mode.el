@@ -3528,6 +3528,16 @@ Put point inside the parentheses of a multiline import and hit
 (defalias 'py-hungry-delete-forward 'c-hungry-delete-forward)
 (defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
 
+(defun py-leave-comment-or-string-backward (&optional pos)
+  "If inside a comment or string, leave it backward. "
+  (interactive)
+  (lexical-let ((pps
+                 (if (featurep 'xemacs)
+                     (parse-partial-sexp (point-min) (point))
+                   (syntax-ppss))))
+    (when (nth 8 pps)
+      (goto-char (1- (nth 8 pps))))))
+
 ;; Decorator
 (defun py-beginning-of-decorator ()
   (interactive)
