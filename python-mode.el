@@ -2314,6 +2314,8 @@ is inserted at the end.  See also the command `py-clear-queue'."
       ;; use the existing python shell
       (set-buffer filebuf)
       (write-region (point-min) (point-max) file nil t nil 'ask)
+      (set-buffer-modified-p 'nil)
+      (kill-buffer filebuf) 
       (sit-for 0.1)
       (if (file-readable-p file)
           (progn
@@ -2326,7 +2328,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (pop-to-buffer regbuf)
         (message "Output buffer: %s" procbuf))
       (sit-for 0.1)
-            (py-cleanup filebuf file))
+            (delete-file file))
         (message "File not readable: %s" "Do you have write permissions?"))))))
 
 (defun py-shell-command-on-region (start end)
@@ -2739,14 +2741,6 @@ Inserts an incentive true form \"if 1:\\n.\" "
           (newline)
           (insert (concat py-encoding-string "\n")))
       (insert (concat py-encoding-string "\n")))))
-
-(defun py-cleanup (buf file)
-  "Deletes temporary buffer and file if `py-cleanup-temporary' is t. "
-  (save-excursion
-      (set-buffer buf)
-      (set-buffer-modified-p nil)
-    ;;      (kill-buffer buf)
-    (delete-file file)))
 
 (defun py-fix-start (start end)
   "Internal use by py-execute... functions.
