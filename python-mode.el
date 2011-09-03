@@ -2129,21 +2129,22 @@ filter."
   ;; Set the default shell if not already set
   (when (null py-shell-name)
     (py-choose-shell py-default-interpreter))
-  (let ((args py-which-args))
+  (let ((args py-which-args)
+        (name (capitalize py-shell-name)))
     (when (and argprompt
                (interactive-p)
                (fboundp 'split-string))
       ;; TBD: Perhaps force "-i" in the final list?
       (setq args (split-string
-                  (read-string (concat py-which-bufname
+                  (read-string (concat name
                                        " arguments: ")
                                (concat
                                 (mapconcat 'identity py-which-args " ") " ")
                                ))))
-    (if (not (equal (buffer-name) "*Python*"))
+    (if (not (equal (buffer-name) name))
         (switch-to-buffer-other-window
-         (apply 'make-comint py-which-bufname py-shell-name nil args))
-      (apply 'make-comint py-which-bufname py-shell-name nil args))
+         (apply 'make-comint name py-shell-name nil args))
+      (apply 'make-comint name py-shell-name nil args))
     (make-local-variable 'comint-prompt-regexp)
     (setq comint-prompt-regexp (concat py-shell-input-prompt-1-regexp "\\|"
                                        py-shell-input-prompt-2-regexp "\\|"
@@ -2272,7 +2273,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
 (defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-         (name (capitalize (or py-shell-name (py-choose-shell))))
+         (name (capitalize (py-choose-shell)))
          (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
@@ -2280,7 +2281,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
          (procbuf (or buf-and-proc
                       (progn
                         (py-shell)
-                        (buffer-name (get-buffer (concat "*" name "*"))))))
+                        (buffer-name (get-buffer name)))))
          (proc (get-process name))
          (temp (make-temp-name name))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
@@ -2289,9 +2290,13 @@ is inserted at the end.  See also the command `py-clear-queue'."
     (py-execute-intern start end regbuf procbuf proc temp file filebuf name)))
 
 (defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf name)
-  (let (shell)
+  (let ((pec (if (string-match "Python3" name)
+         (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)
+         (format "execfile(r'%s') # PYTHON-MODE\n" file)))
+        shell)
     (set-buffer filebuf)
-    (switch-to-buffer (current-buffer)) 
+    (erase-buffer) 
+    ;; (switch-to-buffer (current-buffer)) 
     (insert-buffer-substring regbuf start end)
     (setq start (py-fix-start (point-min)(point-max)))
     (py-insert-coding)
@@ -2303,9 +2308,9 @@ is inserted at the end.  See also the command `py-clear-queue'."
         (set-buffer filebuf)
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((tempbuf (generate-new-buffer-name py-output-buffer))
-             (arg (if (string-equal py-which-bufname "Python")
+             (arg (if (string-match name "Python")
                       "-u" "")))
-              (start-process py-which-bufname tempbuf shell arg file)
+        (start-process name tempbuf shell arg file)
               (pop-to-buffer tempbuf)
               (py-postprocess-output-buffer tempbuf)
               ;; TBD: clean up the temporary file!
@@ -2319,7 +2324,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (sit-for 0.1)
       (if (file-readable-p file)
           (progn
-      (py-execute-file proc file)
+            (py-execute-file proc file pec)
       (setq py-exception-buffer (cons file (current-buffer)))
       (if py-shell-switch-buffers-on-execute
           (progn
@@ -2342,7 +2347,7 @@ Unicode strings like u'\xA9' "
          (shell (or (py-choose-shell-by-shebang)
                     (py-choose-shell-by-import)
                     py-shell-name))
-         (cmd (if (string-equal py-which-bufname
+         (cmd (if (string-equal name
                                 "Jython")
                   "jython -" "python")))
     (with-temp-buffer
@@ -2364,13 +2369,14 @@ Unicode strings like u'\xA9' "
   "Execute the region through an ipython shell. "
   (interactive "r")
   ;; Skip ahead to the first non-blank line
-  (let* ((regbuf (current-buffer))
-         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
-                            (processp (get-process py-which-bufname))
-                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+  (let* ((name (concat "*" py-default-interpreter "*"))
+         (regbuf (current-buffer))
+         (first (progn (and (buffer-live-p (get-buffer name))
+                            (processp (get-process name))
+                            (buffer-name (get-buffer name)))))
          (procbuf (or first (progn
                               (py-shell)
-                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+                              (buffer-name (get-buffer name)))))
          (cmd "#-*- coding: utf-8 -*-\n")
          (lines (count-lines start end))
          shell)
@@ -2395,14 +2401,15 @@ Unicode strings like u'\xA9' "
   "Execute the region in a Python shell. "
   (interactive "r\nP")
   (let* ((regbuf (current-buffer))
-         (first (progn (and (buffer-live-p (get-buffer (concat "*" py-which-bufname "*")))
-                            (processp (get-process py-which-bufname))
-                            (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
+         (name (concat "*" py-default-interpreter "*"))
+         (first (progn (and (buffer-live-p (get-buffer name))
+                            (processp (get-process py-default-interpreter))
+                            (buffer-name (get-buffer name)))))
          (procbuf (or first (progn
                               (py-shell)
-                              (buffer-name (get-buffer (concat "*" py-which-bufname "*"))))))
-         (proc (get-process py-which-bufname))
-         (temp (make-temp-name py-which-bufname))
+                              (buffer-name (get-buffer name)))))
+         (proc (get-process py-default-interpreter))
+         (temp (make-temp-name py-default-interpreter))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (temp (get-buffer-create file))
          (py-line-number-offset 0)
@@ -2439,9 +2446,9 @@ Unicode strings like u'\xA9' "
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((temp (generate-new-buffer-name py-output-buffer))
              ;; TBD: a horrible hack, but why create new Custom variables?
-             (arg (if (string-equal py-which-bufname "Python")
+             (arg (if (string-match py-default-interpreter "Python")
                       "-u" "")))
-        (start-process py-which-bufname temp shell arg file)
+        (start-process py-default-interpreter temp shell arg file)
         (pop-to-buffer temp)
         (py-postprocess-output-buffer temp)
         ;; TBD: clean up the temporary file!
@@ -2462,8 +2469,7 @@ Unicode strings like u'\xA9' "
      (t
       ;; this part is in py-shell-command-on-region now.
       (let ((cmd
-             ;;             (concat py-shell-name (if (string-equal py-which-bufname
-             (concat shell (if (string-equal py-which-bufname
+             (concat shell (if (string-equal py-default-interpreter 
                                              "Jython")
                                " -" ""))))
         ;; otherwise either run it synchronously in a subprocess
