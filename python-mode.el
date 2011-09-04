@@ -1062,7 +1062,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
               (define-key map key 'py-newline-and-indent))
           (where-is-internal 'newline-and-indent))
     (easy-menu-define py-menu map "Python Mode menu"
-      `("Python"
+      '("Python"
         :help "Python-specific features"
         ["Execute statement" py-execute-statement 
          :help "Send statement at point to Python interpreter. "]
@@ -3036,7 +3036,7 @@ the new line indented."
                          (goto-char (match-end 0)))
                        (current-column)))
                ((nth 1 pps)
-                (when (looking-at ".*\\()\\)[ \t]*$")
+                (when (looking-at "[ \t]*\\()\\)[ \t]*$")
                   (setq closing (match-beginning 0)))
                 (save-excursion
                   (goto-char (nth 1 pps))

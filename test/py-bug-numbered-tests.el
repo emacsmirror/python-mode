@@ -1590,6 +1590,20 @@ if foo:
       (py-execute-region (point) (progn (end-of-line)(point)))
       (when (interactive-p) (message "%s" "execute-indented-code-lp:828314-test passed")))))
 
+(defun wrong-indentation-of-function-arguments-lp:840891-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "abdc = foo(a=1,
+           b=2, 
+    c=3)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'wrong-indentation-of-function-arguments-lp:840891-base arg teststring)))
+
+(defun wrong-indentation-of-function-arguments-lp:840891-base ()
+    (goto-char 38)
+    (assert (eq 11 (py-compute-indentation)) nil "wrong-indentation-of-function-arguments-lp:840891-test failed"))
+
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
 
