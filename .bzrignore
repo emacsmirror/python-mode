@@ -1,0 +1,8 @@
+test/UnicodeEncodeError-python3-lp:550661-test.py
+test/UnicodeEncodeError-python2-lp:550661-test.py
+tools/ipython.el
+commit.txt
+.bzrignore
+*.elc
+RCS/
+MANIFEST.in
