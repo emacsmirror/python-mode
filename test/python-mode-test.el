@@ -24,12 +24,14 @@
 
 ;;; Code:
 
+(require 'py-bug-numbered-tests)
+
 (setq python-mode-tests
       (if (featurep 'xemacs)
           (list
            'py-beginning-of-block-or-clause-test)
         (list
-
+         
          'py-beginning-of-block-test
          'py-end-of-block-test
          'py-beginning-of-block-or-clause-test
@@ -42,7 +44,7 @@
          'py-electric-delete-test
          'UnicodeEncodeError-python3-test
          'dict-error-test
-;;         'py-expand-abbrev-pst-pdb.set_trace-test
+         ;;         'py-expand-abbrev-pst-pdb.set_trace-test
          'near-bob-beginning-of-statement-test
          'bob-beginning-of-statement-test
          'honor-comments-indent-test
@@ -66,8 +68,8 @@
          'py-partial-expression-test
          'py-execute-block-test
          'multiline-list-indent-test
-
-)))
+         
+         )))
 
 (defun py-run-tests (&optional arg)
   (interactive "p")
