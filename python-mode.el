@@ -149,7 +149,7 @@ regardless of where in the line point is when the TAB command is used."
 
 ;; Execute stuff start
 (defcustom py-python-command "python"
-  "*Shell command used to start Python interpreter."
+  "Default shell command used to start Python interpreter."
   :type 'string
   :group 'python)
 
@@ -175,23 +175,7 @@ regardless of where in the line point is when the TAB command is used."
   :type 'regexp
   :group 'python)
 
-(defcustom py-default-interpreter "python"
-  "*Which Python interpreter is used by default.
-The value for this variable can be any installed Python'.
-
-When the value containes `python', the variables `py-python-command' and
-`py-python-command-args' are consulted to determine the interpreter
-and arguments to use.
-
-When the value containes `jython', the variables `py-jython-command' and
-`py-jython-command-args' are consulted to determine the interpreter
-and arguments to use.
-
-Note that this variable is consulted only the first time that a Python
-mode buffer is visited during an Emacs session.  After that, use
-\\[py-toggle-shells] to change the interpreter shell."
-  :type 'string
-  :group 'python)
+(defalias 'py-default-interpreter 'py-python-command)
 
 (defcustom py-python-command-args '("-i")
   "*List of string arguments to be used when starting a Python shell."
@@ -1541,7 +1525,7 @@ This does the following:
  - reads py-shell-name
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
- - default to the variable `py-default-interpreter'
+ - default to the variable `py-python-command'
 
 With \\[universal-argument]) user is prompted to specify a reachable Python version."
   (interactive "P")
@@ -1550,7 +1534,7 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
                    ((py-choose-shell-by-shebang))
                    ((py-choose-shell-by-import))
                    (py-shell-name)
-                   (t py-default-interpreter))))
+                   (t py-python-command))))
     (when (interactive-p) (message "%s" erg))
     (setq py-shell-name erg)
     erg))
@@ -2062,7 +2046,7 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
   "Toggles between the CPython and Jython default shells.
 
 With \\[universal-argument]) user is prompted to specify a reachable Python version.
-If no arg given and py-shell-name not set yet, shell is set according to `py-default-interpreter' "
+If no arg given and py-shell-name not set yet, shell is set according to `py-python-command' "
   (interactive "P")
   (let ((name (cond ((eq 4 (prefix-numeric-value arg))
                      (read-from-minibuffer "Python Shell: "))
@@ -2072,7 +2056,7 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-def
                      (if (string-match "python" py-shell-name)
                          "jython"
                        "python"))
-                    (t py-default-interpreter)))
+                    (t py-python-command)))
         )
     (if (string-match "python" name)
         (setq py-shell-name name
@@ -2128,7 +2112,7 @@ filter."
   (interactive "P")
   ;; Set the default shell if not already set
   (when (null py-shell-name)
-    (py-choose-shell py-default-interpreter))
+    (py-choose-shell py-python-command))
   (let ((args py-which-args)
         (name (capitalize py-shell-name)))
     (when (and argprompt
@@ -2369,7 +2353,7 @@ Unicode strings like u'\xA9' "
   "Execute the region through an ipython shell. "
   (interactive "r")
   ;; Skip ahead to the first non-blank line
-  (let* ((name (concat "*" py-default-interpreter "*"))
+  (let* ((name (concat "*" py-python-command "*"))
          (regbuf (current-buffer))
          (first (progn (and (buffer-live-p (get-buffer name))
                             (processp (get-process name))
@@ -2401,15 +2385,15 @@ Unicode strings like u'\xA9' "
   "Execute the region in a Python shell. "
   (interactive "r\nP")
   (let* ((regbuf (current-buffer))
-         (name (concat "*" py-default-interpreter "*"))
+         (name (concat "*" py-python-command "*"))
          (first (progn (and (buffer-live-p (get-buffer name))
-                            (processp (get-process py-default-interpreter))
+                            (processp (get-process py-python-command))
                             (buffer-name (get-buffer name)))))
          (procbuf (or first (progn
                               (py-shell)
                               (buffer-name (get-buffer name)))))
-         (proc (get-process py-default-interpreter))
-         (temp (make-temp-name py-default-interpreter))
+         (proc (get-process py-python-command))
+         (temp (make-temp-name py-python-command))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (temp (get-buffer-create file))
          (py-line-number-offset 0)
@@ -2446,9 +2430,9 @@ Unicode strings like u'\xA9' "
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((temp (generate-new-buffer-name py-output-buffer))
              ;; TBD: a horrible hack, but why create new Custom variables?
-             (arg (if (string-match py-default-interpreter "Python")
+             (arg (if (string-match py-python-command "Python")
                       "-u" "")))
-        (start-process py-default-interpreter temp shell arg file)
+        (start-process py-python-command temp shell arg file)
         (pop-to-buffer temp)
         (py-postprocess-output-buffer temp)
         ;; TBD: clean up the temporary file!
@@ -2469,7 +2453,7 @@ Unicode strings like u'\xA9' "
      (t
       ;; this part is in py-shell-command-on-region now.
       (let ((cmd
-             (concat shell (if (string-equal py-default-interpreter 
+             (concat shell (if (string-equal py-python-command 
                                              "Jython")
                                " -" ""))))
         ;; otherwise either run it synchronously in a subprocess
@@ -2727,7 +2711,7 @@ subtleties, including the use of the optional ASYNC argument."
     (let ((erg (or (downcase name)
                    (py-choose-shell-by-import)
                    py-shell-name
-                   py-default-interpreter)))
+                   py-python-command)))
       (goto-char (point-min))
       (insert (concat py-shebang-startstring " " erg "\n")))))
 
