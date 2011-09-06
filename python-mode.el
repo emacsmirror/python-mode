@@ -2036,10 +2036,7 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (defvar py-output-buffer "*Python Output*")
 (make-variable-buffer-local 'py-output-buffer)
 
-;; for toggling between CPython and Jython
-(defvar py-which-args  py-python-command-args)
 (defvar py-which-bufname "Python")
-(make-variable-buffer-local 'py-which-args)
 (make-variable-buffer-local 'py-which-bufname)
 
 (defun py-toggle-shells (&optional arg)
@@ -2060,11 +2057,9 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-pyt
         )
     (if (string-match "python" name)
         (setq py-shell-name name
-              py-which-args py-python-command-args
               py-which-bufname (capitalize name)
               mode-name (capitalize name))
       (setq py-shell-name name
-            py-which-args py-jython-command-args
             py-which-bufname (capitalize name)
             mode-name (capitalize name)))
     (force-mode-line-update)
@@ -2074,24 +2069,10 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-pyt
 ;;;###autoload
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
-This is like Shell mode, except that Python is running in the window
-instead of a shell.  See the `Interactive Shell' and `Shell Mode'
-sections of the Emacs manual for details, especially for the key
-bindings active in the `*Python*' buffer.
 
-With optional \\[universal-argument], the user is prompted for the
-flags to pass to the Python interpreter.  This has no effect when this
-command is used to switch to an existing process, only when a new
-process is started.  If you use this, you will probably want to ensure
-that the current arguments are retained (they will be included in the
-prompt).  This argument is ignored when this function is called
-programmatically, or when running in Emacs 19.34 or older.
-
-Note: You can toggle between using the CPython interpreter and the
-Jython interpreter by hitting \\[py-toggle-shells].  This toggles
-buffer local variables which control whether all your subshell
-interactions happen to the `*Jython*' or `*Python*' buffers (the
-latter is the name used for the CPython buffer).
+With optional \\[universal-argument] user is prompted by
+`py-choose-shell' for command and options to pass to the Python
+interpreter.
 
 Warning: Don't use an interactive Python if you change sys.ps1 or
 sys.ps2 from their default values, or if you're running code that
@@ -2111,9 +2092,11 @@ non-Python process buffers using the default (Emacs-supplied) process
 filter."
   (interactive "P")
   ;; Set the default shell if not already set
-  (when (null py-shell-name)
-    (py-choose-shell py-python-command))
-  (let ((args py-which-args)
+  (if (eq 4 (prefix-numeric-value arg))
+      (py-choose-shell '(4))
+    (when (null py-shell-name))
+    (py-choose-shell))
+  (let ((args py-python-command-args)
         (name (capitalize py-shell-name)))
     (when (and argprompt
                (interactive-p)
@@ -2123,7 +2106,7 @@ filter."
                   (read-string (concat name
                                        " arguments: ")
                                (concat
-                                (mapconcat 'identity py-which-args " ") " ")
+                                (mapconcat 'identity py-python-command-args " ") " ")
                                ))))
     (if (not (equal (buffer-name) name))
         (switch-to-buffer-other-window
