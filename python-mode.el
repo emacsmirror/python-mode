@@ -2091,23 +2091,11 @@ interaction between undo and process filters; the same problem exists in
 non-Python process buffers using the default (Emacs-supplied) process
 filter."
   (interactive "P")
-  ;; Set the default shell if not already set
-  (if (eq 4 (prefix-numeric-value arg))
-      (py-choose-shell '(4))
-    (when (null py-shell-name))
-    (py-choose-shell))
+  ;; Set or select the shell if not ready 
+  (when (or (eq 4 (prefix-numeric-value argprompt))(null py-shell-name))
+    (py-choose-shell '(4)))
   (let ((args py-python-command-args)
         (name (capitalize py-shell-name)))
-    (when (and argprompt
-               (interactive-p)
-               (fboundp 'split-string))
-      ;; TBD: Perhaps force "-i" in the final list?
-      (setq args (split-string
-                  (read-string (concat name
-                                       " arguments: ")
-                               (concat
-                                (mapconcat 'identity py-python-command-args " ") " ")
-                               ))))
     (if (not (equal (buffer-name) name))
         (switch-to-buffer-other-window
          (apply 'make-comint name py-shell-name nil args))
@@ -2123,8 +2111,7 @@ filter."
     (setq py-pdbtrack-do-tracking-p t)
     (set-syntax-table py-mode-syntax-table)
     (use-local-map py-shell-map)
-    (run-hooks 'py-shell-hook)
-    ))
+    (run-hooks 'py-shell-hook)))
 
 (defun py-clear-queue ()
   "Clear the queue of temporary files waiting to execute."
