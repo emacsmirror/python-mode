@@ -251,22 +251,6 @@ buffer already exists."
       (unless py-shell-initial-switch-buffers
         (switch-to-buffer-other-window buf)))))
 (ad-activate 'py-shell)
-;; (defadvice py-execute-region (before py-execute-buffer-ensure-process)
-;;   "HACK: test that ipython is already running before executing something.
-;;   Doing this properly seems not worth the bother (unless people actually
-;;   request it)."
-;; (unless (comint-check-proc "*Python*")
-;;     (error "Sorry you have to first do M-x py-shell to send something to ipython.")))
-;; (ad-activate 'py-execute-region)
-
-(defadvice py-execute-region (around py-execute-buffer-ensure-process)
-  "HACK: if `py-shell' is not active or ASYNC is explicitly desired, fall back
-  to python instead of ipython."
-  (let ((py-which-shell (if (and (comint-check-proc "*Python*") (not async))
-			    py-python-command
-			  ipython-backup-of-py-python-command)))
-    ad-do-it))
-(ad-activate 'py-execute-region)
 
 (defun ipython-to-doctest (start end)
   "Transform a cut-and-pasted bit from an IPython session into something that
