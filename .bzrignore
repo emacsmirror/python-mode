@@ -8,3 +8,6 @@ RCS/
 MANIFEST.in
 ToDo
 NEWS
+tools/ipython-integration.el
+tools/ipython-integration.el
+tools/python-shell-install-example-buffer.el
