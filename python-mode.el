@@ -1050,7 +1050,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (easy-menu-define py-menu map "Python Mode menu"
       '("Python"
         :help "Python-specific features"
-        ["Execute statement" py-execute-statement 
+        ["Execute statement" py-execute-statement
          :help "Send statement at point to Python interpreter. "]
         ["Execute block" py-execute-block
          :help "Send compound statement at point to Python interpreter. "]
@@ -1108,8 +1108,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
          :help "Try to find source definition of function at point"]
         ["Update imports" py-find-imports
          :help "Update list of top-level imports for completion"]))
-    map)
-  "Keys and menu set for python-mode. ")
+    map))
 
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
