@@ -1566,12 +1566,23 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
 (defun py-set-load-path ()
   "Include the python-mode directory inclusiv needed subdirs. "
   (interactive)
-  (when py-install-directory
+  (cond (py-install-directory
     (add-to-list 'load-path (expand-file-name py-install-directory))
     (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
-    (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/tools"))
-    (add-to-list 'load-path (concat py-install-directory "/pymacs"))
-    (when (interactive-p) (message "%s" load-path))))
+         (add-to-list 'load-path (concat py-install-directory "/pymacs"))
+         (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/test"))
+         (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/tools")))
+        ((string-match "/test$" default-directory)
+         (add-to-list 'load-path (concat (expand-file-name "../") "completion"))
+         (add-to-list 'load-path (concat (expand-file-name "../") "pymacs"))
+         (add-to-list 'load-path (concat (expand-file-name "../") "test"))
+         (add-to-list 'load-path (concat (expand-file-name "../") "tools")))
+        (t 
+         (add-to-list 'load-path (concat default-directory "completion"))
+         (add-to-list 'load-path (concat default-directory "pymacs"))
+         (add-to-list 'load-path (concat default-directory "test"))
+         (add-to-list 'load-path (concat default-directory "tools"))))
+  (when (interactive-p) (message "%s" load-path)))
 
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
