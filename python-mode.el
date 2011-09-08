@@ -2048,6 +2048,16 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
 (defvar py-which-bufname "Python")
 (make-variable-buffer-local 'py-which-bufname)
 
+(defun py-guess-default-python ()
+  "If any Python is installed. Used by `py-shell' if `py-shell-name' is neither selected nor has a customized default value. "
+  (interactive) 
+  (let* ((cmd (or (py-choose-shell) "python"))
+         (erg (executable-find cmd)))
+    (when (interactive-p)
+      (if erg
+          (message "%s" cmd)
+        (message "%s" "Could not detect Python on your system")))))
+
 (defun py-toggle-shells (&optional arg)
   "Toggles between the CPython and Jython default shells.
 
@@ -2082,27 +2092,13 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-pyt
 With optional \\[universal-argument] user is prompted by
 `py-choose-shell' for command and options to pass to the Python
 interpreter.
-
-Warning: Don't use an interactive Python if you change sys.ps1 or
-sys.ps2 from their default values, or if you're running code that
-prints `>>> ' or `... ' at the start of a line.  `python-mode' can't
-distinguish your output from Python's output, and assumes that `>>> '
-at the start of a line is a prompt from Python.  Similarly, the Emacs
-Shell mode code assumes that both `>>> ' and `... ' at the start of a
-line are Python prompts.  Bad things can happen if you fool either
-mode.
-
-Warning:  If you do any editing *in* the process buffer *while* the
-buffer is accepting output from Python, do NOT attempt to `undo' the
-changes.  Some of the output (nowhere near the parts you changed!) may
-be lost if you do.  This appears to be an Emacs bug, an unfortunate
-interaction between undo and process filters; the same problem exists in
-non-Python process buffers using the default (Emacs-supplied) process
-filter."
+"
   (interactive "P")
   ;; Set or select the shell if not ready 
-  (when (or (eq 4 (prefix-numeric-value argprompt))(null py-shell-name))
-    (py-choose-shell '(4)))
+  (if (eq 4 (prefix-numeric-value argprompt))
+      (py-choose-shell '(4))
+    (when (null py-shell-name)
+      (py-guess-default-python)))
   (let ((args py-python-command-args)
         (name (capitalize py-shell-name)))
     (if (not (equal (buffer-name) name))
