@@ -1705,7 +1705,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Set the default shell if not already set
   (when (null py-shell-name)
     (py-toggle-shells (py-choose-shell)))
-  (py-provide-installed-shells-commands)
+  (condition-case nil
+      (py-provide-installed-shells-commands)
+    (error nil))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
@@ -5496,7 +5498,9 @@ If point is inside a string, narrow to that string and fill.
            (not (eq (condition-case nil (region-beginning)(error nil)) (condition-case nil (region-end) (error nil))))))))
 
 (require 'info-look)
-(require 'python-mode-shell-install)
+(condition-case nil
+    (require 'python-mode-shell-install)
+  (error nil))
 
 (provide 'python-mode)
 ;;; python-mode.el ends here
