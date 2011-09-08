@@ -1236,7 +1236,10 @@ i.e. the limit on how far back to scan."
              (parse-partial-sexp (point-min) (point))
            (syntax-ppss))))
 
-(defvar py-shell-name nil)
+(defcustom py-shell-name "python"
+  "A default value `py-shell' may look for, if no shell is specified by command. "
+  :type 'string
+  :group 'python)
 (make-variable-buffer-local 'py-shell-name)
 
 
