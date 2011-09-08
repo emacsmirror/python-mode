@@ -44,7 +44,9 @@
 ;; have few cycles to do so.  Volunteers are welcome.
 
 ;; pdbtrack support contributed by Ken Manheimer, April 2001.  Skip Montanaro
-;; has also contributed significantly to python-mode's development.
+;; has also contributed significantly to python-mode's development. 
+
+;; Author of ipython.el's stuff integrated here is Alexander Schmolck.
 
 ;; Please use Launchpad to submit bugs or patches:
 ;;
