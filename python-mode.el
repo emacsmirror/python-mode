@@ -1,4 +1,4 @@
-;; python-mode.el --- Major mode for editing Python programs
+;;; python-mode.el --- Major mode for editing Python programs
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
@@ -162,18 +162,18 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python
   :tag "Jython Command")
 
-(defcustom py-encoding-string " # -*- coding: utf-8 -*-"
-  "Default string specifying encoding in the heading of file. "
+(defcustom py-encoding-string "# -*- coding: utf-8 -*-"
+  "Default string specifying encoding in the heading of file."
   :type 'string
   :group 'python)
 
 (defcustom py-shebang-startstring "#! /bin/env"
-  "Detecting the shell in head of file. "
+  "String to insert as the shebang in head of file, followed by the interpreter name."
   :type 'string
   :group 'python)
 
 (defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*[ \t]\\)?[^ \t\n]*\\([pj]ython[^ \t\n]*\\)"
-  "Detecting the shell in head of file. "
+  "Detecting the shell in head of file."
   :type 'regexp
   :group 'python)
 
@@ -250,13 +250,13 @@ you're editing someone else's Python code."
 (make-variable-buffer-local 'py-indent-in-delimiter)
 
 (defcustom py-lhs-inbound-indent 1
-  "When line starts a multiline-assignement: How many colums indent should be more than opening bracket, brace or parenthesis. "
+  "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
   :type 'integer
   :group 'python)
 (make-variable-buffer-local 'py-lhs-inbound-indent)
 
 (defcustom py-rhs-inbound-indent 1
-  "When inside a multiline-assignement: How many colums indent should be more than opening bracket, brace or parenthesis. "
+  "When inside a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
   :type 'integer
   :group 'python)
 (make-variable-buffer-local 'py-rhs-inbound-indent)
@@ -824,8 +824,8 @@ Currently-active file is at the head of the list.")
 
 
 ;; Constants
-(defconst py-assignement-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
-  "If looking at the beginning of an assignement. ")
+(defconst py-assignment-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
+  "If looking at the beginning of an assignment. ")
 
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
   "Matches the beginning of a class, method or compound statement. ")
@@ -3078,7 +3078,7 @@ the new line indented."
                     (current-column)
                   (py-beginning-of-statement)
                   (py-compute-indentation orig origline closing)))
-               ((and (< (point) orig)(looking-at py-assignement-re))
+               ((and (< (point) orig)(looking-at py-assignment-re))
                 (current-indentation))
                ((and (looking-at py-block-or-clause-re)(eq origline (py-count-lines)))
                 (py-beginning-of-statement)
