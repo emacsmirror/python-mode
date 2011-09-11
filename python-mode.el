@@ -1,4 +1,4 @@
-;;; python-mode.el --- Major mode for editing Python programs
+;; python-mode.el --- Major mode for editing Python programs
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
@@ -162,18 +162,18 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python
   :tag "Jython Command")
 
-(defcustom py-encoding-string "# -*- coding: utf-8 -*-"
-  "Default string specifying encoding in the heading of file."
+(defcustom py-encoding-string " # -*- coding: utf-8 -*-"
+  "Default string specifying encoding in the heading of file. "
   :type 'string
   :group 'python)
 
 (defcustom py-shebang-startstring "#! /bin/env"
-  "String to insert as the shebang in head of file, followed by the interpreter name."
+  "Detecting the shell in head of file. "
   :type 'string
   :group 'python)
 
 (defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*[ \t]\\)?[^ \t\n]*\\([pj]ython[^ \t\n]*\\)"
-  "Detecting the shell in head of file."
+  "Detecting the shell in head of file. "
   :type 'regexp
   :group 'python)
 
@@ -1562,13 +1562,13 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
     (insert sheb)))
 
 (defun py-set-load-path ()
-  "Include the python-mode directory inclusiv needed subdirs. 
+  "Include the python-mode directory inclusiv needed subdirs.
 
 If `py-install-directory' isn't set, guess from buffer-file-name. "
   (interactive)
   (cond ((ignore-errors py-install-directory)
-    (add-to-list 'load-path (expand-file-name py-install-directory))
-    (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
+         (add-to-list 'load-path (expand-file-name py-install-directory))
+         (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
          (add-to-list 'load-path (concat py-install-directory "/pymacs"))
          (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/test"))
          (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/tools")))
@@ -1714,13 +1714,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         ;; have explicitly turned it off.
         (if (/= tab-width py-indent-offset)
             (setq indent-tabs-mode nil))))
-  (py-set-load-path)
   ;; Set the default shell if not already set
   (when (null py-shell-name)
     (py-toggle-shells (py-choose-shell)))
-  (condition-case nil
-      (py-provide-installed-shells-commands)
-    (error nil))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
