@@ -553,7 +553,6 @@ set in py-execute-region and used in py-jump-to-exception.")
 (defvar empty-line-p-chars "^[ \t\r\f]*$"
   "Empty-line-p-chars.")
 
-;;;###autoload
 (defun empty-line-p (&optional iact)
   "Returns t if cursor is at an empty line, nil otherwise."
   (interactive "p")
@@ -1563,9 +1562,11 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
     (insert sheb)))
 
 (defun py-set-load-path ()
-  "Include the python-mode directory inclusiv needed subdirs. "
+  "Include the python-mode directory inclusiv needed subdirs. 
+
+If `py-install-directory' isn't set, guess from buffer-file-name. "
   (interactive)
-  (cond (py-install-directory
+  (cond ((ignore-errors py-install-directory)
     (add-to-list 'load-path (expand-file-name py-install-directory))
     (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
          (add-to-list 'load-path (concat py-install-directory "/pymacs"))
@@ -1577,10 +1578,11 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
          (add-to-list 'load-path (concat (expand-file-name "../") "test"))
          (add-to-list 'load-path (concat (expand-file-name "../") "tools")))
         (t
-         (add-to-list 'load-path (concat default-directory "completion"))
-         (add-to-list 'load-path (concat default-directory "pymacs"))
-         (add-to-list 'load-path (concat default-directory "test"))
-         (add-to-list 'load-path (concat default-directory "tools"))))
+         (add-to-list 'load-path (file-name-directory buffer-file-name))
+         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "completion"))
+         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "pymacs"))
+         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "test"))
+         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "tools"))))
   (when (interactive-p) (message "%s" load-path)))
 
 (define-derived-mode python2-mode python-mode "Python2"
@@ -1597,8 +1599,6 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
   (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file))
   (py-toggle-shells "python3"))
 
-;;;###autoload
-;; (define-derived-mode python-mode fundamental-mode "Python"
 (defun python-mode ()
   "Major mode for editing Python files.
 To submit a problem report, enter `\\[py-submit-bug-report]' from a
@@ -1741,7 +1741,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
 ;; can specify different `derived-modes' based on the #! line, but
 ;; with the latter, we can't.  So we just won't add them if they're
 ;; already added.
-;;;###autoload
+
 (let ((modes '(("jython" . jython-mode)
                ("python" . python-mode)
                ("python3" . python-mode)
