@@ -1641,9 +1641,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
         paragraph-separate "^[ \t]*$"
         paragraph-start "^[ \t]*$"
         require-final-newline t
-        comment-start "# "
+        comment-start "#"
         comment-end ""
-        comment-start-skip "# *"
+        comment-start-skip "^[ \t]*#+ *"
         comment-column 40
         comment-indent-function 'py-comment-indent-function
         indent-region-function 'py-indent-region
