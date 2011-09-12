@@ -243,12 +243,6 @@ you're editing someone else's Python code."
   :group 'python)
 (make-variable-buffer-local 'py-indent-offset)
 
-(defcustom py-backslashed-continuation-indent 2
-  "Indent of continuation-lines realised by backslashes. "
-  :type 'integer
-  :group 'python)
-(make-variable-buffer-local 'py-indent-in-delimiter)
-
 (defcustom py-lhs-inbound-indent 1
   "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
   :type 'integer
