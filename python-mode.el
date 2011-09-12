@@ -1196,20 +1196,6 @@ This function does not modify point or mark."
         (point)
       (goto-char orig))))
 
-(when (featurep 'xemacs)
-  (defsubst py-highlight-line (from to file line)
-    (cond
-     ((fboundp 'make-extent)
-      ;; XEmacs
-      (let ((e (make-extent from to)))
-        (set-extent-property e 'mouse-face 'highlight)
-        (set-extent-property e 'py-exc-info (cons file line))
-        (set-extent-property e 'keymap py-mode-output-map)))
-     (t
-      ;; Emacs -- Please port this!
-      )
-     )))
-
 (defun py-in-literal (&optional lim)
   "Return non-nil if point is in a Python literal (a comment or string).
 Optional argument LIM indicates the beginning of the containing form,
@@ -2033,7 +2019,7 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
         (setq file (match-string 1)
               line (string-to-number (match-string 2))
               bol (py-point 'bol))
-        (py-highlight-line bol (py-point 'eol) file line)))
+        (overlay-put (make-overlay (match-beginning 0) (match-end 0)) 'face 'highlight)))
     (when (and py-jump-on-exception line)
       (beep)
       (py-jump-to-exception file line)
@@ -2326,7 +2312,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
               (pop-to-buffer tempbuf)
               (py-postprocess-output-buffer tempbuf)
               ;; TBD: clean up the temporary file!
-        ))
+))
      (proc
       ;; use the existing python shell
       (set-buffer filebuf)
@@ -2359,21 +2345,21 @@ Unicode strings like u'\xA9' "
          (shell (or (py-choose-shell-by-shebang)
                     (py-choose-shell-by-import)
                     py-shell-name))
-         (cmd (if (string-equal name
+         (cmd (if (string-equal shell
                                 "Jython")
                   "jython -" "python")))
     (with-temp-buffer
       (insert-buffer-substring regbuf start end)
-      (switch-to-buffer (current-buffer))
       (shell-command-on-region (point-min) (point-max)
                                cmd py-output-buffer)
       ;; shell-command-on-region kills the output buffer if it never
       ;; existed and there's no output from the command
       (if (not (get-buffer py-output-buffer))
           (message "No output.")
-        (setq py-exception-buffer (current-buffer))
+        (setq py-exception-buffer py-output-buffer)
         (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-          (pop-to-buffer py-output-buffer)
+          (when py-shell-switch-buffers-on-execute
+            (pop-to-buffer py-output-buffer))
           (if err-p
               (pop-to-buffer py-exception-buffer)))))))
 
