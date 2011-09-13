@@ -124,6 +124,11 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-close-provides-newline t
+  "If a newline is inserted, when line after block isn't empty. Default is non-nil. "
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-electric-comment-p t
   "If \"#\" should call `py-electric-comment'. Default is `t'. "
   :type 'boolean
@@ -260,6 +265,11 @@ you're editing someone else's Python code."
 Continuation lines are those that immediately follow a backslash
 terminated line. "
   :type 'integer
+  :group 'python)
+
+(defcustom py-kill-empty-line t
+  "If t, py-indent-line-forward kills empty lines. "
+  :type 'boolean
   :group 'python)
 
 (defcustom py-smart-indentation t
@@ -1726,7 +1736,7 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
     (when (not (assoc (car modes) interpreter-mode-alist))
       (push (car modes) interpreter-mode-alist))
     (setq modes (cdr modes))))
-;;;###autoload
+
 (when (not (or (rassq 'python-mode auto-mode-alist)
                (rassq 'jython-mode auto-mode-alist)))
   (push '("\\.py$" . python-mode) auto-mode-alist))
@@ -2071,7 +2081,6 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-pyt
     (message "Using the %s shell" py-shell-name)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
 
-;;;###autoload
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
 
@@ -2976,6 +2985,59 @@ the new line indented."
     (when (< 0 cui)
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
+
+(defun py-indent-line-forward ()
+  "Indent line and move one line forward.
+
+If `py-kill-empty-line' is  non-nil, delete an empty line. 
+When closing a form, use py-close-block et al, which will move and indent likewise.
+"
+  (interactive "*")
+  (let ((orig (point))
+        erg)
+    (unless (eobp)
+  (if (and (not py-indent-comments) (py-in-comment-p))
+      (forward-line 1)
+    (indent-according-to-mode)
+    (end-of-line)
+    (if (eobp) (newline)
+      (progn (forward-line 1))
+      (when (and py-kill-empty-line (empty-line-p) (not (looking-at "[ \t]*\n[[:alpha:]]")) (not (eobp)))
+        (delete-region (line-beginning-position) (line-end-position))))))
+    (when (< orig (point)) (setq erg (point)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-dedent-line-forward ()
+  "Dedent line and move one line forward. "
+  (interactive "*")
+  (py-dedent-line)
+  (forward-line 1)
+  (unless (empty-line-p) (newline)))
+
+(defun py-dedent-line (&optional arg)
+  "Dedent line according to `py-indent-offset'.
+With arg, do it that many times.
+
+If point is between indent levels, dedent to next level.
+Return column reached, if dedent done, nil otherwise. "
+  (interactive "*p")
+  (let ((orig (progn (back-to-indentation)(point)))
+        erg)
+    (dotimes (i arg)
+      (let* ((cui (current-indentation))
+             (remain (% cui py-indent-offset))
+             (indent (* py-indent-offset (/ cui py-indent-offset))))
+        (beginning-of-line)
+        (fixup-whitespace)
+        (if (< 0 remain)
+            (indent-to-column indent)
+          (indent-to-column (- cui py-indent-offset)))))
+    (when (< (point) orig)
+      (setq erg (current-column)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 
 (defun py-compute-indentation (&optional orig origline closing)
   "Compute Python indentation.
@@ -4310,75 +4372,38 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
   (py-forward-into-nomenclature (- arg))
   (py-keep-region-active))
 
-(defun py-in-statement-p ()
-  "Returns list of beginning and end-position if inside.
-Result is useful for booleans too: (when (py-in-statement-p)...)
-will work.
-"
-  (interactive)
-  (let ((orig (point))
-        beg end erg)
-    (save-excursion
-      (setq end (py-end-of-statement))
-      (setq beg (py-beginning-of-statement))
-      (when (and (<= beg orig)(<= orig end))
-        (setq erg (cons beg end))
-        (when (interactive-p) (message "%s" erg))
-        erg))))
-
-(defalias 'py-beginning-of-block-p 'py-statement-opens-block-p)
-(defun py-statement-opens-block-p (&optional regexp)
-  (interactive)
-  "Return position if the current statement opens a block
-in stricter or wider sense.
-For stricter sense specify regexp. "
-  (let* ((regexp (or regexp py-block-re))
-        (erg (py-statement-opens-base regexp)))
+;; Closing forms
+(defun py-close-def ()
+  "Set indent level to that of beginning of function definition.
+If final line isn't empty and `py-close-block-provides-newline' non-nil, insert a newline. "
+  (interactive "*")
+  (let ((erg (py-close-intern py-def-re)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defalias 'py-beginning-of-clause-p 'py-statement-opens-clause-p)
-(defun py-statement-opens-clause-p ()
-  "Return position if the current statement opens block or clause. "
-  (interactive)
-  (py-statement-opens-base py-clause-re))
-
-(defun py-statement-opens-base (regexp)
-  (let ((orig (point))
-        erg)
-    (save-excursion
-      (back-to-indentation)
-      (py-end-of-statement)
-      (py-beginning-of-statement)
-      (when (and
-             (looking-back "^[ \t]*") (<= (line-beginning-position)(point))(looking-at regexp))
-        (setq erg (point))))
+(defun py-close-class ()
+  "Set indent level to that of beginning of class definition.
+If final line isn't empty and `py-close-block-provides-newline' non-nil, insert a newline. "
+  (interactive "*")
+  (let ((erg (py-close-intern py-class-re)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defalias 'py-beginning-of-block-or-clause-p 'py-statement-opens-block-or-clause-p)
-(defun py-statement-opens-block-or-clause-p ()
-  "Return position if the current statement opens block or clause. "
-  (interactive)
-  (py-statement-opens-base py-block-or-clause-re))
+(defun py-close-clause ()
+  "Set indent level to that of beginning of clause definition.
+If final line isn't empty and `py-close-block-provides-newline' non-nil, insert a newline. "
+  (interactive "*")
+  (let ((erg (py-close-intern py-clause-re)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
-(defalias 'py-beginning-of-class-p 'py-statement-opens-class-p)
-(defun py-statement-opens-class-p ()
-  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
-  (interactive)
-  (py-statement-opens-base py-class-re))
-
-(defalias 'py-beginning-of-def-p 'py-statement-opens-def-p)
-(defun py-statement-opens-def-p ()
-  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
-  (interactive)
-  (py-statement-opens-base py-def-re))
-
-(defalias 'py-beginning-of-def-or-class-p 'py-statement-opens-def-or-class-p)
-(defun py-statement-opens-def-or-class-p ()
-  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
-  (interactive)
-  (py-statement-opens-base py-def-or-class-re))
+(defun py-close-block ()
+  "Set indent level to that of beginning of block definition.
+If final line isn't empty and `py-close-block-provides-newline' non-nil, insert a newline. "
+  (interactive "*")
+  (let ((erg (py-close-intern py-block-re)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 ;; Mark forms
 
@@ -5092,6 +5117,87 @@ Used with `eval-after-load'."
 
 
 ;; Helper functions
+(defun py-close-intern (regexp)
+  "Core function, internal used only. "
+  (let ((cui (ignore-errors (car (py-go-to-keyword regexp -1)))))
+    (py-end-base regexp (point))
+    (forward-line 1)
+    (if py-close-provides-newline
+        (unless (empty-line-p) (split-line))
+      (fixup-whitespace))
+    (indent-to-column cui)
+    cui))
+
+(defun py-in-statement-p ()
+  "Returns list of beginning and end-position if inside.
+Result is useful for booleans too: (when (py-in-statement-p)...)
+will work.
+"
+  (interactive)
+  (let ((orig (point))
+        beg end erg)
+    (save-excursion
+      (setq end (py-end-of-statement))
+      (setq beg (py-beginning-of-statement))
+      (when (and (<= beg orig)(<= orig end))
+        (setq erg (cons beg end))
+        (when (interactive-p) (message "%s" erg))
+        erg))))
+
+(defalias 'py-beginning-of-block-p 'py-statement-opens-block-p)
+(defun py-statement-opens-block-p (&optional regexp)
+  (interactive)
+  "Return position if the current statement opens a block
+in stricter or wider sense.
+For stricter sense specify regexp. "
+  (let* ((regexp (or regexp py-block-re))
+        (erg (py-statement-opens-base regexp)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-beginning-of-clause-p 'py-statement-opens-clause-p)
+(defun py-statement-opens-clause-p ()
+  "Return position if the current statement opens block or clause. "
+  (interactive)
+  (py-statement-opens-base py-clause-re))
+
+(defun py-statement-opens-base (regexp)
+  (let ((orig (point))
+        erg)
+    (save-excursion
+      (back-to-indentation)
+      (py-end-of-statement)
+      (py-beginning-of-statement)
+      (when (and
+             (looking-back "^[ \t]*") (<= (line-beginning-position)(point))(looking-at regexp))
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-beginning-of-block-or-clause-p 'py-statement-opens-block-or-clause-p)
+(defun py-statement-opens-block-or-clause-p ()
+  "Return position if the current statement opens block or clause. "
+  (interactive)
+  (py-statement-opens-base py-block-or-clause-re))
+
+(defalias 'py-beginning-of-class-p 'py-statement-opens-class-p)
+(defun py-statement-opens-class-p ()
+  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
+  (interactive)
+  (py-statement-opens-base py-class-re))
+
+(defalias 'py-beginning-of-def-p 'py-statement-opens-def-p)
+(defun py-statement-opens-def-p ()
+  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
+  (interactive)
+  (py-statement-opens-base py-def-re))
+
+(defalias 'py-beginning-of-def-or-class-p 'py-statement-opens-def-or-class-p)
+(defun py-statement-opens-def-or-class-p ()
+  "Return `t' if the statement opens a functions or class definition, nil otherwise. "
+  (interactive)
+  (py-statement-opens-base py-def-or-class-re))
+
 (defun py-beginning-of-expression-p ()
   (interactive)
   "Returns position, if cursor is at the beginning of a expression, nil otherwise. "

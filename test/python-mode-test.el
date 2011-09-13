@@ -31,7 +31,7 @@
           (list
            'py-beginning-of-block-or-clause-test)
         (list
-         
+
          'py-beginning-of-block-test
          'py-end-of-block-test
          'py-beginning-of-block-or-clause-test
@@ -68,7 +68,8 @@
          'py-partial-expression-test
          'py-execute-block-test
          'multiline-list-indent-test
-         
+         'close-block-test
+
          )))
 
 (defun py-run-tests (&optional arg)
@@ -740,6 +741,25 @@ print u'\\xA9'
     (py-execute-region (line-beginning-position) (point))
     (assert (window-full-height-p) "no-switch-no-split-test failed")
     (assert (eq (current-buffer) oldbuf))))
+
+(defun close-block-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def main():
+    if len(sys.argv)==1:
+        usage()
+        sys.exit()
+if __name__==\"__main__\":
+    main()
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'close-block-base arg teststring)))
+
+(defun close-block-base ()
+  (goto-char 102)
+  (assert (eq 4 (py-close-block)) nil "close-block-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

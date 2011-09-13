@@ -172,7 +172,7 @@ def main(argv):
 If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked. "
   (interactive "p")
   (when load-branch-function (funcall load-branch-function))
-  (let ((teststring "
+  (let ((teststring "  
     d = {'a':{'b':3,
               'c':4}}
 "))
@@ -182,7 +182,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
   (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 2)
-    (assert (eq 14 (py-compute-indentation)))))
+    (assert (eq 14 (py-compute-indentation)) nil "nested-dictionaries-indent-lp:328791 failed")))
 
 (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
