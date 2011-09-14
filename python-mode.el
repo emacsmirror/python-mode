@@ -2097,7 +2097,9 @@ interpreter.
     (when (null py-shell-name)
       (py-guess-default-python)))
   (let ((args py-python-command-args)
-        (name (capitalize py-shell-name)))
+        (name (if (string= "ipython" py-shell-name)
+                  "IPython"
+                (capitalize py-shell-name))))
     (if (not (equal (buffer-name) name))
         (switch-to-buffer-other-window
          (apply 'make-comint name py-shell-name nil args))
@@ -2991,7 +2993,7 @@ the new line indented."
 (defun py-indent-line-forward ()
   "Indent line and move one line forward.
 
-If `py-kill-empty-line' is  non-nil, delete an empty line. 
+If `py-kill-empty-line' is  non-nil, delete an empty line.
 When closing a form, use py-close-block et al, which will move and indent likewise.
 "
   (interactive "*")
