@@ -1491,7 +1491,9 @@ Returns the specified Python resp. Jython shell command name. "
   (let ((interpreter (save-excursion
                        (goto-char (point-min))
                        (when (looking-at py-shebang-regexp)
-                         (match-string-no-properties 2)))))
+                            (setq erg (match-string-no-properties 0))
+                            (substring erg (string-match "[ijp]+ython" erg))))))
+    (when (interactive-p) (message "%s" interpreter))
     interpreter))
 
 (defun py-choose-shell-by-import ()
