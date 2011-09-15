@@ -3027,7 +3027,7 @@ With arg, do it that many times.
 If point is between indent levels, dedent to next level.
 Return column reached, if dedent done, nil otherwise. "
   (interactive "*p")
-  (let ((orig (progn (back-to-indentation)(point)))
+  (let ((orig (copy-marker (point)))
         erg)
     (dotimes (i arg)
       (let* ((cui (current-indentation))
@@ -3040,9 +3040,9 @@ Return column reached, if dedent done, nil otherwise. "
           (indent-to-column (- cui py-indent-offset)))))
     (when (< (point) orig)
       (setq erg (current-column)))
+    (goto-char orig)
     (when (interactive-p) (message "%s" erg))
     erg))
-
 
 (defun py-compute-indentation (&optional orig origline closing)
   "Compute Python indentation.
