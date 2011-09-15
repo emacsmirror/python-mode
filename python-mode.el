@@ -3016,11 +3016,11 @@ When closing a form, use py-close-block et al, which will move and indent likewi
 (defun py-dedent-line-forward ()
   "Dedent line and move one line forward. "
   (interactive "*")
-  (py-dedent-line)
+  (py-dedent)
   (forward-line 1)
   (unless (empty-line-p) (newline)))
 
-(defun py-dedent-line (&optional arg)
+(defun py-dedent (&optional arg)
   "Dedent line according to `py-indent-offset'.
 With arg, do it that many times.
 
