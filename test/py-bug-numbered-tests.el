@@ -96,6 +96,7 @@
          'execute-indented-code-lp:828314-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
+         'py-hungry-delete-backwards-needs-cc-lp-850595-test
 
          )))
 
@@ -1624,6 +1625,16 @@ if foo:
 
 (defun py-shebang-ipython-env-lp-849293-base ()
     (assert (string= "ipython" (py-choose-shell-by-shebang)) nil "py-shebang-ipython-env-lp-849293-test failed"))
+
+(defun py-hungry-delete-backwards-needs-cc-lp-850595-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring ""))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-hungry-delete-backwards-needs-cc-lp-850595-base arg teststring)))
+
+(defun py-hungry-delete-backwards-needs-cc-lp-850595-base ()
+    (assert (functionp 'c-hungry-delete-backwards) nil "py-hungry-delete-backwards-needs-cc-lp-850595-test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

@@ -114,6 +114,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall wrong-indentation-of-function-arguments-lp:840891-test \
 --funcall py-shebang-ipython-env-lp-849293-test \
 --funcall py-shebang-consider-ipython-lp-849293-test \
+--funcall py-hungry-delete-backwards-needs-cc-lp-850595-test \
 \
 --funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \

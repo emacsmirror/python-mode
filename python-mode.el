@@ -99,6 +99,7 @@
 (require 'custom)
 (require 'compile)
 (require 'ansi-color)
+(require 'cc-cmds)
 (when (featurep 'xemacs)
   (require 'highlight-indentation))
 
