@@ -1013,6 +1013,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map [(control meta e)] 'py-end-of-def-or-class)
     (define-key map [(control j)] 'py-newline-and-indent)
     (define-key map [(return)] 'py-newline-and-indent)
+    (define-key map [(super backspace)] 'py-dedent-forward-line)
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
     (define-key map [(control c)(\/)] 'py-indent-line-outmost)
@@ -3014,7 +3015,7 @@ When closing a form, use py-close-block et al, which will move and indent likewi
     (when (interactive-p) (message "%s" erg))
     erg))
 
-(defun py-dedent-line-forward ()
+(defun py-dedent-forward-line ()
   "Dedent line and move one line forward. "
   (interactive "*")
   (py-dedent)
