@@ -130,6 +130,11 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
+(defcustom py-dedent-keep-relative-column t
+  "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. "
+  :type 'boolean
+  :group 'python)
+
 (defcustom py-electric-comment-p t
   "If \"#\" should call `py-electric-comment'. Default is `t'. "
   :type 'boolean
@@ -3042,7 +3047,10 @@ Return column reached, if dedent done, nil otherwise. "
           (indent-to-column (- cui py-indent-offset)))))
     (when (< (point) orig)
       (setq erg (current-column)))
+    (if py-dedent-keep-relative-column
     (goto-char orig)
+      (end-of-line)
+      (skip-chars-backward " \t\r\n\f"))
     (when (interactive-p) (message "%s" erg))
     erg))
 
