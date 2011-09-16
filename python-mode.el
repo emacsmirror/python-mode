@@ -1889,7 +1889,8 @@ This function is appropriate for `comint-output-filter-functions'."
          (set-marker overlay-arrow-position (py-point 'bol) (current-buffer))
          (setq py-pdbtrack-is-tracking-p t))
         (overlay-arrow-position
-         (setq overlay-arrow-position nil)
+         (setq overlay-
+arrow-position nil)
          (setq py-pdbtrack-is-tracking-p nil))
         ))
 
@@ -4602,6 +4603,7 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "expression")))
     (kill-region (car erg) (cdr erg))))
 
+(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
 (defun py-kill-partial-expression ()
   "Delete partial-expression at point.
   Stores data in kill ring. Might be yanked back using `C-y'. "
