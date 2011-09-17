@@ -112,9 +112,10 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-electric-comment-add-space-t-lp:828398-test \
 --funcall execute-indented-code-lp:828314-test \
 --funcall wrong-indentation-of-function-arguments-lp:840891-test \
+--funcall wrong-guess-for-py-indent-offset-lp-852052-test \
+--funcall py-hungry-delete-backwards-needs-cc-lp-850595-test \
 --funcall py-shebang-ipython-env-lp-849293-test \
 --funcall py-shebang-consider-ipython-lp-849293-test \
---funcall py-hungry-delete-backwards-needs-cc-lp-850595-test \
 \
 --funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \

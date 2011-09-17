@@ -94,9 +94,10 @@
          'py-electric-comment-add-space-lp:828398-test
          'py-electric-comment-add-space-t-lp:828398-test
          'execute-indented-code-lp:828314-test
+         'py-hungry-delete-backwards-needs-cc-lp-850595-test
+         'wrong-guess-for-py-indent-offset-lp-852052-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
-         'py-hungry-delete-backwards-needs-cc-lp-850595-test
 
          )))
 
@@ -1634,6 +1635,28 @@ if foo:
 
 (defun py-hungry-delete-backwards-needs-cc-lp-850595-base ()
     (assert (functionp 'c-hungry-delete-backwards) nil "py-hungry-delete-backwards-needs-cc-lp-850595-test failed"))
+
+
+(defun wrong-guess-for-py-indent-offset-lp-852052-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "# The indent offset shouldn't be guessed from backslash
+# continuations. I have
+
+from long.pkg.name import long, list, of, \\
+     class, and, function, names
+
+# (note there are five spaces before \"class\", to match with the
+# start of the pkg name.)
+
+# Since the indent of backlash-continued lines has no meaning for
+# code, it should not be considered.
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'wrong-guess-for-py-indent-offset-lp-852052-base arg teststring)))
+
+(defun wrong-guess-for-py-indent-offset-lp-852052-base ()
+    (goto-char 126)
+    (assert (eq 4 (py-guess-indent-offset)) nil "wrong-guess-for-py-indent-offset-lp-852052-test1 failed"))
 
 
 (provide 'py-bug-numbered-tests)

@@ -3354,40 +3354,39 @@ change the global value of `py-indent-offset'. "
   (save-excursion
     (save-restriction
       (widen)
-      (lexical-let ((old-value py-indent-offset)
-                    (orig (point))
-                    done indent first)
-        (while (and (not done) (not (bobp)))
-          (setq first (progn (unless done (py-beginning-of-statement)(current-indentation))))
-          (save-excursion
+      (let* ((lastindent (if
+                             (py-beginning-of-statement-p)
+                             (current-indentation)
+                           (progn
             (py-beginning-of-statement)
-            (setq indent (abs (- first (current-indentation))))
-            (if (and indent (>= indent 2) (<= indent 8)) ; sanity check
-                (setq done t))))
-        (unless done
-          ;; search downward
-          (goto-char orig)
-          (while (and (not done) (not (eobp)))
-            (setq first (progn (unless done (py-end-of-statement)(current-indentation))))
-            (py-end-of-statement)
-            (save-excursion
-              (py-beginning-of-statement)
-              (setq indent (abs (- (current-indentation) first)))
-              (if (and indent (>= indent 2) (<= indent 8)) ; sanity check
-                  (setq done t)))))
-	(when done
-	  (when (/= indent (default-value 'py-indent-offset))
+                             (current-indentation))))
+             (firstindent (progn (py-beginning-of-block)
+                                 (current-indentation)))
+             (guessed (- lastindent firstindent))
+             erg)
+        (if (py-guessed-sanity-check)
+            (setq erg guessed)
+          ;; no indent between statements at point
+          (setq firstindent (progn
+                              (py-beginning-of-def-or-class)
+                              (current-indentation)))
+          (setq guessed (- lastindent firstindent))
+          (when (py-guessed-sanity-check)
+            (setq py-indent-offset guessed)))
+        (when (and (py-guessed-sanity-check) (/= guessed (default-value 'py-indent-offset)))
             (funcall (if global 'kill-local-variable 'make-local-variable)
                      'py-indent-offset)
             (setq py-indent-offset indent)
 	    (unless (= tab-width py-indent-offset)
 	      (setq indent-tabs-mode nil)))
-          (when (or (not (and (eq old-value py-indent-offset) (eq py-indent-offset (default-value 'py-indent-offset))))
-                    (interactive-p))
+        (when (interactive-p)
             (message "%s value of py-indent-offset:  %d"
                      (if global "Global" "Local")
                      py-indent-offset))
-          py-indent-offset)))))
+        py-indent-offset))))
+
+(defun py-guessed-sanity-check ()
+  (and (>= guessed 2)(<= guessed 8)(eq 0 (% guessed 2))))
 
 (defun py-comment-indent-function ()
   "Python version of `comment-indent-function'."
