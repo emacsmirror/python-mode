@@ -96,6 +96,7 @@
          'execute-indented-code-lp:828314-test
          'py-hungry-delete-backwards-needs-cc-lp-850595-test
          'wrong-guess-for-py-indent-offset-lp-852052-test
+         'indent-match-import-pkg-lp-852500-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -1656,7 +1657,22 @@ from long.pkg.name import long, list, of, \\
 
 (defun wrong-guess-for-py-indent-offset-lp-852052-base ()
     (goto-char 126)
-    (assert (eq 4 (py-guess-indent-offset)) nil "wrong-guess-for-py-indent-offset-lp-852052-test1 failed"))
+    (assert (eq 4 (py-guess-indent-offset)) nil "wrong-guess-for-py-indent-offset-lp-852052-test failed"))
+
+(defun indent-match-import-pkg-lp-852500-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "from long.pkg.name import long, list, of, \\
+     class, and, function, names
+
+# (note there are five spaces before \"class\", to match with the
+# start of the pkg name.)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-match-import-pkg-lp-852500-base arg teststring)))
+
+(defun indent-match-import-pkg-lp-852500-base ()
+    (goto-char 45)
+    (assert (eq 5 (py-compute-indentation)) nil "indent-match-import-pkg-lp-852500-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
