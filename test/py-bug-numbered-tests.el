@@ -1644,7 +1644,7 @@ if foo:
 # continuations. I have
 
 from long.pkg.name import long, list, of, \\
-     class, and, function, names
+     class_and_function, and, function, names
 
 # (note there are five spaces before \"class\", to match with the
 # start of the pkg name.)
@@ -1662,7 +1662,7 @@ from long.pkg.name import long, list, of, \\
 (defun indent-match-import-pkg-lp-852500-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "from long.pkg.name import long, list, of, \\
-     class, and, function, names
+     class_and_function, names
 
 # (note there are five spaces before \"class\", to match with the
 # start of the pkg name.)
