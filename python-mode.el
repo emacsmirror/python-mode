@@ -2091,6 +2091,12 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-pyt
     (message "Using the %s shell" py-shell-name)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
 
+(defun py-process-name ()
+  "Return the name of the running Python process, `get-process' willsee it. "
+  (if (string= "ipython" py-shell-name)
+      "IPython"
+    (capitalize py-shell-name)))
+
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
 
@@ -2105,13 +2111,11 @@ interpreter.
     (when (null py-shell-name)
       (py-guess-default-python)))
   (let ((args py-python-command-args)
-        (name (if (string= "ipython" py-shell-name)
-                  "IPython"
-                (capitalize py-shell-name))))
-    (if (not (equal (buffer-name) name))
+        (py-process-name (py-process-name)))
+    (if (not (equal (buffer-name) py-process-name))
         (switch-to-buffer-other-window
-         (apply 'make-comint name py-shell-name nil args))
-      (apply 'make-comint name py-shell-name nil args))
+         (apply 'make-comint py-process-name py-shell-name nil args))
+      (apply 'make-comint py-process-name py-shell-name nil args))
     (make-local-variable 'comint-prompt-regexp)
     (setq comint-prompt-regexp (concat py-shell-input-prompt-1-regexp "\\|"
                                        py-shell-input-prompt-2-regexp "\\|"
