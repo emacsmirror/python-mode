@@ -940,8 +940,31 @@ Currently-active file is at the head of the list.")
   "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
   "Regular expression pdbtrack uses to find a stack trace entry.")
 
-(defconst py-pdbtrack-input-prompt "\n[(<]*[Pp]db[>)]+ "
+(defconst py-pdbtrack-stack-entry-regexp
+  "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
+  "Regular expression pdbtrack uses to find a stack trace entry for pydb.
+
+The debugger outputs program-location lines that look like this:
+   (/usr/bin/zonetab2pot.py:15): makePOT")
+
+(defconst py-pdbtrack-marker-regexp-file-group 1
+  "Group position in gud-pydb-marker-regexp that matches the file name.")
+
+(defconst py-pdbtrack-marker-regexp-line-group 2
+  "Group position in gud-pydb-marker-regexp that matches the line number.")
+
+(defconst py-pdbtrack-marker-regexp-funcname-group 3
+  "Group position in gud-pydb-marker-regexp that matches the function name.")
+
+(defconst py-pdbtrack-input-prompt "\n[(<]*[Pp]y?db[>)]+ "
   "Regular expression pdbtrack uses to recognize a pdb prompt.")
+
+(defconst py-pydbtrack-stack-entry-regexp
+  "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
+  "Regular expression pdbtrack uses to find a stack trace entry for pydb.
+
+The debugger outputs program-location lines that look like this:
+   (/usr/bin/zonetab2pot.py:15): makePOT")
 
 (defconst py-pdbtrack-track-range 10000
   "Max number of characters from end of buffer to search for stack entry.")
@@ -1895,8 +1918,7 @@ This function is appropriate for `comint-output-filter-functions'."
          (set-marker overlay-arrow-position (py-point 'bol) (current-buffer))
          (setq py-pdbtrack-is-tracking-p t))
         (overlay-arrow-position
-         (setq overlay-
-arrow-position nil)
+         (setq overlay-arrow-position nil)
          (setq py-pdbtrack-is-tracking-p nil))
         ))
 
@@ -1969,13 +1991,16 @@ with the same name or having the named function.
 If we're unable find the source code we return a string describing the
 problem as best as we can determine."
 
-  (if (not (string-match py-pdbtrack-stack-entry-regexp block))
-
+  (if (and (not (string-match py-pdbtrack-stack-entry-regexp block))
+	   (not (string-match py-pydbtrack-stack-entry-regexp block)))
       "Traceback cue not found"
-
-    (let* ((filename (match-string 1 block))
-           (lineno (string-to-number (match-string 2 block)))
-           (funcname (match-string 3 block))
+    (let* ((filename (match-string 
+		      py-pdbtrack-marker-regexp-file-group block))
+           (lineno (string-to-number (match-string 
+				   py-pdbtrack-marker-regexp-line-group
+				   block)))
+           (funcname (match-string py-pdbtrack-marker-regexp-funcname-group
+				   block))
            funcbuffer)
 
       (cond ((file-exists-p filename)
