@@ -274,7 +274,7 @@ terminated line. "
   :group 'python)
 
 (defcustom py-kill-empty-line t
-  "If t, py-indent-line-forward kills empty lines. "
+  "If t, py-indent-forward-line kills empty lines. "
   :type 'boolean
   :group 'python)
 
@@ -3028,25 +3028,28 @@ the new line indented."
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
 
-(defun py-indent-line-forward ()
-  "Indent line and move one line forward.
+(defun py-indent-forward-line (&optional arg) 
+  "Indent and move one line forward to next indentation.
+Returns column of line reached.
 
 If `py-kill-empty-line' is  non-nil, delete an empty line.
 When closing a form, use py-close-block et al, which will move and indent likewise.
+With \\[universal argument] just indent.
 "
-  (interactive "*")
+  (interactive "*P")
   (let ((orig (point))
         erg)
     (unless (eobp)
-  (if (and (not py-indent-comments) (py-in-comment-p))
+      (if (and (py-in-comment-p)(not py-indent-comments))
       (forward-line 1)
     (indent-according-to-mode)
-    (end-of-line)
+        (unless (eq 4 (prefix-numeric-value arg))
     (if (eobp) (newline)
       (progn (forward-line 1))
       (when (and py-kill-empty-line (empty-line-p) (not (looking-at "[ \t]*\n[[:alpha:]]")) (not (eobp)))
-        (delete-region (line-beginning-position) (line-end-position))))))
-    (when (< orig (point)) (setq erg (point)))
+              (delete-region (line-beginning-position) (line-end-position)))))))
+    (back-to-indentation) 
+    (when (or (eq 4 (prefix-numeric-value arg)) (< orig (point))) (setq erg (current-column)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
