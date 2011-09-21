@@ -1833,11 +1833,13 @@ comment or by universal prefix C-u."
          (self-insert-command 1))
         (t (self-insert-command (prefix-numeric-value arg))
            (unless (py-in-string-or-comment-p)
-             (let ((indent (py-compute-indentation)))
+             (let ((orig (copy-marker (point)))
+                   (indent (py-compute-indentation)))
                (unless (eq (current-indentation) indent)
                  (beginning-of-line)
                  (delete-horizontal-space)
-                 (indent-to indent)))))))
+                 (indent-to indent))
+               (goto-char orig))))))
 
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
@@ -3459,7 +3461,7 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 
 COUNT defaults to `py-indent-offset',
 use \\[universal-argument] to specify a different value.
- 
+
 If no region is active, current line is dedented.
 Returns current indentation reached. "
   (interactive "P")
