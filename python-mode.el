@@ -4033,7 +4033,7 @@ http://docs.python.org/reference/compound_stmts.html
                  ((not (eq (current-column) (current-indentation)))
                   (back-to-indentation)
           (setq erg (point))
-          (setq done t) 
+          (setq done t)
           (py-beginning-of-statement orig origline done))
                  ((and (eq (point) orig)(or (bolp) (<= (current-column)(current-indentation))))
                   (forward-line -1)
@@ -4219,6 +4219,26 @@ http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (let ((orig (point)))
     (py-end-base py-block-re orig (interactive-p))))
+
+(defun py-down-block ()
+  "Go to the beginning of next block below current level.
+Returns position if block inside found, nil otherwise. "
+  (interactive)
+  (unless (eobp)
+    (let ((orig (point))
+          (end (save-excursion
+                 (py-end-of-block)))
+          erg)
+      (unless (looking-at py-block-re)
+        (py-beginning-of-block))
+      (when (looking-at py-block-re) (goto-char (match-end 0)))
+      (while (and (setq erg (re-search-forward py-block-re end (quote move) 1))(save-match-data (py-in-string-or-comment-p))))
+      (if erg
+          (progn (back-to-indentation)
+                 (setq erg (point)))
+        (goto-char orig))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
 
 ;; Block or clause
 (defalias 'py-goto-initial-line 'py-beginning-of-block-or-clause)
