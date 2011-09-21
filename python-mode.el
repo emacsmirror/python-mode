@@ -1994,9 +1994,9 @@ problem as best as we can determine."
   (if (and (not (string-match py-pdbtrack-stack-entry-regexp block))
 	   (not (string-match py-pydbtrack-stack-entry-regexp block)))
       "Traceback cue not found"
-    (let* ((filename (match-string 
+    (let* ((filename (match-string
 		      py-pdbtrack-marker-regexp-file-group block))
-           (lineno (string-to-number (match-string 
+           (lineno (string-to-number (match-string
 				   py-pdbtrack-marker-regexp-line-group
 				   block)))
            (funcname (match-string py-pdbtrack-marker-regexp-funcname-group
@@ -2152,7 +2152,7 @@ interpreter.
     (setq py-pdbtrack-do-tracking-p t)
     (set-syntax-table py-mode-syntax-table)
     (use-local-map py-shell-map)
-    (setq py-shell-name py-shell-name) 
+    (setq py-shell-name py-shell-name)
     (run-hooks 'py-shell-hook)))
 
 (defun python (&optional argprompt)
@@ -3028,11 +3028,11 @@ the new line indented."
       (setq goal (py-compute-indentation))
       (indent-to-column (- goal py-indent-offset)))))
 
-(defun py-indent-forward-line (&optional arg) 
+(defun py-indent-forward-line (&optional arg)
   "Indent and move one line forward to next indentation.
 Returns column of line reached.
 
-If `py-kill-empty-line' is  non-nil, delete an empty line.
+If `py-kill-empty-line' is non-nil, delete an empty line.
 When closing a form, use py-close-block et al, which will move and indent likewise.
 With \\[universal argument] just indent.
 "
@@ -3041,14 +3041,14 @@ With \\[universal argument] just indent.
         erg)
     (unless (eobp)
       (if (and (py-in-comment-p)(not py-indent-comments))
-      (forward-line 1)
-    (indent-according-to-mode)
+          (forward-line 1)
+        (py-indent-line-outmost)
         (unless (eq 4 (prefix-numeric-value arg))
-    (if (eobp) (newline)
-      (progn (forward-line 1))
-      (when (and py-kill-empty-line (empty-line-p) (not (looking-at "[ \t]*\n[[:alpha:]]")) (not (eobp)))
+          (if (eobp) (newline)
+            (progn (forward-line 1))
+            (when (and py-kill-empty-line (empty-line-p) (not (looking-at "[ \t]*\n[[:alpha:]]")) (not (eobp)))
               (delete-region (line-beginning-position) (line-end-position)))))))
-    (back-to-indentation) 
+    (back-to-indentation)
     (when (or (eq 4 (prefix-numeric-value arg)) (< orig (point))) (setq erg (current-column)))
     (when (interactive-p) (message "%s" erg))
     erg))
