@@ -97,6 +97,7 @@
          'py-hungry-delete-backwards-needs-cc-lp-850595-test
          'wrong-guess-for-py-indent-offset-lp-852052-test
          'indent-match-import-pkg-lp-852500-test
+         'py-shift-line-when-no-region-lp-855565-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -1673,6 +1674,21 @@ from long.pkg.name import long, list, of, \\
 (defun indent-match-import-pkg-lp-852500-base ()
     (goto-char 45)
     (assert (eq 5 (py-compute-indentation)) nil "indent-match-import-pkg-lp-852500-test failed"))
+
+
+(defun py-shift-line-when-no-region-lp-855565-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/ipython
+# -*- coding: utf-8 -*-
+
+if foo:
+    print"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-shift-line-when-no-region-lp-855565-base arg teststring)))
+
+(defun py-shift-line-when-no-region-lp-855565-base ()
+    (goto-char 58)
+    (assert (eq 8 (py-shift-right)) nil "py-shift-line-when-no-region-lp-855565-test failed"))
 
 
 (provide 'py-bug-numbered-tests)

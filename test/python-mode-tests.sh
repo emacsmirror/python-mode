@@ -115,6 +115,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall wrong-guess-for-py-indent-offset-lp-852052-test \
 --funcall indent-match-import-pkg-lp-852500-test \
 --funcall py-hungry-delete-backwards-needs-cc-lp-850595-test \
+--funcall py-shift-line-when-no-region-lp-855565-test \
 --funcall py-shebang-ipython-env-lp-849293-test \
 --funcall py-shebang-consider-ipython-lp-849293-test \
 \

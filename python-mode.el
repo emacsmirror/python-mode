@@ -1045,10 +1045,10 @@ package.  Note that the latest X/Emacs releases contain this package.")
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
     (define-key map [(control c)(\/)] 'py-indent-line-outmost)
-    (define-key map [(control c)(control l)] 'py-shift-region-left)
-    (define-key map [(control c)(control r)] 'py-shift-region-right)
-    (define-key map [(control c)(<)] 'py-shift-region-left)
-    (define-key map [(control c)(>)] 'py-shift-region-right)
+    (define-key map [(control c)(control l)] 'py-shift-left)
+    (define-key map [(control c)(control r)] 'py-shift-right)
+    (define-key map [(control c)(<)] 'py-shift-left)
+    (define-key map [(control c)(>)] 'py-shift-right)
     (define-key map [(control c)(tab)] 'py-indent-region)
     (define-key map [(control c)(:)] 'py-guess-indent-offset)
     ;; subprocess commands
@@ -2806,7 +2806,7 @@ Avoid empty lines at the beginning. "
       (delete-region (line-beginning-position) (1+ (line-end-position))))
     (back-to-indentation)
     (unless (eq (current-indentation) 0)
-      (py-shift-region-left start end (current-indentation)))
+      (py-shift-left start end (current-indentation)))
     (setq py-line-number-offset (count-lines 1 start))
     beg))
 
@@ -3452,58 +3452,66 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
       (narrow-to-region (point) end))))
 
 
+;; backward compatibility
+(defalias 'py-shift-region-left 'py-shift-left)
+(defun py-shift-left (&optional start end count)
+  "Dedent lines from START to END by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \\[universal-argument] to specify a different value.
+ 
+If no region is active, current line is dedented.
+Returns current indentation reached. "
+  (interactive "P")
+  (let ((count (or current-prefix-arg
+                   py-indent-offset))
+        (beg (cond (start)
+                   ((region-active-p)
+                    (region-beginning))
+                   (t (line-beginning-position))))
+        (end (cond ((ignore-errors end))
+                   ((region-active-p)
+                    (region-end))
+                   (t (line-end-position))))
+        erg)
+    (when
+        (indent-rigidly beg end count)
+      (setq erg (current-indentation))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
+
+;; backward compatibility
+(defalias 'py-shift-region-right 'py-shift-right)
+(defun py-shift-right (&optional count start end)
+  "Indent lines from START to END by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \\[universal-argument] to specify a different value.
+
+If no region is active, current line is indented.
+Returns current indentation reached. "
+  (interactive "P")
+  (let ((count (or current-prefix-arg
+                   py-indent-offset))
+        (beg (cond (start)
+                   ((region-active-p)
+                    (region-beginning))
+                   (t (line-beginning-position))))
+        (end (cond ((ignore-errors end))
+                   ((region-active-p)
+                    (region-end))
+                   (t (line-end-position))))
+        erg)
+    (when
+        (indent-rigidly beg end count)
+      (setq erg (current-indentation))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
+
 (defun py-shift-region (start end count)
   "Indent lines from START to END by COUNT spaces."
   (let (deactivate-mark)
     (indent-rigidly start end count)))
-
-(defun py-shift-region-left (start end &optional count)
-  "Shift region of Python code to the left.
-The lines from the line containing the start of the current region up
-to (but not including) the line containing the end of the region are
-shifted to the left, by `py-indent-offset' columns.
-
-If a prefix argument is given, the region is instead shifted by that
-many columns.  With no active region, dedent only the current line.
-You cannot dedent the region if any line is already at column zero."
-  (interactive
-   (let ((p (point))
-         (m (condition-case nil (mark) (mark-inactive nil)))
-         (arg current-prefix-arg))
-     (if m
-         (list (min p m) (max p m) arg)
-       (list p (save-excursion (forward-line 1) (point)) arg))))
-  ;; if any line is at column zero, don't shift the region
-  (save-excursion
-    (goto-char start)
-    (while (< (point) end)
-      (back-to-indentation)
-      (if (and (zerop (current-column))
-               (not (looking-at "\\s *$")))
-          (error "Region is at left edge"))
-      (forward-line 1)))
-  (py-shift-region start end (- (prefix-numeric-value
-                                 (or count py-indent-offset))))
-  (py-keep-region-active))
-
-(defun py-shift-region-right (start end &optional count)
-  "Shift region of Python code to the right.
-The lines from the line containing the start of the current region up
-to (but not including) the line containing the end of the region are
-shifted to the right, by `py-indent-offset' columns.
-
-If a prefix argument is given, the region is instead shifted by that
-many columns.  With no active region, indent only the current line."
-  (interactive
-   (let ((p (point))
-         (m (condition-case nil (mark) (mark-inactive nil)))
-         (arg current-prefix-arg))
-     (if m
-         (list (min p m) (max p m) arg)
-       (list p (save-excursion (forward-line 1) (point)) arg))))
-  (py-shift-region start end (prefix-numeric-value
-                              (or count py-indent-offset)))
-  (py-keep-region-active))
 
 (defun py-indent-region (start end &optional indent-offset)
   "Reindent a region of Python code.
@@ -4964,8 +4972,8 @@ Primarily for reindenting existing code:
 \t\\[universal-argument] \\[py-guess-indent-offset]\t ditto, but change globally
 
 \t\\[py-indent-region]\t reindent region to match its context
-\t\\[py-shift-region-left]\t shift region left by py-indent-offset
-\t\\[py-shift-region-right]\t shift region right by py-indent-offset
+\t\\[py-shift-left]\t shift line or region left by py-indent-offset
+\t\\[py-shift-right]\t shift  line or region right by py-indent-offset
 
 Unlike most programming languages, Python uses indentation, and only
 indentation, to specify block structure.  Hence the indentation supplied
@@ -5035,8 +5043,8 @@ assume the block structure (equals indentation, in Python) of the region
 is correct, and alter the indentation in various ways while preserving
 the block structure:
 %c:py-indent-region
-%c:py-shift-region-left
-%c:py-shift-region-right
+%c:py-shift-left
+%c:py-shift-right
 
 @MARKING & MANIPULATING REGIONS OF CODE
 
