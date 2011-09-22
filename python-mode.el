@@ -3067,7 +3067,9 @@ With \\[universal argument] just indent.
 With arg, do it that many times.
 
 If point is between indent levels, dedent to next level.
-Return column reached, if dedent done, nil otherwise. "
+Return indentation reached, if dedent done, nil otherwise.
+
+Affected by `py-dedent-keep-relative-column'. "
   (interactive "*p")
   (let ((orig (copy-marker (point)))
         erg)
