@@ -3477,7 +3477,7 @@ Returns current indentation reached. "
                    (t (line-end-position))))
         erg)
     (when
-        (indent-rigidly beg end count)
+        (indent-rigidly beg end (- count))
       (setq erg (current-indentation))
       (when (interactive-p) (message "%s" erg))
       erg)))
