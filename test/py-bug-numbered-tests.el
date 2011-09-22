@@ -1638,7 +1638,6 @@ if foo:
 (defun py-hungry-delete-backwards-needs-cc-lp-850595-base ()
     (assert (functionp 'c-hungry-delete-backwards) nil "py-hungry-delete-backwards-needs-cc-lp-850595-test failed"))
 
-
 (defun wrong-guess-for-py-indent-offset-lp-852052-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "# The indent offset shouldn't be guessed from backslash
@@ -1675,7 +1674,6 @@ from long.pkg.name import long, list, of, \\
     (goto-char 45)
     (assert (eq 5 (py-compute-indentation)) nil "indent-match-import-pkg-lp-852500-test failed"))
 
-
 (defun py-shift-line-when-no-region-lp-855565-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/ipython
@@ -1689,7 +1687,6 @@ if foo:
 (defun py-shift-line-when-no-region-lp-855565-base ()
     (goto-char 58)
     (assert (eq 8 (py-shift-right)) nil "py-shift-line-when-no-region-lp-855565-test failed"))
-
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

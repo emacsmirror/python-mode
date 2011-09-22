@@ -3458,6 +3458,9 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 
 ;; backward compatibility
 (defalias 'py-shift-region-left 'py-shift-left)
+(defalias 'py-shift-region-right 'py-shift-right)
+
+(defalias 'py-shift-region-left 'py-shift-left)
 (defun py-shift-left (&optional start end count)
   "Dedent lines from START to END by COUNT spaces.
 
@@ -3465,26 +3468,14 @@ COUNT defaults to `py-indent-offset',
 use \\[universal-argument] to specify a different value.
 
 If no region is active, current line is dedented.
-Returns current indentation reached. "
-  (interactive "P")
+Returns indentation reached. "
+  (interactive "p")
   (let ((count (or current-prefix-arg
                    py-indent-offset))
-        (beg (cond (start)
-                   ((region-active-p)
-                    (region-beginning))
-                   (t (line-beginning-position))))
-        (end (cond ((ignore-errors end))
-                   ((region-active-p)
-                    (region-end))
-                   (t (line-end-position))))
-        erg)
-    (when
-        (indent-rigidly beg end (- count))
-      (setq erg (current-indentation))
-      (when (interactive-p) (message "%s" erg))
-      erg)))
+        (erg (py-shift-intern (- count))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
-;; backward compatibility
 (defalias 'py-shift-region-right 'py-shift-right)
 (defun py-shift-right (&optional count start end)
   "Indent lines from START to END by COUNT spaces.
@@ -3495,29 +3486,228 @@ use \\[universal-argument] to specify a different value.
 If no region is active, current line is indented.
 Returns indentation reached. "
   (interactive "P")
-  (let ((count (or current-prefix-arg
-                   py-indent-offset))
-        (beg (cond (start)
+  (let* ((count (or current-prefix-arg
+                    py-indent-offset))
+         (erg (py-shift-intern count)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-intern (count &optional start end)
+  (let ((beg (cond (start)
                    ((region-active-p)
-                    (save-excursion 
-                      (goto-char (region-beginning))
-                      (line-beginning-position)))
+                    (region-beginning))
                    (t (line-beginning-position))))
-        (end (cond ((ignore-errors end))
+        (end (cond (end)
                    ((region-active-p)
                     (region-end))
                    (t (line-end-position))))
+        (orig end)
         erg)
-    (when
-        (indent-rigidly beg end count)
-      (setq erg (current-indentation))
-      (when (interactive-p) (message "%s" erg))
+    (setq beg (copy-marker beg))
+    (setq end (copy-marker end))
+    (indent-rigidly beg end count)
+    (unless (eq end orig)
+      (goto-char end)
+      (if (empty-line-p)
+          (save-excursion
+            (skip-chars-backward " \t\r\n\f")
+            (setq erg (current-indentation)))
+        (setq erg (current-indentation)))
       erg)))
 
-(defun py-shift-region (start end count)
-  "Indent lines from START to END by COUNT spaces."
-  (let (deactivate-mark)
-    (indent-rigidly start end count)))
+;; make general form below work also in these cases
+(defalias 'py-beginning-of-paragraph 'backward-paragraph)
+(defalias 'py-end-of-paragraph 'forward-paragraph)
+(defalias 'py-beginning-of-line 'beginning-of-line) 
+(defalias 'py-end-of-line 'end-of-line) 
+
+(defun py-shift-forms-base (form arg &optional beg end)
+  (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
+         (endform (intern-soft (concat "py-end-of-" form)))
+         (orig (copy-marker (point)))
+         (beg (cond (beg)
+                    ((region-active-p)
+                     (save-excursion
+                       (goto-char (region-beginning))
+                       (line-beginning-position)))
+                    (t (save-excursion
+                         (funcall begform)
+                         (line-beginning-position)))))
+         (end (cond (end)
+                    ((region-active-p)
+                     (region-end))
+                    (t (funcall endform))))
+         (erg (py-shift-intern arg beg end)))
+    (goto-char orig)
+    erg))
+
+(defun py-shift-paragraph-right (&optional arg)
+  "Indent paragraph by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "paragraph" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-paragraph-left (&optional arg)
+  "Dedent paragraph by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "paragraph" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-block-right (&optional arg)
+  "Indent block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "block" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-block-left (&optional arg)
+  "Dedent block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "block" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-clause-right (&optional arg)
+  "Indent clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "clause" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-clause-left (&optional arg)
+  "Dedent clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "clause" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-right (&optional arg)
+  "Indent def by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "def" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-left (&optional arg)
+  "Dedent def by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "def" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-class-right (&optional arg)
+  "Indent class by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "class" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-class-left (&optional arg)
+  "Dedent class by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "class" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-line-right (&optional arg)
+  "Indent line by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "line" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-line-left (&optional arg)
+  "Dedent line by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "line" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-statement-right (&optional arg)
+  "Indent statement by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "statement" (or arg py-indent-offset))))
+        (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-statement-left (&optional arg)
+  "Dedent statement by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "statement" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defun py-indent-region (start end &optional indent-offset)
   "Reindent a region of Python code.
@@ -5206,7 +5396,7 @@ Used with `eval-after-load'."
 (defun py-close-intern (regexp)
   "Core function, internal used only. "
   (let ((cui (ignore-errors (car (py-go-to-keyword regexp -1)))))
-    (py-end-base regexp (point))
+    (py-end-base regexp (point) (interactive-p))
     (forward-line 1)
     (if py-close-provides-newline
         (unless (empty-line-p) (split-line))

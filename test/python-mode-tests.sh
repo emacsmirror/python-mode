@@ -151,10 +151,11 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall eofs-attribut-test \
 --funcall args-list-first-line-indent-test \
 --funcall py-partial-expression-test \
---funcall py-execute-block-test \
 --funcall close-block-test \
 --funcall py-insert-super-python2-test \
 --funcall py-insert-super-python3-test \
+--funcall py-shift-block-test \
 --funcall UnicodeEncodeError-python3-test 
+# --funcall py-execute-block-test \
 
 
