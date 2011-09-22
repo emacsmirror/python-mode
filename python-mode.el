@@ -3493,13 +3493,15 @@ COUNT defaults to `py-indent-offset',
 use \\[universal-argument] to specify a different value.
 
 If no region is active, current line is indented.
-Returns current indentation reached. "
+Returns indentation reached. "
   (interactive "P")
   (let ((count (or current-prefix-arg
                    py-indent-offset))
         (beg (cond (start)
                    ((region-active-p)
-                    (region-beginning))
+                    (save-excursion 
+                      (goto-char (region-beginning))
+                      (line-beginning-position)))
                    (t (line-beginning-position))))
         (end (cond ((ignore-errors end))
                    ((region-active-p)
