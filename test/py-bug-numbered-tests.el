@@ -1688,5 +1688,25 @@ if foo:
     (goto-char 58)
     (assert (eq 8 (py-shift-right)) nil "py-shift-line-when-no-region-lp-855565-test failed"))
 
+(defun highlighting-in-multiline-function-call-arguments-lp:856833-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -\*- coding: utf-8 -\*-
+
+newObj = SomeClassWithManyManyArgs (param0 = val0,
+    param1 = val1,
+    param2 = val2, param3 = val3)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'highlighting-in-multiline-function-call-arguments-lp:856833-base arg teststring)))
+
+(defun highlighting-in-multiline-function-call-arguments-lp:856833-base ()
+  (font-lock-fontify-buffer)
+  (goto-char 80)
+  ;; (goto-char 106)
+  (assert (eq (get-char-property (point) 'face) nil) nil "highlighting-in-multiline-function-call-arguments-lp:856833 test failed "))
+
+
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
