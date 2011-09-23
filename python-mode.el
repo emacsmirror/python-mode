@@ -664,7 +664,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   "`python-mode-syntax-table' with backslash given whitespace syntax.")
 
 (defface py-variable-name-face
-  '((t (:inherit font-lock-variable-name-face)))
+  ;; '((t (:inherit default)))
+  '((t (:inherit 'font-lock-variable-name-face)))
   "Face method decorators."
   :group 'python)
 (defvar py-variable-name-face 'py-variable-name-face)
@@ -794,7 +795,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; pseudo-keywords
      '("\\<\\(self\\|cls\\|Ellipsis\\|True\\|False\\|None\\)\\>"
        1 py-pseudo-keyword-face)
-     '("^[ \t]*\\(_\\{0,2\\}[a-zA-Z][a-zA-Z_0-9.]+_\\{0,2\\}\\) *\\(+\\|-\\|*\\|**\\|/\\|//\\|&\\|%\\||\\|^\\|>>\\|<<\\)? ?="
+     '("[ \t]*\\(_\\{0,2\\}[a-zA-Z][a-zA-Z_0-9.]+_\\{0,2\\}\\) *\\(+\\|-\\|*\\|**\\|/\\|//\\|&\\|%\\||\\|^\\|>>\\|<<\\)? ?="
        1 py-variable-name-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
