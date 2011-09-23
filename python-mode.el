@@ -2809,7 +2809,7 @@ Avoid empty lines at the beginning. "
       (delete-region (line-beginning-position) (1+ (line-end-position))))
     (back-to-indentation)
     (unless (eq (current-indentation) 0)
-      (py-shift-left start end (current-indentation)))
+      (py-shift-left (current-indentation) start end))
     (setq py-line-number-offset (count-lines 1 start))
     beg))
 
@@ -3462,7 +3462,7 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 (defalias 'py-shift-region-right 'py-shift-right)
 
 (defalias 'py-shift-region-left 'py-shift-left)
-(defun py-shift-left (&optional start end count)
+(defun py-shift-left (&optional count start end)
   "Dedent lines from START to END by COUNT spaces.
 
 COUNT defaults to `py-indent-offset',
@@ -3470,8 +3470,9 @@ use \\[universal-argument] to specify a different value.
 
 If no region is active, current line is dedented.
 Returns indentation reached. "
-  (interactive "p")
-  (let ((count (or current-prefix-arg
+  (interactive "P")
+  (let* ((count (if current-prefix-arg
+                    (prefix-numeric-value count)
                    py-indent-offset))
         (erg (py-shift-intern (- count))))
     (when (interactive-p) (message "%s" erg))
@@ -3487,7 +3488,8 @@ use \\[universal-argument] to specify a different value.
 If no region is active, current line is indented.
 Returns indentation reached. "
   (interactive "P")
-  (let* ((count (or current-prefix-arg
+  (let* ((count (if current-prefix-arg
+                    (prefix-numeric-value count)
                     py-indent-offset))
          (erg (py-shift-intern count)))
     (when (interactive-p) (message "%s" erg))
