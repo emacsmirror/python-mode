@@ -997,9 +997,9 @@ The debugger outputs program-location lines that look like this:
 
 (custom-add-option 'python-mode-hook 'py-imenu-create-index-new)
 (custom-add-option 'python-mode-hook
-		   (lambda ()
-		     "Turn off Indent Tabs mode."
-		     (setq indent-tabs-mode nil)))
+                   (lambda ()
+                     "Turn off Indent Tabs mode."
+                     (setq indent-tabs-mode nil)))
 (custom-add-option 'python-mode-hook 'turn-on-eldoc-mode)
 (custom-add-option 'python-mode-hook 'abbrev-mode)
 ;; (custom-add-option 'python-mode-hook 'python-setup-brm)
@@ -1042,6 +1042,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map [(control meta e)] 'py-end-of-def-or-class)
     (define-key map [(control j)] 'py-newline-and-indent)
     (define-key map [(return)] 'py-newline-and-indent)
+    (define-key map (kbd "RET") 'py-newline-and-indent)
     (define-key map [(super backspace)] 'py-dedent-forward-line)
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
@@ -1995,15 +1996,15 @@ If we're unable find the source code we return a string describing the
 problem as best as we can determine."
 
   (if (and (not (string-match py-pdbtrack-stack-entry-regexp block))
-	   (not (string-match py-pydbtrack-stack-entry-regexp block)))
+           (not (string-match py-pydbtrack-stack-entry-regexp block)))
       "Traceback cue not found"
     (let* ((filename (match-string
-		      py-pdbtrack-marker-regexp-file-group block))
+                      py-pdbtrack-marker-regexp-file-group block))
            (lineno (string-to-number (match-string
-				   py-pdbtrack-marker-regexp-line-group
-				   block)))
+                                   py-pdbtrack-marker-regexp-line-group
+                                   block)))
            (funcname (match-string py-pdbtrack-marker-regexp-funcname-group
-				   block))
+                                   block))
            funcbuffer)
 
       (cond ((file-exists-p filename)
@@ -3417,8 +3418,8 @@ change the global value of `py-indent-offset'. "
             (funcall (if global 'kill-local-variable 'make-local-variable)
                      'py-indent-offset)
             (setq py-indent-offset indent)
-	    (unless (= tab-width py-indent-offset)
-	      (setq indent-tabs-mode nil)))
+            (unless (= tab-width py-indent-offset)
+              (setq indent-tabs-mode nil)))
         (when (interactive-p)
             (message "%s value of py-indent-offset:  %d"
                      (if global "Global" "Local")
@@ -3521,8 +3522,8 @@ Returns indentation reached. "
 ;; make general form below work also in these cases
 (defalias 'py-beginning-of-paragraph 'backward-paragraph)
 (defalias 'py-end-of-paragraph 'forward-paragraph)
-(defalias 'py-beginning-of-line 'beginning-of-line) 
-(defalias 'py-end-of-line 'end-of-line) 
+(defalias 'py-beginning-of-line 'beginning-of-line)
+(defalias 'py-end-of-line 'end-of-line)
 
 (defun py-shift-forms-base (form arg &optional beg end)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
@@ -5320,20 +5321,20 @@ local bindings to py-newline-and-indent."))
   "Set up info-look for Python.
 Used with `eval-after-load'."
   (let* ((version (let ((s (shell-command-to-string (concat py-python-command
-							    " -V"))))
-		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
-		    (match-string 1 s)))
-	 ;; Whether info files have a Python version suffix, e.g. in Debian.
-	 (versioned
-	  (with-temp-buffer
-	    (with-no-warnings (Info-mode))
-	    (condition-case ()
-		;; Don't use `info' because it would pop-up a *info* buffer.
-		(with-no-warnings
-		  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
-					  version))
-		  t)
-	      (error nil)))))
+                                                            " -V"))))
+                    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
+                    (match-string 1 s)))
+         ;; Whether info files have a Python version suffix, e.g. in Debian.
+         (versioned
+          (with-temp-buffer
+            (with-no-warnings (Info-mode))
+            (condition-case ()
+                ;; Don't use `info' because it would pop-up a *info* buffer.
+                (with-no-warnings
+                  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
+                                          version))
+                  t)
+              (error nil)))))
     (info-lookup-maybe-add-help
      :mode 'python-mode
      :regexp "[[:alnum:]_]+"
@@ -5343,55 +5344,55 @@ Used with `eval-after-load'."
      ;; (Miscellaneous in -ref first prefers lookup of keywords, for
      ;; instance.)
      (if versioned
-	 ;; The empty prefix just gets us highlighted terms.
-	 `((,(concat "(python" version "-ref)Miscellaneous Index") nil "")
-	   (,(concat "(python" version "-ref)Module Index" nil ""))
-	   (,(concat "(python" version "-ref)Function-Method-Variable Index"
-		     nil ""))
-	   (,(concat "(python" version "-ref)Class-Exception-Object Index"
-		     nil ""))
-	   (,(concat "(python" version "-lib)Module Index" nil ""))
-	   (,(concat "(python" version "-lib)Class-Exception-Object Index"
-		     nil ""))
-	   (,(concat "(python" version "-lib)Function-Method-Variable Index"
-		     nil ""))
-	   (,(concat "(python" version "-lib)Miscellaneous Index" nil "")))
+         ;; The empty prefix just gets us highlighted terms.
+         `((,(concat "(python" version "-ref)Miscellaneous Index") nil "")
+           (,(concat "(python" version "-ref)Module Index" nil ""))
+           (,(concat "(python" version "-ref)Function-Method-Variable Index"
+                     nil ""))
+           (,(concat "(python" version "-ref)Class-Exception-Object Index"
+                     nil ""))
+           (,(concat "(python" version "-lib)Module Index" nil ""))
+           (,(concat "(python" version "-lib)Class-Exception-Object Index"
+                     nil ""))
+           (,(concat "(python" version "-lib)Function-Method-Variable Index"
+                     nil ""))
+           (,(concat "(python" version "-lib)Miscellaneous Index" nil "")))
        '(("(python-ref)Miscellaneous Index" nil "")
-	 ("(python-ref)Module Index" nil "")
-	 ("(python-ref)Function-Method-Variable Index" nil "")
-	 ("(python-ref)Class-Exception-Object Index" nil "")
-	 ("(python-lib)Module Index" nil "")
-	 ("(python-lib)Class-Exception-Object Index" nil "")
-	 ("(python-lib)Function-Method-Variable Index" nil "")
-	 ("(python-lib)Miscellaneous Index" nil ""))))))
+         ("(python-ref)Module Index" nil "")
+         ("(python-ref)Function-Method-Variable Index" nil "")
+         ("(python-ref)Class-Exception-Object Index" nil "")
+         ("(python-lib)Module Index" nil "")
+         ("(python-lib)Class-Exception-Object Index" nil "")
+         ("(python-lib)Function-Method-Variable Index" nil "")
+         ("(python-lib)Miscellaneous Index" nil ""))))))
 
 (defun py-find-imports ()
   "Find top-level imports, updating `python-imports'."
   (interactive)
   (save-excursion
       (let (lines)
-	(goto-char (point-min))
-	(while (re-search-forward "^import\\>\\|^from\\>" nil t)
-	  (unless (syntax-ppss-context (syntax-ppss))
-	    (let ((start (line-beginning-position)))
-	      ;; Skip over continued lines.
-	      (while (and (eq ?\\ (char-before (line-end-position)))
-			  (= 0 (forward-line 1)))
-		t)
-	      (push (buffer-substring start (line-beginning-position 2))
-		    lines))))
-	(setq python-imports
-	      (if lines
-		  (apply #'concat
-			 (nreverse lines))
-		"None"))
-	(when lines
-	  (set-text-properties 0 (length python-imports) nil python-imports)
-	  ;; The output ends up in the wrong place if the string we
-	  ;; send contains newlines (from the imports).
-	  (setq python-imports
-		(replace-regexp-in-string "\n" "\\n"
-					  (format "%S" python-imports) t t)))))
+        (goto-char (point-min))
+        (while (re-search-forward "^import\\>\\|^from\\>" nil t)
+          (unless (syntax-ppss-context (syntax-ppss))
+            (let ((start (line-beginning-position)))
+              ;; Skip over continued lines.
+              (while (and (eq ?\\ (char-before (line-end-position)))
+                          (= 0 (forward-line 1)))
+                t)
+              (push (buffer-substring start (line-beginning-position 2))
+                    lines))))
+        (setq python-imports
+              (if lines
+                  (apply #'concat
+                         (nreverse lines))
+                "None"))
+        (when lines
+          (set-text-properties 0 (length python-imports) nil python-imports)
+          ;; The output ends up in the wrong place if the string we
+          ;; send contains newlines (from the imports).
+          (setq python-imports
+                (replace-regexp-in-string "\n" "\\n"
+                                          (format "%S" python-imports) t t)))))
   (when (interactive-p) (message "%s" (car (read-from-string python-imports)))))
 
 
@@ -5935,16 +5936,16 @@ and resending the lines later. The lines are stored in reverse order")
 ;; This function is appropriate for `comint-output-filter-functions'."
 ;;   ;; TBD: this should probably use split-string
 ;;   (when (and (or (string-equal string ">>> ")
-;; 		 (and (>= (length string) 5)
-;; 		      (string-equal (substring string -5) "\n>>> ")))
-;; 	     (or (setq py-shell-input-lines nil)
-;; 		 py-file-queue))
+;;               (and (>= (length string) 5)
+;;                    (string-equal (substring string -5) "\n>>> ")))
+;;           (or (setq py-shell-input-lines nil)
+;;               py-file-queue))
 ;;     (pop-to-buffer (current-buffer))
 ;;     (py-safe (delete-file (car py-file-queue)))
 ;;     (setq py-file-queue (cdr py-file-queue))
 ;;     (if py-file-queue
-;; 	(let ((pyproc (get-buffer-process (current-buffer))))
-;; 	  (py-execute-file pyproc (car py-file-queue))))
+;;      (let ((pyproc (get-buffer-process (current-buffer))))
+;;        (py-execute-file pyproc (car py-file-queue))))
 ;;     ))
 
 ;;;
@@ -5956,11 +5957,11 @@ and resending the lines later. The lines are stored in reverse order")
 (if (functionp 'comint-redirect-send-command-to-process)
     (progn
       (defalias
-	'py-shell-redirect-send-command-to-process
-	'comint-redirect-send-command-to-process)
+        'py-shell-redirect-send-command-to-process
+        'comint-redirect-send-command-to-process)
       (defalias
-	'py-shell-dynamic-simple-complete
-	'comint-dynamic-simple-complete))
+        'py-shell-dynamic-simple-complete
+        'comint-dynamic-simple-complete))
 
   ;; XEmacs
 
@@ -5970,20 +5971,20 @@ and resending the lines later. The lines are stored in reverse order")
 
   (defun py-shell-redirect-filter-function (proc string)
     (let ((procbuf (process-buffer proc))
-	  outbuf prompt-pos)
+          outbuf prompt-pos)
       (with-current-buffer procbuf
-	(setq outbuf py-shell-redirect-output-buffer
-	      prompt-pos (string-match comint-prompt-regexp string)))
+        (setq outbuf py-shell-redirect-output-buffer
+              prompt-pos (string-match comint-prompt-regexp string)))
       (if prompt-pos
-	  (setq string (substring string 0 prompt-pos)))
+          (setq string (substring string 0 prompt-pos)))
       (save-excursion
-	(set-buffer outbuf)
-	(goto-char (point-max))
-	(insert string))
+        (set-buffer outbuf)
+        (goto-char (point-max))
+        (insert string))
       (if prompt-pos
-	  (with-current-buffer procbuf
-	    (set-process-filter proc py-shell-redirect-orginal-output-filter)
-	    (setq comint-redirect-completed t))))
+          (with-current-buffer procbuf
+            (set-process-filter proc py-shell-redirect-orginal-output-filter)
+            (setq comint-redirect-completed t))))
     "")
 
   (defun py-shell-redirect-send-command-to-process
@@ -5992,8 +5993,8 @@ and resending the lines later. The lines are stored in reverse order")
     ;; prepear
     (with-current-buffer (process-buffer process)
       (setq comint-redirect-completed nil
-	    py-shell-redirect-output-buffer (get-buffer output-buffer)
-	    py-shell-redirect-orginal-output-filter (process-filter process)))
+            py-shell-redirect-output-buffer (get-buffer output-buffer)
+            py-shell-redirect-orginal-output-filter (process-filter process)))
     (set-process-filter process 'py-shell-redirect-filter-function)
     ;; run
     (comint-simple-send process command))
@@ -6002,21 +6003,21 @@ and resending the lines later. The lines are stored in reverse order")
     (let ((completion (try-completion stub (mapcar 'list candidates))))
       (cond
        ((null completion)
-	nil)
+        nil)
        ((eq completion t)
-	(message "Sole completion")
-	'sole)
+        (message "Sole completion")
+        'sole)
        ((> (length completion) (length stub))
-	(insert (substring completion (length stub)))
-	(if (eq (try-completion completion (mapcar 'list candidates)) t)
-	    (progn (message "Completed")
-		   'sole)
-	  (message "Partially completed")
-	  'partial))
+        (insert (substring completion (length stub)))
+        (if (eq (try-completion completion (mapcar 'list candidates)) t)
+            (progn (message "Completed")
+                   'sole)
+          (message "Partially completed")
+          'partial))
        (t
-	(with-output-to-temp-buffer "*Completions*"
-	  (display-completion-list (sort candidates 'string<)))
-	'listed)))))
+        (with-output-to-temp-buffer "*Completions*"
+          (display-completion-list (sort candidates 'string<)))
+        'listed)))))
 
 (defun py-shell-execute-string-now (string)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
@@ -6024,36 +6025,36 @@ and return collected output"
   (let* ((proc
           ;; (get-process py-which-bufname)
           (get-process (py-process-name)))
-	 (cmd (format "exec '''%s''' in {}"
-		      (mapconcat 'identity (split-string string "\n") "\\n")))
+         (cmd (format "exec '''%s''' in {}"
+                      (mapconcat 'identity (split-string string "\n") "\\n")))
          (procbuf (process-buffer proc))
          (outbuf (get-buffer-create " *pyshellcomplete-output*"))
          (lines (reverse py-shell-input-lines)))
     (if (and proc (not py-file-queue))
-	(unwind-protect
-	    (condition-case nil
-		(progn
-		  (if lines
-		      (with-current-buffer procbuf
-			(py-shell-redirect-send-command-to-process
-			 "\C-c" outbuf proc nil t)
-			;; wait for output
-			(while (not comint-redirect-completed)
-			  (accept-process-output proc 1))))
-		  (with-current-buffer outbuf
-		    (delete-region (point-min) (point-max)))
-		  (with-current-buffer procbuf
-		    (py-shell-redirect-send-command-to-process
-		     cmd outbuf proc nil t)
-		    (while (not comint-redirect-completed) ; wait for output
-		      (accept-process-output proc 1)))
-		  (with-current-buffer outbuf
-		    (buffer-substring (point-min) (point-max))))
-	      (quit (with-current-buffer procbuf
-		      (interrupt-process proc comint-ptyp)
-		      (while (not comint-redirect-completed) ; wait for output
-			(accept-process-output proc 1)))
-		    (signal 'quit nil)))
+        (unwind-protect
+            (condition-case nil
+                (progn
+                  (if lines
+                      (with-current-buffer procbuf
+                        (py-shell-redirect-send-command-to-process
+                         "\C-c" outbuf proc nil t)
+                        ;; wait for output
+                        (while (not comint-redirect-completed)
+                          (accept-process-output proc 1))))
+                  (with-current-buffer outbuf
+                    (delete-region (point-min) (point-max)))
+                  (with-current-buffer procbuf
+                    (py-shell-redirect-send-command-to-process
+                     cmd outbuf proc nil t)
+                    (while (not comint-redirect-completed) ; wait for output
+                      (accept-process-output proc 1)))
+                  (with-current-buffer outbuf
+                    (buffer-substring (point-min) (point-max))))
+              (quit (with-current-buffer procbuf
+                      (interrupt-process proc comint-ptyp)
+                      (while (not comint-redirect-completed) ; wait for output
+                        (accept-process-output proc 1)))
+                    (signal 'quit nil)))
           (if (with-current-buffer procbuf comint-redirect-completed)
               (while lines
                 (with-current-buffer procbuf
@@ -6071,9 +6072,9 @@ and return collected output"
 (defun py-shell-complete ()
   (interactive)
   (let ((word (py-dot-word-before-point))
-	result)
+        result)
     (if (equal word "")
-	(tab-to-tab-stop)	   ; non nil so the completion is over
+        (tab-to-tab-stop)          ; non nil so the completion is over
       (setq result (py-shell-execute-string-now (format "
 def print_completions(namespace, text, prefix=''):
    for name in namespace:
@@ -6103,12 +6104,12 @@ def complete(text):
 complete('%s')
 " word)))
       (if (eq result nil)
-	  (message "Could not do completion as the Python process is busy")
-	(let ((comint-completion-addsuffix nil)
-	      (completions (if (split-string "\n" "\n")
-			       (split-string result "\n" t) ; XEmacs
-			     (split-string result "\n"))))
-	  (py-shell-dynamic-simple-complete word completions))))))
+          (message "Could not do completion as the Python process is busy")
+        (let ((comint-completion-addsuffix nil)
+              (completions (if (split-string "\n" "\n")
+                               (split-string result "\n" t) ; XEmacs
+                             (split-string result "\n"))))
+          (py-shell-dynamic-simple-complete word completions))))))
 
 (add-hook 'py-shell-hook
           '(lambda ()
