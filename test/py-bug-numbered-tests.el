@@ -99,6 +99,7 @@
          'indent-match-import-pkg-lp-852500-test
          'py-shift-line-when-no-region-lp-855565-test
          'indentation-of-from-import-continuation-lines-lp-858041-test
+         'indentation-after-one-line-suites-lp:858044-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -1477,12 +1478,8 @@ elif x < 0:
   (py-bug-tests-intern 'py-indent-line-lp:822532-base arg teststring)))
 
 (defun py-indent-line-lp:822532-base ()
-    (goto-char 53)
-    (set-buffer-modified-p nil)
-    (py-indent-line)
-    (assert (eq 57 (point)) nil "py-xcindent-line-lp:822532-test #1 failed")
-    (assert (not (buffer-modified-p)) nil "py-indent-line-lp:822532-test #2 failed")
-    )
+  (goto-char 53)
+  (assert (eq 4 (py-compute-indentation)) nil "py-indent-line-lp:822532-test failed"))
 
 (defun indent-honor-arglist-whitespaces-lp:822540-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1774,6 +1771,22 @@ usermethod, tupleof, floatrange, any, none_or
 (defun indentation-of-from-import-continuation-lines-lp-858041-base ()
     (goto-char 184)
     (assert (eq 5 (py-compute-indentation)) nil "indentation-of-from-import-continuation-lines-lp-858041-test failed"))
+
+
+(defun indentation-after-one-line-suites-lp:858044-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo: return
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-after-one-line-suites-lp:858044-base arg teststring)))
+
+(defun indentation-after-one-line-suites-lp:858044-base ()
+    (goto-char 64)
+    (assert (eq 0 (py-compute-indentation)) nil "indentation-after-one-line-suites-lp:858044-test failed"))
 
 
 (provide 'py-bug-numbered-tests)

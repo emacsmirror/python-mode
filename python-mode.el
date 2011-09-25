@@ -915,21 +915,23 @@ Currently-active file is at the head of the list.")
   "\\(return\\|raise\\|break\\|continue\\|pass\\)"
   "Regular expression matching keywords which typically close a block.")
 
-(defconst py-no-outdent-re
-  (concat
-   "\\("
-   (mapconcat 'identity
-              (list "try:"
-                    "except\\(\\s +.*\\)?:"
-                    "while\\s +.*:"
-                    "for\\s +.*:"
-                    "if\\s +.*:"
-                    "elif\\s +.*:"
-                    (concat py-block-closing-keywords-re "[ \t\n]")
-                    )
-              "\\|")
-          "\\)")
-  "Regular expression matching lines not to dedent after.")
+(defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>[ 	\n]\\)")
+
+;; (defconst py-no-outdent-re
+;;   (concat
+;;    "\\("
+;;    (mapconcat 'identity
+;;               (list "try:"
+;;                     "except\\(\\s +.*\\)?:"
+;;                     "while\\s +.*:"
+;;                     "for\\s +.*:"
+;;                     "if\\s +.*:"
+;;                     "elif\\s +.*:"
+;;                     (concat py-block-closing-keywords-re "[ \t\n]")
+;;                     )
+;;               "\\|")
+;;           "\\)")
+;;   "Regular expression matching lines not to dedent after.")
 
 (defconst py-traceback-line-re
   "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
@@ -3229,6 +3231,8 @@ Affected by `py-dedent-keep-relative-column'. "
                ((and (looking-at py-block-or-clause-re)(eq origline (py-count-lines)))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing))
+               ((looking-at py-no-outdent-re)
+                (current-indentation))
                ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
                ((and (eq origline (py-count-lines))
