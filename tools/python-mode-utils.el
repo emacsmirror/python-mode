@@ -128,12 +128,12 @@
 
 (defun py-write-shift-forms ()
   " "
-  (interactive) 
+  (interactive)
   (set-buffer (get-buffer-create "py-shift-forms"))
   (erase-buffer)
       (dolist (ele py-shift-forms)
         (insert (concat "
-(defun py-shift-" ele "-right (&optional arg)
+\(defun py-shift-" ele "-right (&optional arg)
   \"Indent " ele " by COUNT spaces.
 
 COUNT defaults to `py-indent-offset',
@@ -159,6 +159,60 @@ Returns outmost indentation reached. \"
 "))
   (emacs-lisp-mode)
   (switch-to-buffer (current-buffer))))
+
+(setq py-down-forms (list "block" "clause" "def" "class" "statement"))
+
+(defun py-write-down-forms ()
+  " "
+  (interactive)
+  (set-buffer (get-buffer-create "py-down-forms"))
+  (erase-buffer)
+      (dolist (ele py-down-forms)
+        (insert (concat "
+\(defun py-down-" ele " ()
+  \"Goto beginning of line following end of " ele ".
+  Returns position reached, if successful, nil otherwise.
+
+A complementary command travelling left, whilst `py-end-of-" ele "' stops at right corner. \"
+  (interactive)
+  (let ((erg (py-end-of-" ele ")))
+    (when erg
+      (unless (eobp)
+        (forward-line 1)
+        (beginning-of-line)
+        (setq erg (point))))
+  (when (interactive-p) (message \"%s\" erg))
+  erg))
+"))
+        (emacs-lisp-mode)
+        (switch-to-buffer (current-buffer))))
+
+(defun py-write-up-forms ()
+  " "
+  (interactive)
+  (set-buffer (get-buffer-create "py-up-forms"))
+  (erase-buffer)
+  (dolist (ele py-down-forms)
+    (insert (concat "
+\(defun py-up-" ele " ()
+  \"Goto end of line preceding beginning of " ele ".
+  Returns position reached, if successful, nil otherwise.
+
+A complementary command travelling right, whilst `py-beginning-of-" ele "' stops at left corner. \"
+  (interactive)
+  (let ((erg (py-beginning-of-" ele ")))
+    (when erg
+      (unless (bobp)
+        (forward-line -1)
+        (end-of-line)
+        (skip-chars-backward \" \\t\\r\\n\\f\")
+        (setq erg (point))))
+  (when (interactive-p) (message \"%s\" erg))
+  erg))
+"))
+    (emacs-lisp-mode)
+    (switch-to-buffer (current-buffer))))
+
 
 (provide 'python-mode-shell-install)
 ;;; python-mode-shell-install.el ends here

@@ -98,6 +98,7 @@
          'wrong-guess-for-py-indent-offset-lp-852052-test
          'indent-match-import-pkg-lp-852500-test
          'py-shift-line-when-no-region-lp-855565-test
+         'indentation-of-from-import-continuation-lines-lp-858041-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -1706,6 +1707,73 @@ newObj = SomeClassWithManyManyArgs (param0 = val0,
   ;; (goto-char 106)
   (assert (eq (get-char-property (point) 'face) nil) nil "highlighting-in-multiline-function-call-arguments-lp:856833 test failed "))
 
+
+
+(defun py-shift-preserve-active-region-lp-857837-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -\*- coding: utf-8 -\*-
+
+print 'hello'
+print 'world'
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-shift-preserve-active-region-lp-857837-base arg teststring)))
+
+(defun py-shift-preserve-active-region-lp-857837-base ()
+    (goto-char 49)
+    (assert nil "py-shift-preserve-active-region-lp-857837-test failed"))
+
+
+(defun variable-highlighted-on-LHS-of-eq-lp-858304-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if someVar == 5:
+    doSomething()
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'variable-highlighted-on-LHS-of-eq-lp-858304-base arg teststring)))
+
+(defun variable-highlighted-on-LHS-of-eq-lp-858304-base ()
+  (goto-char 55)
+  (assert (eq (get-char-property (point) 'face) nil) nil "variable-highlighted-on-LHS-of-eq-lp-858304-test failed"))
+
+
+
+(defun indent-guessing-lp-858040-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+some_longer_call(arguments,
+         arguments)
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-guessing-lp-858040-base arg teststring)))
+
+(defun indent-guessing-lp-858040-base ()
+  (goto-char 40)
+  (assert (eq 4 py-indent-offset) nil "indent-guessing-lp-858040-test failed"))
+
+(defun indentation-of-from-import-continuation-lines-lp-858041-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from nicos import session
+from nicos import status, loggers
+from nicos.utils import DeviceMeta, Param, Override, Value, getVersions, \\
+usermethod, tupleof, floatrange, any, none_or
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-of-from-import-continuation-lines-lp-858041-base arg teststring)))
+
+(defun indentation-of-from-import-continuation-lines-lp-858041-base ()
+    (goto-char 184)
+    (assert (eq 5 (py-compute-indentation)) nil "indentation-of-from-import-continuation-lines-lp-858041-test failed"))
 
 
 (provide 'py-bug-numbered-tests)

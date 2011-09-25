@@ -3188,7 +3188,7 @@ Affected by `py-dedent-keep-relative-column'. "
                   (if (< 1 (- origline this-line))
                       (py-fetch-previous-indent orig)
                     (if (looking-at "from +\\([^ \t\n]+\\) +import")
-                        (progn (forward-char (1- (match-beginning 1)))(current-column))
+                      5
                       (+ (current-indentation) py-continuation-offset)))))
                ((and (looking-at py-if-clause-re)(eq origline (py-count-lines)))
                 (py-beginning-of-if-block)
