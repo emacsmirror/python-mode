@@ -1044,7 +1044,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
     (define-key map [(control meta e)] 'py-end-of-def-or-class)
     (define-key map [(control j)] 'py-newline-and-indent)
-    (define-key map [(return)] 'py-newline-and-indent)
+    (define-key map (kbd "RET") 'py-newline-and-dedent)
     (define-key map [(super backspace)] 'py-dedent-forward-line)
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
