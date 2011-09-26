@@ -943,12 +943,13 @@ Currently-active file is at the head of the list.")
   "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
   "Regular expression pdbtrack uses to find a stack trace entry.")
 
-(defconst py-pdbtrack-stack-entry-regexp
-  "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
-  "Regular expression pdbtrack uses to find a stack trace entry for pydb.
-
-The debugger outputs program-location lines that look like this:
-   (/usr/bin/zonetab2pot.py:15): makePOT")
+;; pydb-328837.diff
+;; (defconst py-pdbtrack-stack-entry-regexp
+;;   "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
+;;   "Regular expression pdbtrack uses to find a stack trace entry for pydb.
+;; 
+;; The debugger outputs program-location lines that look like this:
+;;    (/usr/bin/zonetab2pot.py:15): makePOT")
 
 (defconst py-pdbtrack-marker-regexp-file-group 1
   "Group position in gud-pydb-marker-regexp that matches the file name.")
