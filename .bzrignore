@@ -1,3 +1,6 @@
+*.THIS
+*.OTHER
+*.BASE
 *.diff
 *.patch
 befehle.txt
