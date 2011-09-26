@@ -664,8 +664,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   "`python-mode-syntax-table' with backslash given whitespace syntax.")
 
 (defface py-variable-name-face
-  ;; '((t (:inherit default)))
-  '((t (:inherit 'font-lock-variable-name-face)))
+  '((t (:inherit default)))
+  ;; '((t (:inherit 'font-lock-variable-name-face)))
   "Face method decorators."
   :group 'python)
 (defvar py-variable-name-face 'py-variable-name-face)
