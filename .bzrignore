@@ -1,6 +1,3 @@
-*.THIS
-*.OTHER
-*.BASE
 *.diff
 *.patch
 befehle.txt
@@ -74,3 +71,4 @@ py-queue.el
 py-shell-complete.el
 alt-py-shell-complete.el
 format.py
+Manifest.in
