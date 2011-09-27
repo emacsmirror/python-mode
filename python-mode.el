@@ -2328,8 +2328,9 @@ is inserted at the end.  See also the command `py-clear-queue'."
 (defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-         (name (capitalize (py-choose-shell)))
-         (buf-and-proc (progn
+         (name (if (string= (py-choose-shell) "ipython") "IPython"
+		 capitalize (py-choose-shell)))
+	 (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
                               (buffer-name (get-buffer (concat "*" name "*"))))))
