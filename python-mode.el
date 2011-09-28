@@ -2272,6 +2272,141 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
     (with-temp-buffer
       (shell-command (concat "python " filename) output-buffer error-buffer))))
 
+;; Specifying shells start
+(defun py-execute-region-python (start end &optional async)
+  "Send the region to a common shell calling the python interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "python"))
+
+(defun py-execute-region-python-switch (start end &optional async)
+  "Send the region to a common shell calling the python interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "python")))
+
+(defun py-execute-region-python-no-switch (start end &optional async)
+  "Send the region to a common shell calling the python interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "python")))
+
+(defun py-execute-region-python2 (start end &optional async)
+  "Send the region to a common shell calling the python2 interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "python2"))
+
+(defun py-execute-region-python2-switch (start end &optional async)
+  "Send the region to a common shell calling the python2 interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "python2")))
+
+(defun py-execute-region-python2-no-switch (start end &optional async)
+  "Send the region to a common shell calling the python2 interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "python2")))
+
+(defun py-execute-region-python2.7 (start end &optional async)
+  "Send the region to a common shell calling the python2.7 interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "python2.7"))
+
+(defun py-execute-region-python2.7-switch (start end &optional async)
+  "Send the region to a common shell calling the python2.7 interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "python2.7")))
+
+(defun py-execute-region-python2.7-no-switch (start end &optional async)
+  "Send the region to a common shell calling the python2.7 interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "python2.7")))
+
+(defun py-execute-region-python3 (start end &optional async)
+  "Send the region to a common shell calling the python3 interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "python3"))
+
+(defun py-execute-region-python3-switch (start end &optional async)
+  "Send the region to a common shell calling the python3 interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "python3")))
+
+(defun py-execute-region-python3-no-switch (start end &optional async)
+  "Send the region to a common shell calling the python3 interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "python3")))
+
+(defun py-execute-region-python3.2 (start end &optional async)
+  "Send the region to a common shell calling the python3.2 interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "python3.2"))
+
+(defun py-execute-region-python3.2-switch (start end &optional async)
+  "Send the region to a common shell calling the python3.2 interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "python3.2")))
+
+(defun py-execute-region-python3.2-no-switch (start end &optional async)
+  "Send the region to a common shell calling the python3.2 interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "python3.2")))
+
+(defun py-execute-region-ipython (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "ipython"))
+
+(defun py-execute-region-ipython-switch (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "ipython")))
+
+(defun py-execute-region-ipython-no-switch (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "ipython")))
+
+(defun py-execute-region-jython (start end &optional async)
+  "Send the region to a common shell calling the jython interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "jython"))
+
+(defun py-execute-region-jython-switch (start end &optional async)
+  "Send the region to a common shell calling the jython interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "jython")))
+
+(defun py-execute-region-jython-no-switch (start end &optional async)
+  "Send the region to a common shell calling the jython interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "jython")))
+;; Specifying shells end
+
 (defun py-execute-region-no-switch (start end &optional async)
   "Send the region to a common shell calling a Python interpreter.
 

@@ -121,7 +121,7 @@
           (set-buffer-modified-p 'nil)
           (cond ((processp (get-process "Python3")) (kill-process "Python3"))
                 ((processp (get-process "Python2")) (kill-process "Python2"))
-                ((processp (get-process "Python")) (kill-process "Python")))
+                ((processp (get-process "Python")) (ignore-errors (kill-process "Python"))))
           (kill-buffer (current-buffer))))
     (with-temp-buffer
       (let ((font-lock-verbose nil))

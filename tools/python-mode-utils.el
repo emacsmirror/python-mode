@@ -1,6 +1,5 @@
 ;;; python-mode-shell-install.el --- Installing python, python3, ipython and other python shells
 
-
 ;; Copyright (C) 2011  Andreas Roehler
 
 ;; Author: Andreas Roehler <andreas.roehler@online.de>
@@ -31,12 +30,13 @@
 
 ;;; Code:
 
-
-(defcustom py-installed-shells
-  '("ipython" "python2" "python3" "python2.7" "python" "jython")
+(defcustom py-shells
+  '("python" "python2" "python2.7" "python3" "python3.2" "ipython" "jython")
   "Python-mode will generate commands opening shells mentioned here. Edit this list \w resp. to your machine. "
   :type '(repeat string)
   :group 'python)
+
+(setq py-shells '("python" "python2" "python2.7" "python3" "python3.2" "ipython" "jython"))
 
 (defun py-provide-installed-shells-commands (&optional force)
   "Reads py-installed-shells, provides commands opening these shell. "
@@ -92,7 +92,6 @@
     (py-shell argprompt)))\n\n")))))))
   (emacs-lisp-mode)
   (switch-to-buffer (current-buffer)))
-
 
 (defun py-write-beginning-position-forms ()
   (interactive)
@@ -213,12 +212,34 @@ A complementary command travelling right, whilst `py-beginning-of-" ele "' stops
     (emacs-lisp-mode)
     (switch-to-buffer (current-buffer))))
 
-(defun py-execute-region-python2.7 (start end &optional async shell)
-  "Send the region to a common shell calling a Python interpreter. "
-  (interactive "r\nP")
-  (let ((py-shell-name "python2.7"))
-    (py-execute-base start end async)))
+(defun py-write-specifying-shell-forms ()
+  " "
+  (interactive)
+  (set-buffer (get-buffer-create "specifying-shell-forms"))
+  (erase-buffer)
+  (dolist (ele py-shells)
+    (insert (concat "
+(defun py-execute-region-" ele " (start end &optional async)
+  \"Send the region to a common shell calling the " ele " interpreter. \"
+  (interactive \"r\\nP\")
+  (py-execute-base start end async \"" ele "\"))
+
+(defun py-execute-region-" ele "-switch (start end &optional async)
+  \"Send the region to a common shell calling the " ele " interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. \"
+  (interactive \"r\\nP\")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async \"" ele "\")))
+
+(defun py-execute-region-" ele "-no-switch (start end &optional async)
+  \"Send the region to a common shell calling the " ele " interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to.\"
+  (interactive \"r\\nP\")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async \"" ele "\")))
+"))
+    (emacs-lisp-mode)
+    (switch-to-buffer (current-buffer))))
 
 (provide 'python-mode-shell-install)
 ;;; python-mode-shell-install.el ends here
-
