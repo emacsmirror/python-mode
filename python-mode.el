@@ -2100,9 +2100,10 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
                      (read-from-minibuffer "Python Shell: "))
                     ((ignore-errors (stringp arg))
                      arg)
-                    (if (string-match "python" py-shell-name)
-                        "jython"
-                      "python"))))
+                    (t
+                     (if (string-match "python" py-shell-name)
+                         "jython"
+                       "python")))))
     (if (string-match "python" name)
         (setq py-shell-name name
               py-which-bufname (capitalize name)
@@ -2317,11 +2318,14 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (interactive "r\nP")
   (py-execute-base start end async))
 
-(defun py-execute-base (start end async)
+(defun py-execute-base (start end &optional async shell)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-	 (name (if (string= (py-choose-shell) "ipython") "IPython"
-		 (capitalize (py-choose-shell))))
+         (py-shell-name (or shell py-shell-name))
+	 (name-raw (or shell (py-choose-shell)))
+         (name
+          (if (string= name-raw "ipython") "IPython"
+            (capitalize name-raw)))
 	 (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
