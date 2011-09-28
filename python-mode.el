@@ -161,7 +161,7 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python)
 
 ;; Execute stuff start
-(defcustom py-python-command "python"
+(defcustom py-python-command "ipython"
   "Default shell command used to start Python interpreter."
   :type 'string
   :group 'python)
@@ -2328,8 +2328,9 @@ is inserted at the end.  See also the command `py-clear-queue'."
 (defun py-execute-base (start end async)
   ;; Skip ahead to the first non-blank line
   (let* ((regbuf (current-buffer))
-         (name (capitalize (py-choose-shell)))
-         (buf-and-proc (progn
+	 (name (if (string= (py-choose-shell) "ipython") "IPython"
+		 (capitalize (py-choose-shell))))
+	 (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
                               (buffer-name (get-buffer (concat "*" name "*"))))))
