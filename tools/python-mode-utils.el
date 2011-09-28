@@ -213,6 +213,11 @@ A complementary command travelling right, whilst `py-beginning-of-" ele "' stops
     (emacs-lisp-mode)
     (switch-to-buffer (current-buffer))))
 
+(defun py-execute-region-python2.7 (start end &optional async shell)
+  "Send the region to a common shell calling a Python interpreter. "
+  (interactive "r\nP")
+  (let ((py-shell-name "python2.7"))
+    (py-execute-base start end async)))
 
 (provide 'python-mode-shell-install)
 ;;; python-mode-shell-install.el ends here

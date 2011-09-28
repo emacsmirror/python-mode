@@ -161,17 +161,13 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python)
 
 ;; Execute stuff start
-(defcustom py-python-command "ipython"
-  "Default shell command used to start Python interpreter."
-  :type 'string
-  :group 'python)
 
-(make-obsolete-variable 'py-jpython-command 'py-jython-command nil)
-(defcustom py-jython-command "jython"
-  "*Shell command used to start the Jython interpreter."
-  :type 'string
-  :group 'python
-  :tag "Jython Command")
+;; backward compatibility
+(defalias 'py-python-command 'py-shell-name)
+(defalias 'py-jpython-command 'py-shell-name)
+(defalias 'py-jython-command 'py-shell-name)
+(defalias 'py-default-interpreter 'py-shell-name)
+(defalias 'python-command 'py-shell-name)
 
 (defcustom py-encoding-string " # -*- coding: utf-8 -*-"
   "Default string specifying encoding in the heading of file. "
@@ -188,7 +184,7 @@ regardless of where in the line point is when the TAB command is used."
   :type 'regexp
   :group 'python)
 
-(defalias 'py-default-interpreter 'py-python-command)
+
 
 (defcustom py-python-command-args '("-i")
   "*List of string arguments to be used when starting a Python shell."
@@ -947,7 +943,7 @@ Currently-active file is at the head of the list.")
 ;; (defconst py-pdbtrack-stack-entry-regexp
 ;;   "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
 ;;   "Regular expression pdbtrack uses to find a stack trace entry for pydb.
-;; 
+;;
 ;; The debugger outputs program-location lines that look like this:
 ;;    (/usr/bin/zonetab2pot.py:15): makePOT")
 
@@ -1554,7 +1550,7 @@ This does the following:
  - reads py-shell-name
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
- - default to the variable `py-python-command'
+ - default to the variable `py-shell-name'
 
 With \\[universal-argument]) user is prompted to specify a reachable Python version."
   (interactive "P")
@@ -1562,8 +1558,7 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
                     (read-from-minibuffer "Python Shell: " py-shell-name))
                    ((py-choose-shell-by-shebang))
                    ((py-choose-shell-by-import))
-                   (py-shell-name)
-                   (t py-python-command))))
+                   (t py-shell-name))))
     (when (interactive-p) (message "%s" erg))
     (setq py-shell-name erg)
     erg))
@@ -1641,7 +1636,7 @@ VARIABLES
 
 py-indent-offset\t\tindentation increment
 py-block-comment-prefix\t\tcomment string used by `comment-region'
-py-python-command\t\tshell command to invoke Python interpreter
+py-shell-name\t\tshell command to invoke Python interpreter
 py-temp-directory\t\tdirectory used for temp files (if needed)
 py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   (interactive)
@@ -2099,18 +2094,15 @@ If an exception occurred return t, otherwise return nil.  BUF must exist."
   "Toggles between the CPython and Jython default shells.
 
 With \\[universal-argument]) user is prompted to specify a reachable Python version.
-If no arg given and py-shell-name not set yet, shell is set according to `py-python-command' "
+If no arg given and py-shell-name not set yet, shell is set according to `py-shell-name' "
   (interactive "P")
   (let ((name (cond ((eq 4 (prefix-numeric-value arg))
                      (read-from-minibuffer "Python Shell: "))
                     ((ignore-errors (stringp arg))
                      arg)
-                    (py-shell-name
-                     (if (string-match "python" py-shell-name)
-                         "jython"
-                       "python"))
-                    (t py-python-command)))
-        )
+                    (if (string-match "python" py-shell-name)
+                        "jython"
+                      "python"))))
     (if (string-match "python" name)
         (setq py-shell-name name
               py-which-bufname (capitalize name)
@@ -2425,7 +2417,7 @@ Unicode strings like u'\xA9' "
   "Execute the region through an ipython shell. "
   (interactive "r")
   ;; Skip ahead to the first non-blank line
-  (let* ((name (concat "*" py-python-command "*"))
+  (let* ((name (concat "*" py-shell-name "*"))
          (regbuf (current-buffer))
          (first (progn (and (buffer-live-p (get-buffer name))
                             (processp (get-process name))
@@ -2457,15 +2449,15 @@ Unicode strings like u'\xA9' "
   "Execute the region in a Python shell. "
   (interactive "r\nP")
   (let* ((regbuf (current-buffer))
-         (name (concat "*" py-python-command "*"))
+         (name (concat "*" py-shell-name "*"))
          (first (progn (and (buffer-live-p (get-buffer name))
-                            (processp (get-process py-python-command))
+                            (processp (get-process py-shell-name))
                             (buffer-name (get-buffer name)))))
          (procbuf (or first (progn
                               (py-shell)
                               (buffer-name (get-buffer name)))))
-         (proc (get-process py-python-command))
-         (temp (make-temp-name py-python-command))
+         (proc (get-process py-shell-name))
+         (temp (make-temp-name py-shell-name))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (temp (get-buffer-create file))
          (py-line-number-offset 0)
@@ -2502,9 +2494,9 @@ Unicode strings like u'\xA9' "
         (write-region (point-min) (point-max) file nil 'nomsg))
       (let* ((temp (generate-new-buffer-name py-output-buffer))
              ;; TBD: a horrible hack, but why create new Custom variables?
-             (arg (if (string-match py-python-command "Python")
+             (arg (if (string-match py-shell-name "Python")
                       "-u" "")))
-        (start-process py-python-command temp shell arg file)
+        (start-process py-shell-name temp shell arg file)
         (pop-to-buffer temp)
         (py-postprocess-output-buffer temp)
         ;; TBD: clean up the temporary file!
@@ -2525,7 +2517,7 @@ Unicode strings like u'\xA9' "
      (t
       ;; this part is in py-shell-command-on-region now.
       (let ((cmd
-             (concat shell (if (string-equal py-python-command
+             (concat shell (if (string-equal py-shell-name
                                              "Jython")
                                " -" ""))))
         ;; otherwise either run it synchronously in a subprocess
@@ -2782,8 +2774,7 @@ subtleties, including the use of the optional ASYNC argument."
   (unless (py-choose-shell-by-shebang)
     (let ((erg (or (downcase name)
                    (py-choose-shell-by-import)
-                   py-shell-name
-                   py-python-command)))
+                   py-shell-name)))
       (goto-char (point-min))
       (insert (concat py-shebang-startstring " " erg "\n")))))
 
@@ -3530,8 +3521,8 @@ Returns indentation reached. "
 ;; make general form below work also in these cases
 (defalias 'py-beginning-of-paragraph 'backward-paragraph)
 (defalias 'py-end-of-paragraph 'forward-paragraph)
-(defalias 'py-beginning-of-line 'beginning-of-line) 
-(defalias 'py-end-of-line 'end-of-line) 
+(defalias 'py-beginning-of-line 'beginning-of-line)
+(defalias 'py-end-of-line 'end-of-line)
 
 (defun py-shift-forms-base (form arg &optional beg end)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
@@ -5109,13 +5100,13 @@ variable docs begin with `->'.
 py-indent-offset\tindentation increment
 py-block-comment-prefix\tcomment string used by comment-region
 
-py-python-command\tshell command to invoke Python interpreter
+py-shell-name\tshell command to invoke Python interpreter
 py-temp-directory\tdirectory used for temp files (if needed)
 
 py-beep-if-tab-change\tring the bell if tab-width is changed
 %v:py-indent-offset
 %v:py-block-comment-prefix
-%v:py-python-command
+%v:py-shell-name
 %v:py-temp-directory
 %v:py-beep-if-tab-change
 
@@ -5328,7 +5319,7 @@ local bindings to py-newline-and-indent."))
 (defun python-after-info-look ()
   "Set up info-look for Python.
 Used with `eval-after-load'."
-  (let* ((version (let ((s (shell-command-to-string (concat py-python-command
+  (let* ((version (let ((s (shell-command-to-string (concat py-shell-name
 							    " -V"))))
 		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
 		    (match-string 1 s)))
@@ -5746,7 +5737,7 @@ non-nil) just submit an enhancement request."
      (concat "python-mode " py-version) ;pkgname
      ;; varlist
      (if enhancement-p nil
-       '(py-python-command
+       '(py-shell-name
          py-indent-offset
          py-block-comment-prefix
          py-temp-directory
