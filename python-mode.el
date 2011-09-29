@@ -2370,26 +2370,24 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (let ((py-shell-switch-buffers-on-execute))
     (py-execute-base start end async "python3.2")))
 
-;; broken
-;; (defun py-execute-region-ipython (start end &optional async)
-;;   "Send the region to a common shell calling the ipython interpreter. "
-;;   (interactive "r\nP")
-;;   (py-execute-base start end async "ipython"))
-;; 
-;; (defun py-execute-region-ipython-switch (start end &optional async)
-;;   "Send the region to a common shell calling the ipython interpreter. 
-;; Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
-;;   (interactive "r\nP")
-;;   (let ((py-shell-switch-buffers-on-execute t))
-;;     (py-execute-base start end async "ipython")))
-;; 
-;; (defun py-execute-region-ipython-no-switch (start end &optional async)
-;;   "Send the region to a common shell calling the ipython interpreter.
-;; Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
-;;   (interactive "r\nP")
-;;   (let ((py-shell-switch-buffers-on-execute))
-;;     (py-execute-base start end async "ipython")))
+(defun py-execute-region-ipython (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter. "
+  (interactive "r\nP")
+  (py-execute-base start end async "ipython"))
 
+(defun py-execute-region-ipython-switch (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter. 
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute t))
+    (py-execute-base start end async "ipython")))
+
+(defun py-execute-region-ipython-no-switch (start end &optional async)
+  "Send the region to a common shell calling the ipython interpreter.
+Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+  (interactive "r\nP")
+  (let ((py-shell-switch-buffers-on-execute))
+    (py-execute-base start end async "ipython")))
 (defun py-execute-region-jython (start end &optional async)
   "Send the region to a common shell calling the jython interpreter. "
   (interactive "r\nP")
