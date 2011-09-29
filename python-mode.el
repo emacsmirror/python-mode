@@ -2115,11 +2115,13 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
     (message "Using the %s shell" py-shell-name)
     (setq py-output-buffer (format "*%s Output*" py-which-bufname))))
 
-(defun py-process-name ()
+(defun py-process-name (&optional name)
   "Return the name of the running Python process, `get-process' willsee it. "
-  (if (string= "ipython" py-shell-name)
+  (let* ((name (or name py-shell-name))
+         (erg (if (string= "ipython" name)
       "IPython"
-    (capitalize py-shell-name)))
+                (capitalize name))))
+    erg))
 
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
@@ -2368,24 +2370,25 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (let ((py-shell-switch-buffers-on-execute))
     (py-execute-base start end async "python3.2")))
 
-(defun py-execute-region-ipython (start end &optional async)
-  "Send the region to a common shell calling the ipython interpreter. "
-  (interactive "r\nP")
-  (py-execute-base start end async "ipython"))
-
-(defun py-execute-region-ipython-switch (start end &optional async)
-  "Send the region to a common shell calling the ipython interpreter. 
-Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
-  (interactive "r\nP")
-  (let ((py-shell-switch-buffers-on-execute t))
-    (py-execute-base start end async "ipython")))
-
-(defun py-execute-region-ipython-no-switch (start end &optional async)
-  "Send the region to a common shell calling the ipython interpreter.
-Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
-  (interactive "r\nP")
-  (let ((py-shell-switch-buffers-on-execute))
-    (py-execute-base start end async "ipython")))
+;; broken
+;; (defun py-execute-region-ipython (start end &optional async)
+;;   "Send the region to a common shell calling the ipython interpreter. "
+;;   (interactive "r\nP")
+;;   (py-execute-base start end async "ipython"))
+;; 
+;; (defun py-execute-region-ipython-switch (start end &optional async)
+;;   "Send the region to a common shell calling the ipython interpreter. 
+;; Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
+;;   (interactive "r\nP")
+;;   (let ((py-shell-switch-buffers-on-execute t))
+;;     (py-execute-base start end async "ipython")))
+;; 
+;; (defun py-execute-region-ipython-no-switch (start end &optional async)
+;;   "Send the region to a common shell calling the ipython interpreter.
+;; Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not being switched to."
+;;   (interactive "r\nP")
+;;   (let ((py-shell-switch-buffers-on-execute))
+;;     (py-execute-base start end async "ipython")))
 
 (defun py-execute-region-jython (start end &optional async)
   "Send the region to a common shell calling the jython interpreter. "
@@ -2454,13 +2457,11 @@ is inserted at the end.  See also the command `py-clear-queue'."
   (py-execute-base start end async))
 
 (defun py-execute-base (start end &optional async shell)
-  ;; Skip ahead to the first non-blank line
+  "Adapt the variables used in the process. "
   (let* ((regbuf (current-buffer))
          (py-shell-name (or shell py-shell-name))
 	 (name-raw (or shell (py-choose-shell)))
-         (name
-          (if (string= name-raw "ipython") "IPython"
-            (capitalize name-raw)))
+         (name (py-process-name name-raw))
 	 (buf-and-proc (progn
                          (and (buffer-live-p (get-buffer (concat "*" name "*")))
                               (processp (get-process name))
