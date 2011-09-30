@@ -1685,7 +1685,7 @@ if foo:
 
 (defun py-shift-line-when-no-region-lp-855565-base ()
     (goto-char 58)
-    (assert (eq 8 (py-shift-right)) nil "py-shift-line-when-no-region-lp-855565-test failed"))
+    (assert (eq 8 (py-shift-right 1)) nil "py-shift-line-when-no-region-lp-855565-test failed"))
 
 (defun highlighting-in-multiline-function-call-arguments-lp:856833-test (&optional arg load-branch-function)
   (interactive "p")

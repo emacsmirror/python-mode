@@ -3392,6 +3392,19 @@ Affected by `py-dedent-keep-relative-column'. "
     (skip-chars-backward " \t\r\n\f")
     (current-indentation)))
 
+(defalias 'pios 'py-indentation-of-statement)
+(defalias 'ios 'py-indentation-of-statement)
+(defun py-indentation-of-statement ()
+  (interactive)
+  "Returns the indenation of the statement at point. "
+  (let ((erg (save-excursion
+               (back-to-indentation)
+               (or (py-beginning-of-statement-p)
+                   (py-beginning-of-statement))
+               (current-indentation))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 (defalias 'py-in-list-p 'py-list-beginning-position)
 (defun py-list-beginning-position (&optional start)
   "Return lists beginning position, nil if not inside.
@@ -3596,65 +3609,57 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 
 
 ;; backward compatibility
-(defalias 'py-shift-region-left 'py-shift-left)
-(defalias 'py-shift-region-right 'py-shift-right)
 
 (defalias 'py-shift-region-left 'py-shift-left)
 (defun py-shift-left (&optional count start end)
-  "Dedent lines from START to END by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \\[universal-argument] to specify a different value.
+  "Dedent region according to `py-indent-offset' by COUNT times.
 
 If no region is active, current line is dedented.
 Returns indentation reached. "
-  (interactive "P")
-  (let* ((count (if current-prefix-arg
-                    (prefix-numeric-value count)
-                   py-indent-offset))
-        (erg (py-shift-intern (- count))))
+  (interactive "p")
+  (let ((erg (py-shift-intern (- count) start end)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
 (defalias 'py-shift-region-right 'py-shift-right)
-(defun py-shift-right (&optional count start end)
-  "Indent lines from START to END by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \\[universal-argument] to specify a different value.
+(defun py-shift-right (&optional count beg end)
+  "Indent region according to `py-indent-offset' by COUNT times.
 
 If no region is active, current line is indented.
 Returns indentation reached. "
-  (interactive "P")
-  (let* ((count (if current-prefix-arg
-                    (prefix-numeric-value count)
-                    py-indent-offset))
-         (erg (py-shift-intern count)))
-    (when (interactive-p) (message "%s" erg))
+  (interactive "p")
+  (let ((erg (py-shift-intern count beg end)))
+    (when (interactive-p) (message "%s" erg)) 
     erg))
 
 (defun py-shift-intern (count &optional start end)
-  (let ((beg (cond (start)
-                   ((region-active-p)
-                    (region-beginning))
-                   (t (line-beginning-position))))
-        (end (cond (end)
-                   ((region-active-p)
-                    (region-end))
-                   (t (line-end-position))))
-        (orig end)
-        erg)
+  (let* ((inhibit-point-motion-hooks t)
+         deactivate-mark
+         (beg (cond (start)
+                    ((region-active-p)
+                     (save-excursion
+                       (goto-char
+                        (region-beginning))
+                       (line-beginning-position)))
+                    (t (line-beginning-position))))
+         (end (cond (end)
+                    ((region-active-p)
+                     (save-excursion
+                       (goto-char
+                        (region-end))
+                       (line-end-position)))
+                    (t (line-end-position))))
+         (orig end))
     (setq beg (copy-marker beg))
     (setq end (copy-marker end))
-    (indent-rigidly beg end count)
-    (unless (eq end orig)
-      (goto-char end)
-      (if (empty-line-p)
-          (save-excursion
-            (skip-chars-backward " \t\r\n\f")
-            (setq erg (current-indentation)))
-        (setq erg (current-indentation)))
-      erg)))
+    (dotimes (i (abs count))
+      (if (< 0 count)
+          (indent-rigidly beg end py-indent-offset)
+        (indent-rigidly beg end (- py-indent-offset))))
+    (push-mark beg t)
+    (goto-char end)
+    (skip-chars-backward " \t\r\n\f"))
+  (py-indentation-of-statement))
 
 ;; make general form below work also in these cases
 (defalias 'py-beginning-of-paragraph 'backward-paragraph)

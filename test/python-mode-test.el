@@ -782,7 +782,7 @@ class OrderedDict1(dict):
 
 (defun py-shift-block-base ()
   (goto-char 237)
-  (assert (eq 12 (py-shift-block-right)) nil "py-shift-block-test #1 failed")
+  (assert (eq 24 (py-shift-block-right)) nil "py-shift-block-test #1 failed")
   (assert (eq 8 (py-shift-block-left)) nil "py-shift-block-test #1 failed"))
 
 (provide 'python-mode-test)
