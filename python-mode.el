@@ -3162,8 +3162,8 @@ Returns column. "
         erg)
     (newline)
     (when (< 0 cui)
-      (setq erg (py-compute-indentation))
-      (indent-to-column (- erg py-indent-offset)))
+      (setq erg (- (py-compute-indentation) py-indent-offset))
+      (indent-to-column erg))
     (when (interactive-p) (message "%s" erg))
     erg))
 
