@@ -3155,14 +3155,17 @@ the new line indented."
 
 (defalias 'py-newline-and-close-block 'py-newline-and-dedent)
 (defun py-newline-and-dedent ()
-  "Add a newline and indent to one level below current. "
+  "Add a newline and indent to one level below current.
+Returns column. "
   (interactive "*")
   (let ((cui (current-indentation))
-        goal)
+        erg)
     (newline)
     (when (< 0 cui)
-      (setq goal (py-compute-indentation))
-      (indent-to-column (- goal py-indent-offset)))))
+      (setq erg (py-compute-indentation))
+      (indent-to-column (- erg py-indent-offset)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defun py-indent-forward-line (&optional arg)
   "Indent and move one line forward to next indentation.
