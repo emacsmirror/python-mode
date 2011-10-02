@@ -70,6 +70,7 @@
          'multiline-list-indent-test
          'close-block-test
          'py-shift-block-test
+         'nesting-if-test
 
          )))
 
@@ -784,6 +785,27 @@ class OrderedDict1(dict):
   (goto-char 237)
   (assert (eq 24 (py-shift-block-right)) nil "py-shift-block-test #1 failed")
   (assert (eq 8 (py-shift-block-left)) nil "py-shift-block-test #1 failed"))
+
+(defun nesting-if-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if foo:
+    if bar:
+        pass
+    else:
+        pass
+else:
+    pass
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'nesting-if-test-base arg teststring)))
+
+(defun nesting-if-test-base ()
+    (goto-char 105)
+    (assert (eq 0 (py-compute-indentation)) nil "nesting-if-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

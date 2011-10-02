@@ -1439,7 +1439,7 @@ class X():
 
 (defun if-indentation-lp:818720-base ()
     (goto-char 196)
-    (assert (eq 12 (py-compute-indentation)) nil "in-indentation-lp:818720-test failed"))
+    (assert (eq 12 (py-compute-indentation)) nil "if-indentation-lp:818720-test failed"))
 
 (defun closing-parentesis-indent-lp:821820-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1804,7 +1804,6 @@ if maxdepth == 0 or depth < maxdepth:
 (defun py-compute-indentation-wrong-at-eol-lp-858043-base ()
     (goto-char 132)
     (assert (eq 4 (py-compute-indentation)) nil "py-compute-indentation-wrong-at-eol-lp-858043-test failed"))
-
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
