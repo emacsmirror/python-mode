@@ -4766,7 +4766,8 @@ Takes a list, INDENT and START position. "
     (while (and (not (eval stop))
                 (or
                  (not (and (py-beginning-of-statement-p)(setq erg (py-statement-opens-block-p regexp))))
-                 (< 0 else)(< 0 finally)))
+                 (< 0 else)(< 0 finally)
+                 (eq (point) orig)))
       (funcall function)
       (cond ((looking-at "try")
              (setq finally (1- finally)))
