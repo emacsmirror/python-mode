@@ -5087,6 +5087,98 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
+;; Declarations start
+(defalias 'py-copy-declarations 'py-declarations)
+(defun py-declarations ()
+  "Copy and mark assigments resp. statements in current level which don't open blocks. "
+  (interactive)
+  (let* ((bounds (py-bounds-of-declarations))
+         (beg (car bounds))
+         (end (cdr bounds)))
+    (when (and beg end)
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (kill-new (buffer-substring-no-properties beg end))
+      (exchange-point-and-mark))))
+
+(defun py-bounds-of-declarations ()
+  "Bounds of consecutive multitude of assigments resp. statements around point.
+
+Indented same level, which don't open blocks.
+Typically declarations resp. initialisations of variables following
+a class or function definition. "
+  (interactive)
+  (let* ((orig-indent (progn
+                        (back-to-indentation)
+                        (unless (py-beginning-of-statement-p)
+                          (py-beginning-of-statement))
+                        (unless (py-beginning-of-block-p)
+                          (current-indentation))))
+         (orig (point))
+         last beg end)
+    (when orig-indent
+      (setq beg (point))
+      (while (and (setq last beg)
+                  (setq beg
+                        (when (py-beginning-of-statement)
+                          (line-beginning-position)))
+                  (not (py-in-string-p))
+                  (not (py-beginning-of-block-p))
+                  (eq (current-indentation) orig-indent)))
+      (setq beg last)
+      (goto-char orig)
+      (setq end (line-end-position))
+      (while (and (setq last (line-end-position))
+                  (setq end (py-down-statement))
+                  (not (py-beginning-of-block-p))
+                  (not (looking-at "pdb\."))
+                  (not (py-in-string-p))
+                  (eq (py-indentation-of-statement) orig-indent)))
+      (setq end last)
+      (goto-char orig)
+      (if (and beg end)
+          (progn
+            (when (interactive-p) (message "%s %s" beg end))
+            (cons beg end))
+        (when (interactive-p) (message "%s" nil))
+        nil))))
+
+(defalias 'py-backward-declarations 'py-beginning-of-declarations)
+(defun py-beginning-of-declarations ()
+  "Got to the beginning of assigments resp. statements in current level which don't open blocks.
+"
+  (interactive)
+  (let* ((bounds (py-bounds-of-declarations))
+         (erg (car bounds)))
+    (when erg (goto-char erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-forward-of-declarations 'py-end-of-declarations)
+(defun py-end-of-declarations ()
+  "Got to the end of assigments resp. statements in current level which don't open blocks. "
+  (interactive)
+  (let* ((bounds (py-bounds-of-declarations))
+         (erg (cdr bounds)))
+    (when erg (goto-char erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-kill-declarations ()
+  "Delete variables declared in current level.
+Store deleted variables in kill-ring "
+  (interactive "*")
+  (let* ((bounds (py-bounds-of-declarations))
+         (beg (car bounds))
+         (end (cdr bounds)))
+    (when (and beg end)
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (kill-new (buffer-substring-no-properties beg end))
+      (delete-region beg end))))
+;; Declarations end
 
 ;; pdbtrack functions
 (defun py-pdbtrack-toggle-stack-tracking (arg)
