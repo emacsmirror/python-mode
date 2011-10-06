@@ -73,3 +73,4 @@ alt-py-shell-complete.el
 format.py
 py-execute-base.el
 Manifest.in
+setup.py
