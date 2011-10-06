@@ -74,3 +74,6 @@ format.py
 py-execute-base.el
 Manifest.in
 setup.py
+dist
+MANIFEST
+auspack
