@@ -114,6 +114,13 @@
   :group 'languages
   :prefix "py-")
 
+;; backward compatibility
+(define-obsolete-variable-alias 'py-python-command 'py-shell-name "version 6.0.4") 
+(define-obsolete-variable-alias 'py-jpython-command 'py-shell-name "version 6.0.4")
+(define-obsolete-variable-alias 'py-jython-command 'py-shell-name "version 6.0.4")
+(define-obsolete-variable-alias 'py-default-interpreter 'py-shell-name "version 6.0.4")
+(define-obsolete-variable-alias 'python-command 'py-shell-name "version 6.0.4")
+
 (defcustom py-install-directory nil
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
   :type 'string
@@ -161,13 +168,6 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python)
 
 ;; Execute stuff start
-
-;; backward compatibility
-(defalias 'py-python-command 'py-shell-name)
-(defalias 'py-jpython-command 'py-shell-name)
-(defalias 'py-jython-command 'py-shell-name)
-(defalias 'py-default-interpreter 'py-shell-name)
-(defalias 'python-command 'py-shell-name)
 
 (defcustom py-encoding-string " # -*- coding: utf-8 -*-"
   "Default string specifying encoding in the heading of file. "
