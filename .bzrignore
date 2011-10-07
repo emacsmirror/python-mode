@@ -72,8 +72,7 @@ py-shell-complete.el
 alt-py-shell-complete.el
 format.py
 py-execute-base.el
-Manifest.in
+tools/keywords.txt
+MANIFEST
 setup.py
 dist
-MANIFEST
-auspack

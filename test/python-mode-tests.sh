@@ -137,6 +137,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall indentation-of-from-import-continuation-lines-lp-858041-test \
 --funcall indentation-after-one-line-suites-lp:858044-test \
 --funcall py-compute-indentation-wrong-at-eol-lp-858043-test \
+--funcall comment-indentation-level-lp-869854-test \
 --funcall py-shebang-ipython-env-lp-849293-test \
 --funcall py-shebang-consider-ipython-lp-849293-test \
 \

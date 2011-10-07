@@ -101,6 +101,7 @@
          'indentation-of-from-import-continuation-lines-lp-858041-test
          'indentation-after-one-line-suites-lp:858044-test
          'py-compute-indentation-wrong-at-eol-lp-858043-test
+         'comment-indentation-level-lp-869854-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -1705,8 +1706,6 @@ newObj = SomeClassWithManyManyArgs (param0 = val0,
   ;; (goto-char 106)
   (assert (eq (get-char-property (point) 'face) nil) nil "highlighting-in-multiline-function-call-arguments-lp:856833 test failed "))
 
-
-
 (defun py-shift-preserve-active-region-lp-857837-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -1722,7 +1721,6 @@ print 'world'
     (goto-char 49)
     (assert nil "py-shift-preserve-active-region-lp-857837-test failed"))
 
-
 (defun variable-highlighted-on-LHS-of-eq-lp-858304-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -1737,8 +1735,6 @@ if someVar == 5:
 (defun variable-highlighted-on-LHS-of-eq-lp-858304-base ()
   (goto-char 55)
   (assert (eq (get-char-property (point) 'face) nil) nil "variable-highlighted-on-LHS-of-eq-lp-858304-test failed"))
-
-
 
 (defun indent-guessing-lp-858040-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1773,7 +1769,6 @@ usermethod, tupleof, floatrange, any, none_or
     (goto-char 184)
     (assert (eq 5 (py-compute-indentation)) nil "indentation-of-from-import-continuation-lines-lp-858041-test failed"))
 
-
 (defun indentation-after-one-line-suites-lp:858044-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -1789,7 +1784,6 @@ if foo: return
     (goto-char 64)
     (assert (eq 0 (py-compute-indentation)) nil "indentation-after-one-line-suites-lp:858044-test failed"))
 
-
 (defun py-compute-indentation-wrong-at-eol-lp-858043-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -1804,6 +1798,24 @@ if maxdepth == 0 or depth < maxdepth:
 (defun py-compute-indentation-wrong-at-eol-lp-858043-base ()
     (goto-char 132)
     (assert (eq 4 (py-compute-indentation)) nil "py-compute-indentation-wrong-at-eol-lp-858043-test failed"))
+
+(defun comment-indentation-level-lp-869854-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo():
+    def bar():
+        x = 1
+# asdf
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'comment-indentation-level-lp-869854-base arg teststring)))
+
+(defun comment-indentation-level-lp-869854-base ()
+    (goto-char 104)
+    (assert (eq 0 (py-compute-indentation))  nil "comment-indentation-level-lp-869854-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
