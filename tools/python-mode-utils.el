@@ -161,18 +161,20 @@ Returns outmost indentation reached. \"
 
 (setq py-down-forms (list "block" "clause" "def" "class" "statement"))
 
-(defun py-write-down-forms ()
+(defun py-write-down-forms-lc ()
   " "
   (interactive)
-  (set-buffer (get-buffer-create "py-down-forms"))
+  (set-buffer (get-buffer-create "py-down-forms-lc"))
   (erase-buffer)
       (dolist (ele py-down-forms)
         (insert (concat "
-\(defun py-down-" ele " ()
+\(defun py-down-" ele "-lc ()
   \"Goto beginning of line following end of " ele ".
   Returns position reached, if successful, nil otherwise.
 
-A complementary command travelling left, whilst `py-end-of-" ele "' stops at right corner. \"
+\\\"-lc\\\" stands for \\\"left-corner\\\" - a complementary command travelling left, whilst `py-end-of-" ele "' stops at right corner.
+
+See also `py-down-" ele "': down from current definition to next beginning of " ele " below. \"
   (interactive)
   (let ((erg (py-end-of-" ele ")))
     (when erg
