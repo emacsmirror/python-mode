@@ -4430,7 +4430,12 @@ http://docs.python.org/reference/compound_stmts.html
           (goto-char (nth 2 pps))
           (when (looking-at "\"\"\"\\|'''")
             (goto-char (match-end 0))
-            (while (and (re-search-forward (match-string-no-properties 0) nil (quote move) 1)(py-escaped)))))
+              (while (and (re-search-forward (match-string-no-properties 0) nil (quote move) 1)(py-escaped))))
+            (setq done t) 
+            (end-of-line)
+            (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+            (setq erg (point)) 
+            (py-end-of-statement orig origline done))
          ;; in comment
          ((and (nth 8 pps)(nth 4 pps))
             (if (eobp)

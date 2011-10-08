@@ -71,6 +71,7 @@
          'close-block-test
          'py-shift-block-test
          'nesting-if-test
+         'py-end-of-print-statement-test
 
          )))
 
@@ -806,6 +807,24 @@ else:
 (defun nesting-if-test-base ()
     (goto-char 105)
     (assert (eq 0 (py-compute-indentation)) nil "nesting-if-test failed"))
+
+(defun py-end-of-print-statement-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def usage():
+    print \"\"\"Error: %s
+somme errors
+\"\"\" % (
+          os.path.basename(sys.argv[0]))
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-end-of-print-statement-base arg teststring)))
+
+(defun py-end-of-print-statement-base ()
+    (goto-char 66)
+    (assert (eq 146 (py-end-of-statement)) nil "py-end-of-print-statement-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here

@@ -73,6 +73,8 @@ alt-py-shell-complete.el
 format.py
 py-execute-base.el
 tools/keywords.txt
+python-components-move-numarg.el
+tools/py-down-forms.el
 MANIFEST
+dist/
 setup.py
-dist
