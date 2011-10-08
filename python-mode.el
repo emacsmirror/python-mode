@@ -4594,26 +4594,6 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((orig (point)))
     (py-end-base py-block-re orig (interactive-p))))
 
-(defun py-down-block ()
-  "Go to the beginning of next block below current level.
-Returns position if block inside found, nil otherwise. "
-  (interactive)
-  (unless (eobp)
-    (let ((orig (point))
-          (end (save-excursion
-                 (py-end-of-block)))
-          erg)
-      (unless (looking-at py-block-re)
-        (py-beginning-of-block))
-      (when (looking-at py-block-re) (goto-char (match-end 0)))
-      (while (and (setq erg (re-search-forward py-block-re end (quote move) 1))(save-match-data (py-in-string-or-comment-p))))
-      (if erg
-          (progn (back-to-indentation)
-                 (setq erg (point)))
-        (goto-char orig))
-      (when (interactive-p) (message "%s" erg))
-      erg)))
-
 ;; Block or clause
 (defalias 'py-goto-initial-line 'py-beginning-of-block-or-clause)
 (defalias 'py-previous-block-or-clause 'py-beginning-of-block-or-clause)
@@ -5199,6 +5179,94 @@ See also `py-down-statement': down from current definition to next beginning of 
   erg))
 
 ;; Complementary commands end
+
+;; Py-down commands start
+(defun py-down-statement ()
+  "Go to the beginning of next statement below in buffer.
+
+Returns indentation if statement found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (progn
+        (when (setq erg (py-end-of-statement))
+          (if (< orig (setq erg (py-beginning-of-statement-position)))
+              (goto-char erg)
+            (while (and (setq erg (py-end-of-statement))(py-in-string-or-comment-p)))
+            (when erg
+              (py-beginning-of-statement))))
+        (when erg
+          (setq erg (current-column)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-down-block ()
+  "Go to the beginning of next block below in buffer.
+
+Returns indentation if block found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-block-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-down-clause ()
+  "Go to the beginning of next clause below in buffer.
+
+Returns indentation if clause found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-clause-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-down-block-or-clause ()
+  "Go to the beginning of next block-or-clause below in buffer.
+
+Returns indentation if block-or-clause found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-block-or-clause-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-down-def ()
+  "Go to the beginning of next def below in buffer.
+
+Returns indentation if def found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-def-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-down-class ()
+  "Go to the beginning of next class below in buffer.
+
+Returns indentation if class found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-class-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+;; Py-down commands end
 
 ;; Declarations start
 (defvar py-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>"

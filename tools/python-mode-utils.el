@@ -159,7 +159,7 @@ Returns outmost indentation reached. \"
   (emacs-lisp-mode)
   (switch-to-buffer (current-buffer))))
 
-(setq py-down-forms (list "block" "clause" "def" "class" "statement"))
+(setq py-down-forms (list "block" "clause" "block-or-clause" "def" "class"))
 
 (defun py-write-down-forms-lc ()
   " "
@@ -184,6 +184,29 @@ See also `py-down-" ele "': down from current definition to next beginning of " 
         (setq erg (point))))
   (when (interactive-p) (message \"%s\" erg))
   erg))
+"))
+        (emacs-lisp-mode)
+        (switch-to-buffer (current-buffer))))
+
+(defun py-write-down-forms ()
+  " "
+  (interactive)
+  (set-buffer (get-buffer-create "py-down-forms"))
+  (erase-buffer)
+      (dolist (ele py-down-forms)
+        (insert (concat "
+\(defun py-down-" ele " ()
+  \"Go to the beginning of next " ele " below in buffer.
+
+Returns indentation if " ele " found, nil otherwise. \"
+  (interactive)
+  (let\* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-" ele "-re))))))
+    (when (interactive-p) (message \"%s\" erg))
+    erg))
 "))
         (emacs-lisp-mode)
         (switch-to-buffer (current-buffer))))
