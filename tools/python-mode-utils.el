@@ -159,12 +159,12 @@ Returns outmost indentation reached. \"
   (emacs-lisp-mode)
   (switch-to-buffer (current-buffer))))
 
-(setq py-down-forms (list "block" "clause" "block-or-clause" "def" "class"))
+(setq py-down-forms (list "block" "clause" "block-or-clause" "def" "class" "def-or-class"))
 
 (defun py-write-down-forms-lc ()
   " "
   (interactive)
-  (set-buffer (get-buffer-create "py-down-forms-lc"))
+  (set-buffer (get-buffer-create "py-down-forms-lc.el"))
   (erase-buffer)
       (dolist (ele py-down-forms)
         (insert (concat "
@@ -191,7 +191,7 @@ See also `py-down-" ele "': down from current definition to next beginning of " 
 (defun py-write-down-forms ()
   " "
   (interactive)
-  (set-buffer (get-buffer-create "py-down-forms"))
+  (set-buffer (get-buffer-create "py-down-forms.el"))
   (erase-buffer)
       (dolist (ele py-down-forms)
         (insert (concat "

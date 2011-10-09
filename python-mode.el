@@ -5266,6 +5266,19 @@ Returns indentation if class found, nil otherwise. "
       (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-class-re))))))
     (when (interactive-p) (message "%s" erg))
     erg))
+
+(defun py-down-def-or-class ()
+  "Go to the beginning of next def-or-class below in buffer.
+
+Returns indentation if def-or-class found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (if (eobp)
+        (setq erg nil)
+      (while (and (setq erg (py-down-statement))(or (py-in-string-or-comment-p)(not (looking-at py-def-or-class-re))))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 ;; Py-down commands end
 
 ;; Declarations start
