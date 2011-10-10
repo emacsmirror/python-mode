@@ -102,6 +102,7 @@
          'indentation-after-one-line-suites-lp:858044-test
          'py-compute-indentation-wrong-at-eol-lp-858043-test
          'comment-indentation-level-lp-869854-test
+         'indentation-wrong-after-multi-line-parameter-list-lp-871698-test
          'py-shebang-consider-ipython-lp-849293-test
          'py-shebang-ipython-env-lp-849293-test
 
@@ -462,21 +463,10 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 
 (defun inbound-indentation-multiline-assignement-lp:629916 ()
   (let ((py-indent-honors-multiline-listing t))
-    (goto-char (point-min))
-    (forward-line 1)
-    (indent-according-to-mode)
-    (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test failed")
-    (end-of-line)
-    (search-backward "[")
-    (newline)
-    (indent-according-to-mode)
-    (assert (eq 27 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test failed")
-    (forward-line 1)
-    (indent-according-to-mode)
-    (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test failed")
-    (forward-line 1)
-    (indent-according-to-mode)
-    (assert (eq 28 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test failed")))
+    (goto-char 33)
+    (assert (eq 4 (py-compute-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test #1 failed")
+    (goto-char 62)
+    (assert (eq 8 (current-indentation)) nil "inbound-indentation-multiline-assignement-lp:629916-test #2 failed")))
 
 (defun previous-statement-lp:637955-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -922,9 +912,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
     (py-bug-tests-intern 'multiline-listings-indent-lp:761946-base arg teststring)))
 
 (defun multiline-listings-indent-lp:761946-base ()
-  (goto-char (point-min))
-  (forward-line 3)
-  (back-to-indentation)
+  (goto-char 49)
   (assert (eq 8 (py-compute-indentation)) nil "multiline-listings-indent-lp:761946-test failed"))
 
 (defun new-page-char-causes-loop-lp:762498-test (&optional arg load-branch-function)
@@ -1816,6 +1804,35 @@ def foo():
 (defun comment-indentation-level-lp-869854-base ()
     (goto-char 104)
     (assert (eq 0 (py-compute-indentation))  nil "comment-indentation-level-lp-869854-test failed"))
+
+(defun indentation-wrong-after-multi-line-parameter-list-lp-871698-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo(bar, baz):
+    # indenation as it should be
+
+def foo(bar,
+        baz):
+# this is the next indentaiton line (none)
+
+foo(bar,
+    baz):
+# again the next line isn't indented
+
+class Foo:
+    def bar(biz,
+            baz):
+    # indentation here after newline
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-wrong-after-multi-line-parameter-list-lp-871698-base arg teststring)))
+
+(defun indentation-wrong-after-multi-line-parameter-list-lp-871698-base ()
+    (goto-char 280)
+    (assert (eq 12 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
