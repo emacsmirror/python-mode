@@ -1832,13 +1832,27 @@ comment or by universal prefix C-u."
          (self-insert-command 1))
         (t (self-insert-command (prefix-numeric-value arg))
            (unless (py-in-string-or-comment-p)
+
              (let ((orig (copy-marker (point)))
                    (indent (py-compute-indentation)))
-               (unless (eq (current-indentation) indent)
+               (unless (or (eq (current-indentation) indent)
+                           (and (py-top-level-form-p)(< (current-indentation) indent)))
                  (beginning-of-line)
                  (delete-horizontal-space)
                  (indent-to indent))
                (goto-char orig))))))
+
+(defun py-top-level-form-p ()
+  "Return non-nil, if a class or other top level definition starts at column 0.
+
+Used by `py-electric-colon', which will not indent than. "
+  (let (erg)
+    (when (eq 0 (current-indentation))
+      (save-excursion
+        (beginning-of-line)
+        (setq erg (or (looking-at py-class-re)
+                      (looking-at py-def-re))))
+      erg)))
 
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
