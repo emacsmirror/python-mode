@@ -192,7 +192,7 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
   (let ((py-indent-honors-multiline-listing t))
     (goto-char (point-min))
     (forward-line 2)
-    (assert (eq 14 (py-compute-indentation)) nil "nested-dictionaries-indent-lp:328791 failed")))
+    (assert (eq 14 (py-compute-indentation)) nil "nested-dictionaries-indent-lp:328791-test failed")))
 
 (defun mark-block-region-lp:328806-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -675,39 +675,15 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 \"fore:#00007F\" )
             self.StyleSetSpec(self.STYLE_FIELD,
 \"fore:#00007F\" )
-                self.StyleSetSpec(self.STYLE_FIELD,
-\"fore:#00007F\" )
-                    self.StyleSetSpec(self.STYLE_FIELD,
-\"fore:#00007F\" )
 "))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-tests-intern 'fore-00007F-breaks-indentation-lp:328788 arg teststring)))
 
 (defun fore-00007F-breaks-indentation-lp:328788 ()
-  (goto-char (point-min))
-  (forward-line 1)
-  (indent-according-to-mode)
-  (forward-line 1)
-  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
-  (indent-according-to-mode)
-  (forward-line 1)
-  (indent-according-to-mode)
-  (forward-line 1)
-  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
-  (indent-according-to-mode)
-  (forward-line 1)
-  (indent-according-to-mode)
-  (forward-line 1)
-  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
-  (indent-according-to-mode)
-  (forward-line 1)
-  (indent-according-to-mode)
-  (forward-line 1)
-  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation test failed")
-  (indent-according-to-mode)
-  (forward-line 1)
-  (indent-according-to-mode)
-  )
+  (goto-char 34)
+  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation-test #1 failed")
+  (goto-char 121)
+  (assert (eq 8 (py-compute-indentation)) nil "fore-00007F-breaks-indentation-test #2 failed"))
 
 (defun exceptions-not-highlighted-lp:473525-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1815,11 +1791,7 @@ def foo(bar, baz):
 
 def foo(bar,
         baz):
-# this is the next indentaiton line (none)
-
-foo(bar,
-    baz):
-# again the next line isn't indented
+# this is the next indentation line (none)
 
 class Foo:
     def bar(biz,
@@ -1831,8 +1803,15 @@ class Foo:
   (py-bug-tests-intern 'indentation-wrong-after-multi-line-parameter-list-lp-871698-base arg teststring)))
 
 (defun indentation-wrong-after-multi-line-parameter-list-lp-871698-base ()
-    (goto-char 280)
-    (assert (eq 12 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test failed"))
+  (goto-char 68)
+  (assert (eq 4 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test #1 failed")
+  (goto-char 115)
+  (assert (eq 8 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test #2 failed")
+  (goto-char 201)
+  (assert (eq 12 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test #3 failed")
+  (goto-char 223)
+  (assert (eq 8 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test #4 failed")
+  )
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
