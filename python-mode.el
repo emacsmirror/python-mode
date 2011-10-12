@@ -4811,6 +4811,18 @@ Takes a list, INDENT and START position. "
                  (< 0 else)(< 0 finally)
                  (eq (point) orig)))
       (funcall function)
+      (if (string= regexp
+              py-block-or-clause-re)
+          ;; nesting is ignored then, lowering "else" or
+          ;; "finally" will make it stop
+          (cond ((looking-at "try")
+                 (setq finally (1- finally)))
+                ((looking-at "if")
+                 (setq else (1- else)))
+                ((and (not done) (looking-at "else"))
+                 (setq else (1- else)))
+                ((and (not done) (looking-at "finally"))
+                 (setq finally (1- finally))))
       (cond ((looking-at "try")
              (setq finally (1- finally)))
             ((looking-at "if")
@@ -4818,7 +4830,7 @@ Takes a list, INDENT and START position. "
             ((and (not done) (looking-at "else"))
              (setq else (1+ else)))
             ((and (not done) (looking-at "finally"))
-             (setq finally (1+ finally))))
+               (setq finally (1+ finally)))))
       (setq done nil))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
