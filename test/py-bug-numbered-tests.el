@@ -49,7 +49,6 @@
          'imenu-newline-arglist-lp:328783-test
          'imenu-matches-in-docstring-lp:436285-test
          'exceptions-not-highlighted-lp:473525-test
-         'UnicodeEncodeError-lp:550661-test
          'fill-paragraph-problems-lp:710373-test
          'nested-indents-lp:328775-test
          'previous-statement-lp:637955-test
@@ -103,7 +102,9 @@
          'py-compute-indentation-wrong-at-eol-lp-858043-test
          'comment-indentation-level-lp-869854-test
          'indentation-wrong-after-multi-line-parameter-list-lp-871698-test
+         'no-indent-after-continue-lp-872676-test
          'py-shebang-consider-ipython-lp-849293-test
+         'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
 
          )))
@@ -1812,6 +1813,26 @@ class Foo:
   (goto-char 223)
   (assert (eq 8 (py-compute-indentation)) nil "indentation-wrong-after-multi-line-parameter-list-lp-871698-test #4 failed")
   )
+
+(defun no-indent-after-continue-lp-872676-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo():
+    for i in range(10):
+        if i == 7:
+            continue
+        if i == 9
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'no-indent-after-continue-lp-872676-base arg teststring)))
+
+(defun no-indent-after-continue-lp-872676-base ()
+    (goto-char 141)
+    (assert (eq 8 (py-compute-indentation)) nil "no-indent-after-continue-lp-872676-test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

@@ -71,6 +71,7 @@ TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 
 $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$MODEDIR/\")" --eval "(setq py-install-directory \"../\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
+--funcall UnicodeEncodeError-lp:550661-test \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
@@ -87,7 +88,6 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall nested-indents-lp:328775-test \
 --funcall imenu-matches-in-docstring-lp:436285-test \
 --funcall exceptions-not-highlighted-lp:473525-test \
---funcall UnicodeEncodeError-lp:550661-test \
 --funcall previous-statement-lp:637955-test \
 --funcall inbound-indentation-multiline-assignement-lp:629916-test \
 --funcall indentation-of-continuation-lines-lp:691185-test \
@@ -139,6 +139,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-compute-indentation-wrong-at-eol-lp-858043-test \
 --funcall comment-indentation-level-lp-869854-test \
 --funcall indentation-wrong-after-multi-line-parameter-list-lp-871698-test \
+--funcall no-indent-after-continue-lp-872676-test \
 --funcall py-shebang-ipython-env-lp-849293-test \
 --funcall py-shebang-consider-ipython-lp-849293-test \
 \
