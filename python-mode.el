@@ -114,12 +114,10 @@
   :group 'languages
   :prefix "py-")
 
-;; backward compatibility
-(define-obsolete-variable-alias 'py-python-command 'py-shell-name "version 6.0.4") 
-(define-obsolete-variable-alias 'py-jpython-command 'py-shell-name "version 6.0.4")
-(define-obsolete-variable-alias 'py-jython-command 'py-shell-name "version 6.0.4")
-(define-obsolete-variable-alias 'py-default-interpreter 'py-shell-name "version 6.0.4")
-(define-obsolete-variable-alias 'python-command 'py-shell-name "version 6.0.4")
+(defvar py-python-command  "python")
+(defvar py-jpython-command "jython")
+(defvar py-jython-command "jython")
+(defvar py-default-interpreter "python")
 
 (defcustom py-install-directory nil
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
@@ -183,8 +181,6 @@ regardless of where in the line point is when the TAB command is used."
   "Detecting the shell in head of file. "
   :type 'regexp
   :group 'python)
-
-
 
 (defcustom py-python-command-args '("-i")
   "*List of string arguments to be used when starting a Python shell."
@@ -2293,7 +2289,7 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
   (py-execute-base start end async "python"))
 
 (defun py-execute-region-python-switch (start end &optional async)
-  "Send the region to a common shell calling the python interpreter. 
+  "Send the region to a common shell calling the python interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2312,7 +2308,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "python2"))
 
 (defun py-execute-region-python2-switch (start end &optional async)
-  "Send the region to a common shell calling the python2 interpreter. 
+  "Send the region to a common shell calling the python2 interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2331,7 +2327,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "python2.7"))
 
 (defun py-execute-region-python2.7-switch (start end &optional async)
-  "Send the region to a common shell calling the python2.7 interpreter. 
+  "Send the region to a common shell calling the python2.7 interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2350,7 +2346,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "python3"))
 
 (defun py-execute-region-python3-switch (start end &optional async)
-  "Send the region to a common shell calling the python3 interpreter. 
+  "Send the region to a common shell calling the python3 interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2369,7 +2365,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "python3.2"))
 
 (defun py-execute-region-python3.2-switch (start end &optional async)
-  "Send the region to a common shell calling the python3.2 interpreter. 
+  "Send the region to a common shell calling the python3.2 interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2388,7 +2384,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "ipython"))
 
 (defun py-execute-region-ipython-switch (start end &optional async)
-  "Send the region to a common shell calling the ipython interpreter. 
+  "Send the region to a common shell calling the ipython interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -2406,7 +2402,7 @@ Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will not 
   (py-execute-base start end async "jython"))
 
 (defun py-execute-region-jython-switch (start end &optional async)
-  "Send the region to a common shell calling the jython interpreter. 
+  "Send the region to a common shell calling the jython interpreter.
 Ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to. "
   (interactive "r\nP")
   (let ((py-shell-switch-buffers-on-execute t))
@@ -3668,7 +3664,7 @@ If no region is active, current line is indented.
 Returns indentation reached. "
   (interactive "p")
   (let ((erg (py-shift-intern count beg end)))
-    (when (interactive-p) (message "%s" erg)) 
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-intern (count &optional start end)
@@ -4465,10 +4461,10 @@ http://docs.python.org/reference/compound_stmts.html
           (when (looking-at "\"\"\"\\|'''")
             (goto-char (match-end 0))
               (while (and (re-search-forward (match-string-no-properties 0) nil (quote move) 1)(py-escaped))))
-            (setq done t) 
+            (setq done t)
             (end-of-line)
             (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-            (setq erg (point)) 
+            (setq erg (point))
             (py-end-of-statement orig origline done))
          ;; in comment
          ((and (nth 8 pps)(nth 4 pps))
@@ -6618,12 +6614,24 @@ complete('%s')
 
 (provide 'py-shell-complete)
 
-
-
 (require 'info-look)
 (condition-case nil
     (require 'python-mode-shell-install)
   (error nil))
+
+;; backward compatibility
+;; `define-obsolete-variable-alias' fails with Emacs24 for now
+;; (define-obsolete-variable-alias 'py-python-command 'py-shell-name "version 6.0.4")
+;; (define-obsolete-variable-alias 'py-jpython-command 'py-shell-name "version 6.0.4")
+;; (define-obsolete-variable-alias 'py-jython-command 'py-shell-name "version 6.0.4")
+;; (define-obsolete-variable-alias 'py-default-interpreter 'py-shell-name "version 6.0.4")
+;; (define-obsolete-variable-alias 'python-command 'py-shell-name "version 6.0.4")
+
+(defvar py-python-command py-shell-name)
+(defvar py-jpython-command py-shell-name)
+(defvar py-jython-command py-shell-name)
+(defvar py-default-interpreter py-shell-name)
+(defvar python-command py-shell-name)
 
 (provide 'python-mode)
 ;;; python-mode.el ends here
