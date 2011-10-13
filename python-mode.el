@@ -2922,7 +2922,13 @@ subtleties, including the use of the optional ASYNC argument."
                    (py-choose-shell-by-import)
                    py-shell-name)))
       (goto-char (point-min))
-      (insert (concat py-shebang-startstring " " erg "\n")))))
+      (if (string-match erg "ipython")
+          (progn
+            (shell-command "type ipython" t)
+            (switch-to-buffer (current-buffer))
+            (when (looking-at "[^/\n\r]+")
+              (replace-match "#! ")))
+        (insert (concat py-shebang-startstring " " erg "\n"))))))
 
 (defun py-if-needed-insert-if ()
   "Internal use by py-execute... functions.
