@@ -155,8 +155,9 @@ regardless of where in the line point is when the TAB command is used."
   :type 'boolean
   :group 'python)
 
-(defcustom py-indent-honors-multiline-listing nil
-  "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
+(defcustom py-indent-honors-inline-comment nil
+  "If non-nil, indents to column of inlined comment start. 
+Default is nil. "
   :type 'boolean
   :group 'python)
 
@@ -3328,7 +3329,10 @@ Affected by `py-dedent-keep-relative-column'. "
                 (py-compute-indentation orig origline closing line inside repeat))
                ((nth 8 pps)
                 (goto-char (nth 8 pps))
-                (current-column))
+                (if (and line (or py-indent-honors-inline-comment (looking-back "^[ \t]*")))
+                    (current-column)
+                  (forward-char -1)
+                  (py-compute-indentation orig origline closing line inside repeat)))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
                 (forward-line -1)
                 (end-of-line)

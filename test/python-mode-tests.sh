@@ -140,6 +140,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall comment-indentation-level-lp-869854-test \
 --funcall indentation-wrong-after-multi-line-parameter-list-lp-871698-test \
 --funcall no-indent-after-continue-lp-872676-test \
+--funcall indent-after-inline-comment-lp-873372-test \
 \
 --funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \

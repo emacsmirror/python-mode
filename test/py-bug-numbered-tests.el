@@ -103,6 +103,7 @@
          'comment-indentation-level-lp-869854-test
          'indentation-wrong-after-multi-line-parameter-list-lp-871698-test
          'no-indent-after-continue-lp-872676-test
+         'indent-after-inline-comment-lp-873372-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -1832,6 +1833,22 @@ def foo():
 (defun no-indent-after-continue-lp-872676-base ()
     (goto-char 141)
     (assert (eq 8 (py-compute-indentation)) nil "no-indent-after-continue-lp-872676-test failed"))
+
+
+(defun indent-after-inline-comment-lp-873372-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+foo = True # the next line is indented incorrectly
+           # to here
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-after-inline-comment-lp-873372.txt-base arg teststring)))
+
+(defun indent-after-inline-comment-lp-873372.txt-base ()
+    (goto-char 111)
+    (assert (eq 0 (py-compute-indentation)) nil "indent-after-inline-comment-lp-873372-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
