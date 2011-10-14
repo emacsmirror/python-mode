@@ -66,12 +66,12 @@ echo "\$MODEDIR: $MODEDIR"
 # fi
 
 CCCMDS="${EMACS_SOURCE_DIR}/lisp/progmodes/cc-cmds.el"
+SHELL="${EMACS_SOURCE_DIR}/lisp/shell.el"
 # file holding the tests
 TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$MODEDIR/\")" --eval "(setq py-install-directory \"../\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
---funcall UnicodeEncodeError-lp:550661-test \
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$MODEDIR/\")" --eval "(setq py-install-directory \"../\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS -load $SHELL --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
@@ -140,8 +140,6 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall comment-indentation-level-lp-869854-test \
 --funcall indentation-wrong-after-multi-line-parameter-list-lp-871698-test \
 --funcall no-indent-after-continue-lp-872676-test \
---funcall py-shebang-ipython-env-lp-849293-test \
---funcall py-shebang-consider-ipython-lp-849293-test \
 \
 --funcall multiline-list-indent-test \
 --funcall py-beginning-of-block-test \
@@ -181,8 +179,11 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-shift-block-test \
 --funcall nesting-if-test \
 --funcall py-end-of-print-statement-test \
---funcall UnicodeEncodeError-python3-test 
-# --funcall py-execute-block-test \
+--funcall UnicodeEncodeError-python3-test \
+--funcall UnicodeEncodeError-lp:550661-test \
+--funcall py-shebang-ipython-env-lp-849293-test \
+--funcall py-shebang-consider-ipython-lp-849293-test \
+--funcall py-execute-block-test \
 
 else
 
@@ -200,3 +201,4 @@ To run tests with installed Emacs, load available test-files like "py-bug-number
 EOF
 
 fi
+

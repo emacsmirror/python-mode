@@ -2131,6 +2131,23 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
                 (capitalize name))))
     erg))
 
+;; derived from ipython.el
+(defun py-dirstack-hook ()
+  ;; the following is to synchronize dir-changes
+  (make-local-variable 'shell-dirstack)
+  (setq shell-dirstack nil)
+  (make-local-variable 'shell-last-dir)
+  (setq shell-last-dir nil)
+  (make-local-variable 'shell-dirtrackp)
+  (setq shell-dirtrackp t)
+  (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t))
+
+(add-hook 'py-shell-hook
+          '(lambda ()
+             (require 'py-shell-complete) ; nil t)
+             (when (functionp 'py-shell-complete)
+               (local-set-key [tab] 'py-shell-complete))))
+
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
 
@@ -2146,6 +2163,7 @@ interpreter.
       (py-guess-default-python)))
   (let ((args py-python-command-args)
         (py-process-name (py-process-name)))
+    ;; comint
     (if (not (equal (buffer-name) py-process-name))
         (switch-to-buffer-other-window
          (apply 'make-comint py-process-name py-shell-name nil args))
@@ -2156,12 +2174,23 @@ interpreter.
                                        "^([Pp]db) "))
     (add-hook 'comint-output-filter-functions
               'py-comint-output-filter-function)
+    (setq comint-input-sender 'py-shell-simple-send)
+    (setq comint-input-ring-file-name
+          (if (string-equal py-shell-name "ipython")
+              (or (getenv "IPYTHONDIR") "~/.ipython/history")
+            (or (getenv "PYTHONHISTORY") (concat "~/." py-shell-name "_history"))))
+    (message "comint-input-ring-file-name: %s" comint-input-ring-file-name)
+    (comint-read-input-ring)
+    (set-process-sentinel (get-buffer-process (current-buffer))
+                          #'shell-write-history-on-exit)
     ;; pdbtrack
     (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
     (setq py-pdbtrack-do-tracking-p t)
+    ;;
     (set-syntax-table py-mode-syntax-table)
-    (use-local-map py-shell-map)
-    (setq py-shell-name py-shell-name)
+    (ansi-color-for-comint-mode-on)
+    ;; ToDo: has only effect \w IPython
+    (add-hook 'py-shell-hook 'py-dirstack-hook)
     (run-hooks 'py-shell-hook)))
 
 (defun python (&optional argprompt)
@@ -6610,13 +6639,6 @@ complete('%s')
 			     (split-string result "\n"))))
 	  (py-shell-dynamic-simple-complete word completions))))))
 
-(add-hook 'py-shell-hook
-          '(lambda ()
-             (require 'py-shell-complete) ; nil t)
-             (when (functionp 'py-shell-complete)
-               ;; this should be set in py-shell
-               (setq comint-input-sender 'py-shell-simple-send)
-               (local-set-key [tab] 'py-shell-complete))))
 
 (provide 'py-shell-complete)
 
