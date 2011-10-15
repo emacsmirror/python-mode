@@ -104,6 +104,7 @@
          'indentation-wrong-after-multi-line-parameter-list-lp-871698-test
          'no-indent-after-continue-lp-872676-test
          'indent-after-inline-comment-lp-873372-test
+         'else-clause-indentation-lp-874470-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -504,14 +505,11 @@ elif x < 0:
     (py-bug-tests-intern 'nested-indents-lp:328775 arg teststring)))
 
 (defun nested-indents-lp:328775 ()
-  (let ((font-lock-verbose nil))
-    (font-lock-mode 1)
-    (font-lock-fontify-buffer)
-    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775-test failed!")
+    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775-test #1 failed!")
     (goto-char 41)
-    (assert (eq 8 (py-compute-indentation)) nil "nested-indents-lp:328775-test failed!")
-    (forward-line 1)
-    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775-test failed!")))
+    (assert (eq 8 (py-compute-indentation)) nil "nested-indents-lp:328775-test #2 failed!")
+    (goto-char 53)
+    (assert (eq 4 (py-compute-indentation)) nil "nested-indents-lp:328775-test #3 failed!"))
 
 (defun bullet-lists-in-comments-lp:328782-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
@@ -1849,6 +1847,26 @@ foo = True # the next line is indented incorrectly
 (defun indent-after-inline-comment-lp-873372.txt-base ()
     (goto-char 111)
     (assert (eq 0 (py-compute-indentation)) nil "indent-after-inline-comment-lp-873372-test failed"))
+
+
+(defun else-clause-indentation-lp-874470-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo():
+    for i in range(10):
+        if i == 7:
+            continue
+        do_something(i)
+    else
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'else-clause-indentation-lp-874470-base arg teststring)))
+
+(defun else-clause-indentation-lp-874470-base ()
+    (goto-char 156)
+    (assert (eq 4 (py-compute-indentation)) nil "else-clause-indentation-lp-874470-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
