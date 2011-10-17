@@ -105,6 +105,7 @@
          'no-indent-after-continue-lp-872676-test
          'indent-after-inline-comment-lp-873372-test
          'else-clause-indentation-lp-874470-test
+         'incorrect-use-of-region-in-py-shift-left-lp:875951-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -1867,6 +1868,28 @@ def foo():
 (defun else-clause-indentation-lp-874470-base ()
     (goto-char 156)
     (assert (eq 4 (py-compute-indentation)) nil "else-clause-indentation-lp-874470-test failed"))
+
+
+(defun incorrect-use-of-region-in-py-shift-left-lp:875951-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo():
+    for i in range(10):
+        for j in range(10):
+            print i, j
+        print 'next'
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'incorrect-use-of-region-in-py-shift-left-lp:875951-base arg teststring)))
+
+(defun incorrect-use-of-region-in-py-shift-left-lp:875951-base ()
+  (push-mark 84)
+  (goto-char 135)
+  (py-shift-left 1 84 135)
+  (assert (eq  8 (current-indentation)) nil "incorrect-use-of-region-in-py-shift-left-lp:875951-test failed"))
 
 
 (provide 'py-bug-numbered-tests)

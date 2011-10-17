@@ -3710,21 +3710,20 @@ Returns indentation reached. "
     erg))
 
 (defun py-shift-intern (count &optional start end)
+  (save-excursion
   (let* ((inhibit-point-motion-hooks t)
          deactivate-mark
          (beg (cond (start)
                     ((region-active-p)
                      (save-excursion
                        (goto-char
-                        (region-beginning))
-                       (line-beginning-position)))
+                          (region-beginning))))
                     (t (line-beginning-position))))
          (end (cond (end)
                     ((region-active-p)
                      (save-excursion
                        (goto-char
-                        (region-end))
-                       (line-end-position)))
+                          (region-end))))
                     (t (line-end-position))))
          (orig end))
     (setq beg (copy-marker beg))
@@ -3736,7 +3735,7 @@ Returns indentation reached. "
     (push-mark beg t)
     (goto-char end)
     (skip-chars-backward " \t\r\n\f"))
-  (py-indentation-of-statement))
+    (py-indentation-of-statement)))
 
 ;; make general form below work also in these cases
 (defalias 'py-beginning-of-paragraph 'backward-paragraph)
