@@ -156,7 +156,7 @@ regardless of where in the line point is when the TAB command is used."
   :group 'python)
 
 (defcustom py-indent-honors-inline-comment nil
-  "If non-nil, indents to column of inlined comment start. 
+  "If non-nil, indents to column of inlined comment start.
 Default is nil. "
   :type 'boolean
   :group 'python)
@@ -553,16 +553,13 @@ set in py-execute-region and used in py-jump-to-exception.")
    ((nth 4 ppss) 'comment)
    (t nil))))
 
-(defvar empty-line-p-chars "^[ \t\r\f]*$"
-  "Empty-line-p-chars.")
-
 (defun empty-line-p (&optional iact)
-  "Returns t if cursor is at an empty line, nil otherwise."
+  "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
   (interactive "p")
   (save-excursion
     (let ((erg (progn
                  (beginning-of-line)
-                 (looking-at empty-line-p-chars))))
+                 (looking-at "\\s-*$"))))
       (when iact
         (message "%s" erg))
       erg)))
@@ -833,7 +830,7 @@ Currently-active file is at the head of the list.")
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
   "Matches the beginning of a class, method or compound statement. ")
 
-(defconst py-minor-block-re "[ \t]*\\<\\(if\\|try\\)\\>"
+(defconst py-minor-block-re "[ \t]*\\<\\(for\\|if\\|try\\)\\>"
   "Matches the beginning of an `if' or `try' block. ")
 
 (defconst py-return-re
@@ -6686,7 +6683,6 @@ complete('%s')
 			       (split-string result "\n" t) ; XEmacs
 			     (split-string result "\n"))))
 	  (py-shell-dynamic-simple-complete word completions))))))
-
 
 (provide 'py-shell-complete)
 
