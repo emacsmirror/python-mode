@@ -833,6 +833,9 @@ Currently-active file is at the head of the list.")
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
   "Matches the beginning of a class, method or compound statement. ")
 
+(defconst py-minor-block-re "[ \t]*\\<\\(if\\|try\\)\\>"
+  "Matches the beginning of an `if' or `try' block. ")
+
 (defconst py-return-re
   ".*:?[ \t]*\\<\\(return\\)\\>"
   "Regular expression matching keyword which typically closes a function. ")
@@ -850,7 +853,7 @@ Currently-active file is at the head of the list.")
 (defconst py-def-re "[ \t]*\\<\\(def\\)\\>"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-if-clause-re "[ \t]*\\<\\elif\\>"
+(defconst py-elif-re "[ \t]*\\<\\elif\\>"
   "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-try-clause-re
@@ -861,10 +864,10 @@ Currently-active file is at the head of the list.")
           "\\)")
   "Matches the beginning of a try-statement's clause. ")
 
-(defconst py-if-block-re "[ \t]*\\<if\\>"
+(defconst py-if-re "[ \t]*\\<if\\>"
   "Matches the beginning of a compound statement saying `if'. ")
 
-(defconst py-try-block-re "[ \t]*\\<try\\>"
+(defconst py-try-re "[ \t]*\\<try\\>"
   "Matches the beginning of a compound statement saying `try'. " )
 
 (defconst py-stringlit-re
@@ -4638,7 +4641,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-block-re -1)))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -4650,7 +4653,7 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "p")
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-try-block-re -1)))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-try-re -1)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
