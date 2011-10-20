@@ -95,6 +95,7 @@
 
 ;;; Code:
 
+(require 'shell)
 (require 'comint)
 (require 'custom)
 (require 'compile)
