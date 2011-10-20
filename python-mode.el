@@ -5424,7 +5424,8 @@ Returns indentation if def-or-class found, nil otherwise. "
 
 (defalias 'py-copy-declarations 'py-declarations)
 (defun py-declarations ()
-  "Copy and mark assigments resp. statements in current level which don't open blocks. "
+  "Copy and mark assigments resp. statements in current level which don't open blocks or start with a keyword. 
+See also `py-statements', which is more general, taking also simple statements starting with a keyword. "
   (interactive)
   (let* ((bounds (py-bounds-of-declarations))
          (beg (car bounds))
@@ -5441,7 +5442,8 @@ Returns indentation if def-or-class found, nil otherwise. "
 
 Indented same level, which don't open blocks.
 Typically declarations resp. initialisations of variables following
-a class or function definition. "
+a class or function definition. 
+See also py-bounds-of-statements "
   (interactive)
   (let* ((orig-indent (progn
                         (back-to-indentation)
@@ -5464,7 +5466,7 @@ a class or function definition. "
       (goto-char orig)
       (setq end (line-end-position))
       (while (and (setq last (line-end-position))
-                  (setq end (py-down-statement-lc))
+                  (setq end (py-down-statement))
                   (not (py-beginning-of-block-p))
                   (not (looking-at py-keywords))
                   (not (looking-at "pdb\."))
@@ -5515,6 +5517,99 @@ Store deleted variables in kill-ring "
       (delete-region beg end))))
 ;; Declarations end
 
+;; Statements start
+(defun py-bounds-of-statements ()
+  "Bounds of consecutive multitude of statements around point.
+
+Indented same level, which don't open blocks. "
+  (interactive)
+  (let* ((orig-indent (progn
+                        (back-to-indentation)
+                        (unless (py-beginning-of-statement-p)
+                          (py-beginning-of-statement))
+                        (unless (py-beginning-of-block-p)
+                          (current-indentation))))
+         (orig (point))
+         last beg end)
+    (when orig-indent
+      (setq beg (point))
+      (while (and (setq last beg)
+                  (setq beg
+                        (when (py-beginning-of-statement)
+                          (line-beginning-position)))
+                  (not (py-in-string-p))
+                  (not (py-beginning-of-block-p))
+                  (eq (current-indentation) orig-indent)))
+      (setq beg last)
+      (goto-char orig)
+      (setq end (line-end-position))
+      (while (and (setq last (line-end-position))
+                  (setq end (py-down-statement))
+                  (not (py-beginning-of-block-p))
+                  ;; (not (looking-at py-keywords))
+                  ;; (not (looking-at "pdb\."))
+                  (not (py-in-string-p))
+                  (eq (py-indentation-of-statement) orig-indent)))
+      (setq end last)
+      (goto-char orig)
+      (if (and beg end)
+          (progn
+            (when (interactive-p) (message "%s %s" beg end))
+            (cons beg end))
+        (when (interactive-p) (message "%s" nil))
+        nil))))
+
+(defalias 'py-backward-statements 'py-beginning-of-statements)
+(defun py-beginning-of-statements ()
+  "Got to the beginning of statements in current level which don't open blocks.
+"
+  (interactive)
+  (let* ((bounds (py-bounds-of-statements))
+         (erg (car bounds)))
+    (when erg (goto-char erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-forward-of-statements 'py-end-of-statements)
+(defun py-end-of-statements ()
+  "Got to the end of statements in current level which don't open blocks. "
+  (interactive)
+  (let* ((bounds (py-bounds-of-statements))
+         (erg (cdr bounds)))
+    (when erg (goto-char erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-copy-statements 'py-statements)
+(defun py-statements ()
+  "Copy and mark simple statements in current level which don't open blocks. More general than py-declarations, which would stop at keywords like a print-statement. "
+  (interactive)
+  (let* ((bounds (py-bounds-of-statements))
+         (beg (car bounds))
+         (end (cdr bounds)))
+    (when (and beg end)
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (kill-new (buffer-substring-no-properties beg end))
+      (exchange-point-and-mark))))
+
+(defun py-kill-statements ()
+  "Delete statements declared in current level.
+Store deleted statements in kill-ring "
+  (interactive "*")
+  (let* ((bounds (py-bounds-of-statements))
+         (beg (car bounds))
+         (end (cdr bounds)))
+    (when (and beg end)
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (kill-new (buffer-substring-no-properties beg end))
+      (delete-region beg end))))
+;; Statements end
+
+
 ;; pdbtrack functions
 (defun py-pdbtrack-toggle-stack-tracking (arg)
   (interactive "P")
