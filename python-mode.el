@@ -179,7 +179,7 @@ Default is nil. "
   :type 'string
   :group 'python)
 
-(defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]*[ \t]\\)?[^ \t\n]*\\([pj]ython[^ \t\n]*\\)"
+(defcustom py-shebang-regexp "#![ \t]?\\([^ \t\n]+\\)[^ \t\n]*\\([iptj]ython[^ \t\n]*$\\)"
   "Detecting the shell in head of file. "
   :type 'regexp
   :group 'python)
