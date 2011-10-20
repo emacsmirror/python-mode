@@ -824,6 +824,18 @@ Currently-active file is at the head of the list.")
 
 
 ;; Constants
+(defconst py-finally-re
+  "[ \t]*\\<finally\\>"
+  "Regular expression matching keyword which closes a try-block. ")
+
+(defconst py-else-re
+  "[ \t]*\\<else\\>"
+  "Regular expression matching keyword which closes a for- if- or try-block. ")
+
+(defconst py-except-re
+  "[ \t]*\\<except\\>"
+  "Regular expression matching keyword which composes a try-block. ")
+
 (defconst py-assignment-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
 
@@ -905,8 +917,8 @@ Currently-active file is at the head of the list.")
   "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-block-closing-keywords-re
-  "\\(return\\|raise\\|break\\|continue\\|pass\\)"
-  "Regular expression matching keywords which typically close a block.")
+  "[ \t]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>"
+  "Matches the beginning of a class, method or compound statement. ")
 
 (defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>[ 	\n]\\)")
 
@@ -3322,17 +3334,18 @@ Affected by `py-dedent-keep-relative-column'. "
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat))
                ;; comments
-               ((and (nth 8 pps) (eq origline (py-count-lines)))
+               ((nth 8 pps)
+                (if (eq origline (py-count-lines))
+                    (progn
                 (goto-char (nth 8 pps))
                 (py-line-backward-maybe)
                 (skip-chars-backward " \t")
                 (py-compute-indentation orig origline closing line inside repeat))
-               ((nth 8 pps)
                 (goto-char (nth 8 pps))
                 (if (and line (or py-indent-honors-inline-comment (looking-back "^[ \t]*")))
                     (current-column)
                   (forward-char -1)
-                  (py-compute-indentation orig origline closing line inside repeat)))
+                    (py-compute-indentation orig origline closing line inside repeat))))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
                 (forward-line -1)
                 (end-of-line)
@@ -3392,28 +3405,34 @@ Affected by `py-dedent-keep-relative-column'. "
                       5
                       (+ (current-indentation) py-continuation-offset)))))
                ((looking-at py-no-outdent-re)
-                (current-indentation))
+                (if (eq (py-count-lines) origline)
+                    (progn
+                      (back-to-indentation)
+                      (py-line-backward-maybe)
+                      (py-compute-indentation orig origline closing line inside repeat))
+                  (current-indentation)))
                ((and (looking-at py-block-closing-keywords-re)(eq (py-count-lines) origline))
                 (py-beginning-of-block-or-clause)
                 (+ (current-indentation) py-indent-offset))
                ((looking-at py-block-closing-keywords-re)
-                (py-beginning-of-block-or-clause)
+                (py-beginning-of-block-or-clause nil (current-indentation))
                 (current-indentation))
-               ((and (looking-at py-clause-re) (< (py-count-lines) origline))
-                (+ (current-indentation) py-indent-offset))
-               ((looking-at py-clause-re)
-                (setq done (current-indentation))
-                (while (and (py-beginning-of-block done)
-                            (setq erg (current-indentation))
-                            (< done erg)))
-                erg)
+               ((and (looking-at py-elif-re) (eq (py-count-lines) origline))
+                (py-line-backward-maybe)
+                (car (py-clause-lookup-keyword py-elif-re -1)))
                ((and (looking-at py-clause-re)(eq origline (py-count-lines)))
-                (py-beginning-of-block)
-                (+ (current-indentation) py-indent-offset))
+                (cond ((looking-at py-finally-re)
+                       (car (py-clause-lookup-keyword py-finally-re -1)))
+                      ((looking-at py-except-re)
+                       (car (py-clause-lookup-keyword py-except-re -1)))
+                      ((looking-at py-else-re)
+                       (car (py-clause-lookup-keyword py-else-re -1 (current-indentation))))
+                      ((looking-at py-elif-re)
+                       (car (py-clause-lookup-keyword py-elif-re -1)))))
                ((and (looking-at py-block-re)(eq origline (py-count-lines)))
                 (py-line-backward-maybe)
                 (py-compute-indentation orig origline closing line inside repeat))
-               ((looking-at py-block-re)
+               ((looking-at py-block-or-clause-re)
                 (+ (current-indentation) py-indent-offset))
                ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
@@ -3436,9 +3455,6 @@ Affected by `py-dedent-keep-relative-column'. "
                ((and (< (py-count-lines) origline)(looking-at py-assignment-re))
                 (current-indentation))
                ((looking-at py-assignment-re)
-                (py-beginning-of-statement)
-                (py-compute-indentation orig origline closing line inside repeat))
-               ((and (looking-at py-block-or-clause-re)(eq origline (py-count-lines)))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat))
                ((and (eq origline (py-count-lines))
@@ -4671,7 +4687,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defalias 'py-goto-block-or-clause-up 'py-beginning-of-block-or-clause)
 (defalias 'py-backward-block-or-clause 'py-beginning-of-block-or-clause)
 
-(defun py-beginning-of-block-or-clause (&optional arg)
+(defun py-beginning-of-block-or-clause (&optional arg indent)
   "Looks up for nearest opening clause or block.
 With universal argument looks for next compound statements
 i.e. blocks only.
@@ -4681,10 +4697,11 @@ Returns position reached, if any, nil otherwise.
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let* ((regexp (if (eq 4 (prefix-numeric-value arg))
+
+  (let* ((regexp (if arg
                      py-block-re
                    py-block-or-clause-re))
-         (erg (ignore-errors (cdr (py-go-to-keyword regexp -1)))))
+        (erg (ignore-errors (cdr (py-go-to-keyword regexp -1 indent)))))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -4825,86 +4842,83 @@ Takes a list, INDENT and START position. "
           (when last (goto-char last))
           last))))
 
-(defun py-go-to-keyword (regexp arg &optional indent)
+(defun py-clause-lookup-keyword (regexp arg &optional indent)
   "Returns a list, whose car is indentation, cdr position. "
-  (let ((else 0)
-        (finally 0)
-        (orig (point))
+  (let ((orig (point))
         (origline (py-count-lines))
-                (stop (if (< 0 arg)'(eobp)'(bobp)))
-                (function (if (< 0 arg) 'py-end-of-statement 'py-beginning-of-statement))
-        erg done)
-    (cond ((looking-at "else")
-           (setq else (1+ else)))
-          ((looking-at "finally")
-           (setq finally (1+ finally))))
+        (stop (if (< 0 arg)'(eobp)'(bobp)))
+        (function (if (< 0 arg) 'py-end-of-statement 'py-beginning-of-statement))
+        (count 1)
+        (indent indent)
+        (complement-re
+         (cond ((or (string-match "finally" regexp)
+                    (string-match "except" regexp))
+                py-try-re)
+               ((string-match "elif" regexp)
+                py-if-re)
+               ((string-match "else" regexp)
+                py-minor-block-re)))
+        maxindent erg)
     (while (and (not (eval stop))
-                (if indent
-                    (or (eq origline (py-count-lines)) (< indent (current-indentation)))
-                  (not (and done (py-beginning-of-statement-p)(py-statement-opens-block-p regexp))))
-                (or
-                 (< 0 else)(< 0 finally)
-                 (eq (point) orig)))
+                (< 0 count)
+                (setq erg (funcall function)))
+      (when (or (not maxindent)
+                (< (current-indentation) maxindent))
+        (unless (looking-at py-block-or-clause-re)
+          (setq maxindent (current-indentation)))
+        ;; (message "%s %s" count indent)
+        ;; nesting
+        (cond
+         ((and (looking-at "\\<\\(finally\\)\\>")(save-match-data (string-match regexp "finally")))
+          (setq indent (current-indentation))
+          (while
+              (and
+               (not (eval stop))
+               (funcall function)
+               (not (and (eq indent (current-indentation)) (looking-at "try"))))))
+         ((and (looking-at "\\<\\(except\\)\\>")(save-match-data (string-match regexp "except")))
+          (setq indent (current-indentation))
+          (while
+              (and
+               (not (eval stop))
+               (funcall function)
+               (not (and (eq indent (current-indentation)) (looking-at "try"))))))
+         ((and (looking-at "\\<\\(else\\)\\>")(save-match-data (string-match regexp "else")))
+          (setq indent (current-indentation))
+          (while
+              (and
+               (not (eval stop))
+               (funcall function)
+               (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
+         ((and (looking-at "\\<\\(elif\\)\\>")(save-match-data (string-match regexp "elif")))
+          (setq indent (current-indentation))
+          (while
+              (and
+               (not (eval stop))
+               (funcall function)
+               ;; doesn't mean nesting yet
+               (setq count (1- count))
+               (not (and (eq indent (current-indentation)) (looking-at "if"))))))
+         (t (when (and (looking-at complement-re)(< (current-indentation) maxindent))
+              (setq count (1- count)))))))
+    (when erg (setq erg (cons (current-indentation) erg)))
+    erg))
+
+(defun py-go-to-keyword (regexp arg &optional maxindent)
+  "Returns a list, whose car is indentation, cdr position. "
+  (let ((orig (point))
+        (origline (py-count-lines))
+        (stop (if (< 0 arg)'(eobp)'(bobp)))
+        (function (if (< 0 arg) 'py-end-of-statement 'py-beginning-of-statement))
+        (maxindent maxindent)
+        done erg cui)
+    (while (and (or (not done)(eq origline (py-count-lines)))
+                (not (eval stop)))
       (setq erg (funcall function))
-      (when (or (not indent)(<= (current-indentation) indent))
-        (cond ((string= regexp py-block-or-clause-re)
-          ;; nesting is ignored then, lowering "else" or
-          ;; "finally" will make it stop
-          (cond ((looking-at "try")
-                 (setq finally (1- finally)))
-                ((looking-at "if")
-                 (setq else (1- else)))
-                     ((looking-at "else")
-                 (setq else (1- else)))
-                     ((looking-at "finally")
-                      (setq finally (1- finally)))
-                     (t (unless done
-                          (setq else (1+ else))
-                          (setq done t)))))
-              ((string= regexp py-block-re)
-               (cond ((looking-at "for")
-                      (setq finally (1- else)))
-                     ((looking-at "try")
-             (setq finally (1- finally)))
-            ((looking-at "if")
-             (setq else (1- else)))
-                     ((looking-at "else")
-             (setq else (1+ else)))
-                     ((looking-at "finally")
-                      (setq finally (1+ finally)))
-                     (t (unless done
-                          (setq else (1+ else))
-                          (setq done t)))))
-              ((string= regexp py-def-or-class-re)
-               (cond ((looking-at "def")
-                      (setq else (1- else))
-                      (unless done
-                        (setq else (1+ else))
-                        (setq done t)))
-                     ((looking-at "class")
-                      (setq else (1- else))
-                      (unless done
-                        (setq else (1+ else))
-                        (setq done t)))
-                     (t (unless done
-                          (setq else (1+ else))
-                          (setq done t)))))
-              ((string= regexp py-def-re)
-               (when (looking-at "def")
-                 (setq else (1- else)))
-               (unless done
-                 (setq else (1+ else))
-                 (setq done t)))
-              ((string= regexp py-class-re)
-               (when (looking-at "class")
-                 (setq else (1- else)))
-               (unless done
-                 (setq else (1+ else))
-                 (setq done t)))
-              (t (unless done
-                   (setq else (1+ else))
-                   (setq done t))))))
-    (setq done nil)
+      (when (and (looking-at regexp)(if maxindent
+                                      (< (current-indentation) maxindent)t))
+        (setq erg (point))
+        (setq done t)))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
 

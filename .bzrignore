@@ -78,3 +78,5 @@ tools/py-down-forms.el
 MANIFEST
 dist/
 setup.py
+test/nested-elif.py
+test/nested-try-test.py

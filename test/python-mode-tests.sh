@@ -177,11 +177,13 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall args-list-first-line-indent-test \
 --funcall py-partial-expression-test \
 --funcall close-block-test \
---funcall py-insert-super-python2-test \
---funcall py-insert-super-python3-test \
 --funcall py-shift-block-test \
 --funcall nesting-if-test \
 --funcall py-end-of-print-statement-test \
+--funcall nested-try-test \
+--funcall nested-if-test \
+--funcall py-insert-super-python2-test \
+--funcall py-insert-super-python3-test \
 --funcall UnicodeEncodeError-python3-test \
 --funcall UnicodeEncodeError-lp:550661-test \
 --funcall py-shebang-ipython-env-lp-849293-test \

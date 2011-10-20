@@ -42,7 +42,6 @@
          'py-end-of-def-or-class-test
          'py-electric-backspace-test
          'py-electric-delete-test
-         'UnicodeEncodeError-python3-test
          'dict-error-test
          ;;         'py-expand-abbrev-pst-pdb.set_trace-test
          'near-bob-beginning-of-statement-test
@@ -72,6 +71,9 @@
          'py-shift-block-test
          'nesting-if-test
          'py-end-of-print-statement-test
+         'nested-try-test
+         'nested-if-test
+         'UnicodeEncodeError-python3-test
 
          )))
 
@@ -402,7 +404,7 @@ def _commit_on_success(*args, **kw):
   (py-bug-tests-intern 'try-else-clause-base arg teststring)))
 
 (defun try-else-clause-base ()
-  (forward-line -3)
+  (goto-char 541)
   (assert (eq 4 (py-compute-indentation)) nil "try-else-clause-test failed"))
 
 (defun try-except-test (&optional arg load-branch-function)
@@ -825,6 +827,64 @@ somme errors
 (defun py-end-of-print-statement-base ()
     (goto-char 66)
     (assert (eq 146 (py-end-of-statement)) nil "py-end-of-print-statement-test failed"))
+
+
+(defun nested-try-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def main(argv):
+    grammar = \"foo.xml\"
+    try:
+        opts, args = getopt.getopt(argv, \"hg:d\", [\"help\", \"grammar=\"])
+    except getopt.GetoptError:
+        usage()
+        try:
+            bla
+        except getopt.GetoptError:
+            asdf()
+        finally:
+            return \"blub\"
+    finally:
+        print \"asdf\"
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'nested-try-base arg teststring)))
+
+(defun nested-try-base ()
+    (goto-char 306)
+    (assert (eq 8 (py-compute-indentation)) nil "nested-try-test failed"))
+
+(defun nested-if-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+if abr:
+    if x > 0:
+        if foo:
+            print \"foo\"
+        elif bar:
+            print \"abasdf\"
+        elif baz:
+            for i in range(100):
+                print i
+            else:
+                print \\\"All done\\\"
+    elif x < 0:
+        print \\\"x is negative\\\"
+else:
+    print \"asbd\"
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'nested-if-base arg teststring)))
+
+(defun nested-if-base ()
+    (goto-char 299)
+    (assert (eq 8 (py-compute-indentation)) nil "nested-if-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
