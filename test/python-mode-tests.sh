@@ -182,6 +182,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall py-end-of-print-statement-test \
 --funcall nested-try-test \
 --funcall nested-if-test \
+--funcall nested-try-finally-test \
 --funcall py-insert-super-python2-test \
 --funcall py-insert-super-python3-test \
 --funcall UnicodeEncodeError-python3-test \

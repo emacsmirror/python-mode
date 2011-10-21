@@ -73,6 +73,7 @@
          'py-end-of-print-statement-test
          'nested-try-test
          'nested-if-test
+         'nested-try-finally-test
          'UnicodeEncodeError-python3-test
 
          )))
@@ -885,6 +886,45 @@ else:
 (defun nested-if-base ()
     (goto-char 299)
     (assert (eq 8 (py-compute-indentation)) nil "nested-if-test failed"))
+
+
+(defun nested-try-finally-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Example from:
+# To: python-ideas@python.org
+# From: Nikolaus Rath <Nikolaus@rath.org>
+# Date: Tue, 18 Oct 2011 22:14:56 -0400
+# Message-ID: <87pqhtafrz.fsf@vostro.rath.org>
+
+def my_fun():
+    allocate_res1()
+    try:
+        # do stuff
+        allocate_res2()
+        try:
+            # do stuff
+            allocate_res3()
+            try:
+                do stuff
+            finally:
+                cleanup_res3()
+        finally:
+            cleanup_res2()
+    finally:
+        cleanup_res1()
+
+    return
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'nested-try-finally-base arg teststring)))
+
+(defun nested-try-finally-base ()
+    (goto-char 431)
+    (assert (eq 12 (py-compute-indentation)) nil "nested-try-finally-test failed"))
 
 (provide 'python-mode-test)
 ;;; python-mode-test.el ends here
