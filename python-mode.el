@@ -2191,8 +2191,11 @@ interpreter.
     (setq comint-input-sender 'py-shell-simple-send)
     (setq comint-input-ring-file-name
           (if (string-equal py-shell-name "ipython")
-              (or (getenv "IPYTHONDIR") "~/.ipython/history")
-            (or (getenv "PYTHONHISTORY") (concat "~/." py-shell-name "_history"))))
+              (if (getenv "IPYTHONDIR")
+                  (concat (getenv "IPYTHONDIR") "/history") "~/.ipython/history")
+            (if (getenv "PYTHONHISTORY")
+                (concat (getenv "PYTHONHISTORY") "/" py-shell-name "_history")
+              (concat "~/." py-shell-name "_history"))))
     (message "comint-input-ring-file-name: %s" comint-input-ring-file-name)
     (comint-read-input-ring)
     (set-process-sentinel (get-buffer-process (current-buffer))
