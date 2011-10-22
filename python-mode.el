@@ -833,6 +833,21 @@ Currently-active file is at the head of the list.")
   "[ \t]*\\<else\\>"
   "Regular expression matching keyword which closes a for- if- or try-block. ")
 
+(defconst py-elif-re "[ \t]*\\<\\elif\\>"
+  "Matches the beginning of a compound if-statement's clause exclusively. ")
+
+(defconst py-minor-block-re "[ \t]*\\<\\(for\\|if\\|try\\)\\>"
+  "Matches the beginning of an `if' or `try' block. ")
+
+(defconst py-try-clause-re "[ \t]*\\<\\(except\\|else\\|finally\\)\\>"
+  "Matches the beginning of a compound try-statement's clause. ")
+
+(defconst py-if-re "[ \t]*\\<if\\>"
+  "Matches the beginning of a compound statement saying `if'. ")
+
+(defconst py-try-re "[ \t]*\\<try\\>"
+  "Matches the beginning of a compound statement saying `try'. " )
+
 (defconst py-except-re
   "[ \t]*\\<except\\>"
   "Regular expression matching keyword which composes a try-block. ")
@@ -842,9 +857,6 @@ Currently-active file is at the head of the list.")
 
 (defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
   "Matches the beginning of a class, method or compound statement. ")
-
-(defconst py-minor-block-re "[ \t]*\\<\\(for\\|if\\|try\\)\\>"
-  "Matches the beginning of an `if' or `try' block. ")
 
 (defconst py-return-re
   ".*:?[ \t]*\\<\\(return\\)\\>"
@@ -863,7 +875,7 @@ Currently-active file is at the head of the list.")
 (defconst py-def-re "[ \t]*\\<\\(def\\)\\>"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-elif-re "[ \t]*\\<\\elif\\>"
+(defconst py-elif-clause-re "[ \t]*\\<\\elif\\>"
   "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-try-clause-re
@@ -1090,67 +1102,126 @@ package.  Note that the latest X/Emacs releases contain this package.")
     (mapc #'(lambda (key)
               (define-key map key 'py-newline-and-indent))
           (where-is-internal 'newline-and-indent))
-    (easy-menu-define py-menu map "Python Mode menu"
-      '("Python"
-        :help "Python-specific features"
-        ["Execute statement" py-execute-statement
-         :help "Send statement at point to Python interpreter. "]
-        ["Execute block" py-execute-block
-         :help "Send compound statement at point to Python interpreter. "]
-        ["Execute def" py-execute-def
-         :help "Send function at point to Python interpreter. "]
-        ["Execute region" py-execute-region
-         :help "Send region to Python interpreter. "]
-        ["Execute buffer" py-execute-buffer
-         :help "Send buffer to Python interpreter. "]
-        "-"
-        ["Copy block" py-copy-block
-         :help "Copy innermost compound statement at point"]
-        ["Copy def-or-class" py-copy-def-or-class
-         :help "Copy innermost definition at point"]
-        ["Copy statement" py-copy-statement
-         :help "Copy statement at point"]
-        ["Copy expression" py-copy-expression
-         :help "Copy expression at point"]
-        ["Copy partial-expression" py-copy-partial-expression
-         :help "\".\" operators delimit a partial-expression expression on it's level"]
-        "-"
-        ["Beginning of block" py-beginning-of-block
-         :help "Go to start of innermost compound statement at point"]
-        ["End of block" py-end-of-block
-         :help "Go to end of innermost compound statement at point"]
-        ["Beginning of Def-or-Class" py-beginning-of-def-or-class
-         :help "Go to start of innermost definition at point"]
-        ["End of Def-or-Class" py-end-of-def-or-class
-         :help "Go to end of innermost function definition at point"]
-        ["Beginning of-class" beginning-of-class
-         :help "Go to start of class definition "]
-        ["End of Class" py-end-of-class
-         :help "Go to end of class definition "]
-        "-"
-        ("Templates..."
-         :help "Expand templates for compound statements"
-         :filter (lambda (&rest junk)
-                   (abbrev-table-menu python-mode-abbrev-table)))
-        "-"
-        ["Switch to interpreter" py-shell
-         :help "Switch to `inferior' Python in separate buffer"]
-        ["Import/reload file" py-execute-import-or-reload
-         :help "Load into inferior Python session"]
-        ["Set default process" py-set-proc
-         :help "Make buffer's inferior process the default"
-         :active (buffer-live-p py-buffer)]
-        ["pychecker-run" py-pychecker-run :help "Run pychecker"]
-        ["Debugger" pdb :help "Run pdb under GUD"]
-        "-"
-        ["Help on symbol" py-describe-symbol
-         :help "Use pydoc on symbol at point"]
-        ["Complete symbol" completion-at-point
-         :help "Complete (qualified) symbol before point"]
-        ["Find function" py-find-function
-         :help "Try to find source definition of function at point"]
-        ["Update imports" py-find-imports
-         :help "Update list of top-level imports for completion"]))
+    (if (featurep 'xemacs)
+        (easy-menu-define py-menu map "Python Mode menu"
+          '("Python"
+            "Python-specific features"
+            ["Execute statement" py-execute-statement
+             "Send statement at point to Python interpreter. "]
+            ["Execute block" py-execute-block
+             "Send compound statement at point to Python interpreter. "]
+            ["Execute def" py-execute-def
+             "Send function at point to Python interpreter. "]
+            ["Execute region" py-execute-region
+             "Send region to Python interpreter. "]
+            ["Execute buffer" py-execute-buffer
+             "Send buffer to Python interpreter. "]
+            "-"
+            ["Copy block" py-copy-block
+             "Copy innermost compound statement at point"]
+            ["Copy def-or-class" py-copy-def-or-class
+             "Copy innermost definition at point"]
+            ["Copy statement" py-copy-statement
+             "Copy statement at point"]
+            ["Copy expression" py-copy-expression
+             "Copy expression at point"]
+            ["Copy partial-expression" py-copy-partial-expression
+             "\".\" operators delimit a partial-expression expression on it's level"]
+            "-"
+            ["Beginning of block" py-beginning-of-block
+             "Go to start of innermost compound statement at point"]
+            ["End of block" py-end-of-block
+             "Go to end of innermost compound statement at point"]
+            ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+             "Go to start of innermost definition at point"]
+            ["End of Def-or-Class" py-end-of-def-or-class
+             "Go to end of innermost function definition at point"]
+            ["Beginning of-class" beginning-of-class
+             "Go to start of class definition "]
+            ["End of Class" py-end-of-class
+             "Go to end of class definition "]
+            ;; "-"
+            ;; ("Templates..."
+            ;; "Expand templates for compound statements")
+            "-"
+            ["Switch to interpreter" py-shell
+             "Switch to inferior Python in separate buffer"]
+            ["Import/reload file" py-execute-import-or-reload
+             "Load into inferior Python session"]
+            ["Set default process" py-set-proc
+             "Make buffer's inferior process the default" ]
+            ["pychecker-run" py-pychecker-run "Run pychecker"]
+            ["Debugger" pdb "Run pdb under GUD"]
+            "-"
+            ["Help on symbol" py-describe-symbol
+             "Use pydoc on symbol at point"]
+            ["Complete symbol" completion-at-point
+             "Complete (qualified) symbol before point"]
+            ["Find function" py-find-function
+             "Try to find source definition of function at point"]
+            ["Update imports" py-find-imports
+             "Update list of top-level imports for completion"]))
+      (easy-menu-define py-menu map "Python Mode menu"
+        '("Python"
+          :help "Python-specific features"
+          ["Execute statement" py-execute-statement
+           :help "Send statement at point to Python interpreter. "]
+          ["Execute block" py-execute-block
+           :help "Send compound statement at point to Python interpreter. "]
+          ["Execute def" py-execute-def
+           :help "Send function at point to Python interpreter. "]
+          ["Execute region" py-execute-region
+           :help "Send region to Python interpreter. "]
+          ["Execute buffer" py-execute-buffer
+           :help "Send buffer to Python interpreter. "]
+          "-"
+          ["Copy block" py-copy-block
+           :help "Copy innermost compound statement at point"]
+          ["Copy def-or-class" py-copy-def-or-class
+           :help "Copy innermost definition at point"]
+          ["Copy statement" py-copy-statement
+           :help "Copy statement at point"]
+          ["Copy expression" py-copy-expression
+           :help "Copy expression at point"]
+          ["Copy partial-expression" py-copy-partial-expression
+           :help "\".\" operators delimit a partial-expression expression on it's level"]
+          "-"
+          ["Beginning of block" py-beginning-of-block
+           :help "Go to start of innermost compound statement at point"]
+          ["End of block" py-end-of-block
+           :help "Go to end of innermost compound statement at point"]
+          ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+           :help "Go to start of innermost definition at point"]
+          ["End of Def-or-Class" py-end-of-def-or-class
+           :help "Go to end of innermost function definition at point"]
+          ["Beginning of-class" beginning-of-class
+           :help "Go to start of class definition "]
+          ["End of Class" py-end-of-class
+           :help "Go to end of class definition "]
+          "-"
+          ("Templates..."
+           :help "Expand templates for compound statements"
+           :filter (lambda (&rest junk)
+                     (abbrev-table-menu python-mode-abbrev-table)))
+          "-"
+          ["Switch to interpreter" py-shell
+           :help "Switch to `inferior' Python in separate buffer"]
+          ["Import/reload file" py-execute-import-or-reload
+           :help "Load into inferior Python session"]
+          ["Set default process" py-set-proc
+           :help "Make buffer's inferior process the default"
+           :active (buffer-live-p py-buffer)]
+          ["pychecker-run" py-pychecker-run :help "Run pychecker"]
+          ["Debugger" pdb :help "Run pdb under GUD"]
+          "-"
+          ["Help on symbol" py-describe-symbol
+           :help "Use pydoc on symbol at point"]
+          ["Complete symbol" completion-at-point
+           :help "Complete (qualified) symbol before point"]
+          ["Find function" py-find-function
+           :help "Try to find source definition of function at point"]
+          ["Update imports" py-find-imports
+           :help "Update list of top-level imports for completion"])))
     map))
 
 (defvar py-mode-output-map nil
@@ -5430,7 +5501,7 @@ Returns indentation if def-or-class found, nil otherwise. "
 
 (defalias 'py-copy-declarations 'py-declarations)
 (defun py-declarations ()
-  "Copy and mark assigments resp. statements in current level which don't open blocks or start with a keyword. 
+  "Copy and mark assigments resp. statements in current level which don't open blocks or start with a keyword.
 See also `py-statements', which is more general, taking also simple statements starting with a keyword. "
   (interactive)
   (let* ((bounds (py-bounds-of-declarations))
@@ -5448,7 +5519,7 @@ See also `py-statements', which is more general, taking also simple statements s
 
 Indented same level, which don't open blocks.
 Typically declarations resp. initialisations of variables following
-a class or function definition. 
+a class or function definition.
 See also py-bounds-of-statements "
   (interactive)
   (let* ((orig-indent (progn
