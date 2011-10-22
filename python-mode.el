@@ -2268,7 +2268,7 @@ interpreter.
                 (concat (getenv "PYTHONHISTORY") "/" py-shell-name "_history")
               (concat "~/." py-shell-name "_history"))))
     (message "comint-input-ring-file-name: %s" comint-input-ring-file-name)
-    (comint-read-input-ring)
+    (comint-read-input-ring t)
     (set-process-sentinel (get-buffer-process (current-buffer))
                           #'shell-write-history-on-exit)
     ;; pdbtrack
