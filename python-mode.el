@@ -2582,7 +2582,6 @@ is inserted at the end.  See also the command `py-clear-queue'."
 (defun py-execute-base (start end &optional async shell)
   "Adapt the variables used in the process. "
   (let* ((regbuf (current-buffer))
-         (py-shell-name (or shell py-shell-name))
 	 (name-raw (or shell (py-choose-shell)))
          (name (py-process-name name-raw))
 	 (buf-and-proc (progn
