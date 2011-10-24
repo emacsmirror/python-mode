@@ -2229,9 +2229,10 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
 
 (add-hook 'py-shell-hook
           '(lambda ()
-             (require 'py-shell-complete) ; nil t)
-             (when (functionp 'py-shell-complete)
-               (local-set-key [tab] 'py-shell-complete))))
+             ;; (require 'py-shell-complete) ; nil t)
+             ;; (when (functionp 'py-shell-complete)
+               (local-set-key [tab] 'py-complete)))
+          ;; )
 
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
@@ -6828,8 +6829,8 @@ and return collected output"
    (point)))
 
 ;;;###autoload
-(defun py-shell-complete ()
-  (interactive)
+(defun py-complete ()
+  (interactive "*")
   (let ((word (py-dot-word-before-point))
 	result)
     (if (equal word "")
