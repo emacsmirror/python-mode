@@ -105,6 +105,7 @@
          'no-indent-after-continue-lp-872676-test
          'indent-after-inline-comment-lp-873372-test
          'else-clause-indentation-lp-874470-test
+         'py-complete-lp:858621-test
          'incorrect-use-of-region-in-py-shift-left-lp:875951-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
@@ -1884,6 +1885,24 @@ def foo():
   (goto-char 135)
   (py-shift-left 1 84 135)
   (assert (eq  8 (current-indentation)) nil "incorrect-use-of-region-in-py-shift-left-lp:875951-test failed"))
+
+
+(defun py-complete-lp:858621-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+pri
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-complete-lp:858621-base arg teststring)))
+
+(defun py-complete-lp:858621-base ()
+    (goto-char 52)
+    (completion-at-point)
+    (sit-for 1) 
+    (assert (eq 54 (point)) nil "py-complete-lp:858621-test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

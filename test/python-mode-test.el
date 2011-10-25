@@ -829,7 +829,6 @@ somme errors
     (goto-char 66)
     (assert (eq 146 (py-end-of-statement)) nil "py-end-of-print-statement-test failed"))
 
-
 (defun nested-try-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -886,7 +885,6 @@ else:
 (defun nested-if-base ()
     (goto-char 299)
     (assert (eq 8 (py-compute-indentation)) nil "nested-if-test failed"))
-
 
 (defun nested-try-finally-test (&optional arg load-branch-function)
   (interactive "p")
