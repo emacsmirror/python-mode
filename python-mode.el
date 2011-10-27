@@ -124,9 +124,8 @@
   :type 'string
   :group 'python)
 
-(defcustom py-tab-always-indent t
-  "*Non-nil means TAB in Python mode should always reindent the current line,
-regardless of where in the line point is when the TAB command is used."
+(defcustom py-tab-indent t
+  "*Non-nil means TAB in Python mode calls `py-indent-line'."
   :type 'boolean
   :group 'python)
 
@@ -3376,54 +3375,42 @@ for example.
              (indent-to need))))))
 
 (defun py-indent-line (&optional arg)
-  "Fix the indentation of the current line according to Python rules.
-With \\[universal-argument] (programmatically, the optional argument
-ARG non-nil), ignore dedenting rules for block closing statements
+  "Indent the current line according to Python rules.
+When called interactivly with \\[universal-argument], ignore dedenting rules for block closing statements
 \(e.g. return, raise, break, continue, pass)
 
-This function is normally bound to `indent-line-function' so
-\\[indent-for-tab-command] will call it."
-  (interactive "*P")
-  (let* ((ci (current-indentation))
-         (move-to-indentation-p (<= (current-column) ci))
-         (need (py-compute-indentation))
-         (cc (current-column)))
-    ;; dedent out a level if previous command was the same unless we're in
-    ;; column 1
-    (if (and (equal last-command this-command)
-             (/= cc 0))
+This function is normally used by `indent-line-function' resp.
+\\[indent-for-tab-command]."
+  (interactive "P")
+      (let ((ci (current-indentation))
+            (indent (py-compute-indentation))
+            (col (current-column)))
+    (if (interactive-p)
         (progn
           (beginning-of-line)
           (delete-horizontal-space)
-          (indent-to (* (/ (- cc 1) py-indent-offset) py-indent-offset)))
-      (progn
-        ;; see if we need to dedent
-        (if (py-outdent-p)
-            (setq need (- need py-indent-offset)))
-        (if (or py-tab-always-indent
-                move-to-indentation-p)
-            (progn (if (/= ci need)
-                       (save-excursion
-                       (beginning-of-line)
-                       (delete-horizontal-space)
-                       (indent-to need)))
-                   (if move-to-indentation-p (back-to-indentation)))
-            (insert-tab))))))
+          (if (eq 4 (prefix-numeric-value arg))
+              (indent-to (+ indent py-indent-offset)))
+          (indent-to indent))
+      (if py-tab-indent
+        (cond ((eq indent col)
+          (beginning-of-line)
+               (delete-horizontal-space))
+              ((< col indent)
+               (beginning-of-line)
+               (delete-horizontal-space)
+               (indent-to (+ (* (/ col py-indent-offset) py-indent-offset) py-indent-offset)))
+              (t (beginning-of-line)
+          (delete-horizontal-space)
+                 (indent-to indent)))
+        (insert-tab)))))
 
 (defun py-newline-and-indent ()
-  "Strives to act like the Emacs `newline-and-indent'.
-This is just `strives to' because correct indentation can't be computed
-from scratch for Python code.  In general, deletes the whitespace before
-point, inserts a newline, and takes an educated guess as to how you want
-the new line indented."
+    "Add a newline and indent to outmost reasonable indent.
+When indent is set back manually, this is honoured in following lines. "
   (interactive "*")
-  (let ((ci (current-indentation)))
-    (if (< ci (current-column))         ; if point beyond indentation
-        (newline-and-indent)
-      ;; else try to act like newline-and-indent "normally" acts
-      (beginning-of-line)
-      (insert-char ?\n 1)
-      (move-to-column ci))))
+    (newline)
+    (indent-to-column (py-compute-indentation)))
 
 (defalias 'py-newline-and-close-block 'py-newline-and-dedent)
 (defun py-newline-and-dedent ()

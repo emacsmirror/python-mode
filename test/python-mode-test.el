@@ -205,7 +205,7 @@
 
 (defun py-electric-backspace-base ()
   (goto-char 232)
-  (py-newline-and-indent)
+  (py-newline-and-indent) 
   (assert (eq 241 (point)) nil "py-electric-backspace test #1 failed")
   (py-electric-backspace)
   (assert (eq 4 (current-column)) nil "py-electric-backspace test #2 failed")
