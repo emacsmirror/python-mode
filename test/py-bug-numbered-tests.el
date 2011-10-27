@@ -135,6 +135,32 @@
         (insert teststring)
         (funcall testname)))))
 
+(defvar python-mode-teststring "class OrderedDict1(dict):
+    \"\"\"
+    This implementation of a dictionary keeps track of the order
+    in which keys were inserted.
+    \"\"\"
+
+    def __init__(self, d={}):
+        self._keys = d.keys()
+        dict.__init__(self, d)
+
+    def f():
+        \"\"\"
+        class for in 'for in while with blah'
+        \"\"\"
+        if a:
+
+            ar_atpt_python_list_roh = ([
+                'python-expression',
+
+    #     def ar_thingatpt_write_lists (&optional datei):
+            'python-partial-expression',
+            'python-statement',
+            ])
+"
+  "String used for tests by python-mode-test.el")
+
 (defun sexp-commands-lp:328778-test (&optional arg load-branch-function)
   "With ARG greater 1 keep test buffer open.
 If no `load-branch-function' is specified, make sure the appropriate branch is loaded. Otherwise default python-mode will be checked.
@@ -1900,7 +1926,6 @@ pri
 (defun py-complete-lp:858621-base ()
     (goto-char 52)
     (completion-at-point)
-    (sit-for 1) 
     (assert (eq 54 (point)) nil "py-complete-lp:858621-test failed"))
 
 

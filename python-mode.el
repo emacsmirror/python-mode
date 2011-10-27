@@ -435,7 +435,7 @@ Default is `t'."
 
 ;; (defcustom python-send-receive-delay  5
 ;;  "Seconds to wait for output, used by `python-send-receive'. "
-;; 
+;;
 ;; :type 'number
 ;; :group 'python)
 
@@ -676,7 +676,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
        ;; Otherwise (we're in a non-matching string) the property is
        ;; nil, which is OK.
 ))))
-
 
 (if (featurep 'xemacs)
     (progn
@@ -1526,6 +1525,19 @@ When non-nil, arguments are printed."
   :type 'boolean
   :group 'python)
 
+;; Pymacs start
+(defcustom py-load-python-mode-pymacs-p  t
+ "If Pymacs as delivered with python-mode.el shall be loaded.
+Default is non-nil.
+
+Pymacs has been written by François Pinard and many others.
+See original source: http://pymacs.progiciels-bpi.ca"
+
+:type 'boolean
+:group 'python)
+
+;; Pymacs end
+
 (defun py-switch-imenu-index-function ()
   "For development only. Good old renamed `py-imenu-create-index'-function hangs with medium size files already. Working `py-imenu-create-index-new' is active by default.
 
@@ -1777,24 +1789,25 @@ With \\[universal-argument]) user is prompted to specify a reachable Python vers
 
 If `py-install-directory' isn't set, guess from buffer-file-name. "
   (interactive)
-  (cond ((ignore-errors py-install-directory)
+  (cond (py-install-directory
          (add-to-list 'load-path (expand-file-name py-install-directory))
          (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/completion"))
          (add-to-list 'load-path (concat py-install-directory "/pymacs"))
          (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/test"))
          (add-to-list 'load-path (concat (expand-file-name py-install-directory) "/tools")))
-        ((string-match "/test$" default-directory)
-         (add-to-list 'load-path (concat (expand-file-name "../") "completion"))
-         (add-to-list 'load-path (concat (expand-file-name "../") "pymacs"))
-         (add-to-list 'load-path (concat (expand-file-name "../") "test"))
-         (add-to-list 'load-path (concat (expand-file-name "../") "tools")))
-        (t
-         (add-to-list 'load-path (file-name-directory buffer-file-name))
-         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "completion"))
-         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "pymacs"))
-         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "test"))
-         (add-to-list 'load-path (concat (file-name-directory buffer-file-name) "tools"))))
+        (t (setq py-install-directory
+                 (file-name-directory (buffer-file-name (car (find-function-noselect 'python-mode)))))))
   (when (interactive-p) (message "%s" load-path)))
+
+(defun py-load-python-mode-pymacs ()
+  "Load Pymacs as delivered with python-mode.el.
+
+Pymacs has been written by François Pinard and many others.
+See original source: http://pymacs.progiciels-bpi.ca"
+  (interactive)
+  (load (concat py-install-directory "/pymacs/pymacs.el") nil t)
+  ;; let's have an error immediatly, if it fails.
+  (require 'pymacs))
 
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
@@ -1935,6 +1948,12 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
   ;; Set the default shell if not already set
   (when (null py-shell-name)
     (py-toggle-shells (py-choose-shell)))
+  (unless py-install-directory
+    (cond ((file-name-directory buffer-file-name)
+           (setq py-install-directory (file-name-directory buffer-file-name)))
+          (default-directory
+            (setq py-install-directory default-directory))))
+  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)

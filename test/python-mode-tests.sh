@@ -25,7 +25,9 @@
 # assumes python-mode files in current directory
 
 # the path
+# needs being in `test' directory
 PDIR=`pwd`
+
 
 # write PATH-TO-EMACS source code directory here
 # EMACS_SOURCE_DIR="$HOME/emacs-20110426"
@@ -53,9 +55,6 @@ EMACS="${EMACS_SOURCE_DIR}/src/emacs"
 # when installed Emacs shall be used, CCCMDS must be set
 # CCCMDS="${EMACS_SOURCE_DIR}/lisp/progmodes/cc-cmds.el"
 
-MODEDIR=${PDIR%%/test}
-echo "\$MODEDIR: $MODEDIR"
-
 # ERG=$(echo $LOGNAME | sed 's/^s\(.*\)/m/')
 # if [ $ERG == "m" ]; then
 
@@ -65,13 +64,21 @@ echo "\$MODEDIR: $MODEDIR"
     # EMACS_SOURCE_DIR="~/emacs-20110426"
 # fi
 
+CLMACS="${EMACS_SOURCE_DIR}/lisp/emacs-lisp/cl-macs.el"
+BYTECOMP="${EMACS_SOURCE_DIR}/lisp/emacs-lisp/bytecomp.el"
+CUSTOM="${EMACS_SOURCE_DIR}/lisp/custom.el"
+ANSICOLOR="${EMACS_SOURCE_DIR}/lisp/ansi-color.el"
+COMINT="${EMACS_SOURCE_DIR}/lisp/comint.el"
 CCCMDS="${EMACS_SOURCE_DIR}/lisp/progmodes/cc-cmds.el"
 SHELL="${EMACS_SOURCE_DIR}/lisp/shell.el"
+PYMACS="../pymacs/pymacs.el"
 # file holding the tests
 TESTFILE="py-bug-numbered-tests.el"
 TESTFILE2="python-mode-test.el"
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$MODEDIR/\")" --eval "(setq py-install-directory \"../\")" -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" -load $CCCMDS -load $SHELL --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
+echo "\$PYMACS: $PYMACS"
+
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'python-mode)(unload-feature 'python-mode t))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$TESTDIR/\")" --eval "(setq py-install-directory \"..\")" -load "$PYMACS" -load $CCCMDS -load $COMINT -load $SHELL -load $ANSICOLOR -load $CLMACS -load $BYTECOMP -load $CUSTOM -load "$PDIR/$PYTHONMODE" -load "$PDIR/$TESTFILE" -load "$PDIR/$TESTFILE2" --eval "(quietly-read-abbrev-file (expand-file-name \"~/.abbrev_defs\"))" \
 --funcall nested-dictionaries-indent-lp:328791-test \
 --funcall triple-quoted-string-dq-lp:302834-test \
 --funcall fore-00007F-breaks-indentation-lp:328788-test \
