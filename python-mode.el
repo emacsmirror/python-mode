@@ -902,56 +902,56 @@ Currently-active file is at the head of the list.")
 
 ;; Constants
 (defconst py-finally-re
-  "[ \t]*\\<finally\\>"
+  "[ \t]*\\<finally\\>[: \n\t]"
   "Regular expression matching keyword which closes a try-block. ")
 
 (defconst py-else-re
   "[ \t]*\\<else\\>"
   "Regular expression matching keyword which closes a for- if- or try-block. ")
 
-(defconst py-elif-re "[ \t]*\\<\\elif\\>"
+(defconst py-elif-re "[ \t]*\\<\\elif\\>[ \n\t]"
   "Matches the beginning of a compound if-statement's clause exclusively. ")
 
-(defconst py-minor-block-re "[ \t]*\\<\\(for\\|if\\|try\\)\\>"
+(defconst py-minor-block-re "[ \t]*\\<\\(for\\|if\\|try\\)\\>[: \n\t]"
   "Matches the beginning of an `if' or `try' block. ")
 
-(defconst py-try-clause-re "[ \t]*\\<\\(except\\|else\\|finally\\)\\>"
+(defconst py-try-clause-re "[ \t]*\\<\\(except\\|else\\|finally\\)\\>[: \n\t]"
   "Matches the beginning of a compound try-statement's clause. ")
 
-(defconst py-if-re "[ \t]*\\<if\\>"
+(defconst py-if-re "[ \t]*\\<if\\>[ \n\t]"
   "Matches the beginning of a compound statement saying `if'. ")
 
-(defconst py-try-re "[ \t]*\\<try\\>"
+(defconst py-try-re "[ \t]*\\<try\\>[: \n\t]"
   "Matches the beginning of a compound statement saying `try'. " )
 
 (defconst py-except-re
-  "[ \t]*\\<except\\>"
+  "[ \t]*\\<except\\>[: \n\t]"
   "Regular expression matching keyword which composes a try-block. ")
 
 (defconst py-assignment-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
 
-(defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\>"
+(defconst py-block-re "[ \t]*\\<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)[: \t\n]"
   "Matches the beginning of a class, method or compound statement. ")
 
 (defconst py-return-re
-  ".*:?[ \t]*\\<\\(return\\)\\>"
+  ".*:?[ \t]*\\<\\(return\\)\\>[ \n\t]"
   "Regular expression matching keyword which typically closes a function. ")
 
 (defconst py-closing-re
   "[ \t]*\\_<)\\_>"
   "Regular expression matching keyword which typically closes a function. ")
 
-(defconst py-class-re "[ \t]*\\<\\(class\\)\\>"
+(defconst py-class-re "[ \t]*\\<\\(class\\)\\>[ \n\t]"
   "Matches the beginning of a class definition. ")
 
-(defconst py-def-or-class-re "[ \t]*\\<\\(def\\|class\\)\\>"
+(defconst py-def-or-class-re "[ \t]*\\<\\(def\\|class\\)\\>[ \n\t]"
   "Matches the beginning of a class- or functions definition. ")
 
-(defconst py-def-re "[ \t]*\\<\\(def\\)\\>"
+(defconst py-def-re "[ \t]*\\<\\(def\\)\\>[ \n\t]"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-elif-clause-re "[ \t]*\\<\\elif\\>"
+(defconst py-elif-clause-re "[ \t]*\\<\\elif\\>[ \n\t]"
   "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-try-clause-re
@@ -961,12 +961,6 @@ Currently-active file is at the head of the list.")
                            "\\|")
           "\\)")
   "Matches the beginning of a try-statement's clause. ")
-
-(defconst py-if-re "[ \t]*\\<if\\>"
-  "Matches the beginning of a compound statement saying `if'. ")
-
-(defconst py-try-re "[ \t]*\\<try\\>"
-  "Matches the beginning of a compound statement saying `try'. " )
 
 (defconst py-stringlit-re
   (concat
@@ -999,14 +993,14 @@ Currently-active file is at the head of the list.")
 (defconst py-blank-or-comment-re "[ \t]*\\($\\|#\\)"
   "Regular expression matching a blank or comment line.")
 
-(defconst py-block-or-clause-re "[ \t]*\\<\\(if\\|else\\|elif\\|while\\|for\\|def\\|class\\|try\\|except\\|finally\\|with\\)\\>"
+(defconst py-block-or-clause-re "[ \t]*\\<\\(if\\|else\\|elif\\|while\\|for\\|def\\|class\\|try\\|except\\|finally\\|with\\)\\>[: \n\t]"
   "Matches the beginning of a compound statement or it's clause. ")
 
-(defconst py-clause-re "[ \t]*\\<\\(else\\|except\\|finally\\|elif\\)\\>"
+(defconst py-clause-re "[ \t]*\\<\\(else\\|except\\|finally\\|elif\\)\\>[: \n\t]"
   "Matches the beginning of a compound statement's clause. ")
 
 (defconst py-block-closing-keywords-re
-  "[ \t]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>"
+  "[ \t]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>[ \n\t]"
   "Matches the beginning of a class, method or compound statement. ")
 
 (defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\>[ 	\n]\\)")
@@ -3668,7 +3662,8 @@ Affected by `py-dedent-keep-relative-column'. "
                ((and (< (current-indentation) (current-column)))
                 (back-to-indentation)
                 (unless line
-                  (setq inside (if (featurep 'xemacs)
+                  (setq inside
+                        (if (featurep 'xemacs)
                    (nth 1 (parse-partial-sexp (point-min) (point)))
                     (nth 1 (syntax-ppss)))))
                 (py-compute-indentation orig origline closing line inside repeat))
@@ -5102,28 +5097,28 @@ Takes a list, INDENT and START position. "
         ;; (message "%s %s" count indent)
         ;; nesting
         (cond
-         ((and (looking-at "\\<\\(finally\\)\\>")(save-match-data (string-match regexp "finally")))
+         ((and (looking-at "\\<finally\\>[: \n\t]")(save-match-data (string-match regexp "finally")))
           (setq indent (current-indentation))
           (while
               (and
                (not (eval stop))
                (funcall function)
                (not (and (eq indent (current-indentation)) (looking-at "try"))))))
-         ((and (looking-at "\\<\\(except\\)\\>")(save-match-data (string-match regexp "except")))
+         ((and (looking-at "\\<except\\>[: \n\t]")(save-match-data (string-match "except" regexp)))
           (setq indent (current-indentation))
           (while
               (and
                (not (eval stop))
                (funcall function)
                (not (and (eq indent (current-indentation)) (looking-at "try"))))))
-         ((and (looking-at "\\<\\(else\\)\\>")(save-match-data (string-match regexp "else")))
+         ((and (looking-at "\\<else\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
           (setq indent (current-indentation))
           (while
               (and
                (not (eval stop))
                (funcall function)
                (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
-         ((and (looking-at "\\<\\(elif\\)\\>")(save-match-data (string-match regexp "elif")))
+         ((and (looking-at "\\<elif\\>[ \n\t]")(save-match-data (string-match "elif" regexp)))
           (setq indent (current-indentation))
           (while
               (and
@@ -5651,7 +5646,7 @@ Returns indentation if def-or-class found, nil otherwise. "
 ;; Py-down commands end
 
 ;; Declarations start
-(defvar py-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>"
+(defvar py-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>[: \n\t]"
   "Contents like py-fond-lock-keyword")
 
 (defalias 'py-copy-declarations 'py-declarations)
@@ -6287,7 +6282,7 @@ Used with `eval-after-load'."
   (save-excursion
       (let (lines)
 	(goto-char (point-min))
-	(while (re-search-forward "^import\\>\\|^from\\>" nil t)
+	(while (re-search-forward "^import\\>[ \n\t]\\|^from\\>[ \n\t]" nil t)
 	  (unless (syntax-ppss-context (syntax-ppss))
 	    (let ((start (line-beginning-position)))
 	      ;; Skip over continued lines.
@@ -6497,7 +6492,7 @@ Travels right-margin comments. "
 
 (defvar py-parse-state-re
   (concat
-   "^[ \t]*\\(elif\\|else\\|while\\|def\\|class\\)\\>"
+   "^[ \t]*\\(elif\\|else\\|while\\|def\\|class\\)\\>[ \n\t]"
    "\\|"
    "^[^ #\t\n]"))
 
@@ -6581,7 +6576,7 @@ and `pass'.  This doesn't catch embedded statements."
     (py-goto-initial-line)
     (back-to-indentation)
     (prog1
-        (looking-at (concat py-block-closing-keywords-re "\\>"))
+        (looking-at (concat py-block-closing-keywords-re))
       (goto-char orig))))
 
 (defun py-goto-beyond-block ()
@@ -7822,7 +7817,7 @@ instance.  Assumes an inferior Python is running."
 Used with `eval-after-load'."
   (let* ((version (let ((s (shell-command-to-string (concat python-command
 							    " -V"))))
-		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
+		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>[ \n\t]\\)" s)
 		    (match-string 1 s)))
 	 ;; Whether info files have a Python version suffix, e.g. in Debian.
 	 (versioned
@@ -7888,7 +7883,7 @@ Used with `eval-after-load'."
   (save-excursion
       (let (lines)
 	(goto-char (point-min))
-	(while (re-search-forward "^import\\>\\|^from\\>" nil t)
+	(while (re-search-forward "^import\\>[ \n\t]\\|^from\\>[ \n\t]" nil t)
 	  (unless (syntax-ppss-context (syntax-ppss))
 	    (let ((start (line-beginning-position)))
 	      ;; Skip over continued lines.
@@ -8044,7 +8039,7 @@ Interactively, prompt for name."
   ;; since it isn't (can't be) indentation-based.  Also hide-level
   ;; doesn't seem to work properly.
   (add-to-list 'hs-special-modes-alist
-	       `(python-mode "^\\s-*\\(?:def\\|class\\)\\>" nil "#"
+	       `(python-mode "^\\s-*\\(?:def\\|class\\)\\>[ \n\t]" nil "#"
 		 ,(lambda (arg)
 		    (python-end-of-defun)
 		    (skip-chars-backward " \t\n"))

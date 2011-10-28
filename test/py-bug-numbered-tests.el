@@ -272,14 +272,14 @@ that, needs, to_be, wrapped)
     (goto-char 33)
     (beginning-of-line)
     (delete-horizontal-space)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq 1 (current-indentation)) nil "flexible-indentation-lp:328842-test failed")
     (goto-char 115)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq 16 (current-indentation)) nil "flexible-indentation-lp:328842-test failed")
     (goto-char 202)
-    (delete-horizontal-space) 
-    (indent-to (py-compute-indentation)) 
+    (delete-horizontal-space)
+    (indent-to (py-compute-indentation))
     (assert (eq 2 (current-indentation)) nil "flexible-indentation-lp:328842-test failed")))
 
 (defun py-current-defun-lp:328846-test (&optional arg load-branch-function)
@@ -647,8 +647,8 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
 (defun indentation-of-continuation-lines-lp:691185 ()
   (let ((py-continuation-offset 2))
     (goto-char 127)
-    (delete-horizontal-space) 
-    (indent-to (py-compute-indentation)) 
+    (delete-horizontal-space)
+    (indent-to (py-compute-indentation))
     (assert (eq 10 (current-indentation)) nil "indentation-of-continuation-lines-lp:691185-test failed!")))
 
 (defun goto-beginning-of-tqs-lp:735328-test (&optional arg load-branch-function)
@@ -666,7 +666,7 @@ This docstring isn't indented, test should pass anyway.
 
 (defun goto-beginning-of-tqs-lp:735328 ()
   (goto-char 84)
-  (indent-to (py-compute-indentation)) 
+  (indent-to (py-compute-indentation))
   (assert (eq 4 (current-column)) nil "goto-beginning-of-tqs-lp:735328-test failed")
   )
 
@@ -783,39 +783,39 @@ self.last_xyz_other = None
     (goto-char 93)
     (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
     (goto-char 145)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 170)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 196)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
 
     (setq py-continuation-offset 4)
     (forward-line 1)
     (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
     (goto-char 277)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 304)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 332)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
 
     (setq py-continuation-offset 6)
     (forward-line 1)
     (insert (concat "\n# py-continuation-offset: " (number-to-string py-continuation-offset)))
     (goto-char 415)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 444)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     (goto-char 474)
-    (indent-to (py-compute-indentation)) 
+    (indent-to (py-compute-indentation))
     (assert (eq (current-indentation) py-continuation-offset) nil "backslashed-continuation-line-indent-lp:742993-test failed")
     ))
 
@@ -1012,9 +1012,9 @@ except:
 
 (defun except-indents-wrong-lp:784432-base ()
   (goto-char 17)
-  (assert (eq 0 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #1-test failed")
+  (assert (eq 0 (py-compute-indentation)) nil "except-indents-wrong-lp:784432-test #1 failed")
   (goto-char 25)
-  (assert (eq 4 (py-compute-indentation)) nil "except-indents-wrong-lp:784432.txt #2-test failed"))
+  (assert (eq 4 (py-compute-indentation)) nil "except-indents-wrong-lp:784432-test #2 failed"))
 
 (defun indent-explicitly-set-in-multiline-tqs-lp:784225-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1912,7 +1912,6 @@ def foo():
   (py-shift-left 1 84 135)
   (assert (eq  8 (current-indentation)) nil "incorrect-use-of-region-in-py-shift-left-lp:875951-test failed"))
 
-
 (defun py-complete-lp:858621-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -1928,6 +1927,20 @@ pri
     (completion-at-point)
     (assert (eq 54 (point)) nil "py-complete-lp:858621-test failed"))
 
+(defun indentation-after-line-with-keyword-lp-883073-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+with_foo = False
+    # indents here
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-after-line-with-keyword-lp-883073-base arg teststring)))
+
+(defun indentation-after-line-with-keyword-lp-883073-base ()
+    (goto-char 66)
+    (assert (eq 0 (py-compute-indentation)) nil "indentation-after-line-with-keyword-lp-883073-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

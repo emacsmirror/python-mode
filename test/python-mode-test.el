@@ -430,7 +430,7 @@ def _commit_on_success(*args, **kw):
 
 (defun try-except-base ()
   (goto-char 434)
-  (assert (eq 4 (py-compute-indentation)) nil "try-else-clause-test failed"))
+  (assert (eq 4 (py-compute-indentation)) nil "try-except-test failed"))
 
 (defun assignement-after-block-test (&optional arg load-branch-function)
   (interactive "p")
