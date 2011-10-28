@@ -1067,6 +1067,31 @@ The debugger outputs program-location lines that look like this:
 (defconst py-pdbtrack-track-range 10000
   "Max number of characters from end of buffer to search for stack entry.")
 
+(defcustom pdb-path '/usr/lib/python2.7/pdb.py
+  "Where to find pdb.py. Edit this according to your system.
+
+If you ignore the location `M-x py-guess-pdb-path' might display it. 
+"
+  :type 'variable
+  :group 'python)
+
+;; (setq pdb-path '/usr/lib/python2.7/pdb.py
+;;      gud-pdb-command-name (symbol-name pdb-path))
+
+(defun py-guess-pdb-path ()
+  "If pdb-path isn't set, guess location of pdb.py. "
+  (interactive)
+  (let ((ele (split-string (shell-command-to-string "whereis python")))
+        erg)
+    (while (or (not erg)(string= "" erg))
+      (when (and (string-match "^/" (car ele)) (not (string-match "/man" (car ele))))
+        (setq erg (shell-command-to-string (concat "find " (car ele) " -type f -name \"pdb.py\""))))
+      (setq ele (cdr ele)))
+    (if erg
+        (when (interactive-p) (message "%s" erg))
+      (when (interactive-p) (message "%s" "pdb.py not found, please customize `pdb-path'")))
+    (concat "'" erg)))
+
 
 ;; Major mode boilerplate
 
@@ -1954,6 +1979,12 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
             (setq py-install-directory default-directory))))
   (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
+
+(defadvice pdb (before gud-query-cmdline activate)
+   "Provide a better default command line when called interactively."
+   (interactive
+    (list (gud-query-cmdline pdb-path
+        (file-name-nondirectory buffer-file-name)))))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 (defun jython-mode ()
