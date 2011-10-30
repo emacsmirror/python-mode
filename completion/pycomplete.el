@@ -18,9 +18,28 @@
 ;; of things and a short description of what to expect.
 
 (require 'pymacs)
-(require 'python-mode)
 
 (pymacs-load "pycomplete")
+
+(defun py-symbol-near-point ()
+  "Return the first textual item to the nearest point."
+  ;; alg stolen from etag.el
+  (save-excursion
+    (with-syntax-table py-dotted-expression-syntax-table
+      (if (or (bobp) (not (memq (char-syntax (char-before)) '(?w ?_))))
+          (while (not (looking-at "\\sw\\|\\s_\\|\\'"))
+            (forward-char 1)))
+      (while (looking-at "\\sw\\|\\s_")
+        (forward-char 1))
+      (if (re-search-backward "\\sw\\|\\s_" nil t)
+          (progn (forward-char 1)
+                 (buffer-substring (point)
+                                   (progn (forward-sexp -1)
+                                          (while (looking-at "\\s'")
+                                            (forward-char 1))
+                                          (point))))
+        nil))))
+
 
 (defun py-complete ()
   (interactive)

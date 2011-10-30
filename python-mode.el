@@ -8595,7 +8595,6 @@ Uses `python-imports' to load modules against which to complete."
        #'string<))))
 
 (defalias 'psc 'py-shell-complete)
-(defalias 'py-complete 'py-shell-complete)
 (defun py-shell-complete ()
   (interactive "*")
   (let* ((word (py-dot-word-before-point))
