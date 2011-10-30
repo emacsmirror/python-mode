@@ -1064,7 +1064,7 @@ The debugger outputs program-location lines that look like this:
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
 
-If you ignore the location `M-x py-guess-pdb-path' might display it. 
+If you ignore the location `M-x py-guess-pdb-path' might display it.
 "
   :type 'variable
   :group 'python)
@@ -1973,9 +1973,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
             (setq py-install-directory default-directory))))
   (py-set-load-path)
   (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
-  (find-file "~/arbeit/emacs/python-modes/parasol/completion/pycomplete.el")
-  (eval-buffer)
-  (kill-buffer "pycomplete.el")
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)

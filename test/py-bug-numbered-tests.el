@@ -107,6 +107,7 @@
          'else-clause-indentation-lp-874470-test
          'py-complete-lp:858621-test
          'incorrect-use-of-region-in-py-shift-left-lp:875951-test
+         'indent-after-multiple-except-statements-lp:883815-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
