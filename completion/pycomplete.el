@@ -40,13 +40,6 @@
                                           (point))))
         nil))))
 
-
-(defun py-complete ()
-  (interactive)
-  (let ((pymacs-forget-mutability t)) 
-    (insert (pycomplete-pycomplete (py-symbol-near-point)
-				   (py-find-global-imports)))))
-
 (defun py-find-global-imports ()
   (save-excursion
     (let (first-class-or-def imports)
@@ -64,6 +57,24 @@
 				     (match-end 0))))))
       imports)))
 
-(define-key py-mode-map "\M-\C-i"  'py-complete)
+(defun py-complete ()
+  (interactive)
+  (let* ((pymacs-forget-mutability t)
+         (symbol (py-symbol-near-point))
+         (completions
+          (list (pycomplete-pycomplete symbol
+                                       (py-find-global-imports)))))
+    (cond ((null completions) ; no matching symbol
+           (message "Can't find completion for \"%s\"" symbol)
+           (ding))
+          ((null (cdr completions)) ; sole completion
+           (insert (car completions)))
+          (t
+           (message "Making completion list...")
+           (with-output-to-temp-buffer "*PythonCompletions*"
+             (display-completion-list completions))
+           (message "Making completion list...%s" "done")))))
+
+;; (define-key py-mode-map "\M-\C-i"  'py-complete)
 
 (provide 'pycomplete)
