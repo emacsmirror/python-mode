@@ -1971,7 +1971,11 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
            (setq py-install-directory (file-name-directory buffer-file-name)))
           (default-directory
             (setq py-install-directory default-directory))))
+  (py-set-load-path)
   (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
+  (find-file "~/arbeit/emacs/python-modes/parasol/completion/pycomplete.el")
+  (eval-buffer)
+  (kill-buffer "pycomplete.el")
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)
@@ -7947,7 +7951,6 @@ Uses `python-imports' to load modules against which to complete."
             (completion-table-dynamic 'python-symbol-completions)))))
 
 ;;;; FFAP support
-
 (defun python-module-path (module)
   "Function for `ffap-alist' to return path to MODULE."
   (python-send-receive (format "emacs.modpath (%S)" module)))
