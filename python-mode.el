@@ -5091,10 +5091,11 @@ Takes a list, INDENT and START position. "
                ((string-match "else" regexp)
                 py-minor-block-re)))
         (first t)
-        erg)
+        erg done)
     (while (and (not (eval stop))
                 (< 0 count)
-                (setq erg (funcall function)))
+                (or done (setq erg (funcall function))))
+      (setq done nil)
       (when (and first (< maxindent (current-indentation)))
         (setq maxindent (current-indentation))
         (setq first nil))
@@ -5110,16 +5111,25 @@ Takes a list, INDENT and START position. "
               (and
                (not (eval stop))
                (funcall function)
+               (setq done t) 
                (not (and (eq indent (current-indentation)) (looking-at "try"))))))
-         ((and (looking-at "\\<except\\>[: \n\t]")(save-match-data (string-match "except" regexp)))
-          (setq count (1+ count))
-          (setq indent (current-indentation)))
-         ((and (looking-at "\\<else\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
+         ((and (looking-at "\\<expcept\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
           (setq indent (current-indentation))
+          (setq count (1+ count))
           (while
               (and
                (not (eval stop))
                (funcall function)
+               (setq done t) 
+               (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
+         ((and (looking-at "\\<else\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
+          (setq indent (current-indentation))
+          (setq count (1+ count)) 
+          (while
+              (and
+               (not (eval stop))
+               (funcall function)
+               (setq done t) 
                (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
          ((and (looking-at "\\<elif\\>[ \n\t]")(save-match-data (string-match "elif" regexp)))
           (setq indent (current-indentation))
@@ -5127,6 +5137,7 @@ Takes a list, INDENT and START position. "
               (and
                (not (eval stop))
                (funcall function)
+               (setq done t) 
                ;; doesn't mean nesting yet
                (setq count (1- count))
                (not (and (eq indent (current-indentation)) (looking-at "if"))))))
