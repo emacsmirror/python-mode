@@ -3201,18 +3201,18 @@ subtleties, including the use of the optional ASYNC argument."
       (py-execute-region beg end))))
 
 (defun py-if-needed-insert-shell (&optional name)
-  (unless (py-choose-shell-by-shebang)
-    (let ((erg (or (downcase name)
+  (let ((erg (if name (downcase name)
+               (or (py-choose-shell-by-shebang)
                    (py-choose-shell-by-import)
-                   py-shell-name)))
+                   py-shell-name))))
       (goto-char (point-min))
-      (if (string-match erg "ipython")
+    (if (string-match (concat "^" erg) "ipython")
           (progn
             (shell-command "type ipython" t)
             (switch-to-buffer (current-buffer))
             (when (looking-at "[^/\n\r]+")
               (replace-match "#! ")))
-        (insert (concat py-shebang-startstring " " erg "\n"))))))
+      (insert (concat py-shebang-startstring " " erg "\n")))))
 
 (defun py-if-needed-insert-if ()
   "Internal use by py-execute... functions.
