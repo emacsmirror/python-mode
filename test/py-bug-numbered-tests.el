@@ -1943,5 +1943,25 @@ with_foo = False
     (goto-char 66)
     (assert (eq 0 (py-compute-indentation)) nil "indentation-after-line-with-keyword-lp-883073-test failed"))
 
+(defun indent-after-multiple-except-statements-lp:883815-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+def foo():
+    try:
+        x = 1
+    except SystemError:
+        f = 1
+except KeyError:
+        p = 1
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indent-after-multiple-except-statements-lp:883815-base arg teststring)))
+
+(defun indent-after-multiple-except-statements-lp:883815-base ()
+    (goto-char 121)
+    (assert (eq 4 (py-compute-indentation)) nil "indent-after-multiple-except-statements-lp:883815-test failed"))
+
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

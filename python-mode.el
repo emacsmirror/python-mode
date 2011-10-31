@@ -1824,7 +1824,13 @@ Pymacs has been written by François Pinard and many others.
 See original source: http://pymacs.progiciels-bpi.ca"
   (interactive)
   (load (concat py-install-directory "/pymacs/pymacs.el") nil t)
-  ;; let's have an error immediatly, if it fails.
+  (add-to-list 'load-path (concat py-install-directory "/pymacs/pymacs.el"))
+  (setenv "PYMACS_PYTHON" "python2.7")
+  (autoload 'pymacs-apply "pymacs")
+  (autoload 'pymacs-call "pymacs")
+  (autoload 'pymacs-eval "pymacs")
+  (autoload 'pymacs-exec "pymacs")
+  (autoload 'pymacs-load "pymacs")
   (require 'pymacs))
 
 (define-derived-mode python2-mode python-mode "Python2"
@@ -5106,12 +5112,8 @@ Takes a list, INDENT and START position. "
                (funcall function)
                (not (and (eq indent (current-indentation)) (looking-at "try"))))))
          ((and (looking-at "\\<except\\>[: \n\t]")(save-match-data (string-match "except" regexp)))
-          (setq indent (current-indentation))
-          (while
-              (and
-               (not (eval stop))
-               (funcall function)
-               (not (and (eq indent (current-indentation)) (looking-at "try"))))))
+          (setq count (1+ count))
+          (setq indent (current-indentation)))
          ((and (looking-at "\\<else\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
           (setq indent (current-indentation))
           (while
@@ -5128,9 +5130,14 @@ Takes a list, INDENT and START position. "
                ;; doesn't mean nesting yet
                (setq count (1- count))
                (not (and (eq indent (current-indentation)) (looking-at "if"))))))
-         (t (when (and (looking-at complement-re)(< (current-indentation) maxindent))
+         ((and (looking-at complement-re)(< (current-indentation) maxindent))
+          (setq count (1- count)))
+         (t (when (and (string-match "except" regexp)(looking-at py-block-re))
               (setq count (1- count)))))))
-    (when erg (setq erg (cons (current-indentation) erg)))
+    (when erg
+      (if (looking-at py-def-or-class-re)
+          (setq erg (cons (+ (current-indentation) py-indent-offset) erg))
+        (setq erg (cons (current-indentation) erg))))
     erg))
 
 (defun py-go-to-keyword (regexp arg &optional maxindent)

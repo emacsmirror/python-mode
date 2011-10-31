@@ -150,6 +150,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall no-indent-after-continue-lp-872676-test \
 --funcall indent-after-inline-comment-lp-873372-test \
 --funcall else-clause-indentation-lp-874470-test \
+--funcall indent-after-multiple-except-statements-lp:883815-test \
 --funcall incorrect-use-of-region-in-py-shift-left-lp:875951-test \
 \
 --funcall multiline-list-indent-test \
