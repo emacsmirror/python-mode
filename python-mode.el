@@ -2757,6 +2757,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
                               (buffer-name (get-buffer (concat "*" name "*"))))))
          (procbuf (or buf-and-proc
                       (progn
+                        (setq py-shell-name name-raw)
                         (py-shell)
                         (buffer-name (get-buffer name)))))
          (proc (get-process name))
