@@ -7009,7 +7009,7 @@ element matches `python-python-command'."
 	    (while (and (< start (point)) (looking-at "\\s-*$"))
 	      (forward-line -1))
 	    (current-indentation))))
-       ((python-continuation-line-p)   ; after backslash, or bracketed
+       ((py-continuation-line-p)   ; after backslash, or bracketed
 	(let ((point (point))
 	      (open-start (cadr syntax))
 	      (backslash (python-backslash-continuation-line-p))
@@ -7039,7 +7039,7 @@ element matches `python-python-command'."
 		  (+ (current-indentation) (* (car syntax) python-indent))))
 	    ;; Otherwise backslash-continued.
 	    (forward-line -1)
-	    (if (python-continuation-line-p)
+	    (if (py-continuation-line-p)
 		;; We're past first continuation line.  Align with
 		;; previous line.
 		(current-indentation)
