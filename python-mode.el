@@ -3427,8 +3427,9 @@ This function is normally used by `indent-line-function' resp.
           (indent-to indent))
       (if py-tab-indent
         (cond ((eq indent col)
+                 (when (eq this-command last-command)
           (beginning-of-line)
-               (delete-horizontal-space))
+                   (delete-horizontal-space)))
               ((< col indent)
                (beginning-of-line)
                (delete-horizontal-space)
