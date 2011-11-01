@@ -7178,75 +7178,6 @@ corresponding block opening (or nil)."
 	(setq python-indent-list levels
 	      python-indent-list-length (length python-indent-list))))))
 
-;; This is basically what `python-indent-line' would be if we didn't
-;; do the cycling.
-(defun python-indent-line-1 (&optional leave)
-  "Subroutine of `python-indent-line'.
-Does non-repeated indentation.  LEAVE non-nil means leave
-indentation if it is valid, i.e. one of the positions returned by
-`python-calculate-indentation'."
-  (let ((target (python-calculate-indentation))
-	(pos (- (point-max) (point))))
-    (if (or (= target (current-indentation))
-	    ;; Maybe keep a valid indentation.
-	    (and leave python-indent-list
-		 (assq (current-indentation) python-indent-list)))
-	(if (< (current-column) (current-indentation))
-	    (back-to-indentation))
-      (beginning-of-line)
-      (delete-horizontal-space)
-      (indent-to target)
-      (if (> (- (point-max) pos) (point))
-	  (goto-char (- (point-max) pos))))))
-
-(defun python-indent-line ()
-  "Indent current line as Python code.
-When invoked via `indent-for-tab-command', cycle through possible
-indentations for current line.  The cycle is broken by a command
-different from `indent-for-tab-command', i.e. successive TABs do
-the cycling."
-  (interactive)
-  (if (and (eq this-command 'indent-for-tab-command)
-	   (eq last-command this-command))
-      (if (= 1 python-indent-list-length)
-	  (message "Sole indentation")
-	(progn (setq python-indent-index
-		     (% (1+ python-indent-index) python-indent-list-length))
-	       (beginning-of-line)
-	       (delete-horizontal-space)
-	       (indent-to (car (nth python-indent-index python-indent-list)))
-	       (if (python-block-end-p)
-		   (let ((text (cdr (nth python-indent-index
-					 python-indent-list))))
-		     (if text
-			 (message "Closes: %s" text))))))
-    (python-indent-line-1)
-    (setq python-indent-index (1- python-indent-list-length))))
-
-(defun python-indent-region (start end)
-  "`indent-region-function' for Python.
-Leaves validly-indented lines alone, i.e. doesn't indent to
-another valid position."
-  (save-excursion
-    (goto-char end)
-    (setq end (point-marker))
-    (goto-char start)
-    (or (bolp) (forward-line 1))
-    (while (< (point) end)
-      (or (and (bolp) (eolp))
-	  (python-indent-line-1 t))
-      (forward-line 1))
-    (move-marker end nil)))
-
-(defun python-block-end-p ()
-  "Non-nil if this is a line in a statement closing a block,
-or a blank line indented to where it would close a block."
-  (and (not (python-comment-line-p))
-       (or (python-close-block-statement-p t)
-	   (< (current-indentation)
-	      (save-excursion
-		(python-previous-statement)
-		(current-indentation))))))
 
 
 (defcustom python-python-command "python"
@@ -7488,7 +7419,6 @@ print version_info >= (2, 2) and version_info < (3, 0)\""))))
 	(error "Only Python versions >= 2.2 and < 3.0 are supported")))
     (setq python-version-checked t)))
 
-;;;###autoload
 (defun run-python (&optional cmd noshow new)
   "Run an inferior Python process, input and output via buffer *Python*.
 CMD is the Python command to run.  NOSHOW non-nil means don't
@@ -8012,74 +7942,6 @@ Interactively, prompt for name."
 (defvar outline-heading-end-regexp)
 (defvar eldoc-documentation-function)
 (defvar python-mode-running)            ;Dynamically scoped var.
-
-;;;###autoload
-(defun python-el-loads ()
-  "Settings delivered by python-el python-mode"
-  (set (make-local-variable 'font-lock-defaults)
-       '(python-font-lock-keywords nil nil nil nil
-				   (font-lock-syntactic-keywords
-				    . python-font-lock-syntactic-keywords)
-				   ;; This probably isn't worth it.
-				   ;; (font-lock-syntactic-face-function
-				   ;;  . python-font-lock-syntactic-face-function)
-				   ))
-  (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'indent-line-function) #'python-indent-line)
-  (set (make-local-variable 'indent-region-function) #'python-indent-region)
-  (set (make-local-variable 'paragraph-start) "\\s-*$")
-  (set (make-local-variable 'fill-paragraph-function) 'python-fill-paragraph)
-  (set (make-local-variable 'require-final-newline) mode-require-final-newline)
-  (set (make-local-variable 'add-log-current-defun-function)
-       #'python-current-defun)
-  (set (make-local-variable 'outline-regexp)
-       (rx (* space) (or "class" "def" "elif" "else" "except" "finally"
-			 "for" "if" "try" "while" "with")
-	   symbol-end))
-  (set (make-local-variable 'outline-heading-end-regexp) ":\\s-*\n")
-  (set (make-local-variable 'outline-level) #'python-outline-level)
-  (set (make-local-variable 'open-paren-in-column-0-is-defun-start) nil)
-  (make-local-variable 'python-saved-check-command)
-  (set (make-local-variable 'beginning-of-defun-function)
-       'python-beginning-of-defun)
-  (set (make-local-variable 'end-of-defun-function) 'python-end-of-defun)
-  (add-hook 'which-func-functions 'python-which-func nil t)
-  (setq imenu-create-index-function #'python-imenu-create-index)
-  (set (make-local-variable 'eldoc-documentation-function)
-       #'python-eldoc-function)
-  (add-hook 'eldoc-mode-hook
-	    (lambda () (run-python nil t)) ; need it running
-	    nil t)
-  (add-hook 'completion-at-point-functions
-            'python-completion-at-point nil 'local)
-  ;; Fixme: should be in hideshow.  This seems to be of limited use
-  ;; since it isn't (can't be) indentation-based.  Also hide-level
-  ;; doesn't seem to work properly.
-  (add-to-list 'hs-special-modes-alist
-	       `(python-mode "^\\s-*\\(?:def\\|class\\)\\>[ \n\t]" nil "#"
-		 ,(lambda (arg)
-		    (python-end-of-defun)
-		    (skip-chars-backward " \t\n"))
-		 nil))
-  (set (make-local-variable 'skeleton-further-elements)
-       '((< '(backward-delete-char-untabify (min python-indent
-						 (current-column))))
-	 (^ '(- (1+ (current-indentation))))))
-  ;; Python defines TABs as being 8-char wide.
-  (set (make-local-variable 'tab-width) 8)
-  ;; (when python-guess-indent (python-guess-indent))
-  ;; Let's make it harder for the user to shoot himself in the foot.
-  (unless (= tab-width python-indent)
-    (setq indent-tabs-mode nil))
-  (set (make-local-variable 'python-command) python-python-command)
-  (python-find-imports)
-  (unless (boundp 'python-mode-running)	; kill the recursion from jython-mode
-    (let ((python-mode-running t))
-      (python-maybe-jython))))
-
-;; (python-el-loads)
 
 ;; Not done automatically in Emacs 21 or 22.
 (defcustom python-mode-hook nil
