@@ -461,6 +461,9 @@ variable section, e.g.:
   :group 'python)
 (make-variable-buffer-local 'py-master-file)
 
+(defvar py-execute-directory nil
+  "Stores the file's directory-name py-execute-... functions act upon. ")
+
 (defcustom py-pychecker-command "pychecker"
   "*Shell command used to run Pychecker."
   :type 'string
@@ -2142,6 +2145,7 @@ comint believe the user typed this string so that
     (unwind-protect
         (save-excursion
           (set-buffer procbuf)
+          (when py-execute-directory (setq default-directory py-execute-directory))
           (goto-char (point-max))
           (move-marker (process-mark proc) (point))
           (funcall (process-filter proc) proc msg))
@@ -2748,6 +2752,7 @@ is inserted at the end.  See also the command `py-clear-queue'."
 
 (defun py-execute-base (start end &optional async shell)
   "Adapt the variables used in the process. "
+  (when (buffer-file-name)(setq py-execute-directory (file-name-directory (buffer-file-name))))
   (let* ((regbuf (current-buffer))
 	 (name-raw (or shell (py-choose-shell)))
          (name (py-process-name name-raw))
@@ -5120,7 +5125,7 @@ Takes a list, INDENT and START position. "
               (and
                (not (eval stop))
                (funcall function)
-               (setq done t) 
+               (setq done t)
                (not (and (eq indent (current-indentation)) (looking-at "try"))))))
          ((and (looking-at "\\<expcept\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
           (setq indent (current-indentation))
@@ -5129,16 +5134,16 @@ Takes a list, INDENT and START position. "
               (and
                (not (eval stop))
                (funcall function)
-               (setq done t) 
+               (setq done t)
                (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
          ((and (looking-at "\\<else\\>[: \n\t]")(save-match-data (string-match "else" regexp)))
           (setq indent (current-indentation))
-          (setq count (1+ count)) 
+          (setq count (1+ count))
           (while
               (and
                (not (eval stop))
                (funcall function)
-               (setq done t) 
+               (setq done t)
                (not (and (eq indent (current-indentation)) (looking-at "try\\|if"))))))
          ((and (looking-at "\\<elif\\>[ \n\t]")(save-match-data (string-match "elif" regexp)))
           (setq indent (current-indentation))
@@ -5146,7 +5151,7 @@ Takes a list, INDENT and START position. "
               (and
                (not (eval stop))
                (funcall function)
-               (setq done t) 
+               (setq done t)
                ;; doesn't mean nesting yet
                (setq count (1- count))
                (not (and (eq indent (current-indentation)) (looking-at "if"))))))
