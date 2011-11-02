@@ -846,8 +846,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; keywords
      (cons (concat "\\<\\(" kw1 "\\)\\>[ \n\t(]") 1)
      ;; builtins when they don't appear as object attributes
-     (list (concat "\\([^. \t]\\|^\\)[ \t]*\\<\\(" kw3 "\\)\\>[ \n\t(]") 2
-           'py-builtins-face)
+     (list (concat "\\([ \t(]\\|^\\)\\<\\(" kw3 "\\)\\>[ \n\t(]") 2
+            'py-builtins-face)
      ;; block introducing keywords with immediately following colons.
      ;; Yes "except" is in both lists.
      (cons (concat "\\<\\(" kw2 "\\)[ \n\t(]") 1)
