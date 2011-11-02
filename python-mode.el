@@ -2982,7 +2982,9 @@ See also doku of variable `py-master-file' "
   (when (interactive-p) (message "%s" py-master-file)))
 
 (defun py-execute-buffer-no-switch (&optional async)
-  "Like `py-execute-buffer', but ignores setting of `py-shell-switch-buffers-on-execute', output-buffer will being switched to."
+  "Like `py-execute-buffer', but ignores setting of `py-shell-switch-buffers-on-execute'.
+
+Buffer called from is current afterwards again."
   (interactive "P")
   (save-excursion
     (let ((old-buffer (current-buffer)))
