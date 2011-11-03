@@ -2448,6 +2448,7 @@ interpreter.
     ;;
     (set-syntax-table py-mode-syntax-table)
     (ansi-color-for-comint-mode-on)
+    (use-local-map py-shell-map)
     ;; ToDo: has only effect \w IPython
     (add-hook 'py-shell-hook 'py-dirstack-hook)
     (run-hooks 'py-shell-hook)))
