@@ -104,6 +104,7 @@
 (when (featurep 'xemacs)
   (require 'highlight-indentation))
 
+(require 'help-fns)
 (eval-when-compile
   (require 'compile)
   (require 'hippie-exp)
@@ -7667,9 +7668,7 @@ in a buffer that doesn't have a local value of `python-buffer'."
 Otherwise inherits from `py-mode-syntax-table'.")
 
 (defvar view-return-to-alist)
-(eval-when-compile (autoload 'help-buffer "help-fns"))
-
-(defvar python-imports)			; forward declaration
+(defvar python-imports)
 
 ;; Fixme: Should this actually be used instead of info-look, i.e. be
 ;; bound to C-h S?  [Probably not, since info-look may work in cases
