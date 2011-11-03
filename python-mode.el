@@ -2775,8 +2775,8 @@ is inserted at the end.  See also the command `py-clear-queue'."
 
 (defun py-execute-intern (start end &optional regbuf procbuf proc temp file filebuf name)
   (let ((pec (if (string-match "Python3" name)
-         (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)
-         (format "execfile(r'%s') # PYTHON-MODE\n" file)))
+                 (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)
+               (format "execfile(r'%s') # PYTHON-MODE\n" file)))
         shell)
     (set-buffer filebuf)
     (erase-buffer)
@@ -2795,10 +2795,10 @@ is inserted at the end.  See also the command `py-clear-queue'."
              (arg (if (string-match name "Python")
                       "-u" "")))
         (start-process name tempbuf shell arg file)
-              (pop-to-buffer tempbuf)
-              (py-postprocess-output-buffer tempbuf)
-              ;; TBD: clean up the temporary file!
-))
+        (pop-to-buffer tempbuf)
+        (py-postprocess-output-buffer tempbuf)
+        ;; TBD: clean up the temporary file!
+        ))
      (proc
       ;; use the existing python shell
       (set-buffer filebuf)
@@ -2809,14 +2809,14 @@ is inserted at the end.  See also the command `py-clear-queue'."
       (if (file-readable-p file)
           (progn
             (py-execute-file proc file pec)
-      (setq py-exception-buffer (cons file (current-buffer)))
-      (if py-shell-switch-buffers-on-execute
-          (progn
-            (pop-to-buffer procbuf)
-            (goto-char (point-max)))
-        (pop-to-buffer regbuf)
-        (message "Output buffer: %s" procbuf))
-      (sit-for 0.1)
+            (setq py-exception-buffer (cons file (current-buffer)))
+            (if py-shell-switch-buffers-on-execute
+                (progn
+                  (pop-to-buffer procbuf)
+                  (goto-char (point-max)))
+              (pop-to-buffer regbuf)
+              (message "Output buffer: %s" procbuf))
+            (sit-for 0.1)
             (delete-file file))
         (message "File not readable: %s" "Do you have write permissions?"))))))
 
@@ -3220,7 +3220,8 @@ subtleties, including the use of the optional ASYNC argument."
             (switch-to-buffer (current-buffer))
             (when (looking-at "[^/\n\r]+")
               (replace-match "#! ")))
-      (insert (concat py-shebang-startstring " " erg "\n")))))
+      (insert (concat py-shebang-startstring " " erg "\n")))
+    (insert (concat "import os; os.chdir(\"" py-execute-directory "\")"))))
 
 (defun py-if-needed-insert-if ()
   "Internal use by py-execute... functions.
