@@ -1343,13 +1343,14 @@ package.  Note that the latest X/Emacs releases contain this package.")
 
 (defvar py-shell-map nil
   "Keymap used in *Python* shell buffers.")
-(if py-shell-map
-    nil
-  (setq py-shell-map (copy-keymap comint-mode-map))
-  (define-key py-shell-map [tab]   'tab-to-tab-stop)
-  (define-key py-shell-map "\C-c-" 'py-up-exception)
-  (define-key py-shell-map "\C-c=" 'py-down-exception)
-  )
+
+(setq py-shell-map
+      (let ((map (copy-keymap comint-mode-map)))
+        (define-key map [tab] 'py-complete)
+        (define-key map (kbd "RET") 'comint-send-input)
+        (define-key map "\C-c-" 'py-up-exception)
+        (define-key map "\C-c=" 'py-down-exception)
+        map))
 
 ;; An auxiliary syntax table which places underscore and dot in the
 ;; symbol class for simplicity
@@ -2400,11 +2401,6 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
   (make-local-variable 'shell-dirtrackp)
   (setq shell-dirtrackp t)
   (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t))
-
-(add-hook 'py-shell-hook
-          '(lambda ()
-             (when (functionp 'py-complete)
-               (local-set-key [tab] 'py-complete))))
 
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
