@@ -553,18 +553,17 @@ If no `load-branch-function' is specified, make sure the appropriate branch is l
   (let ((font-lock-verbose nil))
     (set-buffer (get-buffer-create "bullet-lists-in-comments-lp:328782-test"))
     (erase-buffer)
-    (with-temp-buffer
-      (insert "
+    (insert "
 ## * If the filename is a directory and not a Maildir nor
 ##   an MH Mailbox, it will be processed as a Mailbox --this bug named here: bullet-lists-in-comments-lp:328782.htm--
 ##   directory consisting of just .txt and .lorien files.
 ")
-      (when arg (switch-to-buffer (current-buffer)))
-      (python-mode)
-      (font-lock-mode 1)
-      (font-lock-fontify-buffer)
-      (goto-char 100)
-      (py-fill-paragraph))
+    (when arg (switch-to-buffer (current-buffer)))
+    (python-mode)
+    (font-lock-mode 1)
+    (font-lock-fontify-buffer)
+    (goto-char 100)
+    (py-fill-paragraph)
     (set-buffer "bullet-lists-in-comments-lp:328782-test")
     (unless (< 1 arg)
       (set-buffer-modified-p 'nil)
@@ -1360,14 +1359,14 @@ def add(ui, repo, \*pats, \*\*opts):
 # py-master-file: \"/usr/tmp/my-master.py\"
 # End:
 
-print u'\xA9'
+print \"master-file is executed\"
 "))
     (when load-branch-function (funcall load-branch-function))
     (py-bug-tests-intern 'master-file-not-honored-lp:794850-base arg teststring)))
 
 (defun master-file-not-honored-lp:794850-base ()
   (save-excursion
-    (set-buffer (get-buffer-create "lp:794850-test-master.py"))
+    (set-buffer (get-buffer-create "test-master.py"))
     (erase-buffer)
     (insert "#! /usr/bin/env python
  # -*- coding: utf-8 -*-

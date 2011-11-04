@@ -1145,186 +1145,186 @@ This menu will get created automatically if you have the `easymenu'
 package.  Note that the latest X/Emacs releases contain this package.")
 
 (setq py-mode-map
-  (let ((map (make-sparse-keymap)))
-    ;; electric keys
-    (define-key map [(:)] 'py-electric-colon)
-    (define-key map [(\#)] 'py-electric-comment)
-    (define-key map [(delete)] 'py-electric-delete)
-    (define-key map [(backspace)] 'py-electric-backspace)
-    (define-key map [(control backspace)] 'py-hungry-delete-backwards)
-    ;; moving point
-    (define-key map [(control c)(control n)] 'py-end-of-statement)
-    (define-key map [(control c)(control a)] 'py-mark-statement)
-    (define-key map [(control c)(control p)] 'py-beginning-of-statement)
-    (define-key map [(control c)(control u)] 'py-beginning-of-block)
-    (define-key map [(control c)(control q)] 'py-end-of-block)
-    (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
-    (define-key map [(control meta e)] 'py-end-of-def-or-class)
-    (define-key map [(control j)] 'py-newline-and-indent)
-    (define-key map (kbd "RET") 'py-newline-and-indent)
-    (define-key map [(super backspace)] 'py-dedent-forward-line)
-    ;; (define-key map [(control return)] 'py-newline-and-dedent)
-    ;; indentation level modifiers
-    (define-key map [(control c)(\/)] 'py-indent-line-outmost)
-    (define-key map [(control c)(control l)] 'py-shift-left)
-    (define-key map [(control c)(control r)] 'py-shift-right)
-    (define-key map [(control c)(<)] 'py-shift-left)
-    (define-key map [(control c)(>)] 'py-shift-right)
-    (define-key map [(control c)(tab)] 'py-indent-region)
-    (define-key map [(control c)(:)] 'py-guess-indent-offset)
-    ;; subprocess commands
-    (define-key map [(control c)(control c)] 'py-execute-buffer)
-    (define-key map [(control c)(control m)] 'py-execute-import-or-reload)
-    (define-key map [(control c)(control s)] 'py-execute-string)
-    (define-key map [(control c)(|)] 'py-execute-region)
-    (define-key map [(control meta x)] 'py-execute-def-or-class)
-    (define-key map [(control c)(!)] 'py-shell)
-    (define-key map [(control c)(control t)] 'py-toggle-shells)
-    (define-key map [(control meta h)] 'py-mark-def-or-class)
-    (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
-    ;; Miscellaneous
-    (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
-    (define-key map [(control c)(control f)] 'py-sort-imports)
-    (define-key map [(control c)(\#)] 'py-comment-region)
-    (define-key map [(control c)(\?)] 'py-describe-mode)
-    (define-key map [(control c)(control e)] 'py-describe-symbol)
-    (define-key map [(control meta a)] 'py-beginning-of-def-or-class)
-    (define-key map [(control c)(-)] 'py-up-exception)
-    (define-key map [(control c)(=)] 'py-down-exception)
-    (define-key map [(control x) (n) (d)] 'py-narrow-to-defun)
-    ;; information
-    (define-key map [(control c)(control b)] 'py-submit-bug-report)
-    (define-key map [(control c)(control v)] 'py-version)
-    (define-key map [(control c)(control w)] 'py-pychecker-run)
-    (define-key map [(control c)(c)] 'py-compute-indentation)
-    ;; (define-key map [(meta tab)] 'py-shell-complete)
-    (substitute-key-definition 'complete-symbol 'completion-at-point
-			       map global-map)
-    ;; shadow global bindings for newline-and-indent
-    (mapc #'(lambda (key)
-              (define-key map key 'py-newline-and-indent))
-          (where-is-internal 'newline-and-indent))
-    (if (featurep 'xemacs)
-        (easy-menu-define py-menu map "Python Mode menu"
-          '("Python"
-            "Python-specific features"
-            ["Execute statement" py-execute-statement
-             "Send statement at point to Python interpreter. "]
-            ["Execute block" py-execute-block
-             "Send compound statement at point to Python interpreter. "]
-            ["Execute def" py-execute-def
-             "Send function at point to Python interpreter. "]
-            ["Execute region" py-execute-region
-             "Send region to Python interpreter. "]
-            ["Execute buffer" py-execute-buffer
-             "Send buffer to Python interpreter. "]
-            "-"
-            ["Copy block" py-copy-block
-             "Copy innermost compound statement at point"]
-            ["Copy def-or-class" py-copy-def-or-class
-             "Copy innermost definition at point"]
-            ["Copy statement" py-copy-statement
-             "Copy statement at point"]
-            ["Copy expression" py-copy-expression
-             "Copy expression at point"]
-            ["Copy partial-expression" py-copy-partial-expression
-             "\".\" operators delimit a partial-expression expression on it's level"]
-            "-"
-            ["Beginning of block" py-beginning-of-block
-             "Go to start of innermost compound statement at point"]
-            ["End of block" py-end-of-block
-             "Go to end of innermost compound statement at point"]
-            ["Beginning of Def-or-Class" py-beginning-of-def-or-class
-             "Go to start of innermost definition at point"]
-            ["End of Def-or-Class" py-end-of-def-or-class
-             "Go to end of innermost function definition at point"]
-            ["Beginning of-class" beginning-of-class
-             "Go to start of class definition "]
-            ["End of Class" py-end-of-class
-             "Go to end of class definition "]
-            ;; "-"
-            ;; ("Templates..."
-            ;; "Expand templates for compound statements")
-            "-"
-            ["Switch to interpreter" py-shell
-             "Switch to inferior Python in separate buffer"]
-            ["Import/reload file" py-execute-import-or-reload
-             "Load into inferior Python session"]
-            ["Set default process" py-set-proc
-             "Make buffer's inferior process the default" ]
-            ["pychecker-run" py-pychecker-run "Run pychecker"]
-            ["Debugger" pdb "Run pdb under GUD"]
-            "-"
-            ["Help on symbol" py-describe-symbol
-             "Use pydoc on symbol at point"]
-            ["Complete symbol" completion-at-point
-             "Complete (qualified) symbol before point"]
-            ["Find function" py-find-function
-             "Try to find source definition of function at point"]
-            ["Update imports" py-find-imports
-             "Update list of top-level imports for completion"]))
-      (easy-menu-define py-menu map "Python Mode menu"
-        '("Python"
-          :help "Python-specific features"
-          ["Execute statement" py-execute-statement
-           :help "Send statement at point to Python interpreter. "]
-          ["Execute block" py-execute-block
-           :help "Send compound statement at point to Python interpreter. "]
-          ["Execute def" py-execute-def
-           :help "Send function at point to Python interpreter. "]
-          ["Execute region" py-execute-region
-           :help "Send region to Python interpreter. "]
-          ["Execute buffer" py-execute-buffer
-           :help "Send buffer to Python interpreter. "]
-          "-"
-          ["Copy block" py-copy-block
-           :help "Copy innermost compound statement at point"]
-          ["Copy def-or-class" py-copy-def-or-class
-           :help "Copy innermost definition at point"]
-          ["Copy statement" py-copy-statement
-           :help "Copy statement at point"]
-          ["Copy expression" py-copy-expression
-           :help "Copy expression at point"]
-          ["Copy partial-expression" py-copy-partial-expression
-           :help "\".\" operators delimit a partial-expression expression on it's level"]
-          "-"
-          ["Beginning of block" py-beginning-of-block
-           :help "Go to start of innermost compound statement at point"]
-          ["End of block" py-end-of-block
-           :help "Go to end of innermost compound statement at point"]
-          ["Beginning of Def-or-Class" py-beginning-of-def-or-class
-           :help "Go to start of innermost definition at point"]
-          ["End of Def-or-Class" py-end-of-def-or-class
-           :help "Go to end of innermost function definition at point"]
-          ["Beginning of-class" beginning-of-class
-           :help "Go to start of class definition "]
-          ["End of Class" py-end-of-class
-           :help "Go to end of class definition "]
-          "-"
-          ("Templates..."
-           :help "Expand templates for compound statements"
-           :filter (lambda (&rest junk)
-                     (abbrev-table-menu python-mode-abbrev-table)))
-          "-"
-          ["Switch to interpreter" py-shell
-           :help "Switch to `inferior' Python in separate buffer"]
-          ["Import/reload file" py-execute-import-or-reload
-           :help "Load into inferior Python session"]
-          ["Set default process" py-set-proc
-           :help "Make buffer's inferior process the default"
-           :active (buffer-live-p py-buffer)]
-          ["pychecker-run" py-pychecker-run :help "Run pychecker"]
-          ["Debugger" pdb :help "Run pdb under GUD"]
-          "-"
-          ["Help on symbol" py-describe-symbol
-           :help "Use pydoc on symbol at point"]
-          ["Complete symbol" completion-at-point
-           :help "Complete (qualified) symbol before point"]
-          ["Find function" py-find-function
-           :help "Try to find source definition of function at point"]
-          ["Update imports" py-find-imports
-           :help "Update list of top-level imports for completion"])))
-    map))
+      (let ((map (make-sparse-keymap)))
+        ;; electric keys
+        (define-key map [(:)] 'py-electric-colon)
+        (define-key map [(\#)] 'py-electric-comment)
+        (define-key map [(delete)] 'py-electric-delete)
+        (define-key map [(backspace)] 'py-electric-backspace)
+        (define-key map [(control backspace)] 'py-hungry-delete-backwards)
+        ;; moving point
+        (define-key map [(control c)(control n)] 'py-end-of-statement)
+        (define-key map [(control c)(control a)] 'py-mark-statement)
+        (define-key map [(control c)(control p)] 'py-beginning-of-statement)
+        (define-key map [(control c)(control u)] 'py-beginning-of-block)
+        (define-key map [(control c)(control q)] 'py-end-of-block)
+        (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
+        (define-key map [(control meta e)] 'py-end-of-def-or-class)
+        (define-key map [(control j)] 'py-newline-and-indent)
+        (define-key map (kbd "RET") 'py-newline-and-indent)
+        (define-key map [(super backspace)] 'py-dedent-forward-line)
+        ;; (define-key map [(control return)] 'py-newline-and-dedent)
+        ;; indentation level modifiers
+        (define-key map [(control c)(\/)] 'py-indent-line-outmost)
+        (define-key map [(control c)(control l)] 'py-shift-left)
+        (define-key map [(control c)(control r)] 'py-shift-right)
+        (define-key map [(control c)(<)] 'py-shift-left)
+        (define-key map [(control c)(>)] 'py-shift-right)
+        (define-key map [(control c)(tab)] 'py-indent-region)
+        (define-key map [(control c)(:)] 'py-guess-indent-offset)
+        ;; subprocess commands
+        (define-key map [(control c)(control c)] 'py-execute-buffer)
+        (define-key map [(control c)(control m)] 'py-execute-import-or-reload)
+        (define-key map [(control c)(control s)] 'py-execute-string)
+        (define-key map [(control c)(|)] 'py-execute-region)
+        (define-key map [(control meta x)] 'py-execute-def-or-class)
+        (define-key map [(control c)(!)] 'py-shell)
+        (define-key map [(control c)(control t)] 'py-toggle-shells)
+        (define-key map [(control meta h)] 'py-mark-def-or-class)
+        (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
+        ;; Miscellaneous
+        (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
+        (define-key map [(control c)(control f)] 'py-sort-imports)
+        (define-key map [(control c)(\#)] 'py-comment-region)
+        (define-key map [(control c)(\?)] 'py-describe-mode)
+        (define-key map [(control c)(control e)] 'py-describe-symbol)
+        (define-key map [(control meta a)] 'py-beginning-of-def-or-class)
+        (define-key map [(control c)(-)] 'py-up-exception)
+        (define-key map [(control c)(=)] 'py-down-exception)
+        (define-key map [(control x) (n) (d)] 'py-narrow-to-defun)
+        ;; information
+        (define-key map [(control c)(control b)] 'py-submit-bug-report)
+        (define-key map [(control c)(control v)] 'py-version)
+        (define-key map [(control c)(control w)] 'py-pychecker-run)
+        (define-key map [(control c)(c)] 'py-compute-indentation)
+        ;; (define-key map [(meta tab)] 'py-complete)
+        (substitute-key-definition 'complete-symbol 'py-complete
+                                   map global-map)
+        ;; shadow global bindings for newline-and-indent
+        (mapc #'(lambda (key)
+                  (define-key map key 'py-newline-and-indent))
+              (where-is-internal 'newline-and-indent))
+        (if (featurep 'xemacs)
+            (easy-menu-define py-menu map "Python Mode menu"
+              '("Python"
+                "Python-specific features"
+                ["Execute statement" py-execute-statement
+                 "Send statement at point to Python interpreter. "]
+                ["Execute block" py-execute-block
+                 "Send compound statement at point to Python interpreter. "]
+                ["Execute def" py-execute-def
+                 "Send function at point to Python interpreter. "]
+                ["Execute region" py-execute-region
+                 "Send region to Python interpreter. "]
+                ["Execute buffer" py-execute-buffer
+                 "Send buffer to Python interpreter. "]
+                "-"
+                ["Copy block" py-copy-block
+                 "Copy innermost compound statement at point"]
+                ["Copy def-or-class" py-copy-def-or-class
+                 "Copy innermost definition at point"]
+                ["Copy statement" py-copy-statement
+                 "Copy statement at point"]
+                ["Copy expression" py-copy-expression
+                 "Copy expression at point"]
+                ["Copy partial-expression" py-copy-partial-expression
+                 "\".\" operators delimit a partial-expression expression on it's level"]
+                "-"
+                ["Beginning of block" py-beginning-of-block
+                 "Go to start of innermost compound statement at point"]
+                ["End of block" py-end-of-block
+                 "Go to end of innermost compound statement at point"]
+                ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+                 "Go to start of innermost definition at point"]
+                ["End of Def-or-Class" py-end-of-def-or-class
+                 "Go to end of innermost function definition at point"]
+                ["Beginning of-class" beginning-of-class
+                 "Go to start of class definition "]
+                ["End of Class" py-end-of-class
+                 "Go to end of class definition "]
+                ;; "-"
+                ;; ("Templates..."
+                ;; "Expand templates for compound statements")
+                "-"
+                ["Switch to interpreter" py-shell
+                 "Switch to inferior Python in separate buffer"]
+                ["Import/reload file" py-execute-import-or-reload
+                 "Load into inferior Python session"]
+                ["Set default process" py-set-proc
+                 "Make buffer's inferior process the default" ]
+                ["pychecker-run" py-pychecker-run "Run pychecker"]
+                ["Debugger" pdb "Run pdb under GUD"]
+                "-"
+                ["Help on symbol" py-describe-symbol
+                 "Use pydoc on symbol at point"]
+                ["Complete symbol" completion-at-point
+                 "Complete (qualified) symbol before point"]
+                ["Find function" py-find-function
+                 "Try to find source definition of function at point"]
+                ["Update imports" py-find-imports
+                 "Update list of top-level imports for completion"]))
+          (easy-menu-define py-menu map "Python Mode menu"
+            '("Python"
+              :help "Python-specific features"
+              ["Execute statement" py-execute-statement
+               :help "Send statement at point to Python interpreter. "]
+              ["Execute block" py-execute-block
+               :help "Send compound statement at point to Python interpreter. "]
+              ["Execute def" py-execute-def
+               :help "Send function at point to Python interpreter. "]
+              ["Execute region" py-execute-region
+               :help "Send region to Python interpreter. "]
+              ["Execute buffer" py-execute-buffer
+               :help "Send buffer to Python interpreter. "]
+              "-"
+              ["Copy block" py-copy-block
+               :help "Copy innermost compound statement at point"]
+              ["Copy def-or-class" py-copy-def-or-class
+               :help "Copy innermost definition at point"]
+              ["Copy statement" py-copy-statement
+               :help "Copy statement at point"]
+              ["Copy expression" py-copy-expression
+               :help "Copy expression at point"]
+              ["Copy partial-expression" py-copy-partial-expression
+               :help "\".\" operators delimit a partial-expression expression on it's level"]
+              "-"
+              ["Beginning of block" py-beginning-of-block
+               :help "Go to start of innermost compound statement at point"]
+              ["End of block" py-end-of-block
+               :help "Go to end of innermost compound statement at point"]
+              ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+               :help "Go to start of innermost definition at point"]
+              ["End of Def-or-Class" py-end-of-def-or-class
+               :help "Go to end of innermost function definition at point"]
+              ["Beginning of-class" beginning-of-class
+               :help "Go to start of class definition "]
+              ["End of Class" py-end-of-class
+               :help "Go to end of class definition "]
+              "-"
+              ("Templates..."
+               :help "Expand templates for compound statements"
+               :filter (lambda (&rest junk)
+                         (abbrev-table-menu python-mode-abbrev-table)))
+              "-"
+              ["Switch to interpreter" py-shell
+               :help "Switch to `inferior' Python in separate buffer"]
+              ["Import/reload file" py-execute-import-or-reload
+               :help "Load into inferior Python session"]
+              ["Set default process" py-set-proc
+               :help "Make buffer's inferior process the default"
+               :active (buffer-live-p py-buffer)]
+              ["pychecker-run" py-pychecker-run :help "Run pychecker"]
+              ["Debugger" pdb :help "Run pdb under GUD"]
+              "-"
+              ["Help on symbol" py-describe-symbol
+               :help "Use pydoc on symbol at point"]
+              ["Complete symbol" completion-at-point
+               :help "Complete (qualified) symbol before point"]
+              ["Find function" py-find-function
+               :help "Try to find source definition of function at point"]
+              ["Update imports" py-find-imports
+               :help "Update list of top-level imports for completion"])))
+        map))
 
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
@@ -2403,9 +2403,8 @@ If no arg given and py-shell-name not set yet, shell is set according to `py-she
 
 (add-hook 'py-shell-hook
           '(lambda ()
-             ;; (require 'py-shell-complete) ; nil t)
-             (when (functionp 'py-shell-complete)
-               (local-set-key [tab] 'py-shell-complete))))
+             (when (functionp 'py-complete)
+               (local-set-key [tab] 'py-complete))))
 
 (defun py-shell (&optional argprompt)
   "Start an interactive Python interpreter in another window.
@@ -8473,40 +8472,4 @@ This is a no-op if `python-check-comint-prompt' returns nil."
 	(prog1 python-preoutput-result
 	  (kill-local-variable 'python-preoutput-result))))))
 
-(defun py-symbol-completions (symbol)
-  "Return a list of completions of the string SYMBOL from Python process.
-The list is sorted.
-Uses `python-imports' to load modules against which to complete."
-  (when (stringp symbol)
-    (let ((python-imports (py-find-global-imports))
-          (completions
-	   (condition-case ()
-	       (car (read-from-string
-		     (py-send-receive
-		      (format "emacs.complete(%S,%s)"
-			      (substring-no-properties symbol)
-			      python-imports))))
-	     (error nil))))
-      (sort
-       ;; We can get duplicates from the above -- don't know why.
-       (delete-dups completions)
-       #'string<))))
-
-(defalias 'psc 'py-shell-complete)
-(defun py-shell-complete ()
-  (interactive "*")
-  (let* ((word (py-dot-word-before-point))
-         result)
-    (if (equal word "")
-	(tab-to-tab-stop)	   ; non nil so the completion is over
-      (setq result (car (py-symbol-completions word)))
-      (if (eq result nil)
-	  (message "Could not reach Python process")
-	(let ((comint-completion-addsuffix nil)
-	      (completions (if (split-string "\n" "\n")
-			       (split-string result "\n" t) ; XEmacs
-			     (split-string result "\n"))))
-	  (py-shell-dynamic-simple-complete word completions))))))
-
-(provide 'python-mode)
 ;;; python-mode.el ends here
