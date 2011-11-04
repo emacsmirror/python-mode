@@ -1983,6 +1983,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
             (setq py-install-directory default-directory))))
   (py-set-load-path)
   (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
+  (find-file (concat py-install-directory  "/completion/pycomplete.el"))
+  (eval-buffer)
+  (kill-buffer "pycomplete.el")
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)
