@@ -1122,7 +1122,6 @@ If you ignore the location `M-x py-guess-pdb-path' might display it.
 		     (setq indent-tabs-mode nil)))
 (custom-add-option 'python-mode-hook 'turn-on-eldoc-mode)
 (custom-add-option 'python-mode-hook 'abbrev-mode)
-;; (custom-add-option 'python-mode-hook 'python-setup-brm)
 
 (make-obsolete-variable 'jpython-mode-hook 'jython-mode-hook nil)
 (defvar jython-mode-hook nil
@@ -1549,7 +1548,7 @@ When non-nil, arguments are printed."
   :group 'python)
 
 ;; Pymacs start
-(defcustom py-load-python-mode-pymacs-p  t
+(defcustom py-load-python-mode-pymacs-p  nil
  "If Pymacs as delivered with python-mode.el shall be loaded.
 Default is non-nil.
 
@@ -1983,10 +1982,10 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
           (default-directory
             (setq py-install-directory default-directory))))
   (py-set-load-path)
-  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
-  (find-file (concat py-install-directory  "/completion/pycomplete.el"))
-  (eval-buffer)
-  (kill-buffer "pycomplete.el")
+  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs)
+        (find-file (concat py-install-directory "/completion/pycomplete.el"))
+        (eval-buffer)
+        (kill-buffer "pycomplete.el"))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)
@@ -7968,7 +7967,6 @@ Interactively, prompt for name."
 		     (setq indent-tabs-mode nil)))
 (custom-add-option 'python-mode-hook 'turn-on-eldoc-mode)
 (custom-add-option 'python-mode-hook 'abbrev-mode)
-(custom-add-option 'python-mode-hook 'python-setup-brm)
 
 ;;;###autoload
 (define-derived-mode jython-mode python-mode  "Jython"
