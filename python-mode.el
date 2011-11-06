@@ -8400,8 +8400,6 @@ and resending the lines later. The lines are stored in reverse order")
 				     (match-end 0))))))
       imports)))
 
-;; (define-key py-mode-map "\M-\C-i"  'py-complete)
-
 (defun py-shell-execute-string-now (string)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
@@ -8467,3 +8465,4 @@ This is a no-op if `python-check-comint-prompt' returns nil."
 	  (kill-local-variable 'python-preoutput-result))))))
 
 ;;; python-mode.el ends here
+(provide 'python-mode)
