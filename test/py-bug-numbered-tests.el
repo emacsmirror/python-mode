@@ -109,6 +109,7 @@
          'incorrect-use-of-region-in-py-shift-left-lp:875951-test
          'indent-after-multiple-except-statements-lp:883815-test
          'wrongly-highlighted-as-keywords-lp-885144-test
+         'glitch-when-indenting-lists-lp-886473-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -1980,6 +1981,20 @@ latest_sum = 5
   (goto-char 55)
   (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "wrongly-highlighted-as-keywords-lp-885144-test failed"))
 
+(defun glitch-when-indenting-lists-lp-886473-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+def foo(bar, baz):
+    pass
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'glitch-when-indenting-lists-lp-886473-base arg teststring)))
+
+(defun glitch-when-indenting-lists-lp-886473-base ()
+    (goto-char 60)
+    (py-newline-and-indent)
+    (assert (eq 69 (point))  nil "glitch-when-indenting-lists-lp-886473-test failed"))
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here

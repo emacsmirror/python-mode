@@ -3455,8 +3455,16 @@ This function is normally used by `indent-line-function' resp.
     "Add a newline and indent to outmost reasonable indent.
 When indent is set back manually, this is honoured in following lines. "
   (interactive "*")
+  (let (erg)
     (newline)
-    (indent-to-column (py-compute-indentation)))
+    (setq erg (indent-to-column (py-compute-indentation)))
+    (when (and (looking-at "[ \t]+")
+               (nth 1 (if (featurep 'xemacs)
+                          (parse-partial-sexp (point-min) (point))
+                        (syntax-ppss))))
+      (delete-region (match-beginning 0) (match-end 0)))
+    (when (interactive-p) (message "%s" erg))
+    erg))
 
 (defalias 'py-newline-and-close-block 'py-newline-and-dedent)
 (defun py-newline-and-dedent ()
