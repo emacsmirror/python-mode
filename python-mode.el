@@ -1945,20 +1945,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
                   (py-goto-beyond-block)
                   (skip-chars-backward " \t\n"))
                 nil))
-  (add-hook 'python-mode-hook 'py-beg-of-defun-function)
-  (add-hook 'python-mode-hook 'py-end-of-defun-function)
-  (set (make-local-variable 'eldoc-documentation-function)
-       #'python-eldoc-function)
-  (add-hook 'eldoc-mode-hook
-	    (lambda () (run-python nil t)) ; need it running
-	    nil t)
-  (add-hook 'completion-at-point-functions
-            'python-completion-at-point nil 'local)
-  ;;  (add-hook 'python-mode-hook 'py-versions-mode)
-  ;; Run the mode hook.  Note that py-mode-hook is deprecated.
-  (if python-mode-hook
-      (run-hooks 'python-mode-hook)
-    (run-hooks 'py-mode-hook))
   ;; Now do the automagical guessing
   (if py-smart-indentation
       (let ((offset py-indent-offset))
@@ -1982,10 +1968,25 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
           (default-directory
             (setq py-install-directory default-directory))))
   (py-set-load-path)
-  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs)
+  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
         (find-file (concat py-install-directory "/completion/pycomplete.el"))
         (eval-buffer)
-        (kill-buffer "pycomplete.el"))
+  (kill-buffer "pycomplete.el")
+  (add-hook 'python-mode-hook 'py-beg-of-defun-function)
+  (add-hook 'python-mode-hook 'py-end-of-defun-function)
+  (set (make-local-variable 'eldoc-documentation-function)
+       #'python-eldoc-function)
+  (add-hook 'eldoc-mode-hook
+	    (lambda () (run-python nil t)) ; need it running
+	    nil t)
+  (add-hook 'completion-at-point-functions
+            'py-completion-at-point nil 'local)
+  ;;  (add-hook 'python-mode-hook 'py-versions-mode)
+  ;; Run the mode hook.  Note that py-mode-hook is deprecated.
+  (run-mode-hooks
+   (if python-mode-hook
+       'python-mode-hook
+     'py-mode-hook))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)
