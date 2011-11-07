@@ -1143,6 +1143,13 @@ If you ignore the location `M-x py-guess-pdb-path' might display it.
 This menu will get created automatically if you have the `easymenu'
 package.  Note that the latest X/Emacs releases contain this package.")
 
+(defcustom py-complete-function 'py-completion-at-point
+  "Function used for completion in buffers. "
+  :type '(choice (const :tag "py-completion-at-point" py-completion-at-point)
+		 (const :tag "Pymacs based py-complete" py-complete)
+                 (const :tag "IPython's ipython-complete" ipython-complete))
+  :group 'python)
+
 (setq py-mode-map
       (let ((map (make-sparse-keymap)))
         ;; electric keys
@@ -1197,8 +1204,8 @@ package.  Note that the latest X/Emacs releases contain this package.")
         (define-key map [(control c)(control w)] 'py-pychecker-run)
         (define-key map [(control c)(c)] 'py-compute-indentation)
         ;; (define-key map [(meta tab)] 'py-complete)
-        (substitute-key-definition 'complete-symbol 'py-complete
-                                   map global-map)
+        (substitute-key-definition 'complete-symbol
+                                   'completion-at-point map global-map)
         ;; shadow global bindings for newline-and-indent
         (mapc #'(lambda (key)
                   (define-key map key 'py-newline-and-indent))
@@ -1345,7 +1352,7 @@ package.  Note that the latest X/Emacs releases contain this package.")
 
 (setq py-shell-map
       (let ((map (copy-keymap comint-mode-map)))
-        (define-key map [tab] 'py-complete)
+        (define-key map [tab] py-complete-function)
         (define-key map (kbd "RET") 'comint-send-input)
         (define-key map "\C-c-" 'py-up-exception)
         (define-key map "\C-c=" 'py-down-exception)
@@ -1968,10 +1975,11 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
           (default-directory
             (setq py-install-directory default-directory))))
   (py-set-load-path)
-  (when py-load-python-mode-pymacs-p (py-load-python-mode-pymacs))
-        (find-file (concat py-install-directory "/completion/pycomplete.el"))
-        (eval-buffer)
-  (kill-buffer "pycomplete.el")
+  (when py-load-python-mode-pymacs-p
+    (py-load-python-mode-pymacs)
+    (find-file (concat py-install-directory "/completion/pycomplete.el"))
+    (eval-buffer)
+    (kill-buffer "pycomplete.el"))
   (add-hook 'python-mode-hook 'py-beg-of-defun-function)
   (add-hook 'python-mode-hook 'py-end-of-defun-function)
   (set (make-local-variable 'eldoc-documentation-function)
@@ -1980,7 +1988,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
 	    (lambda () (run-python nil t)) ; need it running
 	    nil t)
   (add-hook 'completion-at-point-functions
-            'py-completion-at-point nil 'local)
+            py-complete-function nil 'local)
   ;;  (add-hook 'python-mode-hook 'py-versions-mode)
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
   (run-mode-hooks
@@ -6925,7 +6933,7 @@ in the current *Python* session."
         (process-send-string python-process
                               (format ipython-completion-command-string pattern))
         (accept-process-output python-process)
-	
+
 	;(message (format "DEBUG return: %s" ugly-return))
         (setq completions
               (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
@@ -7892,9 +7900,7 @@ Used with `eval-after-load'."
 	 ("(python-lib)Function-Method-Variable Index" nil "")
 	 ("(python-lib)Miscellaneous Index" nil ""))))))
 (eval-after-load "info-look" '(python-after-info-look))
-
 
-
 ;;;; Completion.
 
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
@@ -7965,7 +7971,7 @@ Uses `python-imports' to load modules against which to complete."
        (delete-dups completions)
        #'string<))))
 
-(defun python-completion-at-point ()
+(defun py-completion-at-point ()
   (let ((end (point))
 	(start (save-excursion
 		 (and (re-search-backward
@@ -7976,6 +7982,8 @@ Uses `python-imports' to load modules against which to complete."
     (when start
       (list start end
             (completion-table-dynamic 'python-symbol-completions)))))
+
+;; Completion end
 
 ;;;; FFAP support
 (defun python-module-path (module)
@@ -7984,7 +7992,6 @@ Uses `python-imports' to load modules against which to complete."
 
 (eval-after-load "ffap"
   '(push '(python-mode . python-module-path) ffap-alist))
-
 ;;;; Find-function support
 
 ;; Fixme: key binding?
@@ -8012,8 +8019,7 @@ Interactively, prompt for name."
     (when (integerp line)
       (goto-char (point-min))
       (forward-line (1- line)))))
-
-
+
 ;;;; Modes.
 
 ;; pdb tracking is alert once this file is loaded, but takes no action if
