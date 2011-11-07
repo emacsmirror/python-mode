@@ -2007,6 +2007,14 @@ It is added to `interpreter-mode-alist' and `py-choose-shell'.
   (when jython-mode-hook
       (run-hooks 'jython-mode-hook)))
 
+;;;###autoload
+(add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
+;;;###autoload
+(add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
+(add-to-list 'same-window-buffer-names (purecopy "*Python*"))
+
 ;; It's handy to add recognition of Python files to the
 ;; interpreter-mode-alist and to auto-mode-alist.  With the former, we
 ;; can specify different `derived-modes' based on the #! line, but
@@ -2474,6 +2482,8 @@ interpreter.
     for options to pass to the Ipython interpreter. "
   (interactive)
   (let ((py-shell-name "ipython"))
+    (local-unset-key [tab])
+    (define-key py-shell-map [tab] 'ipython-complete)
     (py-shell argprompt)))
 
 (defun python2 (&optional argprompt)
@@ -6872,18 +6882,69 @@ If point is inside a string, narrow to that string and fill.
       (and mark-active transient-mark-mode
            (not (eq (condition-case nil (region-beginning)(error nil)) (condition-case nil (region-end) (error nil))))))))
 
-;; Completion start
-;; Completion in GNU Emacs uses code based on python-el,
-;; provide for XEmacs based on `py-shell' below
+;; IPython completion start
+;; see also
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
 
-;;;###autoload
-(add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
-;;;###autoload
-(add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
-;;;###autoload
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
-(add-to-list 'same-window-buffer-names (purecopy "*Python*"))
+(defvar ipython-completion-command-string
+  "print(';'.join(get_ipython().Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n"
+  "The string send to ipython to query for all possible completions")
+
+(setq ipython-completion-command-string                                   "print(';'.join(__IP.Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n")
+
+(defun ipython-complete ()
+      "Try to complete the python symbol before point. Only knows about the stuff
+in the current *Python* session."
+      (interactive)
+      (let* ((ugly-return nil)
+             (sep ";")
+             (python-process (or (get-buffer-process (current-buffer))
+                                 ;XXX hack for .py buffers
+                                 (get-process py-which-bufname)))
+             ;; XXX currently we go backwards to find the beginning of an
+             ;; expression part; a more powerful approach in the future might be
+             ;; to let ipython have the complete line, so that context can be used
+             ;; to do things like filename completion etc.
+             (beg (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
+                                  (point)))
+             (end (point))
+             (pattern (buffer-substring-no-properties beg end))
+             (completions nil)
+             (completion-table nil)
+             completion
+             (comint-output-filter-functions
+              (append comint-output-filter-functions
+                      '(ansi-color-filter-apply
+                        (lambda (string)
+                                        ;(message (format "DEBUG filtering: %s" string))
+                          (setq ugly-return (concat ugly-return string))
+                          (delete-region comint-last-output-start
+                                         (process-mark (get-buffer-process (current-buffer)))))))))
+	;(message (format "#DEBUG pattern: '%s'" pattern))
+        (process-send-string python-process
+                              (format ipython-completion-command-string pattern))
+        (accept-process-output python-process)
+	
+	;(message (format "DEBUG return: %s" ugly-return))
+        (setq completions
+              (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
+        (setq completion-table (loop for str in completions
+                                     collect (list str nil)))
+        (setq completion (try-completion pattern completion-table))
+        (cond ((eq completion t))
+              ((null completion)
+               (message "Can't find completion for \"%s\"" pattern)
+               (ding))
+              ((not (string= pattern completion))
+               (delete-region beg end)
+               (insert completion))
+              (t
+               (message "Making completion list...")
+               (with-output-to-temp-buffer "*Python Completions*"
+                 (display-completion-list (all-completions pattern completion-table)))
+               (message "Making completion list...%s" "done")))))
+
+;; IPython completion end
 
 ;;;; Utility stuff
 
