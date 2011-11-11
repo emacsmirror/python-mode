@@ -6959,10 +6959,6 @@ Uses `python-imports' to load modules against which to complete."
       (list start end
             (completion-table-dynamic 'python-symbol-completions)))))
 
-;; python-mode-reassambled.el ends here
-
-(require 'python-mode-test)
-
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
 (if py-mode-output-map
