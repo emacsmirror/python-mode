@@ -1165,7 +1165,6 @@ Currently-active file is at the head of the list.")
 ;;(require 'components-shell-completion)
 
 ;;; python-components-edit.el
-;;; Code:
 
 ;; (defcustom py-just-one-whitespace nil
 ;;   "If filling functions should normalize whitespaces in region. "
@@ -2357,9 +2356,7 @@ class C(B):
       (goto-char orig)
       (insert (concat "super()." funcname "(" args ")")))))
 
-
 ;;; python-components-intern.el
-;;; Code:
 
 (defun py-nesting-level (&optional pps)
   "Accepts the output of `parse-partial-sexp'. "
@@ -3028,9 +3025,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 (defconst py-help-address "python-mode@python.org"
   "Address accepting submission of bug reports.")
 
-
 ;;; python-components-move.el
-;;; Code:
 
 ;; Block
 (defalias 'py-previous-block 'py-beginning-of-block)
@@ -3910,8 +3905,6 @@ while `py-expression' would copy and return
 (
         os.path.basename(sys.argv[0]))
 
-;;;;;
-
 Also for existing commands a shorthand is defined:
 
 (defalias 'py-statement 'py-copy-statement)"
@@ -4532,9 +4525,7 @@ Takes a list, INDENT and START position. "
           (when last (goto-char last))
           last))))
 
-
 ;;; python-mode-execute.el
-;;; Code:
 
 (defcustom py-source-modes '(python-mode jython-mode)
   "Used to determine if a buffer contains Python source code.
@@ -5626,9 +5617,7 @@ bottom) of the trackback stack is encountered."
         (py-jump-to-exception file line py-line-number-offset)
       (error "%s of traceback" errwhere))))
 
-
 ;;; python-mode-send.el
-;;; Code:
 
 (defun py-output-buffer-filter (&optional beg end)
   (interactive "*")
@@ -5657,9 +5646,7 @@ bottom) of the trackback stack is encountered."
     ;; as to make sure we terminate the multiline instruction.
     (comint-send-string (python-proc) "\n")))
 
-
 ;;; python-components-pdb.el
-;;; Code:
 
 ;; pdbtrack constants
 (defconst py-pdbtrack-stack-entry-regexp
@@ -5676,7 +5663,6 @@ bottom) of the trackback stack is encountered."
 ;;
 ;; The debugger outputs program-location lines that look like this:
 ;;    (/usr/bin/zonetab2pot.py:15): makePOT")
-
 
 (defconst py-pdbtrack-marker-regexp-file-group 1
   "Group position in gud-pydb-marker-regexp that matches the file name.")
@@ -5861,9 +5847,7 @@ named for funcname or define a function funcname."
   (interactive)
   (py-pdbtrack-toggle-stack-tracking 0))
 
-
 ;;; python-components-help.el
-;;; Code:
 
 (defun py-fetch-docu ()
   "Lookup in current buffer for the doku for the symbol at point.
@@ -5871,7 +5855,6 @@ Useful for newly defined symbol, not known to python yet. "
   (interactive)
   (let* ((symb (prin1-to-string (symbol-at-point)))
          (args (py-expression))
-
 
         erg)
     (save-restriction
@@ -5887,7 +5870,6 @@ Useful for newly defined symbol, not known to python yet. "
             (erase-buffer)
             (when (interactive-p) (switch-to-buffer (current-buffer)))
             (insert erg)))))))
-
 
 (defun ar-py-find-imports ()
   (let ((imports ""))
@@ -5928,9 +5910,6 @@ Useful for newly defined symbol, not known to python yet. "
     (py-process-file file "*Python-Help*")
     (when (file-readable-p file)
       (delete-file file))))
-
-
-
 
 
 ;; Documentation functions
@@ -6231,7 +6210,6 @@ Obscure:  When python-mode is first loaded, it looks for all bindings
 to newline-and-indent in the global keymap, and shadows them with
 local bindings to py-newline-and-indent."))
 
-
 ;; (require 'info-look)
 ;; The info-look package does not always provide this function (it
 ;; appears this is the case with XEmacs 21.1)
@@ -6264,7 +6242,6 @@ Interactively, prompt for name."
                             nil nil symbol))
          (sourcefile (py-send-string (concat "inspect.getsourcefile (inspect.getmodule (" symbol ")))")))
          (sourceline (py-send-string (concat "inspect.getsourcelines (" symbol ")))")))))))
-
 
   ;; (let* ((loc (py-send-receive (format "emacs.location_of (%S, %s)"
   ;;       				   name python-imports)))
@@ -6368,9 +6345,7 @@ This is a no-op if `python-check-comint-prompt' returns nil."
 					  (format "%S" python-imports) t t)))))
   (when (interactive-p) (message "%s" (car (read-from-string python-imports)))))
 
-
 ;;; python-components-extensions.el
-;;; Code:
 
 (unless py-mode-map
   (setq py-mode-map (make-sparse-keymap)))
@@ -6691,9 +6666,7 @@ If final line isn't empty and `py-close-block-provides-newline' non-nil, insert 
   (forward-line 1)
   (back-to-indentation))
 
-
 ;;; python-components-imenu.el
-;;; Code:
 
 ;; Imenu definitions
 
@@ -6952,10 +6925,7 @@ of the first definition found."
     (goto-char orig)
     index-alist))
 
-
 ;;; python-components-completion.el
-;;; Code:
-
 
 ;; Fixme: This fails the first time if the sub-process isn't already
 ;; running.  Presumably a timing issue with i/o to the process.
@@ -6988,8 +6958,6 @@ Uses `python-imports' to load modules against which to complete."
     (when start
       (list start end
             (completion-table-dynamic 'python-symbol-completions)))))
-
-
 
 ;; python-mode-reassambled.el ends here
 
@@ -8006,7 +7974,7 @@ in a buffer that doesn't have a local value of `python-buffer'."
       (setq-default python-buffer python-buffer)
     (error "No local value of `python-buffer'")))
 
-;;;; Context-sensitive help.
+;;; Context-sensitive help.
 
 (defvar view-return-to-alist)
 ;; (eval-when-compile (autoload 'help-buffer "help-fns"))
@@ -8113,7 +8081,7 @@ instance.  Assumes an inferior Python is running."
 				 (buffer-substring-no-properties (point) point)
 				 python-imports))))))))))))
 
-;;;; Info-look functionality.
+;;; Info-look functionality.
 
 (declare-function info-lookup-maybe-add-help "info-look" (&rest arg))
 
@@ -8167,7 +8135,7 @@ Used with `eval-after-load'."
 	 ("(python-lib)Miscellaneous Index" nil ""))))))
 (eval-after-load "info-look" '(python-after-info-look))
 
-;;;; Miscellany.
+;;; Miscellany.
 
 (defcustom python-jython-packages '("java" "javax" "org" "com")
   "Packages implying `jython-mode'.
@@ -8357,7 +8325,7 @@ Uses `python-beginning-of-block', `python-end-of-block'."
 ;; definition (separate from BicycleRepairMan).  Complicated by
 ;; finding the right qualified name.
 
-;;;; Completion.
+;;; Completion.
 
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
 (defvar python-imports "None"
@@ -8439,7 +8407,7 @@ Uses `python-imports' to load modules against which to complete."
       (list start end
             (completion-table-dynamic 'python-symbol-completions)))))
 
-;;;; FFAP support
+;;; FFAP support
 
 (defun python-module-path (module)
   "Function for `ffap-alist' to return path to MODULE."
@@ -8448,7 +8416,7 @@ Uses `python-imports' to load modules against which to complete."
 (eval-after-load "ffap"
   '(push '(python-mode . python-module-path) ffap-alist))
 
-;;;; Find-function support
+;;; Find-function support
 
 ;; Fixme: key binding?
 
@@ -8477,7 +8445,7 @@ Interactively, prompt for name."
       (forward-line (1- line)))))
 
 
-;;;; Bicycle Repair Man support
+;;; Bicycle Repair Man support
 
 (autoload 'pymacs-load "pymacs" nil t)
 (autoload 'brm-init "bikemacs")
@@ -8528,7 +8496,7 @@ without confirmation."
 	      ["Undo Last Refactoring" brm-undo :help ""]))))
     (error (error "BicycleRepairMan setup failed: %s" data))))
 
-;;;; Modes.
+;;; Modes
 
 ;; pdb tracking is alert once this file is loaded, but takes no action if
 ;; `python-pdbtrack-do-tracking-p' is nil.
@@ -8859,7 +8827,7 @@ filter."
 order to allow injecting completion command between keyboard interrupt
 and resending the lines later. The lines are stored in reverse order")
 
-;;; need to clear py-shell-input-lines if primary prompt found
+;; need to clear py-shell-input-lines if primary prompt found
 
 ;; (defun py-comint-output-filter-function (string)
 ;;   "Watch output for Python prompt and exec next file waiting in queue.
@@ -8877,8 +8845,6 @@ and resending the lines later. The lines are stored in reverse order")
 ;; 	(let ((pyproc (get-buffer-process (current-buffer))))
 ;; 	  (py-execute-file pyproc (car py-file-queue))))
 ;;     ))
-
-;;;
 
 (defun py-shell-simple-send (proc string)
   (setq py-shell-input-lines (cons string py-shell-input-lines))
@@ -9147,8 +9113,5 @@ in the current *Python* session."
              (display-completion-list (all-completions pattern completion-table)))
            (message "Making completion list...%s" "done")))))
 
-;; Completion start
-
-(provide 'python-components-mode)
 (provide 'python-mode)
-;;; python-components-mode.el ends her
+;;; python-mode.el ends here
