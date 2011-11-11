@@ -1979,6 +1979,7 @@ latest_sum = 5
 (defun wrongly-highlighted-as-keywords-lp-885144-base ()
   (font-lock-fontify-buffer)
   (goto-char 55)
+  (sit-for 0.1) 
   (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "wrongly-highlighted-as-keywords-lp-885144-test failed"))
 
 (defun glitch-when-indenting-lists-lp-886473-test (&optional arg load-branch-function)
@@ -1995,6 +1996,24 @@ def foo(bar, baz):
     (goto-char 60)
     (py-newline-and-indent)
     (assert (eq 69 (point))  nil "glitch-when-indenting-lists-lp-886473-test failed"))
+
+
+(defun keywords-in-identifiers-highlighted-incorrectly-lp:888338-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+def possibly_break():
+    pass
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'keywords-in-identifiers-highlighted-incorrectly-lp:888338-base arg teststring)))
+
+(defun keywords-in-identifiers-highlighted-incorrectly-lp:888338-base ()
+  (font-lock-fontify-buffer)
+  (sit-for 0.1) 
+  (goto-char 55)
+  (assert (eq (get-char-property (point) 'face) 'font-lock-function-name-face) nil "keywords-in-identifiers-highlighted-incorrectly-lp:888338-test failed"))
+
 
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
