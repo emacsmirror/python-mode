@@ -3,6 +3,15 @@
 ;; Maintainer: Andreas Roehler <andreas.roehler@online.de>
 ;; Keywords: languages, processes, python, oop
 
+;; Copyright (C) 1992,1993,1994  Tim Peters
+
+;; Author: 2003-2011 https://launchpad.net/python-mode
+;;         1995-2002 Barry A. Warsaw
+;;         1992-1994 Tim Peters
+;; Maintainer: python-mode@python.org
+;; Created:    Feb 1992
+;; Keywords:   python languages oop
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -42,7 +51,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "This is experimental `python-components-mode' not released yet, see https://code.launchpad.net/~a-roehler/python-mode/python-mode-components")
+(defconst py-version "6.0.4")
 
 (defsubst py-in-string-or-comment-p ()
   "Return beginning position if point is in a Python literal (a comment or string)."
@@ -179,6 +188,38 @@
             ["Update imports" py-find-imports
              :help "Update list of top-level imports for completion"]))
         map))
+
+;;; Intern
+(defun py-point (position)
+  "Returns the value of point at certain commonly referenced POSITIONs.
+POSITION can be one of the following symbols:
+
+  bol -- beginning of line
+  eol -- end of line
+  bod -- beginning of def or class
+  eod -- end of def or class
+  bob -- beginning of buffer
+  eob -- end of buffer
+  boi -- back to indentation
+  bos -- beginning of statement
+
+This function does not modify point or mark."
+  (let ((here (point)))
+    (cond
+     ((eq position 'bol) (beginning-of-line))
+     ((eq position 'eol) (end-of-line))
+     ((eq position 'bod) (py-beginning-of-def-or-class 'either))
+     ((eq position 'eod) (py-end-of-def-or-class 'either))
+     ;; Kind of funny, I know, but useful for py-up-exception.
+     ((eq position 'bob) (goto-char (point-min)))
+     ((eq position 'eob) (goto-char (point-max)))
+     ((eq position 'boi) (back-to-indentation))
+     ((eq position 'bos) (py-beginning-of-statement))
+     (t (error "Unknown buffer position requested: %s" position))
+     )
+    (prog1
+        (point)
+      (goto-char here))))
 
 
 ;;; Python specialized rx
@@ -4045,7 +4086,7 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
-;; Helper functions
+;;; Helper functions
 
 (defun py-forward-line (&optional arg)
   "Goes to end of line after forward move.
@@ -7311,37 +7352,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed"
     (prog1
         (point)
       (when (interactive-p) (message "%s" pos))
-      (goto-char here))))
-
-(defun py-point (position)
-  "Returns the value of point at certain commonly referenced POSITIONs.
-POSITION can be one of the following symbols:
-
-  bol -- beginning of line
-  eol -- end of line
-  bod -- beginning of def or class
-  eod -- end of def or class
-  bob -- beginning of buffer
-  eob -- end of buffer
-  boi -- back to indentation
-  bos -- beginning of statement
-
-This function does not modify point or mark."
-  (let ((here (point)))
-    (cond
-     ((eq position 'bol) (beginning-of-line))
-     ((eq position 'eol) (end-of-line))
-     ((eq position 'bod) (py-beginning-of-def-or-class 'either))
-     ((eq position 'eod) (py-end-of-def-or-class 'either))
-     ;; Kind of funny, I know, but useful for py-up-exception.
-     ((eq position 'bob) (goto-char (point-min)))
-     ((eq position 'eob) (goto-char (point-max)))
-     ((eq position 'boi) (back-to-indentation))
-     ((eq position 'bos) (py-beginning-of-statement))
-     (t (error "Unknown buffer position requested: %s" position))
-     )
-    (prog1
-        (point)
       (goto-char here))))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
