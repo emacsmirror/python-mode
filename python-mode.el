@@ -44,6 +44,11 @@
 
 (defconst py-version "This is experimental `python-components-mode' not released yet, see https://code.launchpad.net/~a-roehler/python-mode/python-mode-components")
 
+(defsubst py-in-string-or-comment-p ()
+  "Return beginning position if point is in a Python literal (a comment or string)."
+  (nth 8 (if (featurep 'xemacs)
+             (parse-partial-sexp (point-min) (point))
+           (syntax-ppss))))
 
 ;;; Bindings
 
@@ -468,7 +473,7 @@ If you ignore the location `M-x py-guess-pdb-path' might display it.
   :type 'string
   :group 'python)
 
-(defcustom py-load-python-mode-pymacs-p  t
+(defcustom py-load-python-mode-pymacs-p  nil
  "If Pymacs as delivered with python-mode.el shall be loaded.
 Default is non-nil.
 
@@ -2716,12 +2721,6 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
                             (when (nth 3 pps) (nth 8 pps)))))))
     (when (interactive-p) (message "%s" erg))
     erg))
-
-(defsubst py-in-string-or-comment-p ()
-  "Return beginning position if point is in a Python literal (a comment or string)."
-  (nth 8 (if (featurep 'xemacs)
-             (parse-partial-sexp (point-min) (point))
-           (syntax-ppss))))
 
 (defun py-in-statement-p ()
   "Returns list of beginning and end-position if inside.
