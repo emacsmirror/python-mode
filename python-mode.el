@@ -1421,9 +1421,15 @@ This function is normally used by `indent-line-function' resp.
   "Add a newline and indent to outmost reasonable indent.
 When indent is set back manually, this is honoured in following lines. "
   (interactive "*")
-  (let (erg)
-    (newline)
-    (setq erg (indent-to-column (py-compute-indentation)))
+  (let ((ci (current-indentation))
+        erg)
+    (if (< ci (current-column))         ; if point beyond indentation
+        (progn
+          (newline)
+          (setq erg (indent-to-column (py-compute-indentation))))
+      (beginning-of-line)
+      (insert-char ?\n 1)
+      (setq erg (move-to-column (py-compute-indentation))))
     (when (and (looking-at "[ \t]+")
                (nth 1 (if (featurep 'xemacs)
                           (parse-partial-sexp (point-min) (point))
