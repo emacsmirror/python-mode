@@ -81,7 +81,8 @@
         (define-key map [(control meta e)] 'py-end-of-def-or-class)
         (define-key map [(control j)] 'py-newline-and-indent)
         ;; Most Pythoneers expect RET `py-newline-and-indent'
-        (define-key map (kbd "RET") 'py-newline-and-dedent)
+        ;; (define-key map (kbd "RET") 'py-newline-and-dedent)
+        (define-key map (kbd "RET") 'py-newline-and-indent)
         (define-key map [(super backspace)] 'py-dedent)
         ;; (define-key map [(control return)] 'py-newline-and-dedent)
         ;; indentation level modifiers
