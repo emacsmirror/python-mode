@@ -5700,8 +5700,11 @@ bottom) of the trackback stack is encountered."
    "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
   "Regular expression pdbtrack uses to find a stack trace entry.")
 
-(defconst py-pdbtrack-input-prompt "\n[(<]*[Pp]y?db[>)]+ "
-  "Regular expression pdbtrack uses to recognize a pdb prompt.")
+;; ipython.el
+;; Recognize the ipython pdb, whose prompt is 'ipdb>' or  'ipydb>'
+;;instead of '(Pdb)'
+(setq py-pdbtrack-input-prompt "\n[(<]*[Ii]?[Pp]y?db[>)]+ ")
+(setq pydb-pydbtrack-input-prompt "\n[(]*ipydb[>)]+ ")
 
 ;; pydb-328837.diff
 ;; (defconst py-pydbtrack-stack-entry-regexp
@@ -7523,7 +7526,7 @@ element matches `python-python-command'."
   "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
   "Regular expression pdbtrack uses to find a stack trace entry.")
 
-(defconst python-pdbtrack-input-prompt "\n[(<]*[Pp]db[>)]+ "
+(defconst python-pdbtrack-input-prompt "\n[(<]*[Ii]?[Pp]db[>)]+ "
   "Regular expression pdbtrack uses to recognize a pdb prompt.")
 
 (defconst python-pdbtrack-track-range 10000
