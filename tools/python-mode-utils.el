@@ -72,7 +72,7 @@
               (insert (concat " interpreter. \"
   (interactive)
   (let ((py-shell-name \"" ele "\"))
-    (py-shell argprompt)))\n\n")))
+    (py-shell argprompt t)))\n\n")))
           (unless (commandp (car (read-from-string ele)))
             (insert (concat "(defun " ele " (&optional argprompt)
   \"Start an unique "))
