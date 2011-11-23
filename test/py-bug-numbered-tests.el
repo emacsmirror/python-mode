@@ -110,6 +110,7 @@
          'indent-after-multiple-except-statements-lp:883815-test
          'wrongly-highlighted-as-keywords-lp-885144-test
          'glitch-when-indenting-lists-lp-886473-test
+         'indentation-keyword-lp-885143-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -2013,6 +2014,20 @@ def possibly_break():
   (sit-for 0.1) 
   (goto-char 55)
   (assert (eq (get-char-property (point) 'face) 'font-lock-function-name-face) nil "keywords-in-identifiers-highlighted-incorrectly-lp:888338-test failed"))
+
+
+(defun indentation-keyword-lp-885143-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'indentation-keyword-lp-885143-base arg teststring)))
+
+(defun indentation-keyword-lp-885143-base ()
+    (goto-char 48)
+    (assert (eq 0 (py-compute-indentation))  nil "indentation-keyword-lp-885143-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
