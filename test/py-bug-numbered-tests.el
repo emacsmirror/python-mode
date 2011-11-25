@@ -111,6 +111,7 @@
          'wrongly-highlighted-as-keywords-lp-885144-test
          'glitch-when-indenting-lists-lp-886473-test
          'indentation-keyword-lp-885143-test
+         'py-shell-complete-lp-328836-test
          'py-shebang-consider-ipython-lp-849293-test
          'UnicodeEncodeError-lp:550661-test
          'py-shebang-ipython-env-lp-849293-test
@@ -1980,7 +1981,7 @@ latest_sum = 5
 (defun wrongly-highlighted-as-keywords-lp-885144-base ()
   (font-lock-fontify-buffer)
   (goto-char 55)
-  (sit-for 0.1) 
+  (sit-for 0.1)
   (assert (eq (get-char-property (point) 'face) 'py-variable-name-face) nil "wrongly-highlighted-as-keywords-lp-885144-test failed"))
 
 (defun glitch-when-indenting-lists-lp-886473-test (&optional arg load-branch-function)
@@ -2011,7 +2012,7 @@ def possibly_break():
 
 (defun keywords-in-identifiers-highlighted-incorrectly-lp:888338-base ()
   (font-lock-fontify-buffer)
-  (sit-for 0.1) 
+  (sit-for 0.1)
   (goto-char 55)
   (assert (eq (get-char-property (point) 'face) 'font-lock-function-name-face) nil "keywords-in-identifiers-highlighted-incorrectly-lp:888338-test failed"))
 
@@ -2028,6 +2029,23 @@ import sys
 (defun indentation-keyword-lp-885143-base ()
     (goto-char 48)
     (assert (eq 0 (py-compute-indentation))  nil "indentation-keyword-lp-885143-test failed"))
+
+
+(defun py-shell-complete-lp-328836-test (&optional arg load-branch-function)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"))
+  (when load-branch-function (funcall load-branch-function))
+  (py-bug-tests-intern 'py-shell-complete-lp-328836-base arg teststring)))
+
+(defun py-shell-complete-lp-328836-base ()
+  (python-dedicated)
+  (goto-char (point-max)) 
+  (insert "pri")
+  (py-shell-complete)
+  (assert (looking-back "print") nil "py-shell-complete-lp-328836-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
