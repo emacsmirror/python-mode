@@ -621,7 +621,7 @@ def foo( self, bar=False ):  # version 12345
 (defun indent-after-assigment-base ()
     (forward-line -1)
     (py-indent-line)
-    (assert (eq 4 (current-column)) nil "indent-after-assigment-test failed"))
+    (assert (eq 4 (current-column)) nil "py-indent-after-assigment-test failed"))
 
 (defun leave-dict-test (&optional arg load-branch-function)
   (interactive "p")
