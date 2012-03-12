@@ -6600,27 +6600,27 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
   (let ((args py-python-command-args)
         (oldbuf (current-buffer)))
     (let* ((buffer
-    (when argprompt
+            (when argprompt
               (cond
                ((eq 4 (prefix-numeric-value argprompt))
-             (setq buffer
-	 (prog1
-                       (read-buffer "Py-Shell buffer: "
+                (setq buffer
+                      (prog1
+                          (read-buffer "Py-Shell buffer: "
                                        (generate-new-buffer-name (py-shell-name-prepare (or pyshellname py-shell-name))))
-	   (if (file-remote-p default-directory)
-	       ;; It must be possible to declare a local default-directory.
-	       (setq default-directory
-		     (expand-file-name
-		      (read-file-name
-		       "Default directory: " default-directory default-directory
-                                 t nil 'file-directory-p)))))))
-            ((and (eq 2 (prefix-numeric-value argprompt))
-                  (fboundp 'split-string))
-             (setq args (split-string
-                         (read-string "Py-Shell arguments: "
-                                      (concat
+                        (if (file-remote-p default-directory)
+                            ;; It must be possible to declare a local default-directory.
+                            (setq default-directory
+                                  (expand-file-name
+                                   (read-file-name
+                                    "Default directory: " default-directory default-directory
+                                    t nil 'file-directory-p)))))))
+               ((and (eq 2 (prefix-numeric-value argprompt))
+                     (fboundp 'split-string))
+                (setq args (split-string
+                            (read-string "Py-Shell arguments: "
+                                         (concat
                                           (mapconcat 'identity py-python-command-args " ") " "))))))))
-         (py-process-name
+           (py-process-name
             (cond (buffer
                    (if
                        (get-process
@@ -6637,60 +6637,73 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
                    py-shell-name)
                   ((or (string= "" py-shell-name)(null py-shell-name))
                    (py-choose-shell))))
-                ;; already in py-choose-shell
-                (py-use-local-default
-                 (if (not (string= "" py-shell-local-path))
-                     (expand-file-name py-shell-local-path)
+           ;; already in py-choose-shell
+           (py-use-local-default
+            (if (not (string= "" py-shell-local-path))
+                (expand-file-name py-shell-local-path)
               (when py-use-local-default
                 (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
-         (py-buffer-name-prepare (unless buffer
-                                   (py-shell-name-prepare py-process-name)))
+           (py-buffer-name-prepare (unless buffer
+                                     (py-shell-name-prepare py-process-name)))
            (py-buffer-name (or buffer py-buffer-name-prepare))
            (pyshellname (downcase (replace-regexp-in-string
                                    "<\\([0-9]+\\)>" ""
                                    (replace-regexp-in-string
                                     "\*" ""
                                     py-buffer-name buffer)))))
-    (py-set-shell-completion-environment pyshellname)
-    ;; comint
+      (py-set-shell-completion-environment pyshellname)
+      (when py-split-windows-on-execute-p
+        (funcall py-split-windows-on-execute-function))
+      ;; comint
       (if buffer
-        (set-buffer (get-buffer-create
+          (set-buffer (get-buffer-create
                        (apply 'make-comint-in-buffer py-buffer-name py-buffer-name pyshellname nil args)))
         (set-buffer (apply 'make-comint-in-buffer py-buffer-name py-buffer-name pyshellname nil args)))
-    (set (make-local-variable 'comint-prompt-regexp)
-	 (concat "\\("
-		 (mapconcat 'identity
-			    (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-			    "\\|")
-		 "\\)"))
-    (add-hook 'comint-output-filter-functions
-              'py-comint-output-filter-function)
-    (setq comint-input-sender 'py-shell-simple-send)
-    (setq comint-input-ring-file-name
+      (set (make-local-variable 'comint-prompt-regexp)
+           (concat "\\("
+                   (mapconcat 'identity
+                              (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+                              "\\|")
+                   "\\)"))
+      (add-hook 'comint-output-filter-functions
+                'py-comint-output-filter-function)
+      (setq comint-input-sender 'py-shell-simple-send)
+      (setq comint-input-ring-file-name
             (if (or (string-match "ipython" py-buffer-name)
                     (string-match "IPython" py-buffer-name))
-              (if (getenv "IPYTHONDIR")
-                  (concat (getenv "IPYTHONDIR") "/history") "~/.ipython/history")
-            (if (getenv "PYTHONHISTORY")
-                (concat (getenv "PYTHONHISTORY") "/" py-buffer-name "_history")
-              (concat "~/." py-buffer-name "_history"))))
-    (comint-read-input-ring t)
-    (set-process-sentinel (get-buffer-process (current-buffer))
-                          #'shell-write-history-on-exit)
-    ;; pdbtrack
-    (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
-    (setq py-pdbtrack-do-tracking-p t)
-    ;;
-    (set-syntax-table python-mode-syntax-table)
-    (ansi-color-for-comint-mode-on)
-    (use-local-map py-shell-map)
-    (add-hook 'py-shell-hook 'py-dirstack-hook)
-    (run-hooks 'py-shell-hook)
-    (when (or (eq switch 'switch)
-              (and (not (eq switch 'noswitch))
-                   py-shell-switch-buffers-on-execute-p))
-      (switch-to-buffer (current-buffer)))
-    (goto-char (point-max))
+                (if (getenv "IPYTHONDIR")
+                    (concat (getenv "IPYTHONDIR") "/history") "~/.ipython/history")
+              (if (getenv "PYTHONHISTORY")
+                  (concat (getenv "PYTHONHISTORY") "/" py-buffer-name "_history")
+                (concat "~/." py-buffer-name "_history"))))
+      (comint-read-input-ring t)
+      (set-process-sentinel (get-buffer-process (current-buffer))
+                            #'shell-write-history-on-exit)
+      ;; pdbtrack
+      (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
+      (setq py-pdbtrack-do-tracking-p t)
+      ;;
+      (set-syntax-table python-mode-syntax-table)
+      (ansi-color-for-comint-mode-on)
+      (use-local-map py-shell-map)
+      (add-hook 'py-shell-hook 'py-dirstack-hook)
+      (run-hooks 'py-shell-hook)
+      (cond ((or (eq switch 'switch)
+                 (and (not (eq switch 'noswitch))
+                      py-shell-switch-buffers-on-execute-p))
+             (switch-to-buffer (current-buffer)))
+            ((and py-split-windows-on-execute-p
+                  (or (eq switch 'noswitch)
+                      (not (eq switch 'switch))))
+             (pop-to-buffer (current-buffer))
+             (delete-other-windows)
+             (when py-split-windows-on-execute-p
+               (funcall py-split-windows-on-execute-function))
+             ;; (message (buffer-name (current-buffer)))
+             (set-buffer oldbuf)
+             (switch-to-buffer (current-buffer))))
+      (goto-char (point-max))
+      (when (and py-verbose-p (interactive-p)) (message py-buffer-name))
       py-buffer-name)))
 
 (defalias 'iyp 'ipython)
