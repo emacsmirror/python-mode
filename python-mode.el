@@ -131,6 +131,14 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-outline-mode-keywords
+  '("class"    "def"    "elif"    "else"    "except"
+    "for"      "if"     "while"   "finally" "try"
+    "with")
+  "Keywords composing visible heads. "
+  :type '(repeat string)
+  :group 'python-mode)
+
 (defcustom py-start-run-py-shell t
   "If `python-mode' should start a python-shell, `py-shell'. Default is `t'.
 
@@ -6499,12 +6507,13 @@ This function is appropriate for `comint-output-filter-functions'."
 
 (defun py-process-name (&optional name dedicated)
   "Return the name of the running Python process, `get-process' willsee it. "
-  (let* ((thisname (if name
-                       (if (string-match "/" name)
-                           (substring name (progn (string-match "\\(.+\\)/\\(.+\\)$" name) (match-beginning 2)))
+  (let* ((sepchar (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -c \"import os; print '%s' % os.sep,\""))))
+         (thisname (if name
+                       (if (string-match sepchar name)
+                           (substring name (progn (string-match (concat "\\(.+\\)" sepchar "\\(.+\\)$") name) (match-beginning 2)))
 
                          name)
-                     (substring py-shell-name (or (string-match "/.+$" py-shell-name) 0))))
+                     (substring py-shell-name (or (string-match (concat sepchar ".+$") py-shell-name) 0))))
          (name (cond (dedicated
                       (make-temp-name (concat thisname "-")))
                      ;; ((string-match "\*" (buffer-name))
@@ -6562,40 +6571,92 @@ interpreter.
   (interactive "P")
   (py-shell argprompt t))
 
+(defun py-shell-name-prepare (name)
+  "Return an appropriate name to display in modeline. "
+  (let ((erg
+         (cond ((string-match "ipython" name)
+                (replace-regexp-in-string "ipython" "IPython" name))
+               ((string-match "jython" name)
+                (replace-regexp-in-string "jython" "Jython" name))
+               ((string-match "python" name)
+                (replace-regexp-in-string "python" "Python" name))
+               (t name))))
+    (unless (string-match "^\*" erg) (setq erg (concat "*" erg "*")))
+    erg))
+
 (defun py-shell (&optional argprompt dedicated pyshellname switch)
   "Start an interactive Python interpreter in another window.
 
-With optional \\[universal-argument] user is prompted by
-`py-choose-shell' for command and options to pass to the Python
-interpreter.
+Interactively, \\[universal-argument] 4 prompts for a buffer.
+\\[universal-argument] 2 prompts for `py-python-command-args'.
+If `default-directory' is a remote file name, it is also prompted
+to change if called with a prefix arg.
+
 Returns variable `py-process-name' used by function `get-process'.
 Optional string PYSHELLNAME overrides default `py-shell-name'.
 Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-execute-p'
 "
   (interactive "P")
-  (let* ((oldbuf (current-buffer))
-         (psn
-          (cond ((eq 4 (prefix-numeric-value argprompt))
-                 (py-choose-shell '(4)))
+  (let ((args py-python-command-args)
+        (oldbuf (current-buffer)))
+    (let* ((buffer
+    (when argprompt
+              (cond
+               ((eq 4 (prefix-numeric-value argprompt))
+             (setq buffer
+	 (prog1
+                       (read-buffer "Py-Shell buffer: "
+                                       (generate-new-buffer-name (py-shell-name-prepare (or pyshellname py-shell-name))))
+	   (if (file-remote-p default-directory)
+	       ;; It must be possible to declare a local default-directory.
+	       (setq default-directory
+		     (expand-file-name
+		      (read-file-name
+		       "Default directory: " default-directory default-directory
+                                 t nil 'file-directory-p)))))))
+            ((and (eq 2 (prefix-numeric-value argprompt))
+                  (fboundp 'split-string))
+             (setq args (split-string
+                         (read-string "Py-Shell arguments: "
+                                      (concat
+                                          (mapconcat 'identity py-python-command-args " ") " "))))))))
+         (py-process-name
+            (cond (buffer
+                   (if
+                       (get-process
+                        (replace-regexp-in-string
+                         "<\\([0-9]+\\)>" ""
+                         buffer))
+                       (replace-regexp-in-string
+                        "<\\([0-9]+\\)>" ""
+                        (replace-regexp-in-string
+                         "\*" ""
+                         buffer))))
+                  (pyshellname pyshellname)
+                  ((stringp py-shell-name)
+                   py-shell-name)
+                  ((or (string= "" py-shell-name)(null py-shell-name))
+                   (py-choose-shell))))
                 ;; already in py-choose-shell
                 (py-use-local-default
                  (if (not (string= "" py-shell-local-path))
                      (expand-file-name py-shell-local-path)
-                   (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
-                (pyshellname pyshellname)
-                ((stringp py-shell-name) py-shell-name)
-                ((or (string= "" py-shell-name)(null py-shell-name))
-                 ;; (py-guess-default-python)
-                 (py-choose-shell))))
-         (args py-python-command-args)
-         (py-process-name (py-process-name psn dedicated))
-         ipython-version version)
+              (when py-use-local-default
+                (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
+         (py-buffer-name-prepare (unless buffer
+                                   (py-shell-name-prepare py-process-name)))
+           (py-buffer-name (or buffer py-buffer-name-prepare))
+           (pyshellname (downcase (replace-regexp-in-string
+                                   "<\\([0-9]+\\)>" ""
+                                   (replace-regexp-in-string
+                                    "\*" ""
+                                    py-buffer-name buffer)))))
     (py-set-shell-completion-environment pyshellname)
     ;; comint
-    (if (not (equal (buffer-name) py-process-name))
+      (if buffer
         (set-buffer (get-buffer-create
-                     (apply 'make-comint py-process-name psn nil args)))
-      (apply 'make-comint py-process-name psn nil args))
+                       (apply 'make-comint-in-buffer py-buffer-name py-buffer-name pyshellname nil args)))
+        (set-buffer (apply 'make-comint-in-buffer py-buffer-name py-buffer-name pyshellname nil args)))
     (set (make-local-variable 'comint-prompt-regexp)
 	 (concat "\\("
 		 (mapconcat 'identity
@@ -6606,13 +6667,13 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
               'py-comint-output-filter-function)
     (setq comint-input-sender 'py-shell-simple-send)
     (setq comint-input-ring-file-name
-          (if (string-equal psn "ipython")
+            (if (or (string-match "ipython" py-buffer-name)
+                    (string-match "IPython" py-buffer-name))
               (if (getenv "IPYTHONDIR")
                   (concat (getenv "IPYTHONDIR") "/history") "~/.ipython/history")
             (if (getenv "PYTHONHISTORY")
-                (concat (getenv "PYTHONHISTORY") "/" psn "_history")
-              (concat "~/." psn "_history"))))
-    ;; (message "comint-input-ring-file-name: %s" comint-input-ring-file-name)
+                (concat (getenv "PYTHONHISTORY") "/" py-buffer-name "_history")
+              (concat "~/." py-buffer-name "_history"))))
     (comint-read-input-ring t)
     (set-process-sentinel (get-buffer-process (current-buffer))
                           #'shell-write-history-on-exit)
@@ -6620,25 +6681,17 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
     (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
     (setq py-pdbtrack-do-tracking-p t)
     ;;
-    (set-syntax-table py-mode-syntax-table)
+    (set-syntax-table python-mode-syntax-table)
     (ansi-color-for-comint-mode-on)
     (use-local-map py-shell-map)
-    ;; ToDo: has only effect \w IPython
     (add-hook 'py-shell-hook 'py-dirstack-hook)
     (run-hooks 'py-shell-hook)
-    (when py-split-windows-on-execute-p
-      (funcall py-split-windows-on-execute-function))
     (when (or (eq switch 'switch)
               (and (not (eq switch 'noswitch))
-                   ;; (or (interactive-p) py-shell-switch-buffers-on-execute-p)
                    py-shell-switch-buffers-on-execute-p))
       (switch-to-buffer (current-buffer)))
     (goto-char (point-max))
-    ;; executing through IPython might fail first time otherwise
-    (when (string-equal psn "ipython") (sit-for 0.1))
-    (when (and py-verbose-p (interactive-p) (not (equal (buffer-name) oldbuf)))
-      (message "%s" (buffer-name)))
-    py-process-name))
+      py-buffer-name)))
 
 (defalias 'iyp 'ipython)
 (defalias 'ipy 'ipython)
@@ -8791,7 +8844,14 @@ With arg, do it that many times.
       (when (eq (point) cuc)
 	(py-end-of-block)))))
 
-;; from sh-beg-end.el. Introduced here for convenience.
+(defalias 'druck 'py-printform-insert)
+(defun py-printform-insert (&optional arg)
+  "Inserts a print statement out of current `(car kill-ring)' by default, inserts ARG instead if delivered. "
+  (interactive "*")
+  (lexical-let* ((name (string-strip (or arg (car kill-ring))))
+                 (form (cond ((eq major-mode 'python-mode)
+                              (concat "print \"" name ": %s \" % " name)))))
+    (insert form)))
 
 (defun py-documentation (w)
   "Launch PyDOC on the Word at Point"
@@ -8829,15 +8889,6 @@ With arg, do it that many times.
       (delete-region (line-beginning-position) (line-end-position)))
     (goto-char orig)
     (insert "pdb.set_trace()")))
-
-(defalias 'druck 'py-printform-insert)
-(defun py-printform-insert (&optional arg)
-  "Inserts a print statement out of current `(car kill-ring)' by default, inserts ARG instead if delivered. "
-  (interactive "*")
-  (lexical-let* ((name (string-strip (or arg (car kill-ring))))
-                 (form (cond ((eq major-mode 'python-mode)
-                              (concat "print \"" name ": %s \" % " name)))))
-    (insert form)))
 
 (defun py-line-to-printform-python2 (&optional arg)
   "Transforms the item on current in a print statement. "
@@ -9485,11 +9536,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
           (autoload 'pymacs-exec "pymacs")
           (autoload 'pymacs-load "pymacs")
           (require 'pymacs)
-          (unwind-protect
-              (progn
-                (find-file (concat py-install-directory "completion/pycomplete.el"))
-                (eval-buffer)))
-          (kill-buffer "pycomplete.el"))
+          (load (concat py-install-directory "completion/pycomplete.el") nil t))
       (error "`py-install-directory' not set, see INSTALL"))))
 
 (defun py-guess-py-install-directory ()
@@ -9584,11 +9631,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'outline-level) #'python-outline-level)
   (set (make-local-variable 'open-paren-in-column-0-is-defun-start) nil)
   (set (make-local-variable 'outline-regexp)
-       (concat (if py-hide-show-hide-docstrings
-                   "^\\s-*\"\"\"\\|" "")
-               (mapconcat 'identity
+       (concat (mapconcat 'identity
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
-                                  py-hide-show-keywords)
+                                  py-outline-mode-keywords)
                           "\\|")))
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
   (set (make-local-variable 'paragraph-start) "\\s-*$")
@@ -9641,12 +9686,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
             (back-to-indentation)
             (py-guess-indent-offset)))
       (py-guess-indent-offset)))
-  (when py-load-pymacs-p (py-load-pymacs)
-        (unwind-protect
-            (progn
-              (find-file (concat py-install-directory "completion/pycomplete.el"))
-              (eval-buffer)))
-        (kill-buffer "pycomplete.el"))
+  (when py-load-pymacs-p (py-load-pymacs))
   (define-key inferior-python-mode-map (kbd "<tab>")
     'python-shell-completion-complete-or-indent)
   ;; add the menu
@@ -9655,6 +9695,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   ;; shell-complete end
   ;; Run the mode hook.  Note that py-mode-hook is deprecated.
+  (defvar py-mode-map python-mode-map)
   (run-mode-hooks
    (if python-mode-hook
        'python-mode-hook
@@ -10782,11 +10823,13 @@ and resending the lines later. The lines are stored in reverse order")
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
   (let* ((proc
-          ;; (get-process py-which-bufname)
           (get-process (py-process-name)))
+         (procbuf (if (buffer-live-p (get-buffer (process-buffer proc)))
+                      (get-buffer (process-buffer proc))
+                    (py-shell nil nil py-shell-name)
+                    (py-shell-execute-string-now string)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
-         (procbuf (process-buffer proc))
          (outbuf (get-buffer-create " *pyshellcomplete-output*"))
          (lines (reverse py-shell-input-lines)))
     (if (and proc (not py-file-queue))
@@ -10830,9 +10873,13 @@ and return collected output"
 (defun py-shell-complete ()
   "Complete word before point, if any. Otherwise insert TAB. "
   (interactive)
+  ;; make sure, a process exists
+  (unless (and (processp (get-process (py-process-name py-shell-name)))
+               (buffer-live-p (get-buffer (py-process-name py-shell-name))))
+    (py-shell nil nil py-shell-name))
   (let ((word (py-dot-word-before-point))
 	result)
-    (if (equal word "")
+    (if (string= word "")
 	(tab-to-tab-stop)	   ; non nil so the completion is over
       (setq result (py-shell-execute-string-now (format "
 def print_completions(namespace, text, prefix=''):
