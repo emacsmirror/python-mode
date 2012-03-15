@@ -2954,7 +2954,6 @@ Returns column. "
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
-
 (defun py-toggle-indent-tabs-mode ()
   "Toggle `indent-tabs-mode'.
 
@@ -3069,8 +3068,6 @@ Optional CLASS is passed directly to `py-beginning-of-def-or-class'."
 ;; make general form below work also in these cases
 (defalias 'py-beginning-of-paragraph 'backward-paragraph)
 (defalias 'py-end-of-paragraph 'forward-paragraph)
-(defalias 'py-beginning-of-line 'beginning-of-line)
-(defalias 'py-end-of-line 'end-of-line)
 
 ;;; Shifting
 (defalias 'py-shift-region-left 'py-shift-left)
@@ -4534,16 +4531,10 @@ will work.
 (defun py-beginning-of-line-p ()
   "Returns position, if cursor is at the beginning of a line, nil otherwise. "
   (interactive)
-  (let ((orig (point))
-        erg)
-    (save-excursion
-      (py-end-of-line)
-      (py-beginning-of-line)
-      (when (eq orig (point))
-        (setq erg orig))
-      (when (and py-verbose-p (interactive-p))
-        (message "%s" erg))
-      erg)))
+  (let ((erg (when (bolp)(point))))
+    (when (interactive-p)
+      (message "%s" erg))
+    erg))
 
 (defun py-beginning-of-statement-p ()
   "Returns position, if cursor is at the beginning of a statement, nil otherwise. "
@@ -5355,6 +5346,35 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (setq erg (point)))
         (when (and py-verbose-p (interactive-p)) (message "%s" erg))
         erg))))
+
+;;; Line
+(defun py-beginning-of-line ()
+  "Go to beginning-of-line, return position.
+
+If already at beginning-of-line and not at BOB, go to beginning of previous line. "
+  (interactive)
+  (let ((erg (unless (bobp)
+               (if (bolp)
+                   (progn
+                     (forward-line -1)
+                     (progn (beginning-of-line)(point)))
+                 (progn (beginning-of-line)(point))))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-end-of-line ()
+  "Go to end-of-line, return position.
+
+If already at end-of-line and not at EOB, go to end of next line. "
+  (interactive)
+  (let ((erg (unless (eobp)
+               (if (eolp)
+                   (progn
+                     (forward-line 1)
+                     (progn (end-of-line)(point)))
+                 (progn (end-of-line)(point))))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 ;;; Statement
 (defalias 'py-backward-statement 'py-beginning-of-statement)
@@ -7221,205 +7241,6 @@ See also `py-execute-region'. "
     (with-temp-buffer
       (insert string)
       (py-execute-region (point-min) (point-max) shell t))))
-
-(defun py-shell-command-on-region (start end)
-  "Execute region in a shell.
-
-Avoids writing to temporary files.
-
-Caveat: Can't be used for expressions containing
-Unicode strings like u'\\xA9' "
-  (interactive "r")
-  (let* ((regbuf (current-buffer))
-         (shell (or (py-choose-shell-by-shebang)
-                    (py-choose-shell-by-import)
-                    py-shell-name))
-         (cmd (if (string-equal shell
-                                "Jython")
-                  "jython -" "python")))
-    (with-temp-buffer
-      (insert-buffer-substring regbuf start end)
-      (shell-command-on-region (point-min) (point-max)
-                               cmd py-output-buffer)
-      ;; shell-command-on-region kills the output buffer if it never
-      ;; existed and there's no output from the command
-      (if (not (get-buffer py-output-buffer))
-          (message "No output.")
-        (setq py-exception-buffer py-output-buffer)
-        (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-          (when py-shell-switch-buffers-on-execute-p
-            (pop-to-buffer py-output-buffer))
-          (if err-p
-              (pop-to-buffer py-exception-buffer)))))))
-
-(defun py-ipython-shell-command-on-region (start end)
-  "Execute region in a shell.
-
-Avoids writing to temporary files.
-
-Caveat: Can't be used for expressions containing
-Unicode strings like u'\\xA9' "
-  (interactive "r")
-  (let* ((regbuf (current-buffer))
-         (shell "ipython")
-         (cmd "ipython")
-         (prompt_in1 ""))
-    (with-temp-buffer
-      (insert-buffer-substring regbuf start end)
-      (shell-command-on-region (point-min) (point-max)
-                               cmd py-output-buffer)
-      ;; shell-command-on-region kills the output buffer if it never
-      ;; existed and there's no output from the command
-      (if (not (get-buffer py-output-buffer))
-          (message "No output.")
-        (setq py-exception-buffer py-output-buffer)
-        (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-          (when py-shell-switch-buffers-on-execute-p
-            (pop-to-buffer py-output-buffer))
-          (if err-p
-              (pop-to-buffer py-exception-buffer)))))))
-
-(defun py-send-region-ipython (start end)
-  "Execute the region through an ipython shell. "
-  (interactive "r")
-  ;; Skip ahead to the first non-blank line
-  (let* ((name (concat "*" "IPython" "*"))
-         (py-shell-name "ipython")
-         (regbuf (current-buffer))
-         (first (progn (and (buffer-live-p (get-buffer name))
-                            (processp (get-process name))
-                            (buffer-name (get-buffer name)))))
-         (procbuf (or first (progn
-                              (py-shell)
-                              (buffer-name (get-buffer name)))))
-         (cmd "#-*- coding: utf-8 -*-\n")
-         ;; (lines (count-lines start end))
-         shell)
-    (setq cmd (concat cmd (buffer-substring-no-properties start end)))
-    ;; Set the shell either to the #! line command, or to the
-    ;; py-shell-name buffer local variable.
-    (setq shell (or (py-choose-shell-by-shebang)
-                    (py-choose-shell-by-import)
-                    py-shell-name))
-    (set-buffer procbuf)
-    (goto-char (point-max))
-    (switch-to-buffer procbuf)
-    (insert cmd)
-    (comint-send-input)
-    ;;    (ipython-send-and-indent)
-    ;; (when (< 1 lines)
-    ;;      (goto-char (point-max))
-    ;; (comint-send-input))
-    ))
-
-(defun ipython-get-indenting-buffer ()
-  "Return a temporary buffer set in python-mode. Create one if necessary."
-  (let ((buf (get-buffer-create ipython-indenting-buffer-name)))
-    (set-buffer buf)
-    (unless (eq major-mode 'python-mode)
-      (python-mode))
-    buf))
-
-(defvar ipython-autoindent t
-  "If non-nil, enable autoindent for IPython shell through python-mode.")
-
-(defun ipython-send-and-indent ()
-  "Send the current line to IPython, and calculate the indentation for
-the next line."
-  (interactive)
-  (if ipython-autoindent
-      (let ((line (buffer-substring (point-at-bol) (point)))
-            (after-prompt1)
-            (after-prompt2))
-        (save-excursion
-          (comint-bol t)
-          (if (looking-at py-shell-input-prompt-1-regexp)
-              (setq after-prompt1 t)
-            (setq after-prompt2 (looking-at py-shell-input-prompt-2-regexp)))
-          (with-current-buffer (ipython-get-indenting-buffer)
-            (when after-prompt1
-              (erase-buffer))
-            (when (or after-prompt1 after-prompt2)
-              (delete-region (point-at-bol) (point))
-              (insert line)
-              (newline-and-indent))))))
-  ;; send input line to ipython interpreter
-  (comint-send-input))
-
-(defun py-execute-region-in-shell (start end &optional shell)
-  "Execute the region in a Python shell. "
-  (interactive "r\nP")
-  (let* ((regbuf (current-buffer))
-         (name (concat "*" py-shell-name "*"))
-         (first (progn (and (buffer-live-p (get-buffer name))
-                            (processp (get-process py-shell-name))
-                            (buffer-name (get-buffer name)))))
-         (procbuf (or first (progn
-                              (py-shell)
-                              (buffer-name (get-buffer name)))))
-         (proc (get-process py-shell-name))
-         (temp (make-temp-name py-shell-name))
-         (file (concat (expand-file-name temp py-temp-directory) ".py"))
-         (temp (get-buffer-create file))
-         (py-line-number-offset 0)
-         shell cmd)
-    ;; Write the contents of the buffer, watching out for indented regions.
-    (save-excursion
-      (set-buffer regbuf)
-      (goto-char start)
-      (beginning-of-line)
-      (while (and (looking-at "\\s *$")
-                  (< (point) end))
-        (forward-line 1))
-      (setq start (point))
-      (or (< start end)
-          (error "Region is empty"))
-      (setq py-line-number-offset (count-lines 1 start))
-      (let ((needs-if (/= (py-point 'bol) (py-point 'boi))))
-        (setq cmd "#-*- coding: utf-8 -*-\n")
-        (when needs-if
-          (setq cmd (concat cmd "if 1:\n"))
-          (setq py-line-number-offset (- py-line-number-offset 1)))
-        (setq cmd (concat cmd (buffer-substring-no-properties start end)))
-        ;; Set the shell either to the #! line command, or to the
-        ;; py-shell-name buffer local variable.
-        (setq shell (or (py-choose-shell-by-shebang)
-                        (py-choose-shell-by-import)
-                        py-shell-name))))
-    (cond
-     (proc
-      ;; use the existing python shell
-      (set-buffer procbuf)
-      (goto-char (point-max))
-      (insert cmd)
-      (switch-to-buffer (current-buffer))
-      (if (functionp 'ipython-send-and-indent)
-          (ipython-send-and-indent)
-        (comint-send-input))
-      (setq py-exception-buffer (cons file (current-buffer)))
-      (switch-to-buffer procbuf))
-     (t
-      ;; this part is in py-shell-command-on-region now.
-      (let ((cmd
-             (concat shell (if (string-equal py-shell-name
-                                             "Jython")
-                               " -" ""))))
-        ;; otherwise either run it synchronously in a subprocess
-        (save-excursion
-          (set-buffer temp)
-          (shell-command-on-region (point-min) (point-max)
-                                   cmd py-output-buffer))
-        ;; shell-command-on-region kills the output buffer if it never
-        ;; existed and there's no output from the command
-        (if (not (get-buffer py-output-buffer))
-            (message "No output.")
-          (setq py-exception-buffer (current-buffer))
-          (let ((err-p (py-postprocess-output-buffer py-output-buffer)))
-            (pop-to-buffer py-output-buffer)
-            (if err-p
-                (pop-to-buffer py-exception-buffer)))))))
-    ;; Clean up after ourselves.
-    (kill-buffer temp)))
 
 (defun py-if-needed-insert-shell (&optional name)
   (let ((erg (if name (downcase name)
@@ -9762,6 +9583,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                (lambda ()
                  "Turn off Indent Tabs mode."
                  (setq indent-tabs-mode nil)))
+  ;; (remove-hook 'python-mode-hook 'abbrev-mode)
   (remove-hook 'python-mode-hook 'python-setup-brm)
   (add-hook 'python-mode-hook
             (lambda ()
@@ -11393,7 +11215,7 @@ as it leaves your system default unchanged."
   (when (interactive-p) (message "py-use-local-default set to %s" py-use-local-default))
   py-use-local-default)
 
-;;; Executes
+;;; Extended executes
 (defun py-execute-statement-python ()
   "Send statement at point to Python interpreter. "
   (interactive)
@@ -13809,6 +13631,209 @@ Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
   (py-execute-prepare "minor-expression" "python3.2" t 'switch))
 
+(defun py-execute-line-python ()
+  "Send line at point to Python interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python" nil nil))
+
+(defun py-execute-line-python-switch ()
+  "Send line at point to Python interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "python" nil 'switch))
+
+(defun py-execute-line-python-noswitch ()
+  "Send line at point to Python interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "python" nil 'noswitch))
+
+(defun py-execute-line-python-dedicated ()
+  "Send line at point to Python unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python" t nil))
+
+(defun py-execute-line-python-dedicated-switch ()
+  "Send line at point to Python unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "python" t 'switch))
+
+(defun py-execute-line-ipython ()
+  "Send line at point to IPython interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "ipython" nil nil))
+
+(defun py-execute-line-ipython-switch ()
+  "Send line at point to IPython interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "ipython" nil 'switch))
+
+(defun py-execute-line-ipython-noswitch ()
+  "Send line at point to IPython interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "ipython" nil 'noswitch))
+
+(defun py-execute-line-ipython-dedicated ()
+  "Send line at point to IPython unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "ipython" t nil))
+
+(defun py-execute-line-ipython-dedicated-switch ()
+  "Send line at point to IPython unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "ipython" t 'switch))
+
+(defun py-execute-line-python3 ()
+  "Send line at point to Python3 interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python3" nil nil))
+
+(defun py-execute-line-python3-switch ()
+  "Send line at point to Python3 interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "python3" nil 'switch))
+
+(defun py-execute-line-python3-noswitch ()
+  "Send line at point to Python3 interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "python3" nil 'noswitch))
+
+(defun py-execute-line-python3-dedicated ()
+  "Send line at point to Python3 unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python3" t nil))
+
+(defun py-execute-line-python3-dedicated-switch ()
+  "Send line at point to Python3 unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "python3" t 'switch))
+
+(defun py-execute-line-python2 ()
+  "Send line at point to Python2 interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python2" nil nil))
+
+(defun py-execute-line-python2-switch ()
+  "Send line at point to Python2 interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "python2" nil 'switch))
+
+(defun py-execute-line-python2-noswitch ()
+  "Send line at point to Python2 interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "python2" nil 'noswitch))
+
+(defun py-execute-line-python2-dedicated ()
+  "Send line at point to Python2 unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python2" t nil))
+
+(defun py-execute-line-python2-dedicated-switch ()
+  "Send line at point to Python2 unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "python2" t 'switch))
+
+(defun py-execute-line-python2.7 ()
+  "Send line at point to Python2.7 interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python2.7" nil nil))
+
+(defun py-execute-line-python2.7-switch ()
+  "Send line at point to Python2.7 interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "python2.7" nil 'switch))
+
+(defun py-execute-line-python2.7-noswitch ()
+  "Send line at point to Python2.7 interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "python2.7" nil 'noswitch))
+
+(defun py-execute-line-python2.7-dedicated ()
+  "Send line at point to Python2.7 unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python2.7" t nil))
+
+(defun py-execute-line-python2.7-dedicated-switch ()
+  "Send line at point to Python2.7 unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "python2.7" t 'switch))
+
+(defun py-execute-line-jython ()
+  "Send line at point to Jython interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "jython" nil nil))
+
+(defun py-execute-line-jython-switch ()
+  "Send line at point to Jython interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "jython" nil 'switch))
+
+(defun py-execute-line-jython-noswitch ()
+  "Send line at point to Jython interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "jython" nil 'noswitch))
+
+(defun py-execute-line-jython-dedicated ()
+  "Send line at point to Jython unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "jython" t nil))
+
+(defun py-execute-line-jython-dedicated-switch ()
+  "Send line at point to Jython unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "jython" t 'switch))
+
+(defun py-execute-line-python3.2 ()
+  "Send line at point to Python3.2 interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python3.2" nil nil))
+
+(defun py-execute-line-python3.2-switch ()
+  "Send line at point to Python3.2 interpreter.
+
+Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py-execute-prepare "line" "python3.2" nil 'switch))
+
+(defun py-execute-line-python3.2-noswitch ()
+  "Send line at point to Python3.2 interpreter.
+
+Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
+  (interactive)
+  (py-execute-prepare "line" "python3.2" nil 'noswitch))
+
+(defun py-execute-line-python3.2-dedicated ()
+  "Send line at point to Python3.2 unique interpreter. "
+  (interactive)
+  (py-execute-prepare "line" "python3.2" t nil))
+
+(defun py-execute-line-python3.2-dedicated-switch ()
+  "Send line at point to Python3.2 unique interpreter and switch to result. "
+  (interactive)
+  (py-execute-prepare "line" "python3.2" t 'switch))
+
 ;;; Column-marker - highlight columns
 ;; merged from column-marker.el,
 ;; Created: Tue Nov 22 10:26:03 2005
@@ -13930,5 +13955,10 @@ FACE is the face to use.  If nil, then face `column-marker-1' is used."
 
 ;; (autoload 'column-marker-1 "column-marker" "Highlight a column." t)
 
+(defalias 'ipython-send-and-indent 'py-execute-line-ipython)
+(defalias 'py-execute-region-in-shell 'py-execute-region)
+(defalias 'py-shell-command-on-region 'py-execute-region-region)
+(defalias 'py-send-region-ipython 'py-execute-region-ipython)
+(defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (provide 'python-mode)
 ;;; python-mode.el ends here
