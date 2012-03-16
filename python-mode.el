@@ -1026,26 +1026,26 @@ Used for determining the default in the next one.")
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 ;; (setq py-not-expression-regexp "[ .=:#\t\r\n\f)]")
 
-(defvar py-minor-expression-skip-regexp "^ .()[]{}=:#\t\r\n\f"
-  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
-;; (setq py-minor-expression-skip-regexp "^ .(){}=:#\t\r\n\f")
+(defvar py-partial-expression-skip-regexp "^ .()[]{}=:#\t\r\n\f"
+  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
+;; (setq py-partial-expression-skip-regexp "^ .(){}=:#\t\r\n\f")
 
-(defvar py-minor-expression-forward-regexp "^ .)}=:#\t\r\n\f"
-  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
+(defvar py-partial-expression-forward-regexp "^ .)}=:#\t\r\n\f"
+  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
 
-(defvar py-minor-expression-backward-regexp "^ .({=:#\t\r\n\f"
-  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, skip it. ")
+(defvar py-partial-expression-backward-regexp "^ .({=:#\t\r\n\f"
+  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
 
-(defvar py-not-minor-expression-skip-regexp " \\.=:#\t\r\n\f"
-  "py-minor-expression assumes chars indicated may not compose a py-minor-expression, skip it. ")
+(defvar py-not-partial-expression-skip-regexp " \\.=:#\t\r\n\f"
+  "py-partial-expression assumes chars indicated may not compose a py-partial-expression, skip it. ")
 
-(defvar py-minor-expression-looking-regexp "[^ .=:#\t\r\n\f)]"
-  "py-minor-expression assumes chars indicated possible composing a py-minor-expression, when looking-at or -back. ")
-;; (setq py-minor-expression-looking-regexp "[^ .=:#\t\r\n\f)]")
+(defvar py-partial-expression-looking-regexp "[^ .=:#\t\r\n\f)]"
+  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, when looking-at or -back. ")
+;; (setq py-partial-expression-looking-regexp "[^ .=:#\t\r\n\f)]")
 
-(defvar py-not-minor-expression-regexp "[ .=:#\t\r\n\f)]"
-  "py-minor-expression assumes chars indicated probably will not compose a py-minor-expression. ")
-;; (setq py-not-minor-expression-regexp "[ .=:#\t\r\n\f)]")
+(defvar py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]"
+  "py-partial-expression assumes chars indicated probably will not compose a py-partial-expression. ")
+;; (setq py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]")
 
 (defvar py-line-number-offset 0
   "When an exception occurs as a result of py-execute-region, a
@@ -2210,22 +2210,22 @@ A a compound python expression might be concatenated by \".\" operator, thus com
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
             ["End of expression" py-end-of-expression
-             :help "`py-end-of-minor-expression'
+             :help "`py-end-of-partial-expression'
 Go to the end of a compound python expression.
 
 A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
-            ["Beginning of minor expression" py-beginning-of-minor-expression
-             :help "`py-beginning-of-minor-expression'
+            ["Beginning of minor expression" py-beginning-of-partial-expression
+             :help "`py-beginning-of-partial-expression'
 Go to start of an minor expression
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
-            ["End of minor-expression" py-end-of-minor-expression
-             :help "`py-end-of-minor-expression'
-Go to end of an minor-expression
+            ["End of partial-expression" py-end-of-partial-expression
+             :help "`py-end-of-partial-expression'
+Go to end of an partial-expression
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
@@ -3551,19 +3551,19 @@ initial line; and comment lines beginning in column 1 are ignored."
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-(defun py-beginning-of-minor-expression-position ()
-  "Returns beginning of minor-expression position. "
+(defun py-beginning-of-partial-expression-position ()
+  "Returns beginning of partial-expression position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-beginning-of-minor-expression)))
+    (let ((erg (py-beginning-of-partial-expression)))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-(defun py-end-of-minor-expression-position ()
-  "Returns end of minor-expression position. "
+(defun py-end-of-partial-expression-position ()
+  "Returns end of partial-expression position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-minor-expression)))
+    (let ((erg (py-end-of-partial-expression)))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -3710,18 +3710,18 @@ Returns a list, whose car is beg, cdr - end."
             (when (and py-verbose-p (interactive-p)) (message "%s" (list beg end)))
           (list beg end))))))
 
-(defun py-bounds-of-minor-expression (&optional position)
-  "Returns bounds of minor-expression at point.
+(defun py-bounds-of-partial-expression (&optional position)
+  "Returns bounds of partial-expression at point.
 
-With optional POSITION, a number, report bounds of minor-expression at POSITION.
+With optional POSITION, a number, report bounds of partial-expression at POSITION.
 Returns a list, whose car is beg, cdr - end."
   (interactive)
   (save-excursion
     (save-restriction
       (widen)
       (when position (goto-char position))
-      (let ((beg (py-beginning-of-minor-expression-position))
-            (end (py-end-of-minor-expression-position)))
+      (let ((beg (py-beginning-of-partial-expression-position))
+            (end (py-end-of-partial-expression-position)))
         (if (and beg end)
             (when (and py-verbose-p (interactive-p)) (message "%s" (list beg end)))
           (list beg end))))))
@@ -4570,14 +4570,14 @@ will work.
         (message "%s" erg))
       erg)))
 
-(defun py-beginning-of-minor-expression-p ()
-  "Returns position, if cursor is at the beginning of a minor-expression, nil otherwise. "
+(defun py-beginning-of-partial-expression-p ()
+  "Returns position, if cursor is at the beginning of a partial-expression, nil otherwise. "
   (interactive)
   (let ((orig (point))
         erg)
     (save-excursion
-      (py-end-of-minor-expression)
-      (py-beginning-of-minor-expression)
+      (py-end-of-partial-expression)
+      (py-beginning-of-partial-expression)
       (when (eq orig (point))
         (setq erg orig))
       (when (and py-verbose-p (interactive-p))
@@ -5222,7 +5222,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
 
 ;;; Partial- or Minor Expression
 (defalias 'py-backward-partial-expression 'py-beginning-of-partial-expression)
-(defalias 'py-beginning-of-minor-expression 'py-beginning-of-partial-expression)
+(defalias 'py-beginning-of-partial-expression 'py-beginning-of-partial-expression)
 (defun py-beginning-of-partial-expression (&optional orig origline done)
   "Go to the beginning of a minor python expression.
 
@@ -5264,19 +5264,19 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
                   (end-of-line)
                   (py-beginning-of-partial-expression orig origline)))
                ((nth 1 pps)
-                (skip-chars-backward py-minor-expression-backward-regexp)
+                (skip-chars-backward py-partial-expression-backward-regexp)
                 (point))
-               ((and (eq (point) orig) (not (bobp)) (looking-back py-minor-expression-looking-regexp))
-                (skip-chars-backward py-minor-expression-skip-regexp)
+               ((and (eq (point) orig) (not (bobp)) (looking-back py-partial-expression-looking-regexp))
+                (skip-chars-backward py-partial-expression-skip-regexp)
                 (py-beginning-of-partial-expression orig origline))
-               ((looking-at py-minor-expression-looking-regexp)
+               ((looking-at py-partial-expression-looking-regexp)
                 (point))
                (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(point)))))
         (when (and py-verbose-p (interactive-p)) (message "%s" erg))
         erg))))
 
 (defalias 'py-forward-partial-expression 'py-end-of-partial-expression)
-(defalias 'py-end-of-minor-expression 'py-end-of-partial-expression)
+(defalias 'py-end-of-partial-expression 'py-end-of-partial-expression)
 (defun py-end-of-partial-expression (&optional orig origline done)
   "Go to the end of a minor python expression.
 
@@ -5338,12 +5338,12 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
           (when (< 0 (skip-chars-forward " \t\r\n\f"))
             (forward-char 1))
           (py-end-of-partial-expression orig origline done))
-         ((and (not done)(looking-at py-minor-expression-looking-regexp)(not (eobp)))
-          (skip-chars-forward py-minor-expression-forward-regexp)
+         ((and (not done)(looking-at py-partial-expression-looking-regexp)(not (eobp)))
+          (skip-chars-forward py-partial-expression-forward-regexp)
           (setq done t)
           (py-end-of-partial-expression orig origline done))
-         ((and (not done)(looking-at py-not-minor-expression-regexp)(not (eobp)))
-          (skip-chars-forward py-not-minor-expression-skip-regexp)
+         ((and (not done)(looking-at py-not-partial-expression-regexp)(not (eobp)))
+          (skip-chars-forward py-not-partial-expression-skip-regexp)
           (py-end-of-partial-expression orig origline done))
          ((and (eq (point) orig) (not (eobp)))
           (forward-char 1)
@@ -5731,13 +5731,13 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-mark-minor-expression ()
-  "Mark minor-expression at point.
+(defun py-mark-partial-expression ()
+  "Mark partial-expression at point.
 
 Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
-    (setq erg (py-mark-base "minor-expression"))
+    (setq erg (py-mark-base "partial-expression"))
     (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
@@ -5794,8 +5794,8 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defalias 'py-partial-expression 'py-copy-minor-expression)
-(defalias 'py-copy-minor-expression 'py-copy-partial-expression)
+(defalias 'py-partial-expression 'py-copy-partial-expression)
+(defalias 'py-copy-partial-expression 'py-copy-partial-expression)
 (defun py-copy-partial-expression ()
   "Mark partial-expression at point.
 
@@ -5917,7 +5917,7 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "expression")))
     (kill-region (car erg) (cdr erg))))
 
-(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
+(defalias 'py-kill-partial-expression 'py-kill-partial-expression)
 (defun py-kill-partial-expression ()
   "Delete partial-expression at point.
   Stores data in kill ring. Might be yanked back using `C-y'.
@@ -13512,208 +13512,208 @@ Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
   (py-execute-prepare "expression" "python3.2" t 'switch))
 
-(defun py-execute-minor-expression-python ()
-  "Send minor-expression at point to Python interpreter. "
+(defun py-execute-partial-expression-python ()
+  "Send partial-expression at point to Python interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python" nil nil))
+  (py-execute-prepare "partial-expression" "python" nil nil))
 
-(defun py-execute-minor-expression-python-switch ()
-  "Send minor-expression at point to Python interpreter.
+(defun py-execute-partial-expression-python-switch ()
+  "Send partial-expression at point to Python interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python" nil 'switch))
+  (py-execute-prepare "partial-expression" "python" nil 'switch))
 
-(defun py-execute-minor-expression-python-noswitch ()
-  "Send minor-expression at point to Python interpreter.
+(defun py-execute-partial-expression-python-noswitch ()
+  "Send partial-expression at point to Python interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "python" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "python" nil 'noswitch))
 
-(defun py-execute-minor-expression-python-dedicated ()
-  "Send minor-expression at point to Python unique interpreter. "
+(defun py-execute-partial-expression-python-dedicated ()
+  "Send partial-expression at point to Python unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python" t nil))
+  (py-execute-prepare "partial-expression" "python" t nil))
 
-(defun py-execute-minor-expression-python-dedicated-switch ()
-  "Send minor-expression at point to Python unique interpreter and switch to result. "
+(defun py-execute-partial-expression-python-dedicated-switch ()
+  "Send partial-expression at point to Python unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python" t 'switch))
+  (py-execute-prepare "partial-expression" "python" t 'switch))
 
-(defun py-execute-minor-expression-ipython ()
-  "Send minor-expression at point to IPython interpreter. "
+(defun py-execute-partial-expression-ipython ()
+  "Send partial-expression at point to IPython interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "ipython" nil nil))
+  (py-execute-prepare "partial-expression" "ipython" nil nil))
 
-(defun py-execute-minor-expression-ipython-switch ()
-  "Send minor-expression at point to IPython interpreter.
+(defun py-execute-partial-expression-ipython-switch ()
+  "Send partial-expression at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "ipython" nil 'switch))
+  (py-execute-prepare "partial-expression" "ipython" nil 'switch))
 
-(defun py-execute-minor-expression-ipython-noswitch ()
-  "Send minor-expression at point to IPython interpreter.
+(defun py-execute-partial-expression-ipython-noswitch ()
+  "Send partial-expression at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "ipython" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "ipython" nil 'noswitch))
 
-(defun py-execute-minor-expression-ipython-dedicated ()
-  "Send minor-expression at point to IPython unique interpreter. "
+(defun py-execute-partial-expression-ipython-dedicated ()
+  "Send partial-expression at point to IPython unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "ipython" t nil))
+  (py-execute-prepare "partial-expression" "ipython" t nil))
 
-(defun py-execute-minor-expression-ipython-dedicated-switch ()
-  "Send minor-expression at point to IPython unique interpreter and switch to result. "
+(defun py-execute-partial-expression-ipython-dedicated-switch ()
+  "Send partial-expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "ipython" t 'switch))
+  (py-execute-prepare "partial-expression" "ipython" t 'switch))
 
-(defun py-execute-minor-expression-python3 ()
-  "Send minor-expression at point to Python3 interpreter. "
+(defun py-execute-partial-expression-python3 ()
+  "Send partial-expression at point to Python3 interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3" nil nil))
+  (py-execute-prepare "partial-expression" "python3" nil nil))
 
-(defun py-execute-minor-expression-python3-switch ()
-  "Send minor-expression at point to Python3 interpreter.
+(defun py-execute-partial-expression-python3-switch ()
+  "Send partial-expression at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3" nil 'switch))
+  (py-execute-prepare "partial-expression" "python3" nil 'switch))
 
-(defun py-execute-minor-expression-python3-noswitch ()
-  "Send minor-expression at point to Python3 interpreter.
+(defun py-execute-partial-expression-python3-noswitch ()
+  "Send partial-expression at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "python3" nil 'noswitch))
 
-(defun py-execute-minor-expression-python3-dedicated ()
-  "Send minor-expression at point to Python3 unique interpreter. "
+(defun py-execute-partial-expression-python3-dedicated ()
+  "Send partial-expression at point to Python3 unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3" t nil))
+  (py-execute-prepare "partial-expression" "python3" t nil))
 
-(defun py-execute-minor-expression-python3-dedicated-switch ()
-  "Send minor-expression at point to Python3 unique interpreter and switch to result. "
+(defun py-execute-partial-expression-python3-dedicated-switch ()
+  "Send partial-expression at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3" t 'switch))
+  (py-execute-prepare "partial-expression" "python3" t 'switch))
 
-(defun py-execute-minor-expression-python2 ()
-  "Send minor-expression at point to Python2 interpreter. "
+(defun py-execute-partial-expression-python2 ()
+  "Send partial-expression at point to Python2 interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2" nil nil))
+  (py-execute-prepare "partial-expression" "python2" nil nil))
 
-(defun py-execute-minor-expression-python2-switch ()
-  "Send minor-expression at point to Python2 interpreter.
+(defun py-execute-partial-expression-python2-switch ()
+  "Send partial-expression at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2" nil 'switch))
+  (py-execute-prepare "partial-expression" "python2" nil 'switch))
 
-(defun py-execute-minor-expression-python2-noswitch ()
-  "Send minor-expression at point to Python2 interpreter.
+(defun py-execute-partial-expression-python2-noswitch ()
+  "Send partial-expression at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "python2" nil 'noswitch))
 
-(defun py-execute-minor-expression-python2-dedicated ()
-  "Send minor-expression at point to Python2 unique interpreter. "
+(defun py-execute-partial-expression-python2-dedicated ()
+  "Send partial-expression at point to Python2 unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2" t nil))
+  (py-execute-prepare "partial-expression" "python2" t nil))
 
-(defun py-execute-minor-expression-python2-dedicated-switch ()
-  "Send minor-expression at point to Python2 unique interpreter and switch to result. "
+(defun py-execute-partial-expression-python2-dedicated-switch ()
+  "Send partial-expression at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2" t 'switch))
+  (py-execute-prepare "partial-expression" "python2" t 'switch))
 
-(defun py-execute-minor-expression-python2.7 ()
-  "Send minor-expression at point to Python2.7 interpreter. "
+(defun py-execute-partial-expression-python2.7 ()
+  "Send partial-expression at point to Python2.7 interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2.7" nil nil))
+  (py-execute-prepare "partial-expression" "python2.7" nil nil))
 
-(defun py-execute-minor-expression-python2.7-switch ()
-  "Send minor-expression at point to Python2.7 interpreter.
+(defun py-execute-partial-expression-python2.7-switch ()
+  "Send partial-expression at point to Python2.7 interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2.7" nil 'switch))
+  (py-execute-prepare "partial-expression" "python2.7" nil 'switch))
 
-(defun py-execute-minor-expression-python2.7-noswitch ()
-  "Send minor-expression at point to Python2.7 interpreter.
+(defun py-execute-partial-expression-python2.7-noswitch ()
+  "Send partial-expression at point to Python2.7 interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2.7" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "python2.7" nil 'noswitch))
 
-(defun py-execute-minor-expression-python2.7-dedicated ()
-  "Send minor-expression at point to Python2.7 unique interpreter. "
+(defun py-execute-partial-expression-python2.7-dedicated ()
+  "Send partial-expression at point to Python2.7 unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2.7" t nil))
+  (py-execute-prepare "partial-expression" "python2.7" t nil))
 
-(defun py-execute-minor-expression-python2.7-dedicated-switch ()
-  "Send minor-expression at point to Python2.7 unique interpreter and switch to result. "
+(defun py-execute-partial-expression-python2.7-dedicated-switch ()
+  "Send partial-expression at point to Python2.7 unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python2.7" t 'switch))
+  (py-execute-prepare "partial-expression" "python2.7" t 'switch))
 
-(defun py-execute-minor-expression-jython ()
-  "Send minor-expression at point to Jython interpreter. "
+(defun py-execute-partial-expression-jython ()
+  "Send partial-expression at point to Jython interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "jython" nil nil))
+  (py-execute-prepare "partial-expression" "jython" nil nil))
 
-(defun py-execute-minor-expression-jython-switch ()
-  "Send minor-expression at point to Jython interpreter.
+(defun py-execute-partial-expression-jython-switch ()
+  "Send partial-expression at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "jython" nil 'switch))
+  (py-execute-prepare "partial-expression" "jython" nil 'switch))
 
-(defun py-execute-minor-expression-jython-noswitch ()
-  "Send minor-expression at point to Jython interpreter.
+(defun py-execute-partial-expression-jython-noswitch ()
+  "Send partial-expression at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "jython" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "jython" nil 'noswitch))
 
-(defun py-execute-minor-expression-jython-dedicated ()
-  "Send minor-expression at point to Jython unique interpreter. "
+(defun py-execute-partial-expression-jython-dedicated ()
+  "Send partial-expression at point to Jython unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "jython" t nil))
+  (py-execute-prepare "partial-expression" "jython" t nil))
 
-(defun py-execute-minor-expression-jython-dedicated-switch ()
-  "Send minor-expression at point to Jython unique interpreter and switch to result. "
+(defun py-execute-partial-expression-jython-dedicated-switch ()
+  "Send partial-expression at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "jython" t 'switch))
+  (py-execute-prepare "partial-expression" "jython" t 'switch))
 
-(defun py-execute-minor-expression-python3.2 ()
-  "Send minor-expression at point to Python3.2 interpreter. "
+(defun py-execute-partial-expression-python3.2 ()
+  "Send partial-expression at point to Python3.2 interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3.2" nil nil))
+  (py-execute-prepare "partial-expression" "python3.2" nil nil))
 
-(defun py-execute-minor-expression-python3.2-switch ()
-  "Send minor-expression at point to Python3.2 interpreter.
+(defun py-execute-partial-expression-python3.2-switch ()
+  "Send partial-expression at point to Python3.2 interpreter.
 
 Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3.2" nil 'switch))
+  (py-execute-prepare "partial-expression" "python3.2" nil 'switch))
 
-(defun py-execute-minor-expression-python3.2-noswitch ()
-  "Send minor-expression at point to Python3.2 interpreter.
+(defun py-execute-partial-expression-python3.2-noswitch ()
+  "Send partial-expression at point to Python3.2 interpreter.
 
 Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3.2" nil 'noswitch))
+  (py-execute-prepare "partial-expression" "python3.2" nil 'noswitch))
 
-(defun py-execute-minor-expression-python3.2-dedicated ()
-  "Send minor-expression at point to Python3.2 unique interpreter. "
+(defun py-execute-partial-expression-python3.2-dedicated ()
+  "Send partial-expression at point to Python3.2 unique interpreter. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3.2" t nil))
+  (py-execute-prepare "partial-expression" "python3.2" t nil))
 
-(defun py-execute-minor-expression-python3.2-dedicated-switch ()
-  "Send minor-expression at point to Python3.2 unique interpreter and switch to result. "
+(defun py-execute-partial-expression-python3.2-dedicated-switch ()
+  "Send partial-expression at point to Python3.2 unique interpreter and switch to result. "
   (interactive)
-  (py-execute-prepare "minor-expression" "python3.2" t 'switch))
+  (py-execute-prepare "partial-expression" "python3.2" t 'switch))
 
 (defun py-execute-line-python ()
   "Send line at point to Python interpreter. "

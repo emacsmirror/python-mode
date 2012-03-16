@@ -1,0 +1,6 @@
+MANIFEST*
+RCS/
+Makefile
+*.elc
+setup.py
+commit.txt
