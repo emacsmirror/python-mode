@@ -986,6 +986,12 @@ See bug report at launchpad, lp:944093. "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-force-py-shell-name-p nil
+  "When `t', execution with kind of Python specified in `py-shell-name' is enforced, possibly shebang doesn't take precedence. "
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-ipython-execute-delay 0.3
   "Delay needed by execute functions when no IPython shell is running. "
   :type 'float
@@ -6615,7 +6621,7 @@ interpreter.
   (interactive "P")
   (py-shell argprompt t))
 
-(defun py-shell-name-prepare (name &optional sepchar)
+(defun py-buffer-name-prepare (name &optional sepchar)
   "Return an appropriate name to display in modeline.
 SEPCHAR is the file-path separator of your system. "
   (let ((sepchar (or sepchar (py-separator-char)))
@@ -6639,6 +6645,16 @@ SEPCHAR is the file-path separator of your system. "
           (t (setq erg (concat "*" erg "*"))))
     erg))
 
+(defun py-delete-numbers-and-stars-from-string (string)
+  "Delete numbering and star chars from string, return result.
+
+Needed when file-path names are contructed from maybe numbered buffer names like \"\*Python\*<2> \""
+  (replace-regexp-in-string
+   "<\\([0-9]+\\)>" ""
+   (replace-regexp-in-string
+    "\*" ""
+    string)))
+
 (defun py-shell (&optional argprompt dedicated pyshellname switch sepchar)
   "Start an interactive Python interpreter in another window.
 
@@ -6654,7 +6670,8 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
   (interactive "P")
   (let ((sepchar (or sepchar (py-separator-char)))
         (args py-python-command-args)
-        (oldbuf (current-buffer)))
+        (oldbuf (current-buffer))
+        proc)
     (let* ((buffer
             (when argprompt
               (cond
@@ -6662,7 +6679,7 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
                 (setq buffer
                       (prog1
                           (read-buffer "Py-Shell buffer: "
-                                       (generate-new-buffer-name (py-shell-name-prepare (or pyshellname py-shell-name) sepchar)))
+                                       (generate-new-buffer-name (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar)))
                         (if (file-remote-p default-directory)
                             ;; It must be possible to declare a local default-directory.
                             (setq default-directory
@@ -6683,11 +6700,7 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
                         (replace-regexp-in-string
                          "<\\([0-9]+\\)>" ""
                          buffer))
-                       (replace-regexp-in-string
-                        "<\\([0-9]+\\)>" ""
-                        (replace-regexp-in-string
-                         "\*" ""
-                         buffer))))
+                       (py-delete-numbers-and-stars-from-string buffer)))
                   (pyshellname pyshellname)
                   ((stringp py-shell-name)
                    py-shell-name)
@@ -6700,7 +6713,7 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
               (when py-use-local-default
                 (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
            (py-buffer-name-prepare (unless buffer
-                                     (py-shell-name-prepare py-process-name sepchar)))
+                                     (py-buffer-name-prepare py-process-name sepchar)))
            (py-buffer-name (or buffer py-buffer-name-prepare))
            (executable (cond (buffer
                               (downcase (replace-regexp-in-string
@@ -6709,17 +6722,13 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
                                           "\*" ""
                                           py-buffer-name buffer))))
                              (pyshellname pyshellname)
-                             (t py-shell-name)))
-           ;; (expand-file-name "~/arbeit/python/Python-3.2.2/python"))
-           )
+                             (t py-shell-name))))
       (py-set-shell-completion-environment executable)
-      (when py-split-windows-on-execute-p
-        (funcall py-split-windows-on-execute-function))
       ;; comint
       (if buffer
           (set-buffer (get-buffer-create
-                       (apply 'make-comint-in-buffer py-buffer-name py-buffer-name executable nil args)))
-        (set-buffer (apply 'make-comint-in-buffer py-buffer-name py-buffer-name executable nil args)))
+                       (apply 'make-comint-in-buffer executable py-buffer-name executable nil args)))
+        (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args)))
       (set (make-local-variable 'comint-prompt-regexp)
            (concat "\\("
                    (mapconcat 'identity
@@ -6740,6 +6749,7 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
       (comint-read-input-ring t)
       (set-process-sentinel (get-buffer-process (current-buffer))
                             #'shell-write-history-on-exit)
+      (setq proc (get-buffer-process (current-buffer)))
       ;; pdbtrack
       (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
       (setq py-pdbtrack-do-tracking-p t)
@@ -6758,14 +6768,16 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-shell-switch-buffers-on-
                       (not (eq switch 'switch))))
              (pop-to-buffer (current-buffer))
              (delete-other-windows)
-             (when py-split-windows-on-execute-p
+             (when (and py-split-windows-on-execute-p
+                        (or (and (eq py-split-windows-on-execute-function 'split-window-vertically) window-full-height-p)
+                            (and (eq py-split-windows-on-execute-function 'split-window-horizontally) window-full-width-p)))
                (funcall py-split-windows-on-execute-function))
              ;; (message (buffer-name (current-buffer)))
              (set-buffer oldbuf)
              (switch-to-buffer (current-buffer))))
       (goto-char (point-max))
       (when (and py-verbose-p (interactive-p)) (message py-buffer-name))
-      py-buffer-name)))
+      proc)))
 
 (defalias 'iyp 'ipython)
 (defalias 'ipy 'ipython)
@@ -7136,19 +7148,19 @@ When called from a programm, it accepts a string specifying a shell which will b
 
 (defun py-execute-base (start end &optional shell dedicated switch nostars sepchar)
   "Adapt the variables used in the process. "
-  (let* ((pop-up-windows py-shell-switch-buffers-on-execute-p)
-         (shell (or shell (py-choose-shell)))
+  (let* ((shell (or shell (py-choose-shell)))
          (regbuf (current-buffer))
          (py-execute-directory (or (ignore-errors (file-name-directory (buffer-file-name)))(getenv "WORKON_HOME")(getenv "HOME")))
          (strg (buffer-substring-no-properties start end))
          (sepchar (or sepchar (py-separator-char)))
          ;; (name-raw (or shell (py-choose-shell)))
-         (name (py-shell-name-prepare shell sepchar))
-         (temp (make-temp-name name))
+         (name (py-buffer-name-prepare shell sepchar))
+         (temp (make-temp-name shell))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
          (filebuf (get-buffer-create file))
-         (proc (or (get-process name)
-                   (get-process (py-shell nil dedicated (or shell (downcase shell)) switch sepchar))))
+         (process-connection-type t)
+         (proc (or (get-process shell)
+                   (get-process (process-name (py-shell nil dedicated (or shell (downcase shell)) switch sepchar)))))
          (procbuf (if dedicated
                       (buffer-name (get-buffer (current-buffer)))
                     (buffer-name (get-buffer (py-process-name name dedicated nostars sepchar)))))
@@ -7172,9 +7184,8 @@ When called from a programm, it accepts a string specifying a shell which will b
     (kill-buffer filebuf)
     (if (file-readable-p file)
         (progn
-          (when (string-match "IPython" (process-name proc))
-            (unless (get-process "*IPython*")
-              (sit-for py-ipython-execute-delay)))
+          (when (string-match "ipython" (process-name proc))
+            (sit-for py-ipython-execute-delay))
           (setq erg (py-execute-file-base proc file pec))
           (setq py-exception-buffer (cons file (current-buffer)))
           ;; (set-buffer regbuf)
@@ -7426,12 +7437,13 @@ See also `\\[py-execute-region]'. "
 (defun py-execute-buffer (&optional shell dedicated switch)
   "Send the contents of the buffer to a Python interpreter.
 
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
 If the file local variable `py-master-file' is non-nil, execute the
 named file instead of the buffer's file.
-If there is a *Python* process buffer, it is used.
-If a clipping restriction is in effect, only the accessible portion of the buffer is sent. A trailing newline will be supplied if needed.
 
-With \\[univeral-argument] user is prompted to specify another then default shell.
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
 
 When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
 
@@ -7574,104 +7586,176 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
         (shell-command (concat "python " exec-execfile) output-buffer error-buffer)))))
 
 ;;; Execute forms at point
-(defun py-execute-block ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-block-p)
-                       (py-beginning-of-block))
-                 (push-mark)))
-          (end (py-end-of-block)))
-      (py-execute-region beg end))))
+(defun py-execute-statement (&optional shell dedicated switch)
+  "Send statement at point to a Python interpreter.
 
-(defun py-execute-block-or-clause ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-block-or-clause-p)
-                       (py-beginning-of-block-or-clause))
-                 (push-mark)))
-          (end (py-end-of-block-or-clause)))
-      (py-execute-region beg end))))
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
 
-(defun py-execute-class ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-class-p)
-                       (py-beginning-of-class))
-                 (push-mark)))
-          (end (py-end-of-class)))
-      (py-execute-region beg end))))
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
 
-(defun py-execute-clause ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-clause-p)
-                       (py-beginning-of-clause))
-                 (push-mark)))
-          (end (py-end-of-clause)))
-      (py-execute-region beg end))))
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
 
-(defun py-execute-def ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-def-p)
-                       (py-beginning-of-def))
-                 (push-mark)))
-          (end (py-end-of-def)))
-      (py-execute-region beg end))))
-
-(defun py-execute-def-or-class ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-def-or-class-p)
-                       (py-beginning-of-def-or-class))
-                 (push-mark)))
-          (end (py-end-of-def-or-class)))
-      (py-execute-region beg end))))
-
-(defun py-execute-expression ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-expression-p)
-                       (py-beginning-of-expression))
-                 (push-mark)))
-          (end (py-end-of-expression)))
-      (py-execute-region beg end))))
-
-(defun py-execute-partial-expression ()
-  "Send python-form at point as is to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-partial-expression-p)
-                       (py-beginning-of-partial-expression))
-                 (push-mark)))
-          (end (py-end-of-partial-expression)))
-      (py-execute-region beg end))))
-
-(defun py-execute-statement ()
-  "Send python-form at point as is to Python interpreter. "
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
   (interactive)
   (save-excursion
     (let ((beg (prog1
                    (or (py-beginning-of-statement-p)
-                       (py-beginning-of-statement))
-                 (push-mark)))
-          (end (py-end-of-statement)))
-      (py-execute-region beg end))))
+                       (py-beginning-of-statement))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-block (&optional shell dedicated switch)
+  "Send block at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-p)
+                       (py-beginning-of-block))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-clause (&optional shell dedicated switch)
+  "Send clause at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-clause-p)
+                       (py-beginning-of-clause))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-block-or-clause (&optional shell dedicated switch)
+  "Send block-or-clause at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-or-clause-p)
+                       (py-beginning-of-block-or-clause))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-def (&optional shell dedicated switch)
+  "Send def at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-p)
+                       (py-beginning-of-def))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-class (&optional shell dedicated switch)
+  "Send class at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-class-p)
+                       (py-beginning-of-class))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-def-or-class (&optional shell dedicated switch)
+  "Send def-or-class at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-or-class-p)
+                       (py-beginning-of-def-or-class))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-expression (&optional shell dedicated switch)
+  "Send expression at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-expression-p)
+                       (py-beginning-of-expression))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-partial-expression (&optional shell dedicated switch)
+  "Send partial-expression at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-partial-expression-p)
+                       (py-beginning-of-partial-expression))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
 
 ;;;
 (defun py-execute-line ()
@@ -9235,17 +9319,17 @@ Should you need more shells to select, extend this command by adding inside the 
                  mode-name "IPython"))
           ((string-match "python3" name)
            (setq py-shell-name name
-                 py-which-bufname (py-shell-name-prepare name)
+                 py-which-bufname (py-buffer-name-prepare name)
                  msg "CPython"
-                 mode-name (py-shell-name-prepare name)))
+                 mode-name (py-buffer-name-prepare name)))
           ((string-match "jython" name)
            (setq py-shell-name name
-                 py-which-bufname (py-shell-name-prepare name)
+                 py-which-bufname (py-buffer-name-prepare name)
                  msg "Jython"
-                 mode-name (py-shell-name-prepare name)))
+                 mode-name (py-buffer-name-prepare name)))
           ((string-match "python" name)
            (setq py-shell-name name
-                 py-which-bufname (py-shell-name-prepare name)
+                 py-which-bufname (py-buffer-name-prepare name)
                  msg "CPython"
                  mode-name py-which-bufname))
           (t

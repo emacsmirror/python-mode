@@ -30,6 +30,8 @@ New in version 6.0.6
   return values-- they allow repeats, i.e. when already
   at end-of-line, jumping to next end etc. 
 
+- new boolean `py-force-py-shell-name-p'
+  When `t', execution with Python specified in `py-shell-name' is en  forced, shebang will have no effect. Default is nil.
 
 New in version 6.0.5
 --------------------
