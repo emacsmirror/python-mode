@@ -33,14 +33,6 @@
 (defun py-execute-block-base ()
   (assert (markerp (py-execute-block)) nil "py-execute-block-test failed"))
 
-(defun py-execute-clause-test (&optional arg load-branch-function)
-  (interactive "p")
-  (let ((teststring "if True: print(\"I'm the py-execute-clause-test\")"))
-    (py-bug-tests-intern 'py-execute-clause-base arg teststring)))
-
-(defun py-execute-clause-base ()
-  (assert (markerp (py-execute-clause)) nil "py-execute-clause-test failed"))
-
 (defun py-execute-block-or-clause-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "if True: print(\"I'm the py-execute-block-or-clause-test\")"))

@@ -6589,17 +6589,16 @@ Returns char found. "
 
                          name)
                      (substring py-shell-name (or (string-match (concat sepchar ".+$") py-shell-name) 0))))
-         (name (cond (dedicated
-                      (make-temp-name (concat thisname "-")))
-                     ;; ((string-match "\*" (buffer-name))
-                     ;; (replace-regexp-in-string "\*" "" (buffer-name)))
-                     (t thisname)))
-         (erg (cond ((or (string-match "ipython" name)
-                         (string-match "IPython" name))
+         (nname (cond (dedicated
+                       (make-temp-name (concat thisname "-")))
+                      ;; ((string-match "\*" (buffer-name))
+                      ;; (replace-regexp-in-string "\*" "" (buffer-name)))
+                      (t thisname)))
+         (erg (cond ((or (string-match "ipython" nname)
+                         (string-match "IPython" nname))
                      "IPython")
-                    (name)
-                    )))
-    ;; (unless (or nostars (string-match "^\*" erg))(setq erg (concat "*" erg "*")))
+                    (nname))))
+    (unless (or nostars (string-match "^\*" erg))(setq erg (concat "*" erg "*")))
     erg))
 
 ;; from ipython.el
@@ -10886,14 +10885,13 @@ and resending the lines later. The lines are stored in reverse order")
 (defun py-shell-execute-string-now (string)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
-  (let* ((proc
-          (get-process (py-process-name)))
-         (procbuf (if (buffer-live-p (get-buffer (process-buffer proc)))
-                      (get-buffer (process-buffer proc))
-                    (py-shell nil nil py-shell-name)
-                    (py-shell-execute-string-now string)))
+  (let* ((proc (or (get-process py-shell-name)
+                   (prog1
+                       (py-shell nil nil py-shell-name)
+                     (sit-for 0.1))))
          (cmd (format "exec '''%s''' in {}"
                       (mapconcat 'identity (split-string string "\n") "\\n")))
+         (procbuf (process-buffer proc))
          (outbuf (get-buffer-create " *pyshellcomplete-output*"))
          (lines (reverse py-shell-input-lines)))
     (if (and proc (not py-file-queue))
