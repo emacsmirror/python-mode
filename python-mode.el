@@ -362,33 +362,40 @@ should be of the form `#x...' where `x' is not a blank or a tab, and
   "When t, comment lines are indented. "
   :type 'boolean
   :group 'python-mode)
-(defvar py-temp-directory nil)
-(defcustom py-temp-directory
+
+(defvar py-temp-directory
   (let ((ok '(lambda (x)
                (and x
                     (setq x (expand-file-name x)) ; always true
                     (file-directory-p x)
                     (file-writable-p x)
-                    x))))
-    (or (funcall ok py-temp-directory)
-        (funcall ok (getenv "TMPDIR"))
-        (funcall ok (getenv "TEMP/TMP"))
-        (funcall ok "/usr/tmp")
-        (funcall ok "/tmp")
-        (funcall ok "/var/tmp")
-        (and (eq system-type 'darwin)
-             (funcall ok "/var/folders"))
-        (and (or (eq system-type 'ms-dos)(eq system-type 'ms-dos)(eq system-type 'windows-nt))
-             (funcall ok (concat "c:" (py-separator-char) "Users" ))))
-    ;; (funcall ok ".")
-    (error
-     "Couldn't find a usable temp directory -- set `py-temp-directory'"))
+                    x)))
+        erg)
+    (or
+     (and (funcall ok (getenv "TMPDIR"))
+          (setq erg (getenv "TMPDIR")))
+     (and (funcall ok (getenv "TEMP/TMP"))
+          (setq erg (getenv "TEMP/TMP")))
+     (and (funcall ok "/usr/tmp")
+          (setq erg "/usr/tmp"))
+     (and (funcall ok "/tmp")
+          (setq erg "/tmp"))
+     (and (funcall ok "/var/tmp")
+          (setq erg "/var/tmp"))
+     (and (eq system-type 'darwin)
+          (funcall ok "/var/folders")
+          (setq erg "/var/folders"))
+     (and (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+          (funcall ok (concat "c:" (py-separator-char) "Users"))
+          (setq erg (concat "c:" (py-separator-char) "Users")))
+     ;; (funcall ok ".")
+     (error
+      "Couldn't find a usable temp directory -- set `py-temp-directory'"))
+    (when erg (setq py-temp-directory erg)))
   "*Directory used for temporary files created by a *Python* process.
 By default, the first directory from this list that exists and that you
 can write into: the value (if any) of the environment variable TMPDIR,
-/usr/tmp, /tmp, /var/tmp, or the current directory."
-  :type 'string
-  :group 'python-mode)
+/usr/tmp, /tmp, /var/tmp, or the current directory.")
 
 (defcustom py-beep-if-tab-change t
   "*Ring the bell if `tab-width' is changed.
@@ -7645,25 +7652,6 @@ Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
           (end (py-end-of-block)))
       (py-execute-region beg end shell dedicated switch))))
 
-(defun py-execute-clause (&optional shell dedicated switch)
-  "Send clause at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-clause-p)
-                       (py-beginning-of-clause))))
-          (end (py-end-of-clause)))
-      (py-execute-region beg end shell dedicated switch))))
-
 (defun py-execute-block-or-clause (&optional shell dedicated switch)
   "Send block-or-clause at point to a Python interpreter.
 
@@ -11726,209 +11714,6 @@ Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
   "Send block at point to Python3.2 unique interpreter and switch to result. "
   (interactive)
   (py-execute-prepare "block" "python3.2" t 'switch))
-
-(defun py-execute-clause-python ()
-  "Send clause at point to Python interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python" nil nil))
-
-(defun py-execute-clause-python-switch ()
-  "Send clause at point to Python interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "python" nil 'switch))
-
-(defun py-execute-clause-python-noswitch ()
-  "Send clause at point to Python interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "python" nil 'noswitch))
-
-(defun py-execute-clause-python-dedicated ()
-  "Send clause at point to Pythonunique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python" t nil))
-
-(defun py-execute-clause-python-dedicated-switch ()
-  "Send clause at point to Python unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "python" t 'switch))
-
-(defun py-execute-clause-ipython ()
-  "Send clause at point to IPython interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "ipython" nil nil))
-
-(defun py-execute-clause-ipython-switch ()
-  "Send clause at point to IPython interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "ipython" nil 'switch))
-
-(defun py-execute-clause-ipython-noswitch ()
-  "Send clause at point to IPython interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "ipython" nil 'noswitch))
-
-(defun py-execute-clause-ipython-dedicated ()
-  "Send clause at point to IPythonunique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "ipython" t nil))
-
-(defun py-execute-clause-ipython-dedicated-switch ()
-  "Send clause at point to IPython unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "ipython" t 'switch))
-
-(defun py-execute-clause-python3 ()
-  "Send clause at point to Python3 interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python3" nil nil))
-
-(defun py-execute-clause-python3-switch ()
-  "Send clause at point to Python3 interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "python3" nil 'switch))
-
-(defun py-execute-clause-python3-noswitch ()
-  "Send clause at point to Python3 interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "python3" nil 'noswitch))
-
-(defun py-execute-clause-python3-dedicated ()
-  "Send clause at point to Python3unique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python3" t nil))
-
-(defun py-execute-clause-python3-dedicated-switch ()
-  "Send clause at point to Python3 unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "python3" t 'switch))
-
-(defun py-execute-clause-python2 ()
-  "Send clause at point to Python2 interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python2" nil nil))
-
-(defun py-execute-clause-python2-switch ()
-  "Send clause at point to Python2 interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "python2" nil 'switch))
-
-(defun py-execute-clause-python2-noswitch ()
-  "Send clause at point to Python2 interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "python2" nil 'noswitch))
-
-(defun py-execute-clause-python2-dedicated ()
-  "Send clause at point to Python2unique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python2" t nil))
-
-(defun py-execute-clause-python2-dedicated-switch ()
-  "Send clause at point to Python2 unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "python2" t 'switch))
-
-(defun py-execute-clause-python2.7 ()
-  "Send clause at point to Python2.7 interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python2.7" nil nil))
-
-(defun py-execute-clause-python2.7-switch ()
-  "Send clause at point to Python2.7 interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "python2.7" nil 'switch))
-
-(defun py-execute-clause-python2.7-noswitch ()
-  "Send clause at point to Python2.7 interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "python2.7" nil 'noswitch))
-
-(defun py-execute-clause-python2.7-dedicated ()
-  "Send clause at point to Python2.7unique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python2.7" t nil))
-
-(defun py-execute-clause-python2.7-dedicated-switch ()
-  "Send clause at point to Python2.7 unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "python2.7" t 'switch))
-
-(defun py-execute-clause-jython ()
-  "Send clause at point to Jython interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "jython" nil nil))
-
-(defun py-execute-clause-jython-switch ()
-  "Send clause at point to Jython interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "jython" nil 'switch))
-
-(defun py-execute-clause-jython-noswitch ()
-  "Send clause at point to Jython interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "jython" nil 'noswitch))
-
-(defun py-execute-clause-jython-dedicated ()
-  "Send clause at point to Jythonunique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "jython" t nil))
-
-(defun py-execute-clause-jython-dedicated-switch ()
-  "Send clause at point to Jython unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "jython" t 'switch))
-
-(defun py-execute-clause-python3.2 ()
-  "Send clause at point to Python3.2 interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python3.2" nil nil))
-
-(defun py-execute-clause-python3.2-switch ()
-  "Send clause at point to Python3.2 interpreter.
-
-Switch to output buffer. Ignores `py-shell-switch-buffers-on-execute-p'. "
-  (interactive)
-  (py-execute-prepare "clause" "python3.2" nil 'switch))
-
-(defun py-execute-clause-python3.2-noswitch ()
-  "Send clause at point to Python3.2 interpreter.
-
-Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
-  (interactive)
-  (py-execute-prepare "clause" "python3.2" nil 'noswitch))
-
-(defun py-execute-clause-python3.2-dedicated ()
-  "Send clause at point to Python3.2unique interpreter. "
-  (interactive)
-  (py-execute-prepare "clause" "python3.2" t nil))
-
-(defun py-execute-clause-python3.2-dedicated-switch ()
-  "Send clause at point to Python3.2 unique interpreter and switch to result. "
-  (interactive)
-  (py-execute-prepare "clause" "python3.2" t 'switch))
 
 (defun py-execute-block-or-clause-python ()
   "Send block-or-clause at point to Python interpreter. "
