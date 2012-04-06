@@ -97,8 +97,5 @@
 (defun py-execute-line-base ()
   (assert (markerp (py-execute-line)) nil "py-execute-line-test failed"))
 
-
-
 (provide 'python-extended-executes-test)
 ;;; python-extended-executes-test.el ends here
- 
