@@ -68,9 +68,9 @@
 (defun py-execute-buffer-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "print(\"I'm the py-execute-buffer-test\")"))
-    (py-bug-tests-intern 'py-execute-buffer-base arg teststring)))
+    (py-bug-tests-intern 'py-execute-buffer-test-base arg teststring)))
 
-(defun py-execute-buffer-base ()
+(defun py-execute-buffer-test-base ()
   (assert (markerp (py-execute-buffer)) nil "py-execute-buffer-test failed"))
 
 (defun py-execute-expression-test (&optional arg load-branch-function)
