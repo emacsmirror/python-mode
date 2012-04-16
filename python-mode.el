@@ -479,6 +479,13 @@ as gud-mode does for debugging C programs with gdb."
   :group 'python-mode)
 (make-variable-buffer-local 'py-pdbtrack-do-tracking-p)
 
+(defcustom py-pdbtrack-filename-mapping nil
+  "Supports mapping file paths when opening file buffers in pdbtrack.
+When non-nil this is an alist mapping paths in the Python interpreter
+to paths in Emacs."
+  :type 'alist
+  :group 'python-mode)
+
 (defcustom py-pdbtrack-minor-mode-string " PDB"
   "*String to use in the minor mode list when pdbtrack is enabled."
   :type 'string
@@ -8069,6 +8076,20 @@ script, and set to python-mode, and pdbtrack will find it.)"
             (py-pdbtrack-overlay-arrow t)
             (pop-to-buffer origbuf t)))))))
 
+(defun py-pdbtrack-map-filename (filename)
+
+  (let
+      ((replacement-val (assoc-default
+                         filename py-pdbtrack-filename-mapping
+                         (lambda (mapkey path)
+                           (string-match
+                            (concat "^" (regexp-quote mapkey))
+                            path)))
+                        ))
+    (if (not (eq replacement-val nil))
+        (replace-match replacement-val 't 't filename)
+      filename)))
+
 (defun py-pdbtrack-get-source-buffer (block)
   "Return line number and buffer of code indicated by block's traceback text.
 
@@ -8095,6 +8116,9 @@ problem as best as we can determine."
 
       (cond ((file-exists-p filename)
              (list lineno (find-file-noselect filename)))
+
+            ((file-exists-p (py-pdbtrack-map-filename filename))
+             (list lineno (find-file-noselect (py-pdbtrack-map-filename filename))))
 
             ((setq funcbuffer (py-pdbtrack-grub-for-buffer funcname lineno))
              (if (string-match "/Script (Python)$" filename)
