@@ -23,18 +23,17 @@
 ;;; Code:
 
 (setq python-mode-shell-complete-tests
-      (list
+        (list
 
-       'python-shell-complete-test
-       'usr-bin-python-shell-complete-test
-       'usr-bin-python2.7-shell-complete-test
-       'arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test
-       'usr-bin-python3-shell-complete-test
-       'usr-bin-python3.1-shell-complete-test
-       'ipython-shell-complete-test
-       'usr-bin-ipython-shell-complete-test
-       'arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test))
-
+'python-shell-complete-test
+'usr-bin-python-shell-complete-test
+'usr-bin-python2.7-shell-complete-test
+'arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test
+'usr-bin-python3-shell-complete-test
+'usr-bin-python3.1-shell-complete-test
+'ipython-shell-complete-test
+'usr-bin-ipython-shell-complete-test
+'arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test))
 (defun py-run-shell-complete-tests ()
   (interactive)
   (dolist (ele python-mode-shell-complete-tests)
@@ -45,141 +44,125 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "python" nil "/"))
-    (switch-to-buffer (current-buffer)) 
+    (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-python-test failed")
-    (when py-verbose-p (message "%s" "py- python-test passed"))))
+    (assert (looking-at "print") nil "python-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "python-shell-complete-test passed"))))
 
 
 (defun usr-bin-python-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "/usr/bin/python" nil "/"))
+    (set-buffer (py-shell nil t "/usr/bin/python" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-usr-bin-python-test failed")
-    (when py-verbose-p (message "%s" "py- usr-bin-python-test passed"))))
+    (assert (looking-at "print") nil "usr-bin-python-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "usr-bin-python-shell-complete-test passed"))))
 
 
 (defun usr-bin-python2.7-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "/usr/bin/python2.7" nil "/"))
+    (set-buffer (py-shell nil t "/usr/bin/python2.7" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-usr-bin-python2.7-test failed")
-    (when py-verbose-p (message "%s" "py- usr-bin-python2.7-test passed"))))
+    (assert (looking-at "print") nil "usr-bin-python2.7-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "usr-bin-python2.7-shell-complete-test passed"))))
 
 
 (defun arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "~/arbeit/python/epdfree/epd_free-7.2-2-rh5-x86/bin/python2.7" nil "/"))
+    (set-buffer (py-shell nil t "~/arbeit/python/epdfree/epd_free-7.2-2-rh5-x86/bin/python2.7" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-test failed")
-    (when py-verbose-p (message "%s" "py- arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-test passed"))))
+    (assert (looking-at "print") nil "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test passed"))))
 
 
 (defun usr-bin-python3-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "/usr/bin/python3" nil "/"))
+    (set-buffer (py-shell nil t "/usr/bin/python3" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-usr-bin-python3-test failed")
-    (when py-verbose-p (message "%s" "py- usr-bin-python3-test passed"))))
+    (assert (looking-at "print") nil "usr-bin-python3-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "usr-bin-python3-shell-complete-test passed"))))
 
 
 (defun usr-bin-python3.1-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "/usr/bin/python3.1" nil "/"))
+    (set-buffer (py-shell nil t "/usr/bin/python3.1" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-usr-bin-python3.1-test failed")
-    (when py-verbose-p (message "%s" "py- usr-bin-python3.1-test passed"))))
+    (assert (looking-at "print") nil "usr-bin-python3.1-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "usr-bin-python3.1-shell-complete-test passed"))))
 
 
 (defun ipython-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "ipython" nil "/"))
+    (set-buffer (py-shell nil t "ipython" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-ipython-test failed")
-    (when py-verbose-p (message "%s" "py- ipython-test passed"))))
+    (assert (looking-at "print") nil "ipython-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "ipython-shell-complete-test passed"))))
 
 
 (defun usr-bin-ipython-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "/usr/bin/ipython" nil "/"))
+    (set-buffer (py-shell nil t "/usr/bin/ipython" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-usr-bin-ipython-test failed")
-    (when py-verbose-p (message "%s" "py- usr-bin-ipython-test passed"))))
+    (assert (looking-at "print") nil "usr-bin-ipython-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "usr-bin-ipython-shell-complete-test passed"))))
 
 
 (defun arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil nil "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython" nil "/"))
+    (set-buffer (py-shell nil t "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython" nil "/"))
+    (sit-for 0.2 t)
     (goto-char (point-max))
-    (comint-send-input)
-    (beginning-of-line)
-    (delete-region (point) (line-end-position))
     (insert "pri")
     (completion-at-point)
     (beginning-of-line)
-    (assert (looking-at "print") nil "py-arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-test failed")
-    (when py-verbose-p (message "%s" "py- arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-test passed"))))
+    (assert (looking-at "print") nil "arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test failed")
+    (when py-verbose-p (message "%s" "arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test passed"))))
 
 
 
