@@ -34,6 +34,7 @@
 'ipython-shell-complete-test
 'usr-bin-ipython-shell-complete-test
 'arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test))
+
 (defun py-run-shell-complete-tests ()
   (interactive)
   (dolist (ele python-mode-shell-complete-tests)
