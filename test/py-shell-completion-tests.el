@@ -38,7 +38,8 @@
 (defun py-run-shell-complete-tests ()
   (interactive)
   (dolist (ele python-mode-shell-complete-tests)
-    (funcall ele)))
+    (funcall ele)
+    (sit-for 1)))
 
 (defun python-shell-complete-test ()
   (interactive)
