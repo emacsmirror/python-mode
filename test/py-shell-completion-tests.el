@@ -158,6 +158,7 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython" nil "/"))
+    (switch-to-buffer (current-buffer)) 
     (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
