@@ -4961,13 +4961,13 @@ enforced upon sessions execute commands.
 Toggles boolean `py-force-local-shell-p' along with `py-force-py-shell-name-p'
 Returns value of `toggle-force-local-shell' switched to.
 
-When on, kind of an option \"follow\", local shell sets `py-shell-name', enforces its use afterwards.
+When on, kind of an option 'follow', local shell sets `py-shell-name', enforces its use afterwards.
 
 See also commands
 `py-force-local-shell-on'
 `py-force-local-shell-off'
  "
-  (interactive "p")
+  (interactive (list arg))
   (let ((arg (or arg (if py-force-local-shell-p -1 1))))
     (if (< 0 arg)
         (progn
@@ -8721,6 +8721,10 @@ SEPCHAR is the file-path separator of your system. "
                  (replace-regexp-in-string "jython" "Jython" name))
                 ((string= "python" name)
                  (replace-regexp-in-string "python" "Python" name))
+                ((string-match "python2" name)
+                 (replace-regexp-in-string "python2" "Python2" name))
+                ((string-match "python3" name)
+                 (replace-regexp-in-string "python3" "Python3" name))
                 (t name)))
     (when dedicated
       (setq erg (make-temp-name (concat erg "-"))))
