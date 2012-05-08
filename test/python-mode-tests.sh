@@ -1092,6 +1092,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall usr-bin-ipython-shell-complete-test \
 \
 --funcall py-ipython-complete-lp:927136-test \
+--funcall py-describe-symbol-fails-on-modules-lp:919719-test \
 --funcall py-end-of-print-statement-test \
 --funcall py-menu-pyshell-test \
 --funcall split-windows-on-execute-p-test \
