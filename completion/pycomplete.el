@@ -62,8 +62,8 @@
   (let* ((pymacs-forget-mutability t)
          (symbol (py-symbol-near-point))
          (completions
-          (list (pycomplete-pycomplete symbol
-                                       (py-find-global-imports)))))
+          (pycomplete-pycomplete symbol
+                                 (py-find-global-imports))))
     (cond ((null completions) ; no matching symbol
            (message "Can't find completion for \"%s\"" symbol)
            (ding))
