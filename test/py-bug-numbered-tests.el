@@ -2701,6 +2701,5 @@ os.chmod
     (set-buffer "*Python-Help*")
     (assert (looking-at "Help on built-in function chmod in os:")  nil "py-describe-symbol-fails-on-modules-lp:919719-test failed"))
 
-
 (provide 'py-bug-numbered-tests)
 ;;; py-bug-numbered-tests.el ends here
