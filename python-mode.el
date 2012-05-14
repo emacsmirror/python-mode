@@ -580,7 +580,6 @@ variable section, e.g.:
 (make-variable-buffer-local 'py-master-file)
 
 (defvar py-pychecker-history nil)
-
 (defcustom py-pychecker-command "pychecker"
   "*Shell command used to run Pychecker."
   :type 'string
@@ -592,6 +591,22 @@ variable section, e.g.:
   :type '(repeat string)
   :group 'python-mode
   :tag "Pychecker Command Args")
+
+
+(defvar py-pylint-history nil)
+(defcustom py-pylint-command "pylint"
+  "*Shell command used to run Pylint."
+  :type 'string
+  :group 'python-mode
+  :tag "Pylint Command")
+
+(defcustom py-pylint-command-args '("--errors-only")
+  "*List of string arguments to be passed to pylint.
+
+Default is \"--errors-only\" "
+  :type '(repeat string)
+  :group 'python-mode
+  :tag "Pylint Command Args")
 
 (defvar py-shell-alist
   '(("jython" . 'jython)
@@ -8169,11 +8184,12 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
   (interactive "fDatei:")
   (let ((coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8)
-        (output-buffer (or output-buffer (make-temp-name "py-process-file-output"))))
+        (output-buffer (or output-buffer (make-temp-name "py-process-file-output")))
+        (cmd (py-choose-shell)))
     (unless (buffer-live-p output-buffer)
       (set-buffer (get-buffer-create output-buffer)))
-    (shell-command (concat "python " filename) output-buffer error-buffer)
-    (when (and py-verbose-p (interactive-p)) (switch-to-buffer output-buffer))))
+    (shell-command (concat cmd " " filename) output-buffer error-buffer)
+    (when (interactive-p) (switch-to-buffer output-buffer))))
 
 ;;;
 (defun py-exec-execfile-region (start end &optional shell)
@@ -8884,7 +8900,7 @@ Useful for newly defined symbol, not known to python yet. "
                         "try: pydoc.help(" sym ")\n")))
     (setq cmd (concat cmd
                       "except:
-    print 'No help available on:', \"" sym "\""))
+    print('No help available on: \"" sym "\"')\n"))
     (with-temp-buffer
       (insert cmd)
       (write-file file))
@@ -9847,6 +9863,22 @@ Uses `python-imports' to load modules against which to complete."
         (define-key map "\C-c=" 'py-down-exception)
         map))
 
+
+(defun py-choose-shell-by-path (&optional file-separator-char)
+  "Select Python executable according to version desplayed in path, current buffer-file is selected from.
+
+Returns versioned string, nil if nothing appropriate found "
+  (interactive)
+  (lexical-let ((path (buffer-file-name))
+                (file-separator-char (or file-separator-char (py-separator-char)))
+                erg)
+    (when (and path file-separator-char
+               (string-match (concat file-separator-char "[iI]?[pP]ython[0-9.]+" file-separator-char) path))
+      (setq erg (substring path
+                           (1+ (string-match (concat file-separator-char "[iI]?[pP]ython[0-9.]+" file-separator-char) path)) (1- (match-end 0)) )))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 (defun py-choose-shell-by-shebang ()
   "Choose shell by looking at #! on the first line.
 
@@ -9989,6 +10021,7 @@ Returns nil, if no executable found.
 This does the following:
  - look for an interpreter with `py-choose-shell-by-shebang'
  - examine imports using `py-choose-shell-by-import'
+ - look if Path/To/File already indicates a Python version
  - if not successful, return default value of `py-shell-name'
 
 When interactivly called, messages the shell name, Emacs would in the given circtumstances.
@@ -9998,12 +10031,15 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there.
   (interactive "P")
   (if (eq 4 (prefix-numeric-value arg))
       (py-switch-shell '(4))
-    (let* ((erg (cond (py-use-local-default
+    (let* ((erg (cond (py-force-py-shell-name-p
+                       py-shell-name)
+                      (py-use-local-default
                        (if (not (string= "" py-shell-local-path))
                            (expand-file-name py-shell-local-path)
                          (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
                       ((py-choose-shell-by-shebang))
                       ((py-choose-shell-by-import))
+                      ((py-choose-shell-by-path))
                       (py-shell-name py-shell-name)
                       (t (default-value 'py-shell-name))))
            (cmd (if py-edit-only-p erg
@@ -10126,21 +10162,27 @@ Returns value of `py-switch-buffers-on-execute-p'. "
     ;; py-send-region.  Fixme: uncomment these if we address that.
     map))
 
+(defun py-normalize-directory (directory &optional file-separator-char)
+  "Make sure DIRECTORY ends with a file-path separator char.
+
+Returns DIRECTORY"
+  (let* ((file-separator-char (or file-separator-char (py-separator-char)))
+         ;; (if (or (string-match "windows" (prin1-to-string system-type))
+         ;; (string-match "ms-dos" (prin1-to-string system-type)))
+         ;; "\\"
+         ;; "\/")
+         (erg (if (string-match (concat file-separator-char "$") directory)
+                  directory
+                (concat directory file-separator-char))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 (defun py-normalize-py-install-directory ()
   "Make sure `py-install-directory' ends with a file-path separator.
 
 Returns `py-install-directory' "
   (interactive)
-  (let* ((file-separator-char (if (or (string-match "windows" (prin1-to-string system-type))
-                                      (string-match "ms-dos" (prin1-to-string system-type)))
-                                  "\\"
-                                "\/"))
-         (erg (if (string-match (concat file-separator-char "$") py-install-directory)
-                  py-install-directory
-                (concat py-install-directory file-separator-char))))
-    (setq py-install-directory erg)
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-normalize-directory py-install-directory (py-separator-char)))
 
 (defun py-install-directory-check ()
   "Do some sanity check for `py-install-directory'.
@@ -10184,17 +10226,22 @@ See original source: http://pymacs.progiciels-bpi.ca"
       (error "`py-install-directory' not set, see INSTALL"))))
 
 (defun py-guess-py-install-directory ()
+  "Takes value of user directory aka $HOME
+if `(locate-library \"python-mode\")' is not succesful. "
   (interactive)
   (let ((erg (file-name-directory (locate-library "python-mode"))))
-    (when erg
-      (when (and py-verbose-p (interactive-p)) (message "Setting py-install-directory to: %s" erg))
-      (setq py-install-directory erg))))
+    (if erg
+        (progn
+          (setq py-install-directory erg)
+          (when (and py-verbose-p (interactive-p)) (message "Setting py-install-directory to: %s" erg)))
+      (setq py-install-directory (expand-file-name "~/")))
+    py-install-directory ))
 
 (defun py-set-load-path ()
   "Include needed subdirs of python-mode directory. "
   (interactive)
-  (let ((py-install-directory (py-normalize-py-install-directory)))
-    (cond (py-install-directory
+  (let ((py-install-directory (py-normalize-directory py-install-directory (py-separator-char))))
+    (cond ((and (not (string= "" py-install-directory))(stringp py-install-directory))
            (add-to-list 'load-path (expand-file-name py-install-directory))
            (add-to-list 'load-path (concat (expand-file-name py-install-directory) "completion"))
            (add-to-list 'load-path (concat (expand-file-name py-install-directory) "test"))
@@ -10299,9 +10346,14 @@ See original source: http://pymacs.progiciels-bpi.ca"
             ["Import/reload file" py-execute-import-or-reload
              :help "`py-execute-import-or-reload'
 Load into inferior Python session"]
+
             ["pychecker-run" py-pychecker-run
              :help "`py-pychecker-run'
 Run pychecker"]
+
+            ["pylint" py-pylint-run
+             :help "Extendet report options, plain checks \"--errors-only\" "]
+
             ["Debugger" pdb
              :help "`pdb'
 Run pdb under GUD"]
@@ -12813,6 +12865,56 @@ Bug: if no IPython-shell is running, fails first time due to header returned, wh
                (display-completion-list (all-completions pattern completion-table)))
              (message "Making completion list...%s" "done"))))
     completion))
+
+;;; Pylint
+(defalias 'pylint 'py-pylint-run)
+(defun py-pylint-run (command)
+  "*Run pylint (default on the file currently visited).
+
+For help see M-x pylint-help resp. M-x pylint-long-help.
+Home-page: http://www.logilab.org/project/pylint "
+  (interactive
+   (let ((default
+           (if (buffer-file-name)
+               (format "%s %s %s" py-pylint-command
+                       (mapconcat 'identity py-pylint-command-args " ")
+                       (buffer-file-name))
+             (format "%s %s" py-pylint-command
+                     (mapconcat 'identity py-pylint-command-args " "))))
+         (last (when py-pylint-history
+                 (let* ((lastcmd (car py-pylint-history))
+                        (cmd (cdr (reverse (split-string lastcmd))))
+                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                   (mapconcat 'identity newcmd " ")))))
+
+     (list
+      (if (fboundp 'read-shell-command)
+          (read-shell-command "Run pylint like this: "
+                              (if last
+                                  last
+                                default)
+                              'py-pylint-history)
+        (read-string "Run pylint like this: "
+                     (if last
+                         last
+                       default)
+                     'py-pylint-history)))))
+  (save-some-buffers (not py-ask-about-save) nil)
+  (if (fboundp 'compilation-start)
+      ;; Emacs.
+      (compilation-start command)
+    ;; XEmacs.
+    (when (featurep 'xemacs)
+      (compile-internal command "No more errors"))))
+
+(defun pylint-help ()
+  "Display Pylint command line help messages.
+
+Let's have this until more Emacs-like help is prepared "
+  (interactive)
+  (set-buffer (get-buffer-create "*Pylint-Help*"))
+  (erase-buffer)
+  (shell-command "pylint --long-help" "*Pylint-Help*"))
 
 ;;; Pychecker
 (defun py-pychecker-run (command)
