@@ -8896,23 +8896,14 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
          (beg (progn (when (and (looking-back "(")(not (looking-at "\\sw"))) (forward-char -1))  (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))(point)))
          (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
          (sym (buffer-substring-no-properties beg end))
-         ;; (sym (prin1-to-string (symbol-at-point)))
          (origfile (buffer-file-name))
          (temp (make-temp-name (buffer-name)))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
-         (cmd (py-find-imports))
-         ;; (quotes (string-match "\\." sym))
-         )
+         (cmd (py-find-imports)))
     (goto-char orig)
     (setq cmd (concat "import pydoc\n"
                       cmd))
-    ;; (if quotes
-    (setq cmd (concat cmd "try: pydoc.help('" sym "')\n"))
-    ;; (setq cmd (concat cmd
-    ;; "try: pydoc.help(" sym ")\n")))
-    (setq cmd (concat cmd
-                      "except:
-    print('No help available on: \"" sym "\"')\n"))
+    (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
     (with-temp-buffer
       (insert cmd)
       (write-file file))
@@ -10182,18 +10173,13 @@ Returns DIRECTORY"
          ;; (string-match "ms-dos" (prin1-to-string system-type)))
          ;; "\\"
          ;; "\/")
-         (erg (if (string-match (concat file-separator-char "$") directory)
-                  directory
-                (concat directory file-separator-char))))
+         (erg (cond ((string-match (concat file-separator-char "$") directory)
+                     directory)
+                    ((not (string= "" directory))
+                     (concat directory file-separator-char))
+                    (t (when py-verbose-p (message "Warning: directory is empty"))))))
     (when (interactive-p) (message "%s" erg))
     erg))
-
-(defun py-normalize-py-install-directory ()
-  "Make sure `py-install-directory' ends with a file-path separator.
-
-Returns `py-install-directory' "
-  (interactive)
-  (py-normalize-directory py-install-directory (py-separator-char)))
 
 (defun py-install-directory-check ()
   "Do some sanity check for `py-install-directory'.
@@ -10212,7 +10198,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (interactive)
   (let* ((pyshell (py-choose-shell))
          (path (getenv "PYTHONPATH"))
-         (py-install-directory (py-normalize-py-install-directory))
+         (py-install-directory (py-normalize-directory py-install-directory (py-separator-char)))
          (pymacs-installed-p
           (ignore-errors (string-match (expand-file-name (concat py-install-directory "Pymacs")) path))))
     ;; Python side
