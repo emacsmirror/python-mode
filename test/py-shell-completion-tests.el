@@ -103,6 +103,7 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python3" nil "/"))
+    (when (interactive-p) (switch-to-buffer (current-buffer))) 
     (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
