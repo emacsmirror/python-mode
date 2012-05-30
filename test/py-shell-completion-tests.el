@@ -97,22 +97,19 @@
     (assert (looking-at "print") nil "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test failed")
     (when py-verbose-p (message "%s" "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test passed"))))
 
-
 (defun usr-bin-python3-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python3" nil "/"))
-    (when (interactive-p) (switch-to-buffer (current-buffer))) 
-    (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
-    (sit-for 0.1)
     (beginning-of-line)
+    (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (sit-for 0.1)
     (assert (looking-at "print") nil "usr-bin-python3-shell-complete-test failed")
     (message "%s" "usr-bin-python3-shell-complete-test passed")))
-
 
 (defun usr-bin-python3.1-shell-complete-test ()
   (interactive)
