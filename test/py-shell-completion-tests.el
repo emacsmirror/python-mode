@@ -41,11 +41,12 @@
     (funcall ele)
     (sit-for 1)))
 
-(defun python-shell-complete-test ()
+(defun python-shell-complete-test  ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "python" nil "/"))
+    (when (interactive-p) (switch-to-buffer (current-buffer)))
     (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
