@@ -41,7 +41,7 @@
     (funcall ele)
     (sit-for 1)))
 
-(defun python-shell-complete-test  ()
+(defun python-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
@@ -49,9 +49,9 @@
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     (sit-for 0.2 t)
     (goto-char (point-max))
-    (insert "pri")
-    (completion-at-point)
-    (beginning-of-line)
+    (save-excursion
+      (insert "pri")
+      (completion-at-point))
     (assert (looking-at "print") nil "python-shell-complete-test failed")
     (message "%s" "python-shell-complete-test passed")))
 
@@ -61,11 +61,12 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python" nil "/"))
-    (sit-for 0.2 t)
+    (switch-to-buffer (current-buffer)) 
+    (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "usr-bin-python-shell-complete-test failed")
     (when py-verbose-p (message "%s" "usr-bin-python-shell-complete-test passed"))))
 
