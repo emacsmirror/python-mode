@@ -77,7 +77,7 @@
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python2.7" nil "/"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
-    (sit-for 0.2 t)
+    (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
