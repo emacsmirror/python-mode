@@ -61,7 +61,7 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python" nil "/"))
-    (switch-to-buffer (current-buffer)) 
+    (switch-to-buffer (current-buffer))
     (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
@@ -76,11 +76,12 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python2.7" nil "/"))
+    (when (interactive-p) (switch-to-buffer (current-buffer)))
     (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "usr-bin-python2.7-shell-complete-test failed")
     (message "%s" "usr-bin-python2.7-shell-complete-test passed")))
 
@@ -95,7 +96,7 @@
     (insert "pri")
     (completion-at-point)
     (sit-for 0.1)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test failed")
     (when py-verbose-p (message "%s" "arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test passed"))))
 
@@ -104,11 +105,11 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python3" nil "/"))
+    (when (interactive-p) (switch-to-buffer (current-buffer)))
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
-    (beginning-of-line)
-    (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (forward-word -1)
     (sit-for 0.1)
     (assert (looking-at "print") nil "usr-bin-python3-shell-complete-test failed")
     (message "%s" "usr-bin-python3-shell-complete-test passed")))
@@ -123,7 +124,7 @@
     (insert "pri")
     (completion-at-point)
     (sit-for 0.1)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "usr-bin-python3.1-shell-complete-test failed")
     (when py-verbose-p (message "%s" "usr-bin-python3.1-shell-complete-test passed"))))
 
@@ -138,7 +139,7 @@
     (insert "pri")
     (completion-at-point)
     (sit-for 0.1)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "ipython-shell-complete-test failed")
     (message "%s" "ipython-shell-complete-test passed")))
 
@@ -153,7 +154,7 @@
     (insert "pri")
     (completion-at-point)
     (sit-for 1 t)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "usr-bin-ipython-shell-complete-test failed")
     (message "%s" "usr-bin-ipython-shell-complete-test passed")))
 
@@ -169,7 +170,7 @@
     (insert "pri")
     (completion-at-point)
     (sit-for 1 t)
-    (beginning-of-line)
+    (forward-word -1)
     (assert (looking-at "print") nil "arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test failed")
     (message "%s" "arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test passed")))
 
