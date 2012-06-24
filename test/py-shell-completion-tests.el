@@ -119,7 +119,7 @@
   (let (py-shell-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/python3.1" nil "/"))
-    (sit-for 0.2 t)
+    (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
     (completion-at-point)
