@@ -1717,8 +1717,10 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
   (interactive "sPython command: ")
   (let* ((process (or process (python-shell-get-or-create-process)))
          (lines (split-string string "\n" t))
-         ;; (temp-file-name (make-temp-file "py"))
-         (temp-file-name (concat (py-normalize-directory py-temp-directory) "psss-temp.py"))
+         (temp-file-name (concat (with-current-buffer (process-buffer process)
+                                   (file-remote-p default-directory))
+                                 (py-normalize-directory py-temp-directory)
+                                 "psss-temp.py"))
          (file-name (or (buffer-file-name) temp-file-name)))
     ;; (when (and py-verbose-p msg)
     ;; (message (format "Sent: %s..." (nth 0 lines)))
@@ -1814,7 +1816,7 @@ FILE-NAME."
       (concat "__pyfile = open('''%s''');"
               "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
               "__pyfile.close()")
-      (or temp-file-name file-name) file-name)
+      (or (file-remote-p temp-file-name 'localname) file-name) file-name)
      process)))
 
 (defun python-shell-switch-to-shell ()
