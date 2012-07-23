@@ -26,12 +26,15 @@
 # 0. http://debbugs.gnu.org/cgi/bugreport.cgi?bug=11984
 # 1. http://bugs.python.org/issue13720
 
-# To execute the tests run:
+# To execute the tests run the following from within the directory:
 # ./python-mode-test.sh path/to/emacs/emacs
 
 # Code:
 
-EMACS_SOURCE_DIR="$HOME/emacs-23.4"
+if [ -z "$EMACS_SOURCE_DIR" ]; then
+    EMACS_SOURCE_DIR="$HOME/emacs-23.4"
+fi
+
 if [ $1 ]; then
     EMACS_SOURCE_DIR=$1
 fi
@@ -41,7 +44,8 @@ if [ $EMACS_SOURCE_DIR ]; then
 EMACS="$EMACS_SOURCE_DIR/src/emacs"
 
 # the directory that this file is in.
-TESTDIR="$(dirname "$0")"
+
+TESTDIR="."
 PDIR="$TESTDIR/.."
 
 HIGHL="highlight-indentation.el"
