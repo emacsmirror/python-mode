@@ -172,14 +172,6 @@ Default is nil "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-report-position-p nil
-  "If functions moving point like `py-forward-into-nomenclature' should report reached position.
-
-Default is nil. "
-
-  :type 'boolean
-  :group 'python-mode)
-
 (defcustom py-extensions "py-extensions.el"
   "File where extensions to python-mode.el should be installed. Used by virtualenv support. "
 
@@ -773,6 +765,12 @@ to select the appropriate python interpreter mode for a file.")
   :type 'string
   :group 'python-mode)
 
+(defcustom py-shell-prompt-read-only t
+  "If non-nil, the python prompt is read only.  Setting this
+variable will only effect new shells."
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-shell-switch-buffers-on-execute-p t
   "When non-nil switch to the new Python shell. "
 
@@ -858,7 +856,7 @@ value to determine defaults."
   :group 'python-mode)
 
 (defcustom py-shell-prompt-alist
-  '(("ipython" . "^In \\[[0-9]+\\]: *")
+  '(("ipython" . "^In \\[[0-9]+\\]: ")
     (t . "^>>> "))
   "Alist of Python input prompts.
 Each element has the form (PROGRAM . REGEXP), where PROGRAM is
@@ -870,7 +868,7 @@ element matches `py-shell-name'."
   :group 'python-mode)
 
 (defcustom py-shell-continuation-prompt-alist
-  '(("ipython" . "^   [.][.][.]+: *")
+  '(("ipython" . "^   [.][.][.]+: ")
     (t . "^[.][.][.] "))
   "Alist of Python continued-line prompts.
 Each element has the form (PROGRAM . REGEXP), where PROGRAM is
@@ -3784,7 +3782,12 @@ Returns `py-indent-offset'"
                                (setq firstindent (progn (py-beginning-of-block)(current-indentation))))
                              (when (ignore-errors (< firstindent (py-down-statement)))
                                (current-indentation)))))))
-           (guessed (when erg (abs (- firstindent erg)))))
+           (second (progn (py-end-of-statement)
+                          (py-end-of-statement)
+                          (py-beginning-of-statement)
+                          (current-indentation)))
+           (guessed (when erg
+                      (abs (- second erg)))))
       (if (and guessed (py-guessed-sanity-check guessed))
           (setq py-indent-offset guessed)
         (setq py-indent-offset (default-value 'py-indent-offset)))
@@ -5041,8 +5044,8 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat))
                ((and (eq origline (py-count-lines))
-                     (save-excursion (and (setq erg (py-go-to-keyword py-block-or-clause-re))
-                                          (ignore-errors (< orig (py-end-of-block-or-clause))))))
+                     (save-excursion (and (save-excursion (setq erg (py-go-to-keyword py-block-or-clause-re)))
+                                          (ignore-errors (< orig (or (py-end-of-block-or-clause)(point)))))))
                 (+ (car erg) (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset)))
                ((and (eq origline (py-count-lines))
                      (py-beginning-of-statement-p))
@@ -6272,15 +6275,20 @@ http://docs.python.org/reference/compound_stmts.html
 (defun py-go-to-keyword (regexp &optional maxindent)
   "Returns a list, whose car is indentation, cdr position. "
   (let ((orig (point))
-        (origline (py-count-lines))
+        ;; (origline (py-count-lines))
         (maxindent maxindent)
+        (first t)
         done erg cui)
     (while (and (not done) (not (bobp)))
       (py-beginning-of-statement)
-      (when (and (looking-at regexp)(if maxindent
-                                        (< (current-indentation) maxindent)t))
-        (setq erg (point))
-        (setq done t)))
+      (if (and (looking-at regexp)(if maxindent
+                                      (< (current-indentation) maxindent)t))
+          (progn
+            (setq erg (point))
+            (setq done t))
+        (when (and first (not maxindent))
+          (setq maxindent (current-indentation))
+          (setq first nil))))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
 
@@ -6352,7 +6360,8 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (skip-chars-forward "^;\t\r\n\f")
         (setq done t)
         (skip-chars-backward " " (line-beginning-position))
-        (py-end-of-statement orig done))
+        (when (< orig (point))
+          (py-end-of-statement orig done)))
        ;; in comment
        ((nth 4 pps)
         (if (eobp)
@@ -6376,9 +6385,8 @@ To go just beyond the final line of the current statement, use `py-down-statemen
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
         (skip-chars-forward "^;" (line-end-position))
-        (skip-chars-backward " \t\r\n\f")
         (py-beginning-of-comment)
-        (skip-chars-backward " \t\r\n\f")
+        (skip-chars-backward " " (line-beginning-position))
         (setq done t)
         (py-end-of-statement orig done))
        ((and (not done) (eq (point) orig)(looking-at ";"))
@@ -6386,8 +6394,7 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (when (< 0 (skip-chars-forward "^;" (line-end-position)))
           (py-beginning-of-comment)
           (skip-chars-backward " \t\r\n\f")
-          (setq done t)
-          )
+          (setq done t))
         (py-end-of-statement orig done))
        ((and (not done) (eq (point) orig))
         (skip-chars-forward "^;" (line-end-position))
@@ -7270,7 +7277,7 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
       (if (and (< orig (point)) (not (eobp)))
           (setq erg (point))
         (setq erg nil)))
-    (when (and py-report-position-p (or iact (interactive-p))) (message "%s" erg))
+    (when (and py-verbose-p (or iact (interactive-p))) (message "%s" erg))
     erg))
 
 (defun py-backward-into-nomenclature (&optional arg)
@@ -7640,7 +7647,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
                                 "\\|")
                      "\\)"))
         (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
-
+        (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
         (set (make-local-variable 'comint-use-prompt-regexp) t)
         (set (make-local-variable 'compilation-error-regexp-alist)
              python-compilation-regexp-alist)
