@@ -117,7 +117,7 @@ Default is nil. "
   :group 'python-mode)
 
 
-(defcustom py-smart-operator-mode-p t
+(defcustom py-smart-operator-mode-p nil
   "If python-mode calls (smart-operator-mode-on)
 
 Default is non-nil. "
@@ -14165,42 +14165,46 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
         (tab-to-tab-stop)
       (process-send-string python-process (format ccs pattern))
       (accept-process-output python-process 0.1)
-      (setq completions
-            (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
-      (setq completion (when completions
-                         (try-completion pattern completions))))
-    (cond ((eq completion t)
-           (if (eq this-command last-command)
-               (when python-completion-original-window-configuration
-                 (set-window-configuration
-                  python-completion-original-window-configuration)))
-           (setq python-completion-original-window-configuration nil)
-           (message "Can't find completion for \"%s\"" pattern)
-           (ding)
-           nil)
-          ((not (string= pattern completion))
-           (progn (delete-char (- (length pattern)))
-                  (insert completion)
-                  ;; minibuffer.el expects a list, a bug IMO
-                  nil))
-          ((< 1 (length completions))
-           (unless python-completion-original-window-configuration
-             (setq python-completion-original-window-configuration
-                   (current-window-configuration)))
-           (with-output-to-temp-buffer "*IPython Completions*"
-             (display-completion-list
-              (all-completions pattern completions)))
-           (set-buffer "*IPython Completions*")
-           (switch-to-buffer "*IPython Completions*")
-           (goto-char (point-min))
-           (when
-               (search-forward (car (all-completions pattern completions)))
-             (forward-word -1)
-             (delete-other-windows)
-             (word-at-point)))
-          ((null completion)
-           (message "Can't find completion for \"%s\"" pattern)
-           (ding)))))
+      (if ugly-return
+          (progn
+            (setq completions
+                  (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
+            ;; (setq completion (when completions
+            ;; (try-completion pattern completions)))
+            (if completions
+                (cond ((eq completions t)
+                       (if (eq this-command last-command)
+                           (when python-completion-original-window-configuration
+                             (set-window-configuration
+                              python-completion-original-window-configuration)))
+                       (setq python-completion-original-window-configuration nil)
+                       (message "Can't find completion for \"%s\"" pattern)
+                       (ding)
+                       nil)
+                      ((< 1 (length completions))
+                       (unless python-completion-original-window-configuration
+                         (setq python-completion-original-window-configuration
+                               (current-window-configuration)))
+                       (with-output-to-temp-buffer "*IPython Completions*"
+                         (display-completion-list
+                          (all-completions pattern completions)))
+                       (set-buffer "*IPython Completions*")
+                       (switch-to-buffer "*IPython Completions*")
+                       (goto-char (point-min))
+                       (when
+                           (search-forward (car (all-completions pattern completions)))
+                         (forward-word -1)
+                         (delete-other-windows)
+                         (word-at-point)))
+                      ((not (string= pattern (car completions)))
+                       (progn (delete-char (- (length pattern)))
+                              (insert (car completions))
+                              nil)))
+              (when py-no-completion-calls-dabbrev-expand-p
+                (ignore-errors (dabbrev-expand nil)))
+              (when py-indent-no-completion-p
+                (tab-to-tab-stop))))
+        (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
 
 (defun ipython-complete-py-shell-name (&optional done)
   "Complete the python symbol before point.
