@@ -1282,7 +1282,7 @@ v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncodeErr
 
 (defcustom py-trailing-whitespace-smart-delete-p nil
   "Default is nil. When t, python-mode calls
-    (add-hook 'before-save-hook 'delete-trailing-whitespace)
+    (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local)
 
 Also commands may delete trailing whitespace by the way.
 When editing other peoples code, this may produce a larger diff than expected "
@@ -13171,14 +13171,18 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                                                  (current-column))))
          (^ '(- (1+ (current-indentation))))))
 
+  (add-to-list 'load-path py-install-directory)
+  (add-to-list 'load-path (concat py-install-directory "extensions"))
   (when py-prepare-autopair-mode-p
+    ;; inlined here
+    ;; (load (concat py-install-directory (char-to-string py-separator-char) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
     (add-hook 'python-mode-hook
               #'(lambda ()
                   (setq autopair-handle-action-fns
                         (list #'autopair-default-handle-action
                               #'autopair-python-triple-quote-action)))))
   (when py-trailing-whitespace-smart-delete-p
-    (add-hook 'before-save-hook 'delete-trailing-whitespace))
+    (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
   (if py-complete-function
       (add-hook 'completion-at-point-functions
                 py-complete-function nil 'local)
