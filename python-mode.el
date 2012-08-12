@@ -13174,8 +13174,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (add-to-list 'load-path py-install-directory)
   (add-to-list 'load-path (concat py-install-directory "extensions"))
   (when py-prepare-autopair-mode-p
-    ;; inlined here
-    ;; (load (concat py-install-directory (char-to-string py-separator-char) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
+    (load (concat py-install-directory (char-to-string py-separator-char) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
     (add-hook 'python-mode-hook
               #'(lambda ()
                   (setq autopair-handle-action-fns
@@ -13214,9 +13213,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   ;; (run-mode-hooks 'python-mode-hook)
   (when py-outline-minor-mode-p (outline-minor-mode 1))
   (when py-smart-operator-mode-p
-    (unless (featurep 'smart-operator)
-      (load (concat (py-normalize-directory py-install-directory) "extensions/smart-operator.el")))
-    (smart-operator-mode-on))
+    (unless (featurep 'py-smart-operator)
+      (load (concat (py-normalize-directory py-install-directory) "extensions/py-smart-operator.el")))
+    (py-smart-operator-mode-on))
   (when (interactive-p) (message "python-mode loaded from: %s" "python-components-mode.el")))
 
 (defadvice pdb (before gud-query-cmdline activate)
