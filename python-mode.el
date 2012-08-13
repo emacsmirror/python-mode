@@ -116,7 +116,6 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
-
 (defcustom py-smart-operator-mode-p nil
   "If python-mode calls (smart-operator-mode-on)
 
@@ -3078,6 +3077,41 @@ Currently-active file is at the head of the list.")
 (add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
 (add-to-list 'same-window-buffer-names (purecopy "*Python*"))
 
+;; Bind python-file-queue before installing the kill-emacs-hook.
+(defvar python-file-queue nil
+  "Queue of Python temp files awaiting execution.
+Currently-active file is at the head of the list.")
+
+(defvar python-pdbtrack-is-tracking-p nil)
+
+(defconst python-pdbtrack-stack-entry-regexp
+  "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+  "Regular expression pdbtrack uses to find a stack trace entry.")
+
+(defconst python-pdbtrack-input-prompt "\n[(<]*[Ii]?[Pp]db[>)]+ "
+  "Regular expression pdbtrack uses to recognize a pdb prompt.")
+
+(defconst python-pdbtrack-track-range 10000
+  "Max number of characters from end of buffer to search for stack entry.")
+
+
+(defconst python-compilation-regexp-alist
+  ;; FIXME: maybe these should move to compilation-error-regexp-alist-alist.
+  ;;   The first already is (for CAML), but the second isn't.  Anyhow,
+  ;;   these are specific to the inferior buffer.  -- fx
+  `((,(rx line-start (1+ (any " \t")) "File \""
+          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
+          "\", line " (group (1+ digit)))
+     1 2)
+    (,(rx " in file " (group (1+ not-newline)) " on line "
+          (group (1+ digit)))
+     1 2)
+    ;; pdb stack trace
+    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
+          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
+     1 2))
+  "`compilation-error-regexp-alist' for inferior Python.")
+
 (defconst python-font-lock-syntactic-keywords
   ;; Make outer chars of matching triple-quote sequences into generic
   ;; string delimiters.  Fixme: Is there a better way?
@@ -3608,7 +3642,7 @@ Returns current indentation "
            (indent-to (+ need py-indent-offset)))
           ((not (eq 1 (prefix-numeric-value arg)))
            (py-smart-indentation-off)
-           (py-indent-line-intern)
+           (py-indent-line-intern need cui)
            (setq py-smart-indentation psi))
           (t (py-indent-line-intern need cui))))
   (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
@@ -7328,8 +7362,6 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
   (setq arg (or arg 1))
   (py-forward-into-nomenclature (- arg) arg))
 
-(defalias 'py-match-paren 'match-paren)
-
 (defun match-paren (&optional arg)
   "Go to the matching brace, bracket or parenthesis if on its counterpart.
 
@@ -8682,13 +8714,15 @@ Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
          (shell (or shell (progn (with-temp-buffer (insert-file-contents file)(py-choose-shell)))))
          (name (py-process-name shell dedicated))
          (proc (get-buffer-process (py-shell nil dedicated (or shell (downcase name)))))
-         (procbuf (if dedicated
-                      (buffer-name (get-buffer (current-buffer)))
-                    (buffer-name (get-buffer (concat "*" name "*")))))
+         (procbuf (get-process proc))
+         ;; (procbuf (if dedicated
+         ;;              (buffer-name (get-buffer (current-buffer)))
+         ;;            (buffer-name (get-buffer (concat "*" name "*")))))
          (pec (if (string-match "Python3" name)
                   (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file)
                 (format "execfile(r'%s') # PYTHON-MODE\n" file)))
-         (comint-scroll-to-bottom-on-output t))
+         (comint-scroll-to-bottom-on-output t)
+         erg)
     (if (file-readable-p file)
         (progn
           (setq erg (py-execute-file-base proc file pec))
@@ -10371,10 +10405,10 @@ Returns value of `py-smart-operator-mode-p' switched to. "
     (if (< 0 arg)
         (progn
           (setq py-smart-operator-mode-p t)
-          (smart-operator-mode 1))
+          (py-smart-operator-mode 1))
       (setq py-smart-operator-mode-p nil)
-      (smart-operator-mode 1))
-    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+      (py-smart-operator-mode -1))
+    (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
     py-smart-operator-mode-p))
 
 (defun py-smart-operator-mode-on (&optional arg)
@@ -10383,8 +10417,8 @@ Returns value of `py-smart-operator-mode-p' switched to. "
 Returns value of `py-smart-operator-mode-p'. "
   (interactive "p")
   (let ((arg (or arg 1)))
-    (toggle-py-smart-operator-mode-p arg))
-  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+    (py-toggle-smart-operator arg))
+  (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
   py-smart-operator-mode-p)
 
 (defun py-smart-operator-mode-off (&optional arg)
@@ -10393,8 +10427,8 @@ Returns value of `py-smart-operator-mode-p'. "
 Returns value of `py-smart-operator-mode-p'. "
   (interactive "p")
   (let ((arg (if arg (- arg) -1)))
-    (toggle-py-smart-operator-mode-p arg))
-  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+    (py-toggle-smart-operator arg))
+  (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
   py-smart-operator-mode-p)
 
 ;;; Split-Windows-On-Execute forms
@@ -11712,7 +11746,7 @@ Run pdb under GUD"]
             ["Toggle py-smart-indentation" toggle-py-smart-indentation
              :help "See also `py-smart-indentation-on', `-off' "]
 
-            ["Toggle py-smart-operator" smart-operator-mode
+            ["Toggle py-smart-operator" py-toggle-smart-operator
              :help "See also `py-smart-operator-on', `-off' "]
 
             ["Toggle indent-tabs-mode" py-toggle-indent-tabs-mode
@@ -13174,7 +13208,8 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (add-to-list 'load-path py-install-directory)
   (add-to-list 'load-path (concat py-install-directory "extensions"))
   (when py-prepare-autopair-mode-p
-    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
+    ;; components-python-mode keeps separate file/directory
+    ;; (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
     (add-hook 'python-mode-hook
               #'(lambda ()
                   (setq autopair-handle-action-fns
@@ -13426,42 +13461,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
 (or (assq 'python-pdbtrack-is-tracking-p minor-mode-alist)
     (push '(python-pdbtrack-is-tracking-p python-pdbtrack-minor-mode-string)
           minor-mode-alist))
-
-;; Bind python-file-queue before installing the kill-emacs-hook.
-(defvar python-file-queue nil
-  "Queue of Python temp files awaiting execution.
-Currently-active file is at the head of the list.")
-
-(defvar python-pdbtrack-is-tracking-p nil)
-
-(defconst python-pdbtrack-stack-entry-regexp
-  "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression pdbtrack uses to find a stack trace entry.")
-
-(defconst python-pdbtrack-input-prompt "\n[(<]*[Ii]?[Pp]db[>)]+ "
-  "Regular expression pdbtrack uses to recognize a pdb prompt.")
-
-(defconst python-pdbtrack-track-range 10000
-  "Max number of characters from end of buffer to search for stack entry.")
-
-;;;; Inferior mode stuff (following cmuscheme).
-
-(defconst python-compilation-regexp-alist
-  ;; FIXME: maybe these should move to compilation-error-regexp-alist-alist.
-  ;;   The first already is (for CAML), but the second isn't.  Anyhow,
-  ;;   these are specific to the inferior buffer.  -- fx
-  `((,(rx line-start (1+ (any " \t")) "File \""
-          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
-          "\", line " (group (1+ digit)))
-     1 2)
-    (,(rx " in file " (group (1+ not-newline)) " on line "
-          (group (1+ digit)))
-     1 2)
-    ;; pdb stack trace
-    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
-          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
-     1 2))
-  "`compilation-error-regexp-alist' for inferior Python.")
 
 (defvar inferior-python-mode-syntax-table
   (let ((st (make-syntax-table py-mode-syntax-table)))
@@ -17491,7 +17490,7 @@ FACE is the face to use.  If nil, then face `column-marker-1' is used."
 
 (defalias 'ipython-send-and-indent 'py-execute-line-ipython)
 (defalias 'py-execute-region-in-shell 'py-execute-region)
-(defalias 'py-shell-command-on-region 'py-execute-region-region)
+(defalias 'py-shell-command-on-region 'py-execute-region)
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (provide 'python-mode)
