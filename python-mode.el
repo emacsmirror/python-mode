@@ -1149,6 +1149,15 @@ actually punts to `jython-mode'."
   :group 'python-mode)
 (defvar py-exception-name-face 'py-exception-name-face)
 
+(defcustom py-set-complete-keymap-p  nil
+  "If `py-complete-initialize', which sets up enviroment for Pymacs based py-complete, should load it's keys into `python-mode-map'
+
+Default is nil.
+See also resp. edit `py-complete-set-keymap' "
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-use-local-default nil
   "If `t', py-shell will use `py-shell-local-path' instead
   of default Python.
