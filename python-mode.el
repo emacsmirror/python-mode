@@ -136,8 +136,11 @@ Default is non-nil. "
   :group 'python-mode)
 (make-variable-buffer-local 'py-smart-operator-mode-p)
 
-(defcustom py-prepare-autopair-mode-p t
-  "If autopair-mode hook should be loaded. Default is `t'. "
+(defcustom py-prepare-autopair-mode-p nil
+  "If autopair-mode stuff should be loaded. Default is `nil'
+
+When non-nil, M-x `autopair-mode' will toggle it.
+See also `autopair-mode-on'. "
   :type 'boolean
   :group 'python-mode)
 
