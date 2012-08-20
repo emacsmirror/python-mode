@@ -10651,14 +10651,15 @@ Returns `t' if successful. "
 
 (defun py-guess-py-install-directory ()
   "Takes value of user directory aka $HOME
-if `(locate-library \"python-mode\")' is not succesful. "
+if `(locate-library \"python-mode\")' is not succesful.
+
+Used only, if `py-install-directory' is empty. "
   (interactive)
   (let ((erg (file-name-directory (locate-library "python-mode"))))
     (if erg
-        (progn
-          (setq py-install-directory erg)
-          (when (and py-verbose-p (interactive-p)) (message "Setting py-install-directory to: %s" erg)))
+        (setq py-install-directory erg)
       (setq py-install-directory (expand-file-name "~/")))
+    (when (and py-verbose-p (interactive-p)) (message "Setting py-install-directory to: %s" py-install-directory))
     py-install-directory ))
 
 (defun py-set-load-path ()
