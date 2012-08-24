@@ -136,6 +136,19 @@ Default is non-nil. "
   :group 'python-mode)
 (make-variable-buffer-local 'py-smart-operator-mode-p)
 
+
+(defcustom py-sexp-function nil
+  "When set, it's value is called instead of `forward-sexp', `backward-sexp'
+
+Default is nil. "
+
+  :type '(choice
+          (const :tag "default" nil)
+          (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
+          (const :tag "py-end-of-expression" py-end-of-expression))
+  :group 'python-mode)
+(make-variable-buffer-local 'py-sexp-function)
+
 (defcustom py-prepare-autopair-mode-p nil
   "If autopair-mode stuff should be loaded. Default is `nil'
 
@@ -9311,6 +9324,10 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
             (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class)
             ;; (orgstruct-mode 1)
             ))
+
+(when py-sexp-function
+  (add-hook 'python-mode-hook
+            (set (make-local-variable 'forward-sexp-function) py-sexp-function)))
 
 (defun py-describe-mode ()
   "Dump long form of `python-mode' docs."
