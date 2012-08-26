@@ -5430,8 +5430,8 @@ will work.
       (py-beginning-of-partial-expression)
       (py-end-of-partial-expression)
       (when (eq orig (point))
-        (setq erg orig))
-      erg)))
+        (setq erg orig)))
+    erg))
 
 (defun py-end-of-block-p ()
   "Returns position, if cursor is at the end of a block, nil otherwise. "
@@ -5441,8 +5441,8 @@ will work.
       (py-beginning-of-block)
       (py-end-of-block)
       (when (eq orig (point))
-        (setq erg orig))
-      erg)))
+        (setq erg orig)))
+    erg))
 
 (defun py-end-of-clause-p ()
   "Returns position, if cursor is at the end of a clause, nil otherwise. "
@@ -9327,7 +9327,8 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
 
 (when py-sexp-function
   (add-hook 'python-mode-hook
-            (set (make-local-variable 'forward-sexp-function) py-sexp-function)))
+            (lambda ()
+              (set (make-local-variable 'forward-sexp-function) py-sexp-function))))
 
 (defun py-describe-mode ()
   "Dump long form of `python-mode' docs."
