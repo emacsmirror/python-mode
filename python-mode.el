@@ -2315,13 +2315,14 @@ Inludes Python shell-prompt in order to stop further searches. ")
        (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
          (match-beginning 0))))
 
-(defmacro empty-line-p ()
+
+(defun empty-line-p ()
   "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
   (interactive "p")
-  `(save-excursion
-     (progn
-       (beginning-of-line)
-       (looking-at "\\s-*$"))))
+  (save-excursion
+    (progn
+      (beginning-of-line)
+      (looking-at "\\s-*$"))))
 
 (defmacro py-escaped ()
   "Return t if char is preceded by an odd number of backslashes. "
