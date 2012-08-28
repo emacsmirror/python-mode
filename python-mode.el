@@ -16694,5 +16694,6 @@ See original source: http://pymacs.progiciels-bpi.ca"
 
 (when py-load-pymacs-p (py-load-pymacs))
 
+(provide 'python)
 (provide 'python-mode)
 ;;; python-mode.el ends here
