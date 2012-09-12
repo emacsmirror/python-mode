@@ -114,21 +114,6 @@
     (assert (looking-at "print") nil "usr-bin-python3-shell-complete-test failed")
     (message "%s" "usr-bin-python3-shell-complete-test passed")))
 
-(defun usr-bin-python3.1-shell-complete-test ()
-  (interactive)
-  (let (py-shell-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
-    (set-buffer (py-shell nil t "/usr/bin/python3.1" nil "/"))
-    (sit-for 0.1)
-    (goto-char (point-max))
-    (insert "pri")
-    (py-shell-complete)
-    (sit-for 0.1)
-    (forward-word -1)
-    (assert (looking-at "print") nil "usr-bin-python3.1-shell-complete-test failed")
-    (when py-verbose-p (message "%s" "usr-bin-python3.1-shell-complete-test passed"))))
-
-
 (defun ipython-shell-complete-test ()
   (interactive)
   (let (py-shell-switch-buffers-on-execute-p

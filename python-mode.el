@@ -309,6 +309,14 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
+
+(defcustom py-electric-colon-greedy-p nil
+  "If py-electric-colon should indent to the outmost reasonable level.
+
+If nil, default, it will not move from at any reasonable level. "
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-electric-colon-newline-and-indent-p nil
   "If non-nil, `py-electric-colon' will call `newline-and-indent'.  Default is `nil'. "
   :type 'boolean
@@ -3512,22 +3520,30 @@ non-electrically.
 
 Electric behavior is inhibited inside a string or
 comment or by universal prefix C-u.
-Default is nil, controlled by `py-electric-colon-active-p'"
+
+Switched by `py-electric-colon-active-p', default is nil
+See also `py-electric-colon-greedy-p' "
   (interactive "*P")
   (cond ((not py-electric-colon-active-p)
          (self-insert-command (prefix-numeric-value arg)))
         ((eq 4 (prefix-numeric-value arg))
          (self-insert-command 1))
-        (t (self-insert-command (prefix-numeric-value arg))
+        (t (if (interactive-p) (self-insert-command (prefix-numeric-value arg))
+             ;; used from dont-indent-code-unnecessarily-lp-1048778-test
+             (insert ":"))
            (unless (py-in-string-or-comment-p)
              (let ((orig (copy-marker (point)))
                    (indent (py-compute-indentation)))
                (unless (or (eq (current-indentation) indent)
+                           (and (not py-electric-colon-greedy-p)
+                                (eq (current-indentation)(save-excursion (py-beginning-of-block)(current-indentation))))
                            (and (py-top-level-form-p)(< (current-indentation) indent)))
                  (beginning-of-line)
                  (delete-horizontal-space)
                  (indent-to indent))
-               (goto-char orig))))))
+               (goto-char orig))
+             (when py-electric-colon-newline-and-indent-p
+               (py-newline-and-indent))))))
 
 (defun py-top-level-form-p ()
   "Return non-nil, if line starts with a top level definition.
@@ -5701,7 +5717,7 @@ is preferable for that. ")
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re indent)))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-minor-block-re indent)))))
     erg))
 
 (defun py-end-of-block ()
@@ -6394,14 +6410,15 @@ http://docs.python.org/reference/compound_stmts.html
 (defun py-go-to-keyword (regexp &optional maxindent)
   "Returns a list, whose car is indentation, cdr position. "
   (let ((orig (point))
-        ;; (origline (py-count-lines))
-        (maxindent maxindent)
+        (maxindent (or maxindent (and (< 0 (current-indentation))(current-indentation))
+                       ;; make maxindent large enough if not set
+                       (* 99 py-indent-offset)))
         (first t)
         done erg cui)
     (while (and (not done) (not (bobp)))
       (py-beginning-of-statement)
       (if (and (looking-at regexp)(if maxindent
-                                      (< (current-indentation) maxindent)t))
+                                      (<= (current-indentation) maxindent) t))
           (progn
             (setq erg (point))
             (setq done t))
