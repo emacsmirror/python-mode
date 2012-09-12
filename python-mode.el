@@ -3484,7 +3484,7 @@ Otherwise inherits from `py-mode-syntax-table'.")
 (defun py-electric-comment (arg)
   "Insert a comment. If starting a comment, indent accordingly.
 
-If a numeric argument ARG is provided, that many colons are inserted
+If a numeric argument ARG is provided, that many \"#\" are inserted
 non-electrically.
 With \\[universal-argument] \"#\" electric behavior is inhibited inside a string or comment."
   (interactive "*P")
