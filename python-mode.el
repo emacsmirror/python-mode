@@ -116,7 +116,6 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
-
 (defcustom py-load-pymacs-p nil
   "If Pymacs as delivered with python-mode.el shall be loaded.
 Default is nil.
@@ -135,7 +134,6 @@ Default is non-nil. "
   :type 'boolean
   :group 'python-mode)
 (make-variable-buffer-local 'py-smart-operator-mode-p)
-
 
 (defcustom py-sexp-function nil
   "When set, it's value is called instead of `forward-sexp', `backward-sexp'
@@ -308,7 +306,6 @@ Default is nil. "
   "`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions. "
   :type 'boolean
   :group 'python-mode)
-
 
 (defcustom py-electric-colon-greedy-p nil
   "If py-electric-colon should indent to the outmost reasonable level.
@@ -2223,20 +2220,17 @@ set in py-execute-region and used in py-jump-to-exception.")
 
 (defvar match-paren-no-use-syntax-pps nil)
 
-(defsubst py-keep-region-active ()
-  "Keep the region active in XEmacs."
-  ;; Ignore byte-compiler warnings you might see.  Also note that
-  ;; FSF's Emacs does it differently; its policy doesn't require us
-  ;; to take explicit action.
-  (and (boundp 'zmacs-region-stays)
-       (setq zmacs-region-stays t)))
+(defvar py-traceback-line-re
+  "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
+  "Regular expression that describes tracebacks.
+Inludes Python shell-prompt in order to stop further searches. ")
 
-;; Constants
+;;; Constants
 (defconst py-blank-or-comment-re "[ \t]*\\($\\|#\\)"
   "Regular expression matching a blank or comment line.")
 
 (defconst py-block-closing-keywords-re
-  "[ \t]*\\<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
+  "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
   "Matches the beginning of a class, method or compound statement. ")
 
 (defconst py-finally-re
@@ -2276,8 +2270,10 @@ set in py-execute-region and used in py-jump-to-exception.")
   "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
   "Regular expression that describes tracebacks.
 Inludes Python shell-prompt in order to stop further searches. ")
+;; (setq py-traceback-line-re
+;; "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)")
 
-(defconst py-assignment-re "\\<\\w+\\>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
+(defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
 
 (defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[: \n\t]"
@@ -2298,11 +2294,17 @@ Inludes Python shell-prompt in order to stop further searches. ")
 (defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|def\\|class\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+(defconst py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
   "Matches the beginning of a compound statement or it's clause. ")
+;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
+
+(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound statement or it's clause.
+Includes def and class. ")
 
 (defconst py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]"
   "Matches the beginning of a compound statement's clause. ")
+;; (setq py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]")
 
 (defconst py-elif-re "[ \t]*\\_<\\elif\\_>[: \n\t]"
   "Matches the beginning of a compound if-statement's clause exclusively. ")
@@ -2322,15 +2324,6 @@ Inludes Python shell-prompt in order to stop further searches. ")
   `(or (nth 8 (syntax-ppss))
        (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
          (match-beginning 0))))
-
-
-(defun empty-line-p ()
-  "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
-  (interactive "p")
-  (save-excursion
-    (progn
-      (beginning-of-line)
-      (looking-at "\\s-*$"))))
 
 (defmacro py-escaped ()
   "Return t if char is preceded by an odd number of backslashes. "
@@ -2359,6 +2352,23 @@ Inludes Python shell-prompt in order to stop further searches. ")
      (beginning-of-line)
      (or (py-preceding-line-backslashed-p)
          (< 0 (nth 0 (syntax-ppss))))))
+
+;;;
+(defun empty-line-p ()
+  "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
+  (interactive "p")
+  (save-excursion
+    (progn
+      (beginning-of-line)
+      (looking-at "\\s-*$"))))
+
+(defsubst py-keep-region-active ()
+  "Keep the region active in XEmacs."
+  ;; Ignore byte-compiler warnings you might see.  Also note that
+  ;; FSF's Emacs does it differently; its policy doesn't require us
+  ;; to take explicit action.
+  (and (boundp 'zmacs-region-stays)
+       (setq zmacs-region-stays t)))
 
 (defun py-count-lines (&optional start end)
   "Count lines in accessible part until current line.
@@ -5008,9 +5018,9 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                ((and (bobp)
                      (eq origline (py-count-lines)))
                 (current-indentation))
-               ((and (bobp)(py-statement-opens-block-p))
+               ((and (bobp)(py-statement-opens-block-p py-extended-block-or-clause-re))
                 (+ (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset) (current-indentation)))
-               ((and (bobp)(not (py-statement-opens-block-p)))
+               ((and (bobp)(not (py-statement-opens-block-p py-extended-block-or-clause-re)))
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps))
@@ -5070,7 +5080,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                                         (progn
                                           (save-excursion
                                             (back-to-indentation)
-                                            (looking-at py-block-or-clause-re)))
+                                            (looking-at py-extended-block-or-clause-re)))
                                         (progn
                                           (back-to-indentation)
                                           (+ (current-column) (* 2 py-indent-offset)))
@@ -5158,7 +5168,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                         (py-compute-indentation orig origline closing line inside repeat))
                     (py-beginning-of-statement)
                     (py-compute-indentation orig origline closing line inside repeat))))
-               ((py-statement-opens-block-p)
+               ((py-statement-opens-block-p py-extended-block-or-clause-re)
                 (if (< (py-count-lines) origline)
                     (+ (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset) (current-indentation))
                   (py-compute-indentation orig origline closing line inside t)))
@@ -5523,9 +5533,9 @@ in stricter or wider sense.
 
 For stricter sense specify regexp. "
   (interactive)
-  (let* ((regexp (or regexp py-block-re))
+  (let* ((regexp (or regexp py-block-or-clause-re))
          (erg (py-statement-opens-base regexp)))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-statement-opens-base (regexp)
@@ -5536,9 +5546,9 @@ For stricter sense specify regexp. "
       (py-end-of-statement)
       (py-beginning-of-statement)
       (when (and
-             (looking-back "^[ \t]*") (<= (line-beginning-position)(point))(looking-at regexp))
+             (<= (line-beginning-position) orig)(looking-back "^[ \t]*")(looking-at regexp))
         (setq erg (point))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-statement-opens-clause-p ()
@@ -5576,37 +5586,99 @@ and `pass'.  This doesn't catch embedded statements."
         (looking-at py-block-closing-keywords-re)
       (goto-char here))))
 
+(defun py-end-of-clause-intern (&optional regexp orig)
+  "Used internal by functions going to the end of a current clause. "
+  (unless (eobp)
+    (let* ((regexp (or regexp py-block-or-clause-re))
+           (orig (or orig (point)))
+           (erg (if (py-statement-opens-block-p regexp)
+                    (point)
+                  (py-go-to-keyword py-extended-block-or-clause-re)
+                  (when (py-statement-opens-block-p regexp)
+                    (point))))
+           ind res)
+      (if erg
+          (progn
+            (setq ind (+ py-indent-offset (current-indentation)))
+            (py-end-of-statement)
+            (forward-line 1)
+            (setq erg (py-travel-current-indent ind)))
+        (goto-char orig)
+        (py-look-downward-for-clause))
+      (when (empty-line-p)
+        (skip-chars-backward " \t\r\n\f")
+        (py-beginning-of-comment)
+        (skip-chars-backward " \t\r\n\f"))
+      (when (eq (point) orig)
+        (py-look-downward-for-clause))
+      (when (< orig (point))
+        (setq res (point)))
+      res)))
+
 (defun py-end-base (regexp &optional orig)
   "Used internal by functions going to the end forms. "
   (let ((orig (or orig (point)))
-        (erg (if (py-statement-opens-block-p regexp)
-                 (point)
-               (py-go-to-keyword regexp)
-               (when (py-statement-opens-block-p regexp)
-                 (point))))
-        ind)
-    (if erg
+        (this (if (py-statement-opens-block-p regexp)
+                  (point)
+                (py-go-to-keyword regexp)
+                (when (py-statement-opens-block-p regexp)
+                  (point))))
+        ind erg last)
+    (if this
         (progn
           (setq ind (+ py-indent-offset (current-indentation)))
           (py-end-of-statement)
           (forward-line 1)
-          (setq erg (py-travel-current-indent ind)))
-      (py-look-downward-for-beginning regexp)
-      (unless (eobp)(py-end-base regexp orig)))
-    (if (< orig (point))
-        (setq erg (point))
-      (setq erg (py-look-downward-for-beginning regexp))
-      (when erg (py-end-base regexp orig)))
+          (py-travel-current-indent ind))
+      (py-look-downward-for-beginning regexp))
+    (when (py-look-downward-for-clause nil orig)
+      (while (and (setq last (point))
+                  (py-look-downward-for-clause nil orig)))
+      (goto-char last)
+      (py-end-of-clause))
+    (when (< orig (point))
+      (setq erg (point)))
     erg))
 
 (defun py-look-downward-for-beginning (regexp)
   "When above any beginning of FORM, search downward. "
-  (let ((erg (re-search-forward regexp nil (quote move) 1)))
+  (let ((erg (re-search-forward regexp nil t 1)))
     (if (and erg (not (py-in-string-or-comment-p))
              (not (py-in-list-p)))
         erg
       (unless (eobp)
         (py-look-downward-for-beginning regexp)))))
+
+(defun py-look-downward-for-clause (&optional ind orig)
+  "If beginning of other clause exists downward in current block.
+
+If succesful return position. "
+  (interactive)
+  (unless (eobp)
+    (let ((ind (or ind
+                   (save-excursion
+                     (py-beginning-of-statement)
+                     (if (py-statement-opens-block-p)
+                         (current-indentation)
+                       (- (current-indentation) py-indent-offset)))))
+          (orig (or orig (point)))
+          erg last)
+      (end-of-line)
+      (setq erg
+            (progn
+              (when (re-search-forward py-extended-block-or-clause-re nil t 1)
+                (when (nth 8 (syntax-ppss))
+                  (while (and (re-search-forward py-extended-block-or-clause-re nil t 1)
+                              (nth 8 (syntax-ppss)))))
+                (setq last (point))
+                (back-to-indentation)
+                (if (and (looking-at py-clause-re)
+                         (not (nth 8 (syntax-ppss))) (eq (current-indentation) ind))
+                    (setq erg (py-end-of-clause))
+                  (goto-char orig)
+                  nil))))
+      (when (interactive-p) (message "%s" erg))
+      erg)))
 
 (defun py-current-defun (&optional iact)
   "Go to the outermost method or class definition in current scope.
@@ -5751,7 +5823,7 @@ Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (let* ((orig (point))
-         (erg (py-end-base py-clause-re orig)))
+         (erg (py-end-of-clause-intern py-block-or-clause-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
@@ -6452,9 +6524,10 @@ To go just beyond the final line of the current statement, use `py-down-statemen
   (interactive)
   (unless (eobp)
     (let ((pps (syntax-ppss))
-          (orig (point))
+          (orig (or orig (point)))
           ;; use by scan-lists
-          parse-sexp-ignore-comments erg stringchar)
+          parse-sexp-ignore-comments
+          erg stringchar)
       (cond
        ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
         (skip-chars-forward "^;" (line-end-position))
@@ -6538,11 +6611,17 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
         (setq done t)
+        (py-end-of-statement orig done))
+       ((bolp)
+        (end-of-line)
+        (py-beginning-of-comment)
+        (skip-chars-backward " \t\r\n\f")
+        (setq done t)
         (py-end-of-statement orig done)))
       (unless
           (or
            (eq (point) orig)
-           (eq 0 (current-column)))
+           (empty-line-p))
         (setq erg (point)))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
@@ -13127,11 +13206,11 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                      (save-excursion
                        (save-match-data
                          (goto-char (point-min))
-                         (when (re-search-forward (concat "^[ \t]*" (match-string-no-properties 1 word) "[ \t]*=[ \t]*[^ \n\r\f\t]+") nil t 1))
-                         (when py-verbose-p (message "%s" (match-string-no-properties 0)))
-                         (if imports
-                             (setq imports (concat imports (match-string-no-properties 0) ";"))
-                           (setq imports (match-string-no-properties 0))))))
+                         (when (re-search-forward (concat "^[ \t]*" (match-string-no-properties 1 word) "[ \t]*=[ \t]*[^ \n\r\f\t]+") nil t 1)
+                           (when py-verbose-p (message "%s" (match-string-no-properties 0)))
+                           (if imports
+                               (setq imports (concat imports (match-string-no-properties 0) ";"))
+                             (setq imports (match-string-no-properties 0)))))))
                    (python-shell-completion--do-completion-at-point proc imports word))
                (error "No completion process at proc"))))))
 
