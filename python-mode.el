@@ -1724,7 +1724,7 @@ else:
   :safe 'stringp)
 
 (defcustom python-shell-completion-string-code
-  "';'.join(__COMPLETER_all_completions('''%s'''))\n"
+  "';'.join(__COMPLETER_all_completions('''%s'''))"
   "Python code used to get a string of completions separated by semicolons."
   :type 'string
   :group 'python-mode
@@ -1740,7 +1740,7 @@ from IPython.core.completerlib import module_completion
 
 and use the following as the value of this variable:
 
-';'.join(module_completion('''%s'''))\n"
+';'.join(module_completion('''%s'''))"
   :type 'string
   :group 'python-mode
   :safe 'stringp)
@@ -5016,7 +5016,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
         (setq indent
               (cond
                ((and (bobp)
-                     (eq origline (py-count-lines)))
+                     (and (not line)(eq origline (py-count-lines))))
                 (current-indentation))
                ((and (bobp)(py-statement-opens-block-p py-extended-block-or-clause-re))
                 (+ (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset) (current-indentation)))
@@ -5024,7 +5024,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                 (current-indentation))
                ;; (py-in-triplequoted-string-p)
                ((and (nth 3 pps)(nth 8 pps))
-                (if (eq origline (py-count-lines))
+                (if (and (not line)(eq origline (py-count-lines)))
                     (progn
                       (forward-line -1)
                       (end-of-line)
@@ -5041,7 +5041,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                 (py-compute-indentation orig origline closing line inside repeat))
                ;; comments
                ((nth 8 pps)
-                (if (eq origline (py-count-lines))
+                (if (and (not line)(eq origline (py-count-lines)))
                     (progn
                       (goto-char (nth 8 pps))
                       (py-line-backward-maybe)
@@ -5052,7 +5052,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                       (current-column)
                     (forward-char -1)
                     (py-compute-indentation orig origline closing line inside repeat))))
-               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not py-indent-comments)(eq origline (py-count-lines)))
+               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not py-indent-comments)(not line)(eq origline (py-count-lines)))
                 0)
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
                 (forward-line -1)
@@ -5134,7 +5134,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                ((and (looking-at py-elif-re) (eq (py-count-lines) origline))
                 (py-line-backward-maybe)
                 (car (py-clause-lookup-keyword py-elif-re -1 nil orig origline)))
-               ((and (looking-at py-clause-re)(eq origline (py-count-lines)))
+               ((and (looking-at py-clause-re)(not line)(eq origline (py-count-lines)))
                 (cond ((looking-at py-finally-re)
                        (car (py-clause-lookup-keyword py-finally-re -1 nil orig origline)))
                       ((looking-at py-except-re)
@@ -5147,8 +5147,9 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                       ;; maybe at if, try, with
                       (t (car (py-clause-lookup-keyword py-block-or-clause-re -1 nil orig origline)))))
                ((looking-at py-block-or-clause-re)
-                (cond ((eq origline (py-count-lines))
+                (cond ((and (not line)(eq origline (py-count-lines)))
                        (py-line-backward-maybe)
+                       (setq line t)
                        (py-compute-indentation orig origline closing line inside t))
                       (t (+ (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset)(current-indentation)))))
                ((looking-at py-block-closing-keywords-re)
@@ -5171,17 +5172,20 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                ((py-statement-opens-block-p py-extended-block-or-clause-re)
                 (if (< (py-count-lines) origline)
                     (+ (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset) (current-indentation))
+                  (skip-chars-backward " \t\r\n\f")
+                  (setq line t)
+                  (back-to-indentation)
                   (py-compute-indentation orig origline closing line inside t)))
                ((and (< (py-count-lines) origline)(looking-at py-assignment-re))
                 (current-indentation))
                ((looking-at py-assignment-re)
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat))
-               ((and (eq origline (py-count-lines))
+               ((and (not line)(eq origline (py-count-lines))
                      (save-excursion (and (save-excursion (setq erg (py-go-to-keyword py-block-or-clause-re)))
                                           (ignore-errors (< orig (or (py-end-of-block-or-clause)(point)))))))
                 (+ (car erg) (if py-smart-indentation (py-guess-indent-offset nil orig origline) py-indent-offset)))
-               ((and (eq origline (py-count-lines))
+               ((and (not line)(eq origline (py-count-lines))
                      (py-beginning-of-statement-p))
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat))
