@@ -889,6 +889,12 @@ Also used by (minor-)outline-mode "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-imenu-create-index-function 'py-imenu-create-index-new
+  "Switch between `py-imenu-create-index-new', which also lists modules variables,  and series 5. index-machine"
+  :type '(choice (const :tag "'py-imenu-create-index-new, also lists modules variables " py-imenu-create-index-new)
+                 (const :tag "py-imenu-create-index, series 5. index-machine" py-imenu-create-index-function))
+  :group 'python-mode)
+
 (defcustom py-shell-name "python"
   "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command. "
   :type 'string
@@ -10086,21 +10092,18 @@ alternative for finding the index.")
 (defvar py-imenu-generic-parens nil)
 
 (defun py-switch-imenu-index-function ()
-  "For development only. Good old renamed `py-imenu-create-index'-function hangs with medium size files already. Working `py-imenu-create-index-new' is active by default.
-
-Switch between classic index machine `py-imenu-create-index'-function and new `py-imenu-create-index-new'.
-
-The former may provide a more detailed report, thus delivering two different index-machines is considered. "
+  "Switch between series 5. index machine `py-imenu-create-index' and `py-imenu-create-index-new', which also lists modules variables "
   (interactive)
   (if (eq major-mode 'python-mode)
       (progn
-        (if (eq imenu-create-index-function 'py-imenu-create-index-new)
-            (setq imenu-create-index-function #'py-imenu-create-index)
-          (setq imenu-create-index-function #'py-imenu-create-index-new))
-        (when (and py-verbose-p (interactive-p)) (message "imenu-create-index-function: %s" (prin1-to-string imenu-create-index-function))))
+        (if (eq py-imenu-create-index-function 'py-imenu-create-index-new)
+            (setq py-imenu-create-index-function 'py-imenu-create-index)
+          (setq py-imenu-create-index-function 'py-imenu-create-index-new))
+        (when py-verbose-p (message "imenu-create-index-function: %s" (prin1-to-string py-imenu-create-index-function)))
+        (funcall imenu-create-index-function))
     (error "%s" "Only available in buffers set to python-mode")))
 
-(defun py-imenu-create-index-function ()
+(defun py-imenu-create-index ()
   "Python interface function for the Imenu package.
 Finds all Python classes and functions/methods. Calls function
 \\[py-imenu-create-index-engine].  See that function for the details
@@ -11030,6 +11033,11 @@ Complete (qualified) symbol before point"]
             ["Find function" py-find-function
              :help "`py-find-function'
 Try to find source definition of function at point"]
+
+            ["Switch index-function" py-switch-imenu-index-function
+             :help "`py-switch-imenu-index-function'
+Switch between `py-imenu-create-index' from 5.1 series and `py-imenu-create-index-new'."]
+
             ["Update imports" py-update-imports
              :help "`py-update-imports'
 Update list of top-level imports for completion"]
@@ -12496,7 +12504,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
   (when (and py-imenu-create-index-p (fboundp 'imenu-add-to-menubar)(ignore-errors (require 'imenu)))
-    (setq imenu-create-index-function #'py-imenu-create-index-new)
+    (setq imenu-create-index-function py-imenu-create-index-function)
     (imenu-add-to-menubar "PyIndex"))
   ;; (when py-imenu-create-index-p (imenu-add-to-menubar "PyIndex"))
 
