@@ -1496,6 +1496,10 @@ or Inferior Python mode, so that source buffer stays associated with a
 specific sub-process. ")
 (make-variable-buffer-local 'python-buffer)
 
+(defvar py-bol-forms-last-indent nil
+  "For internal use. Stores indent from last py-end-of-FORM-bol command.
+When this-command is py-beginning-of-FORM-bol, last-command's indent will be considered in order to jump onto right beginning position.")
+
 (defun python-ffap-module-path (module)
   "Function for `ffap-alist' to return path for MODULE."
   (let ((process (or
@@ -2285,8 +2289,8 @@ Inludes Python shell-prompt in order to stop further searches. ")
 (defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[: \n\t]"
   "Matches the beginning of a compound statement. ")
 
-(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\)\\_>[: \n\t]"
-  "Matches the beginning of an `for', `if' or `try' block. ")
+(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of an `for', `if', `try' or `with' block. ")
 
 (defconst py-try-block-re "[ \t]*\\_<try\\_>[: \n\t]"
   "Matches the beginning of an `if' or `try' block. ")
@@ -5636,6 +5640,7 @@ and `pass'.  This doesn't catch embedded statements."
         ind erg last)
     (if this
         (progn
+          (setq py-bol-forms-last-indent (cons this-command (current-indentation)))
           (setq ind (+ py-indent-offset (current-indentation)))
           (py-end-of-statement)
           (forward-line 1)
@@ -6536,7 +6541,7 @@ http://docs.python.org/reference/compound_stmts.html
 (defun py-end-of-statement (&optional orig done)
   "Go to the last char of current statement.
 
-To go just beyond the final line of the current statement, use `py-down-statement-lc'. "
+To go just beyond the final line of the current statement, use `py-down-statement-bol'. "
   (interactive)
   (unless (eobp)
     (let ((pps (syntax-ppss))
@@ -6641,7 +6646,7 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (setq erg (point)))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
-
+;;;
 (defun py-goto-statement-below ()
   "Goto beginning of next statement. "
   (interactive)
@@ -7264,13 +7269,67 @@ Return beginning position, nil if not inside."
               (when iact (message "%s" last))
               last)))))))
 
-;;; Down
-(defun py-down-block-lc ()
+
+;;; Beginning-of-line forms
+(defun py-mark-base-bol (form &optional py-mark-decorators)
+  (let* ((begform (intern-soft (concat "py-beginning-of-" form "-bol")))
+         (endform (intern-soft (concat "py-end-of-" form "-bol")))
+         (begcheckform (intern-soft (concat "py-beginning-of-" form "-bol-p")))
+         (orig (point))
+         beg end erg)
+    (setq beg (if
+                  (setq beg (funcall begcheckform))
+                  beg
+                (funcall begform)))
+    (when py-mark-decorators
+      (save-excursion
+        (when (setq erg (py-beginning-of-decorator-bol))
+          (setq beg erg))))
+    (setq end (funcall endform))
+    (push-mark beg t t)
+    (unless end (when (< beg (point))
+                  (setq end (point))))
+    (when (interactive-p) (message "%s %s" beg end))
+    (cons beg end)))
+
+(defun py-beginning-of-block-bol-p ()
+  "Returns position, if cursor is at the beginning of block, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-block-bol)
+      (py-beginning-of-block-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-block-lc 'py-beginning-of-block-bol)
+(defun py-beginning-of-block-bol (&optional indent)
+  "Goto beginning of line where block starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-block': up from current definition to next beginning of block above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-block-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-block)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-block)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-block-lc 'py-end-of-block-bol)
+(defun py-end-of-block-bol ()
   "Goto beginning of line following end of block.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-block' stops at right corner.
+  Returns position reached, if successful, nil otherwise.
 
 See also `py-down-block': down from current definition to next beginning of block below. "
   (interactive)
@@ -7280,15 +7339,82 @@ See also `py-down-block': down from current definition to next beginning of bloc
         (forward-line 1)
         (beginning-of-line)
         (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-block-bol ()
+  "Mark block, take beginning of line positions.
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base-bol "block"))
+    (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-down-clause-lc ()
+(defun py-copy-block-bol ()
+  "Delete block bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-block-bol ()
+  "Delete block bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-block-bol ()
+  "Delete block bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-clause-bol-p ()
+  "Returns position, if cursor is at the beginning of clause, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-clause-bol)
+      (py-beginning-of-clause-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-clause-lc 'py-beginning-of-clause-bol)
+(defun py-beginning-of-clause-bol (&optional indent)
+  "Goto beginning of line where clause starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-clause': up from current definition to next beginning of clause above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-clause-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-clause)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-clause)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-clause-lc 'py-end-of-clause-bol)
+(defun py-end-of-clause-bol ()
   "Goto beginning of line following end of clause.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-clause' stops at right corner.
+  Returns position reached, if successful, nil otherwise.
 
 See also `py-down-clause': down from current definition to next beginning of clause below. "
   (interactive)
@@ -7298,15 +7424,167 @@ See also `py-down-clause': down from current definition to next beginning of cla
         (forward-line 1)
         (beginning-of-line)
         (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-clause-bol ()
+  "Mark clause, take beginning of line positions.
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base-bol "clause"))
+    (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-down-def-lc ()
+(defun py-copy-clause-bol ()
+  "Delete clause bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "clause")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-clause-bol ()
+  "Delete clause bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-clause-bol ()
+  "Delete clause bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-block-or-clause-bol-p ()
+  "Returns position, if cursor is at the beginning of block-or-clause, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-block-or-clause-bol)
+      (py-beginning-of-block-or-clause-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-block-or-clause-lc 'py-beginning-of-block-or-clause-bol)
+(defun py-beginning-of-block-or-clause-bol (&optional indent)
+  "Goto beginning of line where block-or-clause starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-block-or-clause': up from current definition to next beginning of block-or-clause above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-block-or-clause-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-block-or-clause)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-block-or-clause)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-block-or-clause-lc 'py-end-of-block-or-clause-bol)
+(defun py-end-of-block-or-clause-bol ()
+  "Goto beginning of line following end of block-or-clause.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-down-block-or-clause': down from current definition to next beginning of block-or-clause below. "
+  (interactive)
+  (let ((erg (py-end-of-block-or-clause)))
+    (when erg
+      (unless (eobp)
+        (forward-line 1)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-block-or-clause-bol ()
+  "Mark block-or-clause, take beginning of line positions.
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base-bol "block-or-clause"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-copy-block-or-clause-bol ()
+  "Delete block-or-clause bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block-or-clause")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-block-or-clause-bol ()
+  "Delete block-or-clause bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-block-or-clause-bol ()
+  "Delete block-or-clause bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-def-bol-p ()
+  "Returns position, if cursor is at the beginning of def, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-def-bol)
+      (py-beginning-of-def-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-def-lc 'py-beginning-of-def-bol)
+(defun py-beginning-of-def-bol (&optional indent)
+  "Goto beginning of line where def starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-def': up from current definition to next beginning of def above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-def-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-def)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-def)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-def-lc 'py-end-of-def-bol)
+(defun py-end-of-def-bol ()
   "Goto beginning of line following end of def.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-def' stops at right corner.
+  Returns position reached, if successful, nil otherwise.
 
 See also `py-down-def': down from current definition to next beginning of def below. "
   (interactive)
@@ -7316,15 +7594,84 @@ See also `py-down-def': down from current definition to next beginning of def be
         (forward-line 1)
         (beginning-of-line)
         (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-def-bol (&optional arg)
+  "Mark def, take beginning of line positions.
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
+Returns beginning and end positions of region, a cons. "
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        erg)
+    (py-mark-base-bol "def" py-mark-decorators)
+    (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-down-class-lc ()
+(defun py-copy-def-bol ()
+  "Delete def bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "def")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-def-bol ()
+  "Delete def bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-def-bol ()
+  "Delete def bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-class-bol-p ()
+  "Returns position, if cursor is at the beginning of class, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-class-bol)
+      (py-beginning-of-class-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-class-lc 'py-beginning-of-class-bol)
+(defun py-beginning-of-class-bol (&optional indent)
+  "Goto beginning of line where class starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-class': up from current definition to next beginning of class above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-class-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-class)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-class)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-class-lc 'py-end-of-class-bol)
+(defun py-end-of-class-bol ()
   "Goto beginning of line following end of class.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-class' stops at right corner.
+  Returns position reached, if successful, nil otherwise.
 
 See also `py-down-class': down from current definition to next beginning of class below. "
   (interactive)
@@ -7334,15 +7681,171 @@ See also `py-down-class': down from current definition to next beginning of clas
         (forward-line 1)
         (beginning-of-line)
         (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-class-bol (&optional arg)
+  "Mark class, take beginning of line positions.
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
+Returns beginning and end positions of region, a cons. "
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        erg)
+    (py-mark-base-bol "class" py-mark-decorators)
+    (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-down-statement-lc ()
+(defun py-copy-class-bol ()
+  "Delete class bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "class")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-class-bol ()
+  "Delete class bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-class-bol ()
+  "Delete class bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-def-or-class-bol-p ()
+  "Returns position, if cursor is at the beginning of def-or-class, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-def-or-class-bol)
+      (py-beginning-of-def-or-class-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-def-or-class-lc 'py-beginning-of-def-or-class-bol)
+(defun py-beginning-of-def-or-class-bol (&optional indent)
+  "Goto beginning of line where def-or-class starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-def-or-class': up from current definition to next beginning of def-or-class above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-def-or-class-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-def-or-class)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-def-or-class)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-def-or-class-lc 'py-end-of-def-or-class-bol)
+(defun py-end-of-def-or-class-bol ()
+  "Goto beginning of line following end of def-or-class.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-down-def-or-class': down from current definition to next beginning of def-or-class below. "
+  (interactive)
+  (let ((erg (py-end-of-def-or-class)))
+    (when erg
+      (unless (eobp)
+        (forward-line 1)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-def-or-class-bol (&optional arg)
+  "Mark def-or-class, take beginning of line positions.
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
+Returns beginning and end positions of region, a cons. "
+  (interactive "P")
+  (let ((py-mark-decorators (or arg py-mark-decorators))
+        erg)
+    (py-mark-base-bol "def-or-class" py-mark-decorators)
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-copy-def-or-class-bol ()
+  "Delete def-or-class bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "def-or-class")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-def-or-class-bol ()
+  "Delete def-or-class bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-def-or-class-bol ()
+  "Delete def-or-class bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-beginning-of-statement-bol-p ()
+  "Returns position, if cursor is at the beginning of statement, at beginning of line, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        (indent (current-indentation))
+        erg)
+    (save-excursion
+      (py-end-of-statement-bol)
+      (py-beginning-of-statement-bol indent)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defalias 'py-beginning-of-statement-lc 'py-beginning-of-statement-bol)
+(defun py-beginning-of-statement-bol (&optional indent)
+  "Goto beginning of line where statement starts.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-up-statement': up from current definition to next beginning of statement above. "
+  (interactive)
+  (let* ((indent (or indent (when (eq 'py-end-of-statement-bol (car py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
+         erg)
+    (if indent
+        (while (and (setq erg (py-beginning-of-statement)) (< indent (current-indentation))(not (bobp))))
+      (setq erg (py-beginning-of-statement)))
+    ;; reset
+    (setq py-bol-forms-last-indent nil)
+    (when erg
+      (unless (eobp)
+        (beginning-of-line)
+        (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-statement-lc 'py-end-of-statement-bol)
+(defun py-end-of-statement-bol ()
   "Goto beginning of line following end of statement.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-statement' stops at right corner.
+  Returns position reached, if successful, nil otherwise.
 
 See also `py-down-statement': down from current definition to next beginning of statement below. "
   (interactive)
@@ -7352,9 +7855,46 @@ See also `py-down-statement': down from current definition to next beginning of 
         (forward-line 1)
         (beginning-of-line)
         (setq erg (point))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-mark-statement-bol ()
+  "Mark statement, take beginning of line positions.
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base-bol "statement"))
+    (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
+(defun py-copy-statement-bol ()
+  "Delete statement bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "statement")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-kill-statement-bol ()
+  "Delete statement bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-delete-statement-bol ()
+  "Delete statement bol at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base-bol "block")))
+    (delete-region (car erg) (cdr erg))))
+
+;;;
+;;; Py-down commands start
 (defun py-down-statement ()
   "Go to the beginning of next statement below in buffer.
 
@@ -7421,9 +7961,9 @@ Returns indentation if block-or-clause found, nil otherwise. "
     erg))
 
 (defun py-down-def ()
-  "Go to the beginning of next def below in buffer.
+  "Go to the beginning of next function definition below in buffer.
 
-Returns indentation if def found, nil otherwise. "
+Returns indentation if found, nil otherwise. "
   (interactive)
   (let* ((orig (point))
          erg)
@@ -7458,9 +7998,8 @@ Returns indentation if def-or-class found, nil otherwise. "
       (while (and (setq erg (py-down-statement))(not (looking-at py-def-or-class-re)))))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
-;; Py-down commands end
 
-;; ripped from cc-mode
+;;; ripped from cc-mode
 (defun py-forward-into-nomenclature (&optional arg iact)
   "Move forward to end of a nomenclature section or word.
 
@@ -7600,17 +8139,17 @@ This function is appropriate for `comint-output-filter-functions'."
 
 When `py-separator-char' is customized, its taken.
 Returns char found. "
-  (let ((erg (cond ((characterp py-separator-char)
-                    (char-to-string py-separator-char))
-                   ;; epd hack
-                   ((and
-                     (string-match "[Ii][Pp]ython" py-shell-name)
-                     (string-match "epd\\|EPD" py-shell-name))
-                    (setq erg (shell-command-to-string (concat py-shell-name " -c \"import os; print(os.sep)\"")))
-                    (setq erg (replace-regexp-in-string "\n" "" erg))
-                    (when (string-match "^$" erg)
-                      (setq erg (substring erg (string-match "^$" erg)))))
-                   (t (setq erg (shell-command-to-string (concat py-shell-name " -W ignore" " -c \"import os; print(os.sep)\"")))))))
+  (let* ((erg (cond ((characterp py-separator-char)
+                     (char-to-string py-separator-char))
+                    ;; epd hack
+                    ((and
+                      (string-match "[Ii][Pp]ython" py-shell-name)
+                      (string-match "epd\\|EPD" py-shell-name))
+                     (setq erg (shell-command-to-string (concat py-shell-name " -c \"import os; print(os.sep)\"")))
+                     (setq erg (replace-regexp-in-string "\n" "" erg))
+                     (when (string-match "^$" erg)
+                       (setq erg (substring erg (string-match "^$" erg)))))
+                    (t (setq erg (shell-command-to-string (concat py-shell-name " -W ignore" " -c \"import os; print(os.sep)\"")))))))
     (replace-regexp-in-string "\n" "" erg)))
 
 (unless py-separator-char (setq py-separator-char (py-separator-char)))
@@ -12023,88 +12562,499 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p'. "]
         (easy-menu-define py-menu map "Python Mode Commands"
           `("PyEdit"
             :help "Python-specific features"
-            ["Copy block" py-copy-block
-             :help "`py-copy-block'
+            ("Block ... "
+             ["Beginning of block" py-beginning-of-block
+              :help "`py-beginning-of-block'
+Go to start of innermost compound statement at point"]
+             ["End of block" py-end-of-block
+              :help "`py-end-of-block'
+Go to end of innermost compound statement at point"]
+
+             ["Down block" py-down-block
+              :help "`py-down-block'
+
+Go to the beginning of next block below in buffer.
+
+Returns indentation if block found, nil otherwise. "]
+
+             ["Up block" py-up-block
+              :help "`py-up-block'
+
+Go upwards to the beginning of next block below in buffer.
+
+Returns indentation if block found, nil otherwise. "]
+
+             ["Copy block" py-copy-block
+              :help "`py-copy-block'
 Copy innermost compound statement at point"]
 
-            ["Copy clause" py-copy-clause
-             :help "`py-copy-clause'
-Copy clause at point"]
+             ["Kill block" py-kill-block
+              :help "`py-kill-block'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
 
-            ["Copy def-or-class" py-copy-def-or-class
-             :help "`py-copy-def-or-class'
+             ["Delete block" py-delete-block
+              :help "`py-delete-block'
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+
+             )
+            ("Def-or-class ... "
+             ["Beginning of Def-or-Class" py-beginning-of-def-or-class
+              :help "`py-beginning-of-def-or-class'
+Go to start of innermost definition at point"]
+
+             ["End of Def-or-Class" py-end-of-def-or-class
+              :help "`py-end-of-def-or-class'
+Go to end of innermost function definition at point"]
+
+             ["Down def-or-class" py-down-def-or-class
+              :help "`py-down-def-or-class'
+
+Go to the beginning of next def-or-class below in buffer.
+
+Returns indentation if def-or-class found, nil otherwise. "]
+
+             ["Up def-or-class" py-up-def-or-class
+              :help "`py-up-def-or-class'
+
+Go upwards to the beginning of next def-or-class below in buffer.
+
+Returns indentation if def-or-class found, nil otherwise. "]
+
+             ["Copy Def-or-Class" py-copy-def-or-class
+              :help "`py-copy-def-or-class'
 Copy innermost definition at point"]
 
-            ["Copy def" py-copy-def
-             :help "`py-copy-def'
-Copy method/function definition at point"]
+             ["Kill def-or-class" py-kill-def-or-class
+              :help "`py-kill-def-or-class'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
 
-            ["Copy class" py-copy-class
-             :help "`py-copy-class'
-Copy class definition at point"]
+             ["Delete def-or-class" py-delete-def-or-class
+              :help "`py-delete-def-or-class'
+Delete def-or-class at point, don't store deleted string in kill-ring"]
 
-            ["Copy statement" py-copy-statement
-             :help "`py-copy-statement'
-Copy statement at point"]
-            ["Copy expression" py-copy-expression
-             :help "`py-copy-expression'
-Copy expression at point"]
+             )
 
-            ["Copy partial expression" py-copy-partial-expression
-             :help "`py-copy-partial-expression'
-\".\" operators delimit a partial-expression expression on it's level"]
-            "-"
-            ["Beginning of block" py-beginning-of-block
-             :help "`py-beginning-of-block'
+            ("Clause ... "
+             ["Copy clause" py-copy-clause
+              :help "`py-copy-clause'
+Copy clause at point"]
+
+             ["Beginning of clause" py-beginning-of-clause
+              :help "`py-beginning-of-clause'
 Go to start of innermost compound statement at point"]
-            ["End of block" py-end-of-block
-             :help "`py-end-of-block'
+             ["End of clause" py-end-of-clause
+              :help "`py-end-of-clause'
 Go to end of innermost compound statement at point"]
-            ["Beginning of Def-or-Class" py-beginning-of-def-or-class
-             :help "`py-beginning-of-def-or-class'
+
+             ["Down clause" py-down-clause
+              :help "`py-down-clause'
+
+Go to the beginning of next clause below in buffer.
+
+Returns indentation if clause found, nil otherwise. "]
+
+             ["Up clause" py-up-clause
+              :help "`py-up-clause'
+
+Go upwards to the beginning of next clause below in buffer.
+
+Returns indentation if clause found, nil otherwise. "]
+
+             ["Copy clause" py-copy-clause
+              :help "`py-copy-clause'
+Copy innermost compound statement at point"]
+
+             ["Kill clause" py-kill-clause
+              :help "`py-kill-clause'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete clause" py-delete-clause
+              :help "`py-delete-clause'
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+
+             )
+
+
+            ("Statement ... "
+             ["Beginning of Statement" py-beginning-of-statement
+              :help "`py-beginning-of-statement'
 Go to start of innermost definition at point"]
-            ["End of Def-or-Class" py-end-of-def-or-class
-             :help "`py-end-of-def-or-class'
+
+             ["End of Statement" py-end-of-statement
+              :help "`py-end-of-statement'
 Go to end of innermost function definition at point"]
-            ["Beginning of class" py-beginning-of-class
-             :help "`py-beginning-of-class'
-Go to start of class definition "]
-            ["End of class" py-end-of-class
-             :help "`py-end-of-class'
-Go to end of class definition "]
-            ["Beginning of statement" py-beginning-of-statement
-             :help "`py-beginning-of-statement'
-Go to start of a Python statement"]
-            ["End of statement" py-end-of-statement
-             :help "`py-end-of-statement'
-Go to end of a Python statement"]
-            ["Beginning of expression" py-beginning-of-expression
-             :help "Go to the beginning of a compound python expression.
+
+             ["Up statement" py-up-statement
+              :help "`py-up-statement'
+
+Go upwards to the beginning of next statement below in buffer.
+
+Returns indentation if statement found, nil otherwise. "]
+
+             ["Copy statement" py-copy-statement
+              :help "`py-copy-statement'
+Copy innermost definition at point"]
+
+             ["Kill statement" py-kill-statement
+              :help "`py-kill-statement'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete statement" py-delete-statement
+              :help "`py-delete-statement'
+Delete statement at point, don't store deleted string in kill-ring"]
+
+             )
+
+            ("Expression ..."
+
+             ["Beginning of expression" py-beginning-of-expression
+              :help "Go to the beginning of a compound python expression.
 
 A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
-            ["End of expression" py-end-of-expression
-             :help "`py-end-of-expression'
+
+             ["End of expression" py-end-of-expression
+              :help "`py-end-of-expression'
 Go to the end of a compound python expression.
 
 A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
-            ["Beginning of minor expression" py-beginning-of-partial-expression
-             :help "`py-beginning-of-partial-expression'
+
+             ["Beginning of expression" py-beginning-of-expression
+              :help "`py-beginning-of-expression'
+Go to start of a Python expression"]
+
+             ["End of expression" py-end-of-expression
+              :help "`py-end-of-expression'
+Go to end of a Python expression"]
+
+             ["Copy expression" py-copy-expression
+              :help "`py-copy-expression'
+Copy expression at point"]
+
+             ["Kill expression" py-kill-expression
+              :help "`py-kill-expression'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete expression" py-delete-expression
+              :help "`py-delete-expression'
+Delete expression at point, don't store deleted string in kill-ring"]
+             )
+            ("Partial expression ..."
+
+             ["Beginning of minor expression" py-beginning-of-partial-expression
+              :help "`py-beginning-of-partial-expression'
 Go to start of an minor expression
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
-            ["End of partial-expression" py-end-of-partial-expression
-             :help "`py-end-of-partial-expression'
+
+             ["End of partial-expression" py-end-of-partial-expression
+              :help "`py-end-of-partial-expression'
 Go to end of an partial-expression
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
+
+             ["Copy partial expression" py-copy-partial-expression
+              :help "`py-copy-partial-expression'
+\".\" operators delimit a partial-expression expression on it's level"]
+
+             ["Kill partial-expression" py-kill-partial-expression
+              :help "`py-kill-partial-expression'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete partial-expression" py-delete-partial-expression
+              :help "`py-delete-partial-expression'
+Delete partial-expression at point, don't store deleted string in kill-ring"]
+
+             )
+
+            ("Class ... "
+             ["Beginning of Class" py-beginning-of-class
+              :help "`py-beginning-of-class'
+Go to start of innermost definition at point"]
+
+             ["End of Class" py-end-of-class
+              :help "`py-end-of-class'
+Go to end of innermost function definition at point"]
+
+             ["Down class" py-down-class
+              :help "`py-down-class'
+
+Go to the beginning of next class below in buffer.
+
+Returns indentation if class found, nil otherwise. "]
+
+             ["Up class" py-up-class
+              :help "`py-up-class'
+
+Go upwards to the beginning of next class below in buffer.
+
+Returns indentation if class found, nil otherwise. "]
+
+             ["Copy class" py-copy-class
+              :help "`py-copy-class'
+Copy innermost definition at point"]
+
+             ["Kill class" py-kill-class
+              :help "`py-kill-class'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete class" py-delete-class
+              :help "`py-delete-class'
+Delete class at point, don't store deleted string in kill-ring"]
+
+             )
+
+            ("Def ... "
+             ["Beginning of Def" py-beginning-of-def
+              :help "`py-beginning-of-def'
+Go to start of innermost definition at point"]
+
+             ["End of Def" py-end-of-def
+              :help "`py-end-of-def'
+Go to end of innermost function definition at point"]
+
+             ["Down def" py-down-def
+              :help "`py-down-def'
+
+Go to the beginning of next def below in buffer.
+
+Returns indentation if def found, nil otherwise. "]
+
+             ["Up def" py-up-def
+              :help "`py-up-def'
+
+Go upwards to the beginning of next def below in buffer.
+
+Returns indentation if def found, nil otherwise. "]
+
+             ["Copy def" py-copy-def
+              :help "`py-copy-def'
+Copy innermost definition at point"]
+
+             ["Kill def" py-kill-def
+              :help "`py-kill-def'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Delete def" py-delete-def
+              :help "`py-delete-def'
+Delete def at point, don't store deleted string in kill-ring"]
+
+             )
+            "-"
+            (" Block bol ... "
+             ["Beginning of block bol" py-beginning-of-block-bol
+              :help "`py-beginning-of-block-bol'
+Go to beginning of line at beginning of block.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of block bol" py-end-of-block-bol
+              :help "`py-end-of-block-bol'
+Go to beginning of line following end of block.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark block bol" py-mark-block-bol
+              :help "`py-mark-block-bol'
+Mark block at point. "]
+
+             ["Copy block bol" py-copy-block-bol
+              :help "`py-copy-block-bol'
+Copy block at point. "]
+
+             ["Kill block bol" py-kill-block-bol
+              :help "`py-kill-block-bol'
+Kill block at point. "]
+
+             ["Delete block bol" py-delete-block-bol
+              :help "`py-delete-block-bol'
+Delete block at point. "]
+             )
+
+            (" Clause bol ... "
+             ["Beginning of clause bol" py-beginning-of-clause-bol
+              :help "`py-beginning-of-clause-bol'
+Go to beginning of line at beginning of clause.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of clause bol" py-end-of-clause-bol
+              :help "`py-end-of-clause-bol'
+Go to beginning of line following end of clause.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark clause bol" py-mark-clause-bol
+              :help "`py-mark-clause-bol'
+Mark clause at point. "]
+
+             ["Copy clause bol" py-copy-clause-bol
+              :help "`py-copy-clause-bol'
+Copy clause at point. "]
+
+             ["Kill clause bol" py-kill-clause-bol
+              :help "`py-kill-clause-bol'
+Kill clause at point. "]
+
+             ["Delete clause bol" py-delete-clause-bol
+              :help "`py-delete-clause-bol'
+Delete clause at point. "]
+             )
+            (" Block-Or-Clause bol ... "
+             ["Beginning of block-or-clause bol" py-beginning-of-block-or-clause-bol
+              :help "`py-beginning-of-block-or-clause-bol'
+Go to beginning of line at beginning of block-or-clause.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of block-or-clause bol" py-end-of-block-or-clause-bol
+              :help "`py-end-of-block-or-clause-bol'
+Go to beginning of line following end of block-or-clause.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark block-or-clause bol" py-mark-block-or-clause-bol
+              :help "`py-mark-block-or-clause-bol'
+Mark block-or-clause at point. "]
+
+             ["Copy block-or-clause bol" py-copy-block-or-clause-bol
+              :help "`py-copy-block-or-clause-bol'
+Copy block-or-clause at point. "]
+
+             ["Kill block-or-clause bol" py-kill-block-or-clause-bol
+              :help "`py-kill-block-or-clause-bol'
+Kill block-or-clause at point. "]
+
+             ["Delete block-or-clause bol" py-delete-block-or-clause-bol
+              :help "`py-delete-block-or-clause-bol'
+Delete block-or-clause at point. "]
+             )
+            (" Def-Or-Class bol ... "
+             ["Beginning of def-or-class bol" py-beginning-of-def-or-class-bol
+              :help "`py-beginning-of-def-or-class-bol'
+Go to beginning of line at beginning of def-or-class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of def-or-class bol" py-end-of-def-or-class-bol
+              :help "`py-end-of-def-or-class-bol'
+Go to beginning of line following end of def-or-class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark def-or-class bol" py-mark-def-or-class-bol
+              :help "`py-mark-def-or-class-bol'
+Mark def-or-class at point. "]
+
+             ["Copy def-or-class bol" py-copy-def-or-class-bol
+              :help "`py-copy-def-or-class-bol'
+Copy def-or-class at point. "]
+
+             ["Kill def-or-class bol" py-kill-def-or-class-bol
+              :help "`py-kill-def-or-class-bol'
+Kill def-or-class at point. "]
+
+             ["Delete def-or-class bol" py-delete-def-or-class-bol
+              :help "`py-delete-def-or-class-bol'
+Delete def-or-class at point. "]
+             )
+            (" Statement bol ... "
+             ["Beginning of statement bol" py-beginning-of-statement-bol
+              :help "`py-beginning-of-statement-bol'
+Go to beginning of line at beginning of statement.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of statement bol" py-end-of-statement-bol
+              :help "`py-end-of-statement-bol'
+Go to beginning of line following end of statement.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark statement bol" py-mark-statement-bol
+              :help "`py-mark-statement-bol'
+Mark statement at point. "]
+
+             ["Copy statement bol" py-copy-statement-bol
+              :help "`py-copy-statement-bol'
+Copy statement at point. "]
+
+             ["Kill statement bol" py-kill-statement-bol
+              :help "`py-kill-statement-bol'
+Kill statement at point. "]
+
+             ["Delete statement bol" py-delete-statement-bol
+              :help "`py-delete-statement-bol'
+Delete statement at point. "]
+             )
+            (" Def bol ... "
+             ["Beginning of def bol" py-beginning-of-def-bol
+              :help "`py-beginning-of-def-bol'
+Go to beginning of line at beginning of def.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of def bol" py-end-of-def-bol
+              :help "`py-end-of-def-bol'
+Go to beginning of line following end of def.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark def bol" py-mark-def-bol
+              :help "`py-mark-def-bol'
+Mark def at point. "]
+
+             ["Copy def bol" py-copy-def-bol
+              :help "`py-copy-def-bol'
+Copy def at point. "]
+
+             ["Kill def bol" py-kill-def-bol
+              :help "`py-kill-def-bol'
+Kill def at point. "]
+
+             ["Delete def bol" py-delete-def-bol
+              :help "`py-delete-def-bol'
+Delete def at point. "]
+             )
+            (" Class bol ... "
+             ["Beginning of class bol" py-beginning-of-class-bol
+              :help "`py-beginning-of-class-bol'
+Go to beginning of line at beginning of class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of class bol" py-end-of-class-bol
+              :help "`py-end-of-class-bol'
+Go to beginning of line following end of class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark class bol" py-mark-class-bol
+              :help "`py-mark-class-bol'
+Mark class at point. "]
+
+             ["Copy class bol" py-copy-class-bol
+              :help "`py-copy-class-bol'
+Copy class at point. "]
+
+             ["Kill class bol" py-kill-class-bol
+              :help "`py-kill-class-bol'
+Kill class at point. "]
+
+             ["Delete class bol" py-delete-class-bol
+              :help "`py-delete-class-bol'
+Delete class at point. "]
+             )
+
+
+            "-"
             ["Backward into nomenclature" py-backward-into-nomenclature
              :help " `py-backward-into-nomenclature'
 Go backward into nomenclature
@@ -12116,52 +13066,7 @@ Go forward into nomenclature
 
 A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
             "-"
-            ["Down statement lc" py-down-statement-lc
-             :help "`py-down-statement-lc'
-Goto beginning of line following end of statement.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-statement' stops at right corner.
-
-See also `py-down-statement': down from current definition to next beginning of statement below. "]
-            ["Down block lc" py-down-block-lc
-             :help "`py-down-block-lc'
-Goto beginning of line following end of block.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-block' stops at right corner.
-
-See also `py-down-block': down from current definition to next beginning of block below. "]
-            ["Down def lc" py-down-def-lc
-             :help "`py-down-def-lc'
-Goto beginning of line following end of def.
-
-Returns position reached, if successful, nil otherwise.
-
-\"-lc\" stands for \"left-corner\" - a complementary command travelling left, whilst `py-end-of-def' stops at right corner.
-
-See also `py-down-def': down from current definition to next beginning of def below.
- "]
-            ["Down statement" py-down-statement
-             :help "`py-down-statement'
-
-Go to the beginning of next statement below in buffer.
-
-Returns indentation if statement found, nil otherwise. "]
-            ["Down block" py-down-block
-             :help "`py-down-block'
-
-Go to the beginning of next block below in buffer.
-
-Returns indentation if block found, nil otherwise. "]
-            ["Down def" py-down-def
-             :help "`py-down-def'
-
-Go to the beginning of next function definition below in buffer.
-
-Returns indentation if found, nil otherwise. "]))
+            ))
         ;; Python shell menu
         (easy-menu-define py-menu map "Python Shells"
           `("PyShell"
