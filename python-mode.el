@@ -3908,30 +3908,46 @@ Returns `py-indent-offset'"
   (save-excursion
     (let* ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
+           done
            (firstindent
-            (if (eq origline (py-count-lines))
-                (progn (py-beginning-of-statement)
-                       (if (eq origline (py-count-lines))
-                           (progn (py-beginning-of-statement)(current-column)) (current-column)))))
-           (erg (when firstindent
-                  (py-beginning-of-block)
-                  (if
-                      (< (current-column) firstindent)
-                      (current-column)
-                    (progn (goto-char orig)
-                           ;; need a block-start
-                           (when
-                               (setq firstindent (progn (py-beginning-of-block)(current-indentation)))
-                             (when (eq origline (py-count-lines))
-                               (setq firstindent (progn (py-beginning-of-block)(current-indentation))))
-                             (when (ignore-errors (< firstindent (py-down-statement)))
-                               (current-indentation)))))))
-           (second (progn (py-end-of-statement)
-                          (py-end-of-statement)
-                          (py-beginning-of-statement)
-                          (current-indentation)))
-           (guessed (when erg
-                      (abs (- second erg)))))
+            (cond ((py-beginning-of-statement-p)
+                   (current-column))
+                  ((py-beginning-of-statement)
+                   (current-column))
+                  (t (goto-char orig)
+                     (if (py-down-block)
+                         (current-column)
+                       ;; if nothing suitable around, us default
+                       (setq done t)
+                       (default-value 'py-indent-offset)))))
+           (secondindent
+            (if done (when (and
+                            (py-end-of-statement)
+                            (py-end-of-statement))
+                       (current-indentation))
+              (when firstindent
+                (if (py-statement-opens-block-p)
+                    (progn
+                      (when (and (py-end-of-statement)
+                                 (py-end-of-statement))
+                        (current-indentation)))
+                  (if (py-beginning-of-block)
+                      (progn
+                        (setq firstindent (current-indentation))
+                        (when (and (py-end-of-statement)
+                                   (py-end-of-statement))
+                          (current-indentation))))))))
+           guessed)
+      (unless secondindent
+        (setq secondindent
+              (when (py-end-of-block)
+                (progn (setq first (current-indentation))
+                       (when (and (py-end-of-statement)
+                                  (py-end-of-statement))
+                         (current-indentation))))))
+      (when secondindent
+        (setq guessed
+              (abs (- secondindent firstindent))))
       (if (and guessed (py-guessed-sanity-check guessed))
           (setq py-indent-offset guessed)
         (setq py-indent-offset (default-value 'py-indent-offset)))
@@ -5643,26 +5659,35 @@ and `pass'.  This doesn't catch embedded statements."
           (setq py-bol-forms-last-indent (cons this-command (current-indentation)))
           (setq ind (+ py-indent-offset (current-indentation)))
           (py-end-of-statement)
+          (setq last (point))
           (forward-line 1)
-          (py-travel-current-indent ind))
+          ;; when jumping clause for clause
+          (if (and (looking-at regexp)(not (nth 1 (syntax-ppss)))(not (nth 8 (syntax-ppss))))
+              (goto-char last)
+            (unless (py-travel-current-indent ind (point))
+              (goto-char last))))
       (py-look-downward-for-beginning regexp))
-    (when (py-look-downward-for-clause nil orig)
-      (while (and (setq last (point))
-                  (py-look-downward-for-clause nil orig)))
-      (goto-char last)
-      (py-end-of-clause))
+    ;; py-travel-current-indent will stop of clause at equal indent
+    (unless (and (or (string= regexp py-clause-re) (string= regexp py-block-or-clause-re))(< orig (point)))
+      (if (and (setq last (point)) (py-look-downward-for-clause nil orig))
+          (progn
+            (while (and (setq last (point))
+                        (py-look-downward-for-clause nil orig)))
+            (goto-char last)
+            (py-end-of-clause))
+        (goto-char last)))
     (when (< orig (point))
       (setq erg (point)))
     erg))
 
 (defun py-look-downward-for-beginning (regexp)
   "When above any beginning of FORM, search downward. "
-  (let ((erg (re-search-forward regexp nil t 1)))
-    (if (and erg (not (py-in-string-or-comment-p))
-             (not (py-in-list-p)))
-        erg
-      (unless (eobp)
-        (py-look-downward-for-beginning regexp)))))
+  (let ((orig (point))
+        erg)
+    (while (and (setq erg (point)) (not (eobp)) (re-search-forward regexp nil t 1)
+                (not (nth 8 (syntax-ppss))) (not (nth 1 (syntax-ppss)))))
+    (when (< orig erg)
+      erg)))
 
 (defun py-look-downward-for-clause (&optional ind orig)
   "If beginning of other clause exists downward in current block.
@@ -5799,18 +5824,20 @@ is preferable for that. ")
 
 ;;; Beg-end forms
 (defun py-beginning-of-block (&optional indent)
-  "Returns beginning of block if successful, nil otherwise.
+  "Go to beginning of block.
+
+Returns beginning of block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-minor-block-re indent)))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re indent)))))
     erg))
 
-(defun py-end-of-block ()
-  "Go to the end of block.
+(defun py-end-of-block (&optional indent)
+  "Go to end of block.
 
-Returns position reached, if any, nil otherwise.
+Returns end of block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -5821,7 +5848,9 @@ http://docs.python.org/reference/compound_stmts.html"
     erg))
 
 (defun py-beginning-of-clause (&optional indent)
-  "Returns beginning of clause if successful, nil otherwise.
+  "Go to beginning of clause.
+
+Returns beginning of clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -5829,21 +5858,23 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-clause-re indent)))))
     erg))
 
-(defun py-end-of-clause ()
-  "Go to the end of clause.
+(defun py-end-of-clause (&optional indent)
+  "Go to end of clause.
 
-Returns position reached, if any, nil otherwise.
+Returns end of clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (let* ((orig (point))
-         (erg (py-end-of-clause-intern py-block-or-clause-re orig)))
+         (erg (py-end-base py-clause-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
 (defun py-beginning-of-block-or-clause (&optional indent)
-  "Returns beginning of block-or-clause if successful, nil otherwise.
+  "Go to beginning of block-or-clause.
+
+Returns beginning of block-or-clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -5851,10 +5882,10 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-or-clause-re indent)))))
     erg))
 
-(defun py-end-of-block-or-clause ()
-  "Go to the end of block-or-clause.
+(defun py-end-of-block-or-clause (&optional indent)
+  "Go to end of block-or-clause.
 
-Returns position reached, if any, nil otherwise.
+Returns end of block-or-clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -5864,155 +5895,121 @@ http://docs.python.org/reference/compound_stmts.html"
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-beginning-of-def (&optional indent)
-  "Returns beginning of def if successful, nil otherwise.
+(defun py-beginning-of-def (&optional arg indent)
+  "Go to beginning of def.
+
+Returns beginning of def if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-re indent)))))
+  (interactive "P")
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-re indent))))
+        (py-mark-decorators (or arg py-mark-decorators)))
     erg))
 
-(defun py-end-of-def ()
-  "Go to the end of def.
+(defun py-end-of-def (&optional arg indent)
+  "Go to end of def.
 
-Returns position reached, if any, nil otherwise.
+Returns end of def if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-def-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-beginning-of-class (&optional indent)
-  "Returns beginning of class if successful, nil otherwise.
+(defun py-beginning-of-class (&optional arg indent)
+  "Go to beginning of class.
+
+Returns beginning of class if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-class-re indent)))))
+  (interactive "P")
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-class-re indent))))
+        (py-mark-decorators (or arg py-mark-decorators)))
     erg))
 
-(defun py-end-of-class ()
-  "Go to the end of class.
+(defun py-end-of-class (&optional arg indent)
+  "Go to end of class.
 
-Returns position reached, if any, nil otherwise.
+Returns end of class if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-class-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-beginning-of-def-or-class (&optional arg)
-  "Returns beginning of def-or-class if successful, nil otherwise.
+(defun py-beginning-of-def-or-class (&optional arg indent)
+  "Go to beginning of def-or-class.
 
-With \\[universal-argument] go to beginning of class.
+Returns beginning of def-or-class if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let ((erg (if (eq 4 (prefix-numeric-value arg))
-                 (ignore-errors (cdr (py-go-to-keyword py-class-re)))
-               (ignore-errors (cdr (py-go-to-keyword py-def-or-class-re))))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-or-class-re indent))))
+        (py-mark-decorators (or arg py-mark-decorators)))
     erg))
 
-(defun py-end-of-def-or-class (&optional arg)
-  "Go to the end of def-or-class.
+(defun py-end-of-def-or-class (&optional arg indent)
+  "Go to end of def-or-class.
 
-With \\[universal-argument] go to end of class.
-Returns position reached, if any, nil otherwise.
+Returns end of def-or-class if successful, nil otherwise
+
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (save-restriction
-    (widen)
-    (let* ((orig (point))
-           (pps (syntax-ppss))
-           ;; (origline (py-count-lines))
-           (erg
-            (if (eq 4 (prefix-numeric-value arg))
-                (if (and (not (nth 8 pps)) (looking-at py-class-re))
-                    (point)
-                  (py-go-to-keyword py-class-re)
-                  (when (and (not (nth 8 pps)) (looking-at py-class-re)) (point)))
-              (if (and (not (nth 8 pps)) (looking-at py-def-or-class-re))
-                  (point)
-                (py-go-to-keyword py-def-or-class-re)
-                (when (and (not (nth 8 pps)) (looking-at py-def-or-class-re)) (point)))))
-           ind)
-      (if erg
-          (progn
-            (setq ind
-                  (+ (if py-smart-indentation
-                         (save-excursion
-                           (goto-char orig)
-                           ;; (setq origline (py-count-lines))
-                           (py-end-of-statement)
-                           (py-end-of-statement)
-                           ;; (when (eq origline (py-count-lines)) (py-end-of-statement))
-                           (py-guess-indent-offset nil (point)))
-                       py-indent-offset)
-                     (current-indentation)))
-            (py-end-of-statement)
-            (forward-line 1)
-            (setq erg (py-travel-current-indent ind)))
-        (py-look-downward-for-beginning py-def-or-class-re)
-        (unless (eobp)
-          (progn
-            (setq ind
-                  (+ (if py-smart-indentation
-                         (save-excursion
-                           (goto-char orig)
-                           (py-end-of-statement)
-                           (py-end-of-statement)
-                           (py-guess-indent-offset nil (point)))
-                       py-indent-offset)
-                     (current-indentation)))
-            (py-end-of-statement)
-            (forward-line 1)
-            (setq erg (py-travel-current-indent ind)))))
-      (if (< orig (point))
-          (setq erg (point))
-        (setq erg (py-look-downward-for-beginning py-def-or-class-re))
-        (when erg
-          (progn
-            (setq ind (+ py-indent-offset (current-indentation)))
-            (py-end-of-statement)
-            (forward-line 1)
-            (setq erg (py-travel-current-indent ind)))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
+  (let* ((orig (point))
+         (erg (py-end-base py-def-or-class-re orig)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 (defun py-beginning-of-if-block (&optional indent)
-  "Returns beginning of if-block if successful, nil otherwise.
+  "Go to beginning of if-block.
+
+Returns beginning of if-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-re indent)))))
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-block-re indent)))))
     erg))
 
-(defun py-end-of-if-block ()
-  "Go to the end of if-block.
+(defun py-end-of-if-block (&optional indent)
+  "Go to end of if-block.
 
-Returns position reached, if any, nil otherwise.
+Returns end of if-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (let* ((orig (point))
-         (erg (py-end-base py-if-re orig)))
+         (erg (py-end-base py-if-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
 (defun py-beginning-of-try-block (&optional indent)
-  "Returns beginning of try-block if successful, nil otherwise.
+  "Go to beginning of try-block.
+
+Returns beginning of try-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -6020,10 +6017,10 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-try-block-re indent)))))
     erg))
 
-(defun py-end-of-try-block ()
-  "Go to the end of try-block.
+(defun py-end-of-try-block (&optional indent)
+  "Go to end of try-block.
 
-Returns position reached, if any, nil otherwise.
+Returns end of try-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -6034,7 +6031,9 @@ http://docs.python.org/reference/compound_stmts.html"
     erg))
 
 (defun py-beginning-of-minor-block (&optional indent)
-  "Returns beginning of minor-block if successful, nil otherwise.
+  "Go to beginning of minor-block.
+
+Returns beginning of minor-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -6042,10 +6041,10 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-minor-block-re indent)))))
     erg))
 
-(defun py-end-of-minor-block ()
-  "Go to the end of minor-block.
+(defun py-end-of-minor-block (&optional indent)
+  "Go to end of minor-block.
 
-Returns position reached, if any, nil otherwise.
+Returns end of minor-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
@@ -6054,6 +6053,7 @@ http://docs.python.org/reference/compound_stmts.html"
          (erg (py-end-base py-minor-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
+
 
 ;; Buffer
 (defun py-beginning-of-buffer ()
@@ -6065,7 +6065,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defun py-end-of-buffer ()
   "Go to end-of-buffer, return position.
 
-If already at end-of-buffer and not at EOB, go to end of next line. "
+  If already at end-of-buffer and not at EOB, go to end of next line. "
   (let ((erg (unless (eobp)
                (goto-char (point-max)))))
     erg))
@@ -6608,9 +6608,9 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (forward-comment 99999)
         (setq done t)
         (skip-chars-forward "^;" (line-end-position))
-        (skip-chars-backward " \t\r\n\f")
-        (py-beginning-of-comment)
-        (skip-chars-backward " \t\r\n\f")
+        (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+        ;; (py-beginning-of-comment)
+        ;; (skip-chars-backward " \t\r\n\f")
         (py-end-of-statement orig done))
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
@@ -7270,7 +7270,7 @@ Return beginning position, nil if not inside."
               last)))))))
 
 
-;;; Beginning-of-line forms
+;;; Beginning of line forms
 (defun py-mark-base-bol (form &optional py-mark-decorators)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form "-bol")))
          (endform (intern-soft (concat "py-end-of-" form "-bol")))
@@ -7893,111 +7893,282 @@ Don't store data in kill ring. "
   (let ((erg (py-mark-base-bol "block")))
     (delete-region (car erg) (cdr erg))))
 
-;;;
-;;; Py-down commands start
-(defun py-down-statement ()
-  "Go to the beginning of next statement below in buffer.
+;;; Py up/down commands
+(defun py-up-base (regexp)
+  "Go to the beginning of next form upwards in buffer.
 
-Returns indentation if statement found, nil otherwise. "
-  (interactive)
+Return position if form found, nil otherwise. "
   (let* ((orig (point))
          erg)
-    (if (eobp)
+    (if (bobp)
         (setq erg nil)
-      (progn
-        (when (setq erg (py-end-of-statement))
-          (if (< orig (setq erg (py-beginning-of-statement-position)))
-              (goto-char erg)
-            (setq erg (py-end-of-statement))
-            (when erg
-              (py-beginning-of-statement))))
-        (when erg
-          (setq erg (current-column)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (syntax-ppss))))
+      (back-to-indentation)
+      (when (looking-at regexp) (setq erg (point)))
+      (when py-verbose-p (message "%s" erg))
+      erg)))
+
+(defun py-down-base (regexp)
+  "Go to the beginning of next form below in buffer.
+
+Return position if form found, nil otherwise. "
+  (unless (eobp)
+    (forward-line 1)
+    (beginning-of-line)
+    (let* ((orig (point))
+           erg)
+      (if (eobp)
+          (setq erg nil)
+        (while (and (re-search-forward regexp nil t 1)
+                    (nth 8 (syntax-ppss))))
+        (back-to-indentation)
+        (when (looking-at regexp) (setq erg (point)))
+        (when py-verbose-p (message "%s" erg))
+        erg))))
+
+(defun py-up-base-bol (regexp)
+  "Go to the beginning of next form upwards in buffer.
+
+Return position if form found, nil otherwise. "
+  (let* ((orig (point))
+         erg)
+    (if (bobp)
+        (setq erg nil)
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (syntax-ppss))))
+      (beginning-of-line)
+      (when (looking-at regexp) (setq erg (point)))
+      (when py-verbose-p (message "%s" erg))
+      erg)))
+
+(defun py-down-base-bol (regexp)
+  "Go to the beginning of next form below in buffer.
+
+Return position if form found, nil otherwise. "
+  (unless (eobp)
+    (forward-line 1)
+    (beginning-of-line)
+    (let* ((orig (point))
+           erg)
+      (if (eobp)
+          (setq erg nil)
+        (while (and (re-search-forward regexp nil t 1)
+                    (nth 8 (syntax-ppss))))
+        (beginning-of-line)
+        (when (looking-at regexp) (setq erg (point)))
+        (when py-verbose-p (message "%s" erg))
+        erg))))
+
+(defun py-up-block ()
+  "Go to the beginning of next block upwards in buffer.
+
+Return position if block found, nil otherwise. "
+  (interactive)
+  (py-up-base py-block-re))
+
+(defun py-up-minor-block ()
+  "Go to the beginning of next minor-block upwards in buffer.
+
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (py-up-base py-minor-block-re))
+
+(defun py-up-clause ()
+  "Go to the beginning of next clause upwards in buffer.
+
+Return position if clause found, nil otherwise. "
+  (interactive)
+  (py-up-base py-clause-re))
+
+(defun py-up-block-or-clause ()
+  "Go to the beginning of next block-or-clause upwards in buffer.
+
+Return position if block-or-clause found, nil otherwise. "
+  (interactive)
+  (py-up-base py-block-or-clause-re))
+
+(defun py-up-def ()
+  "Go to the beginning of next def upwards in buffer.
+
+Return position if def found, nil otherwise. "
+  (interactive)
+  (py-up-base py-def-re))
+
+(defun py-up-class ()
+  "Go to the beginning of next class upwards in buffer.
+
+Return position if class found, nil otherwise. "
+  (interactive)
+  (py-up-base py-class-re))
+
+(defun py-up-def-or-class ()
+  "Go to the beginning of next def-or-class upwards in buffer.
+
+Return position if def-or-class found, nil otherwise. "
+  (interactive)
+  (py-up-base py-def-or-class-re))
 
 (defun py-down-block ()
   "Go to the beginning of next block below in buffer.
 
-Returns indentation if block found, nil otherwise. "
+Return position if block found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (re-search-forward py-block-re nil (quote move))
-                  (nth 8 (if (featurep 'xemacs)
-                             (parse-partial-sexp ppstart (point))
-                           (syntax-ppss)))))
-      (back-to-indentation)
-      (when (looking-at py-block-re) (setq erg (current-indentation)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
+  (py-down-base py-block-re))
+
+(defun py-down-minor-block ()
+  "Go to the beginning of next minor-block below in buffer.
+
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (py-down-base py-minor-block-re))
 
 (defun py-down-clause ()
   "Go to the beginning of next clause below in buffer.
 
-Returns indentation if clause found, nil otherwise. "
+Return position if clause found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (setq erg (py-down-statement))(not (looking-at py-clause-re)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-down-base py-clause-re))
 
 (defun py-down-block-or-clause ()
   "Go to the beginning of next block-or-clause below in buffer.
 
-Returns indentation if block-or-clause found, nil otherwise. "
+Return position if block-or-clause found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (setq erg (py-down-statement))(not (looking-at py-block-or-clause-re)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-down-base py-block-or-clause-re))
 
 (defun py-down-def ()
-  "Go to the beginning of next function definition below in buffer.
+  "Go to the beginning of next def below in buffer.
 
-Returns indentation if found, nil otherwise. "
+Return position if def found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (setq erg (py-down-statement))(not (looking-at py-def-re)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-down-base py-def-re))
 
 (defun py-down-class ()
   "Go to the beginning of next class below in buffer.
 
-Returns indentation if class found, nil otherwise. "
+Return position if class found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (setq erg (py-down-statement))(not (looking-at py-class-re)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-down-base py-class-re))
 
 (defun py-down-def-or-class ()
   "Go to the beginning of next def-or-class below in buffer.
 
-Returns indentation if def-or-class found, nil otherwise. "
+Return position if def-or-class found, nil otherwise. "
   (interactive)
-  (let* ((orig (point))
-         erg)
-    (if (eobp)
-        (setq erg nil)
-      (while (and (setq erg (py-down-statement))(not (looking-at py-def-or-class-re)))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
+  (py-down-base py-def-or-class-re))
+
+(defun py-up-block-bol ()
+  "Go to the beginning of next block upwards in buffer.
+
+Go to beginning of line.
+Return position if block found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-block-re))
+
+(defun py-up-minor-block-bol ()
+  "Go to the beginning of next minor-block upwards in buffer.
+
+Go to beginning of line.
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-minor-block-re))
+
+(defun py-up-clause-bol ()
+  "Go to the beginning of next clause upwards in buffer.
+
+Go to beginning of line.
+Return position if clause found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-clause-re))
+
+(defun py-up-block-or-clause-bol ()
+  "Go to the beginning of next block-or-clause upwards in buffer.
+
+Go to beginning of line.
+Return position if block-or-clause found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-block-or-clause-re))
+
+(defun py-up-def-bol ()
+  "Go to the beginning of next def upwards in buffer.
+
+Go to beginning of line.
+Return position if def found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-def-re))
+
+(defun py-up-class-bol ()
+  "Go to the beginning of next class upwards in buffer.
+
+Go to beginning of line.
+Return position if class found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-class-re))
+
+(defun py-up-def-or-class-bol ()
+  "Go to the beginning of next def-or-class upwards in buffer.
+
+Go to beginning of line.
+Return position if def-or-class found, nil otherwise. "
+  (interactive)
+  (py-up-base-bol py-def-or-class-re))
+
+(defun py-down-block-bol ()
+  "Go to the beginning of next block below in buffer.
+
+Go to beginning of line
+Return position if block found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-block-re))
+
+(defun py-down-minor-block-bol ()
+  "Go to the beginning of next minor-block below in buffer.
+
+Go to beginning of line
+Return position if minor-block found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-minor-block-re))
+
+(defun py-down-clause-bol ()
+  "Go to the beginning of next clause below in buffer.
+
+Go to beginning of line
+Return position if clause found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-clause-re))
+
+(defun py-down-block-or-clause-bol ()
+  "Go to the beginning of next block-or-clause below in buffer.
+
+Go to beginning of line
+Return position if block-or-clause found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-block-or-clause-re))
+
+(defun py-down-def-bol ()
+  "Go to the beginning of next def below in buffer.
+
+Go to beginning of line
+Return position if def found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-def-re))
+
+(defun py-down-class-bol ()
+  "Go to the beginning of next class below in buffer.
+
+Go to beginning of line
+Return position if class found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-class-re))
+
+(defun py-down-def-or-class-bol ()
+  "Go to the beginning of next def-or-class below in buffer.
+
+Go to beginning of line
+Return position if def-or-class found, nil otherwise "
+  (interactive)
+  (py-down-base-bol py-def-or-class-re))
 
 ;;; ripped from cc-mode
 (defun py-forward-into-nomenclature (&optional arg iact)
@@ -8091,15 +8262,18 @@ With universal arg \C-u insert a `%'. "
         (ar-braced-beginning-atpt))
        (t (self-insert-command 1))))))
 
-(defun py-travel-current-indent (indent)
+(defun py-travel-current-indent (indent &optional orig)
   "Moves down until clause is closed, i.e. current indentation is reached.
 
 Takes a list, INDENT and START position. "
-  (let (last)
-    (while (and (setq last (point))(not (eobp))(py-end-of-statement)
-                (<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation))))))
-    (when last (goto-char last))
-    last))
+  (unless (eobp)
+    (let ((orig (or orig (point)))
+          last)
+      (while (and (setq last (point))(not (eobp))(py-end-of-statement)
+                  (or (<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation))))(eq last (line-beginning-position)))))
+      (goto-char last)
+      (when (< orig last)
+        last))))
 
 ;;; python-mode-execute.el
 (defun py-toggle-execute-keep-temporary-file-p ()
@@ -10642,12 +10816,17 @@ alternative for finding the index.")
   (if (eq major-mode 'python-mode)
       (progn
         (if (eq py-imenu-create-index-function 'py-imenu-create-index-new)
-            (setq py-imenu-create-index-function 'py-imenu-create-index)
-          (setq py-imenu-create-index-function 'py-imenu-create-index-new))
+            ;; (setq py-imenu-create-index-function 'py-imenu-create-index)
+            (set (make-local-variable 'py-imenu-create-index-function) 'py-imenu-create-index)
+          ;; (setq py-imenu-create-index-function 'py-imenu-create-index-new)
+          (set (make-local-variable 'py-imenu-create-index-function) 'py-imenu-create-index-new))
+        (when py-menu
+          (easy-menu-add py-menu))
         (when py-verbose-p (message "imenu-create-index-function: %s" (prin1-to-string py-imenu-create-index-function)))
         (funcall imenu-create-index-function))
     (error "%s" "Only available in buffers set to python-mode")))
 
+(defalias 'py-imenu-create-index-function 'py-imenu-create-index)
 (defun py-imenu-create-index ()
   "Python interface function for the Imenu package.
 Finds all Python classes and functions/methods. Calls function
@@ -12674,7 +12853,6 @@ Delete innermost compound statement at point, don't store deleted string in kill
 
              )
 
-
             ("Statement ... "
              ["Beginning of Statement" py-beginning-of-statement
               :help "`py-beginning-of-statement'
@@ -12683,13 +12861,6 @@ Go to start of innermost definition at point"]
              ["End of Statement" py-end-of-statement
               :help "`py-end-of-statement'
 Go to end of innermost function definition at point"]
-
-             ["Up statement" py-up-statement
-              :help "`py-up-statement'
-
-Go upwards to the beginning of next statement below in buffer.
-
-Returns indentation if statement found, nil otherwise. "]
 
              ["Copy statement" py-copy-statement
               :help "`py-copy-statement'
@@ -12861,6 +13032,18 @@ Go to beginning of line following end of block.
 
 Returns position reached, if successful, nil otherwise. "]
 
+             ["Up block bol" py-up-block-bol
+              :help "`py-up-block-bol'
+Go to next block upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down block bol" py-down-block-bol
+              :help "`py-down-block-bol'
+Go to next block downwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
              ["Mark block bol" py-mark-block-bol
               :help "`py-mark-block-bol'
 Mark block at point. "]
@@ -12888,6 +13071,18 @@ Returns position reached, if successful, nil otherwise. "]
              ["End of clause bol" py-end-of-clause-bol
               :help "`py-end-of-clause-bol'
 Go to beginning of line following end of clause.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Up clause bol" py-up-clause-bol
+              :help "`py-up-clause-bol'
+Go to next clause upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down clause bol" py-down-clause-bol
+              :help "`py-down-clause-bol'
+Go to next clause downwards in buffer if any. Go to beginning of line.
 
 Returns position reached, if successful, nil otherwise. "]
 
@@ -12920,6 +13115,18 @@ Go to beginning of line following end of block-or-clause.
 
 Returns position reached, if successful, nil otherwise. "]
 
+             ["Up block-or-clause bol" py-up-block-or-clause-bol
+              :help "`py-up-block-or-clause-bol'
+Go to next block-or-clause upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down block-or-clause bol" py-down-block-or-clause-bol
+              :help "`py-down-block-or-clause-bol'
+Go to next block-or-clause downwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
              ["Mark block-or-clause bol" py-mark-block-or-clause-bol
               :help "`py-mark-block-or-clause-bol'
 Mark block-or-clause at point. "]
@@ -12936,6 +13143,88 @@ Kill block-or-clause at point. "]
               :help "`py-delete-block-or-clause-bol'
 Delete block-or-clause at point. "]
              )
+            (" Def bol ... "
+             ["Beginning of def bol" py-beginning-of-def-bol
+              :help "`py-beginning-of-def-bol'
+Go to beginning of line at beginning of def.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of def bol" py-end-of-def-bol
+              :help "`py-end-of-def-bol'
+Go to beginning of line following end of def.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Up def bol" py-up-def-bol
+              :help "`py-up-def-bol'
+Go to next def upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down def bol" py-down-def-bol
+              :help "`py-down-def-bol'
+Go to next def downwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark def bol" py-mark-def-bol
+              :help "`py-mark-def-bol'
+Mark def at point. "]
+
+             ["Copy def bol" py-copy-def-bol
+              :help "`py-copy-def-bol'
+Copy def at point. "]
+
+             ["Kill def bol" py-kill-def-bol
+              :help "`py-kill-def-bol'
+Kill def at point. "]
+
+             ["Delete def bol" py-delete-def-bol
+              :help "`py-delete-def-bol'
+Delete def at point. "]
+             )
+            (" Class bol ... "
+             ["Beginning of class bol" py-beginning-of-class-bol
+              :help "`py-beginning-of-class-bol'
+Go to beginning of line at beginning of class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["End of class bol" py-end-of-class-bol
+              :help "`py-end-of-class-bol'
+Go to beginning of line following end of class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Up class bol" py-up-class-bol
+              :help "`py-up-class-bol'
+Go to next class upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down class bol" py-down-class-bol
+              :help "`py-down-class-bol'
+Go to next class downwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Mark class bol" py-mark-class-bol
+              :help "`py-mark-class-bol'
+Mark class at point. "]
+
+             ["Copy class bol" py-copy-class-bol
+              :help "`py-copy-class-bol'
+Copy class at point. "]
+
+             ["Kill class bol" py-kill-class-bol
+              :help "`py-kill-class-bol'
+Kill class at point. "]
+
+             ["Delete class bol" py-delete-class-bol
+              :help "`py-delete-class-bol'
+Delete class at point. "]
+             )
             (" Def-Or-Class bol ... "
              ["Beginning of def-or-class bol" py-beginning-of-def-or-class-bol
               :help "`py-beginning-of-def-or-class-bol'
@@ -12946,6 +13235,18 @@ Returns position reached, if successful, nil otherwise. "]
              ["End of def-or-class bol" py-end-of-def-or-class-bol
               :help "`py-end-of-def-or-class-bol'
 Go to beginning of line following end of def-or-class.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Up def-or-class bol" py-up-def-or-class-bol
+              :help "`py-up-def-or-class-bol'
+Go to next def-or-class upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise. "]
+
+             ["Down def-or-class bol" py-down-def-or-class-bol
+              :help "`py-down-def-or-class-bol'
+Go to next def-or-class downwards in buffer if any. Go to beginning of line.
 
 Returns position reached, if successful, nil otherwise. "]
 
@@ -12992,68 +13293,7 @@ Kill statement at point. "]
 
              ["Delete statement bol" py-delete-statement-bol
               :help "`py-delete-statement-bol'
-Delete statement at point. "]
-             )
-            (" Def bol ... "
-             ["Beginning of def bol" py-beginning-of-def-bol
-              :help "`py-beginning-of-def-bol'
-Go to beginning of line at beginning of def.
-
-Returns position reached, if successful, nil otherwise. "]
-
-             ["End of def bol" py-end-of-def-bol
-              :help "`py-end-of-def-bol'
-Go to beginning of line following end of def.
-
-Returns position reached, if successful, nil otherwise. "]
-
-             ["Mark def bol" py-mark-def-bol
-              :help "`py-mark-def-bol'
-Mark def at point. "]
-
-             ["Copy def bol" py-copy-def-bol
-              :help "`py-copy-def-bol'
-Copy def at point. "]
-
-             ["Kill def bol" py-kill-def-bol
-              :help "`py-kill-def-bol'
-Kill def at point. "]
-
-             ["Delete def bol" py-delete-def-bol
-              :help "`py-delete-def-bol'
-Delete def at point. "]
-             )
-            (" Class bol ... "
-             ["Beginning of class bol" py-beginning-of-class-bol
-              :help "`py-beginning-of-class-bol'
-Go to beginning of line at beginning of class.
-
-Returns position reached, if successful, nil otherwise. "]
-
-             ["End of class bol" py-end-of-class-bol
-              :help "`py-end-of-class-bol'
-Go to beginning of line following end of class.
-
-Returns position reached, if successful, nil otherwise. "]
-
-             ["Mark class bol" py-mark-class-bol
-              :help "`py-mark-class-bol'
-Mark class at point. "]
-
-             ["Copy class bol" py-copy-class-bol
-              :help "`py-copy-class-bol'
-Copy class at point. "]
-
-             ["Kill class bol" py-kill-class-bol
-              :help "`py-kill-class-bol'
-Kill class at point. "]
-
-             ["Delete class bol" py-delete-class-bol
-              :help "`py-delete-class-bol'
-Delete class at point. "]
-             )
-
-
+Delete statement at point. "])
             "-"
             ["Backward into nomenclature" py-backward-into-nomenclature
              :help " `py-backward-into-nomenclature'
@@ -13415,15 +13655,15 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
   (when (and py-imenu-create-index-p (fboundp 'imenu-add-to-menubar)(ignore-errors (require 'imenu)))
-    (setq imenu-create-index-function py-imenu-create-index-function)
+    (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
     (imenu-add-to-menubar "PyIndex"))
   ;; (when py-imenu-create-index-p (imenu-add-to-menubar "PyIndex"))
 
   ;; Now guess `py-indent-offset'
 
   ;; add the menu
-  (if py-menu
-      (easy-menu-add py-menu))
+  (when py-menu
+    (easy-menu-add py-menu))
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   ;; (py-send-string "import emacs")
 
