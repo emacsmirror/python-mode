@@ -71,7 +71,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.0.11")
+(defconst py-version "6.0.12")
 
 (defvar python-local-version nil
   "Used internally. ")
