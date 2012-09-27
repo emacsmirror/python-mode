@@ -2189,9 +2189,16 @@ Used for determining the default in the next one.")
 (defvar py-execute-keep-temporary-file-p nil
   "For tests only. Excute functions delete temporary files default. ")
 
-(defvar py-expression-skip-regexp "^ =:#\t\r\n\f"
+(defvar py-string-start-regexp "\\(\"\"\"\\|'''\\|\"\\|'\\)"
+  "When looking at beginning of string. ")
+
+(defvar py-expression-skip-regexp "[^ (=:#\t\r\n\f]"
   "py-expression assumes chars indicated possible composing a py-expression, skip it. ")
 ;; (setq py-expression-skip-regexp "^ =:#\t\r\n\f")
+
+(defvar py-expression-skip-chars "^ (:=#\t\r\n\f"
+  "py-expression assumes chars indicated possible composing a py-expression, skip it. ")
+;; (setq py-expression-skip-chars "^ (=#\t\r\n\f")
 
 (defvar py-expression-looking-regexp "[^ =:#\t\r\n\f]+"
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
@@ -2201,18 +2208,29 @@ Used for determining the default in the next one.")
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 ;; (setq py-not-expression-regexp "[ .=:#\t\r\n\f)]")
 
-(defvar py-partial-expression-skip-regexp "^ .()[]{}=:#\t\r\n\f"
+(defvar py-not-expression-chars " .=#\t\r\n\f"
+  "py-expression assumes chars indicated probably will not compose a py-expression. ")
+;; (setq py-not-expression-chars "[ .=#\t\r\n\f)]+")
+
+
+(defvar py-not-expression-chars " .=#\t\r\n\f"
+  "py-expression assumes chars indicated probably will not compose a py-expression. ")
+;; (setq py-not-expression-chars "[ .=#\t\r\n\f)]+")
+
+(defvar py-partial-expression-skip-chars "^ .()[]{}=:#\t\r\n\f"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
-;; (setq py-partial-expression-skip-regexp "^ .(){}=:#\t\r\n\f")
+;; (setq py-partial-expression-skip-chars "^ .(){}=:#\t\r\n\f")
 
 (defvar py-partial-expression-forward-regexp "^ .)}=:#\t\r\n\f"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
 
-(defvar py-partial-expression-backward-regexp "^ .({=:#\t\r\n\f"
+(defvar py-partial-expression-skip-backward-chars "^ .\"(){}[]=:#\t\r\n\f"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
+;; (setq py-partial-expression-skip-backward-chars "^ .\"(){}\[]=:#\t\r\n\f")
 
-(defvar py-not-partial-expression-skip-regexp " \\.=:#\t\r\n\f"
+(defvar py-not-partial-expression-skip-chars " \\.=:#\t\r\n\f"
   "py-partial-expression assumes chars indicated may not compose a py-partial-expression, skip it. ")
+;; (setq py-not-partial-expression-skip-chars " )\]\\.=:#\t\r\n\f")
 
 (defvar py-partial-expression-looking-regexp "[^ .=:#\t\r\n\f]"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, when looking-at or -back. ")
@@ -2221,6 +2239,25 @@ Used for determining the default in the next one.")
 (defvar py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]"
   "py-partial-expression assumes chars indicated probably will not compose a py-partial-expression. ")
 ;; (setq py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]")
+
+(defvar py-operator-regexp "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\)[ \t]*"
+  "Matches most of Python operators inclusive whitespaces around.
+
+See also `py-assignment-regexp' ")
+;; (setq py-operator-regexp "[ \t]*\\(+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\)[ \t]*")
+
+(defvar py-assignment-regexp "[ \t]*=[^=]"
+  "Matches assignment operator inclusive whitespaces around.
+
+See also `py-operator-regexp' ")
+;; (setq  py-assignment-regexp "[ \t]*=[^=]")
+
+(defvar py-delimiter-regexp "\\(,\\|;\\|:\\)[ \t]*"
+  "Delimiting elements of lists or other programming constructs. ")
+;; (setq py-delimiter-regexp "\\(,\\|;\\:\\)[ \t]*")
+
+(defvar py-delimiter-chars ",;."
+  "Chars delimiting elements of lists or other programming constructs. ")
 
 (defvar py-line-number-offset 0
   "When an exception occurs as a result of py-execute-region, a
@@ -2910,7 +2947,7 @@ Used with `eval-after-load'."
          ("(python-lib)Miscellaneous Index" nil ""))))))
 (eval-after-load "info-look" '(python-after-info-look))
 
-;;;; Miscellany.
+;;; Miscellany.
 
 ;; Called from `python-mode', this causes a recursive call of the
 ;; mode.  See logic there to break out of the recursion.
@@ -3902,52 +3939,94 @@ By default, make a buffer-local copy of `py-indent-offset' with the
 new value.
 With optional argument GLOBAL change the global value of `py-indent-offset'.
 
-Indent might be guessed savely only from beginning of a block.
 Returns `py-indent-offset'"
   (interactive "P")
   (save-excursion
     (let* ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
-           done
+           last down
            (firstindent
-            (cond ((py-beginning-of-statement-p)
-                   (current-column))
-                  ((py-beginning-of-statement)
-                   (current-column))
-                  (t (goto-char orig)
-                     (if (py-down-block)
-                         (current-column)
-                       ;; if nothing suitable around, us default
-                       (setq done t)
-                       (default-value 'py-indent-offset)))))
-           (secondindent
-            (if done (when (and
+            (if (py-beginning-of-block)
+                (progn
+                  (setq last (point))
+                  (setq down t)
+                  (current-indentation))
+              (progn
+                (forward-line -1)
+                (back-to-indentation)
+                (cond ((py-beginning-of-statement-p)
+                       (setq last (point))
+                       (current-column))
+                      ((py-beginning-of-statement)
+                       (setq last (point))
+                       (current-column))
+                      ((and (prog1 (goto-char orig)
+                              (back-to-indentation))
+                            (py-beginning-of-block-p))
+                       (setq down t)
+                       (setq last (point))
+                       (current-indentation))
+                      ((and (goto-char orig)
                             (py-end-of-statement)
                             (py-end-of-statement))
+                       (py-beginning-of-statement)
+                       (setq last (point))
                        (current-indentation))
-              (when firstindent
-                (if (py-statement-opens-block-p)
-                    (progn
-                      (when (and (py-end-of-statement)
-                                 (py-end-of-statement))
-                        (current-indentation)))
-                  (if (py-beginning-of-block)
-                      (progn
-                        (setq firstindent (current-indentation))
-                        (when (and (py-end-of-statement)
-                                   (py-end-of-statement))
-                          (current-indentation))))))))
+                      (t (goto-char orig)
+                         (if (py-down-block)
+                             (progn (setq last (point))
+                                    (setq down t)
+                                    (current-column))
+                           ;; if nothing suitable around, us default
+                           (default-value 'py-indent-offset)))))))
+           (secondindent
+            (if firstindent
+                (cond ((or down (py-statement-opens-block-p))
+                       (or (progn
+                             (when (and (py-end-of-statement)
+                                        (py-end-of-statement)
+                                        (py-beginning-of-statement))
+                               (current-indentation)))
+                           (progn
+                             (goto-char last)
+                             (and (py-beginning-of-block)
+                                  (current-indentation)))))
+
+                      ((py-beginning-of-block)
+                       (progn
+                         (when (and (py-end-of-statement)
+                                    (py-end-of-statement)
+                                    (py-beginning-of-statement)
+                                    (py-beginning-of-statement))
+                           (current-indentation))))
+                      (t (if last (if (and (goto-char last)
+                                           (py-end-of-statement)
+                                           (py-end-of-statement)
+                                           (py-beginning-of-statement))
+                                      (current-indentation)
+                                    (goto-char last)
+                                    (when (py-beginning-of-block-or-clause)
+                                      (current-indentation))))))))
            guessed)
       (unless secondindent
         (setq secondindent
               (when (py-end-of-block)
-                (progn (setq first (current-indentation))
-                       (when (and (py-end-of-statement)
-                                  (py-end-of-statement))
-                         (current-indentation))))))
+                (current-indentation))))
+      (unless secondindent
+        (setq secondindent
+              ;; (setq first (current-indentation))
+              (when (and (py-end-of-statement)
+                         (py-end-of-statement)
+                         (py-beginning-of-statement))
+                (current-indentation))))
       (when secondindent
+        (when (eq 0 (abs (- secondindent firstindent)))
+          (when (if (py-beginning-of-block) (< (current-indentation) secondindent))
+            (setq secondindent (current-indentation))))
         (setq guessed
               (abs (- secondindent firstindent))))
+      (when (and (eq 0 guessed)(not (eq 0 secondindent)))
+        (setq guessed secondindent))
       (if (and guessed (py-guessed-sanity-check guessed))
           (setq py-indent-offset guessed)
         (setq py-indent-offset (default-value 'py-indent-offset)))
@@ -5647,13 +5726,14 @@ and `pass'.  This doesn't catch embedded statements."
 
 (defun py-end-base (regexp &optional orig)
   "Used internal by functions going to the end forms. "
-  (let ((orig (or orig (point)))
-        (this (if (py-statement-opens-block-p regexp)
-                  (point)
-                (py-go-to-keyword regexp)
-                (when (py-statement-opens-block-p regexp)
-                  (point))))
-        ind erg last)
+  (let* ((orig (or orig (point)))
+         (regexp (or regexp py-extended-block-or-clause-re))
+         (this (if (py-statement-opens-block-p regexp)
+                   (point)
+                 (when (cdr-safe (py-go-to-keyword py-extended-block-or-clause-re))
+                   (when (py-statement-opens-block-p py-extended-block-or-clause-re)
+                     (point)))))
+         ind erg last)
     (if this
         (progn
           (setq py-bol-forms-last-indent (cons this-command (current-indentation)))
@@ -5661,21 +5741,39 @@ and `pass'.  This doesn't catch embedded statements."
           (py-end-of-statement)
           (setq last (point))
           (forward-line 1)
-          ;; when jumping clause for clause
-          (if (and (looking-at regexp)(not (nth 1 (syntax-ppss)))(not (nth 8 (syntax-ppss))))
-              (goto-char last)
-            (unless (py-travel-current-indent ind (point))
-              (goto-char last))))
-      (py-look-downward-for-beginning regexp))
-    ;; py-travel-current-indent will stop of clause at equal indent
-    (unless (and (or (string= regexp py-clause-re) (string= regexp py-block-or-clause-re))(< orig (point)))
-      (if (and (setq last (point)) (py-look-downward-for-clause nil orig))
-          (progn
-            (while (and (setq last (point))
-                        (py-look-downward-for-clause nil orig)))
-            (goto-char last)
-            (py-end-of-clause))
-        (goto-char last)))
+          (if (looking-at regexp)
+              (skip-chars-backward " \t\r\n\f")
+            (py-travel-current-indent ind (point))
+            (cond ((string= regexp py-clause-re)
+                   ;; (string= regexp py-block-or-clause-re)
+                   (unless (< orig (point))
+                     (if
+                         (and (setq last (point)) (prog1 (py-end-of-statement)(beginning-of-line))(looking-at py-clause-re))
+                         (py-travel-current-indent (+ (current-indentation) py-indent-offset) (point))
+                       (goto-char last))))
+                  (t (while
+                         (and (setq last (point)) (prog1 (py-end-of-statement)(beginning-of-line))(looking-at py-clause-re))
+                       (py-travel-current-indent (+ (current-indentation) py-indent-offset) (point)))
+                     (goto-char last)))))
+      (goto-char orig))
+    (when (eq orig (point))
+      ;; py-travel-current-indent will stop of clause at equal indent
+      (if (py-look-downward-for-beginning regexp)
+          (if (or (string= regexp py-clause-re) (string= regexp py-block-or-clause-re))
+              (progn
+                (py-beginning-of-statement)
+                (py-end-of-statement))
+            (progn
+              (setq orig (point) ind (+ (current-indentation) py-indent-offset))
+              (if (and (setq last (point)) (py-look-downward-for-clause ind orig py-block-or-clause-re))
+                  (progn
+                    (while (and (setq last (point))
+                                (py-look-downward-for-clause ind orig py-block-or-clause-re)
+                                (setq orig (point))))
+                    (goto-char last)
+                    (py-end-of-clause))
+                (goto-char last)
+                (py-travel-current-indent (current-indentation) (point)))))))
     (when (< orig (point))
       (setq erg (point)))
     erg))
@@ -5683,13 +5781,14 @@ and `pass'.  This doesn't catch embedded statements."
 (defun py-look-downward-for-beginning (regexp)
   "When above any beginning of FORM, search downward. "
   (let ((orig (point))
-        erg)
-    (while (and (setq erg (point)) (not (eobp)) (re-search-forward regexp nil t 1)
-                (not (nth 8 (syntax-ppss))) (not (nth 1 (syntax-ppss)))))
-    (when (< orig erg)
-      erg)))
+        erg last)
+    (while (and (setq last (point)) (not (eobp)) (setq erg (re-search-forward regexp nil t 1))
+                (or (nth 8 (syntax-ppss)) (nth 1 (syntax-ppss)))))
+    (or erg
+        (when (< orig last)
+          last))))
 
-(defun py-look-downward-for-clause (&optional ind orig)
+(defun py-look-downward-for-clause (&optional ind orig regexp)
   "If beginning of other clause exists downward in current block.
 
 If succesful return position. "
@@ -5702,21 +5801,24 @@ If succesful return position. "
                          (current-indentation)
                        (- (current-indentation) py-indent-offset)))))
           (orig (or orig (point)))
+          (regexp (or regexp py-extended-block-or-clause-re))
           erg last)
       (end-of-line)
-      (setq erg
-            (progn
-              (when (re-search-forward py-extended-block-or-clause-re nil t 1)
-                (when (nth 8 (syntax-ppss))
-                  (while (and (re-search-forward py-extended-block-or-clause-re nil t 1)
-                              (nth 8 (syntax-ppss)))))
-                (setq last (point))
-                (back-to-indentation)
-                (if (and (looking-at py-clause-re)
-                         (not (nth 8 (syntax-ppss))) (eq (current-indentation) ind))
-                    (setq erg (py-end-of-clause))
-                  (goto-char orig)
-                  nil))))
+      (when (re-search-forward regexp nil t 1)
+        (when (nth 8 (syntax-ppss))
+          (while (and (re-search-forward regexp nil t 1)
+                      (nth 8 (syntax-ppss)))))
+        (setq last (point))
+        (back-to-indentation)
+        (unless (and (looking-at py-clause-re)
+                     (not (nth 8 (syntax-ppss))) (eq (current-indentation) ind))
+          (progn (setq ind (current-indentation))
+                 (while (and (py-end-of-statement-bol)(not (looking-at py-clause-re))(<= ind (current-indentation)))))
+          (if (and (looking-at py-clause-re)
+                   (not (nth 8 (syntax-ppss)))
+                   (< orig (point)))
+              (setq erg (point))
+            (goto-char orig))))
       (when (interactive-p) (message "%s" erg))
       erg)))
 
@@ -5831,7 +5933,12 @@ Returns beginning of block if successful, nil otherwise
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
-  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re indent)))))
+  (let* ((orig (point))
+         (indent (or indent (progn (py-beginning-of-statement) (current-indentation))))
+         erg)
+    (if (py-beginning-of-block-p)
+        (setq erg (point))
+      (setq erg (ignore-errors (cdr (py-go-to-keyword-above py-block-re indent)))))
     erg))
 
 (defun py-end-of-block (&optional indent)
@@ -6054,7 +6161,6 @@ http://docs.python.org/reference/compound_stmts.html"
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-
 ;; Buffer
 (defun py-beginning-of-buffer ()
   "Go to beginning-of-buffer, return position. "
@@ -6093,8 +6199,10 @@ http://docs.python.org/reference/compound_stmts.html"
 
 ;;; Expression
 (defalias 'py-backward-expression 'py-beginning-of-expression)
-(defun py-beginning-of-expression (&optional orig done)
+(defun py-beginning-of-expression (&optional arg)
   "Go to the beginning of a compound python expression.
+
+With numeric ARG do it that many times.
 
 A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
@@ -6103,304 +6211,442 @@ If already at the beginning or before a expression, go to next expression in buf
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes.
 "
-  (interactive)
-  (save-restriction
-    (widen)
-    (unless (bobp)
-      (let ((orig (or orig (point)))
-            (cui (current-indentation))
-            (pps (syntax-ppss))
-            erg)
-        (cond
-         ;; if in string
-         ((and (nth 3 pps)(nth 8 pps)
-               (goto-char (nth 8 pps)))
-          (setq done t)
-          (unless (looking-back "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)[ \t]*")
-            (when (nth 2 pps)
-              (goto-char (nth 2 pps))))
-          (py-beginning-of-expression orig done))
-         ;; comments left, as strings are done
-         ((nth 8 pps)
-          (goto-char (1- (nth 8 pps)))
-          (py-beginning-of-expression orig done))
-         ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+  (interactive "p")
+  (or arg (setq arg 1))
+  (let (erg)
+    (if (< 0 arg)
+        (save-restriction
+          (widen)
+          (setq erg (py-beginning-of-expression-intern)))
+      (setq arg (abs arg))
+      (setq erg (py-end-of-expression arg)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-beginning-of-expression-intern (&optional orig)
+  (unless (bobp)
+    (let ((orig (or orig (point)))
+          (pps (syntax-ppss))
+          erg)
+      (cond
+       ((empty-line-p)
+        (while
+            (and (empty-line-p)(not (bobp)))
           (forward-line -1)
-          (unless (bobp)
-            (end-of-line)
-            (py-beginning-of-expression orig done)))
-         ;; character address of start of innermost containing list; nil if none.
-         ((nth 1 pps)
-          (goto-char (nth 1 pps))
-          (when
-              (not (looking-back "[ \t]+"))
-            (when (< 0 (abs (skip-chars-backward py-expression-skip-regexp)))
-              (setq done t)))
-          (py-beginning-of-expression orig done))
-         ((looking-at "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)")
-          (goto-char (1- (match-beginning 0)))
-          (skip-chars-backward " \t\r\n\f")
+          (end-of-line))
+        (py-beginning-of-expression-intern orig))
+       ;; lists
+       ((nth 1 pps)
+        (goto-char (nth 1 pps))
+        (skip-chars-backward py-expression-skip-chars)
+        (while (or (looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp) (line-beginning-position) t)
+                   (looking-back (concat "[[:alnum:]_]*" py-operator-regexp "[ \t]*") (line-beginning-position) t))
+          (goto-char (match-beginning 0))))
+       ;; listed elements
+       ((looking-back (concat "[^ \t\n\r\f]+" py-delimiter-regexp))
+        (goto-char (match-beginning 0))
+        (while (looking-back (concat "[^ \t\n\r\f]+" py-delimiter-regexp))
+          (goto-char (match-beginning 0)))
+        (unless (or (looking-back py-assignment-regexp) (looking-back "^[ \t]*"))
+          (py-beginning-of-expression-intern orig)))
+       ;; strings
+       ((and (nth 3 pps)(nth 8 pps)
+             (goto-char (nth 8 pps)))
+        (cond (;; consider expression a string starting at BOL
+               (bolp))
+              ((looking-back py-assignment-regexp))
+              ((looking-back py-operator-regexp)
+               (when (nth 2 pps)
+                 (goto-char (nth 2 pps))))
+              (t (py-beginning-of-expression-intern orig))))
+       ;; comments left
+       ((nth 8 pps)
+        (goto-char (nth 8 pps))
+        (unless (bobp)
+          (py-beginning-of-expression-intern orig)))
+       ;; concatenated strings
+       ((looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+        (goto-char (match-beginning 0))
+        (while (looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp) (line-beginning-position) t)
+          (goto-char (match-beginning 0)))
+        (skip-chars-backward py-expression-skip-chars))
+       ;; before comment
+       ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+        (forward-line -1)
+        (end-of-line)
+        (skip-chars-backward " \t\r\n\f")
+        (unless (bobp)
           (forward-char -1)
-          (py-beginning-of-expression orig done))
-         ((looking-back "[\])}]")
+          (py-beginning-of-expression-intern orig)))
+       ;; before assignment
+       ((looking-back py-assignment-regexp)
+        (goto-char (1- (match-beginning 0)))
+        (forward-char -1)
+        (py-beginning-of-expression-intern orig))
+       ((looking-back py-operator-regexp)
+        (goto-char (1- (match-beginning 0)))
+        (forward-char -1)
+        (unless (< 0 (abs (skip-chars-backward py-expression-skip-chars)))
+          (py-beginning-of-expression-intern orig)))
+       ((looking-back "\"\\|'")
+        (forward-char -1)
+        (skip-chars-backward "\"'")
+        (unless (looking-back py-assignment-regexp)
+          (py-beginning-of-expression-intern orig)))
+       ((looking-back "(\\|\\[")
+        (forward-char -1)
+        (unless (looking-back py-assignment-regexp)
+          (py-beginning-of-expression-intern orig)))
+       ((looking-back "[\])}]")
+        (forward-char -1)
+        (unless (looking-back py-assignment-regexp)
+          (py-beginning-of-expression-intern orig)))
+       ;; inside expression
+       ((looking-back py-expression-looking-regexp)
+        (skip-chars-backward py-expression-skip-chars)
+        (unless (or (looking-back "^[ \t]*") (looking-back py-assignment-regexp))
+          (py-beginning-of-expression-intern orig)))
+       ((looking-back (concat "[ \t]*" "[[:alnum:]_]*" py-operator-regexp "[[:alnum:]_]*") (line-beginning-position) t)
+        (goto-char (match-beginning 0))
+        (unless (looking-back "^[ \t]*")
+          (py-beginning-of-expression-intern orig)))
+       ((and (eq (point) orig) (looking-back "[ \t\r\n\f]"))
+        (skip-chars-backward " \t\r\n\f")
+        (unless (bobp)
           (forward-char -1)
-          (py-beginning-of-expression orig done))
+          (py-beginning-of-expression-intern orig)))
+       ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
+        (forward-char -1)
+        (when (< 0 (abs (skip-chars-backward py-expression-skip-chars)))
+          (py-beginning-of-expression-intern orig)))
+       ((and (looking-at py-expression-looking-regexp) (not (looking-back "[ \t\r\n\f]")))
+        (unless (< 0 (abs (skip-chars-backward py-expression-skip-chars)))
+          (py-beginning-of-expression-intern orig)))
+       ((and (eq (point) orig)(looking-back "[ \t]*="))
+        (goto-char (match-beginning 0))
+        (skip-chars-backward " \t\r\n\f")
+        (py-beginning-of-expression-intern orig)))
+      (unless (or (eq (point) orig)(looking-at "[ \t]*#"))
+        (setq erg (point)))
+      erg)))
 
-         ;; inside expression
-         ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
-          (skip-chars-backward py-expression-skip-regexp)
-          (setq done t)
-          (py-beginning-of-expression orig done))
-         ((looking-at "[ \t\r\n\f]")
-          (skip-chars-backward " \t\r\n\f")
-          (unless (bobp) (forward-char -1))
-          (unless (eq (abs (skip-chars-backward "^ \t\r\n\f")) 0)
-            (py-beginning-of-expression orig done)))
-         ((and (eq (point) orig) (not (bobp))(looking-back "[ \.\t\r\n\f]"))
-          (skip-chars-backward "=:+-*/&%^><. \t\r\n\f")
-          (unless (bobp) (forward-char -1))
-          (unless (eq (abs (skip-chars-backward "^=:+-*/&%^>< \t\r\n\f")) 0)
-            (setq done t)
-            (py-beginning-of-expression orig done)))
-         ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
-          (forward-char -1)
-          (when (< 0 (abs (skip-chars-backward py-expression-skip-regexp)))
-            (setq done t))
-          (py-beginning-of-expression orig done))
-         ((looking-at py-expression-looking-regexp)
-          (setq done t)))
-        (unless (or (eq (point) orig)(looking-at "[ \t]*#"))
-          (setq erg (point)))
-        (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-        erg))))
-
-(defun py-end-of-expression (&optional orig done)
+(defun py-end-of-expression (&optional arg)
   "Go to the end of a compound python expression.
+
+With numeric ARG do it that many times.
 
 A a compound python expression might be concatenated by \".\" operator, thus composed by minor python expressions.
 
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 
 Operators however are left aside resp. limit py-expression designed for edit-purposes. "
-  (interactive)
-  (save-restriction
-    (widen)
-    (unless (eobp)
-      (let*
-          ((orig (or orig (point)))
+  (interactive "p")
+  (or arg (setq arg 1))
+  (let (erg)
+    (if (< 0 arg)
+        (save-restriction
+          (widen)
+          (while (< 0 arg)
+            (setq erg (py-end-of-expression-intern))
+            (setq arg (1- arg))))
+      (setq arg (abs arg))
+      (setq erg (py-beginning-of-expression arg)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-end-of-expression-intern (&optional orig)
+  (unless (eobp)
+    (let* ((orig (or orig (point)))
            (pps (syntax-ppss))
-           (done done)
            erg
            ;; use by scan-lists
            parse-sexp-ignore-comments)
-        (cond
-         ;; start of innermost containing list; nil if none.
-         ((nth 1 pps)
-          (goto-char (nth 1 pps))
-          (let ((parse-sexp-ignore-comments t))
-            (forward-list)
-            (py-end-of-expression orig done)))
-         ;; in comment
-         ((nth 4 pps)
-          (or (< (point) (progn (forward-comment 1)(point)))(forward-line 1))
-          (py-end-of-expression orig done))
-         ((and (empty-line-p)(not done)(not (eobp)))
-          (while
-              (and (empty-line-p)(not done)(not (eobp)))
-            (forward-line 1))
-          (py-end-of-expression orig done))
-         ;; inside string
-         ((py-in-string-p)
-          (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
-            (goto-char (match-end 0)))
-          (while
-              (nth 3 (syntax-ppss))
-            (forward-char 1))
-          (when (looking-at "[ \t]*$")
-            (setq done t))
-          (py-end-of-expression orig done))
-         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
-          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp))
-                      (beginning-of-line)))
-          (end-of-line)
-          (skip-chars-backward " \t\r\n\f")
-          (unless (bolp) (setq done t))
-          (py-end-of-expression orig done))
-         ((and (not done)(looking-at py-not-expression-regexp)(not (eobp)))
-          (goto-char (match-end 0))
-          (skip-chars-forward " \t\r\n\f")
-          (py-end-of-expression orig done))
-         ((and (not done)(looking-at py-expression-skip-regexp)(not (eobp)))
-          (skip-chars-forward py-not-expression-regexp)
-          (forward-char -1)
-          (py-end-of-expression orig done))
-         ((and
-           ;; (not done)
-           (not (eobp))(looking-at py-expression-looking-regexp))
-          (goto-char (match-end 0))
-          (setq done t)
-          (unless (< 0 (skip-chars-forward py-expression-skip-regexp))
-            (unless (looking-at "[ \t\r\n\f]") (forward-char 1)))
-          (py-end-of-expression orig done))
-         ((looking-at "\\(+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)[ \t]*")
-          (setq done t)
-          (goto-char (match-end 0))
-          (py-end-of-expression orig done)))
-        (unless (eq (point) orig)
-          (setq erg (point)))
-        (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-        erg))))
+      (cond
+       ((nth 1 pps)
+        (goto-char (nth 1 pps))
+        (let ((parse-sexp-ignore-comments t))
+          (forward-list))
+        (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+          (py-end-of-expression-intern orig)))
+       ;; in comment
+       ((nth 4 pps)
+        (or (< (point) (progn (forward-comment 1)(point)))(forward-line 1))
+        (py-end-of-expression-intern orig))
+       ((empty-line-p)
+        (while
+            (and (empty-line-p)(not (eobp)))
+          (forward-line 1))
+        (py-end-of-expression-intern orig))
+       ((looking-at (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+        (goto-char (match-end 0))
+        (while (looking-at (concat py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+          (goto-char (match-end 0))))
+       ;; inside string
+       ((py-in-string-p)
+        (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
+          (goto-char (match-end 0)))
+        (while
+            (nth 3 (syntax-ppss))
+          (forward-char 1))
+        (if (looking-at ":")
+            (forward-char 1)
+          (unless (looking-at "[ \t]*$")
+            (py-end-of-expression-intern orig))))
+       ((looking-at "[(\[]")
+        (forward-list)
+        (if (looking-at ":")
+            (forward-char 1)
+          (unless (looking-at "[ \t]*$")
+            (py-end-of-expression-intern orig))))
+       ((looking-at ":")
+        (forward-char 1)
+        (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+          (py-end-of-expression-intern orig)))
+       ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+        (while (and (looking-at "[ \t]*#") (not (eobp)))
+          (forward-line 1))
+        (py-end-of-expression-intern orig))
+       ((looking-at py-assignment-regexp)
+        (goto-char (match-end 0))
+        (if (looking-at "[(\[]")
+            (forward-list 1)
+          (py-end-of-expression-intern orig)))
+       ((looking-at (concat "[^ \t\n\r\f]+" py-delimiter-regexp))
+        (goto-char (match-end 0))
+        (while (looking-at (concat "[^ \t\n\r\f]+" py-delimiter-regexp))
+          (goto-char (match-end 0)))
+        (unless (or (looking-at py-assignment-regexp) (looking-at "[ \t]*$"))
+          (py-end-of-expression-intern orig)))
+       ((looking-at (concat "[ \t]*" "[^ (\t\n\r\f]+" py-operator-regexp "[^ \t\n\r\f]+"))
+        (goto-char (match-end 0))
+        (while (looking-at (concat "[ \t]*" "[^ (\t]+" py-operator-regexp "[^ \t]+"))
+          (goto-char (match-end 0)))
+        (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+          (py-end-of-expression-intern orig)))
+       ((looking-at py-not-expression-regexp)
+        (skip-chars-forward py-not-expression-chars)
+        (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+          (py-end-of-expression-intern orig)))
+       ((looking-at py-expression-skip-regexp)
+        (skip-chars-forward py-expression-skip-chars)
+        (unless (or (looking-at "[ \n\t\r\f]*$")(looking-at py-assignment-regexp))
+          (py-end-of-expression-intern orig)))
+       ((looking-at ":")
+        (forward-char 1)))
+      (unless (or (eq (point) orig)(and (eobp)(bolp)))
+        (setq erg (point)))
+      erg)))
 
 ;;; Partial- or Minor Expression
 (defalias 'py-backward-partial-expression 'py-beginning-of-partial-expression)
-(defun py-beginning-of-partial-expression (&optional orig erg)
+(defun py-beginning-of-partial-expression (&optional arg)
   "Go to the beginning of a minor python expression.
+
+With numeric ARG do it that many times.
 
 \".\" operators delimit a minor expression on their level.
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes.
 
 If already at the beginning or before a partial-expression, go to next partial-expression in buffer upwards "
-  (interactive)
-  (save-restriction
-    (widen)
-    (unless (bobp)
-      (let ((orig (or orig (point)))
-            (cui (current-indentation))
-            ;; (origline (or origline (py-count-lines)))
-            (pps (syntax-ppss))
-            (erg erg))
-        (cond
-         ((nth 1 pps)
-          (goto-char (nth 1 pps))
-          ;; (skip-chars-backward py-partial-expression-backward-regexp)
-          (setq erg (point))
-          (when (< 0 (abs (skip-chars-backward py-partial-expression-skip-regexp)))
-            (setq erg (point))))
-         ((nth 8 pps)
-          (when (nth 2 pps)
-            (goto-char (nth 2 pps)))
-          (goto-char (1- (nth 8 pps)))
-          (setq erg (point))
-          (py-beginning-of-partial-expression orig erg))
-         ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
-          (forward-line -1)
-          (unless (bobp)
-            (end-of-line)
-            (setq erg (point))
-            (py-beginning-of-partial-expression orig erg)))
+  (interactive "p")
+  (or arg (setq arg 1))
+  (let (erg)
+    (if (< 0 arg)
+        (save-restriction
+          (widen)
 
-         ((looking-at "\\(=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\)")
-          (goto-char (1- (match-beginning 0)))
-          (skip-chars-backward " \t\r\n\f")
-          (unless (bobp) (forward-char -1))
-          (py-beginning-of-partial-expression orig erg))
-         ((looking-at "[ \t\r\n\f]")
-          (skip-chars-backward " \t\r\n\f")
-          (unless (bobp) (forward-char -1))
-          (unless (eq (abs (skip-chars-backward "^ .\t\r\n\f")) 0)
-            (py-beginning-of-partial-expression orig erg)))
-         ((and (eq (point) orig) (not (bobp))(looking-back "[ \.\t\r\n\f]"))
-          (skip-chars-backward "=:+-*/&%^><. \t\r\n\f")
-          (unless (bobp) (forward-char -1))
-          (unless (eq (abs (skip-chars-backward "^=:+-*/&%^><. \t\r\n\f")) 0)
-            (py-beginning-of-partial-expression orig erg)))
-         ((and (eq (point) orig) (not (bobp)) (looking-back py-partial-expression-looking-regexp))
-          (forward-char -1)
-          (when (< 0 (abs (skip-chars-backward py-partial-expression-skip-regexp)))
-            (setq erg (point)))
-          (py-beginning-of-partial-expression orig erg))
-         ((looking-at py-partial-expression-looking-regexp)
-          (setq erg (point)))
-         ((and (eq (point) orig)(not (bobp)))
-          (skip-chars-backward " \t\r\n\f")
-          (py-beginning-of-partial-expression orig erg))
-         (t (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))(setq erg (point)))))
-        (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-        erg))))
+          (while (< 0 arg)
+            (setq erg (py-beginning-of-partial-expression-intern))
+            (setq arg (1- arg))))
+      (setq arg (abs arg))
+      (setq erg (py-end-of-partial-expression (abs arg))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+
+(defun py-beginning-of-partial-expression-intern (&optional orig)
+  (unless (bobp)
+    (let* ((orig (or orig (point)))
+           (pps (syntax-ppss))
+           erg)
+      (cond
+       ((and (empty-line-p)(not (bobp)))
+        (while
+            (and (empty-line-p)(not (bobp)))
+          (forward-line -1)
+          (end-of-line))
+        (py-beginning-of-partial-expression-intern orig))
+       ;; this would up-list prematurely
+       ;; ((nth 1 pps)
+       ;; (goto-char (nth 1 pps)))
+       ((nth 4 pps)
+        (skip-chars-backward "^#")
+        (while (nth 4 (syntax-ppss))
+          (forward-char -1))
+        (unless (bobp) (forward-char -1))
+        (py-beginning-of-partial-expression-intern orig))
+       ((looking-back ":")
+        (forward-char -1)
+        (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-chars)))
+          (py-beginning-of-partial-expression-intern orig)))
+       ((looking-back py-partial-expression-looking-regexp)
+        (cond ((looking-back "\"\\|'")
+               (forward-char -1)
+               (skip-chars-backward "\"'")
+               (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-chars)))
+                 (py-beginning-of-partial-expression-intern orig)))
+              ((looking-back "]\\|)")
+               (forward-char -1)
+               (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-backward-chars)))
+                 (py-beginning-of-partial-expression-intern orig)))
+              ((and (looking-back "(\\|\\[") (not (nth 8 pps)))
+               (forward-char -1))
+              (t (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-chars)))
+                   (py-beginning-of-partial-expression-intern orig)))))
+       ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+        (forward-line -1)
+        (unless (bobp)
+          (end-of-line)
+          (py-beginning-of-partial-expression-intern orig)))
+       ((looking-back py-delimiter-regexp)
+        (skip-chars-backward " \t")
+        (skip-chars-backward py-delimiter-chars)
+        (forward-char -1)
+        (skip-chars-backward py-partial-expression-skip-backward-chars))
+       ((looking-back py-assignment-regexp)
+        (goto-char (1- (match-beginning 0)))
+        (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-backward-chars)))
+          (py-beginning-of-partial-expression-intern orig)))
+       ((looking-back py-operator-regexp)
+        (goto-char (1- (match-beginning 0)))
+        (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-backward-chars)))
+          (py-beginning-of-partial-expression-intern orig)))
+       ((looking-back ")\\|]")
+        (goto-char (1- (match-beginning 0)))
+        (unless (< 0 (abs (skip-chars-backward py-partial-expression-skip-backward-chars)))
+          (py-beginning-of-partial-expression-intern orig)))
+       ((looking-back "[ \.\t\r\n\f]")
+        (skip-chars-backward py-not-partial-expression-skip-chars)
+        ;; (skip-chars-backward py-partial-expression-skip-backward-chars))
+        (py-beginning-of-partial-expression-intern orig))
+       ((nth 9 pps)
+        (goto-char (car (last (nth 9 pps)))))
+       ((nth 8 pps)
+        (when (nth 2 pps)
+          (goto-char (nth 2 pps)))
+        (goto-char (1- (nth 8 pps)))
+        (py-beginning-of-partial-expression-intern orig))))
+    (unless (eq (point) orig)
+      (setq erg (point)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 (defalias 'py-forward-partial-expression 'py-end-of-partial-expression)
-(defun py-end-of-partial-expression (&optional orig origline done)
+(defun py-end-of-partial-expression (&optional arg)
   "Go to the end of a minor python expression.
+
+With numeric ARG do it that many times.
 
 \".\" operators delimit a minor expression on their level.
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes. "
-  (interactive)
-  (save-restriction
-    (widen)
-    (unless (eobp)
-      (let*
-          ((orig (or orig (point)))
-           (origline (or origline (py-count-lines)))
-           (pps (if (featurep 'xemacs)
-                    (parse-partial-sexp (point-min) (point))
-                  (syntax-ppss)))
-           (done done)
-           erg
-           ;; use by scan-lists
-           parse-sexp-ignore-comments)
-        (cond
-         ((and (empty-line-p)(not done)(not (eobp)))
-          (while
-              (and (empty-line-p)(not done)(not (eobp)))
-            (forward-line 1))
-          (py-end-of-partial-expression orig origline done))
-         ;; inside string
-         ((nth 3 pps)
-          (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
-            (goto-char (match-end 0)))
-          (while
-              (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
-                   (nth 3
-                        (if (featurep 'xemacs)
-                            (parse-partial-sexp (point-min) (point))
-                          (syntax-ppss)))))
-          (py-end-of-partial-expression orig origline done))
-         ;; in comment
-         ((nth 4 pps)
-          (forward-line 1)
-          (py-end-of-partial-expression orig origline done))
-         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*")(not done))
-          (while (and (looking-at "[ \t]*#") (forward-line 1)(not (eobp))
-                      (beginning-of-line)))
-          (end-of-line)
-          ;;          (setq done t)
-          (skip-chars-backward " \t\r\n\f")
-          (py-end-of-partial-expression orig origline done))
-         ((and (nth 1 pps) (<= orig (nth 1 pps)))
-          (goto-char (nth 1 pps))(forward-list)
-          (point))
-         ((and (not done)(ignore-errors (<= orig (nth 2 pps))))
-          (goto-char (nth 2 pps))
-          (setq done t)
-          (skip-chars-forward py-partial-expression-forward-regexp)
-          (py-end-of-partial-expression orig origline done))
-         ((and (looking-at "\\.")(< orig (point)))
-          (point))
-         ((and (not done)(looking-at "\\.\\|=\\|:\\|+\\|-\\|*\\|/\\|//\\|&\\|%\\||\\|\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!="))
-          (goto-char (match-end 0))
-          (when (< 0 (skip-chars-forward " \t\r\n\f"))
+  (interactive "p")
+  (or arg (setq arg 1))
+  (let (erg)
+    (if (< 0 arg)
+        (save-restriction
+          (widen)
+          (while (< 0 arg)
+            (setq erg (py-end-of-partial-expression-intern))
+            (setq arg (1- arg))))
+      (setq arg (abs arg))
+      (setq erg (py-beginning-of-partial-expression arg)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+
+(defun py-end-of-partial-expression-intern (&optional orig)
+  (unless (eobp)
+    (let*
+        ((orig (or orig (point)))
+         (pps (syntax-ppss))
+         erg
+         ;; use by scan-lists
+         parse-sexp-ignore-comments)
+      (cond
+       ((and (empty-line-p)(not (eobp)))
+        (while
+            (and (empty-line-p)(not (eobp)))
+          (forward-line 1))
+        (py-end-of-partial-expression-intern orig))
+       ((and (eq (point) orig) (looking-at "[ \t\n\f\r]"))
+        (skip-chars-forward " \t\r\n\f")
+        (py-end-of-partial-expression-intern orig))
+       ((looking-at "[ \t]*#")
+        (while (and (looking-at "[ \t]*#") (forward-line 1)))
+        (py-end-of-partial-expression-intern orig))
+       ;; inside string
+       ((nth 3 pps)
+        (when (looking-at "\"\"\"\\|'''\\|\"\\|'")
+          (goto-char (match-end 0)))
+        (or (< 0 (abs (skip-chars-forward "^ \t\r\n\f")))
+            (while
+                (and (re-search-forward "[^\\]\"\"\"\\|[^\\]'''\\|[^\\]\"\\|[^\\]'" nil (quote move) 1)
+                     (nth 3 (syntax-ppss))))))
+       ;; in comment
+       ((nth 4 pps)
+        (while (or (nth 4 (syntax-ppss)) (looking-at comment-start))
+          (forward-line 1)))
+       ((looking-at py-operator-regexp)
+        (goto-char (match-end 0))
+        (when (< 0 (skip-chars-forward " \t\r\n\f"))
+          (forward-char 1))
+        (if (looking-at "\"\"\"\\|'''\\|\"\\|'")
+            (progn
+              (goto-char (match-end 0))
+              (py-end-of-partial-expression-intern orig))
+          (unless (< 0 (abs (skip-chars-forward py-partial-expression-forward-regexp)))
+            (py-end-of-partial-expression-intern orig))))
+       ((looking-at py-partial-expression-looking-regexp)
+        (unless (< 0 (abs (skip-chars-forward py-partial-expression-forward-regexp)))
+          (when (looking-at "(")
             (forward-char 1))
-          (skip-chars-forward py-partial-expression-forward-regexp)
-          (setq done t)
-          (py-end-of-partial-expression orig origline done))
-         ((and (not done)(looking-at py-partial-expression-looking-regexp)(not (eobp)))
-          (skip-chars-forward py-partial-expression-forward-regexp)
-          (setq done t)
-          (py-end-of-partial-expression orig origline done))
-         ((and (not done)(looking-at py-not-partial-expression-regexp)(not (eobp)))
-          (skip-chars-forward py-not-partial-expression-skip-regexp)
-          (skip-chars-forward py-partial-expression-forward-regexp)
-          (setq done t)
-          (py-end-of-partial-expression orig origline done))
-         ((and (eq (point) orig) (not (eobp)))
-          (forward-char 1)
-          (py-end-of-partial-expression orig origline done)))
-        (unless (eq (point) orig)
-          (setq erg (point)))
-        (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-        erg))))
+          (py-end-of-partial-expression-intern orig)))
+       ((looking-at py-not-partial-expression-regexp)
+        (if (and (< orig (point)) (looking-at ")"))
+            (forward-char 1)
+          (skip-chars-forward py-not-partial-expression-skip-chars)
+          (cond ((nth 4 (syntax-ppss))
+                 (while (or (nth 4 (syntax-ppss)) (looking-at comment-start))
+                   (forward-line 1))
+                 (py-end-of-expression-intern orig))
+                ((looking-at "\"\"\"\\|'''\\|\"\\|'")
+                 (goto-char (match-end 0))
+                 (py-end-of-partial-expression-intern orig))
+                ((looking-at py-operator-regexp)
+                 (goto-char (match-end 0))
+                 (py-end-of-partial-expression-intern orig))
+                (t (unless (< 0 (abs (skip-chars-forward py-partial-expression-forward-regexp)))
+                     (py-end-of-partial-expression-intern orig))))))
+       ((and (eq (point) orig) (not (eobp)))
+        (forward-char 1)
+        (py-end-of-partial-expression-intern orig))
+       ((nth 9 pps)
+        (goto-char (car (last (nth 9 pps))))
+        (forward-list)
+        (py-end-of-partial-expression-intern orig))
+       ((and (nth 1 pps) (<= orig (nth 1 pps)))
+        (goto-char (nth 1 pps))(forward-list)
+        (py-end-of-partial-expression-intern orig))
+       ((and (ignore-errors (<= orig (nth 2 pps))))
+        (goto-char (nth 2 pps))
+        (skip-chars-forward py-partial-expression-forward-regexp)
+        (py-end-of-partial-expression-intern orig)))
+      (unless (or (eq (point) orig)(and (eobp)(bolp)))
+        (setq erg (point)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
 
 ;;; Line
 (defun py-beginning-of-line ()
@@ -6521,19 +6767,26 @@ http://docs.python.org/reference/compound_stmts.html
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
 
-;; (defmacro py-go-to-keyword (regexp &optional maxindent)
-;;   "Returns a list, whose car is indentation, cdr position. "
-;;   `(let ((orig (point))
-;;          (origline (py-count-lines))
-;;          (maxindent maxindent)
-;;          done erg)
-;;      (while (and (not done) (not (bobp)))
-;;        (py-beginning-of-statement)
-;;        (when (and (looking-at ,regexp)(if maxindent
-;;                                           (< (current-indentation) maxindent)t))
-;;          (setq erg (point))
-;;          (setq done t)))
-;;      (when erg (cons (current-indentation) erg))))
+(defun py-go-to-keyword-above (regexp &optional maxindent)
+  "Returns a list, whose car is indentation, cdr position. "
+  (let ((orig (point))
+        (maxindent (or maxindent (and (< 0 (current-indentation))(current-indentation))
+                       ;; make maxindent large enough if not set
+                       (* 99 py-indent-offset)))
+        (first t)
+        done erg cui)
+    (while (and (not done) (not (bobp)))
+      (py-beginning-of-statement)
+      (if (and (looking-at regexp)(if maxindent
+                                      (< (current-indentation) maxindent) t))
+          (progn
+            (setq erg (point))
+            (setq done t))
+        (when (and first (not maxindent))
+          (setq maxindent (current-indentation))
+          (setq first nil))))
+    (when erg (setq erg (cons (current-indentation) erg)))
+    erg))
 
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
@@ -6551,13 +6804,13 @@ To go just beyond the final line of the current statement, use `py-down-statemen
           erg stringchar)
       (cond
        ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
-        (skip-chars-forward "^;" (line-end-position))
+        (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (py-beginning-of-comment)
         (unless (looking-back "^[ \t]*")
           (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
         (if (eq (point) orig)
             (progn
-              (skip-chars-forward "^;" (line-end-position))
+              (skip-chars-forward (concat "^" comment-start) (line-end-position))
               (forward-comment 99999)
               (py-end-of-statement orig done))
           (setq done t)
@@ -6572,7 +6825,7 @@ To go just beyond the final line of the current statement, use `py-down-statemen
                 (when (looking-at ":[ \t]*$")
                   (forward-char 1))
                 (setq done t)
-                (skip-chars-forward "^;" (line-end-position))
+                (skip-chars-forward (concat "^" comment-start) (line-end-position))
                 (skip-chars-backward " \t\r\n\f")
                 (py-end-of-statement orig done))
             (goto-char orig))))
@@ -6596,38 +6849,37 @@ To go just beyond the final line of the current statement, use `py-down-statemen
        ((nth 4 pps)
         (if (eobp)
             nil
-          (skip-chars-forward "^;" (line-end-position))
+          (skip-chars-forward (concat "^" comment-start) (line-end-position))
           (forward-comment 99999)
           (skip-chars-backward " \t\r\n\f" (line-beginning-position))
           (when (py-beginning-of-comment)
             (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
           (py-end-of-statement orig done)))
        ((looking-at "#")
-        ;; (skip-chars-forward "#")
-        (skip-chars-forward "^;" (line-end-position))
+        (end-of-line)
         (forward-comment 99999)
         (setq done t)
-        (skip-chars-forward "^;" (line-end-position))
+        (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
         ;; (py-beginning-of-comment)
         ;; (skip-chars-backward " \t\r\n\f")
         (py-end-of-statement orig done))
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
-        (skip-chars-forward "^;" (line-end-position))
+        (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (py-beginning-of-comment)
         (skip-chars-backward " " (line-beginning-position))
         (setq done t)
         (py-end-of-statement orig done))
        ((and (not done) (eq (point) orig)(looking-at ";"))
         (skip-chars-forward ";" (line-end-position))
-        (when (< 0 (skip-chars-forward "^;" (line-end-position)))
+        (when (< 0 (skip-chars-forward (concat "^" comment-start) (line-end-position)))
           (py-beginning-of-comment)
           (skip-chars-backward " \t\r\n\f")
           (setq done t))
         (py-end-of-statement orig done))
        ((and (not done) (eq (point) orig))
-        (skip-chars-forward "^;" (line-end-position))
+        (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f")
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
@@ -7268,7 +7520,6 @@ Return beginning position, nil if not inside."
               (setq last (1+ (point)))
               (when iact (message "%s" last))
               last)))))))
-
 
 ;;; Beginning of line forms
 (defun py-mark-base-bol (form &optional py-mark-decorators)
@@ -9427,152 +9678,6 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
       (with-temp-buffer
         (shell-command (concat "python " exec-execfile) output-buffer error-buffer)))))
 
-;;; Execute forms
-(defun py-execute-statement (&optional shell dedicated switch)
-  "Send statement at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-statement-p)
-                       (py-beginning-of-statement))))
-          (end (py-end-of-statement)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-block (&optional shell dedicated switch)
-  "Send block at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-block-p)
-                   (py-beginning-of-block)))
-          (end (py-end-of-block)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-block-or-clause (&optional shell dedicated switch)
-  "Send block-or-clause at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-block-or-clause-p)
-                   (py-beginning-of-block-or-clause)))
-          (end (py-end-of-block-or-clause)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-def (&optional shell dedicated switch)
-  "Send def at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-def-p)
-                   (py-beginning-of-def)))
-          (end (py-end-of-def)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-class (&optional shell dedicated switch)
-  "Send class at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-class-p)
-                   (py-beginning-of-class)))
-          (end (py-end-of-class)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-def-or-class (&optional shell dedicated switch)
-  "Send def-or-class at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-def-or-class-p)
-                   (py-beginning-of-def-or-class)))
-          (end (py-end-of-def-or-class)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-expression (&optional shell dedicated switch)
-  "Send expression at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-expression-p)
-                   (py-beginning-of-expression)))
-          (end (py-end-of-expression)))
-      (py-execute-region beg end shell dedicated switch))))
-
-(defun py-execute-partial-expression (&optional shell dedicated switch)
-  "Send partial-expression at point to a Python interpreter.
-
-When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
-See also `py-force-py-shell-name-p'.
-
-When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
-
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
-Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
-  (interactive "P")
-  (save-excursion
-    (let ((beg (or (py-beginning-of-partial-expression-p)
-                   (py-beginning-of-partial-expression)))
-          (end (py-end-of-partial-expression)))
-      (py-execute-region beg end shell dedicated switch))))
-
 ;;;
 (defun py-execute-line ()
   "Send current line from beginning of indent to Python interpreter. "
@@ -11296,12 +11401,9 @@ Returns value of `py-smart-operator-mode-p' switched to. "
   (interactive)
   (let ((arg (or arg (if py-smart-operator-mode-p -1 1))))
     (if (< 0 arg)
-        (progn
-          (setq py-smart-operator-mode-p t)
-          (py-smart-operator-mode 1))
-      (setq py-smart-operator-mode-p nil)
-      (py-smart-operator-mode -1))
-    (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
+        (setq py-smart-operator-mode-p t)
+      (setq py-smart-operator-mode-p nil))
+    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
     py-smart-operator-mode-p))
 
 (defun py-smart-operator-mode-on (&optional arg)
@@ -11311,7 +11413,7 @@ Returns value of `py-smart-operator-mode-p'. "
   (interactive "p")
   (let ((arg (or arg 1)))
     (py-toggle-smart-operator arg))
-  (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
+  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
   py-smart-operator-mode-p)
 
 (defun py-smart-operator-mode-off (&optional arg)
@@ -11320,9 +11422,9 @@ Returns value of `py-smart-operator-mode-p'. "
 Returns value of `py-smart-operator-mode-p'. "
   (interactive "p")
   (let ((arg (if arg (- arg) -1)))
-    (py-toggle-smart-operator arg))
-  (when (interactive-p) (message "py-smart-operator-mode: %s" py-smart-operator-mode-p))
-  py-smart-operator-mode-p)
+    (py-toggle-smart-operator arg)
+    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+    py-smart-operator-mode-p))
 
 ;;; Split-Windows-On-Execute forms
 (defalias 'toggle-py-split-windows-on-execute 'py-toggle-split-windows-on-execute)
@@ -13613,7 +13715,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                                    ))
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start) "#")
   (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
@@ -15170,6 +15272,159 @@ as it leaves your system default unchanged."
   (setq py-use-local-default (not py-use-local-default))
   (when (interactive-p) (message "py-use-local-default set to %s" py-use-local-default))
   py-use-local-default)
+
+;;; Py execute
+(defun py-execute-statement (&optional shell dedicated switch)
+  "Send statement at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-statement-p)
+                       (py-beginning-of-statement))))
+          (end (py-end-of-statement)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-block (&optional shell dedicated switch)
+  "Send block at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-p)
+                       (py-beginning-of-block))))
+          (end (py-end-of-block)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-block-or-clause (&optional shell dedicated switch)
+  "Send block-or-clause at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-block-or-clause-p)
+                       (py-beginning-of-block-or-clause))))
+          (end (py-end-of-block-or-clause)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-def (&optional shell dedicated switch)
+  "Send def at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-p)
+                       (py-beginning-of-def))))
+          (end (py-end-of-def)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-class (&optional shell dedicated switch)
+  "Send class at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-class-p)
+                       (py-beginning-of-class))))
+          (end (py-end-of-class)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-def-or-class (&optional shell dedicated switch)
+  "Send def-or-class at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-def-or-class-p)
+                       (py-beginning-of-def-or-class))))
+          (end (py-end-of-def-or-class)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-expression (&optional shell dedicated switch)
+  "Send expression at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-expression-p)
+                       (py-beginning-of-expression))))
+          (end (py-end-of-expression)))
+      (py-execute-region beg end shell dedicated switch))))
+
+(defun py-execute-partial-expression (&optional shell dedicated switch)
+  "Send partial-expression at point to a Python interpreter.
+
+When called with \\[univeral-argument], execution through `default-value' of `py-shell-name' is forced.
+See also `py-force-py-shell-name-p'.
+
+When called with \\[univeral-argument] followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment.
+
+When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
+
+Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
+  (interactive "P")
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-partial-expression-p)
+                       (py-beginning-of-partial-expression))))
+          (end (py-end-of-partial-expression)))
+      (py-execute-region beg end shell dedicated switch))))
 
 ;;; Extended executes
 ;; created by `write-extended-execute-forms'
