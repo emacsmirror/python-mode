@@ -71,7 +71,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.0.12")
+(defconst py-version "6.0.13")
 
 (defvar python-local-version nil
   "Used internally. ")
@@ -2252,7 +2252,7 @@ See also `py-assignment-regexp' ")
 See also `py-operator-regexp' ")
 ;; (setq  py-assignment-regexp "[ \t]*=[^=]")
 
-(defvar py-delimiter-regexp "\\(,\\|;\\|:\\)[ \t]*"
+(defvar py-delimiter-regexp "\\(,\\|;\\|:\\)[ \t\n]"
   "Delimiting elements of lists or other programming constructs. ")
 ;; (setq py-delimiter-regexp "\\(,\\|;\\:\\)[ \t]*")
 
@@ -6388,20 +6388,20 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (while
             (nth 3 (syntax-ppss))
           (forward-char 1))
-        (if (looking-at ":")
-            (forward-char 1)
-          (unless (looking-at "[ \t]*$")
-            (py-end-of-expression-intern orig))))
+        ;; (if (looking-at ":")
+        ;; (forward-char 1)
+        (unless (looking-at "[ \t]*$")
+          (py-end-of-expression-intern orig)))
        ((looking-at "[(\[]")
         (forward-list)
-        (if (looking-at ":")
-            (forward-char 1)
-          (unless (looking-at "[ \t]*$")
-            (py-end-of-expression-intern orig))))
-       ((looking-at ":")
-        (forward-char 1)
-        (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+        ;; (if (looking-at ":")
+        ;; (forward-char 1)
+        (unless (looking-at "[ \t]*$")
           (py-end-of-expression-intern orig)))
+       ;; ((looking-at ":")
+       ;; (forward-char 1)
+       ;; (unless (or (looking-at "[ \t]*$")(looking-at py-assignment-regexp))
+       ;; (py-end-of-expression-intern orig)))
        ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
         (while (and (looking-at "[ \t]*#") (not (eobp)))
           (forward-line 1))
@@ -6415,7 +6415,8 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (goto-char (match-end 0))
         (while (looking-at (concat "[^ \t\n\r\f]+" py-delimiter-regexp))
           (goto-char (match-end 0)))
-        (unless (or (looking-at py-assignment-regexp) (looking-at "[ \t]*$"))
+        (forward-char -1)
+        (unless (looking-at (concat py-assignment-regexp "\\|[ \t]*$\\|" py-delimiter-regexp))
           (py-end-of-expression-intern orig)))
        ((looking-at (concat "[ \t]*" "[^ (\t\n\r\f]+" py-operator-regexp "[^ \t\n\r\f]+"))
         (goto-char (match-end 0))
@@ -6431,8 +6432,9 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (skip-chars-forward py-expression-skip-chars)
         (unless (or (looking-at "[ \n\t\r\f]*$")(looking-at py-assignment-regexp))
           (py-end-of-expression-intern orig)))
-       ((looking-at ":")
-        (forward-char 1)))
+       ;; ((looking-at ":")
+       ;; (forward-char 1))
+       )
       (unless (or (eq (point) orig)(and (eobp)(bolp)))
         (setq erg (point)))
       erg)))
@@ -10173,38 +10175,49 @@ Returns python-imports"
     (delete-other-windows)))
 
 (defalias 'py-help-at-point 'py-describe-symbol)
-(defun py-describe-symbol (&optional arg)
+(defun py-describe-symbol (&optional debug)
   "Print help on symbol at point.
 
+If symbol is defined in current buffer, jump to it's definition
 Optional \\[universal-argument] used for debugging, will prevent deletion of temp file. "
   (interactive "P")
   (let* ((orig (point))
-         (beg (progn (when (and (looking-back "(")(not (looking-at "\\sw"))) (forward-char -1))  (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))(point)))
+         (beg (progn (when (and (looking-back "(")(not (looking-at "\\sw"))) (forward-char -1)) (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))(point)))
          (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
          (sym (buffer-substring-no-properties beg end))
          (origfile (buffer-file-name))
          (temp (make-temp-name (buffer-name)))
          (file (concat (expand-file-name temp py-temp-directory) ".py"))
-         (cmd (py-find-imports)))
-    (goto-char orig)
-    (when cmd
-      (setq cmd (mapconcat
-                 (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
-                 (split-string cmd ";" t)
-                 "")))
-    (setq cmd (concat "import pydoc\n"
-                      cmd))
-    (when (not py-remove-cwd-from-path)
-      (setq cmd (concat cmd "import sys\n"
-                        "sys.path.insert(0, '"
-                        (file-name-directory origfile) "')\n")))
-    (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-    (with-temp-buffer
-      (insert cmd)
-      (write-file file))
-    (py-process-file file "*Python-Help*")
-    (when (file-readable-p file)
-      (unless (eq 4 (prefix-numeric-value arg)) (delete-file file)))))
+         (cmd (py-find-imports))
+         ;; if symbol is defined in current buffer, go to
+         (erg (progn (goto-char (point-min))
+                     (when
+                         (re-search-forward (concat "^[ \t]*def " sym "(") nil t 1)
+                       (forward-char -2)
+                       (point)))))
+    (if erg
+        (progn (push-mark orig)(push-mark (point))
+               (when (and (interactive-p) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
+      (goto-char orig)
+      (when cmd
+        (setq cmd (mapconcat
+                   (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
+                   (split-string cmd ";" t)
+                   "")))
+      (setq cmd (concat "import pydoc\n"
+                        cmd))
+      (when (not py-remove-cwd-from-path)
+        (setq cmd (concat cmd "import sys\n"
+                          "sys.path.insert(0, '"
+                          (file-name-directory origfile) "')\n")))
+      (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
+      (with-temp-buffer
+        (insert cmd)
+        (write-file file))
+      (setq erg (py-process-file file "*Python-Help*"))
+      (message "%s" erg)
+      (when (file-readable-p file)
+        (unless (eq 4 (prefix-numeric-value debug)) (delete-file file))))))
 
 
 ;;; Documentation

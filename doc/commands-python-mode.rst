@@ -2327,6 +2327,7 @@ py-describe-symbol
 ------------------
 Print help on symbol at point.
 
+If symbol is defined in current buffer, jump to it's definition
 Optional C-u used for debugging, will prevent deletion of temp file. 
 
 py-describe-mode
