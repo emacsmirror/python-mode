@@ -3346,9 +3346,9 @@ character address of the specified TYPE."
         ;; classes
         (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
          (1 font-lock-keyword-face) (2 py-class-name-face))
-        (,(rx symbol-start
-              (or "raise" "except")
-              symbol-end) . py-exception-name-face)
+        ;; (,(rx symbol-start
+        ;; (or "raise" "except")
+        ;; symbol-end) . py-exception-name-face)
         ;; already pseudo-keyword
         ;; (,(rx symbol-start
         ;;       (or "None" "True" "False" "__debug__" "NotImplemented")
@@ -3360,8 +3360,6 @@ character address of the specified TYPE."
         (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
                                                 (0+ "." (1+ (or word ?_)))))
          (1 py-decorators-face))
-        ;; '("\\_<raise[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_.]*\\)" 1 py-exception-name-face)
-        ;; '("[ \t]*\\(_\\{0,2\\}[a-zA-Z][a-zA-Z_0-9.]+_\\{0,2\\}\\) *\\(+\\|-\\|*\\|*\\*\\|/\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\)? ?=[^=\n]"
         ;; Builtin Exceptions
         (,(rx symbol-start
               (or "ArithmeticError" "AssertionError" "AttributeError"
@@ -3394,10 +3392,8 @@ character address of the specified TYPE."
                   "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
                   "unichr" "unicode" "vars" "xrange" "zip")
               symbol-end) . py-builtins-face)
-        ;; '("[ \t]*\\(_\\{0,2\\}[a-zA-Z][a-zA-Z_0-9.]+_\\{0,2\\}\\) *\\(+\\|-\\|*\\|*\\*\\|/\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\)? ?=[^=\n]"
+        ;; (,(python-rx line-start (* (any " \t"))(group (** 0 2 "_") word (0+ (or word ?_))(** 0 2 "_"))(* (any " \t")) assignment-operator)
         ;; 1 py-variable-name-face)
-        (,(python-rx line-start (* (any " \t"))(group (** 0 2 "_") word (0+ (or word ?_))(** 0 2 "_"))(* (any " \t")) assignment-operator)
-         1 py-variable-name-face)
         ;; asignations
         ;; support for a = b = c = 5
         (,(lambda (limit)
