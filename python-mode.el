@@ -3337,7 +3337,7 @@ character address of the specified TYPE."
       `(,(rx symbol-start
              (or "and" "del" "from" "not" "while" "as" "elif" "global" "or" "with"
                  "assert" "else" "if" "pass" "yield" "break" "import"
-                 "print" "exec" "in" "continue" "finally" "is"
+                 "print" "exec" "in" "continue" "finally" "is" "except" "raise"
                  "return" "def" "for" "lambda" "try")
              symbol-end)
         ;; functions
@@ -3361,13 +3361,13 @@ character address of the specified TYPE."
                                                 (0+ "." (1+ (or word ?_)))))
          (1 py-decorators-face))
         ;; Builtin Exceptions
-        (,(rx symbol-start
+        (,(rx word-start
               (or "ArithmeticError" "AssertionError" "AttributeError"
                   "BaseException" "BufferError" "BytesWarning" "DeprecationWarning"
                   "EOFError" "EnvironmentError" "Exception" "FloatingPointError"
                   "FutureWarning" "GeneratorExit" "IOError" "ImportError"
                   "ImportWarning" "IndentationError" "IndexError" "KeyError"
-                  "KeyboardInterrupt" "LookupError" "MemoryError" "NameError"
+                  "KeyboardInterrupt" "LookupError" "MemoryError" "NameError" "NoResultFound"
                   "NotImplementedError" "OSError" "OverflowError"
                   "PendingDeprecationWarning" "ReferenceError" "RuntimeError"
                   "RuntimeWarning" "StandardError" "StopIteration" "SyntaxError"
@@ -3375,7 +3375,7 @@ character address of the specified TYPE."
                   "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
                   "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
                   "UserWarning" "ValueError" "Warning" "ZeroDivisionError")
-              symbol-end) . py-exception-name-face)
+              word-end) . py-exception-name-face)
         ;; (,(rx (or space line-start) symbol-start "range
         ;; Builtins
         (,(rx (or space line-start) symbol-start
