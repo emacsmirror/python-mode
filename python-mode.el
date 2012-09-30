@@ -848,6 +848,12 @@ variable will only effect new shells."
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-max-split-windows 2
+  "When split windows is enabled the maximum windows to allow
+  before reusing other windows."
+  :type 'number
+  :group 'python-mode)
+
 (defcustom py-split-windows-on-execute-function 'split-window-vertically
   "How window should get splitted to display results of py-execute-... functions. "
   :type '(choice (const :tag "split-window-vertically" split-window-vertically)
@@ -8699,31 +8705,23 @@ Needed when file-path names are contructed from maybe numbered buffer names like
     string)))
 
 (defun py-shell-manage-windows (switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name)
-  (delete-other-windows)
-  (window-configuration-to-register 213465889)
   (cond (;; split and switch
          (unless (eq switch 'noswitch)
            (and py-split-windows-on-execute-p
                 (or (eq switch 'switch)
                     py-switch-buffers-on-execute-p)))
-         (unless (string-match "[Ii][Pp]ython" py-buffer-name) (delete-other-windows))
-         (when (< (count-windows) 2)
-           (funcall py-split-windows-on-execute-function))
-         (pop-to-buffer py-buffer-name))
+         (if (< (count-windows) py-max-split-windows)
+             (funcall py-split-windows-on-execute-function)
+           (switch-to-buffer-other-window py-buffer-name)))
         ;; split, not switch
         ((and py-split-windows-on-execute-p
               (or (eq switch 'noswitch)
                   (not (eq switch 'switch))))
-         (if (< (count-windows) 2)
+         (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
-               (display-buffer py-buffer-name)
-               ;; avoids windows flip top-down - by side-effect?
-               (window-configuration-to-register 213465889))
-           (window-configuration-to-register 213465889))
-         (jump-to-register 213465889)
-         (display-buffer oldbuf)
-         (pop-to-buffer oldbuf))
+               (display-buffer py-buffer-name))
+           (display-buffer py-buffer-name 'display-buffer-reuse-window)))
         ;; no split, switch
         ((or (eq switch 'switch)
              (and (not (eq switch 'noswitch))
