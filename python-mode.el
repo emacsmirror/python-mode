@@ -339,10 +339,10 @@ If nil, default, it will not move from at any reasonable level. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-complete-function 'nil
+(defcustom py-complete-function 'py-shell-complete
   "When set, enforces function todo completion, default is nil.
 
-Normally python-mode, resp. inferior-python-mode know best which functin to use. "
+Normally python-mode, resp. inferior-python-mode know best which function to use. "
   :type '(choice
           (const :tag "default" nil)
           (const :tag "py-completion-at-point" py-completion-at-point)
@@ -398,6 +398,9 @@ Richard Everson commented:
                  (const :tag "IPython's ipython-complete" ipython-complete))
   :group 'python-mode)
 (make-variable-buffer-local 'ipython-complete-function)
+
+(defvar py-shell-complete-debug nil
+  "For interal use when debugging." )
 
 (defvar py-local-complete-function nil
   "Set by python-mode-hook resp. to environment.
@@ -2217,7 +2220,6 @@ Used for determining the default in the next one.")
 (defvar py-not-expression-chars " .=#\t\r\n\f"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 ;; (setq py-not-expression-chars "[ .=#\t\r\n\f)]+")
-
 
 (defvar py-not-expression-chars " .=#\t\r\n\f"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
@@ -6470,7 +6472,6 @@ If already at the beginning or before a partial-expression, go to next partial-e
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-
 (defun py-beginning-of-partial-expression-intern (&optional orig)
   (unless (bobp)
     (let* ((orig (or orig (point)))
@@ -6570,7 +6571,6 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
       (setq erg (py-beginning-of-partial-expression arg)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
-
 
 (defun py-end-of-partial-expression-intern (&optional orig)
   (unless (eobp)
@@ -8809,10 +8809,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
                                   (read-string "Py-Shell arguments: "
                                                (concat
                                                 (mapconcat 'identity py-python-command-args " ") " ")))))))))
-             (pyshellname (or pyshellname
-                              (if (or (null py-shell-name)(string= "" py-shell-name))
-                                  (py-choose-shell)
-                                py-shell-name)))
+             (pyshellname (or pyshellname (py-choose-shell)))
              ;; If we use a pipe, Unicode characters are not printed
              ;; correctly (Bug#5794) and IPython does not work at
              ;; all (Bug#5390). python.el
@@ -11712,14 +11709,14 @@ Used only, if `py-install-directory' is empty. "
         (define-key map [(control c)(control v)] 'py-version)
         (define-key map [(control c)(control w)] 'py-pychecker-run)
         (define-key map (kbd "TAB") 'py-indent-line)
-        (if py-complete-function
-            (progn
-              (define-key map [(meta tab)] py-complete-function)
-              (define-key map [(esc) (tab)] py-complete-function))
-          (define-key map [(meta tab)] 'py-shell-complete)
-          (define-key map [(esc) (tab)] 'py-shell-complete))
-        ;; (substitute-key-definition 'complete-symbol 'completion-at-point
-        ;; map global-map)
+        ;; (if py-complete-function
+        ;;     (progn
+        ;;       (define-key map [(meta tab)] py-complete-function)
+        ;;       (define-key map [(esc) (tab)] py-complete-function))
+        ;;   (define-key map [(meta tab)] 'py-shell-complete)
+        ;;   (define-key map [(esc) (tab)] 'py-shell-complete))
+        (substitute-key-definition 'complete-symbol 'completion-at-point
+                                   map global-map)
         (easy-menu-define py-menu map "Python Tools"
           `("PyTools"
             :help "Python mode tools"
@@ -14025,7 +14022,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
 ;; syntax?; font-locking, e.g. for triple-quoted strings?
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
   "Major mode for interacting with an inferior Python process.
-A Python process can be started with \\[py-shell].
+A Python process can be started with \\[run-python] or \\[py-shell].
 
 Hooks `comint-mode-hook' and `inferior-python-mode-hook' are run in
 that order.
@@ -14041,8 +14038,21 @@ For running multiple processes in multiple buffers, see `run-python' and
 `python-buffer'.
 
 \\{inferior-python-mode-map}"
-  :group 'python-mode
-  (setq mode-line-process '(":%s")))
+  :group 'python
+  (require 'ansi-color) ; for ipython
+  (setq mode-line-process '(":%s"))
+  (set (make-local-variable 'comint-input-filter) 'python-input-filter)
+  (add-hook 'comint-preoutput-filter-functions #'python-preoutput-filter
+	    nil t)
+  (python--set-prompt-regexp)
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       python-compilation-regexp-alist)
+  (if py-complete-function
+      (add-hook 'completion-at-point-functions
+                py-complete-function nil 'local)
+    (add-hook 'completion-at-point-functions
+              'py-completion-at-point nil 'local))
+  (compilation-shell-minor-mode 1))
 
 (defvar python-preoutput-leftover nil)
 (defvar python-preoutput-skip-next-prompt nil)
@@ -14529,18 +14539,19 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (python-shell-completion--do-completion-at-point (get-buffer-process (current-buffer)) nil word)
            nil))))
 
-(defun py-shell-complete (&optional shell)
+(defun py-shell-complete (&optional shell debug)
   "Complete word before point, if any. Otherwise insert TAB. "
   (interactive)
   ;; (window-configuration-to-register 313465889)
   ;; (save-window-excursion
+  (when debug (setq py-shell-complete-debug nil))
   (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
       ;;  kind of completion resp. to shell
       (let (py-fontify-shell-buffer-p
             (shell (or shell (py-report-executable (buffer-name (current-buffer)))))
             (imports (py-find-imports)))
         (if (string-match "[iI][pP]ython" shell)
-            (ipython-complete)
+            (ipython-complete nil nil nil nil nil shell debug)
           (let* ((orig (point))
                  (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
                  (end (point))
@@ -14571,43 +14582,14 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
             ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
              (python-shell-completion--do-completion-at-point proc (buffer-substring-no-properties beg end) word))
             ;; deals better with imports
-            (imports
-             (py-python-script-complete shell imports beg end word))
-            (t (py-shell-complete-intern word beg end shell imports proc)))
-      ;; (jump-to-register a)
-      )))
+            ;; (imports
+            ;; (py-python-script-complete shell imports beg end word))
+            (t (py-shell-complete-intern word beg end shell imports proc debug))))))
 
-(defun py-shell-complete-intern (word &optional beg end shell imports proc)
-  (let (result)
-    (if imports
-        (setq result (py-shell-execute-string-now (format (concat imports "
-def print_completions(namespace, text, prefix=''):
-   for name in namespace:
-       if name.startswith(text):
-           print(prefix + name)
-
-def complete(text):
-    import __builtin__
-    import __main__
-    if '.' in text:
-        terms = text.split('.')
-        try:
-            if hasattr(__main__, terms[0]):
-                obj = getattr(__main__, terms[0])
-            else:
-                obj = getattr(__builtin__, terms[0])
-            for term in terms[1:-1]:
-                obj = getattr(obj, term)
-            print_completions(dir(obj), terms[-1], text[:text.rfind('.') + 1])
-        except AttributeError:
-            pass
-    else:
-        import keyword
-        print_completions(keyword.kwlist, text)
-        print_completions(dir(__builtin__), text)
-        print_completions(dir(__main__), text)
-complete('%s')") word) shell nil proc))
-      (setq result (py-shell-execute-string-now (format "
+(defun py-shell-complete-intern (word &optional beg end shell imports proc debug)
+  (when imports
+    (python-shell-send-string-no-output imports proc))
+  (let ((result (py-shell-execute-string-now (format "
 def print_completions(namespace, text, prefix=''):
    for name in namespace:
        if name.startswith(text):
@@ -14637,7 +14619,7 @@ complete('%s')" word) shell nil proc)))
     (if (or (eq result nil)(string= "" result))
         (progn
           (if py-no-completion-calls-dabbrev-expand-p
-              (or (dabbrev-expand nil) (message "Can't complete"))
+              (or (ignore-errors (dabbrev-expand nil)) (message "Can't complete"))
             (message "No completion found")))
 
       (setq result (replace-regexp-in-string comint-prompt-regexp "" result))
@@ -14648,19 +14630,39 @@ complete('%s')" word) shell nil proc)))
                                (split-string result "\n" t) ; XEmacs
                              (split-string result "\n")))
               #'string<)))
-        (if (string= (car completions) word)
-            (tab-to-tab-stop)
-          (delete-region beg end)
-          (insert (car completions))))
-      ;; (jump-to-register a)
-      (point))))
+        (when debug (setq py-shell-complete-debug completions))
+        (if (and completions (not (string= "" (car completions))))
+            (cond ((eq completions t)
+                   (if (eq this-command last-command)
+                       (when python-completion-original-window-configuration
+                         (set-window-configuration
+                          python-completion-original-window-configuration)))
+                   (setq python-completion-original-window-configuration nil)
+                   (message "Can't find completion for \"%s\"" word)
+                   (ding)
+                   nil)
+                  ((< 1 (length completions))
+                   (unless python-completion-original-window-configuration
+                     (setq python-completion-original-window-configuration
+                           (current-window-configuration)))
+                   (with-output-to-temp-buffer "*Python Completions*"
+                     (display-completion-list
+                      (all-completions word completions)))
+                   (recenter))
+                  ((not (string= word (car completions)))
+                   (progn (delete-char (- (length word)))
+                          (insert (car completions))
+                          nil)))
+          (when py-no-completion-calls-dabbrev-expand-p
+            (ignore-errors (dabbrev-expand nil)))
+          (when py-indent-no-completion-p
+            (tab-to-tab-stop)))))))
 
 ;;; IPython Shell Complete
 
 ;; see also
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
-
-(defun ipython-complete (&optional done completion-command-string beg end word)
+(defun ipython-complete (&optional done completion-command-string beg end word shell debug)
   "Complete the python symbol before point.
 
 If no completion available, insert a TAB.
@@ -14668,14 +14670,14 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
 
   (interactive "*")
   (let* (
-         ;; py-split-windows-on-execute-p
-         ;; py-switch-buffers-on-execute-p
+         py-split-windows-on-execute-p
+         py-switch-buffers-on-execute-p
          (beg (or beg (progn (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
                                              (point)))))
          (end (or end (point)))
          (pattern (or word (buffer-substring-no-properties beg end)))
          (sep ";")
-         (shell (py-choose-shell))
+         (shell (or shell (py-choose-shell)))
          (pyshellname (if (string-match "ipython" shell)
                           shell
                         "ipython"))
@@ -14683,9 +14685,9 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
          done
          (process
           (if ipython-complete-use-separate-shell-p
-              (unless (and (buffer-live-p "*IPython-Complete*")
-                           (comint-check-proc (process-name (get-buffer-process "*IPython-Complete*"))))
-                (get-buffer-process (py-shell nil nil pyshellname 'noswitch nil "*IPython-Complete*")))
+              (unless (and (buffer-live-p " *IPython-Complete*")
+                           (comint-check-proc (process-name (get-buffer-process " *IPython-Complete*"))))
+                (get-buffer-process (py-shell nil nil pyshellname 'noswitch nil " *IPython-Complete*")))
             (progn
               (while (and processlist (not done))
                 (when (and
@@ -14717,9 +14719,8 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
           (progn
             (setq completions
                   (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
-            ;; (setq completion (when completions
-            ;; (try-completion pattern completions)))
-            (if completions
+            (when debug (setq py-shell-complete-debug completions))
+            (if (and completions (not (string= "" (car completions))))
                 (cond ((eq completions t)
                        (if (eq this-command last-command)
                            (when python-completion-original-window-configuration
@@ -14736,14 +14737,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                        (with-output-to-temp-buffer "*IPython Completions*"
                          (display-completion-list
                           (all-completions pattern completions)))
-                       (set-buffer "*IPython Completions*")
-                       (switch-to-buffer "*IPython Completions*")
-                       (goto-char (point-min))
-                       (when
-                           (search-forward (car (all-completions pattern completions)))
-                         (forward-word -1)
-                         (delete-other-windows)
-                         (word-at-point)))
+                       (recenter))
                       ((not (string= pattern (car completions)))
                        (progn (delete-char (- (length pattern)))
                               (insert (car completions))
