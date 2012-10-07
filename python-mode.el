@@ -1044,14 +1044,6 @@ Making switch between several virtualenv's easier,
   :type 'string
   :group 'python-mode)
 
-(defcustom py-load-highlight-indentation-p  nil
-  "If highlight-indentation should be load.
-
-When `t', toggle buffer local status via `M-x highlight-indentation' during session. "
-
-  :type 'boolean
-  :group 'python-mode)
-
 (defcustom py-underscore-word-syntax-p t
   "If underscore chars should be of syntax-class `word', not of `symbol'.
 
@@ -1947,6 +1939,131 @@ Used for determining the default in the next one.")
 
 (defvar virtualenv-name nil)
 
+;;(eval-when-compile (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+
+;;; Minor mode switches
+(defun py-toggle-highlight-indentation (&optional indent)
+  "If `highlight-indentation-p' should be on or off. "
+  (interactive "P")
+  (unless (featurep 'highlight-indentation)
+    (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+  (highlight-indentation indent)
+  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
+  highlight-indent-active)
+
+(defun py-highlight-indentation-off ()
+  "If `highlight-indentation-p' should be on or off. "
+  (interactive)
+  (unless (featurep 'highlight-indentation)
+    (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+  (highlight-indentation-off)
+  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
+  highlight-indent-active)
+
+(defun py-highlight-indentation-on ()
+  "If `highlight-indentation-p' should be on or off. "
+  (interactive "P")
+  (unless (featurep 'highlight-indentation)
+    (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+  (highlight-indentation-on)
+  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
+  highlight-indent-active)
+
+;; Smart indentation
+(defalias 'toggle-py-smart-indentation 'py-toggle-smart-indentation)
+(defun py-toggle-smart-indentation (&optional arg)
+  "If `py-smart-indentation' should be on or off.
+
+Returns value of `py-smart-indentation' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-smart-indentation -1 1))))
+    (if (< 0 arg)
+        (progn
+          (setq py-smart-indentation t)
+          (py-compute-indentation))
+      (setq py-smart-indentation nil)
+      (setq py-indent-offset (default-value 'py-indent-offset)))
+    (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
+    py-smart-indentation))
+
+(defun py-smart-indentation-on (&optional arg)
+  "Make sure, `py-smart-indentation' is on.
+
+Returns value of `py-smart-indentation'. "
+  (interactive "p")
+  (let ((arg (or arg 1)))
+    (toggle-py-smart-indentation arg))
+  (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
+  py-smart-indentation)
+
+(defun py-smart-indentation-off (&optional arg)
+  "Make sure, `py-smart-indentation' is off.
+
+Returns value of `py-smart-indentation'. "
+  (interactive "p")
+  (let ((arg (if arg (- arg) -1)))
+    (toggle-py-smart-indentation arg))
+  (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
+  py-smart-indentation)
+
+(defun py-toggle-sexp-function ()
+  "Opens customization "
+  (interactive)
+  (customize-variable 'py-sexp-function))
+
+;; Smart operator
+(defalias 'toggle-py-smart-operator 'py-toggle-smart-operator)
+(defun py-toggle-smart-operator (&optional arg)
+  "If `py-smart-operator-mode-p' should be on or off.
+
+Returns value of `py-smart-operator-mode-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-smart-operator-mode-p -1 1))))
+    (if (< 0 arg)
+        (setq py-smart-operator-mode-p t)
+      (setq py-smart-operator-mode-p nil))
+    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+    py-smart-operator-mode-p))
+
+(defun py-smart-operator-mode-on (&optional arg)
+  "Make sure, `py-smart-operator-mode-p' is on.
+
+Returns value of `py-smart-operator-mode-p'. "
+  (interactive "p")
+  (let ((arg (or arg 1)))
+    (py-toggle-smart-operator arg))
+  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+  py-smart-operator-mode-p)
+
+(defun py-smart-operator-mode-off (&optional arg)
+  "Make sure, `py-smart-operator-mode-p' is off.
+
+Returns value of `py-smart-operator-mode-p'. "
+  (interactive "p")
+  (let ((arg (if arg (- arg) -1)))
+    (py-toggle-smart-operator arg)
+    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
+    py-smart-operator-mode-p))
+
+;; autopair
+(defun py-toggle-autopair-mode ()
+  "If `autopair-p' should be on or off. "
+  (interactive)
+  (unless (featurep 'autopair)
+    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el")))
+  (autopair-mode)
+  (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
+  autopair-mode)
+
+(defun py-autopair-mode-on ()
+  "Make sure, autopair' is on. "
+  (interactive)
+  (unless (featurep 'autopair)
+    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el")))
+  (autopair-on)
+  (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
+  autopair-mode)
+
 ;;;
 (defun py-ffap-module-path (module)
   "Function for `ffap-alist' to return path for MODULE."
@@ -2288,10 +2405,14 @@ FILE-NAME."
   (interactive)
   (pop-to-buffer (process-buffer (python-shell-get-or-create-process)) t))
 
-;;; Eldoc
+
+
+(defun py-toggle-sexp-function ()
+  "Opens customization "
+  (interactive)
+  (customize-variable 'py-sexp-function))
 
 ;;; Pdb
-
 (defun python-pdbtrack-set-tracked-buffer (file-name)
   "Set the buffer for FILE-NAME as the tracked buffer.
 Internally it uses the `python-pdbtrack-tracked-buffer' variable.
@@ -3152,7 +3273,7 @@ The level is the number of `py-indent-offset' steps of indentation
 of current line."
   (1+ (/ (current-indentation) py-indent-offset)))
 
-;;;; Completion.
+;;; Completion.
 
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
 
@@ -3220,10 +3341,7 @@ of current line."
 (eval-after-load "ffap"
   '(push '(python-mode . python-module-path) ffap-alist))
 
-;;;; Find-function support
-
-;; Fixme: key binding?
-
+;;; Find-function support
 (defun python-find-function (name)
   "Find source of definition of function NAME.
 Interactively, prompt for name."
@@ -11358,75 +11476,6 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there.
         (when (interactive-p) (message "%s" "Could not detect Python on your system. Maybe set `py-edit-only-p'?")))
       erg)))
 
-;;; Smart indentation
-(defalias 'toggle-py-smart-indentation 'py-toggle-smart-indentation)
-(defun py-toggle-smart-indentation (&optional arg)
-  "If `py-smart-indentation' should be on or off.
-
-Returns value of `py-smart-indentation' switched to. "
-  (interactive)
-  (let ((arg (or arg (if py-smart-indentation -1 1))))
-    (if (< 0 arg)
-        (setq py-smart-indentation t)
-      (setq py-smart-indentation nil)
-      (setq py-indent-offset (default-value 'py-indent-offset)))
-    (when (and py-verbose-p (interactive-p)) (message "py-smart-indentation: %s" py-smart-indentation))
-    py-smart-indentation))
-
-(defun py-smart-indentation-on (&optional arg)
-  "Make sure, `py-smart-indentation' is on.
-
-Returns value of `py-smart-indentation'. "
-  (interactive "p")
-  (let ((arg (or arg 1)))
-    (toggle-py-smart-indentation arg))
-  (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
-  py-smart-indentation)
-
-(defun py-smart-indentation-off (&optional arg)
-  "Make sure, `py-smart-indentation' is off.
-
-Returns value of `py-smart-indentation'. "
-  (interactive "p")
-  (let ((arg (if arg (- arg) -1)))
-    (toggle-py-smart-indentation arg))
-  (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
-  py-smart-indentation)
-
-;;; Smart operator
-(defalias 'toggle-py-smart-operator 'py-toggle-smart-operator)
-(defun py-toggle-smart-operator (&optional arg)
-  "If `py-smart-operator-mode-p' should be on or off.
-
-Returns value of `py-smart-operator-mode-p' switched to. "
-  (interactive)
-  (let ((arg (or arg (if py-smart-operator-mode-p -1 1))))
-    (if (< 0 arg)
-        (setq py-smart-operator-mode-p t)
-      (setq py-smart-operator-mode-p nil))
-    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-    py-smart-operator-mode-p))
-
-(defun py-smart-operator-mode-on (&optional arg)
-  "Make sure, `py-smart-operator-mode-p' is on.
-
-Returns value of `py-smart-operator-mode-p'. "
-  (interactive "p")
-  (let ((arg (or arg 1)))
-    (py-toggle-smart-operator arg))
-  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-  py-smart-operator-mode-p)
-
-(defun py-smart-operator-mode-off (&optional arg)
-  "Make sure, `py-smart-operator-mode-p' is off.
-
-Returns value of `py-smart-operator-mode-p'. "
-  (interactive "p")
-  (let ((arg (if arg (- arg) -1)))
-    (py-toggle-smart-operator arg)
-    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-    py-smart-operator-mode-p))
-
 ;;; Split-Windows-On-Execute forms
 (defalias 'toggle-py-split-windows-on-execute 'py-toggle-split-windows-on-execute)
 (defun py-toggle-split-windows-on-execute (&optional arg)
@@ -11831,7 +11880,7 @@ Run pdb under GUD"]
             "-"
 
             ["Toggle highlight-indentation" py-toggle-highlight-indentation
-             :help "When `py-load-highlight-indentation-p' is `t', this toggles `highlight-indentation' "]
+             :help "Toggles `highlight-indentation' minor mode "]
 
             ["Toggle autopair-mode" autopair-mode
              :help "When `py-prepare-autopair-mode-p' is `t', this toggles `autopair-mode' "]
@@ -17567,18 +17616,6 @@ See original source: http://pymacs.progiciels-bpi.ca"
 
 (when py-load-pymacs-p (py-load-pymacs))
 
-
-;;; Toggle highlight-indentation
-(defalias 'py-highlight-indentation-on 'highlight-indentation-on)
-(defalias 'py-highlight-indentation-off 'highlight-indentation-off)
-(defalias 'toggle-highlight-indentation 'py-toggle-highlight-indentation)
-(defun py-toggle-highlight-indentation (&optional indent)
-  "If `highlight-indentation-p' should be on or off. "
-  (interactive "P")
-  (unless (featurep 'highlight-indentation)
-    (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
-  (highlight-indentation indent))
-
 ;;; Hooks
 (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
 
@@ -17630,11 +17667,11 @@ See original source: http://pymacs.progiciels-bpi.ca"
             ;; (orgstruct-mode 1)
             ))
 
-(add-hook 'python-mode-hook
-          (lambda ()
-            (when py-load-highlight-indentation-p
-              (unless (featurep 'highlight-indentation)
-                (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el"))))))
+;; (add-hook 'python-mode-hook
+;;           (lambda ()
+;;             (when py-load-highlight-indentation-p
+;;               (unless (featurep 'highlight-indentation)
+;;                 (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el"))))))
 
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
@@ -17661,9 +17698,20 @@ For running multiple processes in multiple buffers, see `run-python' and
   (set (make-local-variable 'comint-input-filter) 'python-input-filter)
   (add-hook 'comint-preoutput-filter-functions #'python-preoutput-filter
 	    nil t)
-  (python--set-prompt-regexp)
   (set (make-local-variable 'compilation-error-regexp-alist)
        python-compilation-regexp-alist)
+  (set (make-local-variable 'comint-prompt-regexp)
+       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+              (concat "\\("
+                      (mapconcat 'identity
+                                 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+                                 "\\|")
+                      "\\)"))
+             (t (concat "\\("
+                        (mapconcat 'identity
+                                   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+                                   "\\|")
+                        "\\)"))))
   (if py-complete-function
       (add-hook 'completion-at-point-functions
                 py-complete-function nil 'local)
