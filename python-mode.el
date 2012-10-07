@@ -1044,13 +1044,13 @@ Making switch between several virtualenv's easier,
   :type 'string
   :group 'python-mode)
 
-(defcustom highlight-indentation  nil
-  "If level of indentation should be displayed at start.
-Toggle buffer local status via `M-x highlight-indentation' during session. "
+(defcustom py-load-highlight-indentation-p  nil
+  "If highlight-indentation should be load.
+
+When `t', toggle buffer local status via `M-x highlight-indentation' during session. "
 
   :type 'boolean
   :group 'python-mode)
-(make-variable-buffer-local 'highlight-indentation)
 
 (defcustom py-underscore-word-syntax-p t
   "If underscore chars should be of syntax-class `word', not of `symbol'.
@@ -7250,7 +7250,7 @@ while `py-expression' would copy and return
 \(
         os.path.basename(sys.argv[0]))
 
-\;;;;;
+\;;
 
 Also for existing commands a shorthand is defined:
 
@@ -10337,19 +10337,6 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
     (if (featurep 'xemacs) (print-help-return-message)
       (help-print-return-message))))
 
-(add-hook 'python-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode py-indent-tabs-mode)
-            (set (make-local-variable 'beginning-of-defun-function) 'py-beginning-of-def-or-class)
-            (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class)
-            ;; (orgstruct-mode 1)
-            ))
-
-(when py-sexp-function
-  (add-hook 'python-mode-hook
-            (lambda ()
-              (set (make-local-variable 'forward-sexp-function) py-sexp-function))))
-
 (defun py-describe-mode ()
   "Dump long form of `python-mode' docs."
   (interactive)
@@ -11842,6 +11829,9 @@ Load into inferior Python session"]
              :help "`pdb'
 Run pdb under GUD"]
             "-"
+
+            ["Toggle highlight-indentation" py-toggle-highlight-indentation
+             :help "When `py-load-highlight-indentation-p' is `t', this toggles `highlight-indentation' "]
 
             ["Toggle autopair-mode" autopair-mode
              :help "When `py-prepare-autopair-mode-p' is `t', this toggles `autopair-mode' "]
@@ -13599,48 +13589,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."
            (error "No per-mode abbrev table")))
      "Mode" arg)))
 
-;;; Hooks
-;; arrange to kill temp files when Emacs exists
-(add-hook 'kill-emacs-hook 'py-kill-emacs-hook)
-(add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
-
-(add-hook 'inferior-python-mode-hook 'py-send-shell-setup-code)
-
-(remove-hook 'python-mode-hook 'python-setup-brm)
-(add-hook 'python-mode-hook
-          #'(lambda ()
-              (when py-smart-indentation
-                (if (bobp)
-                    (save-excursion
-                      (save-restriction
-                        (widen)
-                        (while (and (not (eobp))
-                                    (or
-                                     (let ((erg (syntax-ppss)))
-                                       (or (nth 1 erg) (nth 8 erg)))
-                                     (eq 0 (current-indentation))))
-                          (forward-line 1))
-                        (back-to-indentation)
-                        (py-guess-indent-offset)))
-                  (py-guess-indent-offset)))))
-
-(add-hook 'comint-output-filter-functions
-          'py-comint-output-filter-function)
-
-(add-hook 'python-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode py-indent-tabs-mode)
-            (set (make-local-variable 'beginning-of-defun-function) 'py-beginning-of-def-or-class)
-            (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class)
-            ;; (orgstruct-mode 1)
-            ))
-(when py-warn-tmp-files-left-p
-  (add-hook 'python-mode-hook 'py-warn-tmp-files-left))
-
-;; FixMe: for unknown reasons this is not done by mode
-(if (file-readable-p abbrev-file-name)
-    (add-hook 'python-mode-hook '(lambda () (load abbrev-file-name nil t)))
-  (message "Warning: %s" "no abbrev-file found, customize `abbrev-file-name' in order to make mode-specific abbrevs work. "))
 
 ;;;
 
@@ -13750,14 +13698,6 @@ These are Python temporary files awaiting execution."
   (mapc #'(lambda (filename)
             (ignore-errors (delete-file filename)))
         py-file-queue))
-
-;; arrange to kill temp files when Emacs exists
-(add-hook 'kill-emacs-hook 'py-kill-emacs-hook)
-(add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
-
-;; inside python-mode already
-;; (add-hook 'python-mode-hook
-;;           (lambda ()
 
 (defun py-python-version (&optional executable verbose)
   "Returns versions number of a Python EXECUTABLE, string.
@@ -17627,6 +17567,75 @@ See original source: http://pymacs.progiciels-bpi.ca"
 
 (when py-load-pymacs-p (py-load-pymacs))
 
+
+;;; Toggle highlight-indentation
+(defalias 'py-highlight-indentation-on 'highlight-indentation-on)
+(defalias 'py-highlight-indentation-off 'highlight-indentation-off)
+(defalias 'toggle-highlight-indentation 'py-toggle-highlight-indentation)
+(defun py-toggle-highlight-indentation (&optional indent)
+  "If `highlight-indentation-p' should be on or off. "
+  (interactive "P")
+  (unless (featurep 'highlight-indentation)
+    (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+  (highlight-indentation indent))
+
+;;; Hooks
+(add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
+
+;; arrange to kill temp files when Emacs exists
+(add-hook 'kill-emacs-hook 'py-kill-emacs-hook)
+(add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
+
+(add-hook 'inferior-python-mode-hook 'py-send-shell-setup-code)
+
+(remove-hook 'python-mode-hook 'python-setup-brm)
+(add-hook 'python-mode-hook
+          #'(lambda ()
+              (when py-smart-indentation
+                (if (bobp)
+                    (save-excursion
+                      (save-restriction
+                        (widen)
+                        (while (and (not (eobp))
+                                    (or
+                                     (let ((erg (syntax-ppss)))
+                                       (or (nth 1 erg) (nth 8 erg)))
+                                     (eq 0 (current-indentation))))
+                          (forward-line 1))
+                        (back-to-indentation)
+                        (py-guess-indent-offset)))
+                  (py-guess-indent-offset)))))
+
+(add-hook 'comint-output-filter-functions
+          'py-comint-output-filter-function)
+
+(when py-warn-tmp-files-left-p
+  (add-hook 'python-mode-hook 'py-warn-tmp-files-left))
+
+;; FixMe: for unknown reasons this is not done by mode
+(if (file-readable-p abbrev-file-name)
+    (add-hook 'python-mode-hook '(lambda () (load abbrev-file-name nil t)))
+  (message "Warning: %s" "no abbrev-file found, customize `abbrev-file-name' in order to make mode-specific abbrevs work. "))
+
+(when py-sexp-function
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (set (make-local-variable 'forward-sexp-function) py-sexp-function))))
+
+(add-hook 'python-mode-hook
+          (lambda ()
+            (setq indent-tabs-mode py-indent-tabs-mode)
+            (set (make-local-variable 'beginning-of-defun-function) 'py-beginning-of-def-or-class)
+            (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class)
+            ;; (orgstruct-mode 1)
+            ))
+
+(add-hook 'python-mode-hook
+          (lambda ()
+            (when py-load-highlight-indentation-p
+              (unless (featurep 'highlight-indentation)
+                (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el"))))))
+
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
   "Major mode for interacting with an inferior Python process.
@@ -17685,7 +17694,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
 
 \\{python-mode-map}"
   :group 'python-mode
-;;; Local vars
+  ;; Local vars
   (set (make-local-variable 'outline-regexp)
        (concat (mapconcat 'identity
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
