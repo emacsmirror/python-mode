@@ -1364,6 +1364,76 @@ Don't activate this, with some probability it will mess up abbrev edits, leaving
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-fill-docstring-style 'pep-257
+  "Implemented styles are DJANGO, ONETWO, PEP-257, PEP-257-NN,
+SYMMETRIC, and NIL.
+
+A value of NIL won't care about quotes
+position and will treat docstrings a normal string, any other
+value may result in one of the following docstring styles:
+
+DJANGO:
+
+    \"\"\"
+    Process foo, return bar.
+    \"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+ONETWO:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+PEP-257:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+PEP-257-NN:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+SYMMETRIC:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\""
+  :type '(choice
+          (const :tag "Don't format docstrings" nil)
+          (const :tag "Django's coding standards style." django)
+          (const :tag "One newline and start and Two at end style." onetwo)
+          (const :tag "PEP-257 with 2 newlines at end of string." pep-257)
+          (const :tag "PEP-257 with 1 newline at end of string." pep-257-nn)
+          (const :tag "Symmetric style." symmetric))
+  :group 'python-mode
+  :safe (lambda (val)
+          (memq val '(django onetwo pep-257 pep-257-nn symmetric nil))))
+
 ;;; Faces
 (defface py-number-face
   '((t (:inherit default)))
@@ -1642,7 +1712,7 @@ Used for determining the default in the next one.")
 (defvar py-execute-keep-temporary-file-p nil
   "For tests only. Excute functions delete temporary files default. ")
 
-(defvar py-string-start-regexp "\\(\"\"\"\\|'''\\|\"\\|'\\)"
+(defvar py-string-delim-re "\\(\"\"\"\\|'''\\|\"\\|'\\)"
   "When looking at beginning of string. ")
 
 (defvar py-expression-skip-regexp "[^ (=:#\t\r\n\f]"
@@ -1651,7 +1721,7 @@ Used for determining the default in the next one.")
 (defvar py-expression-skip-chars "^ (:=#\t\r\n\f"
   "py-expression assumes chars indicated possible composing a py-expression, skip it. ")
 
-(defvar py-expression-looking-regexp "[^ =:#\t\r\n\f]+"
+(defvar py-expression-looking-re "[^ =:#\t\r\n\f]+"
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
 
 (defvar py-not-expression-regexp "[ .=:#\t\r\n\f)]"
@@ -2568,7 +2638,7 @@ for options to pass to the DOCNAME interpreter. \"
 
 ;; (setq py-expression-skip-chars "^ (=#\t\r\n\f")
 
-;; (setq py-expression-looking-regexp "[^ =:#\t\r\n\f)]")
+;; (setq py-expression-looking-re "[^ =:#\t\r\n\f)]")
 
 ;; (setq py-not-expression-regexp "[ .=:#\t\r\n\f)]")
 
@@ -5115,8 +5185,19 @@ Store deleted statements in kill-ring "
                        current-line 0 (- 0 (length separator) 1)) lines))
     (mapconcat 'identity (nreverse lines) "\n")))
 
+(defun py-fix-this-indent (indent)
+  (unless (and (eq (current-indentation) (current-column))
+               (eq (current-column) indent))
+    (beginning-of-line)
+    (indent-to-column indent)
+    (delete-region
+     (point)
+     (progn (skip-chars-forward " \t") (point)))))
+
+;;; Filling
 (defun py-fill-comment (&optional justify)
   "Fill the comment paragraph at point"
+  (interactive "*P")
   (let (;; Non-nil if the current line contains a comment.
         has-comment
 
@@ -5179,98 +5260,393 @@ Store deleted statements in kill-ring "
           (fill-paragraph justify))))
     t))
 
-(defun py-fix-this-indent (indent)
-  (unless (and (eq (current-indentation) (current-column))
-               (eq (current-column) indent))
-    (beginning-of-line)
-    (indent-to-column indent)
-    (delete-region
-     (point)
-     (progn (skip-chars-forward " \t") (point)))))
+(defun py-fill-paragraph (&optional justify style)
+  "`fill-paragraph-function'
 
-(defun py-fill-string (start &optional justify)
-  "Fill the paragraph around (point) in the string starting at start"
-  ;; basic strategy: narrow to the string and call the default
-  ;; implementation
-  (let (;; the start of the string's contents
-        string-start
-        ;; the end of the string's contents
-        string-end
-        ;; length of the string's delimiter
-        delim-length
-        ;; The string delimiter
-        delim)
+Optional argument JUSTIFY defines if the paragraph should be justified.
 
-    (save-excursion
-      (goto-char start)
-      (if (looking-at "\\([urbURB]*\\(?:'''\\|\"\"\"\\|'\\|\"\\)\\)\\\\?\n?")
-          (setq string-start (match-end 0)
-                delim-length (- (match-end 1) (match-beginning 1))
-                delim (buffer-substring-no-properties (match-beginning 1)
-                                                      (match-end 1)))
-        (error "The parameter start is not the beginning of a python string"))
+With regards to triple quotes positioning, commands
+py-fill-paragraph-SUFFIX
+choose one of the following implemented styles:
 
-      ;; if the string is the first token on a line and doesn't start with
-      ;; a newline, fill as if the string starts at the beginning of the
-      ;; line. this helps with one line docstrings
-      (save-excursion
-        (beginning-of-line)
-        (and (/= (char-before string-start) ?\n)
-             (looking-at (concat "[ \t]*" delim))
-             (setq string-start (point))))
+DJANGO, ONETWO, PEP-257, PEP-257-NN, SYMMETRIC
 
-      ;; move until after end of string, then the end of the string's contents
-      ;; is delim-length characters before that
-      (forward-sexp)
-      (setq string-end (- (point) delim-length)))
+Otherwise `py-fill-docstring-style' is used. Explanation:
 
-    ;; Narrow to the string's contents and fill the current paragraph
-    (save-restriction
-      (narrow-to-region string-start string-end)
-      (let ((ends-with-newline (= (char-before (point-max)) ?\n)))
-        (fill-paragraph justify)
-        (if (and (not ends-with-newline)
-                 (= (char-before (point-max)) ?\n))
-            ;; the default fill-paragraph implementation has inserted a
-            ;; newline at the end. Remove it again.
-            (save-excursion
-              (goto-char (point-max))
-              (delete-char -1)))))
+DJANGO:
 
-    ;; return t to indicate that we've done our work
-    t))
+    \"\"\"
+    Process foo, return bar.
+    \"\"\"
 
-(defun py-fill-paragraph (&optional justify)
-  "Like \\[fill-paragraph], but handle Python comments and strings.
+    \"\"\"
+    Process foo, return bar.
 
-If any of the current line is a comment, fill the comment or the
-paragraph of it that point is in, preserving the comment's indentation
-and initial `#'s.
-If point is inside a string, narrow to that string and fill.
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+ONETWO:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+PEP-257:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+PEP-257-NN:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+SYMMETRIC:
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
 "
   (interactive "P")
-  (save-excursion
+  (let ((pps (syntax-ppss))
+        (style (or style py-fill-docstring-style)))
+    (save-excursion
+      (cond
+       ;; Comments
+       ((nth 4 pps)
+        (py-fill-comment justify))
+       ;; Strings/Docstrings
+       ((save-excursion (or (nth 3 pps)
+                            (equal (string-to-syntax "|")
+                                   (syntax-after (point)))))
+        (py-fill-string justify style))
+       ;; Decorators
+       ((save-excursion
+          (equal (char-after
+                  (py-beginning-of-statement))
+                 ;; (back-to-indentation)
+                 ;; (point))
+                 ?\@))
+        (py-fill-decorator justify))
+       ;; Parens
+       ((or (nth 1 pps)
+            (looking-at (python-rx open-paren))
+            (save-excursion
+              (skip-syntax-forward "^(" (line-end-position))
+              (looking-at (python-rx open-paren))))
+        (py-fill-paren justify))
+       (t t)))))
+
+;; (defun py-fill-comment (&optional justify)
+;;   "Comment fill function for `py-fill-paragraph'.
+;; JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+;;   (fill-comment-paragraph justify))
+
+
+;; (defun py-fill-string (start &optional justify)
+;;   "Fill the paragraph around (point) in the string starting at start"
+;;   ;; basic strategy: narrow to the string and call the default
+;;   ;; implementation
+;;   (let (;; the start of the string's contents
+;;         string-start
+;;         ;; the end of the string's contents
+;;         string-end
+;;         ;; length of the string's delimiter
+;;         delim-length
+;;         ;; The string delimiter
+;;         delim)
+;;
+;;     (save-excursion
+;;       (goto-char start)
+;;       (if (looking-at "\\([urbURB]*\\(?:'''\\|\"\"\"\\|'\\|\"\\)\\)\\\\?\n?")
+;;           (setq string-start (match-end 0)
+;;                 delim-length (- (match-end 1) (match-beginning 1))
+;;                 delim (buffer-substring-no-properties (match-beginning 1)
+;;                                                       (match-end 1)))
+;;         (error "The parameter start is not the beginning of a python string"))
+;;
+;;       ;; if the string is the first token on a line and doesn't start with
+;;       ;; a newline, fill as if the string starts at the beginning of the
+;;       ;; line. this helps with one line docstrings
+;;       (save-excursion
+;;         (beginning-of-line)
+;;         (and (/= (char-before string-start) ?\n)
+;;              (looking-at (concat "[ \t]*" delim))
+;;              (setq string-start (point))))
+;;
+;;       ;; move until after end of string, then the end of the string's contents
+;;       ;; is delim-length characters before that
+;;       (forward-sexp)
+;;       (setq string-end (- (point) delim-length)))
+;;
+;;     ;; Narrow to the string's contents and fill the current paragraph
+;;     (save-restriction
+;;       (narrow-to-region string-start string-end)
+;;       (let ((ends-with-newline (= (char-before (point-max)) ?\n)))
+;;         (fill-paragraph justify)
+;;         (if (and (not ends-with-newline)
+;;                  (= (char-before (point-max)) ?\n))
+;;             ;; the default fill-paragraph implementation has inserted a
+;;             ;; newline at the end. Remove it again.
+;;             (save-excursion
+;;               (goto-char (point-max))
+;;               (delete-char -1)))))
+;;
+;;     ;; return t to indicate that we've done our work
+;;     t))
+
+(defun py-fill-string (&optional justify style)
+  "String fill function for `py-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (interactive "P")
+  (let* ((py-fill-docstring-style (or style py-fill-docstring-style))
+         ;; unset python-mode value this time
+         forward-sexp-function
+         (orig (point-marker))
+         (pps (syntax-ppss))
+         (beg
+          (if (nth 3 pps)
+              (copy-marker (nth 8 pps))
+            (when (and (equal (string-to-syntax "|")
+                              (syntax-after (point))))
+              (point-marker))))
+         (delim-length (progn (goto-char beg)(when (looking-at py-string-delim-re) (- (match-end 0) (match-beginning 0)))))
+         ;; Assume docstrings at BOL resp. indentation
+         (docstring-p
+          (progn
+            (eq (current-column) (current-indentation))))
+         (end
+          (progn
+            (forward-sexp)
+            (point-marker)))
+         (multi-line-p
+          ;; Docstring styles may vary for oneliners and multi-liners.
+          (> (count-matches "\n" beg end) 0))
+         (delimiters-style
+          (case py-fill-docstring-style
+            ;; delimiters-style is a cons cell with the form
+            ;; (START-NEWLINES .  END-NEWLINES). When any of the sexps
+            ;; is NIL means to not add any newlines for start or end
+            ;; of docstring.  See `py-fill-docstring-style' for a
+            ;; graphic idea of each style.
+            (django (cons 1 1))
+            (onetwo (and multi-line-p (cons 1 2)))
+            (pep-257 (and multi-line-p (cons nil 2)))
+            (pep-257-nn (and multi-line-p (cons nil 1)))
+            (symmetric (and multi-line-p (cons 1 1)))))
+         (fill-paragraph-function))
     (save-restriction
-      (widen)
-      (let ((pps
-             (if (featurep 'xemacs)
-                 (parse-partial-sexp (point-min) (point))
-               (syntax-ppss))))
-        (cond
-         ;; inside a comment
-         ((nth 4 pps)
-          (py-fill-comment justify))
-         ;; only whitespace before the comment start
-         ((save-excursion (beginning-of-line) (looking-at "[ \t]*#"))
-          (py-fill-comment justify))
-         ;; inside a string
-         ((nth 3 pps)
-          (py-fill-string (nth 8 pps)))
-         ;; opening quote of a string
-         ((progn (save-excursion (forward-char 1)(nth 3 pps)))
-          (save-excursion
-            (forward-char 1)
-            (py-fill-string (nth 8 pps)))))))))
+      (narrow-to-region (+ beg delim-length) (- end delim-length))
+      ;; (fill-paragraph justify)
+      (fill-region (+ beg delim-length) (- end delim-length)))
+    ;; (sit-for 0.1)
+    (save-excursion
+      (when (and docstring-p py-fill-docstring-style)
+        ;; Add the number of newlines indicated by the selected style
+        ;; at the start of the docstring.
+        (goto-char (+ beg delim-length))
+        (delete-region (point) (progn
+                                 (skip-syntax-forward "> ")
+                                 (point)))
+        (and (car delimiters-style)
+             (or (newline (car delimiters-style)) t)
+             ;; Indent only if a newline is added.
+             ;; (indent-according-to-mode)
+             (indent-region (+ beg delim-length) (- end delim-length)))
+        ;; Add the number of newlines indicated by the selected style
+        ;; at the end of the docstring.
+        (goto-char (if (not (= end (point-max)))
+                       (- end delim-length)
+                     end))
+        (delete-region (point) (progn
+                                 (skip-syntax-backward "> ")
+                                 (point)))
+        (and (cdr delimiters-style)
+             ;; Add newlines only if string ends.
+             (not (= end (point-max)))
+             (or (newline (cdr delimiters-style)) t)
+             ;; Again indent only if a newline is added.
+             (indent-according-to-mode))
+        (when (or (eq style 'pep-257)(eq style 'pep-257-nn))
+          (indent-region beg end)
+          )) t)))
+
+(defun py-fill-decorator (&optional justify)
+  "Decorator fill function for `py-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (interactive "*P")
+  t)
+
+(defun py-fill-paren (&optional justify)
+  "Paren fill function for `py-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (interactive "*P")
+  (save-restriction
+    (narrow-to-region
+     (progn
+       (while (python-syntax-context 'paren)
+         (goto-char (1- (point-marker))))
+       (point-marker)
+       (line-beginning-position))
+     (progn
+       (when (not (python-syntax-context 'paren))
+         (end-of-line)
+         (when (not (python-syntax-context 'paren))
+           (skip-syntax-backward "^)")))
+       (while (python-syntax-context 'paren)
+         (goto-char (1+ (point-marker))))
+       (point-marker)))
+    (let ((paragraph-start "\f\\|[ \t]*$")
+          (paragraph-separate ",")
+          (fill-paragraph-function))
+      (goto-char (point-min))
+      (fill-paragraph justify))
+    (while (not (eobp))
+      (forward-line 1)
+      (py-indent-line)
+      (goto-char (line-end-position)))) t)
+
+(defun py-fill-string-django (&optional justify)
+  "Fill docstring according to Django's coding standards style.
+
+Optional argument JUSTIFY defines if the paragraph should be justified.
+
+    \"\"\"
+    Process foo, return bar.
+    \"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+"
+  (interactive "*P")
+  (py-fill-string justify 'django))
+
+(defun py-fill-string-onetwo (&optional justify)
+  "One newline and start and Two at end style.
+
+Optional argument JUSTIFY defines if the paragraph should be justified.
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+"
+  (interactive "*P")
+  (py-fill-string justify 'onetwo))
+
+(defun py-fill-string-pep-257 (&optional justify)
+  "PEP-257 with 2 newlines at end of string.
+
+Optional argument JUSTIFY defines if the paragraph should be justified.
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+"
+  (interactive "*P")
+  (py-fill-string justify 'pep-257))
+
+(defun py-fill-string-pep-257-nn (&optional justify)
+  "PEP-257 with 1 newline at end of string.
+
+Optional argument JUSTIFY defines if the paragraph should be justified.
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+"
+  (interactive "*P")
+  (py-fill-string justify 'pep-257-nn))
+
+(defun py-fill-string-symmetric (&optional justify)
+  "Symmetric style.
+
+Optional argument JUSTIFY defines if the paragraph should be justified.
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+"
+  (interactive "*P")
+  (py-fill-string justify 'symmetric))
+
+;; (defun py-fill-paragraph (&optional justify)
+;;   "Like \\[fill-paragraph], but handle Python comments and strings.
+;;
+;; If any of the current line is a comment, fill the comment or the
+;; paragraph of it that point is in, preserving the comment's indentation
+;; and initial `#'s.
+;; If point is inside a string, narrow to that string and fill.
+;; "
+;;   (interactive "P")
+;;   (save-excursion
+;;     (save-restriction
+;;       (widen)
+;;       (let ((pps
+;;              (if (featurep 'xemacs)
+;;                  (parse-partial-sexp (point-min) (point))
+;;                (syntax-ppss))))
+;;         (cond
+;;          ;; inside a comment
+;;          ((nth 4 pps)
+;;           (py-fill-comment justify))
+;;          ;; only whitespace before the comment start
+;;          ((save-excursion (beginning-of-line) (looking-at "[ \t]*#"))
+;;           (py-fill-comment justify))
+;;          ;; inside a string
+;;          ((nth 3 pps)
+;;           (py-fill-string (nth 8 pps)))
+;;          ;; opening quote of a string
+;;          ((progn (save-excursion (forward-char 1)(nth 3 pps)))
+;;           (save-excursion
+;;             (forward-char 1)
+;;             (py-fill-string (nth 8 pps)))))))))
 
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
@@ -6456,7 +6832,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
        ((nth 1 pps)
         (goto-char (nth 1 pps))
         (skip-chars-backward py-expression-skip-chars)
-        (while (or (looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp) (line-beginning-position) t)
+        (while (or (looking-back (concat py-string-delim-re py-expression-looking-re py-string-delim-re py-operator-regexp) (line-beginning-position) t)
                    (looking-back (concat "[[:alnum:]_]*" py-operator-regexp "[ \t]*") (line-beginning-position) t))
           (goto-char (match-beginning 0))))
        ;; listed elements
@@ -6482,9 +6858,9 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (unless (bobp)
           (py-beginning-of-expression-intern orig)))
        ;; concatenated strings
-       ((looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+       ((looking-back (concat py-string-delim-re py-expression-looking-re py-string-delim-re py-operator-regexp py-string-delim-re py-expression-looking-re py-string-delim-re))
         (goto-char (match-beginning 0))
-        (while (looking-back (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp) (line-beginning-position) t)
+        (while (looking-back (concat py-string-delim-re py-expression-looking-re py-string-delim-re py-operator-regexp) (line-beginning-position) t)
           (goto-char (match-beginning 0)))
         (skip-chars-backward py-expression-skip-chars))
        ;; before comment
@@ -6519,7 +6895,7 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (unless (looking-back py-assignment-regexp)
           (py-beginning-of-expression-intern orig)))
        ;; inside expression
-       ((looking-back py-expression-looking-regexp)
+       ((looking-back py-expression-looking-re)
         (skip-chars-backward py-expression-skip-chars)
         (unless (or (looking-back "^[ \t]*") (looking-back py-assignment-regexp))
           (py-beginning-of-expression-intern orig)))
@@ -6532,11 +6908,11 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
         (unless (bobp)
           (forward-char -1)
           (py-beginning-of-expression-intern orig)))
-       ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-regexp))
+       ((and (eq (point) orig) (not (bobp)) (looking-back py-expression-looking-re))
         (forward-char -1)
         (when (< 0 (abs (skip-chars-backward py-expression-skip-chars)))
           (py-beginning-of-expression-intern orig)))
-       ((and (looking-at py-expression-looking-regexp) (not (looking-back "[ \t\r\n\f]")))
+       ((and (looking-at py-expression-looking-re) (not (looking-back "[ \t\r\n\f]")))
         (unless (< 0 (abs (skip-chars-backward py-expression-skip-chars)))
           (py-beginning-of-expression-intern orig)))
        ((and (eq (point) orig)(looking-back "[ \t]*="))
@@ -6594,9 +6970,9 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
             (and (empty-line-p)(not (eobp)))
           (forward-line 1))
         (py-end-of-expression-intern orig))
-       ((looking-at (concat py-string-start-regexp py-expression-looking-regexp py-string-start-regexp py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+       ((looking-at (concat py-string-delim-re py-expression-looking-re py-string-delim-re py-operator-regexp py-string-delim-re py-expression-looking-re py-string-delim-re))
         (goto-char (match-end 0))
-        (while (looking-at (concat py-operator-regexp py-string-start-regexp py-expression-looking-regexp py-string-start-regexp))
+        (while (looking-at (concat py-operator-regexp py-string-delim-re py-expression-looking-re py-string-delim-re))
           (goto-char (match-end 0))))
        ;; inside string
        ((py-in-string-p)
@@ -7047,29 +7423,20 @@ To go just beyond the final line of the current statement, use `py-down-statemen
                   (forward-char 1))
                 (setq done t)
                 (skip-chars-forward (concat "^" comment-start) (line-end-position))
-                (skip-chars-backward " \t\r\n\f")
+                (skip-chars-backward " \t\r\n\f" (line-beginning-position))
                 (py-end-of-statement orig done))
             (goto-char orig))))
        ((and (nth 8 pps)(nth 3 pps))
         (goto-char (nth 8 pps))
-        (if (looking-at "\"\"\"\\|'''")
-            (progn
-              (goto-char (match-end 0))
-              (while (and (re-search-forward (match-string-no-properties 0) nil (quote move) 1)
-                          (nth 3 (syntax-ppss)))))
-          (setq stringchar (char-to-string (char-after)))
-          (forward-char 1)
-          (while (and (re-search-forward stringchar nil t 1)
-                      (nth 3 (syntax-ppss)))))
-        (skip-chars-forward "^;\t\r\n\f")
-        (setq done t)
-        (skip-chars-backward " " (line-beginning-position))
-        (when (< orig (point))
-          (py-end-of-statement orig done)))
+        (when (looking-at py-string-delim-re)
+          (goto-char (match-end 0))
+          (while (and (setq erg (re-search-forward (match-string-no-properties 0) nil (quote move) 1))
+                      (nth 3 (syntax-ppss))))
+          (when erg
+            (py-end-of-statement orig done))))
        ;; in comment
        ((nth 4 pps)
-        (if (eobp)
-            nil
+        (unless (eobp)
           (skip-chars-forward (concat "^" comment-start) (line-end-position))
           (forward-comment 99999)
           (skip-chars-backward " \t\r\n\f" (line-beginning-position))
@@ -7082,8 +7449,6 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (setq done t)
         (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-        ;; (py-beginning-of-comment)
-        ;; (skip-chars-backward " \t\r\n\f")
         (py-end-of-statement orig done))
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
@@ -7099,17 +7464,23 @@ To go just beyond the final line of the current statement, use `py-down-statemen
           (skip-chars-backward " \t\r\n\f")
           (setq done t))
         (py-end-of-statement orig done))
-       ((and (not done) (eq (point) orig))
-        (skip-chars-forward (concat "^" comment-start) (line-end-position))
-        (skip-chars-backward " \t\r\n\f")
-        (py-beginning-of-comment)
-        (skip-chars-backward " \t\r\n\f")
-        (setq done t)
-        (py-end-of-statement orig done))
        ((bolp)
         (end-of-line)
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
+        (setq done t)
+        (py-end-of-statement orig done))
+       ((and (not (ignore-errors (eq (point) done)))(looking-back py-string-delim-re) (progn (goto-char (match-beginning 0))(and (nth 8 (syntax-ppss))(nth 3 (syntax-ppss)))))
+        (end-of-line)
+        (py-beginning-of-comment)
+        (skip-chars-backward " \t\r\n\f")
+        (setq done (point))
+        (py-end-of-statement orig done))
+       ((not done)
+        (skip-chars-forward (concat "^" comment-start) (line-end-position))
+        (skip-chars-backward " \t\r\n\f")
+        (py-beginning-of-comment)
+        (skip-chars-backward " \t\r\n\f" (line-beginning-position))
         (setq done t)
         (py-end-of-statement orig done)))
       (unless
