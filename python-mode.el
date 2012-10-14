@@ -986,16 +986,6 @@ Default ignores all inputs of 0, 1, or 2 non-blank characters."
   :type 'regexp
   :group 'python-mode)
 
-(defcustom python-remove-cwd-from-path t
-  "Whether to allow loading of Python modules from the current directory.
-If this is non-nil, Emacs removes '' from sys.path when starting
-an inferior Python process.  This is the default, for security
-reasons, as it is easy for the Python process to be started
-without the user's realization (e.g. to perform completion)."
-  :type 'boolean
-  :group 'python-mode
-  :version "23.3")
-
 (defcustom python-source-modes '(python-mode jython-mode)
   "Used to determine if a buffer contains Python source code.
 
@@ -1790,7 +1780,7 @@ Inludes Python shell-prompt in order to stop further searches. ")
   "Data from last `_emacs_out' line seen by the preoutput filter.")
 
 (defvar python-preoutput-continuation nil
-  "If non-nil, funcall this when `python-preoutput-filter' sees `_emacs_ok'.")
+  "If non-nil, funcall this when `py-preoutput-filter' sees `_emacs_ok'.")
 
 (defvar python-preoutput-leftover nil)
 
@@ -2868,15 +2858,14 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
      ((equal s "_") '(3))
      (t (error "Unhandled string: %s" s)))))
 
-;;; GNU python.el stuff
-
+;;; GNU Emacs23 python.el stuff
 (defun py-history-input-filter (str)
   "`comint-input-filter' function for inferior Python.
 Don't save anything for STR matching `py-history-filter-regexp'."
   (not (string-match py-history-filter-regexp str)))
 
 ;; Fixme: Loses with quoted whitespace.
-(defun python-args-to-list (string)
+(defun py-args-to-list (string)
   (let ((where (string-match "[ \t]" string)))
     (cond ((null where) (list string))
           ((not (= where 0))
@@ -2889,7 +2878,7 @@ Don't save anything for STR matching `py-history-filter-regexp'."
 ;; >>> ... ... >>>
 ;; Also look for (and delete) an `_emacs_ok' string and call
 ;; `python-preoutput-continuation' if we get it.
-(defun python-preoutput-filter (s)
+(defun py-preoutput-filter (s)
   "`comint-preoutput-filter-functions' function: ignore prompts not at bol."
   (when python-preoutput-leftover
     (setq s (concat python-preoutput-leftover s))
@@ -2936,22 +2925,6 @@ Don't save anything for STR matching `py-history-filter-regexp'."
            res)
           (t (concat res s)))))
 
-(defun python-check-version (cmd)
-  "Check that CMD runs a suitable version of Python."
-  ;; Fixme:  Check on Jython.
-  (unless (or python-version-checked
-              (equal 0 (string-match (regexp-quote python-python-command)
-                                     cmd)))
-    (unless (shell-command-to-string cmd)
-      (error "Can't run Python command `%s'" cmd))
-    (let* ((res (shell-command-to-string
-                 (concat cmd
-                         " -c \"from sys import version_info;\
-print version_info >= (2, 2) and version_info < (3, 0)\""))))
-      (unless (string-match "True" res)
-        (error "Only Python versions >= 2.2 and < 3.0 are supported")))
-    (setq python-version-checked t)))
-
 (defun run-python (&optional cmd noshow new)
   "Run an inferior Python process, input and output via buffer *Python*.
 
@@ -2972,35 +2945,36 @@ process buffer for a list of commands.
 
 By default, Emacs inhibits the loading of Python modules from the
 current working directory, for security reasons.  To disable this
-behavior, change `python-remove-cwd-from-path' to nil."
+behavior, change `py-remove-cwd-from-path' to nil."
   (interactive (if current-prefix-arg
-                   (list (read-string "Run Python: " python-command) nil t)
-                 (list python-command)))
+		   (list (read-string "Run Python: " python-command) nil t)
+		 (list python-command)))
+  (require 'ansi-color) ; for ipython
   (unless cmd (setq cmd python-command))
+  (py-check-version cmd)
   (setq python-command cmd)
   ;; Fixme: Consider making `python-buffer' buffer-local as a buffer
   ;; (not a name) in Python buffers from which `run-python' &c is
   ;; invoked.  Would support multiple processes better.
   (when (or new (not (comint-check-proc python-buffer)))
     (with-current-buffer
-        (let* ((cmdlist
-                (append (python-args-to-list cmd) '("-i")
-                        (if python-remove-cwd-from-path
-                            '("-c" "import sys; sys.path.remove('')"))))
-               (path (getenv "PYTHONPATH"))
-               (process-environment	; to import emacs.py
-                (cons (concat "PYTHONPATH="
-                              (if path (concat path path-separator))
-                              data-directory)
-                      process-environment))
+	(let* ((cmdlist
+		(append (py-args-to-list cmd) '("-i")
+			(if python-remove-cwd-from-path
+			    '("-c" "import sys; sys.path.remove('')"))))
+	       (path (getenv "PYTHONPATH"))
+	       (process-environment	; to import emacs.py
+		(cons (concat "PYTHONPATH="
+			      (if path (concat path path-separator))
+			      data-directory)
+		      process-environment))
                ;; If we use a pipe, unicode characters are not printed
                ;; correctly (Bug#5794) and IPython does not work at
                ;; all (Bug#5390).
-               ;; (process-connection-type t))
-               )
-          (apply 'make-comint-in-buffer "Python"
-                 (generate-new-buffer "*Python*")
-                 (car cmdlist) nil (cdr cmdlist)))
+	       (process-connection-type t))
+	  (apply 'make-comint-in-buffer "Python"
+		 (generate-new-buffer "*Python*")
+		 (car cmdlist) nil (cdr cmdlist)))
       (setq-default python-buffer (current-buffer))
       (setq python-buffer (current-buffer))
       (accept-process-output (get-buffer-process python-buffer) 5)
@@ -3026,10 +3000,10 @@ behavior, change `python-remove-cwd-from-path' to nil."
   (sit-for 1 t)        ;Should we use accept-process-output instead?  --Stef
   (unless noshow (pop-to-buffer python-buffer t)))
 
-(defun python-send-command (command)
-  "Like `python-send-string' but resets `compilation-shell-minor-mode'."
+(defun py-send-command (command)
+  "Like `py-send-string' but resets `compilation-shell-minor-mode'."
   (when (python-check-comint-prompt)
-    (with-current-buffer (process-buffer (py-proc))
+    (with-current-buffer (process-buffer (python-proc))
       (goto-char (point-max))
       (compilation-forget-errors)
       (py-send-string command)
@@ -3070,11 +3044,11 @@ behavior, change `python-remove-cwd-from-path' to nil."
         (set-marker orig-start (line-beginning-position 0)))
       (write-region "if True:\n" nil f nil 'nomsg))
     (write-region start end f t 'nomsg)
-    (python-send-command command)
+    (py-send-command command)
     (with-current-buffer (process-buffer (py-proc))
       ;; Tell compile.el to redirect error locations in file `f' to
       ;; positions past marker `orig-start'.  It has to be done *after*
-      ;; `python-send-command''s call to `compilation-forget-errors'.
+      ;; `py-send-command''s call to `compilation-forget-errors'.
       (compilation-fake-loc orig-start f))))
 
 (defun python-send-string (string)
@@ -3098,13 +3072,6 @@ With prefix arg, position cursor at end of buffer."
     (push-mark)
     (goto-char (point-max))))
 
-(defun python-send-region-and-go (start end)
-  "Send the region to the inferior Python process.
-Then switch to the process buffer."
-  (interactive "r")
-  (python-send-region start end)
-  (python-switch-to-python t))
-
 (defun python-load-file (file-name)
   "Load a Python file FILE-NAME into the inferior Python process.
 If the file has extension `.py' import or reload it as a module.
@@ -3119,7 +3086,7 @@ module-qualified names."
                                    (file-name-nondirectory file-name)))
   (with-current-buffer (process-buffer (py-proc)) ;Runs python if needed.
     ;; Fixme: I'm not convinced by this logic from python-mode.el.
-    (python-send-command
+    (py-send-command
      (if (string-match "\\.py\\'" file-name)
          (let ((module (file-name-sans-extension
                         (file-name-nondirectory file-name))))
@@ -3144,7 +3111,7 @@ See variable `python-buffer'.  Starts a new process if necessary."
   "Set the default value of `python-buffer' to correspond to this buffer.
 If the current buffer has a local value of `python-buffer', set the
 default (global) value to that.  The associated Python process is
-the one that gets input from \\[python-send-region] et al when used
+the one that gets input from \\[py-send-region] et al when used
 in a buffer that doesn't have a local value of `python-buffer'."
   (interactive)
   (if (local-variable-p 'python-buffer)
@@ -3541,7 +3508,7 @@ Interactively, prompt for name."
      1 2))
   "`compilation-error-regexp-alist' for inferior Python.")
 
-(defconst python-font-lock-syntactic-keywords
+(defconst py-font-lock-syntactic-keywords
   ;; Make outer chars of matching triple-quote sequences into generic
   ;; string delimiters.  Fixme: Is there a better way?
   ;; First avoid a sequence preceded by an odd number of backslashes.
@@ -3632,7 +3599,7 @@ This function does not modify point or mark."
 
 
 ;;; Font-lock and syntax
-(defun python-info-ppss-context (type &optional syntax-ppss)
+(defun py-info-ppss-context (type &optional syntax-ppss)
   "Return non-nil if point is on TYPE using SYNTAX-PPSS.
 TYPE can be 'comment, 'string or 'paren.  It returns the start
 character address of the specified TYPE."
@@ -3715,9 +3682,9 @@ character address of the specified TYPE."
                                  (? ?\[ (+ (not (any ?\]))) ?\]) (* space)
                                  assignment-operator)))
               (when (re-search-forward re limit t)
-                (while (and (python-info-ppss-context 'paren)
+                (while (and (py-info-ppss-context 'paren)
                             (re-search-forward re limit t)))
-                (if (and (not (python-info-ppss-context 'paren))
+                (if (and (not (py-info-ppss-context 'paren))
                          (not (equal (char-after (point-marker)) ?=)))
                     t
                   (set-match-data nil)))))
@@ -3730,10 +3697,10 @@ character address of the specified TYPE."
                                  assignment-operator)))
               (when (and (re-search-forward re limit t)
                          (goto-char (nth 3 (match-data))))
-                (while (and (python-info-ppss-context 'paren)
+                (while (and (py-info-ppss-context 'paren)
                             (re-search-forward re limit t))
                   (goto-char (nth 3 (match-data))))
-                (if (not (python-info-ppss-context 'paren))
+                (if (not (py-info-ppss-context 'paren))
                     t
                   (set-match-data nil)))))
          (1 py-variable-name-face nil nil))
@@ -9333,143 +9300,140 @@ BUFFER allows specifying a name, the Python process is connected to
 When DONE is `t', `py-shell-manage-windows' is omitted
 "
   (interactive "P")
-  (if (or argprompt dedicated pyshellname switch sepchar py-buffer-name done (interactive-p))
-      (let* ((coding-system-for-read 'utf-8)
-             (coding-system-for-write 'utf-8)
-             (sepchar (or sepchar (char-to-string py-separator-char)))
-             (args py-python-command-args)
-             (oldbuf (current-buffer))
-             (path (getenv "PYTHONPATH"))
-             ;; make classic python.el forms usable, to import emacs.py
-             (process-environment
-              (cons (concat "PYTHONPATH="
-                            (if path (concat path path-separator))
-                            data-directory)
-                    process-environment))
-             ;; proc
-             (py-buffer-name
-              (or py-buffer-name
-                  (when argprompt
-                    (cond
-                     ((eq 4 (prefix-numeric-value argprompt))
-                      (setq py-buffer-name
-                            (prog1
-                                (read-buffer "Py-Shell buffer: "
-                                             (generate-new-buffer-name (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar)))
-                              (if (file-remote-p default-directory)
-                                  ;; It must be possible to declare a local default-directory.
-                                  (setq default-directory
-                                        (expand-file-name
-                                         (read-file-name
-                                          "Default directory: " default-directory default-directory
-                                          t nil 'file-directory-p)))))))
-                     ((and (eq 2 (prefix-numeric-value argprompt))
-                           (fboundp 'split-string))
-                      (setq args (split-string
-                                  (read-string "Py-Shell arguments: "
-                                               (concat
-                                                (mapconcat 'identity py-python-command-args " ") " ")))))))))
-             (pyshellname (or pyshellname (py-choose-shell)))
-             ;; If we use a pipe, Unicode characters are not printed
-             ;; correctly (Bug#5794) and IPython does not work at
-             ;; all (Bug#5390). python.el
-             (process-connection-type t)
-             ;; already in py-choose-shell
-             (py-use-local-default
-              (if (not (string= "" py-shell-local-path))
-                  (expand-file-name py-shell-local-path)
-                (when py-use-local-default
-                  (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
-             (py-buffer-name-prepare (unless py-buffer-name
-                                       (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar dedicated)))
-             (py-buffer-name (or py-buffer-name py-buffer-name-prepare))
-             (executable (cond (pyshellname)
-                               (py-buffer-name
-                                (py-report-executable py-buffer-name))))
-             proc)
-        (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
-        (set (make-local-variable 'comint-prompt-regexp)
-             (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
-                    (concat "\\("
+  (if (and py-buffer-name (string= py-buffer-name (buffer-name (current-buffer))))
+      (buffer-name (current-buffer))
+    (let* ((coding-system-for-read 'utf-8)
+           (coding-system-for-write 'utf-8)
+           (sepchar (or sepchar (char-to-string py-separator-char)))
+           (args py-python-command-args)
+           (oldbuf (current-buffer))
+           (path (getenv "PYTHONPATH"))
+           ;; make classic python.el forms usable, to import emacs.py
+           (process-environment
+            (cons (concat "PYTHONPATH="
+                          (if path (concat path path-separator))
+                          data-directory)
+                  process-environment))
+           ;; proc
+           (py-buffer-name
+            (or py-buffer-name
+                (when argprompt
+                  (cond
+                   ((eq 4 (prefix-numeric-value argprompt))
+                    (setq py-buffer-name
+                          (prog1
+                              (read-buffer "Py-Shell buffer: "
+                                           (generate-new-buffer-name (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar)))
+                            (if (file-remote-p default-directory)
+                                ;; It must be possible to declare a local default-directory.
+                                (setq default-directory
+                                      (expand-file-name
+                                       (read-file-name
+                                        "Default directory: " default-directory default-directory
+                                        t nil 'file-directory-p)))))))
+                   ((and (eq 2 (prefix-numeric-value argprompt))
+                         (fboundp 'split-string))
+                    (setq args (split-string
+                                (read-string "Py-Shell arguments: "
+                                             (concat
+                                              (mapconcat 'identity py-python-command-args " ") " ")))))))))
+           (pyshellname (or pyshellname (py-choose-shell)))
+           ;; If we use a pipe, Unicode characters are not printed
+           ;; correctly (Bug#5794) and IPython does not work at
+           ;; all (Bug#5390). python.el
+           (process-connection-type t)
+           ;; already in py-choose-shell
+           (py-use-local-default
+            (if (not (string= "" py-shell-local-path))
+                (expand-file-name py-shell-local-path)
+              (when py-use-local-default
+                (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
+           (py-buffer-name-prepare (unless py-buffer-name
+                                     (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar dedicated)))
+           (py-buffer-name (or py-buffer-name py-buffer-name-prepare))
+           (executable (cond (pyshellname)
+                             (py-buffer-name
+                              (py-report-executable py-buffer-name))))
+           proc)
+      (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
+      (set (make-local-variable 'comint-prompt-regexp)
+           (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+                  (concat "\\("
+                          (mapconcat 'identity
+                                     (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+                                     "\\|")
+                          "\\)"))
+                 (t (concat "\\("
                             (mapconcat 'identity
-                                       (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+                                       (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
                                        "\\|")
-                            "\\)"))
-                   (t (concat "\\("
-                              (mapconcat 'identity
-                                         (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-                                         "\\|")
-                              "\\)"))))
-        (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
-        (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
-        (set (make-local-variable 'comint-use-prompt-regexp) nil)
-        (set (make-local-variable 'compilation-error-regexp-alist)
-             python-compilation-regexp-alist)
-        ;; (setq completion-at-point-functions nil)
-        (add-hook 'comint-preoutput-filter-functions #'python-preoutput-filter
-                  nil t)
-        (if py-fontify-shell-buffer-p
-            (progn
-              (set (make-local-variable 'font-lock-defaults)
-                   '(python-font-lock-keywords nil nil nil nil
-                                               (font-lock-syntactic-keywords
-                                                . python-font-lock-syntactic-keywords)))
-              (set (make-local-variable 'comment-start) "# ")
-              (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
-              (set (make-local-variable 'comment-column) 40)
-              (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
-              (set (make-local-variable 'indent-region-function) 'py-indent-region)
-              (set (make-local-variable 'indent-line-function) 'py-indent-line)
-              (font-lock-fontify-buffer))
-          (font-lock-unfontify-region (point-min) (line-beginning-position)))
-        (setq python-buffer (current-buffer))
-        ;; (accept-process-output (get-buffer-process python-buffer) 5)
-        (setq proc (get-buffer-process (current-buffer)))
-        (goto-char (point-max))
-        (move-marker (process-mark proc) (point-max))
-        ;; (funcall (process-filter proc) proc "")
-        (py-shell-send-setup-code proc)
-        ;; (accept-process-output proc 1)
-        (compilation-shell-minor-mode 1)
-        ;; (sit-for 0.1)
-        (setq comint-input-sender 'py-shell-simple-send)
-        (setq comint-input-ring-file-name
-              (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
-                     (if py-honor-IPYTHONDIR-p
-                         (if (getenv "IPYTHONDIR")
-                             (concat (getenv "IPYTHONDIR") "/history")
-                           py-ipython-history)
-                       py-ipython-history))
-                    (t
-                     (if py-honor-PYTHONHISTORY-p
-                         (if (getenv "PYTHONHISTORY")
-                             (concat (getenv "PYTHONHISTORY") "/" (py-report-executable py-buffer-name) "_history")
-                           py-ipython-history)
-                       py-ipython-history))
-                    ;; (dedicated
-                    ;; (concat "~/." (substring py-buffer-name 0 (string-match "-" py-buffer-name)) "_history"))
-                    ;; .pyhistory might be locked from outside Emacs
-                    ;; (t "~/.pyhistory")
-                    ;; (t (concat "~/." (py-report-executable py-buffer-name) "_history"))
-                    ))
-        (comint-read-input-ring t)
-        (set-process-sentinel (get-buffer-process (current-buffer))
-                              #'shell-write-history-on-exit)
-        ;; pdbtrack
-        ;; (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
-        (setq py-pdbtrack-do-tracking-p t)
-        ;;
-        (set-syntax-table python-mode-syntax-table)
-        (ansi-color-for-comint-mode-on)
-        (use-local-map py-shell-map)
-        ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
-        (when py-shell-hook (run-hooks 'py-shell-hook))
-        (unless done (py-shell-manage-windows switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name))
-        py-buffer-name)
-    (cond ((comint-check-proc (current-buffer))
-           (buffer-name (current-buffer)))
-          ((comint-check-proc py-buffer-name)
-           py-buffer-name))))
+                            "\\)"))))
+      (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
+      (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
+      (set (make-local-variable 'comint-use-prompt-regexp) nil)
+      (set (make-local-variable 'compilation-error-regexp-alist)
+           python-compilation-regexp-alist)
+      ;; (setq completion-at-point-functions nil)
+      (add-hook 'comint-preoutput-filter-functions #'py-preoutput-filter
+                nil t)
+      (if py-fontify-shell-buffer-p
+          (progn
+            (set (make-local-variable 'font-lock-defaults)
+                 '(python-font-lock-keywords nil nil nil nil
+                                             (font-lock-syntactic-keywords
+                                              . py-font-lock-syntactic-keywords)))
+            (set (make-local-variable 'comment-start) "# ")
+            (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
+            (set (make-local-variable 'comment-column) 40)
+            (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
+            (set (make-local-variable 'indent-region-function) 'py-indent-region)
+            (set (make-local-variable 'indent-line-function) 'py-indent-line)
+            (font-lock-fontify-buffer))
+        (font-lock-unfontify-region (point-min) (line-beginning-position)))
+      (setq python-buffer (current-buffer))
+      ;; (accept-process-output (get-buffer-process python-buffer) 5)
+      (setq proc (get-buffer-process (current-buffer)))
+      (goto-char (point-max))
+      (move-marker (process-mark proc) (point-max))
+      ;; (funcall (process-filter proc) proc "")
+      (py-shell-send-setup-code proc)
+      ;; (accept-process-output proc 1)
+      (compilation-shell-minor-mode 1)
+      ;; (sit-for 0.1)
+      (setq comint-input-sender 'py-shell-simple-send)
+      (setq comint-input-ring-file-name
+            (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+                   (if py-honor-IPYTHONDIR-p
+                       (if (getenv "IPYTHONDIR")
+                           (concat (getenv "IPYTHONDIR") "/history")
+                         py-ipython-history)
+                     py-ipython-history))
+                  (t
+                   (if py-honor-PYTHONHISTORY-p
+                       (if (getenv "PYTHONHISTORY")
+                           (concat (getenv "PYTHONHISTORY") "/" (py-report-executable py-buffer-name) "_history")
+                         py-ipython-history)
+                     py-ipython-history))
+                  ;; (dedicated
+                  ;; (concat "~/." (substring py-buffer-name 0 (string-match "-" py-buffer-name)) "_history"))
+                  ;; .pyhistory might be locked from outside Emacs
+                  ;; (t "~/.pyhistory")
+                  ;; (t (concat "~/." (py-report-executable py-buffer-name) "_history"))
+                  ))
+      (comint-read-input-ring t)
+      (set-process-sentinel (get-buffer-process (current-buffer))
+                            #'shell-write-history-on-exit)
+      ;; pdbtrack
+      ;; (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
+      (setq py-pdbtrack-do-tracking-p t)
+      ;;
+      (set-syntax-table python-mode-syntax-table)
+      (ansi-color-for-comint-mode-on)
+      (use-local-map py-shell-map)
+      ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
+      (when py-shell-hook (run-hooks 'py-shell-hook))
+      (unless done (py-shell-manage-windows switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name))
+      py-buffer-name)))
 
 (defalias 'iyp 'ipython)
 (defalias 'ipy 'ipython)
@@ -9539,6 +9503,17 @@ Optional \\[universal-argument] prompts for options to pass to the Python3.2 int
    Optional DEDICATED SWITCH are provided for use from programs. "
   (interactive "P")
   (py-shell argprompt dedicated "python3.2" switch))
+
+(defun python3.3 (&optional argprompt dedicated switch)
+  "Start an Python3.3 interpreter.
+
+Optional \\[universal-argument] prompts for options to pass to the Python3.3 interpreter. See `py-python-command-args'.
+   Optional DEDICATED SWITCH are provided for use from programs.
+
+Command expects Python3.3 installed at your system. "
+  (interactive "P")
+  (py-shell argprompt dedicated "python3.,#. zi
+3" switch))
 
 ;; dedicated
 (defun python-dedicated (&optional argprompt switch)
@@ -14005,6 +13980,13 @@ Optional C-u prompts for options to pass to the Jython interpreter. See `py-pyth
 Start an Python3.2 interpreter.
 
 Optional C-u prompts for options to pass to the Python3.2 interpreter. See `py-python-command-args'."]
+
+            ["python3.3" python3.3
+             :help "`python3.3'
+Start an Python3.3 interpreter.
+
+Optional C-u prompts for options to pass to the Python3.3 interpreter. See `py-python-command-args'."]
+
             "-"
             ["python-dedicated" python-dedicated
              :help "`python-dedicated'
@@ -14351,7 +14333,7 @@ module-qualified names."
                                    (file-name-nondirectory file-name)))
   (with-current-buffer (process-buffer (py-proc)) ;Runs python if needed.
     ;; Fixme: I'm not convinced by this logic from python-mode.el.
-    (python-send-command
+    (py-send-command
      (if (string-match "\\.py\\'" file-name)
          (let ((module (file-name-sans-extension
                         (file-name-nondirectory file-name))))
@@ -18179,8 +18161,8 @@ You can send text to the inferior Python process from other buffers
 containing Python source.
  * \\[python-switch-to-python] switches the current buffer to the Python
     process buffer.
- * \\[python-send-region] sends the current region to the Python process.
- * \\[python-send-region-and-go] switches to the Python process buffer
+ * \\[py-send-region] sends the current region to the Python process.
+ * \\[py-send-region-and-go] switches to the Python process buffer
     after sending the text.
 For running multiple processes in multiple buffers, see `run-python' and
 `python-buffer'.
@@ -18190,7 +18172,7 @@ For running multiple processes in multiple buffers, see `run-python' and
   (require 'ansi-color) ; for ipython
   (setq mode-line-process '(":%s"))
   (set (make-local-variable 'comint-input-filter) 'python-input-filter)
-  (add-hook 'comint-preoutput-filter-functions #'python-preoutput-filter
+  (add-hook 'comint-preoutput-filter-functions #'py-preoutput-filter
 	    nil t)
   (set (make-local-variable 'compilation-error-regexp-alist)
        python-compilation-regexp-alist)
@@ -18245,7 +18227,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'font-lock-defaults)
        '(python-font-lock-keywords nil nil nil nil
                                    (font-lock-syntactic-keywords
-                                    . python-font-lock-syntactic-keywords)
+                                    . py-font-lock-syntactic-keywords)
                                    ;; This probably isn't worth it.
                                    ;; (font-lock-syntactic-face-function
                                    ;;  . python-font-lock-syntactic-face-function)
