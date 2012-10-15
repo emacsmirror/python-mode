@@ -341,48 +341,10 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :group 'python-mode)
 
 (defcustom ipython-complete-function 'ipython-complete
-  "Function used for completion in IPython shell buffers.
-
-Minor bug: `ipython-complete' raises the prompt counter when completion done
-
-Richard Everson commented:
-
-    I don't know how to stop IPython from incrementing the prompt
-    counter, but using py-completion-at-point just hangs emacs for
-    me. If I start with a new IPython shell, then
-
-    In [1]: import sys
-
-    In [2]: sys.pa
-
-    then M-x py-completion-at-point, hoping to complete to sys.path, Emacs
-    hangs.  Escaping out of it shows that the \*Python\* buffer has the
-    contents:
-
-    >>> Traceback (most recent call last):
-      File \"<stdin>\", line 1, in <module>
-    NameError: name 'nil' is not defined
-    >>> =
-    [ ... ]
-
-    On the other hand, IPython's interaction and completion itself is pretty
-    impressive (for versions greater than 0.10 at least): it inserts the
-    correct indentation for for, if, etc and it will show completions even
-    within a loop.  Here's an example from a terminal shell:
-
-    In [1]:
-
-    In [1]: for i in range(3):
-       ...:     print i, sys.p<------------ Pressed tab here; indentation inser=
-    ted automatically
-    sys.path                 sys.path_importer_cache  sys.prefix
-    sys.path_hooks           sys.platform             sys.py3kwarning
-       ...:     print i, sys.path<------------ Pressed tab again
-    sys.path                 sys.path_hooks           sys.path_importer_cache
-"
+  "Function used for completion in IPython shell buffers. "
   :type '(choice (const :tag "py-completion-at-point" py-completion-at-point)
                  (const :tag "py-shell-complete" py-shell-complete)
-		 (const :tag "Pymacs based py-complete" py-complete)
+                 (const :tag "Pymacs based py-complete" py-complete)
                  (const :tag "IPython's ipython-complete" ipython-complete))
   :group 'python-mode)
 (make-variable-buffer-local 'ipython-complete-function)
@@ -1354,7 +1316,7 @@ Don't activate this, with some probability it will mess up abbrev edits, leaving
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-fill-docstring-style 'pep-257
+(defcustom py-fill-docstring-style 'pep-257-nn
   "Implemented styles are DJANGO, ONETWO, PEP-257, PEP-257-NN,
 SYMMETRIC, and NIL.
 
@@ -1705,6 +1667,9 @@ Used for determining the default in the next one.")
 
 (defvar py-string-delim-re "\\(\"\"\"\\|'''\\|\"\\|'\\)"
   "When looking at beginning of string. ")
+
+(defvar py-labelled-re "[ \\t]*:[[:print:]]+"
+  "When looking at label. ")
 
 (defvar py-expression-skip-regexp "[^ (=:#\t\r\n\f]"
   "py-expression assumes chars indicated possible composing a py-expression, skip it. ")
@@ -3063,11 +3028,11 @@ behavior, change `py-remove-cwd-from-path' to nil."
     ;; as to make sure we terminate the multiline instruction.
     (comint-send-string (py-proc) "\n")))
 
-(defun python-switch-to-python (eob-p)
+(defun py-switch-to-python (eob-p)
   "Switch to the Python process buffer, maybe starting new process.
 With prefix arg, position cursor at end of buffer."
   (interactive "P")
-  (pop-to-buffer (process-buffer (py-proc)) t) ;Runs python if needed.
+  (pop-to-buffer (py-shell)) ;Runs python if needed.
   (when eob-p
     (push-mark)
     (goto-char (point-max))))
@@ -4606,16 +4571,16 @@ Returns and keeps relative position "
   "Returns beginning of paragraph position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-beginning-of-paragraph)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    (let ((erg (progn (py-beginning-of-paragraph) (point))))
+      (when (interactive-p) (message "%s" erg))
       erg)))
 
 (defun py-end-of-paragraph-position ()
   "Returns end of paragraph position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-paragraph)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    (let ((erg (progn (py-end-of-paragraph) (point))))
+      (when (interactive-p) (message "%s" erg))
       erg)))
 
 (defun py-beginning-of-block-position ()
@@ -5226,11 +5191,10 @@ Store deleted statements in kill-ring "
           (fill-paragraph justify))))
     t))
 
-(defun py-fill-paragraph (&optional justify style)
+(defun py-fill-paragraph (&optional justify style start end)
   "`fill-paragraph-function'
 
-With regards to triple quotes positioning, commands
-py-fill-paragraph-SUFFIX
+commands py-fill-paragraph-SUFFIX
 choose one of the following implemented styles:
 
 DJANGO, ONETWO, PEP-257, PEP-257-NN, SYMMETRIC
@@ -5290,34 +5254,49 @@ SYMMETRIC:
     \"\"\"
 "
   (interactive "P")
-  (let ((pps (syntax-ppss))
-        (style (or style py-fill-docstring-style)))
+  (let ((orig (copy-marker (point)))
+        (beg (or start (if (use-region-p) (region-beginning) (py-beginning-of-paragraph-position))))
+        (end (copy-marker (or end (if (use-region-p) (region-end) (py-end-of-paragraph-position)))))
+        pps
+        (style (or style py-fill-docstring-style))
+        (this-end (point-min)))
     (save-excursion
-      (cond
-       ;; Comments
-       ((nth 4 pps)
-        (py-fill-comment justify))
-       ;; Strings/Docstrings
-       ((save-excursion (or (nth 3 pps)
-                            (equal (string-to-syntax "|")
-                                   (syntax-after (point)))))
-        (py-fill-string justify style))
-       ;; Decorators
-       ((save-excursion
-          (equal (char-after
-                  (py-beginning-of-statement))
-                 ;; (back-to-indentation)
-                 ;; (point))
-                 ?\@))
-        (py-fill-decorator justify))
-       ;; Parens
-       ((or (nth 1 pps)
-            (looking-at (python-rx open-paren))
-            (save-excursion
-              (skip-syntax-forward "^(" (line-end-position))
-              (looking-at (python-rx open-paren))))
-        (py-fill-paren justify))
-       (t t)))))
+      (save-restriction
+        (goto-char beg) (end-of-line)
+        (setq pps (syntax-ppss))
+        (narrow-to-region beg end)
+        (cond
+         ;; Comments
+         ((nth 4 pps)
+          (py-fill-comment justify))
+         ;; Strings/Docstrings
+         ((save-excursion
+            (or (nth 3 pps)
+                (equal (string-to-syntax "|")
+                       (syntax-after (point)))
+                (looking-at py-string-delim-re))
+            (goto-char (point-min))
+            (while (and (progn (forward-paragraph) (< this-end (point)))(setq this-end (copy-marker (point))))
+              (py-fill-string justify style beg this-end)
+              (goto-char this-end)
+              ;; (end-of-line) (while (nth 8 (syntax-ppss))(forward-char 1))
+              (set (make-local-variable 'py-fill-docstring-style) nil))))
+         ;; Decorators
+         ((save-excursion
+            (equal (char-after
+                    (py-beginning-of-statement))
+                   ;; (back-to-indentation)
+                   ;; (point))
+                   ?\@))
+          (py-fill-decorator justify))
+         ;; Parens
+         ((or (nth 1 pps)
+              (looking-at (python-rx open-paren))
+              (save-excursion
+                (skip-syntax-forward "^(" (line-end-position))
+                (looking-at (python-rx open-paren))))
+          (py-fill-paren justify))
+         (t t))))))
 
 ;; (defun py-fill-comment (&optional justify)
 ;;   "Comment fill function for `py-fill-paragraph'.
@@ -5376,7 +5355,29 @@ SYMMETRIC:
 ;;     ;; return t to indicate that we've done our work
 ;;     t))
 
-(defun py-fill-string (&optional justify style)
+(defun py-fill-labelled-string (beg end)
+  "Fill string or paragraph containing lines starting with label
+
+See lp:1066489 "
+  (interactive "r*")
+  (let ((end (copy-marker end))
+        (last (copy-marker (point)))
+        this-beg this-end)
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (skip-chars-forward " \t\r\n\f")
+        (if (looking-at py-labelled-re)
+            (progn
+              (setq this-beg (line-beginning-position))
+              (goto-char (match-end 0))
+              (while (and (not (eobp)) (re-search-forward py-labelled-re end t 1)(< last (match-beginning 0))(setq last (match-beginning 0)))
+                (save-match-data (fill-region this-beg (1- (line-beginning-position))))
+                (setq this-beg (line-beginning-position))
+                (goto-char (match-end 0)))))))))
+
+(defun py-fill-string (&optional justify style beg end)
   "String fill function for `py-fill-paragraph'.
 JUSTIFY should be used (if applicable) as in `fill-paragraph'."
   (interactive "P")
@@ -5385,21 +5386,20 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
          forward-sexp-function
          (orig (point-marker))
          (pps (syntax-ppss))
-         (beg
-          (if (nth 3 pps)
-              (copy-marker (nth 8 pps))
-            (when (and (equal (string-to-syntax "|")
-                              (syntax-after (point))))
-              (point-marker))))
+         (beg (or beg (if (nth 3 pps)
+                          (copy-marker (nth 8 pps))
+                        (when (and (equal (string-to-syntax "|")
+                                          (syntax-after (point))))
+                          (point-marker)))))
          (delim-length (progn (goto-char beg)(when (looking-at py-string-delim-re) (- (match-end 0) (match-beginning 0)))))
          ;; Assume docstrings at BOL resp. indentation
          (docstring-p
-          (progn
-            (eq (current-column) (current-indentation))))
-         (end
-          (progn
-            (forward-sexp)
-            (point-marker)))
+          (and delim-length
+               (eq (current-column) (current-indentation))
+               (not (looking-at py-labelled-re))))
+         (end (or end (progn
+                        (forward-sexp)
+                        (point-marker))))
          (multi-line-p
           ;; Docstring styles may vary for oneliners and multi-liners.
           (> (count-matches "\n" beg end) 0))
@@ -5417,10 +5417,13 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
             (symmetric (and multi-line-p (cons 1 1)))))
          (fill-paragraph-function))
     (save-restriction
-      (narrow-to-region (+ beg delim-length) (- end delim-length))
-      ;; (fill-paragraph justify)
-      (fill-region (+ beg delim-length) (- end delim-length)))
-    ;; (sit-for 0.1)
+      (cond (docstring-p
+             (narrow-to-region (+ beg delim-length) (- end delim-length))
+             (fill-region (+ beg delim-length) (- end delim-length)))
+            ((string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end))
+             (py-fill-labelled-string beg end))
+            (t (narrow-to-region beg end)
+               (fill-region beg end))))
     (save-excursion
       (when (and docstring-p py-fill-docstring-style)
         ;; Add the number of newlines indicated by the selected style
@@ -5449,8 +5452,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
              ;; Again indent only if a newline is added.
              (indent-according-to-mode))
         (when (or (eq style 'pep-257)(eq style 'pep-257-nn))
-          (indent-region beg end)
-          )) t)))
+          (indent-region beg end))) t)))
 
 (defun py-fill-decorator (&optional justify)
   "Decorator fill function for `py-fill-paragraph'.
