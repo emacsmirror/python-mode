@@ -31,8 +31,8 @@
        ;; 'arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test
        'usr-bin-python3-shell-complete-test
        ;; 'usr-bin-python3.2-shell-complete-test
-       'ipython-shell-complete-test
-       'usr-bin-ipython-shell-complete-test
+       ;; 'ipython-shell-complete-test
+       ;; 'usr-bin-ipython-shell-complete-test
        ;; 'arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test
        )
 )
