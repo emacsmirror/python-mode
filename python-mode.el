@@ -3453,11 +3453,6 @@ Interactively, prompt for name."
   "Max number of characters from end of buffer to search for stack entry.")
 
 ;;; Bindings
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
-(add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
-(add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
-(add-to-list 'same-window-buffer-names (purecopy "*Python*"))
-
 ;; Bind python-file-queue before installing the kill-emacs-hook.
 
 (defconst python-pdbtrack-stack-entry-regexp
@@ -14206,24 +14201,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."
       (when (and py-verbose-p (interactive-p)) (message "%s" pos))
       (goto-char here))))
 
-;; It's handy to add recognition of Python files to the
-;; interpreter-mode-alist and to auto-mode-alist.  With the former, we
-;; can specify different `derived-modes' based on the #! line, but
-;; with the latter, we can't.  So we just won't add them if they're
-;; already added.
-
-(let ((modes '(("jython" . jython-mode)
-               ("python" . python-mode)
-               ("python3" . python-mode))))
-  (while modes
-    (when (not (assoc (car modes) interpreter-mode-alist))
-      (push (car modes) interpreter-mode-alist))
-    (setq modes (cdr modes))))
-
-(when (not (or (rassq 'python-mode auto-mode-alist)
-               (rassq 'jython-mode auto-mode-alist)))
-  (push '("\\.py$" . python-mode) auto-mode-alist))
-
 (defun py-kill-emacs-hook ()
   "Delete files in `py-file-queue'.
 These are Python temporary files awaiting execution."
@@ -15257,7 +15234,9 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
 (defun virtualenv-workon (name)
   "Issue a virtualenvwrapper-like virtualenv-workon command"
   (interactive (list (completing-read "Virtualenv: " (virtualenv-workon-complete))))
-  (virtualenv-activate (concat (getenv "WORKON_HOME") "/" name)))
+  (if (getenv "WORKON_HOME")
+      (virtualenv-activate (concat (py-normalize-directory (getenv "WORKON_HOME")) name))
+    (virtualenv-activate (concat (py-normalize-directory virtualenv-workon-home) name))))
 
 (defun py-toggle-local-default-use ()
   (interactive)
@@ -18160,6 +18139,40 @@ See original source: http://pymacs.progiciels-bpi.ca"
 ;;             (when py-load-highlight-indentation-p
 ;;               (unless (featurep 'highlight-indentation)
 ;;                 (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el"))))))
+
+(add-to-list 'same-window-buffer-names (purecopy "*Python*"))
+(add-to-list 'same-window-buffer-names (purecopy "*IPython*"))
+
+;;; interpreter-mode-alist
+;; It's handy to add recognition of Python files to the
+;; interpreter-mode-alist and to auto-mode-alist.  With the former, we
+;; can specify different `derived-modes' based on the #! line, but
+;; with the latter, we can't.  So we just won't add them if they're
+;; already added.
+
+(let ((modes '(("jython" . jython-mode)
+               ("python" . python-mode)
+               ("python2" . python-mode)
+               ("python2.6" . python-mode)
+               ("python2.7" . python-mode)
+               ("python3" . python-mode)
+               ("python3.0" . python-mode)
+               ("python3.1" . python-mode)
+               ("python3.2" . python-mode)
+               ("python3.3" . python-mode))))
+  (while modes
+    (when (not (assoc (car modes) interpreter-mode-alist))
+      (push (car modes) interpreter-mode-alist))
+    (setq modes (cdr modes))))
+
+(when (not (or (rassq 'python-mode auto-mode-alist)
+               (rassq 'jython-mode auto-mode-alist)))
+  (push '("\\.py$" . python-mode) auto-mode-alist))
+
+;; (add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
+;; (add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
+;; (add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
+
 
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
