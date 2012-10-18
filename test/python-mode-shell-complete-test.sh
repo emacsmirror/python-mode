@@ -93,11 +93,11 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall usr-bin-python-shell-complete-test \
 --funcall usr-bin-python2.7-shell-complete-test \
 --funcall home-speck-arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test \
---funcall usr-bin-python3-shell-complete-test \
 --funcall usr-bin-python3.1-shell-complete-test \
 --funcall ipython-shell-complete-test \
 --funcall usr-bin-ipython-shell-complete-test \
 --funcall home-speck-arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test \
+# --funcall usr-bin-python3-shell-complete-test \
 
 else
 
