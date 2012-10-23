@@ -4191,85 +4191,54 @@ Returns `py-indent-offset'"
            (origline (or origline (py-count-lines)))
            last down done
            (firstindent
-            (if (py-beginning-of-block)
-                (progn
-                  (setq last (point))
-                  (setq down t)
-                  (current-indentation))
-              (progn
-                (unless (bobp) (forward-line -1)
-                        (back-to-indentation))
-                (cond ((py-beginning-of-statement-p)
-                       (setq last (point))
-                       (current-column))
-                      ((and (not (bobp)) (py-beginning-of-statement))
-                       (setq last (point))
-                       (current-column))
-                      ((and (prog1 (goto-char orig)
-                              (back-to-indentation))
-                            (py-beginning-of-block-p))
-                       (setq down t)
-                       (setq last (point))
-                       (current-indentation))
-                      ((and (goto-char orig)
-                            (py-end-of-statement)
-                            (py-end-of-statement))
-                       (py-beginning-of-statement)
-                       (setq last (point))
-                       (current-indentation))
-                      (t (goto-char orig)
-                         (if (py-down-block)
-                             (progn (setq last (point))
-                                    (setq down t)
-                                    (current-column))
-                           ;; if nothing suitable around, us default
-                           (setq done t)
-                           (default-value 'py-indent-offset)
-                           ))))))
+            (cond ((and (py-beginning-of-statement-p) (looking-at py-extended-block-or-clause-re))
+                   (current-indentation))
+                  ((and (py-beginning-of-statement)(looking-at py-extended-block-or-clause-re))
+                   (current-indentation))
+                  (t (while (and (setq last (py-beginning-of-statement))(not (looking-at py-extended-block-or-clause-re))))
+                     (if last
+                         (progn
+                           (setq last (point))
+                           (setq down t)
+                           (current-indentation))
+                       (if (and (goto-char orig)
+                                (py-end-of-statement)
+                                (py-end-of-statement)
+                                (py-beginning-of-statement)
+                                (looking-at py-extended-block-or-clause-re))
+
+                           (progn
+                             (setq last (point))
+                             (current-indentation)
+                             (goto-char orig))
+                         (while (and (setq last (py-down-statement))(not (looking-at py-extended-block-or-clause-re)))
+                           (if last
+                               (progn (setq last (point))
+                                      (setq down t)
+                                      (current-column))
+                             ;; if nothing suitable around, us default
+                             (setq done t)
+                             (default-value 'py-indent-offset))))))))
            (secondindent
             (unless done
               (if firstindent
-                  (cond ((or down (py-statement-opens-block-p))
-                         (or (progn
-                               (when (and (py-end-of-statement)
-                                          (py-end-of-statement)
-                                          (py-beginning-of-statement))
-                                 (current-indentation)))
-                             (progn
-                               (goto-char last)
-                               (and (py-beginning-of-block)
-                                    (current-indentation)))))
-
-                        ((py-beginning-of-block)
-                         (progn
-                           (when (and (py-end-of-statement)
-                                      (py-end-of-statement)
-                                      (py-beginning-of-statement)
-                                      (py-beginning-of-statement))
-                             (current-indentation))))
-                        (t (if last (if (and (goto-char last)
-                                             (py-end-of-statement)
-                                             (py-end-of-statement)
-                                             (py-beginning-of-statement))
-                                        (current-indentation)
-                                      (goto-char last)
-                                      (when (py-beginning-of-block-or-clause)
-                                        (current-indentation)))))))))
+                  (if (progn (setq orig (point)) (while (and (py-beginning-of-statement)(>= firstindent (current-indentation)) (setq last (point)) (not (looking-at py-extended-block-or-clause-re)))) last)
+                      (current-indentation)
+                    (goto-char orig)
+                    (while (and (not (eobp))(py-end-of-statement)(setq last (point))
+                                (save-excursion (or (>= firstindent (progn (py-beginning-of-statement)(current-indentation)))(eq last (line-beginning-position))))
+                                (py-end-of-statement-p)))
+                    (when last (py-beginning-of-statement) (current-indentation))))))
            guessed)
       (unless (or done secondindent)
         (setq secondindent
-              (when (py-end-of-block)
-                (current-indentation))))
-      (unless (or done secondindent)
-        (setq secondindent
-              ;; (setq first (current-indentation))
               (when (and (py-end-of-statement)
                          (py-end-of-statement)
                          (py-beginning-of-statement))
                 (current-indentation))))
       (when secondindent
         (when (eq 0 (abs (- secondindent firstindent)))
-          (when (if (py-beginning-of-block) (< (current-indentation) secondindent))
+          (when (if (py-beginning-of-statement) (< (current-indentation) secondindent))
             (setq secondindent (current-indentation))))
         (setq guessed
               (abs (- secondindent firstindent))))
@@ -4317,6 +4286,7 @@ The defun visible is the one that contains point or follows point. "
 (defalias 'py-end-of-paragraph 'forward-paragraph)
 
 ;;; Shifting
+
 (defalias 'py-shift-region-left 'py-shift-left)
 (defun py-shift-left (&optional count start end)
   "Dedent region according to `py-indent-offset' by COUNT times.
@@ -4358,12 +4328,9 @@ Returns indentation reached. "
            (orig end))
       (setq beg (copy-marker beg))
       (setq end (copy-marker end))
-      ;; lp:962227
-      ;; (dotimes (i (abs count))
       (if (< 0 count)
           (indent-rigidly beg end py-indent-offset)
         (indent-rigidly beg end (- py-indent-offset)))
-      ;; )
       (push-mark beg t)
       (goto-char end)
       (skip-chars-backward " \t\r\n\f"))
@@ -4398,7 +4365,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "paragraph" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-paragraph-left (&optional arg)
@@ -4410,7 +4377,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "paragraph" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-block-right (&optional arg)
@@ -4422,7 +4389,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "block" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-block-left (&optional arg)
@@ -4434,7 +4401,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "block" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-clause-right (&optional arg)
@@ -4446,7 +4413,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "clause" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-clause-left (&optional arg)
@@ -4458,7 +4425,31 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "clause" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-block-or-clause-right (&optional arg)
+  "Indent block-or-clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "block-or-clause" (or arg py-indent-offset))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-block-or-clause-left (&optional arg)
+  "Dedent block-or-clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "block-or-clause" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-def-right (&optional arg)
@@ -4470,7 +4461,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "def" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-def-left (&optional arg)
@@ -4482,7 +4473,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "def" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-class-right (&optional arg)
@@ -4494,7 +4485,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "class" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-class-left (&optional arg)
@@ -4506,7 +4497,31 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "class" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-or-class-right (&optional arg)
+  "Indent def-or-class by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "def-or-class" (or arg py-indent-offset))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-or-class-left (&optional arg)
+  "Dedent def-or-class by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "def-or-class" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-line-right (&optional arg)
@@ -4518,7 +4533,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "line" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-line-left (&optional arg)
@@ -4530,7 +4545,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "line" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-statement-right (&optional arg)
@@ -4542,7 +4557,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "statement" (or arg py-indent-offset))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (defun py-shift-statement-left (&optional arg)
@@ -4554,9 +4569,10 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py-shift-forms-base "statement" (- (or arg py-indent-offset)))))
-    (when (and (interactive-p) py-verbose-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
+;;;
 (defun py-indent-and-forward ()
   "Indent current line according to mode, move one line forward. "
   (interactive "*")
@@ -6321,7 +6337,7 @@ and `pass'.  This doesn't catch embedded statements."
       (if this
           (progn
             (setq py-bol-forms-last-indent (cons this-command (current-indentation)))
-            (setq ind (+ py-indent-offset (current-indentation)))
+            (setq ind (+ (progn (if py-smart-indentation (py-guess-indent-offset)  py-indent-offset)) (current-indentation)))
             (py-end-of-statement)
             (setq last (point))
             (forward-line 1)
@@ -6499,6 +6515,18 @@ http://launchpad.net/python-mode
 is preferable for that. ")
 
 ;;; Beg-end forms
+
+(defun py-beginning-of-top-level ()
+  "Go to beginning of block until level of indentation is null.
+
+Returns beginning of block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re 0)))))
+    erg))
+
 (defun py-beginning-of-block (&optional indent)
   "Go to beginning of block.
 
@@ -6506,13 +6534,8 @@ Returns beginning of block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
-  (let* ((orig (point))
-         (indent (or indent (progn (py-beginning-of-statement) (current-indentation))))
-         erg)
-    (if (py-beginning-of-block-p)
-        (setq erg (point))
-      (setq erg (ignore-errors (cdr (py-go-to-keyword-above py-block-re indent)))))
+  (interactive "P")
+  (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re indent)))))
     erg))
 
 (defun py-end-of-block (&optional indent)
@@ -6522,7 +6545,7 @@ Returns end of block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -6535,7 +6558,7 @@ Returns beginning of clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-clause-re indent)))))
     erg))
 
@@ -6546,7 +6569,7 @@ Returns end of clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-clause-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -6559,7 +6582,7 @@ Returns beginning of block-or-clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-or-clause-re indent)))))
     erg))
 
@@ -6570,7 +6593,7 @@ Returns end of block-or-clause if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-block-or-clause-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -6670,7 +6693,7 @@ Returns beginning of if-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-if-block-re indent)))))
     erg))
 
@@ -6681,7 +6704,7 @@ Returns end of if-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-if-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -6694,7 +6717,7 @@ Returns beginning of try-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-try-block-re indent)))))
     erg))
 
@@ -6705,7 +6728,7 @@ Returns end of try-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-try-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -6718,7 +6741,7 @@ Returns beginning of minor-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-minor-block-re indent)))))
     erg))
 
@@ -6729,11 +6752,12 @@ Returns end of minor-block if successful, nil otherwise
 
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
+  (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base py-minor-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
+
 
 ;; Buffer
 (defun py-beginning-of-buffer ()
@@ -7275,19 +7299,22 @@ http://docs.python.org/reference/compound_stmts.html
        ((or (empty-line-p)(nth 8 pps))
         ;; when travelling large sections of empty or comment lines
         ;; recursive calls might run into `max-specpdl-size' error
-        (while (and (not (bobp)) (or (empty-line-p)(setq this (nth 8 (syntax-ppss)))))
+        (while (and (not (bobp)) (or (empty-line-p) (setq this (nth 8 (syntax-ppss)))))
           (if (empty-line-p)
               (skip-chars-backward " \t\r\n\f")
-            (when this
-              (goto-char (1- this)))))
+            (goto-char this)))
         (py-beginning-of-statement orig done))
-       ;; (py-beginning-of-statement orig done))
-       ;; ((nth 8 pps)
-       ;; (goto-char (1- (nth 8 pps)))
-       ;; (py-beginning-of-statement orig done))
+       ((nth 8 pps)
+        (goto-char (nth 8 pps))
+        (py-beginning-of-statement orig done))
        ((nth 1 pps)
         (goto-char (1- (nth 1 pps)))
         (setq done t)
+        (py-beginning-of-statement orig done))
+       ((looking-at py-string-delim-re)
+        (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+          (setq done t))
+        (back-to-indentation)
         (py-beginning-of-statement orig done))
        ((and (eq (point) orig)(looking-back ";[ \t]*"))
         (goto-char (match-beginning 0))
@@ -7369,30 +7396,20 @@ http://docs.python.org/reference/compound_stmts.html
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
 (defalias 'py-forward-statement 'py-end-of-statement)
-(defun py-end-of-statement (&optional orig done)
+(defun py-end-of-statement (&optional orig done origline)
   "Go to the last char of current statement.
 
 To go just beyond the final line of the current statement, use `py-down-statement-bol'. "
   (interactive)
   (unless (eobp)
     (let ((pps (syntax-ppss))
+          (origline (or origline (py-count-lines)))
           (orig (or orig (point)))
           ;; use by scan-lists
           parse-sexp-ignore-comments
+          forward-sexp-function
           erg stringchar)
       (cond
-       ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
-        (skip-chars-forward (concat "^" comment-start) (line-end-position))
-        (py-beginning-of-comment)
-        (unless (looking-back "^[ \t]*")
-          (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
-        (if (eq (point) orig)
-            (progn
-              (skip-chars-forward (concat "^" comment-start) (line-end-position))
-              (forward-comment 99999)
-              (py-end-of-statement orig done))
-          (setq done t)
-          (py-end-of-statement orig done)))
        ((nth 1 pps)
         (when (< orig (point))
           (setq orig (point)))
@@ -7405,16 +7422,14 @@ To go just beyond the final line of the current statement, use `py-down-statemen
                 (setq done t)
                 (skip-chars-forward (concat "^" comment-start) (line-end-position))
                 (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-                (py-end-of-statement orig done))
+                (py-end-of-statement orig done origline))
             (goto-char orig))))
        ((and (nth 8 pps)(nth 3 pps))
         (goto-char (nth 8 pps))
         (when (looking-at py-string-delim-re)
-          (goto-char (match-end 0))
-          (while (and (setq erg (re-search-forward (match-string-no-properties 0) nil (quote move) 1))
-                      (nth 3 (syntax-ppss))))
-          (when erg
-            (py-end-of-statement orig done))))
+          (forward-sexp)
+          (setq done nil)
+          (py-end-of-statement orig done origline)))
        ;; in comment
        ((nth 4 pps)
         (unless (eobp)
@@ -7423,47 +7438,73 @@ To go just beyond the final line of the current statement, use `py-down-statemen
           (skip-chars-backward " \t\r\n\f" (line-beginning-position))
           (when (py-beginning-of-comment)
             (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
-          (py-end-of-statement orig done)))
+          (py-end-of-statement orig done origline)))
        ((looking-at "#")
         (end-of-line)
         (forward-comment 99999)
         (setq done t)
         (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-        (py-end-of-statement orig done))
+        (py-end-of-statement orig done origline))
+       ((looking-at py-string-delim-re)
+        (forward-sexp)
+        (setq done nil)
+        (py-end-of-statement orig done origline))
+       ((and (not done)
+             (< 0 (abs (skip-chars-forward (concat "^" comment-start) (line-end-position)))))
+        (if (or (< origline (py-count-lines)) (looking-back ":[ \t]*"))
+            (progn
+              (skip-chars-backward " \t\r\n\f")
+              (py-beginning-of-comment)
+              (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+              (if (eq orig (point))
+                  (forward-line 1)
+                (setq done t))
+              (py-end-of-statement orig done origline))
+          (unless (looking-at "#")
+            (skip-chars-backward " \t\r\n\f")
+            (py-beginning-of-comment)
+            (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+            (setq done t))
+          (py-end-of-statement orig done origline)))
+
+       ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
+        (setq done t)
+        (py-beginning-of-comment)
+        (py-end-of-statement orig done origline))
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
         (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (py-beginning-of-comment)
         (skip-chars-backward " " (line-beginning-position))
         (setq done t)
-        (py-end-of-statement orig done))
+        (py-end-of-statement orig done origline))
        ((and (not done) (eq (point) orig)(looking-at ";"))
         (skip-chars-forward ";" (line-end-position))
         (when (< 0 (skip-chars-forward (concat "^" comment-start) (line-end-position)))
           (py-beginning-of-comment)
           (skip-chars-backward " \t\r\n\f")
           (setq done t))
-        (py-end-of-statement orig done))
+        (py-end-of-statement orig done origline))
        ((bolp)
         (end-of-line)
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
         (setq done t)
-        (py-end-of-statement orig done))
+        (py-end-of-statement orig done origline))
        ((and (not (ignore-errors (eq (point) done)))(looking-back py-string-delim-re) (progn (goto-char (match-beginning 0))(and (nth 8 (syntax-ppss))(nth 3 (syntax-ppss)))))
         (end-of-line)
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
         (setq done (point))
-        (py-end-of-statement orig done))
-       ((not done)
+        (py-end-of-statement orig done origline))
+       ((and done (eq (current-column) (current-indentation)))
         (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f")
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
         (setq done t)
-        (py-end-of-statement orig done)))
+        (py-end-of-statement orig done origline)))
       (unless
           (or
            (eq (point) orig)
@@ -8718,6 +8759,32 @@ Don't store data in kill ring. "
     (delete-region (car erg) (cdr erg))))
 
 ;;; Py up/down commands
+(defun py-up-statement ()
+  "Go to the beginning of next statement upwards in buffer.
+
+Return position if statement found, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        erg)
+    (if (py-beginning-of-statement-p)
+        (setq erg (py-beginning-of-statement))
+      (setq erg (and (py-beginning-of-statement) (py-beginning-of-statement))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-down-statement ()
+  "Go to the end of next statement downwards in buffer.
+
+Return position if statement found, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        erg)
+    (if (py-end-of-statement-p)
+        (setq erg (and (py-end-of-statement) (py-beginning-of-statement)))
+      (setq erg (and (py-end-of-statement) (py-end-of-statement)(py-beginning-of-statement))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
 (defun py-up-base (regexp)
   "Go to the beginning of next form upwards in buffer.
 
@@ -9094,7 +9161,8 @@ Takes a list, INDENT and START position. "
     (let ((orig (or orig (point)))
           last)
       (while (and (setq last (point))(not (eobp))(py-end-of-statement)
-                  (or (<= indent (progn (save-excursion (py-beginning-of-statement)(current-indentation))))(eq last (line-beginning-position)))))
+                  (save-excursion (or (<= indent (progn  (py-beginning-of-statement)(current-indentation)))(eq last (line-beginning-position))))
+                  (py-end-of-statement-p)))
       (goto-char last)
       (when (< orig last)
         last))))
@@ -9942,23 +10010,24 @@ See also `py-execute-region'. "
             (insert (concat "#! " erg "\n"))
           (insert (concat py-shebang-startstring " " erg "\n")))))))
 
-(defun py-insert-execute-directory (&optional orig done)
+(defun py-insert-execute-directory (directory &optional orig done)
   (let ((orig (or orig (point)))
         (done done))
+    (switch-to-buffer (current-buffer))
     (if done (goto-char done) (goto-char (point-min)))
     (cond ((re-search-forward "^from __future__ import " nil t 1)
            (py-end-of-statement)
            (setq done (point))
-           (py-insert-execute-directory orig done))
+           (py-insert-execute-directory directory orig done))
           ((re-search-forward py-encoding-string-re nil t 1)
            (setq done (point))
-           (py-insert-execute-directory orig done))
+           (py-insert-execute-directory directory orig done))
           ((re-search-forward py-shebang-regexp nil t 1)
            (setq done (point))
-           (py-insert-execute-directory orig done))
+           (py-insert-execute-directory directory orig done))
           (t (forward-line 1)
              (unless (empty-line-p) (newline))
-             (insert (concat "import os; os.chdir(\"" execute-directory "\")\n"))))))
+             (insert (concat "import os; os.chdir(\"" directory "\")\n"))))))
 
 (defun py-insert-coding ()
   ;; (switch-to-buffer (current-buffer))
@@ -13302,7 +13371,17 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete block" py-delete-block
               :help "`py-delete-block'
-Delete innermost compound statement at point, don't store deleted string in kill-ring"])
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+
+             ["Shift block right" py-shift-block-right
+              :help "`py-shift-block-right'
+Shift block right. "]
+
+             ["Shift block left" py-shift-block-left
+              :help "`py-shift-block-left'
+Shift block left. "]
+
+             )
             ("Def-or-class ... "
              ["Beginning of Def-or-Class" py-beginning-of-def-or-class
               :help "`py-beginning-of-def-or-class'
@@ -13336,12 +13415,19 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete def-or-class" py-delete-def-or-class
               :help "`py-delete-def-or-class'
-Delete def-or-class at point, don't store deleted string in kill-ring"])
+Delete def-or-class at point, don't store deleted string in kill-ring"]
+
+             ["Shift def-or-class right" py-shift-def-or-class-right
+              :help "`py-shift-def-or-class-right'
+Shift def-or-class right. "]
+
+             ["Shift def-or-class left" py-shift-def-or-class-left
+              :help "`py-shift-def-or-class-left'
+Shift def-or-class left. "]
+
+             )
 
             ("Clause ... "
-             ["Copy clause" py-copy-clause
-              :help "`py-copy-clause'
-Copy clause at point"]
 
              ["Beginning of clause" py-beginning-of-clause
               :help "`py-beginning-of-clause'
@@ -13374,7 +13460,17 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete clause" py-delete-clause
               :help "`py-delete-clause'
-Delete innermost compound statement at point, don't store deleted string in kill-ring"])
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+
+             ["Shift clause right" py-shift-clause-right
+              :help "`py-shift-clause-right'
+Shift clause right. "]
+
+             ["Shift clause left" py-shift-clause-left
+              :help "`py-shift-clause-left'
+Shift clause left. "]
+
+             )
 
             ("Statement ... "
              ["Beginning of Statement" py-beginning-of-statement
@@ -13395,7 +13491,18 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete statement" py-delete-statement
               :help "`py-delete-statement'
-Delete statement at point, don't store deleted string in kill-ring"])
+Delete statement at point, don't store deleted string in kill-ring"]
+
+
+             ["Shift statement right" py-shift-statement-right
+              :help "`py-shift-statement-right'
+Shift statement right. "]
+
+             ["Shift statement left" py-shift-statement-left
+              :help "`py-shift-statement-left'
+Shift statement left. "]
+
+             )
 
             ("Expression ..."
 
@@ -13434,7 +13541,10 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete expression" py-delete-expression
               :help "`py-delete-expression'
-Delete expression at point, don't store deleted string in kill-ring"])
+Delete expression at point, don't store deleted string in kill-ring"]
+
+             )
+
             ("Partial expression ..."
 
              ["Beginning of minor expression" py-beginning-of-partial-expression
@@ -13461,7 +13571,9 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete partial-expression" py-delete-partial-expression
               :help "`py-delete-partial-expression'
-Delete partial-expression at point, don't store deleted string in kill-ring"])
+Delete partial-expression at point, don't store deleted string in kill-ring"]
+
+             )
 
             ("Class ... "
              ["Beginning of Class" py-beginning-of-class
@@ -13496,7 +13608,18 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete class" py-delete-class
               :help "`py-delete-class'
-Delete class at point, don't store deleted string in kill-ring"])
+Delete class at point, don't store deleted string in kill-ring"]
+
+
+             ["Shift class right" py-shift-class-right
+              :help "`py-shift-class-right'
+Shift class right. "]
+
+             ["Shift class left" py-shift-class-left
+              :help "`py-shift-class-left'
+Shift class left. "]
+
+             )
 
             ("Def ... "
              ["Beginning of Def" py-beginning-of-def
@@ -13531,7 +13654,18 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
 
              ["Delete def" py-delete-def
               :help "`py-delete-def'
-Delete def at point, don't store deleted string in kill-ring"])
+Delete def at point, don't store deleted string in kill-ring"]
+
+
+             ["Shift def right" py-shift-def-right
+              :help "`py-shift-def-right'
+Shift def right. "]
+
+             ["Shift def left" py-shift-def-left
+              :help "`py-shift-def-left'
+Shift def left. "]
+
+             )
             "-"
             (" Block bol ... "
              ["Beginning of block bol" py-beginning-of-block-bol
@@ -13572,7 +13706,17 @@ Kill block at point. "]
 
              ["Delete block bol" py-delete-block-bol
               :help "`py-delete-block-bol'
-Delete block at point. "])
+Delete block at point. "]
+
+             ["Shift block right" py-shift-block-right
+              :help "`py-shift-block-right'
+Shift block right. "]
+
+             ["Shift block left" py-shift-block-left
+              :help "`py-shift-block-left'
+Shift block left. "]
+
+             )
 
             (" Clause bol ... "
              ["Beginning of clause bol" py-beginning-of-clause-bol
@@ -13613,7 +13757,19 @@ Kill clause at point. "]
 
              ["Delete clause bol" py-delete-clause-bol
               :help "`py-delete-clause-bol'
-Delete clause at point. "])
+Delete clause at point. "]
+
+
+             ["Shift clause right" py-shift-clause-right
+              :help "`py-shift-clause-right'
+Shift clause right. "]
+
+             ["Shift clause left" py-shift-clause-left
+              :help "`py-shift-clause-left'
+Shift clause left. "]
+
+             )
+
             (" Block-Or-Clause bol ... "
              ["Beginning of block-or-clause bol" py-beginning-of-block-or-clause-bol
               :help "`py-beginning-of-block-or-clause-bol'
@@ -13653,7 +13809,18 @@ Kill block-or-clause at point. "]
 
              ["Delete block-or-clause bol" py-delete-block-or-clause-bol
               :help "`py-delete-block-or-clause-bol'
-Delete block-or-clause at point. "])
+Delete block-or-clause at point. "]
+
+             ["Shift block-or-clause right" py-shift-block-or-clause-right
+              :help "`py-shift-block-or-clause-right'
+Shift block-or-clause right. "]
+
+             ["Shift block-or-clause left" py-shift-block-or-clause-left
+              :help "`py-shift-block-or-clause-left'
+Shift block-or-clause left. "]
+
+             )
+
             (" Def bol ... "
              ["Beginning of def bol" py-beginning-of-def-bol
               :help "`py-beginning-of-def-bol'
@@ -13693,7 +13860,18 @@ Kill def at point. "]
 
              ["Delete def bol" py-delete-def-bol
               :help "`py-delete-def-bol'
-Delete def at point. "])
+Delete def at point. "]
+
+             ["Shift def right" py-shift-def-right
+              :help "`py-shift-def-right'
+Shift def right. "]
+
+             ["Shift def left" py-shift-def-left
+              :help "`py-shift-def-left'
+Shift def left. "]
+
+             )
+
             (" Class bol ... "
              ["Beginning of class bol" py-beginning-of-class-bol
               :help "`py-beginning-of-class-bol'
@@ -13733,7 +13911,18 @@ Kill class at point. "]
 
              ["Delete class bol" py-delete-class-bol
               :help "`py-delete-class-bol'
-Delete class at point. "])
+Delete class at point. "]
+
+             ["Shift class right" py-shift-class-right
+              :help "`py-shift-class-right'
+Shift class right. "]
+
+             ["Shift class left" py-shift-class-left
+              :help "`py-shift-class-left'
+Shift class left. "]
+
+             )
+
             (" Def-Or-Class bol ... "
              ["Beginning of def-or-class bol" py-beginning-of-def-or-class-bol
               :help "`py-beginning-of-def-or-class-bol'
@@ -13773,7 +13962,18 @@ Kill def-or-class at point. "]
 
              ["Delete def-or-class bol" py-delete-def-or-class-bol
               :help "`py-delete-def-or-class-bol'
-Delete def-or-class at point. "])
+Delete def-or-class at point. "]
+
+             ["Shift def-or-class right" py-shift-def-or-class-right
+              :help "`py-shift-def-or-class-right'
+Shift def-or-class right. "]
+
+             ["Shift def-or-class left" py-shift-def-or-class-left
+              :help "`py-shift-def-or-class-left'
+Shift def-or-class left. "]
+
+             )
+
             (" Statement bol ... "
              ["Beginning of statement bol" py-beginning-of-statement-bol
               :help "`py-beginning-of-statement-bol'
@@ -13801,7 +14001,17 @@ Kill statement at point. "]
 
              ["Delete statement bol" py-delete-statement-bol
               :help "`py-delete-statement-bol'
-Delete statement at point. "])
+Delete statement at point. "]
+
+             ["Shift statement right" py-shift-statement-right
+              :help "`py-shift-statement-right'
+Shift statement right. "]
+
+             ["Shift statement left" py-shift-statement-left
+              :help "`py-shift-statement-left'
+Shift statement left. "]
+
+             )
             "-"
             ["Backward into nomenclature" py-backward-into-nomenclature
              :help " `py-backward-into-nomenclature'
