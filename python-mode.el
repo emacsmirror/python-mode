@@ -3805,15 +3805,13 @@ See also `py-electric-colon-greedy-p' "
          (self-insert-command (prefix-numeric-value arg)))
         ((eq 4 (prefix-numeric-value arg))
          (self-insert-command 1))
-        (t (if (interactive-p) (self-insert-command (prefix-numeric-value arg))
-             ;; used from dont-indent-code-unnecessarily-lp-1048778-test
-             (insert ":"))
+        (t (insert ":")
            (unless (py-in-string-or-comment-p)
              (let ((orig (copy-marker (point)))
                    (indent (py-compute-indentation)))
                (unless (or (eq (current-indentation) indent)
                            (and (not py-electric-colon-greedy-p)
-                                (eq (current-indentation)(save-excursion (py-beginning-of-block)(current-indentation))))
+                                (eq (current-indentation)(save-excursion (beginning-of-line) (py-beginning-of-block)(current-indentation))))
                            (and (py-top-level-form-p)(< (current-indentation) indent)))
                  (beginning-of-line)
                  (delete-horizontal-space)
@@ -14108,6 +14106,46 @@ Symmetric style.
     \"\"\"
 
 See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
+
+             )
+
+
+            ("Electric... "
+             :help "electric commands'"
+
+             ["Electric colon" py-electric-colon
+              :help " `py-electric-colon'
+Insert a colon and indent accordingly.
+
+If a numeric argument ARG is provided, that many colons are inserted
+non-electrically.
+
+Electric behavior is inhibited inside a string or
+comment or by universal prefix C-u.
+
+Switched by `py-electric-colon-active-p', default is nil
+See also `py-electric-colon-greedy-p' "]
+
+             ["Electric delete" py-electric-delete
+              :help " `py-electric-delete'
+Delete following character or levels of whitespace\.
+
+With ARG do that ARG times\. . "]
+
+             ["Electric backspace" py-electric-backspace
+              :help " `py-electric-backspace'
+Delete preceding character or level of indentation\.
+
+With ARG do that ARG times\.
+Returns column reached\. . "]
+
+             ["Electric comment" py-electric-comment
+              :help " `py-electric-comment'
+Insert a comment. If starting a comment, indent accordingly.
+
+If a numeric argument ARG is provided, that many \"#\" are inserted
+non-electrically.
+With C-u \"#\" electric behavior is inhibited inside a string or comment.. "]
 
              )))
 
