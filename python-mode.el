@@ -1047,54 +1047,46 @@ When editing other peoples code, this may produce a larger diff than expected "
 (defcustom python-shell-buffer-name "Python"
   "Default buffer name for Python interpreter."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-interpreter "python"
   "Default Python interpreter for shell."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-internal-buffer-name "Python Internal"
   "Default buffer name for the Internal Python interpreter."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-interpreter-args "-i"
   "Default arguments for the Python interpreter."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-prompt-regexp ">>> "
   "Regular Expression matching top\-level input prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-prompt-block-regexp "[.][.][.] "
   "Regular Expression matching block input prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-prompt-output-regexp ""
   "Regular Expression matching output prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-prompt-pdb-regexp "[(<]*[Ii]?[Pp]db[>)]+ "
   "Regular Expression matching pdb input prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-send-setup-max-wait 5
   "Seconds to wait for process output before code setup.
@@ -1139,8 +1131,7 @@ This variable, when set to a string, makes the values stored in
 to be modified properly so shells are started with the specified
 virtualenv."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-ffap-setup-code
   "def __FFAP_get_module_path(module):
@@ -1154,15 +1145,13 @@ virtualenv."
         return ''"
   "Python code to get a module path."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-ffap-string-code
   "__FFAP_get_module_path('''%s''')\n"
   "Python code used to get a string with the path of a module."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-setup-codes '(python-shell-completion-setup-code
                                       python-ffap-setup-code
@@ -1218,15 +1207,13 @@ else:
         return completions"
   "Code used to setup completion in inferior Python processes."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-completion-string-code
   "';'.join(__COMPLETER_all_completions('''%s'''))"
   "Python code used to get a string of completions separated by semicolons."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-shell-module-completion-string-code ""
   "Python code used to get completions separated by semicolons for imports.
@@ -1240,16 +1227,14 @@ and use the following as the value of this variable:
 
 ';'.join(module_completion('''%s'''))"
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-pdbtrack-stacktrace-info-regexp
   "^> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
   "Regular Expression matching stacktrace information.
 Used to extract the current line and module being inspected."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-eldoc-setup-code
   "def __PYDOC_get_help(obj):
@@ -1284,15 +1269,13 @@ Used to extract the current line and module being inspected."
         print(doc)"
   "Python code to setup documentation retrieval."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom python-eldoc-string-code
   "__PYDOC_get_help('''%s''')\n"
   "Python code used to get a string with the documentation of an object."
   :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+  :group 'python-mode)
 
 (defcustom strip-chars-before  "\\`[ \t\r\n]*"
   "Regexp indicating which chars shall be stripped before STRING - which is defined by `string-chars-preserve'."
@@ -6757,7 +6740,6 @@ http://docs.python.org/reference/compound_stmts.html"
          (erg (py-end-base py-minor-block-re orig)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
-
 
 ;; Buffer
 (defun py-beginning-of-buffer ()
@@ -13493,7 +13475,6 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
               :help "`py-delete-statement'
 Delete statement at point, don't store deleted string in kill-ring"]
 
-
              ["Shift statement right" py-shift-statement-right
               :help "`py-shift-statement-right'
 Shift statement right. "]
@@ -13610,7 +13591,6 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
               :help "`py-delete-class'
 Delete class at point, don't store deleted string in kill-ring"]
 
-
              ["Shift class right" py-shift-class-right
               :help "`py-shift-class-right'
 Shift class right. "]
@@ -13655,7 +13635,6 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
              ["Delete def" py-delete-def
               :help "`py-delete-def'
 Delete def at point, don't store deleted string in kill-ring"]
-
 
              ["Shift def right" py-shift-def-right
               :help "`py-shift-def-right'
@@ -13758,7 +13737,6 @@ Kill clause at point. "]
              ["Delete clause bol" py-delete-clause-bol
               :help "`py-delete-clause-bol'
 Delete clause at point. "]
-
 
              ["Shift clause right" py-shift-clause-right
               :help "`py-shift-clause-right'
@@ -14345,8 +14323,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."
               "#"
               ;; forward-sexp function
               (lambda (arg)
-                (py-down-block-lc)
-                (skip-chars-backward " \t\n"))
+                (py-end-of-block))
               nil))
 
 (setq imenu-generic-expression 'py-imenu-generic-regexp)
@@ -18382,7 +18359,6 @@ See original source: http://pymacs.progiciels-bpi.ca"
 ;; (add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
 ;; (add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
 ;; (add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
-
 
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
