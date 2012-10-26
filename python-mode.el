@@ -105,15 +105,15 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-load-pymacs-p nil
-  "If Pymacs as delivered with python-mode.el shall be loaded.
-Default is nil.
-
-Pymacs has been written by François Pinard and many others.
-See original source: http://pymacs.progiciels-bpi.ca"
-
-  :type 'boolean
-  :group 'python-mode)
+;; (defcustom py-load-pymacs-p nil
+;;   "If Pymacs as delivered with python-mode.el shall be loaded.
+;; Default is nil.
+;;
+;; Pymacs has been written by François Pinard and many others.
+;; See original source: http://pymacs.progiciels-bpi.ca"
+;;
+;;   :type 'boolean
+;;   :group 'python-mode)
 
 (defcustom py-smart-operator-mode-p nil
   "If python-mode calls (smart-operator-mode-on)
@@ -18267,46 +18267,46 @@ Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 
 ;;; Pymacs
-(defun py-load-pymacs ()
-  "Load Pymacs as delivered with python-mode.el.
-
-Pymacs has been written by François Pinard and many others.
-See original source: http://pymacs.progiciels-bpi.ca"
-  (interactive)
-  (let* ((pyshell (py-choose-shell))
-         (path (getenv "PYTHONPATH"))
-         (py-install-directory (cond ((string= "" py-install-directory)
-                                      (py-guess-py-install-directory))
-                                     (t (py-normalize-directory py-install-directory))))
-         (pymacs-installed-p
-          (ignore-errors (string-match (expand-file-name (concat py-install-directory "Pymacs")) path))))
-    ;; Python side
-    (unless pymacs-installed-p
-      (setenv "PYTHONPATH" (concat
-                            (expand-file-name py-install-directory)
-                            path-separator
-                            (expand-file-name py-install-directory) "completion"
-                            (if path (concat path-separator path)))))
-
-    (if (py-install-directory-check)
-        (progn
-          ;; don't interfere with already installed Pymacs
-          (unless (featurep 'pymacs)
-            (load (concat py-install-directory "pymacs.el") nil t))
-          (setenv "PYMACS_PYTHON" (if (string-match "IP" pyshell)
-                                      "python"
-                                    pyshell))
-          (autoload 'pymacs-apply "pymacs")
-          (autoload 'pymacs-call "pymacs")
-          (autoload 'pymacs-eval "pymacs")
-          (autoload 'pymacs-exec "pymacs")
-          (autoload 'pymacs-load "pymacs")
-          (require 'pymacs)
-          (load (concat py-install-directory "completion/pycomplete.el") nil t)
-          (add-hook 'python-mode-hook 'py-complete-initialize))
-      (error "`py-install-directory' not set, see INSTALL"))))
-
-(when py-load-pymacs-p (py-load-pymacs))
+;; (defun py-load-pymacs ()
+;;   "Load Pymacs as delivered with python-mode.el.
+;;
+;; Pymacs has been written by François Pinard and many others.
+;; See original source: http://pymacs.progiciels-bpi.ca"
+;;   (interactive)
+;;   (let* ((pyshell (py-choose-shell))
+;;          (path (getenv "PYTHONPATH"))
+;;          (py-install-directory (cond ((string= "" py-install-directory)
+;;                                       (py-guess-py-install-directory))
+;;                                      (t (py-normalize-directory py-install-directory))))
+;;          (pymacs-installed-p
+;;           (ignore-errors (string-match (expand-file-name (concat py-install-directory "Pymacs")) path))))
+;;     ;; Python side
+;;     (unless pymacs-installed-p
+;;       (setenv "PYTHONPATH" (concat
+;;                             (expand-file-name py-install-directory)
+;;                             path-separator
+;;                             (expand-file-name py-install-directory) "completion"
+;;                             (if path (concat path-separator path)))))
+;;
+;;     (if (py-install-directory-check)
+;;         (progn
+;;           ;; don't interfere with already installed Pymacs
+;;           (unless (featurep 'pymacs)
+;;             (load (concat py-install-directory "pymacs.el") nil t))
+;;           (setenv "PYMACS_PYTHON" (if (string-match "IP" pyshell)
+;;                                       "python"
+;;                                     pyshell))
+;;           (autoload 'pymacs-apply "pymacs")
+;;           (autoload 'pymacs-call "pymacs")
+;;           (autoload 'pymacs-eval "pymacs")
+;;           (autoload 'pymacs-exec "pymacs")
+;;           (autoload 'pymacs-load "pymacs")
+;;           (require 'pymacs)
+;;           (load (concat py-install-directory "completion/pycomplete.el") nil t)
+;;           (add-hook 'python-mode-hook 'py-complete-initialize))
+;;       (error "`py-install-directory' not set, see INSTALL"))))
+;;
+;; (when py-load-pymacs-p (py-load-pymacs))
 
 ;;; Hooks
 (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
@@ -18526,12 +18526,10 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
    (py-complete-function
     (add-hook 'completion-at-point-functions
               py-complete-function nil 'local))
-   (py-load-pymacs-p
-    (add-hook 'completion-at-point-functions
-              'py-complete-completion-at-point nil 'local))
-   (t
-    (add-hook 'completion-at-point-functions
-              'py-shell-complete nil 'local)))
+   (t (add-hook 'completion-at-point-functions
+                'py-complete-completion-at-point nil 'local)
+      (add-hook 'completion-at-point-functions
+                'py-shell-complete nil 'local)))
   (when (and py-imenu-create-index-p (fboundp 'imenu-add-to-menubar)(ignore-errors (require 'imenu)))
     (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
     (imenu-add-to-menubar "PyIndex"))
