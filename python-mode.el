@@ -2731,13 +2731,6 @@ Includes def and class. ")
      (and (eq (char-before (point)) ?\\ )
           (py-escaped))))
 
-(defmacro py-continuation-line-p ()
-  "Return t iff current line is a continuation line."
-  `(save-excursion
-     (beginning-of-line)
-     (or (py-preceding-line-backslashed-p)
-         (< 0 (nth 0 (syntax-ppss))))))
-
 ;;;
 (defun empty-line-p ()
   "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
@@ -4170,47 +4163,70 @@ Returns `py-indent-offset'"
   (save-excursion
     (let* ((orig (or orig (point)))
            (origline (or origline (py-count-lines)))
-           last down done
-           (firstindent
-            (cond ((and (py-beginning-of-statement-p) (looking-at py-extended-block-or-clause-re))
-                   (current-indentation))
-                  ((and (py-beginning-of-statement)(looking-at py-extended-block-or-clause-re))
-                   (current-indentation))
-                  (t (while (and (setq last (py-beginning-of-statement))(not (looking-at py-extended-block-or-clause-re))))
-                     (if last
-                         (progn
-                           (setq last (point))
-                           (setq down t)
-                           (current-indentation))
-                       (if (and (goto-char orig)
-                                (py-end-of-statement)
-                                (py-end-of-statement)
-                                (py-beginning-of-statement)
-                                (looking-at py-extended-block-or-clause-re))
-
+           last down done firstindent secondindent
+           (count 0)
+           guessed)
+      (back-to-indentation)
+      (when (looking-at py-block-closing-keywords-re)
+        (setq count (1+ count)))
+      (forward-line -1)
+      (back-to-indentation)
+      (when (looking-at py-block-closing-keywords-re)
+        (setq count (1+ count)))
+      (when (< 0 count)
+        (while (and (< 0 count)(re-search-backward py-block-re nil t 1)(or (nth 8 (syntax-ppss)) (progn (setq count (1- count)) t))))
+        (setq firstindent (current-indentation)))
+      (unless firstindent
+        (setq firstindent
+              (cond ((and (py-beginning-of-statement-p) (looking-at py-extended-block-or-clause-re))
+                     (current-indentation))
+                    ((and (py-beginning-of-statement-p)(looking-at py-block-closing-keywords-re))
+                     (while (and (re-search-backward py-extended-block-or-clause-re nil t 1)(nth 8 (syntax-ppss))))
+                     ;; (py-beginning-of-statement)
+                     (when (py-beginning-of-statement-p) (current-indentation)))
+                    ((and (py-beginning-of-statement)(looking-at py-extended-block-or-clause-re))
+                     (current-indentation))
+                    (t (while (and (setq last (py-beginning-of-statement))(not (looking-at py-extended-block-or-clause-re))))
+                       (if last
                            (progn
                              (setq last (point))
-                             (current-indentation)
-                             (goto-char orig))
-                         (while (and (setq last (py-down-statement))(not (looking-at py-extended-block-or-clause-re)))
-                           (if last
-                               (progn (setq last (point))
-                                      (setq down t)
-                                      (current-column))
-                             ;; if nothing suitable around, us default
-                             (setq done t)
-                             (default-value 'py-indent-offset))))))))
-           (secondindent
+                             (setq down t)
+                             (current-indentation))
+                         (if (and (goto-char orig)
+                                  (py-end-of-statement)
+                                  (py-end-of-statement)
+                                  (py-beginning-of-statement)
+                                  (looking-at py-extended-block-or-clause-re))
+
+                             (prog1
+                                 (current-indentation)
+                               (setq last (point))
+                               (goto-char orig))
+                           (while (and (setq last (py-down-statement))(not (looking-at py-extended-block-or-clause-re)))
+                             (if last
+                                 (progn (setq last (point))
+                                        (setq down t)
+                                        (current-column))
+                               ;; if nothing suitable around, us default
+                               (setq done t)
+                               (default-value 'py-indent-offset)))))))))
+      (setq secondindent
             (unless done
               (if firstindent
-                  (if (progn (setq orig (point)) (while (and (py-beginning-of-statement)(>= firstindent (current-indentation)) (setq last (point)) (not (looking-at py-extended-block-or-clause-re)))) last)
-                      (current-indentation)
-                    (goto-char orig)
-                    (while (and (not (eobp))(py-end-of-statement)(setq last (point))
-                                (save-excursion (or (>= firstindent (progn (py-beginning-of-statement)(current-indentation)))(eq last (line-beginning-position))))
-                                (py-end-of-statement-p)))
-                    (when last (py-beginning-of-statement) (current-indentation))))))
-           guessed)
+                  ;; let's look if inside a clause
+                  (cond ((and
+                          ;; (goto-char orig)
+                          (not (eobp))(py-end-of-statement)(py-end-of-statement)(setq last (point))
+                          (save-excursion (< firstindent (progn (py-beginning-of-statement)(current-indentation))))
+                          (py-end-of-statement-p))
+                         (py-beginning-of-statement) (current-indentation))
+                        (t (if (progn (setq orig (point)) (while (and (py-beginning-of-statement)(>= firstindent (current-indentation)) (setq last (point)) (not (looking-at py-extended-block-or-clause-re)))) last)
+                               (current-indentation)
+                             (goto-char orig)
+                             (while (and (not (eobp))(py-end-of-statement)(setq last (point))
+                                         (save-excursion (or (>= firstindent (progn (py-beginning-of-statement)(current-indentation)))(eq last (line-beginning-position))))
+                                         (py-end-of-statement-p)))
+                             (when last (py-beginning-of-statement) (current-indentation))))))))
       (unless (or done secondindent)
         (setq secondindent
               (when (and (py-end-of-statement)
@@ -6650,6 +6666,7 @@ http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-def-or-class-re indent))))
         (py-mark-decorators (or arg py-mark-decorators)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
 (defun py-end-of-def-or-class (&optional arg indent)
@@ -7291,6 +7308,11 @@ http://docs.python.org/reference/compound_stmts.html
         (goto-char (1- (nth 1 pps)))
         (setq done t)
         (py-beginning-of-statement orig done))
+       ((py-preceding-line-backslashed-p)
+        (forward-line -1)
+        (back-to-indentation)
+        (setq done t)
+        (py-beginning-of-statement orig done))
        ((looking-at py-string-delim-re)
         (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
           (setq done t))
@@ -7316,10 +7338,6 @@ http://docs.python.org/reference/compound_stmts.html
           (py-beginning-of-statement orig done)))
        ((looking-at "[ \t]*#")
         (skip-chars-backward " \t\r\n\f")
-        (setq done t)
-        (py-beginning-of-statement orig done))
-       ((py-continuation-line-p)
-        (forward-line -1)
         (setq done t)
         (py-beginning-of-statement orig done)))
       (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
@@ -7373,6 +7391,33 @@ http://docs.python.org/reference/compound_stmts.html
               )))
     erg))
 
+
+(defun py-eos-handle-comment-start ()
+  (end-of-line)
+  (forward-comment 99999)
+  (skip-chars-forward (concat "^" comment-start) (line-end-position))
+  (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+  (unless (progn (setq pps (syntax-ppss))(or (nth 8 pps)(nth 1 pps))) (setq done t)))
+
+(defun py-eos-handle-doublequoted-string-start ()
+  "Internal use, find possible end of statement from string start. "
+  (when
+      (and (setq this (point)) (progn (while (and (not (eobp)) (search-forward (match-string-no-properties 0) nil t 1) (nth 8 (syntax-ppss)))) (< this (point))))
+    (skip-chars-forward (concat "^" comment-start) (line-end-position))
+    (skip-chars-backward " \t\r\n\f")))
+
+(defun py-eos-handle-singlequoted-string-start ()
+  "Internal use, find possible end of statement from string start. "
+  (when
+      (and (setq this (point)) (progn (ignore-errors (forward-sexp)) (< this (point))))
+    (skip-chars-forward (concat "^" comment-start) (line-end-position))
+    (skip-chars-backward " \t\r\n\f")))
+
+(defun py-handle-eol ()
+  (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+  (when (py-beginning-of-comment)
+    (skip-chars-backward " \t\r\n\f" (line-beginning-position))))
+
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
 (defalias 'py-forward-statement 'py-end-of-statement)
@@ -7385,10 +7430,12 @@ To go just beyond the final line of the current statement, use `py-down-statemen
     (let ((pps (syntax-ppss))
           (origline (or origline (py-count-lines)))
           (orig (or orig (point)))
+          erg this
           ;; use by scan-lists
           parse-sexp-ignore-comments
           forward-sexp-function
-          erg stringchar)
+          stringchar stm)
+
       (cond
        ((nth 1 pps)
         (when (< orig (point))
@@ -7406,51 +7453,66 @@ To go just beyond the final line of the current statement, use `py-down-statemen
             (goto-char orig))))
        ((and (nth 8 pps)(nth 3 pps))
         (goto-char (nth 8 pps))
-        (when (looking-at py-string-delim-re)
-          (forward-sexp)
-          (setq done nil)
+        (unless (looking-back "^[ \t]*")
+          (setq stm t))
+        ;; (when (looking-at py-string-delim-re)
+        ;; (py-eos-handle-string-start))
+        (when (looking-at "'''\\|'")
+          (py-eos-handle-singlequoted-string-start))
+        (when (looking-at "\"\"\"\\|\"")
+          (py-eos-handle-doublequoted-string-start))
+        (when stm (setq done t))
+        (setq stm nil)
+        (unless (nth 3 (syntax-ppss))
           (py-end-of-statement orig done origline)))
        ;; in comment
        ((nth 4 pps)
         (unless (eobp)
           (skip-chars-forward (concat "^" comment-start) (line-end-position))
           (forward-comment 99999)
-          (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-          (when (py-beginning-of-comment)
-            (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
+          (py-handle-eol)
           (py-end-of-statement orig done origline)))
-       ((looking-at "#")
+       ((py-current-line-backslashed-p)
         (end-of-line)
-        (forward-comment 99999)
-        (setq done t)
-        (skip-chars-forward (concat "^" comment-start) (line-end-position))
-        (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+        (py-handle-eol)
+        (when (and (eq (char-before (point)) ?\\ )
+                   (py-escaped))
+          (forward-line 1))
         (py-end-of-statement orig done origline))
+       ((and (not done)(looking-at "[ \t]*#"))
+        (py-eos-handle-comment-start)
+        (py-end-of-statement orig done origline))
+       ((looking-at "'''\\|'")
+        (py-eos-handle-singlequoted-string-start)
+        ;; string not terminated
+        (unless (nth 3 (syntax-ppss))
+          (py-end-of-statement orig done origline)))
+       ((looking-at "\"\"\"\\|\"")
+        (py-eos-handle-doublequoted-string-start)
+        ;; string not terminated
+        (unless (nth 3 (syntax-ppss))
+          (py-end-of-statement orig done origline)))
        ((looking-at py-string-delim-re)
-        (forward-sexp)
-        (setq done nil)
+        (py-eos-handle-string-start)
         (py-end-of-statement orig done origline))
+       ((and (looking-at py-no-outdent-re)(not (nth 8 pps)))
+        (end-of-line)
+        (py-handle-eol))
        ((and (not done)
              (< 0 (abs (skip-chars-forward (concat "^" comment-start) (line-end-position)))))
-        (if (or (< origline (py-count-lines)) (looking-back ":[ \t]*"))
-            (progn
-              (skip-chars-backward " \t\r\n\f")
-              (py-beginning-of-comment)
-              (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-              (if (eq orig (point))
-                  (forward-line 1)
-                (setq done t))
-              (py-end-of-statement orig done origline))
-          (unless (looking-at "#")
-            (skip-chars-backward " \t\r\n\f")
-            (py-beginning-of-comment)
-            (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-            (setq done t))
-          (py-end-of-statement orig done origline)))
-
-       ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
+        (py-handle-eol)
+        ;; with trailing whitespaces at orig
+        (if (and (< orig (point)) (not (progn (setq pps (syntax-ppss))(or (nth 8 pps)(nth 1 pps)))))
+            (setq done t)
+          (if (or (nth 8 pps)(nth 1 pps))
+              (py-end-of-statement orig done origline)
+            (forward-line 1)
+            (py-handle-eol)))
         (setq done t)
-        (py-beginning-of-comment)
+        (py-end-of-statement orig done origline))
+       ((and (not done) (< 0 (skip-chars-forward " \t\r\n\f")))
+        (when (looking-at "[ \t]*#")
+          (py-eos-handle-comment-start))
         (py-end-of-statement orig done origline))
        ((py-current-line-backslashed-p)
         (skip-chars-forward " \t\r\n\f")
