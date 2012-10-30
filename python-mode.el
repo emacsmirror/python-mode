@@ -8815,15 +8815,17 @@ Return position if statement found, nil otherwise. "
     erg))
 
 (defun py-down-statement ()
-  "Go to the end of next statement downwards in buffer.
+  "Go to the beginning of next statement downwards in buffer.
 
 Return position if statement found, nil otherwise. "
   (interactive)
-  (let ((orig (point))
-        erg)
-    (if (py-end-of-statement-p)
-        (setq erg (and (py-end-of-statement) (py-beginning-of-statement)))
-      (setq erg (and (py-end-of-statement) (py-end-of-statement)(py-beginning-of-statement))))
+  (let* ((orig (point))
+         (erg
+          (cond ((py-end-of-statement-p)
+                 (setq erg (and (py-end-of-statement) (py-beginning-of-statement))))
+                ((ignore-errors (< orig (progn (py-end-of-statement) (py-beginning-of-statement))))
+                 (point))
+                (t (goto-char orig) (and (py-end-of-statement) (py-end-of-statement)(py-beginning-of-statement))))))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
@@ -10093,12 +10095,14 @@ Inserts an incentive true form \"if 1:\\n.\" "
 (defun py-fix-start (start end)
   "Internal use by py-execute... functions.
 Avoid empty lines at the beginning. "
+  (python-mode)
   (goto-char start)
   (let ((beg (copy-marker start)))
     (while (empty-line-p)
       (delete-region (line-beginning-position) (1+ (line-end-position))))
     (back-to-indentation)
-    (unless (eq (current-indentation) 0)
+    (py-down-statement)
+    (while (not (eq (current-indentation) 0))
       (py-shift-left (current-indentation) start end))
     (setq py-line-number-offset (count-lines 1 start))
     beg))
