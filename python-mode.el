@@ -18625,7 +18625,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
     (unless (featurep 'py-smart-operator)
       (load (concat (py-normalize-directory py-install-directory) "extensions/py-smart-operator.el")))
     (py-smart-operator-mode-on))
-  (when (interactive-p) (message "python-mode loaded from: %s" "python-components-mode.el")))
+  (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
 
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
