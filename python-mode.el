@@ -1425,6 +1425,9 @@ SYMMETRIC:
 (defvar py-exception-name-face 'py-exception-name-face)
 
 ;;;
+(defvar python-mode-message-string "python-mode.el"
+  "Reports the python-mode branch in use.")
+
 (defvar python-local-version nil
   "Used internally. ")
 (make-variable-buffer-local 'python-local-version)
@@ -18625,7 +18628,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
     (unless (featurep 'py-smart-operator)
       (load (concat (py-normalize-directory py-install-directory) "extensions/py-smart-operator.el")))
     (py-smart-operator-mode-on))
-  (when (interactive-p) (message "python-mode loaded from: %s" "python-mode.el")))
+  (when (interactive-p) (message "python-mode loaded from: %s" python-mode-message-string)))
 
 (define-derived-mode python2-mode python-mode "Python2"
   "Edit and run code used by Python version 2 series. "
