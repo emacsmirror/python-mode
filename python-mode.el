@@ -1659,9 +1659,6 @@ Used for determining the default in the next one.")
 (defvar py-output-buffer "*Python Output*")
 (make-variable-buffer-local 'py-output-buffer)
 
-(defvar py-execute-keep-temporary-file-p nil
-  "For tests only. Excute functions delete temporary files default. ")
-
 (defvar py-string-delim-re "\\(\"\"\"\\|'''\\|\"\\|'\\)"
   "When looking at beginning of string. ")
 
@@ -9215,13 +9212,6 @@ Takes a list, INDENT and START position. "
         last))))
 
 ;;; python-mode-execute.el
-(defun py-toggle-execute-keep-temporary-file-p ()
-  "Toggle py-execute-keep-temporary-file-p "
-  (interactive)
-  (setq py-execute-keep-temporary-file-p
-        (not py-execute-keep-temporary-file-p))
-  (when (and py-verbose-p (interactive-p)) (message "py-execute-keep-temporary-file-p: %s" py-execute-keep-temporary-file-p)))
-
 (defun py-comint-output-filter-function (string)
   "Watch output for Python prompt and exec next file waiting in queue.
 This function is appropriate for `comint-output-filter-functions'."
@@ -10006,7 +9996,7 @@ When called from a programm, it accepts a string specifying a shell which will b
                    (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
                      (when py-verbose-p (message "Output buffer: %s" procbuf)))
                    (sit-for 0.1)
-                   (unless py-execute-keep-temporary-file-p
+                   (when py-cleanup-temporary
                      (delete-file file)
                      (when (buffer-live-p localname)
                        (kill-buffer localname)))
