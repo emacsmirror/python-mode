@@ -2088,6 +2088,70 @@ Returns value of `py-smart-operator-mode-p'. "
   (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
   autopair-mode)
 
+;; py-switch-buffers-on-execute-p forms
+(defun toggle-py-switch-buffers-on-execute-p (&optional arg)
+  "If `py-switch-buffers-on-execute-p' should be on or off.
+
+  Returns value of `py-switch-buffers-on-execute-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-switch-buffers-on-execute-p -1 1))))
+    (if (< 0 arg)
+        (setq py-switch-buffers-on-execute-p t)
+      (setq py-switch-buffers-on-execute-p nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-switch-buffers-on-execute-p: %s" py-switch-buffers-on-execute-p))
+    py-switch-buffers-on-execute-p))
+
+(defun py-switch-buffers-on-execute-p-on (&optional arg)
+  "Make sure, `py-py-switch-buffers-on-execute-p' is on.
+
+Returns value of `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-switch-buffers-on-execute-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-switch-buffers-on-execute-p: %s" py-switch-buffers-on-execute-p))
+  py-switch-buffers-on-execute-p)
+
+(defun py-switch-buffers-on-execute-p-off ()
+  "Make sure, `py-switch-buffers-on-execute-p' is off.
+
+Returns value of `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (toggle-py-switch-buffers-on-execute-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-switch-buffers-on-execute-p: %s" py-switch-buffers-on-execute-p))
+  py-switch-buffers-on-execute-p)
+
+;; py-split-windows-on-execute-p forms
+(defun toggle-py-split-windows-on-execute-p (&optional arg)
+  "If `py-split-windows-on-execute-p' should be on or off.
+
+  Returns value of `py-split-windows-on-execute-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-split-windows-on-execute-p -1 1))))
+    (if (< 0 arg)
+        (setq py-split-windows-on-execute-p t)
+      (setq py-split-windows-on-execute-p nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+    py-split-windows-on-execute-p))
+
+(defun py-split-windows-on-execute-p-on (&optional arg)
+  "Make sure, `py-py-split-windows-on-execute-p' is on.
+
+Returns value of `py-split-windows-on-execute-p'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-split-windows-on-execute-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+  py-split-windows-on-execute-p)
+
+(defun py-split-windows-on-execute-p-off ()
+  "Make sure, `py-split-windows-on-execute-p' is off.
+
+Returns value of `py-split-windows-on-execute-p'. "
+  (interactive)
+  (toggle-py-split-windows-on-execute-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+  py-split-windows-on-execute-p)
+
 ;;;
 (defun py-ffap-module-path (module)
   "Function for `ffap-alist' to return path for MODULE."
@@ -9370,9 +9434,9 @@ Needed when file-path names are contructed from maybe numbered buffer names like
            (and py-split-windows-on-execute-p
                 (or (eq switch 'switch)
                     py-switch-buffers-on-execute-p)))
-         (if (< (count-windows) py-max-split-windows)
-             (funcall py-split-windows-on-execute-function)
-           (switch-to-buffer-other-window py-buffer-name)))
+         (when (< (count-windows) py-max-split-windows)
+           (funcall py-split-windows-on-execute-function))
+         (switch-to-buffer-other-window py-buffer-name))
         ;; split, not switch
         ((and py-split-windows-on-execute-p
               (or (eq switch 'noswitch)
@@ -9380,19 +9444,20 @@ Needed when file-path names are contructed from maybe numbered buffer names like
          (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
-               (display-buffer py-buffer-name))
+               (display-buffer py-buffer-name 'display-buffer-reuse-window))
            (display-buffer py-buffer-name 'display-buffer-reuse-window)))
         ;; no split, switch
         ((or (eq switch 'switch)
              (and (not (eq switch 'noswitch))
                   py-switch-buffers-on-execute-p))
-         (pop-to-buffer py-buffer-name)
-         (goto-char (point-max)))
+         (let (pop-up-windows)
+           (pop-to-buffer py-buffer-name)))
         ;; no split, no switch
         ((or (eq switch 'noswitch)
              (not py-switch-buffers-on-execute-p))
-         (set-buffer oldbuf)
-         (switch-to-buffer (current-buffer)))))
+         (let (pop-up-windows)
+           (set-buffer oldbuf)
+           (switch-to-buffer (current-buffer))))))
 
 (defun py-report-executable (py-buffer-name)
   (let ((erg (downcase (replace-regexp-in-string
@@ -12360,54 +12425,97 @@ Run pdb under GUD"]
             ("Modes"
              :help "Toggle useful modes like `highlight-indentation'"
 
-             ["Toggle highlight-indentation" py-toggle-highlight-indentation
-              :help "M-x `highlight-indentation' switches this minor mode "]
+             ("py-switch-buffers-on-execute-p"
+              :help "Toggle  `py-switch-buffers-on-execute-p'"
 
-             ["Highlight-indentation on" highlight-indentation-on
-              :help "M-x `highlight-indentation-on' switches this minor mode on "]
+              ["Toggle py-switch-buffers-on-execute-p" toggle-py-switch-buffers-on-execute-p
+               :help "M-x `py-switch-buffers-on-execute-p' switches this minor mode "]
 
-             ["Highlight-indentation off" highlight-indentation-off
-              :help "M-x `highlight-indentation-off' switches this minor mode off "]
-             "-"
+              ["py-switch-buffers-on-execute-p on" py-switch-buffers-on-execute-p-on
+               :help "M-x `py-switch-buffers-on-execute-p-on' switches this minor mode on "]
 
-             ["Toggle autopair-mode" py-toggle-autopair-mode
-              :help "Toggles py-autopair minor-mode "]
+              ["py-switch-buffers-on-execute-p off" py-switch-buffers-on-execute-p-off
+               :help "M-x `py-switch-buffers-on-execute-p-off' switches this minor mode off "]
 
-             ["Autopair on" py-autopair-mode-on
-              :help "Switches autopair minor-mode on "]
+              )
 
-             "-"
+             ("py-split-windows-on-execute-p"
+              :help "Toggle  `py-split-windows-on-execute-p'"
 
-             ["Toggle py-smart-indentation" toggle-py-smart-indentation
-              :help "Toggles py-smart-indentation minor-mode "]
+              ["Toggle py-split-windows-on-execute-p" toggle-py-split-windows-on-execute-p
+               :help "M-x `py-split-windows-on-execute-p' splites this minor mode "]
 
-             ["Py-smart-indentation on" py-smart-indentation-mode-on
-              :help "Switches py-smart-indentation minor-mode on "]
+              ["py-split-windows-on-execute-p on" py-split-windows-on-execute-p-on
+               :help "M-x `py-split-windows-on-execute-p-on' splites this minor mode on "]
 
-             ["Toggle py-smart-indentation" py-toggle-smart-indentation
-              :help "Toggles py-smart-indentation minor-mode off"]
+              ["py-split-windows-on-execute-p off" py-split-windows-on-execute-p-off
+               :help "M-x `py-split-windows-on-execute-p-off' splites this minor mode off "]
 
-             "-"
+              )
 
-             ["Toggle py-smart-operator" py-toggle-smart-operator
-              :help "Toggles py-smart-operator minor-mode"]
+             ("Highlight indentation"
+              :help "Toggle  `highlight-indentation'"
 
-             ["Py-smart-operator off" py-smart-operator-mode-off
-              :help "Switches py-smart-operator minor-mode off "]
+              ["Toggle highlight-indentation" py-toggle-highlight-indentation
+               :help "M-x `highlight-indentation' switches this minor mode "]
 
-             ["Py-smart-operator on" py-smart-operator-mode-on
-              :help "Switches py-smart-operator minor-mode on "]
+              ["Highlight-indentation on" highlight-indentation-on
+               :help "M-x `highlight-indentation-on' switches this minor mode on "]
 
-             "-"
+              ["Highlight-indentation off" highlight-indentation-off
+               :help "M-x `highlight-indentation-off' switches this minor mode off "]
 
-             ["Toggle indent-tabs-mode" py-toggle-indent-tabs-mode
-              :help "See also `py-indent-tabs-mode-on', `-off' "]
+              )
 
-             ["Switch indent-tabs-mode on" py-indent-tabs-mode-on
-              :help "`py-indent-tabs-mode-on'"]
+             ("Autopair"
+              :help "Toggle autopair-mode'"
 
-             ["Switch indent-tabs-mode off" py-indent-tabs-mode-off
-              :help "`py-indent-tabs-mode-off'"])
+              ["Toggle autopair-mode" py-toggle-autopair-mode
+               :help "Toggles py-autopair minor-mode "]
+
+              ["Autopair on" py-autopair-mode-on
+               :help "Switches autopair minor-mode on "]
+
+              )
+
+             ("Smart indentation"
+              :help "Toggle py-smart-indentation'"
+
+              ["Toggle py-smart-indentation" toggle-py-smart-indentation
+               :help "Toggles py-smart-indentation minor-mode "]
+
+              ["Py-smart-indentation on" py-smart-indentation-mode-on
+               :help "Switches py-smart-indentation minor-mode on "]
+
+              )
+
+             ("Smart operator"
+              :help "Toggle py-smart-operator'"
+
+              ["Toggle py-smart-operator" py-toggle-smart-operator
+               :help "Toggles py-smart-operator minor-mode"]
+
+              ["Py-smart-operator off" py-smart-operator-mode-off
+               :help "Switches py-smart-operator minor-mode off "]
+
+              ["Py-smart-operator on" py-smart-operator-mode-on
+               :help "Switches py-smart-operator minor-mode on "]
+
+              )
+
+             ("indent-tabs-mode"
+              :help "Toggle indent-tabs-mode'"
+
+              ["Toggle indent-tabs-mode" py-toggle-indent-tabs-mode
+               :help "See also `py-indent-tabs-mode-on', `-off' "]
+
+              ["Switch indent-tabs-mode on" py-indent-tabs-mode-on
+               :help "`py-indent-tabs-mode-on'"]
+
+              ["Switch indent-tabs-mode off" py-indent-tabs-mode-off
+               :help "`py-indent-tabs-mode-off'"])
+
+             )
 
             ["Help on symbol" py-describe-symbol
              :help "`py-describe-symbol'
@@ -14109,20 +14217,6 @@ One newline and start and Two at end style.
     \"\"\"
 
 See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
-
-             ["py fill string pep 257" py-fill-string-pep-257
-              :help " `py-fill-string-pep-257'
-PEP-257 with 2 newlines at end of string.
-
-    \"\"\"Process foo, return bar.\"\"\"
-
-    \"\"\"Process foo, return bar.
-
-    If processing fails throw ProcessingError.
-
-    \"\"\"
-
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style' "]
 
              ["py fill string pep 257" py-fill-string-pep-257
               :help " `py-fill-string-pep-257'
