@@ -18712,29 +18712,19 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                               #'autopair-python-triple-quote-action)))))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
-  ;; (cond
-  ;; (py-complete-function
-  ;; (add-hook 'completion-at-point-functions
-  ;; py-complete-function nil 'local))
-  (add-hook 'completion-at-point-functions
-            (if py-load-pymacs-p
-                'py-complete-completion-at-point
-              'py-completion-at-point)
-            nil 'local)
-
-  ;; (py-load-pymacs-p
-  ;;  (add-hook 'completion-at-point-functions
-  ;;            'py-complete-completion-at-point nil 'local))
-  ;; (t
-  ;;  (add-hook 'completion-at-point-functions
-  ;;            'py-shell-complete nil 'local)))
+  (cond
+   (py-complete-function
+    (add-hook 'completion-at-point-functions
+              py-complete-function nil 'local))
+   (py-load-pymacs-p
+    (add-hook 'completion-at-point-functions
+              'py-complete-completion-at-point nil 'local))
+   (t
+    (add-hook 'completion-at-point-functions
+              'py-shell-complete nil 'local)))
   (when (and py-imenu-create-index-p (fboundp 'imenu-add-to-menubar)(ignore-errors (require 'imenu)))
     (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
     (imenu-add-to-menubar "PyIndex"))
-  ;; (when py-imenu-create-index-p (imenu-add-to-menubar "PyIndex"))
-
-  ;; Now guess `py-indent-offset'
-
   ;; add the menu
   (when py-menu
     (easy-menu-add py-menu))
