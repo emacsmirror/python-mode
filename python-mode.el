@@ -72,6 +72,7 @@
   :prefix "py-")
 
 (defconst py-version "6.0.13")
+;; (defconst py-version "6.1.0")
 
 ;;; User definable variables
 
@@ -770,8 +771,8 @@ Also used by (minor-)outline-mode "
   "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command. "
   :type 'string
   :group 'python-mode)
-
 (make-variable-buffer-local 'py-shell-name)
+(defvaralias 'py-python-command 'py-shell-name)
 
 (defcustom py-shell-toggle-1 py-shell-name
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
@@ -2004,7 +2005,7 @@ Returns value of `py-smart-indentation' switched to. "
     (if (< 0 arg)
         (progn
           (setq py-smart-indentation t)
-          (py-compute-indentation))
+          (py-guess-indent-offset))
       (setq py-smart-indentation nil)
       (setq py-indent-offset (default-value 'py-indent-offset)))
     (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
@@ -5806,8 +5807,11 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                       (skip-chars-backward " \t")
                       (py-compute-indentation orig origline closing line inside repeat indent-offset))
                   (goto-char (nth 8 pps))
-                  (if (and line (or py-indent-honors-inline-comment (looking-back "^[ \t]*")))
-                      (current-column)
+                  (if
+                      line
+                      (if py-indent-honors-inline-comment
+                          (current-column)
+                        (current-indentation))
                     (forward-char -1)
                     (py-compute-indentation orig origline closing line inside repeat indent-offset))))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not py-indent-comments)(not line)(eq origline (py-count-lines)))
@@ -5871,7 +5875,6 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                     (if (looking-at "from +\\([^ \t\n]+\\) +import")
                         5
                       (+ (current-indentation) py-continuation-offset)))))
-
                ((and (looking-at py-block-closing-keywords-re)(eq (py-count-lines) origline))
                 (skip-chars-backward "[ \t\r\n\f]")
                 (py-beginning-of-statement)
@@ -7562,6 +7565,9 @@ To go just beyond the final line of the current statement, use `py-down-statemen
        ((and (looking-at py-no-outdent-re)(not (nth 8 pps)))
         (end-of-line)
         (py-handle-eol))
+       ((and (eq (point) orig) (< (current-column) (current-indentation)))
+        (back-to-indentation)
+        (py-end-of-statement orig done origline))
        ((and (not done)
              (< 0 (abs (skip-chars-forward (concat "^" comment-start) (line-end-position)))))
         (py-handle-eol)
