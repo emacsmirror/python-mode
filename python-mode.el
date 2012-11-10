@@ -360,6 +360,12 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :type 'string
   :group 'python-mode)
 
+(defcustom py-python-command-args '("-i")
+  "*List of string arguments to be used when starting a Python shell."
+  :type '(repeat string)
+  :group 'python-mode)
+(make-variable-buffer-local 'py-python-command-args)
+
 (defcustom py-jython-command-args '("-i")
   "*List of string arguments to be used when starting a Jython shell."
   :type '(repeat string)
@@ -5922,7 +5928,11 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                 (py-beginning-of-block)
                 (current-indentation))
                ((and (< (py-count-lines) origline)(looking-at py-assignment-re))
-                (current-indentation))
+                (goto-char (match-end 0))
+                ;; multiline-assignment
+                (if (looking-at " *[[{(]")
+                    (+ (current-indentation) py-indent-offset)
+                  (current-indentation)))
                ((looking-at py-assignment-re)
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat indent-offset))
