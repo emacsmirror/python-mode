@@ -342,7 +342,7 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :type '(choice
           (const :tag "default" nil)
           (const :tag "py-completion-at-point" py-completion-at-point)
-          (const :tag "Pymacs based py-complete" py-complete)
+          (const :tag "Pymacs based py-complete-completion-at-point" py-complete-completion-at-point)
           (const :tag "py-shell-complete" py-shell-complete)
           (const :tag "IPython's ipython-complete" ipython-complete)
           )
@@ -18993,6 +18993,28 @@ Keep current buffer. Ignores `py-shell-switch-buffers-on-execute-p' "
 ;;       (error "`py-install-directory' not set, see INSTALL"))))
 ;;
 ;; (when py-load-pymacs-p (py-load-pymacs))
+(defun py-load-pycomplete ()
+  "Load Pymacs based pycomplete."
+  (interactive)
+  (let* ((path (getenv "PYTHONPATH"))
+         (py-install-directory (cond ((string= "" py-install-directory)
+                                      (py-guess-py-install-directory))
+                                     (t (py-normalize-directory py-install-directory))))
+         (pycomplete-directory (concat (expand-file-name py-install-directory) "completion")))
+    (if (py-install-directory-check)
+        (progn
+          (require 'pymacs)
+          (setenv "PYTHONPATH" (concat
+                                pycomplete-directory
+                                (if path (concat path-separator path))))
+          (add-to-list 'load-path pycomplete-directory)
+          (require 'pycomplete)
+          (add-hook 'python-mode-hook 'py-complete-initialize))
+      (error "`py-install-directory' not set, see INSTALL"))))
+
+(when (or (eq py-complete-function 'py-complete-completion-at-point) py-load-pymacs-p)
+  (py-load-pycomplete))
+
 
 ;;; Hooks
 (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
