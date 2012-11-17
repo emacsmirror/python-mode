@@ -18379,6 +18379,9 @@ bottom) of the trackback stack is encountered."
          (pycomplete-directory (concat (expand-file-name py-install-directory) "completion")))
     (if (py-install-directory-check)
         (progn
+          ;; If the Pymacs process is already running, augment its path.
+          (when (and (get-process "pymacs") (fboundp 'pymacs-exec))
+            (pymacs-exec (concat "sys.path.insert(0, '" pycomplete-directory "')")))
           (require 'pymacs)
           (setenv "PYTHONPATH" (concat
                                 pycomplete-directory
