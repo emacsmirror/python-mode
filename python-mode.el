@@ -2475,7 +2475,7 @@ for options to pass to the DOCNAME interpreter. \"
 (defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
   "Matches the beginning of a compound statement or it's clause. ")
 ;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
 
@@ -8952,9 +8952,9 @@ When called from a programm, it accepts a string specifying a shell which will b
          (execute-directory (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
                                   (py-use-current-dir-when-execute-p
                                    (file-name-directory (buffer-file-name)))
-                                  ((getenv "WORKON_HOME"))
+                                  ((getenv "VIRTUAL_ENV"))
                                   (py-execute-directory)
-                                  ((getenv "HOME"))))
+                                  (t (getenv "HOME"))))
          (strg (buffer-substring-no-properties start end))
          (sepchar (or sepchar (char-to-string py-separator-char)))
          (py-buffer-name (py-buffer-name-prepare pyshellname sepchar))
@@ -10425,7 +10425,7 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                   (back-to-indentation)
                   (py-compute-indentation orig origline closing line inside t indent-offset)))
                ((and (not line)(eq origline (py-count-lines))
-                     (save-excursion (and (save-excursion (setq erg (py-go-to-keyword py-block-or-clause-re)))
+                     (save-excursion (and (setq erg (py-go-to-keyword py-extended-block-or-clause-re))
                                           (ignore-errors (< orig (or (py-end-of-block-or-clause)(point)))))))
                 (+ (car erg) (if py-smart-indentation (py-guess-indent-offset nil orig origline) indent-offset)))
                ((and (not line)(eq origline (py-count-lines))
@@ -14283,7 +14283,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
             (shell (or shell (py-report-executable (buffer-name (current-buffer)))))
             (imports (py-find-imports)))
         (if (string-match "[iI][pP]ython" shell)
-            (ipython-complete nil nil nil nil nil shell debug)
+            (ipython-complete nil nil nil nil nil shell debug imports)
           (let* ((orig (point))
                  (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
                  (end (point))
@@ -14310,7 +14310,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
       (cond ((string= word "")
              (tab-to-tab-stop))
             ((string-match "[iI][pP]ython" shell)
-             (ipython-complete nil nil beg end word))
+             (ipython-complete nil nil beg end word nil debug imports))
             ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
              (python-shell-completion--do-completion-at-point proc (buffer-substring-no-properties beg end) word))
             ;; deals better with imports
@@ -14393,7 +14393,7 @@ complete('%s')" word) shell nil proc)))
 ;; ipython shell complete
 ;; see also
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
-(defun ipython-complete (&optional done completion-command-string beg end word shell debug)
+(defun ipython-complete (&optional done completion-command-string beg end word shell debug imports)
   "Complete the python symbol before point.
 
 If no completion available, insert a TAB.
@@ -14413,6 +14413,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                           shell
                         "ipython"))
          (processlist (process-list))
+         (imports (or imports (py-find-imports)))
          done
          (process
           (if ipython-complete-use-separate-shell-p
@@ -14439,8 +14440,12 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                       (delete-region comint-last-output-start
                                      (process-mark (get-buffer-process (current-buffer))))))))
 
-         (ccs (or completion-command-string (py-set-ipython-completion-command-string
-                                             (process-name python-process))))
+         (ccs (or completion-command-string
+                  (if imports
+                      (concat imports (py-set-ipython-completion-command-string
+                                       (process-name python-process)))
+                    (py-set-ipython-completion-command-string
+                     (process-name python-process)))))
          completion completions completion-table ugly-return)
     (if (string= pattern "")
         (tab-to-tab-stop)
