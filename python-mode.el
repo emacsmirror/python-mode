@@ -849,97 +849,10 @@ When non-nil, arguments are printed."
   :type 'boolean
   :group 'python-mode)
 
-(defcustom python-default-interpreter 'cpython
-  "*Which Python interpreter is used by default.
-The value for this variable can be either `cpython' or `jpython'.
-
-When the value is `cpython', the variables `python-python-command' and
-`python-python-command-args' are consulted to determine the interpreter
-and arguments to use.
-
-When the value is `jpython', the variables `python-jpython-command' and
-`python-jpython-command-args' are consulted to determine the interpreter
-and arguments to use.
-
-Note that this variable is consulted only the first time that a Python
-mode buffer is visited during an Emacs session.  After that, use
-\\[py-toggle-shell] to change the interpreter shell."
-  :type '(choice (const :tag "Python (a.k.a. CPython)" cpython)
-		 (const :tag "JPython" jpython))
-  :group 'python-mode)
-
-(defcustom python-python-command-args '("-i")
-  "*List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
-  :group 'python-mode)
-
-(defcustom python-jython-command-args '("-i")
-  "*List of string arguments to be used when starting a Jython shell."
-  :type '(repeat string)
-  :group 'python-mode
-  :tag "JPython Command Args")
-
-(defcustom python-pdbtrack-minor-mode-string " PDB"
-  "*Minor-mode sign to be displayed when pdbtrack is active."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-prompt-alist
-  '(("ipython" . "^In \\[[0-9]+\\]: *")
-    (t . "^>>> "))
-  "Alist of Python input prompts.
-Each element has the form (PROGRAM . REGEXP), where PROGRAM is
-the value of `python-python-command' for the python process and
-REGEXP is a regular expression matching the Python prompt.
-PROGRAM can also be t, which specifies the default when no other
-element matches `python-python-command'."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-continuation-prompt-alist
-  '(("ipython" . "^   [.][.][.]+: *")
-    (t . "^[.][.][.] "))
-  "Alist of Python continued-line prompts.
-Each element has the form (PROGRAM . REGEXP), where PROGRAM is
-the value of `python-python-command' for the python process and
-REGEXP is a regular expression matching the Python prompt for
-continued lines.
-PROGRAM can also be t, which specifies the default when no other
-element matches `python-python-command'."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-python-command "python"
-  "Shell command to run Python interpreter.
-Any arguments can't contain whitespace."
-  :group 'python-mode
-  :type 'string)
-
-(defcustom python-jython-command "jython"
-  "Shell command to run Jython interpreter.
-Any arguments can't contain whitespace."
-  :group 'python-mode
-  :type 'string)
-
 (defcustom py-history-filter-regexp "\\`\\s-*\\S-?\\S-?\\s-*\\'"
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters."
   :type 'regexp
-  :group 'python-mode)
-
-(defcustom python-source-modes '(python-mode jython-mode)
-  "Used to determine if a buffer contains Python source code.
-
-If a file is loaded into a buffer that is in one of these major modes, it is considered Python source by `py-load-file', which uses the
-value to determine defaults."
-  :type '(repeat function)
-  :group 'python-mode)
-
-(defcustom python-jython-packages '("java" "javax" "org" "com")
-  "Packages implying `jython-mode'.
-If these are imported near the beginning of the buffer, `python-mode'
-actually punts to `jython-mode'."
-  :type '(repeat string)
   :group 'python-mode)
 
 (defcustom py-set-complete-keymap-p  nil
@@ -1500,11 +1413,6 @@ to select the appropriate python interpreter mode for a file.")
 
 (defvar python--prompt-regexp nil)
 
-(defvar python-command py-shell-name
-  "Actual command used to run Python.
-May be `python-python-command' or `python-jython-command', possibly
-modified by the user. ")
-
 (defvar py-bol-forms-last-indent nil
   "For internal use. Stores indent from last py-end-of-FORM-bol command.
 When this-command is py-beginning-of-FORM-bol, last-command's indent will be considered in order to jump onto right beginning position.")
@@ -1525,16 +1433,7 @@ Never set this variable directly, use
 `python-pdbtrack-set-tracked-buffer' instead.")
 (make-variable-buffer-local 'python-pdbtrack-tracked-buffer)
 
-(defvar python-pdbtrack-buffers-to-kill nil
-  "List of buffers to be deleted after tracking finishes.")
-(make-variable-buffer-local 'python-pdbtrack-buffers-to-kill)
-
 (defvar ipython-version nil)
-
-(defvar python-command "python"
-  "Used by `py-completion-at-point', derived from python.el" )
-
-(defvaralias 'python-python-command-args 'py-python-command-args)
 
 (defvaralias 'py-python-command 'py-shell-name)
 
@@ -1561,8 +1460,8 @@ for options to pass to the DOCNAME interpreter. \"
 
 (defvar view-return-to-alist)
 
-(defvar python-imports)			; forward declaration
-(make-variable-buffer-local 'python-imports)
+(defvar py-imports)			; forward declaration
+(make-variable-buffer-local 'py-imports)
 
 (defcustom py-execute-directory nil
   "When set, stores the file's default directory-name py-execute-... functions act upon.
@@ -1857,16 +1756,6 @@ alternative for finding the index.")
 (or (assq 'py-pdbtrack-is-tracking-p minor-mode-alist)
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
           minor-mode-alist))
-
-(defvar python-which-shell nil)
-(make-variable-buffer-local 'python-which-shell)
-
-(defvar python-which-args  python-python-command-args)
-(make-variable-buffer-local 'python-which-args)
-
-(defvar python-which-bufname "Python")
-(make-variable-buffer-local 'python-which-bufname)
-
 (defvar inferior-python-mode-syntax-table
   (let ((st (make-syntax-table py-mode-syntax-table)))
     ;; Don't get confused by apostrophes in the process's output (e.g. if
@@ -1875,8 +1764,6 @@ alternative for finding the index.")
     ;; Maybe we should do the same for double quotes?
     ;; (modify-syntax-entry ?\" "." st)
     st))
-
-(defvar python-imports)
 
 (defvar virtualenv-workon-home nil)
 
@@ -3082,7 +2969,7 @@ instance.  Assumes an inferior Python is running."
       ;; First try the symbol we're on.
       (or (and symbol
                (py-send-receive (format "emacs.eargs(%S, %s)"
-                                        symbol python-imports)))
+                                        symbol py-imports)))
           ;; Try moving to symbol before enclosing parens.
           (let ((s (syntax-ppss)))
             (unless (zerop (car s))
@@ -3096,7 +2983,7 @@ instance.  Assumes an inferior Python is running."
                         (py-send-receive
                          (format "emacs.eargs(%S, %s)"
                                  (buffer-substring-no-properties (point) point)
-                                 python-imports))))))))))))
+                                 py-imports))))))))))))
 
 
 (defun py-outline-level ()
@@ -9644,9 +9531,9 @@ Useful for newly defined symbol, not known to python yet. "
             (insert erg)))))))
 
 (defun py-find-imports ()
-  "Find top-level imports, updating `python-imports'.
+  "Find top-level imports, updating `py-imports'.
 
-Returns python-imports"
+Returns py-imports"
   (interactive)
   (let (imports)
     (save-excursion
@@ -9662,7 +9549,7 @@ Returns python-imports"
                 "[\\]\r?\n?\s*" ""
                 (buffer-substring-no-properties (match-beginning 0) (point))) ";"))))
     (when (and py-verbose-p (interactive-p)) (message "%s" imports))
-    (setq python-imports imports)
+    (setq py-imports imports)
     imports))
 
 (defun py-eldoc-function ()
@@ -10143,10 +10030,10 @@ Search in current buffer first. "
                                         (format "Find location of (default %s): " symbol)
                                       "Find location of: ")
                                     nil nil symbol)))
-      (unless python-imports
+      (unless py-imports
         (error "Not called from buffer visiting Python file"))
       (let* ((loc (py-send-receive (format "emacs.location_of (%S, %s)"
-                                           name python-imports)))
+                                           name py-imports)))
              (loc (car (read-from-string loc)))
              (file (car loc))
              (line (cdr loc)))
@@ -10158,7 +10045,7 @@ Search in current buffer first. "
 
 ;;; Miscellanus
 (defun py-update-imports ()
-  "Returns `python-imports'.
+  "Returns `py-imports'.
 
 Imports done are displayed in message buffer. "
   (interactive)
@@ -10167,7 +10054,7 @@ Imports done are displayed in message buffer. "
           (orig (point))
           erg)
       (mapc 'py-execute-string (split-string (car (read-from-string (py-find-imports))) "\n" t))
-      (setq erg (car (read-from-string python-imports)))
+      (setq erg (car (read-from-string py-imports)))
       (set-buffer oldbuf)
       (goto-char orig)
       (when (interactive-p)
@@ -14185,7 +14072,7 @@ and return collected output"
 (defun py-symbol-completions (symbol)
   "Return a list of completions of the string SYMBOL from Python process.
 The list is sorted.
-Uses `python-imports' to load modules against which to complete."
+Uses `py-imports' to load modules against which to complete."
   (when (stringp symbol)
     (let ((completions
 	   (condition-case ()
@@ -14193,7 +14080,7 @@ Uses `python-imports' to load modules against which to complete."
 		     (py-send-receive
 		      (format "emacs.complete(%S,%s)"
 			      (substring-no-properties symbol)
-			      python-imports))))
+			      py-imports))))
 	     (error nil))))
       (sort
        ;; We can get duplicates from the above -- don't know why.
