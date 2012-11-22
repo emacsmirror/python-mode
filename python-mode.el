@@ -1748,7 +1748,7 @@ alternative for finding the index.")
 
 (defvar skeleton-further-elements)
 
-;;             (defvar py-mode-map python-mode-map))
+
 ;;           (set (make-local-variable 'beginning-o1f-defun-function) 'py-beginning-of-def-or-class)
 ;;           (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
 
@@ -1902,11 +1902,6 @@ Returns value of `py-smart-indentation'. "
     (toggle-py-smart-indentation arg))
   (when (interactive-p) (message "py-smart-indentation: %s" py-smart-indentation))
   py-smart-indentation)
-
-(defun py-toggle-sexp-function ()
-  "Opens customization "
-  (interactive)
-  (customize-variable 'py-sexp-function))
 
 ;; Smart operator
 (defalias 'toggle-py-smart-operator 'py-toggle-smart-operator)
@@ -2934,17 +2929,20 @@ module-qualified names."
        (format "execfile(%S)" file-name)))
     (message "%s loaded" file-name)))
 
-(defun py-proc ()
+(defun py-proc (&optional dedicated)
   "Return the current Python process.
 
-See variable `py-buffer-name'.  Starts a new process if necessary."
-  ;; Fixme: Maybe should look for another active process if there
-  ;; isn't one for `py-buffer-name'.
-  (unless (comint-check-proc py-buffer-name)
-    (py-shell))
-  (get-buffer-process (if (derived-mode-p 'inferior-python-mode)
-                          (current-buffer)
-                        py-buffer-name)))
+Start a new process if necessary. "
+  (interactive)
+  (let (py-split-windows-on-execute-p
+        (erg
+         (cond ((and (not dedicated) (comint-check-proc (current-buffer)))
+                (get-buffer-process (buffer-name (current-buffer))))
+               ((not dedicated)
+                (get-buffer-process (py-shell)))
+               ((py-shell nil dedicated)))))
+    (when (interactive-p) (message "%S" erg))
+    erg))
 
 (defun py-check-comint-prompt (&optional proc)
   "Return non-nil if and only if there's a normal prompt in the inferior buffer.
@@ -5618,11 +5616,19 @@ and `pass'.  This doesn't catch embedded statements."
                                (point))
                               ((and (py-beginning-of-statement-p)(looking-at (symbol-value regexp)))
                                (point))
-                              (t (when (cdr-safe (py-go-to-keyword (if (string= regexp py-def-or-class-re)
-                                                                       py-def-or-class-re
-                                                                     py-extended-block-or-clause-re)))
-                                   (when (py-statement-opens-block-p py-extended-block-or-clause-re)
-                                     (point)))))))
+                              (t
+                               (when
+                                   (cdr-safe
+                                    (py-go-to-keyword
+                                     (cond ((eq regexp 'py-def-or-class-re)
+                                            py-def-or-class-re)
+                                           ((eq regexp 'py-def-re)
+                                            py-def-re)
+                                           ((eq regexp 'py-class-re)
+                                            py-class-re)
+                                           (t py-extended-block-or-clause-re))))
+                                 (when (py-statement-opens-block-p py-extended-block-or-clause-re)
+                                   (point)))))))
            ind erg last pps)
       (if this
           (progn
@@ -8832,7 +8838,7 @@ When called from a programm, it accepts a string specifying a shell which will b
   (interactive "r")
   (py-execute-base start end (default-value 'py-shell-name) t))
 
-(defun py-execute-base (start end &optional pyshellname dedicated switch nostars sepchar)
+(defun py-execute-base (start end &optional pyshellname dedicated switch nostars sepchar split)
   "Adapt the variables used in the process. "
   (let* ((oldbuf (current-buffer))
          (pyshellname (or pyshellname (py-choose-shell)))
@@ -8848,6 +8854,8 @@ When called from a programm, it accepts a string specifying a shell which will b
          (temp (make-temp-name
                 (concat (replace-regexp-in-string (regexp-quote sepchar) "-" (replace-regexp-in-string (concat "^" (regexp-quote sepchar)) "" (replace-regexp-in-string ":" "-" pyshellname))) "-")))
          (localname (concat (expand-file-name py-temp-directory) sepchar (replace-regexp-in-string (regexp-quote sepchar) "-" temp) ".py"))
+         (switch (or switch py-switch-buffers-on-execute-p))
+         (split (or split py-split-windows-on-execute-p))
          (proc (if dedicated
                    (get-buffer-process (py-shell nil dedicated pyshellname switch sepchar py-buffer-name t))
                  (or (get-buffer-process (py-buffer-name-prepare pyshellname))
@@ -8895,7 +8903,7 @@ When called from a programm, it accepts a string specifying a shell which will b
                      (sit-for py-ipython-execute-delay))
                    (setq erg (py-execute-file-base proc file pec procbuf))
                    (setq py-exception-buffer (cons file (current-buffer)))
-                   (py-shell-manage-windows switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name)
+                   (py-shell-manage-windows switch split oldbuf py-buffer-name)
                    (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
                      (when py-verbose-p (message "Output buffer: %s" procbuf)))
                    (sit-for 0.1)
@@ -9282,7 +9290,7 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given.')
         (progn
           (setq erg (py-execute-file-base proc file pec))
           (setq py-exception-buffer (cons file (current-buffer)))
-          (py-shell-manage-windows switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name)
+          (py-shell-manage-windows switch split oldbuf py-buffer-name)
           (sit-for 0.1)
           erg)
       (message "File not readable: %s" "Do you have write permissions?"))))
@@ -10514,9 +10522,10 @@ Needed when file-path names are contructed from maybe numbered buffer names like
     "\*" ""
     string)))
 
-(defun py-shell-manage-windows (switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name)
+(defun py-shell-manage-windows (switch split oldbuf py-buffer-name)
   (cond (;; split and switch
-         (and py-split-windows-on-execute-p
+         (and (not (eq split 'nosplit))
+              py-split-windows-on-execute-p
               (not (eq switch 'noswitch))
               (or (eq switch 'switch)
                   py-switch-buffers-on-execute-p))
@@ -10525,9 +10534,11 @@ Needed when file-path names are contructed from maybe numbered buffer names like
          (pop-to-buffer py-buffer-name)
          (display-buffer oldbuf))
         ;; split, not switch
-        ((and py-split-windows-on-execute-p
-              (or (eq switch 'noswitch)
-                  (not (eq switch 'switch))))
+        ((and
+          (not (eq split 'nosplit))
+          py-split-windows-on-execute-p
+          (or (eq switch 'noswitch)
+              (not (eq switch 'switch))))
          (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
@@ -10569,7 +10580,7 @@ This function takes the list of setup code to send from the
      (symbol-value code) process)
     (sit-for 0.1)))
 
-(defun py-shell (&optional argprompt dedicated pyshellname switch sepchar py-buffer-name done)
+(defun py-shell (&optional argprompt dedicated pyshellname switch sepchar py-buffer-name done split)
   "Start an interactive Python interpreter in another window.
 Interactively, \\[universal-argument] 4 prompts for a buffer.
 \\[universal-argument] 2 prompts for `py-python-command-args'.
@@ -10582,10 +10593,13 @@ Optional symbol SWITCH ('switch/'noswitch) precedes `py-switch-buffers-on-execut
 When SEPCHAR is given, `py-shell' must not detect the file-separator.
 BUFFER allows specifying a name, the Python process is connected to
 When DONE is `t', `py-shell-manage-windows' is omitted
+Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
 "
   (interactive "P")
   (let* ((coding-system-for-read 'utf-8)
          (coding-system-for-write 'utf-8)
+         (switch (or switch py-switch-buffers-on-execute-p))
+         (split (or split py-split-windows-on-execute-p))
          (sepchar (or sepchar (char-to-string py-separator-char)))
          (args py-python-command-args)
          (oldbuf (current-buffer))
@@ -10714,7 +10728,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
       (set-syntax-table python-mode-syntax-table)
       ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
       (when py-shell-hook (run-hooks 'py-shell-hook)))
-    (unless done (py-shell-manage-windows switch py-split-windows-on-execute-p py-switch-buffers-on-execute-p oldbuf py-buffer-name))
+    (unless done (py-shell-manage-windows switch split oldbuf py-buffer-name))
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
@@ -13761,6 +13775,8 @@ Optional C-u prompts for options to pass to the Python3.2 interpreter. See `py-p
             ["Switch shell-switch-buffers-on-execute OFF" py-shell-switch-buffers-on-execute-off
              :help "Switch `py-switch-buffers-on-execute-p' OFF. "]))
         map))
+
+(defvaralias 'py-mode-map 'python-mode-map)
 
 ;;; Abbrevs
 (defun py-edit-abbrevs ()
@@ -18297,22 +18313,22 @@ bottom) of the trackback stack is encountered."
 (add-hook 'inferior-python-mode-hook 'py-send-shell-setup-code)
 
 (remove-hook 'python-mode-hook 'python-setup-brm)
-(add-hook 'python-mode-hook
-          #'(lambda ()
-              (when py-smart-indentation
-                (if (bobp)
-                    (save-excursion
-                      (save-restriction
-                        (widen)
-                        (while (and (not (eobp))
-                                    (or
-                                     (let ((erg (syntax-ppss)))
-                                       (or (nth 1 erg) (nth 8 erg)))
-                                     (eq 0 (current-indentation))))
-                          (forward-line 1))
-                        (back-to-indentation)
-                        (py-guess-indent-offset)))
-                  (py-guess-indent-offset)))))
+;; (add-hook 'python-mode-hook
+;;           #'(lambda ()
+;;               (when py-smart-indentation
+;;                 (if (bobp)
+;;                     (save-excursion
+;;                       (save-restriction
+;;                         (widen)
+;;                         (while (and (not (eobp))
+;;                                     (or
+;;                                      (let ((erg (syntax-ppss)))
+;;                                        (or (nth 1 erg) (nth 8 erg)))
+;;                                      (eq 0 (current-indentation))))
+;;                           (forward-line 1))
+;;                         (back-to-indentation)
+;;                         (py-guess-indent-offset)))
+;;                   (py-guess-indent-offset)))))
 
 (add-hook 'comint-output-filter-functions
           'py-comint-output-filter-function)
