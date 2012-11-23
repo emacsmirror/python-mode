@@ -376,12 +376,6 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :group 'python-mode)
 (make-variable-buffer-local 'py-lhs-inbound-indent)
 
-(defcustom py-rhs-inbound-indent 1
-  "When inside a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
-  :type 'integer
-  :group 'python-mode)
-(make-variable-buffer-local 'py-rhs-inbound-indent)
-
 (defcustom py-continuation-offset 2
   "*Additional amount of offset to give for some continuation lines.
 Continuation lines are those that immediately follow a backslash
@@ -416,15 +410,6 @@ set `py-smart-indentation' to nil in your `python-mode-hook'."
   :type 'boolean
   :group 'python-mode)
 (make-variable-buffer-local 'py-smart-indentation)
-
-(defcustom py-align-multiline-strings-p t
-  "*Flag describing how multi-line triple quoted strings are aligned.
-When this flag is non-nil, continuation lines are lined up under the
-preceding line's indentation.  When this flag is nil, continuation
-lines are aligned to column zero."
-  :type '(choice (const :tag "Align under preceding line" t)
-                 (const :tag "Align to column zero" nil))
-  :group 'python-mode)
 
 (defcustom py-block-comment-prefix "##"
   "*String used by \\[comment-region] to comment out a block of code.
@@ -779,39 +764,6 @@ Also used by (minor-)outline-mode "
   :group 'python-mode)
 (make-variable-buffer-local 'py-shell-toggle-2)
 
-(defcustom py-source-modes '(python-mode jython-mode)
-  "Used to determine if a buffer contains Python source code.
-
-If a file is loaded into a buffer that is in one of these major modes, it is considered Python source by `py-load-file', which uses the
-value to determine defaults."
-  :type '(repeat function)
-  :group 'python-mode)
-
-(defcustom py-shell-prompt-alist
-  '(("ipython" . "^In \\[[0-9]+\\]: ")
-    (t . "^>>> "))
-  "Alist of Python input prompts.
-Each element has the form (PROGRAM . REGEXP), where PROGRAM is
-the value of `py-shell-name' for the python process and
-REGEXP is a regular expression matching the Python prompt.
-PROGRAM can also be t, which specifies the default when no other
-element matches `py-shell-name'."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom py-shell-continuation-prompt-alist
-  '(("ipython" . "^   [.][.][.]+: ")
-    (t . "^[.][.][.] "))
-  "Alist of Python continued-line prompts.
-Each element has the form (PROGRAM . REGEXP), where PROGRAM is
-the value of `py-shell-name' for the python process and
-REGEXP is a regular expression matching the Python prompt for
-continued lines.
-PROGRAM can also be t, which specifies the default when no other
-element matches `py-shell-name'."
-  :type 'string
-  :group 'python-mode)
-
 (defcustom py-match-paren-mode nil
   "*Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
@@ -946,64 +898,9 @@ When editing other peoples code, this may produce a larger diff than expected "
   :type 'string
   :group 'python-mode)
 
-(defcustom python-shell-internal-buffer-name "Python Internal"
-  "Default buffer name for the Internal Python interpreter."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-interpreter-args "-i"
-  "Default arguments for the Python interpreter."
-  :type 'string
-  :group 'python-mode)
-
 (defcustom python-shell-prompt-regexp ">>> "
   "Regular Expression matching top\-level input prompt of python shell.
 It should not contain a caret (^) at the beginning."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-prompt-block-regexp "[.][.][.] "
-  "Regular Expression matching block input prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-prompt-output-regexp ""
-  "Regular Expression matching output prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-prompt-pdb-regexp "[(<]*[Ii]?[Pp]db[>)]+ "
-  "Regular Expression matching pdb input prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-process-environment nil
-  "List of environment variables for Python shell.
-This variable follows the same rules as `process-environment'
-since it merges with it before the process creation routines are
-called.  When this variable is nil, the Python shell is run with
-the default `process-environment'."
-  :type '(repeat string)
-  :group 'python-mode
-  :safe 'listp)
-
-(defcustom python-shell-extra-pythonpaths nil
-  "List of extra pythonpaths for Python shell.
-The values of this variable are added to the existing value of
-PYTHONPATH in the `process-environment' variable."
-  :type '(repeat string)
-  :group 'python-mode
-  :safe 'listp)
-
-(defcustom python-shell-virtualenv-path nil
-  "Path to virtualenv root.
-This variable, when set to a string, makes the values stored in
-`python-shell-process-environment' and `python-shell-exec-path'
-to be modified properly so shells are started with the specified
-virtualenv."
   :type 'string
   :group 'python-mode)
 
@@ -1027,75 +924,7 @@ virtualenv."
   :type 'string
   :group 'python-mode)
 
-(defcustom python-shell-setup-codes '(python-shell-completion-setup-code
-                                      python-ffap-setup-code
-                                      python-eldoc-setup-code)
-  "List of code run by `py-shell-send-setup-codes'."
-  :type '(repeat symbol)
-  :group 'python-mode
-  :safe 'listp)
-
-(defcustom python-shell-compilation-regexp-alist
-  `((,(rx line-start (1+ (any " \t")) "File \""
-	  (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
-	  "\", line " (group (1+ digit)))
-     1 2)
-    (,(rx " in file " (group (1+ not-newline)) " on line "
-	  (group (1+ digit)))
-     1 2)
-    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
-	  "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
-     1 2))
-  "`compilation-error-regexp-alist' for inferior Python."
-  :type '(alist string)
-  :group 'python-mode)
-
-(defcustom python-shell-completion-setup-code
-  "try:
-    import readline
-except ImportError:
-    def __COMPLETER_all_completions(text): []
-else:
-    import rlcompleter
-    readline.set_completer(rlcompleter.Completer().complete)
-    def __COMPLETER_all_completions(text):
-        import sys
-        completions = []
-        try:
-            i = 0
-            while True:
-                res = readline.get_completer()(text, i)
-                if not res: break
-                i += 1
-                completions.append(res)
-        except NameError:
-            pass
-        return completions"
-  "Code used to setup completion in inferior Python processes."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-completion-string-code
-  "';'.join(__COMPLETER_all_completions('''%s'''))"
-  "Python code used to get a string of completions separated by semicolons."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-module-completion-string-code ""
-  "Python code used to get completions separated by semicolons for imports.
-
-For IPython v0.11, add the following line to
-`python-shell-completion-setup-code':
-
-from IPython.core.completerlib import module_completion
-
-and use the following as the value of this variable:
-
-';'.join(module_completion('''%s'''))"
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-eldoc-setup-code
+(defcustom py-eldoc-setup-code
   "def __PYDOC_get_help(obj):
     try:
         import inspect
@@ -1130,9 +959,50 @@ and use the following as the value of this variable:
   :type 'string
   :group 'python-mode)
 
-(defcustom python-eldoc-string-code
-  "__PYDOC_get_help('''%s''')\n"
-  "Python code used to get a string with the documentation of an object."
+(defcustom py-setup-codes '(python-shell-completion-setup-code
+                            python-ffap-setup-code
+                            py-eldoc-setup-code)
+  "List of code run by `py-shell-send-setup-codes'."
+  :type '(repeat symbol)
+  :group 'python-mode
+  :safe 'listp)
+
+(defcustom python-shell-completion-setup-code
+  "try:
+    import readline
+except ImportError:
+    def __COMPLETER_all_completions(text): []
+else:
+    import rlcompleter
+    readline.set_completer(rlcompleter.Completer().complete)
+    def __COMPLETER_all_completions(text):
+        import sys
+        completions = []
+        try:
+            i = 0
+            while True:
+                res = readline.get_completer()(text, i)
+                if not res: break
+                i += 1
+                completions.append(res)
+        except NameError:
+            pass
+        return completions"
+  "Code used to setup completion in inferior Python processes."
+  :type 'string
+  :group 'python-mode)
+
+(defcustom python-shell-module-completion-string-code ""
+  "Python code used to get completions separated by semicolons for imports.
+
+For IPython v0.11, add the following line to
+`python-shell-completion-setup-code':
+
+from IPython.core.completerlib import module_completion
+
+and use the following as the value of this variable:
+
+';'.join(module_completion('''%s'''))"
   :type 'string
   :group 'python-mode)
 
@@ -1147,16 +1017,6 @@ and use the following as the value of this variable:
 
   :type 'string
   :group 'convenience)
-
-(defcustom python-use-skeletons nil
-  "Non-nil means template skeletons will be automagically inserted.
-This happens when pressing \"if<SPACE>\", for example, to prompt for
-the if condition.
-
-Kept for compatibility reasons.
-Don't activate this, with some probability it will mess up abbrev edits, leaving abbrev-mode unusable. "
-  :type 'boolean
-  :group 'python-mode)
 
 (defcustom py-fill-docstring-style 'pep-257-nn
   "Implemented styles are DJANGO, ONETWO, PEP-257, PEP-257-NN,
@@ -1286,10 +1146,6 @@ SYMMETRIC:
 (defvar python-mode-message-string "python-mode.el"
   "Reports the python-mode branch in use.")
 
-(defvar python-local-version nil
-  "Used internally. ")
-(make-variable-buffer-local 'python-local-version)
-
 (defvar py-local-command nil
   "Returns locally used executable-name. ")
 (make-variable-buffer-local 'py-local-command)
@@ -1298,17 +1154,11 @@ SYMMETRIC:
   "Returns locally used executable-name including its version. ")
 (make-variable-buffer-local 'py-local-versioned-command)
 
-(defvar python-preoutput-leftover nil)
-(defvar python-preoutput-skip-next-prompt nil)
+(defvar py-preoutput-leftover nil)
+(defvar py-preoutput-skip-next-prompt nil)
 
 (defvar py-shell-complete-debug nil
   "For interal use when debugging." )
-
-(defvar py-local-complete-function nil
-  "Set by python-mode-hook resp. to environment.
-
-`py-complete-function', when set, overrides it. ")
-(make-variable-buffer-local 'py-local-complete-function)
 
 (defvar py-encoding-string-re "^[ \t]*#[ \t]*-\\*-[ \t]*coding:.+-\\*-"
   "Matches encoding string of a Python file. ")
@@ -1391,12 +1241,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-pylint-history nil)
 
-(defvar py-shell-alist
-  '(("jython" . 'jython)
-    ("python" . 'cpython))
-  "*Alist of interpreters and python shells. Used by `py-choose-shell'
-to select the appropriate python interpreter mode for a file.")
-
 (defvar ipython-de-input-prompt-regexp "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
   "A regular expression to match the IPython input prompt. ")
 
@@ -1411,8 +1255,6 @@ to select the appropriate python interpreter mode for a file.")
 
 (defvar python-mode-v5-behavior nil)
 
-(defvar python--prompt-regexp nil)
-
 (defvar py-bol-forms-last-indent nil
   "For internal use. Stores indent from last py-end-of-FORM-bol command.
 When this-command is py-beginning-of-FORM-bol, last-command's indent will be considered in order to jump onto right beginning position.")
@@ -1420,18 +1262,48 @@ When this-command is py-beginning-of-FORM-bol, last-command's indent will be con
 (defvar python-mode-syntax-table nil
   "Syntax table for Python files.")
 
-(defvar outline-heading-end-regexp)
+(setq python-mode-syntax-table
+      (let ((table (make-syntax-table)))
+        ;; Give punctuation syntax to ASCII that normally has symbol
+        ;; syntax or has word syntax and isn't a letter.
+        (let ((symbol (string-to-syntax "_"))
+              (sst (standard-syntax-table)))
+          (dotimes (i 128)
+            (unless (= i ?_)
+              (if (equal symbol (aref sst i))
+                  (modify-syntax-entry i "." table)))))
+        (modify-syntax-entry ?$ "." table)
+        (modify-syntax-entry ?% "." table)
+        ;; exceptions
+        (modify-syntax-entry ?# "<" table)
+        (modify-syntax-entry ?\n ">" table)
+        (modify-syntax-entry ?' "\"" table)
+        (modify-syntax-entry ?` "$" table)
+        (when py-underscore-word-syntax-p
+          (modify-syntax-entry ?_ "w" table))
+        table))
+
+(defvar py-dotty-syntax-table
+  (let ((table (make-syntax-table python-mode-syntax-table)))
+    (modify-syntax-entry ?. "w" table)
+    (modify-syntax-entry ?_ "w" table)
+    table)
+  "Dotty syntax table for Python files.
+It makes underscores and dots word constituent chars.")
+
+(defvar py-dotted-expression-syntax-table
+  (let ((table (make-syntax-table python-mode-syntax-table)))
+    (modify-syntax-entry ?_ "_" table)
+    (modify-syntax-entry ?. "_" table)
+    table)
+  "Syntax table used to identify Python dotted expressions.")
+
+(defvar outline-heading-end-regexp nil)
 
 (defvar eldoc-documentation-function)
 
 (defvar py-completion-last-window-configuration nil
   "Internal use: restore py-restore-window-configuration when completion is done resp. abandoned. ")
-
-(defvar python-pdbtrack-tracked-buffer nil
-  "Variable containing the value of the current tracked buffer.
-Never set this variable directly, use
-`python-pdbtrack-set-tracked-buffer' instead.")
-(make-variable-buffer-local 'python-pdbtrack-tracked-buffer)
 
 (defvar ipython-version nil)
 
@@ -1458,11 +1330,6 @@ for options to pass to the DOCNAME interpreter. \"
           (goto-char (point-max)))))
 ")
 
-(defvar view-return-to-alist)
-
-(defvar py-imports)			; forward declaration
-(make-variable-buffer-local 'py-imports)
-
 (defcustom py-execute-directory nil
   "When set, stores the file's default directory-name py-execute-... functions act upon.
 
@@ -1477,9 +1344,12 @@ See also `py-execute-directory'"
   :type 'boolean
   :group 'python-mode)
 
-(defvar py-prev-dir/file nil
-  "Caches (directory . file) pair used in the last `py-load-file' command.
-Used for determining the default in the next one.")
+(defcustom py-shell-prompt-output-regexp ""
+  "Regular Expression matching output prompt of python shell.
+It should not contain a caret (^) at the beginning."
+  :type 'string
+  :group 'python-mode
+  )
 
 (defvar py-exception-buffer nil)
 
@@ -1562,32 +1432,12 @@ Inludes Python shell-prompt in order to stop further searches. ")
   "Regular expression that describes tracebacks.
 Inludes Python shell-prompt in order to stop further searches. ")
 
-(defvar python-preoutput-result nil
+(defvar py-preoutput-result nil
   "Data from last `_emacs_out' line seen by the preoutput filter.")
-
-(defvar python-preoutput-continuation nil
-  "If non-nil, funcall this when `py-preoutput-filter' sees `_emacs_ok'.")
-
-(defvar python-preoutput-leftover nil)
-
-(defvar python-preoutput-skip-next-prompt nil)
-
-(defvar python-version-checked nil)
 
 (defvar python-prev-dir/file nil
   "Caches (directory . file) pair used in the last `py-load-file' command.
 Used for determining the default in the next one.")
-
-(defvar py-mode-syntax-table nil)
-
-(defvar py-help-mode-syntax-table
-  (let ((st (make-syntax-table py-mode-syntax-table)))
-    ;; Don't get confused by apostrophes in the process's output (e.g. if
-    ;; you execute "help(os)").
-    (modify-syntax-entry ?\' "." st)
-    ;; Maybe we should do the same for double quotes?
-    (modify-syntax-entry ?\" "." st)
-    st))
 
 (defvar py-file-queue nil
   "Queue of Python temp files awaiting execution.
@@ -1604,32 +1454,11 @@ Currently-active file is at the head of the list.")
 
 (defvar py-pdbtrack-is-tracking-p nil)
 
-(defvar python-file-queue nil
-  "Queue of Python temp files awaiting execution.
-Currently-active file is at the head of the list.")
-
-(defvar python-pdbtrack-is-tracking-p nil)
-
 (defvar py-shell-map nil
   "Keymap used in *Python* shell buffers.")
 
-(defvar python-shell-map
-  (let ((map (copy-keymap comint-mode-map)))
-    (define-key map [tab]   'py-shell-complete)
-    (define-key map "\C-c-" 'py-up-exception)
-    (define-key map "\C-c=" 'py-down-exception)
-    map)
-  "Keymap used in *Python* shell buffers.")
-
-(defvar python-font-lock-keywords nil
+(defvar py-font-lock-keywords nil
   "Additional expressions to highlight in Python mode.")
-
-(defvar py-dotted-expression-syntax-table
-  (let ((table (make-syntax-table python-mode-syntax-table)))
-    (modify-syntax-entry ?_ "_" table)
-    (modify-syntax-entry ?. "_" table)
-    table)
-  "Syntax table used to identify Python dotted expressions.")
 
 (defvar jython-mode-hook nil
   "*Hook called by `jython-mode'. `jython-mode' also calls
@@ -1637,9 +1466,6 @@ Currently-active file is at the head of the list.")
 
 (defvar py-shell-hook nil
   "*Hook called by `py-shell'.")
-
-(defvar py-indent-line-indent nil
-  "Used internal by `py-indent-line'")
 
 (defvar ipython-completion-command-string nil
   "Either ipython0.10-completion-command-string or ipython0.11-completion-command-string.
@@ -1658,8 +1484,10 @@ ipython0.11-completion-command-string also covers version 0.12")
   "Internal use only - when `py-up-exception' is called in
 source-buffer, this will deliver the exception-buffer again. ")
 
-(defvar python-preoutput-result nil
+(defvar py-preoutput-result nil
   "Data from last `_emacs_out' line seen by the preoutput filter.")
+
+(defvar py-import nil)
 
 (defvar py-imenu-class-regexp
   (concat                               ; <<classes>>
@@ -1748,7 +1576,6 @@ alternative for finding the index.")
 
 (defvar skeleton-further-elements)
 
-
 ;;           (set (make-local-variable 'beginning-o1f-defun-function) 'py-beginning-of-def-or-class)
 ;;           (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class))
 
@@ -1757,7 +1584,7 @@ alternative for finding the index.")
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
           minor-mode-alist))
 (defvar inferior-python-mode-syntax-table
-  (let ((st (make-syntax-table py-mode-syntax-table)))
+  (let ((st (make-syntax-table python-mode-syntax-table)))
     ;; Don't get confused by apostrophes in the process's output (e.g. if
     ;; you execute "help(os)").
     (modify-syntax-entry ?\' "." st)
@@ -1769,7 +1596,126 @@ alternative for finding the index.")
 
 (defvar virtualenv-name nil)
 
+(defvar py-imports nil)
+
 ;;(eval-when-compile (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
+
+;;; Constants
+(defconst py-blank-or-comment-re "[ \t]*\\($\\|#\\)"
+  "Regular expression matching a blank or comment line.")
+
+(defconst py-block-closing-keywords-re
+  "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
+  "Matches the beginning of a class, method or compound statement. ")
+
+(defconst py-finally-re
+  "[ \t]*\\_<finally\\_>[: \n\t]"
+  "Regular expression matching keyword which closes a try-block. ")
+
+(defconst py-except-re
+  "[ \t]*\\_<except\\_>[: \n\t]"
+  "Regular expression matching keyword which composes a try-block. ")
+
+(defconst py-else-re
+  "[ \t]*\\_<else\\_>[: \n\t]"
+  "Regular expression matching keyword which closes a for- if- or try-block. ")
+
+(defconst py-return-re
+  ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]"
+  "Regular expression matching keyword which typically closes a function. ")
+
+(defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ 	\n]\\)")
+
+;; (defconst py-no-outdent-re
+;;   (concat
+;;    "\\("
+;;    (mapconcat 'identity
+;;               (list "try:"
+;;                     "except\\(\\s +.*\\)?:"
+;;                     "while\\s +.*:"
+;;                     "for\\s +.*:"
+;;                     "if\\s +.*:"
+;;                     "elif\\s +.*:"
+;;                     (concat py-block-closing-keywords-re "[ \t\n]"))
+;;               "\\|")
+;;    "\\)")
+;;   "Regular expression matching lines not to dedent after.")
+
+;; (setq py-traceback-line-re
+;; "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)")
+
+(defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
+  "If looking at the beginning of an assignment. ")
+
+(defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound statement. ")
+
+(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of an `for', `if', `try' or `with' block. ")
+
+(defconst py-try-block-re "[ \t]*\\_<try\\_>[: \n\t]"
+  "Matches the beginning of an `if' or `try' block. ")
+
+(defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
+  "Matches the beginning of a class definition. ")
+
+(defconst py-def-or-class-re "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]"
+  "Matches the beginning of a class- or functions definition. ")
+
+(defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
+  "Matches the beginning of a functions definition. ")
+
+(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound statement or it's clause. ")
+;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
+
+(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound statement or it's clause.
+Includes def and class. ")
+
+(defconst py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound statement's clause. ")
+;; (setq py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]")
+
+(defconst py-elif-re "[ \t]*\\_<\\elif\\_>[: \n\t]"
+  "Matches the beginning of a compound if-statement's clause exclusively. ")
+
+(defconst py-try-clause-re "[ \t]*\\_<\\(except\\|else\\|finally\\)\\_>[: \n\t]"
+  "Matches the beginning of a compound try-statement's clause. ")
+
+(defconst py-if-re "[ \t]*\\_<if\\_>[ \n\t]"
+  "Matches the beginning of a compound statement saying `if'. ")
+
+(defconst py-try-re "[ \t]*\\_<try\\_>[: \n\t]"
+  "Matches the beginning of a compound statement saying `try'. " )
+
+;;; Macro definitions
+(defmacro py-in-string-or-comment-p ()
+  "Returns beginning position if inside a string or comment, nil otherwise. "
+  `(or (nth 8 (syntax-ppss))
+       (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
+         (match-beginning 0))))
+
+(defmacro py-escaped ()
+  "Return t if char is preceded by an odd number of backslashes. "
+  `(save-excursion
+     (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
+(defmacro py-preceding-line-backslashed-p ()
+  "Return t if preceding line is a backslashed continuation line. "
+  `(save-excursion
+     (beginning-of-line)
+     (skip-chars-backward " \t\r\n\f")
+     (and (eq (char-before (point)) ?\\ )
+          (py-escaped))))
+
+(defmacro py-current-line-backslashed-p ()
+  "Return t if current line is a backslashed continuation line. "
+  `(save-excursion
+     (end-of-line)
+     (skip-chars-backward " \t\r\n\f")
+     (and (eq (char-before (point)) ?\\ )
+          (py-escaped))))
 
 ;;; Minor mode switches
 ;;
@@ -2026,34 +1972,6 @@ Returns value of `py-split-windows-on-execute-p'. "
   (customize-variable 'py-sexp-function))
 
 ;;;
-(setq python-mode-syntax-table
-      (let ((table (make-syntax-table)))
-        ;; Give punctuation syntax to ASCII that normally has symbol
-        ;; syntax or has word syntax and isn't a letter.
-        (let ((symbol (string-to-syntax "_"))
-              (sst (standard-syntax-table)))
-          (dotimes (i 128)
-            (unless (= i ?_)
-              (if (equal symbol (aref sst i))
-                  (modify-syntax-entry i "." table)))))
-        (modify-syntax-entry ?$ "." table)
-        (modify-syntax-entry ?% "." table)
-        ;; exceptions
-        (modify-syntax-entry ?# "<" table)
-        (modify-syntax-entry ?\n ">" table)
-        (modify-syntax-entry ?' "\"" table)
-        (modify-syntax-entry ?` "$" table)
-        (when py-underscore-word-syntax-p
-          (modify-syntax-entry ?_ "w" table))
-        table))
-
-(defconst python-dotty-syntax-table
-  (let ((table (make-syntax-table)))
-    (set-char-table-parent table python-mode-syntax-table)
-    (modify-syntax-entry ?. "_" table)
-    table)
-  "Syntax table giving `.' symbol syntax.
-Otherwise inherits from `python-mode-syntax-table'.")
 
 ;;;
 
@@ -2074,10 +1992,10 @@ to \"^python-\"."
 (defun py-send-shell-setup-code ()
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
-`python-shell-setup-codes' list."
+`py-setup-codes' list."
   (let ((process (get-buffer-process (current-buffer))))
     (accept-process-output process 1)
-    (dolist (code python-shell-setup-codes)
+    (dolist (code py-setup-codes)
       (when code
         (py-send-string (symbol-value code) process)))))
 
@@ -2143,10 +2061,10 @@ the output."
     (accept-process-output process 1)
     (when output-buffer
       (replace-regexp-in-string
-       (if (> (length python-shell-prompt-output-regexp) 0)
+       (if (> (length py-shell-prompt-output-regexp) 0)
            (format "\n*%s$\\|^%s\\|\n$"
                    python-shell-prompt-regexp
-                   (or python-shell-prompt-output-regexp ""))
+                   (or py-shell-prompt-output-regexp ""))
          (format "\n*$\\|^%s\\|\n$"
                  python-shell-prompt-regexp))
        "" output-buffer))))
@@ -2192,7 +2110,7 @@ completions on the current context."
 
 (defun python-shell-completion--do-completion-at-point (process imports input)
   "Do completion at point for PROCESS."
-  (with-syntax-table python-dotty-syntax-table
+  (with-syntax-table py-dotty-syntax-table
     (when imports (py-shell-send-string-no-output imports process))
     (let* ((code python-shell-module-completion-string-code)
            (completions
@@ -2265,150 +2183,6 @@ for options to pass to the DOCNAME interpreter. \"
           (goto-char (point-max)))))
 ")
 
-;; (setq py-expression-skip-regexp "^ =:#\t\r\n\f")
-
-;; (setq py-expression-skip-chars "^ (=#\t\r\n\f")
-
-;; (setq py-expression-looking-re "[^ =:#\t\r\n\f)]")
-
-;; (setq py-not-expression-regexp "[ .=:#\t\r\n\f)]")
-
-;; (setq py-not-expression-chars "[ .=#\t\r\n\f)]+")
-
-;; (setq py-not-expression-chars "[ .=#\t\r\n\f)]+")
-
-;; (setq py-partial-expression-skip-chars "^ .(){}=:#\t\r\n\f")
-
-;; (setq py-partial-expression-skip-backward-chars "^ .\"(){}\[]=:#\t\r\n\f")
-
-;; (setq py-not-partial-expression-skip-chars " )\]\\.=:#\t\r\n\f")
-
-;; (setq py-partial-expression-looking-regexp "[^ .=:#\t\r\n\f)]")
-
-;; (setq py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]")
-
-;; (setq py-operator-regexp "[ \t]*\\(+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\)[ \t]*")
-
-;; (setq  py-assignment-regexp "[ \t]*=[^=]")
-
-;; (setq py-delimiter-regexp "\\(,\\|;\\:\\)[ \t]*")
-
-(defconst py-blank-or-comment-re "[ \t]*\\($\\|#\\)"
-  "Regular expression matching a blank or comment line.")
-
-(defconst py-block-closing-keywords-re
-  "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
-  "Matches the beginning of a class, method or compound statement. ")
-
-(defconst py-finally-re
-  "[ \t]*\\_<finally\\_>[: \n\t]"
-  "Regular expression matching keyword which closes a try-block. ")
-
-(defconst py-except-re
-  "[ \t]*\\_<except\\_>[: \n\t]"
-  "Regular expression matching keyword which composes a try-block. ")
-
-(defconst py-else-re
-  "[ \t]*\\_<else\\_>[: \n\t]"
-  "Regular expression matching keyword which closes a for- if- or try-block. ")
-
-(defconst py-return-re
-  ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]"
-  "Regular expression matching keyword which typically closes a function. ")
-
-(defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ 	\n]\\)")
-
-;; (defconst py-no-outdent-re
-;;   (concat
-;;    "\\("
-;;    (mapconcat 'identity
-;;               (list "try:"
-;;                     "except\\(\\s +.*\\)?:"
-;;                     "while\\s +.*:"
-;;                     "for\\s +.*:"
-;;                     "if\\s +.*:"
-;;                     "elif\\s +.*:"
-;;                     (concat py-block-closing-keywords-re "[ \t\n]"))
-;;               "\\|")
-;;    "\\)")
-;;   "Regular expression matching lines not to dedent after.")
-
-;; (setq py-traceback-line-re
-;; "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)")
-
-(defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
-  "If looking at the beginning of an assignment. ")
-
-(defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound statement. ")
-
-(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\|with\\)\\_>[: \n\t]"
-  "Matches the beginning of an `for', `if', `try' or `with' block. ")
-
-(defconst py-try-block-re "[ \t]*\\_<try\\_>[: \n\t]"
-  "Matches the beginning of an `if' or `try' block. ")
-
-(defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
-  "Matches the beginning of a class definition. ")
-
-(defconst py-def-or-class-re "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]"
-  "Matches the beginning of a class- or functions definition. ")
-
-(defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
-  "Matches the beginning of a functions definition. ")
-
-(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound statement or it's clause. ")
-;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
-
-(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound statement or it's clause.
-Includes def and class. ")
-
-(defconst py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound statement's clause. ")
-;; (setq py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]")
-
-(defconst py-elif-re "[ \t]*\\_<\\elif\\_>[: \n\t]"
-  "Matches the beginning of a compound if-statement's clause exclusively. ")
-
-(defconst py-try-clause-re "[ \t]*\\_<\\(except\\|else\\|finally\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound try-statement's clause. ")
-
-(defconst py-if-re "[ \t]*\\_<if\\_>[ \n\t]"
-  "Matches the beginning of a compound statement saying `if'. ")
-
-(defconst py-try-re "[ \t]*\\_<try\\_>[: \n\t]"
-  "Matches the beginning of a compound statement saying `try'. " )
-
-;;; Macro definitions
-(defmacro py-in-string-or-comment-p ()
-  "Returns beginning position if inside a string or comment, nil otherwise. "
-  `(or (nth 8 (syntax-ppss))
-       (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
-         (match-beginning 0))))
-
-(defmacro py-escaped ()
-  "Return t if char is preceded by an odd number of backslashes. "
-  `(save-excursion
-     (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
-
-(defmacro py-preceding-line-backslashed-p ()
-  "Return t if preceding line is a backslashed continuation line. "
-  `(save-excursion
-     (beginning-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
-
-(defmacro py-current-line-backslashed-p ()
-  "Return t if current line is a backslashed continuation line. "
-  `(save-excursion
-     (end-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
-
 (defsubst py-keep-region-active ()
   "Keep the region active in XEmacs."
   ;; Ignore byte-compiler warnings you might see.  Also note that
@@ -2418,6 +2192,24 @@ Includes def and class. ")
        (setq zmacs-region-stays t)))
 
 ;;; Helper commands
+(defun py-update-imports ()
+  "Returns `python-imports'.
+
+Imports done are displayed in message buffer. "
+  (interactive)
+  (save-excursion
+    (let ((oldbuf (current-buffer))
+          (orig (point))
+          erg)
+      (mapc 'py-execute-string (split-string (car (read-from-string (py-find-imports))) "\n" t))
+      (setq erg (car (read-from-string python-imports)))
+      (set-buffer oldbuf)
+      (goto-char orig)
+      (when (interactive-p)
+        (switch-to-buffer (current-buffer))
+        (message "%s" erg))
+      erg)))
+
 (defun py-guess-pdb-path ()
   "If py-pdb-path isn't set, find location of pdb.py. "
   (interactive)
@@ -2781,31 +2573,31 @@ Don't save anything for STR matching `py-history-filter-regexp'."
 ;; `python-preoutput-continuation' if we get it.
 (defun py-preoutput-filter (s)
   "`comint-preoutput-filter-functions' function: ignore prompts not at bol."
-  (when python-preoutput-leftover
-    (setq s (concat python-preoutput-leftover s))
-    (setq python-preoutput-leftover nil))
+  (when py-preoutput-leftover
+    (setq s (concat py-preoutput-leftover s))
+    (setq py-preoutput-leftover nil))
   (let ((start 0)
         (res ""))
     ;; First process whole lines.
     (while (string-match "\n" s start)
       (let ((line (substring s start (setq start (match-end 0)))))
         ;; Skip prompt if needed.
-        (when (and python-preoutput-skip-next-prompt
+        (when (and py-preoutput-skip-next-prompt
                    (string-match comint-prompt-regexp line))
-          (setq python-preoutput-skip-next-prompt nil)
+          (setq py-preoutput-skip-next-prompt nil)
           (setq line (substring line (match-end 0))))
         ;; Recognize special _emacs_out lines.
         (if (and (string-match "\\`_emacs_out \\(.*\\)\n\\'" line)
-                 (local-variable-p 'python-preoutput-result))
+                 (local-variable-p 'py-preoutput-result))
             (progn
-              (setq python-preoutput-result (match-string 1 line))
-              (set (make-local-variable 'python-preoutput-skip-next-prompt) t))
+              (setq py-preoutput-result (match-string 1 line))
+              (set (make-local-variable 'py-preoutput-skip-next-prompt) t))
           (setq res (concat res line)))))
     ;; Then process the remaining partial line.
     (unless (zerop start) (setq s (substring s start)))
     (cond ((and (string-match comint-prompt-regexp s)
                 ;; Drop this prompt if it follows an _emacs_out...
-                (or python-preoutput-skip-next-prompt
+                (or py-preoutput-skip-next-prompt
                     ;; ... or if it's not gonna be inserted at BOL.
                     ;; Maybe we could be more selective here.
                     (if (zerop (length res))
@@ -2815,14 +2607,14 @@ Don't save anything for STR matching `py-history-filter-regexp'."
            ;; What is this all about, exactly?  --Stef
            ;; (if (and (eq ?. (aref s 0)))
            ;;     (accept-process-output (get-buffer-process (current-buffer)) 1))
-           (setq python-preoutput-skip-next-prompt nil)
+           (setq py-preoutput-skip-next-prompt nil)
            res)
           ((let ((end (min (length "_emacs_out ") (length s))))
              (eq t (compare-strings s nil end "_emacs_out " nil end)))
            ;; The leftover string is a prefix of _emacs_out so we don't know
            ;; yet whether it's an _emacs_out or something else: wait until we
            ;; get more output so we can resolve this ambiguity.
-           (set (make-local-variable 'python-preoutput-leftover) s)
+           (set (make-local-variable 'py-preoutput-leftover) s)
            res)
           (t (concat res s)))))
 
@@ -2948,11 +2740,10 @@ Start a new process if necessary. "
   "Return non-nil if and only if there's a normal prompt in the inferior buffer.
 If there isn't, it's probably not appropriate to send input to return Eldoc
 information etc.  If PROC is non-nil, check the buffer for that process."
-  (with-current-buffer (process-buffer (or proc (py-proc)))
+  (with-current-buffer (process-buffer (or proc (get-buffer-process (py-shell))))
     (save-excursion
       (save-match-data
-        (re-search-backward (concat python--prompt-regexp " *\\=")
-                            nil t)))))
+        (re-search-backward " *\\=" nil t)))))
 
 ;; Fixme:  Is there anything reasonable we can do with random methods?
 ;; (Currently only works with functions.)
@@ -2960,8 +2751,10 @@ information etc.  If PROC is non-nil, check the buffer for that process."
   "`eldoc-documentation-function' for Python.
 Only works when point is in a function name, not its arg list, for
 instance.  Assumes an inferior Python is running."
-  (let ((symbol (with-syntax-table python-dotty-syntax-table
-                  (current-word))))
+  (let ((symbol (with-syntax-table py-dotty-syntax-table
+                  (current-word)))
+        (py-imports (py-find-imports)))
+
     ;; This is run from timers, so inhibit-quit tends to be set.
     (with-local-quit
       ;; First try the symbol we're on.
@@ -3001,37 +2794,11 @@ of current line."
   '(push '(python-mode . py-module-path) ffap-alist))
 
 ;;;
-(setq py-mode-syntax-table
-      (let ((table (make-syntax-table))
-            (tablelookup (if (featurep 'xemacs)
-                             'get-char-table
-                           'aref)))
-        ;; Give punctuation syntax to ASCII that normally has symbol
-        ;; syntax or has word syntax and isn't a letter.
-        (if (featurep 'xemacs)
-            (setq table (standard-syntax-table))
-          (let ((symbol (string-to-syntax "_"))
-                ;; (symbol (string-to-syntax "_"))
-                (sst (standard-syntax-table)))
-            (dotimes (i 128)
-              (unless (= i ?_)
-                (if (equal symbol (funcall tablelookup sst i))
-                    (modify-syntax-entry i "." table))))))
-        (modify-syntax-entry ?$ "." table)
-        (modify-syntax-entry ?% "." table)
-        ;; exceptions
-        (modify-syntax-entry ?# "<" table)
-        (modify-syntax-entry ?\n ">" table)
-        (modify-syntax-entry ?' "\"" table)
-        (modify-syntax-entry ?` "$" table)
-        (modify-syntax-entry ?\_ "w" table)
-        table))
-
 (defconst py-space-backslash-table
-  (let ((table (copy-syntax-table py-mode-syntax-table)))
+  (let ((table (copy-syntax-table python-mode-syntax-table)))
     (modify-syntax-entry ?\\ " " table)
     table)
-  "`py-mode-syntax-table' with backslash given whitespace syntax.")
+  "`python-mode-syntax-table' with backslash given whitespace syntax.")
 
 ;; have to bind py-file-queue before installing the kill-emacs-hook
 
@@ -3070,19 +2837,8 @@ of current line."
 (defconst py-pdbtrack-track-range 10000
   "Max number of characters from end of buffer to search for stack entry.")
 
-;; Bindings
-;; Bind python-file-queue before installing the kill-emacs-hook.
-(defconst python-pdbtrack-stack-entry-regexp
-  "^> \\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression pdbtrack uses to find a stack trace entry.")
-
-(defconst python-pdbtrack-input-prompt "\n[(<]*[Ii]?[Pp]db[>)]+ "
-  "Regular expression pdbtrack uses to recognize a pdb prompt.")
-
-(defconst python-pdbtrack-track-range 10000
-  "Max number of characters from end of buffer to search for stack entry.")
 
-
+;; Bindings
 (defconst python-compilation-regexp-alist
   ;; FIXME: maybe these should move to compilation-error-regexp-alist-alist.
   ;;   The first already is (for CAML), but the second isn't.  Anyhow,
@@ -3202,7 +2958,7 @@ character address of the specified TYPE."
            (nth 1 ppss))
           (t nil))))
 
-(setq python-font-lock-keywords
+(setq py-font-lock-keywords
       ;; Keywords
       `(,(rx symbol-start
              (or "and" "del" "from" "not" "while" "as" "elif" "global" "or" "with"
@@ -3353,14 +3109,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
-
-(defconst python-dotty-syntax-table
-  (let ((table (make-syntax-table)))
-    (set-char-table-parent table py-mode-syntax-table)
-    (modify-syntax-entry ?. "_" table)
-    table)
-  "Syntax table giving `.' symbol syntax.
-Otherwise inherits from `py-mode-syntax-table'.")
 
 ;; An auxiliary syntax table which places underscore and dot in the
 ;; symbol class for simplicity
@@ -10011,10 +9759,10 @@ This is a no-op if `py-check-comint-prompt' returns nil."
   (let ((proc (py-proc)))
     (with-current-buffer (process-buffer proc)
       (when (py-check-comint-prompt proc)
-	(set (make-local-variable 'python-preoutput-result) nil)
+	(set (make-local-variable 'py-preoutput-result) nil)
         (accept-process-output proc 5)
-	(prog1 python-preoutput-result
-	  (kill-local-variable 'python-preoutput-result))))))
+	(prog1 py-preoutput-result
+	  (kill-local-variable 'py-preoutput-result))))))
 
 (defalias 'py-find-function 'py-find-definition)
 (defun py-find-definition (&optional arg)
@@ -10024,7 +9772,8 @@ Interactively, prompt for name.
 
 Search in current buffer first. "
   (interactive)
-  (let* ((symbol (or arg
+  (let* ((py-imports (py-find-imports))
+         (symbol (or arg
                      (with-syntax-table py-dotted-expression-syntax-table
                        (current-word))))
          ;; (enable-recursive-minibuffers t)
@@ -10052,24 +9801,6 @@ Search in current buffer first. "
           (forward-line (1- line)))))))
 
 ;;; Miscellanus
-(defun py-update-imports ()
-  "Returns `py-imports'.
-
-Imports done are displayed in message buffer. "
-  (interactive)
-  (save-excursion
-    (let ((oldbuf (current-buffer))
-          (orig (point))
-          erg)
-      (mapc 'py-execute-string (split-string (car (read-from-string (py-find-imports))) "\n" t))
-      (setq erg (car (read-from-string py-imports)))
-      (set-buffer oldbuf)
-      (goto-char orig)
-      (when (interactive-p)
-        (switch-to-buffer (current-buffer))
-        (when py-verbose-p (message "%s" erg)))
-      erg)))
-
 (defun py-insert-super ()
   "Insert a function \"super()\" from current environment.
 
@@ -10573,9 +10304,9 @@ Needed when file-path names are contructed from maybe numbered buffer names like
 (defun py-shell-send-setup-code (process)
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
-`python-shell-setup-codes' list."
+`py-setup-codes' list."
   (accept-process-output process 1)
-  (dolist (code python-shell-setup-codes)
+  (dolist (code py-setup-codes)
     (py-shell-send-string-no-output
      (symbol-value code) process)
     (sit-for 0.1)))
@@ -10610,7 +10341,7 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
                         (if path (concat path path-separator))
                         data-directory)
                 process-environment))
-         ;; proc
+         ;; reset later on
          (py-buffer-name
           (or py-buffer-name
               (when argprompt
@@ -10644,9 +10375,9 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
               (expand-file-name py-shell-local-path)
             (when py-use-local-default
               (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
-         (py-buffer-name-prepare (unless py-buffer-name
+         (py-buffer-name-prepare (unless (and py-buffer-name (not dedicated))
                                    (py-buffer-name-prepare (or pyshellname py-shell-name) sepchar dedicated)))
-         (py-buffer-name (or py-buffer-name py-buffer-name-prepare))
+         (py-buffer-name (or py-buffer-name-prepare py-buffer-name))
          (executable (cond (pyshellname)
                            (py-buffer-name
                             (py-report-executable py-buffer-name))))
@@ -10673,61 +10404,59 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
       ;; (setq completion-at-point-functions nil)
       (when py-fontify-shell-buffer-p
         (set (make-local-variable 'font-lock-defaults)
-             '(python-font-lock-keywords nil nil nil nil
-                                         (font-lock-syntactic-keywords
-                                          . py-font-lock-syntactic-keywords)))
-        (set (make-local-variable 'comment-start) "# ")
-        (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
-        (set (make-local-variable 'comment-column) 40)
-        (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
-        (font-lock-fontify-buffer))
-      (set (make-local-variable 'indent-region-function) 'py-indent-region)
-      (set (make-local-variable 'indent-line-function) 'py-indent-line)
-      ;; (font-lock-unfontify-region (point-min) (line-beginning-position))
-      (setq python-buffer (current-buffer))
-      ;; (accept-process-output (get-buffer-process python-buffer) 5)
-      (setq proc (get-buffer-process (current-buffer)))
-      (goto-char (point-max))
-      (move-marker (process-mark proc) (point-max))
-      ;; (funcall (process-filter proc) proc "")
-      (py-shell-send-setup-code proc)
-      ;; (accept-process-output proc 1)
-      (compilation-shell-minor-mode 1)
-      ;; (sit-for 0.1)
-      (setq comint-input-sender 'py-shell-simple-send)
-      (setq comint-input-ring-file-name
-            (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
-                   (if py-honor-IPYTHONDIR-p
-                       (if (getenv "IPYTHONDIR")
-                           (concat (getenv "IPYTHONDIR") "/history")
-                         py-ipython-history)
-                     py-ipython-history))
-                  (t
-                   (if py-honor-PYTHONHISTORY-p
-                       (if (getenv "PYTHONHISTORY")
-                           (concat (getenv "PYTHONHISTORY") "/" (py-report-executable py-buffer-name) "_history")
-                         py-ipython-history)
-                     py-ipython-history))
-                  ;; (dedicated
-                  ;; (concat "~/." (substring py-buffer-name 0 (string-match "-" py-buffer-name)) "_history"))
-                  ;; .pyhistory might be locked from outside Emacs
-                  ;; (t "~/.pyhistory")
-                  ;; (t (concat "~/." (py-report-executable py-buffer-name) "_history"))
-                  ))
-      (comint-read-input-ring t)
-      (set-process-sentinel (get-buffer-process (current-buffer))
-                            #'shell-write-history-on-exit)
-      ;; (comint-send-string proc "import emacs\n")
-      ;; (process-send-string proc "import emacs")
-      (ansi-color-for-comint-mode-on)
-      (use-local-map py-shell-map)
-      ;; pdbtrack
-      (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file t)
-      (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t)
-      (setq py-pdbtrack-do-tracking-p t)
-      (set-syntax-table python-mode-syntax-table)
-      ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
-      (when py-shell-hook (run-hooks 'py-shell-hook)))
+             '(py-font-lock-keywords nil nil nil nil
+                                     (font-lock-syntactic-keywords
+                                      . py-font-lock-syntactic-keywords))))
+      (set (make-local-variable 'comment-start) "# ")
+      (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
+      (set (make-local-variable 'comment-column) 40)
+      (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
+      (font-lock-fontify-buffer))
+    (set (make-local-variable 'indent-region-function) 'py-indent-region)
+    (set (make-local-variable 'indent-line-function) 'py-indent-line)
+    ;; (font-lock-unfontify-region (point-min) (line-beginning-position))
+    (setq proc (get-buffer-process py-buffer-name))
+    (goto-char (point-max))
+    (move-marker (process-mark proc) (point-max))
+    ;; (funcall (process-filter proc) proc "")
+    (py-shell-send-setup-code proc)
+    ;; (accept-process-output proc 1)
+    (compilation-shell-minor-mode 1)
+    ;; (sit-for 0.1)
+    (setq comint-input-sender 'py-shell-simple-send)
+    (setq comint-input-ring-file-name
+          (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+                 (if py-honor-IPYTHONDIR-p
+                     (if (getenv "IPYTHONDIR")
+                         (concat (getenv "IPYTHONDIR") "/history")
+                       py-ipython-history)
+                   py-ipython-history))
+                (t
+                 (if py-honor-PYTHONHISTORY-p
+                     (if (getenv "PYTHONHISTORY")
+                         (concat (getenv "PYTHONHISTORY") "/" (py-report-executable py-buffer-name) "_history")
+                       py-ipython-history)
+                   py-ipython-history))
+                ;; (dedicated
+                ;; (concat "~/." (substring py-buffer-name 0 (string-match "-" py-buffer-name)) "_history"))
+                ;; .pyhistory might be locked from outside Emacs
+                ;; (t "~/.pyhistory")
+                ;; (t (concat "~/." (py-report-executable py-buffer-name) "_history"))
+                ))
+    (comint-read-input-ring t)
+    (set-process-sentinel (get-buffer-process py-buffer-name)
+                          #'shell-write-history-on-exit)
+    ;; (comint-send-string proc "import emacs\n")
+    ;; (process-send-string proc "import emacs")
+    (ansi-color-for-comint-mode-on)
+    (use-local-map py-shell-map)
+    ;; pdbtrack
+    (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file t)
+    (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t)
+    (setq py-pdbtrack-do-tracking-p t)
+    (set-syntax-table python-mode-syntax-table)
+    ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
+    (when py-shell-hook (run-hooks 'py-shell-hook))
     (unless done (py-shell-manage-windows switch split oldbuf py-buffer-name))
     py-buffer-name))
 
@@ -14088,16 +13817,17 @@ and return collected output"
 (defun py-symbol-completions (symbol)
   "Return a list of completions of the string SYMBOL from Python process.
 The list is sorted.
-Uses `py-imports' to load modules against which to complete."
+Uses `python-imports' to load modules against which to complete."
   (when (stringp symbol)
-    (let ((completions
-	   (condition-case ()
-	       (car (read-from-string
-		     (py-send-receive
-		      (format "emacs.complete(%S,%s)"
-			      (substring-no-properties symbol)
-			      py-imports))))
-	     (error nil))))
+    (let* ((py-imports (py-find-imports))
+           (completions
+            (condition-case ()
+                (car (read-from-string
+                      (py-send-receive
+                       (format "emacs.complete(%S,%s)"
+                               (substring-no-properties symbol)
+                               py-imports))))
+              (error nil))))
       (sort
        ;; We can get duplicates from the above -- don't know why.
        (delete-dups completions)
@@ -18467,13 +18197,13 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                                   py-outline-mode-keywords)
                           "\\|")))
   (set (make-local-variable 'font-lock-defaults)
-       '(python-font-lock-keywords nil nil nil nil
-                                   (font-lock-syntactic-keywords
-                                    . py-font-lock-syntactic-keywords)
-                                   ;; This probably isn't worth it.
-                                   ;; (font-lock-syntactic-face-function
-                                   ;;  . python-font-lock-syntactic-face-function)
-                                   ))
+       '(py-font-lock-keywords nil nil nil nil
+                               (font-lock-syntactic-keywords
+                                . py-font-lock-syntactic-keywords)
+                               ;; This probably isn't worth it.
+                               ;; (font-lock-syntactic-face-function
+                               ;;  . python-font-lock-syntactic-face-function)
+                               ))
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-start) "#")
