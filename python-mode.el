@@ -1720,7 +1720,39 @@ Includes def and class. ")
 ;;; Minor mode switches
 ;;
 
-;;; python-mode-v5-behavior-p forms
+;; py-jump-on-exception forms
+(defun toggle-py-jump-on-exception (&optional arg)
+  "If `py-jump-on-exception' should be on or off.
+
+  Returns value of `py-jump-on-exception' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-jump-on-exception -1 1))))
+    (if (< 0 arg)
+        (setq py-jump-on-exception t)
+      (setq py-jump-on-exception nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-jump-on-exception: %s" py-jump-on-exception))
+    py-jump-on-exception))
+
+(defun py-jump-on-exception-on (&optional arg)
+  "Make sure, py-jump-on-exception' is on.
+
+Returns value of `py-jump-on-exception'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-jump-on-exception arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-jump-on-exception: %s" py-jump-on-exception))
+  py-jump-on-exception)
+
+(defun py-jump-on-exception-off ()
+  "Make sure, `py-jump-on-exception' is off.
+
+Returns value of `py-jump-on-exception'. "
+  (interactive)
+  (toggle-py-jump-on-exception -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-jump-on-exception: %s" py-jump-on-exception))
+  py-jump-on-exception)
+
+;; python-mode-v5-behavior-p forms
 (defun toggle-python-mode-v5-behavior-p (&optional arg)
   "If `python-mode-v5-behavior-p' should be on or off.
 
@@ -11397,6 +11429,31 @@ Run pdb under GUD"]
             ("Modes"
              :help "Toggle useful modes like `highlight-indentation'"
 
+             ("Jump on exception"
+              :help "Toggle `py-jump-on-exception'"
+
+              ["Toggle jump on exception" toggle-py-jump-on-exception
+               :help " `toggle-py-jump-on-exception'
+
+ If `py-jump-on-exception' should be on or off\.
+
+ Returns value of `py-jump-on-exception' switched to\. . "]
+
+              ["Jump on exception on" py-jump-on-exception-on
+               :help " `py-jump-on-exception-on'
+
+Make sure, py-jump-on-exception' is on\.
+
+Returns value of `py-jump-on-exception'\. . "]
+
+              ["Jump on exception off" py-jump-on-exception-off
+               :help " `py-jump-on-exception-off'
+
+Make sure, `py-jump-on-exception' is off\.
+
+Returns value of `py-jump-on-exception'\. . "]
+              )
+
              ("py-switch-buffers-on-execute-p"
               :help "Toggle  `py-switch-buffers-on-execute-p'"
 
@@ -18307,6 +18364,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
        '((< '(backward-delete-char-untabify (min py-indent-offset
                                                  (current-column))))
          (^ '(- (1+ (current-indentation))))))
+  (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
   (py-set-load-path)
   ;; (add-to-list 'load-path py-install-directory)
   ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
@@ -18329,8 +18387,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
    (t
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
-  (when (and py-imenu-create-index-p (fboundp 'imenu-add-to-menubar)(ignore-errors (require 'imenu)))
-    (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
+  (when (and py-imenu-create-index-p
+             (fboundp 'imenu-add-to-menubar)
+             (ignore-errors (require 'imenu)))
     (imenu-add-to-menubar "PyIndex"))
   ;; add the menu
   (when py-menu
