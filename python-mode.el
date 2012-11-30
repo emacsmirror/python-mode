@@ -1337,7 +1337,7 @@ Used by Python-shell for output of `py-execute-buffer' and related commands. See
   :type 'string
   :group 'python-mode)
 
-(defcustom py-use-current-dir-when-execute-p nil
+(defcustom py-use-current-dir-when-execute-p t
   "When `t', current directory is used by Python-shell for output of `py-execute-buffer' and related commands.
 
 See also `py-execute-directory'"
@@ -1948,6 +1948,38 @@ Returns value of `py-smart-operator-mode-p'. "
     (py-toggle-smart-operator arg)
     (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
     py-smart-operator-mode-p))
+
+;; py-use-current-dir-when-execute-p forms
+(defun toggle-py-use-current-dir-when-execute-p (&optional arg)
+  "If `py-use-current-dir-when-execute-p' should be on or off.
+
+  Returns value of `py-use-current-dir-when-execute-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-use-current-dir-when-execute-p -1 1))))
+    (if (< 0 arg)
+        (setq py-use-current-dir-when-execute-p t)
+      (setq py-use-current-dir-when-execute-p nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-use-current-dir-when-execute-p: %s" py-use-current-dir-when-execute-p))
+    py-use-current-dir-when-execute-p))
+
+(defun py-use-current-dir-when-execute-p-on (&optional arg)
+  "Make sure, py-use-current-dir-when-execute-p' is on.
+
+Returns value of `py-use-current-dir-when-execute-p'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-use-current-dir-when-execute-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-use-current-dir-when-execute-p: %s" py-use-current-dir-when-execute-p))
+  py-use-current-dir-when-execute-p)
+
+(defun py-use-current-dir-when-execute-p-off ()
+  "Make sure, `py-use-current-dir-when-execute-p' is off.
+
+Returns value of `py-use-current-dir-when-execute-p'. "
+  (interactive)
+  (toggle-py-use-current-dir-when-execute-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-use-current-dir-when-execute-p: %s" py-use-current-dir-when-execute-p))
+  py-use-current-dir-when-execute-p)
 
 ;; autopair
 (defun py-toggle-autopair-mode ()
@@ -8669,7 +8701,8 @@ When called from a programm, it accepts a string specifying a shell which will b
                                   (py-use-current-dir-when-execute-p
                                    (file-name-directory (buffer-file-name)))
                                   ((getenv "VIRTUAL_ENV"))
-                                  (py-execute-directory)
+                                  ((stringp py-execute-directory)
+                                   py-execute-directory)
                                   (t (getenv "HOME"))))
          (strg (buffer-substring-no-properties start end))
          (sepchar (or sepchar (char-to-string py-separator-char)))
