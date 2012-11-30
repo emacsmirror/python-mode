@@ -10709,8 +10709,12 @@ With arg, do it that many times.
   "Inserts a print statement out of current `(car kill-ring)' by default, inserts ARG instead if delivered. "
   (interactive "*")
   (let* ((name (string-strip (or arg (car kill-ring))))
+         ;; guess if doublequotes or parentesis are needed
+         (numbered (and (string-match "^[0-9]" name) (string-match "^[ \t]*[0-9]" name)(string-match "[0-9][ \t]*$" name)))
          (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'inferior-python-mode))
-                      (concat "print \"" name ": %s \" % " name)))))
+                      (if numbered
+                          (concat "print(\"" name ": %s \" % (" name "))")
+                        (concat "print(\"" name ": %s \" % \"" name "\")"))))))
     (insert form)))
 
 (defun eva ()
@@ -13718,7 +13722,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."
               "#"
               ;; forward-sexp function
               (lambda (arg)
-                (py-end-of-block))
+                (py-end-of-block-or-clause))
               nil))
 
 (setq imenu-generic-expression 'py-imenu-generic-regexp)
