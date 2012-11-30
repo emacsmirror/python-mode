@@ -4770,49 +4770,50 @@ SYMMETRIC:
     \"\"\"
 "
   (interactive "P")
-  (let ((orig (copy-marker (point)))
-        (beg (or start (if (use-region-p) (region-beginning) (py-beginning-of-paragraph-position))))
-        (end (copy-marker (or end (if (use-region-p) (region-end) (py-end-of-paragraph-position)))))
-        pps
-        (style (or style py-fill-docstring-style))
-        (this-end (point-min)))
-    (save-excursion
-      (save-restriction
-        (goto-char beg) (end-of-line)
-        (setq pps (syntax-ppss))
-        (narrow-to-region beg end)
-        (cond
-         ;; Comments
-         ((nth 4 pps)
-          (py-fill-comment justify))
-         ;; Strings/Docstrings
-         ((save-excursion
-            (or (nth 3 pps)
-                (equal (string-to-syntax "|")
-                       (syntax-after (point)))
-                (looking-at py-string-delim-re))
-            (goto-char (point-min))
-            (while (and (progn (forward-paragraph) (< this-end (point)))(setq this-end (copy-marker (point))))
-              (py-fill-string justify style beg this-end)
-              (goto-char this-end)
-              ;; (end-of-line) (while (nth 8 (syntax-ppss))(forward-char 1))
-              (set (make-local-variable 'py-fill-docstring-style) nil))))
-         ;; Decorators
-         ((save-excursion
-            (equal (char-after
-                    (py-beginning-of-statement))
-                   ;; (back-to-indentation)
-                   ;; (point))
-                   ?\@))
-          (py-fill-decorator justify))
-         ;; Parens
-         ((or (nth 1 pps)
-              (looking-at (python-rx open-paren))
-              (save-excursion
-                (skip-syntax-forward "^(" (line-end-position))
-                (looking-at (python-rx open-paren))))
-          (py-fill-paren justify))
-         (t t))))))
+  (or (fill-comment-paragraph justify)
+      (let ((orig (copy-marker (point)))
+            (beg (or start (if (use-region-p) (region-beginning) (py-beginning-of-paragraph-position))))
+            (end (copy-marker (or end (if (use-region-p) (region-end) (py-end-of-paragraph-position)))))
+            pps
+            (style (or style py-fill-docstring-style))
+            (this-end (point-min)))
+        (save-excursion
+          (save-restriction
+            (goto-char beg) (end-of-line)
+            (setq pps (syntax-ppss))
+            (narrow-to-region beg end)
+            (cond
+             ;; Comments
+             ((nth 4 pps)
+              (py-fill-comment justify))
+             ;; Strings/Docstrings
+             ((save-excursion
+                (or (nth 3 pps)
+                    (equal (string-to-syntax "|")
+                           (syntax-after (point)))
+                    (looking-at py-string-delim-re))
+                (goto-char (point-min))
+                (while (and (progn (forward-paragraph) (< this-end (point)))(setq this-end (copy-marker (point))))
+                  (py-fill-string justify style beg this-end)
+                  (goto-char this-end)
+                  ;; (end-of-line) (while (nth 8 (syntax-ppss))(forward-char 1))
+                  (set (make-local-variable 'py-fill-docstring-style) nil))))
+             ;; Decorators
+             ((save-excursion
+                (equal (char-after
+                        (py-beginning-of-statement))
+                       ;; (back-to-indentation)
+                       ;; (point))
+                       ?\@))
+              (py-fill-decorator justify))
+             ;; Parens
+             ((or (nth 1 pps)
+                  (looking-at (python-rx open-paren))
+                  (save-excursion
+                    (skip-syntax-forward "^(" (line-end-position))
+                    (looking-at (python-rx open-paren))))
+              (py-fill-paren justify))
+             (t t)))))))
 
 ;; (defun py-fill-comment (&optional justify)
 ;;   "Comment fill function for `py-fill-paragraph'.
