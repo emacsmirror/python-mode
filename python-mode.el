@@ -690,6 +690,18 @@ variable will only effect new shells."
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-fileless-buffer-use-default-directory-p t
+  "When `py-use-current-dir-when-execute-p' is non-nil and no buffer-file exists, value of `default-directory' sets current working directory of Python output shell"
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-keep-shell-dir-when-execute-p nil
+  "Don't change Python shell's current working directory when sending code.
+
+See also `py-execute-directory'"
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-switch-buffers-on-execute-p nil
   "When non-nil switch to the Python output buffer. "
 
@@ -8697,13 +8709,17 @@ When called from a programm, it accepts a string specifying a shell which will b
   "Adapt the variables used in the process. "
   (let* ((oldbuf (current-buffer))
          (pyshellname (or pyshellname (py-choose-shell)))
-         (execute-directory (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
-                                  (py-use-current-dir-when-execute-p
-                                   (file-name-directory (buffer-file-name)))
-                                  ((getenv "VIRTUAL_ENV"))
-                                  ((stringp py-execute-directory)
-                                   py-execute-directory)
-                                  (t (getenv "HOME"))))
+         (execute-directory
+          (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
+                ((and py-use-current-dir-when-execute-p (buffer-file-name))
+                 (file-name-directory (buffer-file-name)))
+                ((and py-use-current-dir-when-execute-p
+                      py-fileless-buffer-use-default-directory-p)
+                 (expand-file-name default-directory))
+                ((stringp py-execute-directory)
+                 py-execute-directory)
+                ((getenv "VIRTUAL_ENV"))
+                (t (getenv "HOME"))))
          (strg (buffer-substring-no-properties start end))
          (sepchar (or sepchar (char-to-string py-separator-char)))
          (py-buffer-name (py-buffer-name-prepare pyshellname sepchar))
@@ -8733,41 +8749,42 @@ When called from a programm, it accepts a string specifying a shell which will b
     (py-if-needed-insert-shell (prin1-to-string proc) sepchar)
     (unless wholebuf (py-insert-coding))
     (unless (string-match "[jJ]ython" pyshellname) (py-insert-execute-directory execute-directory))
-    (cond (python-mode-v5-behavior-p
-           (let ((cmd (concat pyshellname (if (string-equal py-which-bufname
-                                                            "Jython")
-                                              " -"
-                                            ;; " -c "
-                                            ""))))
-             (save-excursion
-               (set-buffer filebuf)
-               (shell-command-on-region (point-min) (point-max)
-                                        cmd py-output-buffer))
-             (if (not (get-buffer py-output-buffer))
-                 (message "No output.")
-               (setq py-exception-buffer oldbuf)
-               (let ((err-p (py-postprocess-output-buffer py-output-buffer file)))
-                 (if err-p
-                     (pop-to-buffer py-exception-buffer)
-                   (pop-to-buffer py-output-buffer)
-                   (goto-char (point-max))
-                   (setq erg (copy-marker (point))))))))
-          (t (set-buffer filebuf)
-             (write-region (point-min) (point-max) file nil t nil 'ask)
-             (set-buffer-modified-p 'nil)
-             (kill-buffer filebuf)
-             (if (file-readable-p file)
-                 (progn
-                   (when (string-match "ipython" (process-name proc))
-                     (sit-for py-ipython-execute-delay))
-                   (setq erg (py-execute-file-base proc file pec procbuf))
-                   (setq py-exception-buffer (cons file (current-buffer)))
-                   (py-shell-manage-windows switch split oldbuf py-buffer-name)
-                   (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
-                     (when py-verbose-p (message "Output buffer: %s" procbuf)))
-                   (sit-for 0.1)
-                   erg)
-               (message "%s not readable. %s" file "Do you have write permissions?"))))
+    (unwind-protect
+        (cond (python-mode-v5-behavior-p
+               (let ((cmd (concat pyshellname (if (string-equal py-which-bufname
+                                                                "Jython")
+                                                  " -"
+                                                ;; " -c "
+                                                ""))))
+                 (save-excursion
+                   (set-buffer filebuf)
+                   (shell-command-on-region (point-min) (point-max)
+                                            cmd py-output-buffer))
+                 (if (not (get-buffer py-output-buffer))
+                     (message "No output.")
+                   (setq py-exception-buffer oldbuf)
+                   (let ((err-p (py-postprocess-output-buffer py-output-buffer file)))
+                     (if err-p
+                         (pop-to-buffer py-exception-buffer)
+                       (pop-to-buffer py-output-buffer)
+                       (goto-char (point-max))
+                       (setq erg (copy-marker (point))))))))
+              (t (set-buffer filebuf)
+                 (write-region (point-min) (point-max) file nil t nil 'ask)
+                 (set-buffer-modified-p 'nil)
+                 (kill-buffer filebuf)
+                 (if (file-readable-p file)
+                     (progn
+                       (when (string-match "ipython" (process-name proc))
+                         (sit-for py-ipython-execute-delay))
+                       (setq erg (py-execute-file-base proc file pec procbuf))
+                       (setq py-exception-buffer (cons file (current-buffer)))
+                       (py-shell-manage-windows switch split oldbuf py-buffer-name)
+                       (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
+                         (when py-verbose-p (message "Output buffer: %s" procbuf)))
+                       (sit-for 0.1)
+                       erg)
+                   (message "%s not readable. %s" file "Do you have write permissions?")))))
     (when py-cleanup-temporary
       (py-delete-temporary file localname filebuf))
     erg))
