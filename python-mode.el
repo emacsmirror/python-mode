@@ -243,17 +243,17 @@ Default is nil. "
   :type '(repeat string)
   :group 'python-mode)
 
-(defcustom py-start-run-py-shell t
-  "If `python-mode' should start a python-shell, `py-shell'. Default is `t'. "
+(defcustom py-start-run-py-shell nil
+  "If `python-mode' should start a python-shell, `py-shell'.
 
+Default is `nil'. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-start-run-ipython-shell t
-  "If `python-mode' should start an ipython-shell. Default is `t'.
+(defcustom py-start-run-ipython-shell nil
+  "If `python-mode' should start an ipython-shell.
 
-A running ipython-shell presently is needed by `ipython-complete', otherwise first try will fail. "
-
+Default is `nil'. "
   :type 'boolean
   :group 'python-mode)
 
@@ -11258,12 +11258,17 @@ if `(locate-library \"python-mode\")' is not succesful.
 
 Used only, if `py-install-directory' is empty. "
   (interactive)
-  (let ((erg (file-name-directory (locate-library "python-mode"))))
+  (let ((erg (cond ((locate-library "python-mode")
+                    (file-name-directory (locate-library "python-mode")))
+                   ((and (buffer-file-name)(string-match "python-mode" (buffer-file-name)))
+                    (file-name-directory (buffer-file-name)))
+                   ((string-match "python-mode" (buffer-name))
+                    default-directory))))
     (if erg
         (setq py-install-directory erg)
       (setq py-install-directory (expand-file-name "~/")))
     (when (and py-verbose-p (interactive-p)) (message "Setting py-install-directory to: %s" py-install-directory))
-    py-install-directory ))
+    py-install-directory))
 
 (defun py-set-load-path ()
   "Include needed subdirs of python-mode directory. "
