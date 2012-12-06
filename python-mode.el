@@ -215,6 +215,15 @@ Default is  non-nil"
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-use-font-lock-doc-face-p nil
+  "If documention string inside of def or class get `font-lock-doc-face'.
+
+`font-lock-doc-face' inherits `font-lock-string-face'.
+Call M-x `customize-face' in order to have a visible effect. "
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-org-cycle-p nil
   "When non-nil, command `org-cycle' is available at shift-TAB, <backtab>
 
@@ -13557,9 +13566,6 @@ Needs Pymacs"]
 electricly insert ',', and redisplay latest signature.\n
 Needs Pymacs"]
 
-             ["Electric yank" py-electric-yank
-              :help " `py-electric-yank'
-Perform command `yank' followed by an `indent-according-to-mode' . "]
              )))
 
         ;; Python shell menu
@@ -18387,14 +18393,17 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
                                   py-outline-mode-keywords)
                           "\\|")))
-  (set (make-local-variable 'font-lock-defaults)
-       '(py-font-lock-keywords nil nil nil nil
-                               (font-lock-syntactic-keywords
-                                . py-font-lock-syntactic-keywords)
-                               ;; This probably isn't worth it.
-                               ;; (font-lock-syntactic-face-function
-                               ;;  . python-font-lock-syntactic-face-function)
-                               ))
+  (if py-use-font-lock-doc-face-p
+      (set (make-local-variable 'font-lock-defaults)
+           '(py-font-lock-keywords nil nil nil nil
+                                   (font-lock-syntactic-keywords
+                                    . py-font-lock-syntactic-keywords)
+                                   (font-lock-syntactic-face-function
+                                    . py-font-lock-syntactic-face-function)))
+    (set (make-local-variable 'font-lock-defaults)
+         '(py-font-lock-keywords nil nil nil nil
+                                 (font-lock-syntactic-keywords
+                                  . py-font-lock-syntactic-keywords))))
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-start) "#")
