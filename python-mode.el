@@ -3246,6 +3246,17 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
 
+(defun py-font-lock-syntactic-face-function (state)
+  (if (nth 3 state)
+      (let ((startpos (nth 8 state)))
+        (save-excursion
+          (goto-char startpos)
+          (if (and (looking-at-p "'''\\|\"\"\"")
+                   (looking-back "\\`\\|^\\s *\\(?:class\\|def\\)\\s +\\(?:\\sw\\|\\s_\\)+(.*):\n\\s *"))
+              font-lock-doc-face
+            font-lock-string-face)))
+    font-lock-comment-face))
+
 (defun py-insert-default-shebang ()
   "Insert in buffer shebang of installed default Python. "
   (interactive "*")
