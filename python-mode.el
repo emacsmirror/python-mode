@@ -1318,8 +1318,6 @@ It makes underscores and dots word constituent chars.")
     table)
   "Syntax table used to identify Python dotted expressions.")
 
-(defvar outline-heading-end-regexp nil)
-
 (defvar eldoc-documentation-function)
 
 (defvar py-completion-last-window-configuration nil
