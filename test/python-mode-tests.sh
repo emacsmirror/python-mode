@@ -1058,6 +1058,8 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 -eval "(assert (boundp 'py-font-lock-keywords) nil \"py-font-lock-keywords not a variable\")" \
 -eval "(assert (boundp 'py-font-lock-syntactic-keywords) nil \"py-font-lock-syntactic-keywords not a variable\")" \
 -eval "(assert (boundp 'virtualenv-name) nil \"virtualenv-name not a variable\")" \
+--funcall comments-start-a-new-line-lp-1092847-n1-test \
+--funcall comments-start-a-new-line-lp-1092847-n2-test \
 --funcall wrong-indentation-after-return-or-pass-keyword-lp-1087499-test \
 --funcall wrong-indent-after-asignment-lp-1087404-test \
 --funcall py-execute-buffer-python3-looks-broken-lp-1085386-test \
@@ -1143,8 +1145,6 @@ $EMACS -Q --batch --eval "(message (emacs-version))" --eval "(when (featurep 'py
 --funcall indent-honor-arglist-whitespaces-lp:822540-test \
 --funcall comments-indent-honor-setting-lp:824427-test \
 --funcall closing-list-lp:826144-test \
---funcall py-electric-comment-add-space-lp:828398-test \
---funcall py-electric-comment-add-space-t-lp:828398-test \
 --funcall wrong-indentation-of-function-arguments-lp:840891-test \
 --funcall wrong-guess-for-py-indent-offset-lp:852052-test \
 --funcall indent-match-import-pkg-lp:852500-test \
@@ -1361,3 +1361,5 @@ est \
 --funcall temporary-files-remain-when-python-raises-exception-lp-1083973-n2-test 2 \
 --funcall temporary-files-remain-when-python-raises-exception-lp-1083973-n3-test 2 \
 --funcall temporary-files-remain-when-python-raises-exception-lp-1083973-n4-test 2 \
+--funcall py-electric-comment-add-space-lp:828398-test \
+--funcall py-electric-comment-add-space-t-lp:828398-test \

@@ -309,8 +309,8 @@ If nil, default, it will not move from at any reasonable level. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-electric-comment-p t
-  "If \"#\" should call `py-electric-comment'. Default is `t'. "
+(defcustom py-electric-comment-p nil
+  "If \"#\" should call `py-electric-comment'. Default is `nil'. "
   :type 'boolean
   :group 'python-mode)
 
@@ -1736,7 +1736,151 @@ Includes def and class. ")
           (py-escaped))))
 
 ;;; Minor mode switches
-;;
+;; py-electric-comment-p forms
+(defun toggle-py-electric-comment-p (&optional arg)
+  "If `py-electric-comment-p' should be on or off.
+
+  Returns value of `py-electric-comment-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-electric-comment-p -1 1))))
+    (if (< 0 arg)
+        (setq py-electric-comment-p t)
+      (setq py-electric-comment-p nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-electric-comment-p: %s" py-electric-comment-p))
+    py-electric-comment-p))
+
+(defun py-electric-comment-p-on (&optional arg)
+  "Make sure, py-electric-comment-p' is on.
+
+Returns value of `py-electric-comment-p'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-electric-comment-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-electric-comment-p: %s" py-electric-comment-p))
+  py-electric-comment-p)
+
+(defun py-electric-comment-p-off ()
+  "Make sure, `py-electric-comment-p' is off.
+
+Returns value of `py-electric-comment-p'. "
+  (interactive)
+  (toggle-py-electric-comment-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-electric-comment-p: %s" py-electric-comment-p))
+  py-electric-comment-p)
+
+;; toggle-force-local-shell
+(defun toggle-force-local-shell (&optional arg)
+  "If locally indicated Python shell should be taken and
+enforced upon sessions execute commands.
+
+Toggles boolean `py-force-local-shell-p' along with `py-force-py-shell-name-p'
+Returns value of `toggle-force-local-shell' switched to.
+
+When on, kind of an option 'follow', local shell sets `py-shell-name', enforces its use afterwards.
+
+See also commands
+`py-force-local-shell-on'
+`py-force-local-shell-off'
+ "
+  (interactive (list arg))
+  (let ((arg (or arg (if py-force-local-shell-p -1 1))))
+    (if (< 0 arg)
+        (progn
+          (setq py-shell-name (or py-local-command (py-choose-shell)))
+          (setq py-force-local-shell-p t))
+      (setq py-shell-name (default-value 'py-shell-name))
+      (setq py-force-local-shell-p nil))
+    (when (interactive-p)
+      (if py-force-local-shell-p
+          (when py-verbose-p (message "Enforce %s"  py-shell-name))
+        (when py-verbose-p (message "py-shell-name default restored to: %s" py-shell-name))))
+    py-shell-name))
+
+(defun py-force-local-shell-on ()
+  "Make sure, `py-py-force-local-shell-p' is on.
+
+Returns value of `py-force-local-shell-p'.
+
+Kind of an option 'follow', local shell sets `py-shell-name', enforces its use afterwards "
+  (interactive)
+  (let* ((erg (toggle-force-local-shell 1)))
+    (when (or py-verbose-p (interactive-p))
+      (message "Enforce %s" py-shell-name))))
+
+(defun py-force-local-shell-off ()
+  "Restore `py-shell-name' default value and `behaviour'. "
+  (interactive)
+  (let* ((erg (toggle-force-local-shell 1)))
+    (when (or py-verbose-p (interactive-p))
+      (message "py-shell-name default restored to: %s" py-shell-name)
+      (message "Enforce %s" py-shell-name))))
+
+;; toggle-force-py-shell-name-p forms
+(defun toggle-force-py-shell-name-p (&optional arg)
+  "If customized default `py-shell-name' should be enforced upon execution.
+
+If `py-force-py-shell-name-p' should be on or off.
+Returns value of `py-force-py-shell-name-p' switched to.
+
+See also commands
+force-py-shell-name-p-on
+force-py-shell-name-p-off
+
+Caveat: Completion might not work that way.
+"
+  (interactive "p")
+  (let ((arg (or arg (if py-force-py-shell-name-p -1 1))))
+    (if (< 0 arg)
+        (setq py-force-py-shell-name-p t)
+      (setq py-force-py-shell-name-p nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
+    py-force-py-shell-name-p))
+
+(defun force-py-shell-name-p-on (&optional arg)
+  "Switches `py-force-py-shell-name-p' on.
+
+Customized default `py-shell-name' will be enforced upon execution.
+Returns value of `py-force-py-shell-name-p'.
+
+Caveat: Completion might not work that way.
+"
+  (interactive "p")
+  (let ((arg (or arg 1)))
+    (toggle-force-py-shell-name-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
+  py-force-py-shell-name-p)
+
+(defun force-py-shell-name-p-off ()
+  "Make sure, `py-force-py-shell-name-p' is off.
+
+Function to use by executes will be guessed from environment.
+Returns value of `py-force-py-shell-name-p'. "
+  (interactive)
+  (toggle-force-py-shell-name-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
+  py-force-py-shell-name-p)
+
+;; py-toggle-indent-tabs-mode
+(defun py-toggle-indent-tabs-mode ()
+  "Toggle `indent-tabs-mode'.
+
+Returns value of `indent-tabs-mode' switched to. "
+  (interactive)
+  (when
+      (setq indent-tabs-mode (not indent-tabs-mode))
+    (setq tab-width py-indent-offset))
+  (when (and py-verbose-p (interactive-p)) (message "indent-tabs-mode %s  py-indent-offset %s" indent-tabs-mode py-indent-offset))
+  indent-tabs-mode)
+
+(defun py-indent-tabs-mode-on (arg)
+  "Switch `indent-tabs-mode' on. "
+  (interactive "p")
+  (py-indent-tabs-mode (abs arg)(interactive-p)))
+
+(defun py-indent-tabs-mode-off (arg)
+  "Switch `indent-tabs-mode' on. "
+  (interactive "p")
+  (py-indent-tabs-mode (- (abs arg))(interactive-p)))
 
 ;; py-jump-on-exception forms
 (defun toggle-py-jump-on-exception (&optional arg)
@@ -3534,108 +3678,6 @@ Returns column. "
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
-(defun toggle-force-local-shell (&optional arg)
-  "If locally indicated Python shell should be taken and
-enforced upon sessions execute commands.
-
-Toggles boolean `py-force-local-shell-p' along with `py-force-py-shell-name-p'
-Returns value of `toggle-force-local-shell' switched to.
-
-When on, kind of an option 'follow', local shell sets `py-shell-name', enforces its use afterwards.
-
-See also commands
-`py-force-local-shell-on'
-`py-force-local-shell-off'
- "
-  (interactive (list arg))
-  (let ((arg (or arg (if py-force-local-shell-p -1 1))))
-    (if (< 0 arg)
-        (progn
-          (setq py-shell-name (or py-local-command (py-choose-shell)))
-          (setq py-force-local-shell-p t))
-      (setq py-shell-name (default-value 'py-shell-name))
-      (setq py-force-local-shell-p nil))
-    (when (interactive-p)
-      (if py-force-local-shell-p
-          (when py-verbose-p (message "Enforce %s"  py-shell-name))
-        (when py-verbose-p (message "py-shell-name default restored to: %s" py-shell-name))))
-    py-shell-name))
-
-(defun py-force-local-shell-on ()
-  "Make sure, `py-py-force-local-shell-p' is on.
-
-Returns value of `py-force-local-shell-p'.
-
-Kind of an option 'follow', local shell sets `py-shell-name', enforces its use afterwards "
-  (interactive)
-  (let* ((erg (toggle-force-local-shell 1)))
-    (when (or py-verbose-p (interactive-p))
-      (message "Enforce %s" py-shell-name))))
-
-(defun py-force-local-shell-off ()
-  "Restore `py-shell-name' default value and `behaviour'. "
-  (interactive)
-  (let* ((erg (toggle-force-local-shell 1)))
-    (when (or py-verbose-p (interactive-p))
-      (message "py-shell-name default restored to: %s" py-shell-name)
-      (message "Enforce %s" py-shell-name))))
-
-;; toggle-force-py-shell-name-p forms
-(defun toggle-force-py-shell-name-p (&optional arg)
-  "If customized default `py-shell-name' should be enforced upon execution.
-
-If `py-force-py-shell-name-p' should be on or off.
-Returns value of `py-force-py-shell-name-p' switched to.
-
-See also commands
-force-py-shell-name-p-on
-force-py-shell-name-p-off
-
-Caveat: Completion might not work that way.
-"
-  (interactive "p")
-  (let ((arg (or arg (if py-force-py-shell-name-p -1 1))))
-    (if (< 0 arg)
-        (setq py-force-py-shell-name-p t)
-      (setq py-force-py-shell-name-p nil))
-    (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
-    py-force-py-shell-name-p))
-
-(defun force-py-shell-name-p-on (&optional arg)
-  "Switches `py-force-py-shell-name-p' on.
-
-Customized default `py-shell-name' will be enforced upon execution.
-Returns value of `py-force-py-shell-name-p'.
-
-Caveat: Completion might not work that way.
-"
-  (interactive "p")
-  (let ((arg (or arg 1)))
-    (toggle-force-py-shell-name-p arg))
-  (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
-  py-force-py-shell-name-p)
-
-(defun force-py-shell-name-p-off ()
-  "Make sure, `py-force-py-shell-name-p' is off.
-
-Function to use by executes will be guessed from environment.
-Returns value of `py-force-py-shell-name-p'. "
-  (interactive)
-  (toggle-force-py-shell-name-p -1)
-  (when (or py-verbose-p (interactive-p)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
-  py-force-py-shell-name-p)
-
-(defun py-toggle-indent-tabs-mode ()
-  "Toggle `indent-tabs-mode'.
-
-Returns value of `indent-tabs-mode' switched to. "
-  (interactive)
-  (when
-      (setq indent-tabs-mode (not indent-tabs-mode))
-    (setq tab-width py-indent-offset))
-  (when (and py-verbose-p (interactive-p)) (message "indent-tabs-mode %s  py-indent-offset %s" indent-tabs-mode py-indent-offset))
-  indent-tabs-mode)
-
 (defun py-indent-tabs-mode (arg &optional iact)
   "With positive ARG switch `indent-tabs-mode' on.
 
@@ -3649,16 +3691,6 @@ Returns value of `indent-tabs-mode' switched to. "
     (setq indent-tabs-mode nil))
   (when (and py-verbose-p (or iact (interactive-p))) (message "indent-tabs-mode %s   py-indent-offset %s" indent-tabs-mode py-indent-offset))
   indent-tabs-mode)
-
-(defun py-indent-tabs-mode-on (arg)
-  "Switch `indent-tabs-mode' on. "
-  (interactive "p")
-  (py-indent-tabs-mode (abs arg)(interactive-p)))
-
-(defun py-indent-tabs-mode-off (arg)
-  "Switch `indent-tabs-mode' on. "
-  (interactive "p")
-  (py-indent-tabs-mode (- (abs arg))(interactive-p)))
 
 ;; Guess indent offset
 (defun py-guessed-sanity-check (guessed)
@@ -11577,6 +11609,32 @@ Run pdb under GUD"]
             ("Modes"
              :help "Toggle useful modes like `highlight-indentation'"
 
+             ("Use current dir when execute"
+              :help "Toggle `py-use-current-dir-when-execute-p'"
+
+              ["Toggle use-current-dir-when-execute-p" toggle-py-use-current-dir-when-execute-p
+               :help " `toggle-py-use-current-dir-when-execute-p'
+
+If `py-use-current-dir-when-execute-p' should be on or off\.
+
+  Returns value of `py-use-current-dir-when-execute-p' switched to\. . "]
+
+              ["use-current-dir-when-execute-p on" py-use-current-dir-when-execute-p-on
+               :help " `py-use-current-dir-when-execute-p-on'
+
+Make sure, py-use-current-dir-when-execute-p' is on\.
+
+Returns value of `py-use-current-dir-when-execute-p'\. . "]
+
+              ["use-current-dir-when-execute-p off" py-use-current-dir-when-execute-p-off
+               :help " `py-use-current-dir-when-execute-p-off'
+
+Make sure, `py-use-current-dir-when-execute-p' is off\.
+
+Returns value of `py-use-current-dir-when-execute-p'\. . "]
+
+              )
+
              ("Jump on exception"
               :help "Toggle `py-jump-on-exception'"
 
@@ -11705,6 +11763,32 @@ Returns value of `py-jump-on-exception'\. . "]
 
               ["Switch indent-tabs-mode off" py-indent-tabs-mode-off
                :help "`py-indent-tabs-mode-off'"])
+
+             ("Electric comment"
+              :help "Toggle `py-electric-comment-p'"
+
+              ["Toggle electric comment" toggle-py-electric-comment-p
+               :help " `toggle-py-electric-comment-p'
+
+If `py-electric-comment-p' should be on or off\.
+
+  Returns value of `py-electric-comment-p' switched to\. . "]
+
+              ["Electric comment on" py-electric-comment-p-on
+               :help " `py-electric-comment-p-on'
+
+Make sure, py-electric-comment-p' is on\.
+
+Returns value of `py-electric-comment-p'\. . "]
+
+              ["Electric comment off" py-electric-comment-p-off
+               :help " `py-electric-comment-p-off'
+
+Make sure, `py-electric-comment-p' is off\.
+
+Returns value of `py-electric-comment-p'\. . "]
+
+              )
 
              )
 
