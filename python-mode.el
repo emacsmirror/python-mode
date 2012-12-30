@@ -8757,7 +8757,6 @@ When called from a programm, it accepts a string specifying a shell which will b
     (kill-buffer localname)))
 
 (defun py-execute-buffer-file (start end pyshellname dedicated switch nostars sepchar split file)
-  (delete-other-windows)
   (let* ((oldbuf (current-buffer))
          (py-exception-buffer oldbuf)
          (pyshellname (or pyshellname (py-choose-shell)))
@@ -8804,7 +8803,6 @@ When called from a programm, it accepts a string specifying a shell which will b
     erg))
 
 (defun py-execute-buffer-finally (start end &optional pyshellname dedicated switch nostars sepchar split)
-  (delete-other-windows)
   (let* ((oldbuf (current-buffer))
          (pyshellname (or pyshellname (py-choose-shell)))
          (execute-directory
