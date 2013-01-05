@@ -329,6 +329,16 @@ If nil, default, it will not move from at any reasonable level. "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-return-key 'py-newline-and-indent
+  "Which command <return> should call. "
+  :type '(choice
+          (const :tag "default" py-newline-and-indent)
+          (const :tag "newline" newline)
+          (const :tag "py-newline-and-indent" py-newline-and-indent)
+          (const :tag "py-newline-and-dedent" py-newline-and-dedent)
+          )
+  :group 'python-mode)
+
 (defcustom py-complete-function 'py-shell-complete
   "When set, enforces function todo completion, default is nil.
 
@@ -1589,8 +1599,6 @@ alternative for finding the index.")
 (defvar py-already-guessed-indent-offset nil
   "Internal use by py-indent-line, use the guess already computed. ")
 (make-variable-buffer-local 'py-already-guessed-indent-offset)
-
-(defvar python-mode-map)
 
 (defvar skeleton-further-elements)
 
@@ -11429,7 +11437,7 @@ Used only, if `py-install-directory' is empty. "
         (define-key map [(control j)] 'py-newline-and-indent)
         ;; Most Pythoneers expect RET `py-newline-and-indent'
         ;; (define-key map (kbd "RET") 'py-newline-and-dedent)
-        (define-key map (kbd "RET") 'py-newline-and-indent)
+        (define-key map (kbd "RET") py-return-key)
         ;; (define-key map (kbd "RET") 'newline)
         (define-key map [(super backspace)] 'py-dedent)
         ;; (define-key map [(control return)] 'py-newline-and-dedent)
