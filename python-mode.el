@@ -8863,6 +8863,7 @@ When called from a programm, it accepts a string specifying a shell which will b
           (setq erg (py-execute-file-base proc file pec procbuf))
           (sit-for 0.1)
           (if (py-postprocess-output-buffer procbuf file)
+              ;; exception occured
               (progn (set-buffer filebuf)
                      (switch-to-buffer (current-buffer)))
             (kill-buffer filebuf)
@@ -8948,7 +8949,6 @@ See also `py-execute-region'. "
 (defun py-insert-execute-directory (directory &optional orig done)
   (let ((orig (or orig (point)))
         (done done))
-    (switch-to-buffer (current-buffer))
     (if done (goto-char done) (goto-char (point-min)))
     (cond ((re-search-forward "^from __future__ import " nil t 1)
            (py-end-of-statement)
@@ -9305,7 +9305,7 @@ Returns position where output starts. "
       (unwind-protect
           (save-excursion
             (set-buffer procbuf)
-            (switch-to-buffer (current-buffer))
+            ;; (switch-to-buffer (current-buffer))
             (funcall (process-filter proc) proc msg))))
     (set-buffer procbuf)
     (process-send-string proc cmd)
