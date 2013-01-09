@@ -12938,6 +12938,167 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
         (easy-menu-define py-menu map "Python Mode Commands"
           `("PyEdit"
             :help "Python-specific features"
+            ("Copy ... "
+             ["Copy statement" py-copy-statement
+              :help "`py-copy-statement'
+Copy statement at point"]
+             ["Copy clause" py-copy-clause
+              :help "`py-copy-clause'
+Copy innermost compound statement at point"]
+
+             ["Copy block" py-copy-block
+              :help "`py-copy-block'
+Copy innermost compound statement at point"]
+
+             ["Copy def" py-copy-def
+              :help "`py-copy-def'
+Copy innermost definition at point"]
+             ["Copy expression" py-copy-expression
+              :help "`py-copy-expression'
+Copy expression at point"]
+             ["Copy partial expression" py-copy-partial-expression
+              :help "`py-copy-partial-expression'
+\".\" operators delimit a partial-expression expression on it's level"]
+             ["Copy class" py-copy-class
+              :help "`py-copy-class'
+Copy innermost definition at point"]
+
+             ["Copy Def-or-Class" py-copy-def-or-class
+              :help "`py-copy-def-or-class'
+Copy innermost definition at point"]
+
+             )
+            ("Kill ... "
+
+             ["Kill statement" py-kill-statement
+              :help "`py-kill-statement'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill clause" py-kill-clause
+              :help "`py-kill-clause'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill block" py-kill-block
+              :help "`py-kill-block'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill def-or-class" py-kill-def-or-class
+              :help "`py-kill-def-or-class'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill expression" py-kill-expression
+              :help "`py-kill-expression'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill partial-expression" py-kill-partial-expression
+              :help "`py-kill-partial-expression'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill class" py-kill-class
+              :help "`py-kill-class'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+             ["Kill def" py-kill-def
+              :help "`py-kill-def'
+Delete innermost compound statement at point, store deleted string in kill-ring"]
+             )
+            ("Delete ... "
+             ["Delete block" py-delete-block
+              :help "`py-delete-block'
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+
+             ["Delete def-or-class" py-delete-def-or-class
+              :help "`py-delete-def-or-class'
+Delete def-or-class at point, don't store deleted string in kill-ring"]
+
+             ["Delete clause" py-delete-clause
+              :help "`py-delete-clause'
+Delete innermost compound statement at point, don't store deleted string in kill-ring"]
+             ["Delete statement" py-delete-statement
+              :help "`py-delete-statement'
+Delete statement at point, don't store deleted string in kill-ring"]
+
+             ["Delete expression" py-delete-expression
+              :help "`py-delete-expression'
+Delete expression at point, don't store deleted string in kill-ring"]
+
+             ["Delete partial-expression" py-delete-partial-expression
+              :help "`py-delete-partial-expression'
+Delete partial-expression at point, don't store deleted string in kill-ring"]
+
+             ["Delete class" py-delete-class
+              :help "`py-delete-class'
+Delete class at point, don't store deleted string in kill-ring"]
+
+             ["Delete def" py-delete-def
+              :help "`py-delete-def'
+Delete def at point, don't store deleted string in kill-ring"]
+
+             )
+
+            ("Shift right ... "
+             ["Shift block right" py-shift-block-right
+              :help "`py-shift-block-right'
+Shift block right. "]
+
+             ["Shift clause right" py-shift-clause-right
+              :help "`py-shift-clause-right'
+Shift clause right. "]
+
+             ["Shift statement right" py-shift-statement-right
+              :help "`py-shift-statement-right'
+Shift statement right. "]
+
+             ["Shift def-or-class right" py-shift-def-or-class-right
+              :help "`py-shift-def-or-class-right'
+Shift def-or-class right. "]
+
+             ["Shift class right" py-shift-class-right
+              :help "`py-shift-class-right'
+Shift class right. "]
+
+             ["Shift def right" py-shift-def-right
+              :help "`py-shift-def-right'
+Shift def right. "]
+
+             ["Shift block-or-clause right" py-shift-block-or-clause-right
+              :help "`py-shift-block-or-clause-right'
+Shift block-or-clause right. "]
+
+             )
+
+            ("Shift left ... "
+             ["Shift block left" py-shift-block-left
+              :help "`py-shift-block-left'
+Shift block left. "]
+
+             ["Shift clause left" py-shift-clause-left
+              :help "`py-shift-clause-left'
+Shift clause left. "]
+
+             ["Shift statement left" py-shift-statement-left
+              :help "`py-shift-statement-left'
+Shift statement left. "]
+
+             ["Shift def-or-class left" py-shift-def-or-class-left
+              :help "`py-shift-def-or-class-left'
+Shift def-or-class left. "]
+
+             ["Shift class left" py-shift-class-left
+              :help "`py-shift-class-left'
+Shift class left. "]
+
+             ["Shift def left" py-shift-def-left
+              :help "`py-shift-def-left'
+Shift def left. "]
+
+             ["Shift block-or-clause left" py-shift-block-or-clause-left
+              :help "`py-shift-block-or-clause-left'
+Shift block-or-clause left. "]
+
+             )
+
+            "-"
             ("Block ... "
              ["Beginning of block" py-beginning-of-block
               :help "`py-beginning-of-block'
