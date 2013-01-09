@@ -224,6 +224,14 @@ Call M-x `customize-face' in order to have a visible effect. "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-tab-indents-region-p nil
+  "If `t', TAB will indent/cycle the region, not just the current line.
+
+Default is  nil"
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-org-cycle-p nil
   "When non-nil, command `org-cycle' is available at shift-TAB, <backtab>
 
@@ -3578,28 +3586,52 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
   (if py-tab-indent
       (cond ((eq need cui)
              (when (eq this-command last-command)
-               (beginning-of-line)
-               (delete-horizontal-space)
-               (if (<= (line-beginning-position) (+ (point) (- col cui)))
-                   (forward-char (- col cui))
-                 (beginning-of-line))))
+               (if (and py-tab-indents-region-p (use-region-p))
+                   (progn
+                     (when (eq (point) (region-end))
+                       (exchange-point-and-mark))
+                     (while (< 0 (current-indentation))
+                       (py-shift-region-left 1)))
+                 (beginning-of-line)
+                 (delete-horizontal-space)
+                 (if (<= (line-beginning-position) (+ (point) (- col cui)))
+                     (forward-char (- col cui))
+                   (beginning-of-line)))))
             ((< cui need)
              (if (eq this-command last-command)
+                 (if (and py-tab-indents-region-p (use-region-p))
+                     (progn
+                       (when (eq (point) (region-end))
+                         (exchange-point-and-mark))
+                       (py-shift-region-right 1))
+                   (progn
+                     (beginning-of-line)
+                     (delete-horizontal-space)
+                     (indent-to (+ (* (/ cui py-indent-offset) py-indent-offset) py-indent-offset))
+                     (forward-char (- col cui))))
+               (if (and py-tab-indents-region-p (use-region-p))
+                   (progn
+                     (when (eq (point) (region-end))
+                       (exchange-point-and-mark))
+                     (while (< (current-indentation) need)
+                       (py-shift-region-right 1)))
+                 (beginning-of-line)
+                 (delete-horizontal-space)
+                 (indent-to need)
+                 (forward-char (- col cui)))))
+            (t
+             (if (and py-tab-indents-region-p (use-region-p))
                  (progn
-                   (beginning-of-line)
-                   (delete-horizontal-space)
-                   (indent-to (+ (* (/ cui py-indent-offset) py-indent-offset) py-indent-offset))
-                   (forward-char (- col cui)))
+                   (when (eq (point) (region-end))
+                     (exchange-point-and-mark))
+                   (while (< (current-indentation) need)
+                     (py-shift-region-right 1)))
                (beginning-of-line)
-               (delete-horizontal-space)
-               (indent-to need)
-               (forward-char (- col cui))))
-            (t (beginning-of-line)
                (delete-horizontal-space)
                (indent-to need)
                (if (<= (line-beginning-position) (+ (point) (- col cui)))
                    (forward-char (- col cui))
-                 (beginning-of-line))))
+                 (beginning-of-line)))))
     (insert-tab)))
 
 (defun py-indent-line (&optional arg)
@@ -3844,6 +3876,7 @@ The defun visible is the one that contains point or follows point. "
 If no region is active, current line is dedented.
 Returns indentation reached. "
   (interactive "p")
+  (setq count (or count 1))
   (let ((erg (py-shift-intern (- count) start end)))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
@@ -3855,6 +3888,7 @@ Returns indentation reached. "
 If no region is active, current line is indented.
 Returns indentation reached. "
   (interactive "p")
+  (setq count (or count 1))
   (let ((erg (py-shift-intern count beg end)))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
