@@ -71,7 +71,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.1.0")
+(defconst py-version "6.1.0+")
 
 ;;; Customization
 (defcustom python-mode-modeline-display "Py"
@@ -228,6 +228,14 @@ Call M-x `customize-face' in order to have a visible effect. "
   "If `t', TAB will indent/cycle the region, not just the current line.
 
 Default is  nil"
+
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-block-comment-prefix-p t
+  "If py-comment inserts py-block-comment-prefix.
+
+Default is t"
 
   :type 'boolean
   :group 'python-mode)
@@ -2560,19 +2568,26 @@ From a programm use `py-beginning-of-comment' instead "
     (when (and py-verbose-p (interactive-p))
       (message "%s" erg))))
 
-(defun py-beginning-of-comment ()
-  "Go to the beginning of current line's comment, if any.
-
-Returns position if succesful. "
-  (save-restriction
-    (widen)
-    (let ((pps
-           (if (featurep 'xemacs)
-               (parse-partial-sexp (line-beginning-position) (point))
-             (syntax-ppss))))
-      (when (nth 4 pps)
-        (goto-char
-         (nth 8 pps))))))
+;; (defun py-beginning-of-comment ()
+;;   "Go to beginning of comment at point.
+;;
+;; Returns position, nil if not in comment."
+;;   (interactive)
+;;   (let ((orig (point))
+;;         last erg done)
+;;     (while (and (not done)(not (bobp)) (or (looking-at (concat "[ \t]*" comment-start))(nth 4 (syntax-ppss))(empty-line-p)))
+;;       (when (nth 4 (syntax-ppss))
+;;         (goto-char (nth 8 (syntax-ppss)))
+;;         (setq last (point)))
+;;       (when (and last (< (point) last))
+;;         (unless (empty-line-p)
+;;           (setq last (point))))
+;;       (if (looking-back "^[ \t]*")
+;;           (forward-line -1)
+;;         ;; inline comment
+;;         (when (and (looking-at (concat "[ \t]*" comment-start)) (< (point) orig))(setq last (point)))
+;;         (setq done t)))
+;;     last))
 
 (defun py-clause-lookup-keyword (regexp arg &optional indent orig origline)
   "Returns a list, whose car is indentation, cdr position. "
@@ -4747,11 +4762,178 @@ See also py-bounds-of-statements "
         nil))))
 
 ;;; Comments, Filling
+(defun py-beginning-of-comment ()
+  "Go to the beginning of current line's comment, if any.
+
+Returns position if succesful. "
+  (interactive)
+  (save-restriction
+    (widen)
+    (let ((pps (syntax-ppss)))
+      (when (nth 4 pps)
+        (goto-char
+         (nth 8 pps))))))
+
+(defun py-end-of-comment ()
+  "Go to the end of comment at point.
+
+Returns position, nil if not in comment."
+
+  (interactive)
+  (let ((orig (point))
+        last)
+    (while (and (not (eobp)) (or (looking-at (concat "[ \t]*" comment-start))(nth 4 (syntax-ppss))(empty-line-p)))
+      (unless (empty-line-p)
+        (setq last (point)))
+      (forward-line 1))
+    (if last
+        (progn
+          (goto-char last)
+          (end-of-line)
+          (skip-chars-backward " \t\r\n\f")
+          (point))
+      last)))
+
+(defun py-uncomment ()
+  "Uncomment lines at point.
+
+If region is active, restrict uncommenting at region "
+  (interactive "*")
+  (save-excursion
+    (save-restriction
+      (when (use-region-p)
+        (narrow-to-region (region-beginning) (region-end)))
+      (let ((beg (or (py-beginning-of-comment)(and (looking-at (concat "[ \t]*" comment-start)) (point)))))
+        (push-mark)
+        (py-end-of-comment)
+        (uncomment-region beg (point))))))
+
 (defun py-comment-region (beg end &optional arg)
   "Like `comment-region' but uses double hash (`#') comment starter."
   (interactive "r\nP")
-  (let ((comment-start py-block-comment-prefix))
+  (let ((comment-start (if py-block-comment-prefix-p
+                           py-block-comment-prefix
+                         comment-start)))
     (comment-region beg end arg)))
+
+(defun py-comment-block (&optional beg end arg)
+  "Comments block at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-block-position)))
+          (end (or end (py-end-of-block-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-clause (&optional beg end arg)
+  "Comments clause at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-clause-position)))
+          (end (or end (py-end-of-clause-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-block-or-clause (&optional beg end arg)
+  "Comments block-or-clause at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-block-or-clause-position)))
+          (end (or end (py-end-of-block-or-clause-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-def (&optional beg end arg)
+  "Comments def at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-def-position)))
+          (end (or end (py-end-of-def-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-class (&optional beg end arg)
+  "Comments class at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-class-position)))
+          (end (or end (py-end-of-class-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-def-or-class (&optional beg end arg)
+  "Comments def-or-class at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-def-or-class-position)))
+          (end (or end (py-end-of-def-or-class-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-statement (&optional beg end arg)
+  "Comments statement at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-statement-position)))
+          (end (or end (py-end-of-statement-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
 
 (defun py-join-words-wrapping (words separator line-prefix line-length)
   (let ((lines ())
@@ -6484,7 +6666,7 @@ Returns beginning of clause if successful, nil otherwise
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (py-beginning-of-form-intern py-clause-re (interactive-p) indent))
+  (py-beginning-of-form-intern py-block-or-clause-re (interactive-p) indent))
 
 (defun py-end-of-clause (&optional indent)
   "Go to end of clause.
