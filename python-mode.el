@@ -13311,6 +13311,75 @@ Shift block-or-clause left. "]
 
              )
 
+            ("Comment ... "
+             :help "Comment forms"
+
+             ["Beginning of comment" py-beginning-of-comment
+              :help " `py-beginning-of-comment'
+Go to beginning of comment at point. "]
+
+             ["End of comment" py-end-of-comment
+              :help " `py-end-of-comment'
+
+Go to end of comment at point. "]
+
+             ["Uncomment" py-uncomment
+              :help " `py-uncomment'
+
+Uncomment lines at point\.
+
+If region is active, restrict uncommenting at region . "]
+
+             ["Comment block" py-comment-block
+              :help " `py-comment-block'
+Comments block at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment clause" py-comment-clause
+              :help " `py-comment-clause'
+Comments clause at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment block or clause" py-comment-block-or-clause
+              :help " `py-comment-block-or-clause'
+Comments block-or-clause at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment def" py-comment-def
+              :help " `py-comment-def'
+Comments def at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment class" py-comment-class
+              :help " `py-comment-class'
+Comments class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment def or class" py-comment-def-or-class
+              :help " `py-comment-def-or-class'
+Comments def-or-class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment statement" py-comment-statement
+              :help " `py-comment-statement'
+Comments statement at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             )
             "-"
             ("Block ... "
              ["Beginning of block" py-beginning-of-block
@@ -13353,6 +13422,14 @@ Shift block right. "]
              ["Shift block left" py-shift-block-left
               :help "`py-shift-block-left'
 Shift block left. "]
+
+             ["Comment block" py-comment-block
+              :help " `py-comment-block'
+
+Comments block at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
 
              )
             ("Def-or-class ... "
@@ -13397,6 +13474,14 @@ Shift def-or-class right. "]
              ["Shift def-or-class left" py-shift-def-or-class-left
               :help "`py-shift-def-or-class-left'
 Shift def-or-class left. "]
+
+             ["Comment def or class" py-comment-def-or-class
+              :help " `py-comment-def-or-class'
+
+Comments def-or-class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
 
              )
 
@@ -13443,6 +13528,14 @@ Shift clause right. "]
               :help "`py-shift-clause-left'
 Shift clause left. "]
 
+             ["Comment clause" py-comment-clause
+              :help " `py-comment-clause'
+
+Comments clause at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
              )
 
             ("Statement ... "
@@ -13473,6 +13566,14 @@ Shift statement right. "]
              ["Shift statement left" py-shift-statement-left
               :help "`py-shift-statement-left'
 Shift statement left. "]
+
+             ["Comment statement" py-comment-statement
+              :help " `py-comment-statement'
+
+Comments statement at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
 
              )
 
@@ -13590,6 +13691,14 @@ Shift class right. "]
               :help "`py-shift-class-left'
 Shift class left. "]
 
+             ["Comment class" py-comment-class
+              :help " `py-comment-class'
+
+Comments class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
              )
 
             ("Def ... "
@@ -13634,6 +13743,14 @@ Shift def right. "]
              ["Shift def left" py-shift-def-left
               :help "`py-shift-def-left'
 Shift def left. "]
+
+             ["Comment def" py-comment-def
+              :help " `py-comment-def'
+
+Comments def at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
 
              )
             "-"
@@ -14269,7 +14386,9 @@ Optional C-u prompts for options to pass to the Python3.2 interpreter. See `py-p
             ["Switch shell-switch-buffers-on-execute ON" py-shell-switch-buffers-on-execute-on
              :help "Switch `py-switch-buffers-on-execute-p' ON. "]
             ["Switch shell-switch-buffers-on-execute OFF" py-shell-switch-buffers-on-execute-off
-             :help "Switch `py-switch-buffers-on-execute-p' OFF. "]))
+             :help "Switch `py-switch-buffers-on-execute-p' OFF. "]
+            )
+          )
         map))
 
 (defvaralias 'py-mode-map 'python-mode-map)
