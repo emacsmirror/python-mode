@@ -13065,6 +13065,109 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
         (easy-menu-define py-menu map "Python Mode Commands"
           `("PyEdit"
             :help "Python-specific features"
+            ["Comment Out Region"   py-comment-region (point) (mark)
+             :help "Like `comment-region' but uses double hash (`#') comment starter." ]
+            ["Uncomment Region"     (py-comment-region (point) (mark) '(4))
+             :help "(py-comment-region (point) (mark) '(4))" ]
+
+            ("Comment ... "
+             :help "Comment forms"
+
+             ["Beginning of comment" py-beginning-of-comment
+              :help " `py-beginning-of-comment'
+Go to beginning of comment at point. "]
+
+             ["End of comment" py-end-of-comment
+              :help " `py-end-of-comment'
+
+Go to end of comment at point. "]
+
+             ["Uncomment" py-uncomment
+              :help " `py-uncomment'
+
+Uncomment lines at point\.
+
+If region is active, restrict uncommenting at region . "]
+
+             ["Comment block" py-comment-block
+              :help " `py-comment-block'
+Comments block at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment clause" py-comment-clause
+              :help " `py-comment-clause'
+Comments clause at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment block or clause" py-comment-block-or-clause
+              :help " `py-comment-block-or-clause'
+Comments block-or-clause at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment def" py-comment-def
+              :help " `py-comment-def'
+Comments def at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment class" py-comment-class
+              :help " `py-comment-class'
+Comments class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment def or class" py-comment-def-or-class
+              :help " `py-comment-def-or-class'
+Comments def-or-class at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             ["Comment statement" py-comment-statement
+              :help " `py-comment-statement'
+Comments statement at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default. "]
+
+             )
+
+            ("Mark ... "
+             ["Mark statement" py-mark-statement
+              :help "`py-mark-statement'
+Mark statement at point"]
+
+             ["Mark clause" py-mark-clause
+              :help "`py-mark-clause'
+Mark innermost compound statement at point"]
+
+             ["Mark def" py-mark-def
+              :help "`py-mark-def'
+Mark innermost definition at point"]
+             ["Mark expression" py-mark-expression
+              :help "`py-mark-expression'
+Mark expression at point"]
+             ["Mark partial expression" py-mark-partial-expression
+              :help "`py-mark-partial-expression'
+\".\" operators delimit a partial-expression expression on it's level"]
+             ["Mark class" py-mark-class
+              :help "`py-mark-class'
+Mark innermost definition at point"]
+
+             ["Mark Def-or-Class" py-mark-def-or-class
+              :help "`py-mark-def-or-class'
+Mark innermost definition at point"]
+
+             )
+
             ("Copy ... "
              ["Copy statement" py-copy-statement
               :help "`py-copy-statement'
@@ -13225,75 +13328,7 @@ Shift block-or-clause left. "]
 
              )
 
-            ("Comment ... "
-             :help "Comment forms"
 
-             ["Beginning of comment" py-beginning-of-comment
-              :help " `py-beginning-of-comment'
-Go to beginning of comment at point. "]
-
-             ["End of comment" py-end-of-comment
-              :help " `py-end-of-comment'
-
-Go to end of comment at point. "]
-
-             ["Uncomment" py-uncomment
-              :help " `py-uncomment'
-
-Uncomment lines at point\.
-
-If region is active, restrict uncommenting at region . "]
-
-             ["Comment block" py-comment-block
-              :help " `py-comment-block'
-Comments block at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment clause" py-comment-clause
-              :help " `py-comment-clause'
-Comments clause at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment block or clause" py-comment-block-or-clause
-              :help " `py-comment-block-or-clause'
-Comments block-or-clause at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment def" py-comment-def
-              :help " `py-comment-def'
-Comments def at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment class" py-comment-class
-              :help " `py-comment-class'
-Comments class at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment def or class" py-comment-def-or-class
-              :help " `py-comment-def-or-class'
-Comments def-or-class at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             ["Comment statement" py-comment-statement
-              :help " `py-comment-statement'
-Comments statement at point\.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default. "]
-
-             )
             "-"
             ("Block ... "
              ["Beginning of block" py-beginning-of-block
