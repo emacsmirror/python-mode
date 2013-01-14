@@ -1648,6 +1648,10 @@ alternative for finding the index.")
 
 (defvar py-imports nil)
 
+(defvar highlight-indentation nil
+  "Menu  PyEdit fails when not bound")
+(make-variable-buffer-local 'highlight-indentation)
+
 ;;(eval-when-compile (load (concat (py-normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
 
 ;;; Constants
