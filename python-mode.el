@@ -158,6 +158,37 @@ See also `py-no-completion-calls-dabbrev-expand-p'"
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-set-fill-column-p nil
+  "If python-mode should set fill-column
+
+according values in `py-comment-fill-column' and `py-docstring-fill-column'.
+Default is  nil"
+
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-autofill-timer-delay 1
+  "Delay when idle before functions ajusting  `py-docstring-fill-column' resp. `py-comment-fill-column' are called. "
+  :type 'integer
+
+  :group 'python-mode)
+
+(defcustom py-docstring-fill-column 72
+  "Value of `fill-column' to use when filling a docstring.
+Any non-integer value means do not use a different value of
+`fill-column' when filling docstrings."
+  :type '(choice (integer)
+                 (const :tag "Use the current `fill-column'" t))
+  :group 'python-mode)
+
+(defcustom py-comment-fill-column 79
+  "Value of `fill-column' to use when filling a comment.
+Any non-integer value means do not use a different value of
+`fill-column' when filling docstrings."
+  :type '(choice (integer)
+                 (const :tag "Use the current `fill-column'" t))
+  :group 'python-mode)
+
 (defcustom py-fontify-shell-buffer-p nil
   "If code in Python shell should be highlighted as in script buffer.
 
@@ -11867,6 +11898,12 @@ Run pdb under GUD"]
             ("Modes"
              :help "Toggle useful modes like `highlight-indentation'"
 
+             ["Auto-fill mode"
+              (setq py-set-fill-column-p
+                    (not py-set-fill-column-p))
+              :help "Set Python specific `fill-column' according to `py-docstring-fill-column' and `py-comment-fill-column' "
+              :style toggle :selected py-set-fill-column-p]
+
              ["Toggle use-current-dir-when-execute-p"
               (setq py-use-current-dir-when-execute-p
                     (not py-use-current-dir-when-execute-p))
@@ -11952,13 +11989,11 @@ indent-width will be guessed from current major-mode"
 
               )
 
-
              ["Electric comment "
               (setq py-electric-comment-p
                     (not py-electric-comment-p))
               :help "If \"#\" should call `py-electric-comment'\. Default is `nil'\. "
               :style toggle :selected py-electric-comment-p]
-
 
              )
 
@@ -13170,6 +13205,10 @@ Mark innermost definition at point"]
               :help "`py-mark-def-or-class'
 Mark innermost definition at point"]
 
+             ["Mark comment" py-mark-comment
+              :help "`py-mark-comment'
+Mark commented section at point"]
+
              )
 
             ("Copy ... "
@@ -13331,7 +13370,6 @@ Shift def left. "]
 Shift block-or-clause left. "]
 
              )
-
 
             "-"
             ("Block ... "
@@ -14369,7 +14407,6 @@ Optional C-u prompts for options to pass to the Python3.2 interpreter. See `py-p
             )
           )
         map))
-
 
 (defvaralias 'py-mode-map 'python-mode-map)
 
@@ -19003,6 +19040,24 @@ bottom) of the trackback stack is encountered."
 ;; (add-to-list 'interpreter-mode-alist (cons (purecopy "python") 'python-mode))
 ;; (add-to-list 'interpreter-mode-alist (cons (purecopy "jython") 'jython-mode))
 
+(defun py-set-auto-fill-values ()
+  "Internal use by `py-run-auto-fill-timer'"
+  (let ((pps (syntax-ppss)))
+    (cond ((and (nth 4 pps)(numberp py-comment-fill-column))
+           (set (make-local-variable 'fill-column) py-comment-fill-column))
+          ((and (nth 3 pps)(numberp py-docstring-fill-column))
+           (set (make-local-variable 'fill-column) py-docstring-fill-column))
+          (t (set (make-local-variable 'fill-column) py-fill-column-orig)))))
+
+(defun py-run-auto-fill-timer ()
+  "Set fill-column to values of `py-docstring-fill-column' resp. to `py-comment-fill-column' according to environment. "
+  (when py-set-fill-column-p
+    (unless py-autofill-timer
+      (setq py-autofill-timer
+            (run-with-idle-timer
+             py-autofill-timer-delay t
+             'py-set-auto-fill-values)))))
+
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
   "Major mode for interacting with an inferior Python process.
@@ -19138,6 +19193,9 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
    (t
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
+  (if py-set-fill-column-p
+      (add-hook 'python-mode-hook 'py-run-auto-fill-timer)
+    (remove-hook 'python-mode-hook 'py-run-auto-fill-timer))
   (when (and py-imenu-create-index-p
              (fboundp 'imenu-add-to-menubar)
              (ignore-errors (require 'imenu)))
