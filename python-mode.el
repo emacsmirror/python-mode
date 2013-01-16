@@ -6699,9 +6699,26 @@ Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
   (let* ((orig (point))
-         (erg (py-end-base 'py-extended-block-or-clause-re orig)))
-    (when (< orig (point))
-      (setq erg (py-beginning-of-block-or-clause)))
+         erg
+         (indent (if
+                     (py-beginning-of-statement-p)
+                     (current-indentation)
+                   (progn
+                     (py-beginning-of-statement)
+                     (current-indentation)))))
+    (while (and (setq last (point)) (py-end-of-statement) (py-end-of-statement) (py-beginning-of-statement) (eq (current-indentation) indent)))
+    (if (< indent (current-indentation))
+        (setq erg (point))
+      (goto-char last))
+    (when (< (point) orig)
+      (goto-char orig))
+    (when (and (eq (point) orig)
+               (progn (forward-char 1)
+                      (skip-chars-forward "^\"'[({" (line-end-position))
+                      (member (char-after) (list ?\( ?\" ?\' ?\[ ?\{)))
+               (setq erg (point))))
+    (unless erg
+      (goto-char orig))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
@@ -11773,6 +11790,11 @@ Used only, if `py-install-directory' is empty. "
         ;;   (define-key map [(esc) (tab)] 'py-shell-complete))
         (substitute-key-definition 'complete-symbol 'completion-at-point
                                    map global-map)
+        (substitute-key-definition 'backward-up-list 'py-up
+                                   map global-map)
+        (substitute-key-definition 'down-list 'py-down
+                                   map global-map)
+
         (easy-menu-define py-menu map "Python Tools"
           `("PyTools"
             :help "Python mode tools"
