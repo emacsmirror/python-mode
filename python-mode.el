@@ -71,7 +71,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.1.0+")
+(defconst py-version "6.1.1")
 
 ;;; Customization
 (defcustom python-mode-modeline-display "Py"
@@ -2519,24 +2519,6 @@ for options to pass to the DOCNAME interpreter. \"
        (setq zmacs-region-stays t)))
 
 ;;; Helper commands
-(defun py-update-imports ()
-  "Returns `python-imports'.
-
-Imports done are displayed in message buffer. "
-  (interactive)
-  (save-excursion
-    (let ((oldbuf (current-buffer))
-          (orig (point))
-          erg)
-      (mapc 'py-execute-string (split-string (car (read-from-string (py-find-imports))) "\n" t))
-      (setq erg (car (read-from-string python-imports)))
-      (set-buffer oldbuf)
-      (goto-char orig)
-      (when (interactive-p)
-        (switch-to-buffer (current-buffer))
-        (message "%s" erg))
-      erg)))
-
 (defun py-guess-pdb-path ()
   "If py-pdb-path isn't set, find location of pdb.py. "
   (interactive)
@@ -9837,9 +9819,9 @@ Useful for newly defined symbol, not known to python yet. "
             (insert erg)))))))
 
 (defun py-find-imports ()
-  "Find top-level imports, updating `py-imports'.
+  "Find top-level imports.
 
-Returns py-imports"
+Returns imports "
   (interactive)
   (let (imports)
     (save-excursion
@@ -9854,8 +9836,9 @@ Returns py-imports"
                (replace-regexp-in-string
                 "[\\]\r?\n?\s*" ""
                 (buffer-substring-no-properties (match-beginning 0) (point))) ";"))))
+    (and imports
+         (setq imports (replace-regexp-in-string ";$" "" imports)))
     (when (and py-verbose-p (interactive-p)) (message "%s" imports))
-    (setq py-imports imports)
     imports))
 
 (defun py-eldoc-function ()
@@ -12068,9 +12051,6 @@ Try to find source definition of function at point"]
              :help "`py-switch-imenu-index-function'
 Switch between `py-imenu-create-index' from 5.1 series and `py-imenu-create-index-new'."]
 
-            ["Update imports" py-update-imports
-             :help "`py-update-imports'
-Update list of top-level imports for completion"]
             "-"
             ))
         ;; Menu py-execute forms
@@ -14749,8 +14729,8 @@ and return collected output"
 
 (defun py-symbol-completions (symbol)
   "Return a list of completions of the string SYMBOL from Python process.
-The list is sorted.
-Uses `python-imports' to load modules against which to complete."
+
+The list is sorted. "
   (when (stringp symbol)
     (let* ((py-imports (py-find-imports))
            (completions
