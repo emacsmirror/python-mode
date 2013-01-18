@@ -1364,9 +1364,12 @@ When this-command is py-beginning-of-FORM-bol, last-command's indent will be con
         (modify-syntax-entry ?\n ">" table)
         (modify-syntax-entry ?' "\"" table)
         (modify-syntax-entry ?` "$" table)
-        (when py-underscore-word-syntax-p
-          (modify-syntax-entry ?_ "w" table))
+        (modify-syntax-entry ?\_ "w" table)
         table))
+
+(if py-underscore-word-syntax-p
+    (modify-syntax-entry ?\_ "w" python-mode-syntax-table)
+  (modify-syntax-entry ?\_ "_" python-mode-syntax-table))
 
 (defvar py-dotty-syntax-table
   (let ((table (make-syntax-table python-mode-syntax-table)))
@@ -1804,7 +1807,42 @@ Includes def and class. ")
      (and (eq (char-before (point)) ?\\ )
           (py-escaped))))
 
-;;; Minor mode switches
+;;; Toggle
+;; py-underscore-word-syntax-p forms
+(defun toggle-py-underscore-word-syntax-p (&optional arg)
+  "If `py-underscore-word-syntax-p' should be on or off.
+
+  Returns value of `py-underscore-word-syntax-p' switched to. "
+  (interactive)
+  (let ((arg (or arg (if py-underscore-word-syntax-p -1 1))))
+    (if (< 0 arg)
+        (progn
+          (setq py-underscore-word-syntax-p t)
+          (modify-syntax-entry ?\_ "w" python-mode-syntax-table))
+      (setq py-underscore-word-syntax-p nil)
+      (modify-syntax-entry ?\_ "_" python-mode-syntax-table))
+    (when (or py-verbose-p (interactive-p)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
+    py-underscore-word-syntax-p))
+
+(defun py-underscore-word-syntax-p-on (&optional arg)
+  "Make sure, py-underscore-word-syntax-p' is on.
+
+Returns value of `py-underscore-word-syntax-p'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-underscore-word-syntax-p arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
+  py-underscore-word-syntax-p)
+
+(defun py-underscore-word-syntax-p-off ()
+  "Make sure, `py-underscore-word-syntax-p' is off.
+
+Returns value of `py-underscore-word-syntax-p'. "
+  (interactive)
+  (toggle-py-underscore-word-syntax-p -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
+  py-underscore-word-syntax-p)
+
 ;; py-electric-comment-p forms
 (defun toggle-py-electric-comment-p (&optional arg)
   "If `py-electric-comment-p' should be on or off.
@@ -11920,7 +11958,31 @@ Run pdb under GUD"]
 
             ("Modes"
              :help "Toggle useful modes like `highlight-indentation'"
+             ("Underscore word syntax"
+              :help "Toggle `py-underscore-word-syntax-p'"
 
+              ["Toggle underscore word syntax" toggle-py-underscore-word-syntax-p
+               :help " `toggle-py-underscore-word-syntax-p'
+
+If `py-underscore-word-syntax-p' should be on or off\.
+
+  Returns value of `py-underscore-word-syntax-p' switched to\. . "]
+
+              ["Underscore word syntax on" py-underscore-word-syntax-p-on
+               :help " `py-underscore-word-syntax-p-on'
+
+Make sure, py-underscore-word-syntax-p' is on\.
+
+Returns value of `py-underscore-word-syntax-p'\. . "]
+
+              ["Underscore word syntax off" py-underscore-word-syntax-p-off
+               :help " `py-underscore-word-syntax-p-off'
+
+Make sure, `py-underscore-word-syntax-p' is off\.
+
+Returns value of `py-underscore-word-syntax-p'\. . "]
+
+              )
 
              ["Tab shifts region "
               (setq py-tab-shifts-region-p
@@ -11930,7 +11992,6 @@ Run pdb under GUD"]
 Default is  nil
 See also `py-tab-indents-region-p'"
               :style toggle :selected py-tab-shifts-region-p]
-
 
              ["Tab indents region "
               (setq py-tab-indents-region-p
@@ -19282,4 +19343,3 @@ Runs `jython-mode-hook' after `python-mode-hook'."
 
 (provide 'python-mode)
 ;; python-mode.el ends here
-
