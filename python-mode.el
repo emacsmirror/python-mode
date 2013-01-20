@@ -5331,6 +5331,9 @@ See lp:1066489 "
 JUSTIFY should be used (if applicable) as in `fill-paragraph'."
   (interactive "P")
   (let* ((py-fill-docstring-style (or style py-fill-docstring-style))
+         (fill-column (if (integerp py-docstring-fill-column)
+                          py-docstring-fill-column
+                        fill-column))
          ;; unset python-mode value this time
          forward-sexp-function
          (orig (point-marker))
@@ -5367,7 +5370,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
          (fill-paragraph-function))
     (save-restriction
       (cond (docstring-p
-             (narrow-to-region (+ beg delim-length) (- end delim-length))
+             (narrow-to-region (+ beg delim-length) (- (1- end) delim-length))
              (fill-region (+ beg delim-length) (- end delim-length)))
             ((string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end))
              (py-fill-labelled-string beg end))
@@ -6589,7 +6592,8 @@ http://docs.python.org/reference/compound_stmts.html
         (while (and (not (bobp)) (or (empty-line-p) (setq this (nth 8 (syntax-ppss)))))
           (if (empty-line-p)
               (skip-chars-backward " \t\r\n\f")
-            (goto-char this)))
+            (goto-char this)
+            (skip-chars-backward " \t\r\n\f")))
         (py-beginning-of-statement orig done))
        ((nth 8 pps)
         (goto-char (nth 8 pps))
