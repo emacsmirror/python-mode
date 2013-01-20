@@ -954,6 +954,13 @@ When editing other peoples code, this may produce a larger diff than expected "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-newline-delete-trailing-whitespace-p t
+  "Delete trailing whitespace maybe left by `py-newline-and-indent'.
+
+Default is `t'. See lp:1100892 "
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-warn-tmp-files-left-p nil
   "Messages a warning, when `py-temp-directory' contains files susceptible being left by previous Python-mode sessions. See also lp:987534 "
   :type 'boolean
@@ -3819,6 +3826,11 @@ When indent is set back manually, this is honoured in following lines. "
                           (parse-partial-sexp (point-min) (point))
                         (syntax-ppss))))
       (delete-region (match-beginning 0) (match-end 0)))
+    (save-excursion
+      (and py-newline-delete-trailing-whitespace-p
+           (goto-char orig)
+           (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+           (delete-region (point) (line-end-position))))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
