@@ -3507,7 +3507,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
         (save-excursion
           (goto-char startpos)
           (if (and (looking-at-p "'''\\|\"\"\"")
-                   (looking-back "\\`\\|^\\s *\\(?:class\\|def\\)\\s +\\(?:\\sw\\|\\s_\\)+(.*):\n\\s *"))
+                   (looking-back "\\(?:\\`\\|^\\s *\\(?:class\\|def\\)\\s +.*\\)\n*\\(?:\\s *#\\s *.*\n\\)*\\s *"))
               font-lock-doc-face
             font-lock-string-face)))
     font-lock-comment-face))
