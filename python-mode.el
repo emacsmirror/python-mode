@@ -1813,6 +1813,207 @@ Includes def and class. ")
           (py-escaped))))
 
 ;;; Toggle
+;; py-docstring-style forms
+(defun toggle-py-nil-docstring-style (&optional arg)
+  "If nil docstring-style should be on or off.
+
+  Returns value of `py-docstring-style' switched to.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style nil) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'nil)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-nil-docstring-style-on (&optional arg)
+  "Make sure, nil docstring-style' is on.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-nil-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-nil-docstring-style-off ()
+  "Make sure, nil docstring-style is off.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (toggle-py-nil-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun toggle-py-onetwo-docstring-style (&optional arg)
+  "If onetwo docstring-style should be on or off.
+
+  Returns value of `py-docstring-style' switched to.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style onetwo) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'onetwo)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-onetwo-docstring-style-on (&optional arg)
+  "Make sure, onetwo docstring-style' is on.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-onetwo-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-onetwo-docstring-style-off ()
+  "Make sure, onetwo docstring-style is off.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (toggle-py-onetwo-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun toggle-py-pep-257-docstring-style (&optional arg)
+  "If pep-257 docstring-style should be on or off.
+
+  Returns value of `py-pep-257-docstring-style' switched to. "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style pep-257) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'pep-257)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-pep-257-docstring-style-on (&optional arg)
+  "Make sure, pep-257 docstring-style' is on.
+
+Returns value of `py-pep-257-docstring-style'. "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-pep-257-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-pep-257-docstring-style-off ()
+  "Make sure, pep-257 docstring-style is off.
+
+Returns value of `py-pep-257-docstring-style'. "
+  (interactive)
+  (toggle-py-pep-257-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun toggle-py-pep-257-nn-docstring-style (&optional arg)
+  "If pep-257-nn docstring-style should be on or off.
+
+  Returns value of `py-pep-257-nn-docstring-style' switched to. "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style pep-257-nn) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'pep-257-nn)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-pep-257-nn-docstring-style-on (&optional arg)
+  "Make sure, pep-257-nn docstring-style' is on.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-pep-257-nn-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-pep-257-nn-docstring-style-off ()
+  "Make sure, pep-257-nn docstring-style is off.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (toggle-py-pep-257-nn-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun toggle-py-symmetric-docstring-style (&optional arg)
+  "If symmetric docstring-style should be on or off.
+
+  Returns value of `py-docstring-style' switched to.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style symmetric) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'symmetric)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-symmetric-docstring-style-on (&optional arg)
+  "Make sure, symmetric docstring-style' is on.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-symmetric-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-symmetric-docstring-style-off ()
+  "Make sure, symmetric docstring-style is off.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (toggle-py-symmetric-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun toggle-py-django-docstring-style (&optional arg)
+  "If django docstring-style should be on or off.
+
+  Returns value of `py-docstring-style' switched to.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg (if (eq py-docstring-style django) -1 1))))
+    (if (< 0 arg)
+        (setq py-docstring-style 'django)
+      (setq py-docstring-style nil))
+    (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+    py-docstring-style))
+
+(defun py-django-docstring-style-on (&optional arg)
+  "Make sure, django docstring-style' is on.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (let ((arg (or arg 1)))
+    (toggle-py-django-docstring-style arg))
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
+(defun py-django-docstring-style-off ()
+  "Make sure, django docstring-style is off.
+
+  Returns value of `py-docstring-style'.
+To set permanently,  customize this variable "
+  (interactive)
+  (toggle-py-django-docstring-style -1)
+  (when (or py-verbose-p (interactive-p)) (message "py-docstring-style: %s" py-docstring-style))
+  py-docstring-style)
+
 ;; py-underscore-word-syntax-p forms
 (defun toggle-py-underscore-word-syntax-p (&optional arg)
   "If `py-underscore-word-syntax-p' should be on or off.
@@ -11861,6 +12062,101 @@ Used only, if `py-install-directory' is empty. "
 
             ("Switches"
              :help "Toggle useful modes like `highlight-indentation'"
+             ("Docstring styles"
+              :help "Toggle values of `py-docstring-style'"
+
+              ("Nil"
+               :help "Toggle nil docstring-style"
+
+               ["Toggle nil docstring style" toggle-py-nil-docstring-style
+                :help "If nil docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Nil on" py-nil-docstring-style-on
+                :help "Make sure, nil docstring-style is on"]
+
+               ["Nil off" py-nil-docstring-style-off
+                :help "Restores default value of `py-docstring-style'"]
+
+               )
+
+              ("Onetwo"
+               :help "Toggle onetwo docstring-style"
+
+               ["Toggle onetwo docstring style" toggle-py-onetwo-docstring-style
+                :help "If onetwo docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Onetwo on" py-onetwo-docstring-style-on
+                :help "Make sure, onetwo docstring-style is on"]
+
+               ["Onetwo off" py-onetwo-docstring-style-off
+                :help " Restores default value of `py-docstring-style' "]
+
+               )
+
+              ("Pep 257"
+               :help "Toggle pep-257 docstring-style"
+
+               ["Toggle pep 257 docstring style" toggle-py-pep-257-docstring-style
+                :help "If pep-257 docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Pep 257 on" py-pep-257-docstring-style-on
+                :help "Make sure, pep-257 docstring-style is on"]
+
+               ["Pep 257 off" py-pep-257-docstring-style-off
+                :help " Restores default value of `py-docstring-style' "]
+
+               )
+
+              ("Pep 257 nn"
+               :help "Toggle pep-257-nn docstring-style"
+
+               ["Toggle pep 257 nn docstring style" toggle-py-pep-257-nn-docstring-style
+                :help "If pep-257-nn docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Pep 257 nn on" py-pep-257-nn-docstring-style-on
+                :help "Make sure, pep-257-nn docstring-style is on"]
+
+               ["Pep 257 nn off" py-pep-257-nn-docstring-style-off
+                :help " Restores default value of `py-docstring-style' "]
+
+               )
+
+              ("Symmetric"
+               :help "Toggle symmetric docstring-style"
+
+               ["Toggle symmetric docstring style" toggle-py-symmetric-docstring-style
+                :help "If symmetric docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Symmetric on" py-symmetric-docstring-style-on
+                :help "Make sure, symmetric docstring-style is on"]
+
+               ["Symmetric off" py-symmetric-docstring-style-off
+                :help " Restores default value of `py-docstring-style' "]
+
+               )
+
+              ("Django"
+               :help "Toggle django docstring-style"
+
+               ["Toggle django docstring style" toggle-py-django-docstring-style
+                :help "If django docstring-style should be on or off
+  Returns value of `py-docstring-style' switched to "]
+
+               ["Django on" py-django-docstring-style-on
+                :help "Make sure, django docstring-style is on"]
+
+               ["Django off" py-django-docstring-style-off
+                :help "Restores default value of `py-docstring-style'"]
+
+               )
+
+
+              )
              ("Underscore word syntax"
               :help "Toggle `py-underscore-word-syntax-p'"
 
