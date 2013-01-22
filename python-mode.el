@@ -1101,7 +1101,7 @@ and use the following as the value of this variable:
   :type 'string
   :group 'convenience)
 
-(defcustom py-fill-docstring-style 'pep-257-nn
+(defcustom py-docstring-style 'pep-257-nn
   "Implemented styles are DJANGO, ONETWO, PEP-257, PEP-257-NN,
 SYMMETRIC, and NIL.
 
@@ -5147,7 +5147,7 @@ choose one of the following implemented styles:
 
 DJANGO, ONETWO, PEP-257, PEP-257-NN, SYMMETRIC
 
-Otherwise `py-fill-docstring-style' is used. Explanation:
+Otherwise `py-docstring-style' is used. Explanation:
 
 DJANGO:
 
@@ -5207,7 +5207,7 @@ SYMMETRIC:
             (beg (or start (if (use-region-p) (region-beginning) (py-beginning-of-paragraph-position))))
             (end (copy-marker (or end (if (use-region-p) (region-end) (py-end-of-paragraph-position)))))
             pps
-            (style (or style py-fill-docstring-style))
+            (style (or style py-docstring-style))
             (this-end (point-min)))
         (save-excursion
           (save-restriction
@@ -5229,7 +5229,7 @@ SYMMETRIC:
                   (py-fill-string justify style beg this-end)
                   (goto-char this-end)
                   ;; (end-of-line) (while (nth 8 (syntax-ppss))(forward-char 1))
-                  (set (make-local-variable 'py-fill-docstring-style) nil))))
+                  (set (make-local-variable 'py-docstring-style) nil))))
              ;; Decorators
              ((save-excursion
                 (equal (char-after
@@ -5330,7 +5330,7 @@ See lp:1066489 "
   "String fill function for `py-fill-paragraph'.
 JUSTIFY should be used (if applicable) as in `fill-paragraph'."
   (interactive "P")
-  (let* ((py-fill-docstring-style (or style py-fill-docstring-style))
+  (let* ((py-docstring-style (or style py-docstring-style))
          (fill-column (if (integerp py-docstring-fill-column)
                           py-docstring-fill-column
                         fill-column))
@@ -5356,11 +5356,11 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
           ;; Docstring styles may vary for oneliners and multi-liners.
           (> (count-matches "\n" beg end) 0))
          (delimiters-style
-          (case py-fill-docstring-style
+          (case py-docstring-style
             ;; delimiters-style is a cons cell with the form
             ;; (START-NEWLINES .  END-NEWLINES). When any of the sexps
             ;; is NIL means to not add any newlines for start or end
-            ;; of docstring.  See `py-fill-docstring-style' for a
+            ;; of docstring.  See `py-docstring-style' for a
             ;; graphic idea of each style.
             (django (cons 1 1))
             (onetwo (and multi-line-p (cons 1 2)))
@@ -5377,7 +5377,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
             (t (narrow-to-region beg end)
                (fill-region beg end))))
     (save-excursion
-      (when (and docstring-p py-fill-docstring-style)
+      (when (and docstring-p py-docstring-style)
         ;; Add the number of newlines indicated by the selected style
         ;; at the start of the docstring.
         (goto-char (+ beg delim-length))
@@ -5454,7 +5454,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
 "
   (interactive "*P")
   (py-fill-string justify 'django))
@@ -5471,7 +5471,7 @@ See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
 
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
 "
   (interactive "*P")
   (py-fill-string justify 'onetwo))
@@ -5487,7 +5487,7 @@ See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
 
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
 "
   (interactive "*P")
   (py-fill-string justify 'pep-257))
@@ -5502,7 +5502,7 @@ See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
 "
   (interactive "*P")
   (py-fill-string justify 'pep-257-nn))
@@ -5518,7 +5518,7 @@ See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
 "
   (interactive "*P")
   (py-fill-string justify 'symmetric))
@@ -14240,17 +14240,17 @@ Go to beginning one level below of compound statement or definition at point. "]
 
             "-"
             ("Filling"
-             :help "see also customizable `py-fill-docstring-style'"
+             :help "see also customizable `py-docstring-style'"
 
              ["Fill string" py-fill-string
               :help " `py-fill-string'
 
-Uses value of `py-fill-docstring-style', if set. "]
+Uses value of `py-docstring-style', if set. "]
 
              ["Fill paragraph" py-fill-paragraph
               :help " `py-fill-paragraph'
 
-Uses value of `py-fill-docstring-style', if set. "]
+Uses value of `py-docstring-style', if set. "]
 
              ["Fill comment" py-fill-comment
               :help " `py-fill-comment'
@@ -14270,7 +14270,7 @@ Fill comment at point. "]
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'
+See available styles at `py-fill-paragraph' or var `py-docstring-style'
  "]
 
              ["py fill string onetwo" py-fill-string-onetwo
@@ -14286,7 +14286,7 @@ One newline and start and Two at end style.
 
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
+See available styles at `py-fill-paragraph' or var `py-docstring-style'"]
 
              ["py fill string pep 257" py-fill-string-pep-257
               :help " `py-fill-string-pep-257'
@@ -14301,7 +14301,7 @@ PEP-257 with 2 newlines at end of string.
 
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
+See available styles at `py-fill-paragraph' or var `py-docstring-style'"]
 
              ["py fill string pep 257 nn" py-fill-string-pep-257-nn
               :help " `py-fill-string-pep-257-nn'
@@ -14315,7 +14315,7 @@ PEP-257 with 1 newline at end of string.
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
+See available styles at `py-fill-paragraph' or var `py-docstring-style'"]
 
              ["py fill string symmetric" py-fill-string-symmetric
               :help " `py-fill-string-symmetric'
@@ -14330,7 +14330,7 @@ Symmetric style.
     If processing fails throw ProcessingError.
     \"\"\"
 
-See available styles at `py-fill-paragraph' or var `py-fill-docstring-style'"]
+See available styles at `py-fill-paragraph' or var `py-docstring-style'"]
 
              )
 
