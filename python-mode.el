@@ -10751,7 +10751,10 @@ When HONOR-BLOCK-CLOSE-P is non-nil, statements such as `return',
                       line
                       (if py-indent-honors-inline-comment
                           (current-column)
-                        (current-indentation))
+                        (progn (back-to-indentation)
+                               (if (looking-at py-block-or-clause-re)
+                                   (+ (current-indentation) py-indent-offset)
+                                 (current-indentation))))
                     (forward-char -1)
                     (py-compute-indentation orig origline closing line inside repeat indent-offset))))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not py-indent-comments)(not line)(eq origline (py-count-lines)))
@@ -12098,10 +12101,12 @@ Used only, if `py-install-directory' is empty. "
             ("Switches"
              :help "Toggle useful modes like `highlight-indentation'"
              ("Docstring styles"
-              :help "Toggle values of `py-docstring-style'"
+              :help "Toggle values of `py-docstring-style'
+In order to set permanently customize this variable"
 
               ("Nil"
-               :help "Toggle nil docstring-style"
+               :help "Toggle nil value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle nil docstring style" toggle-py-nil-docstring-style
                 :help "If nil docstring-style should be on or off
@@ -12116,7 +12121,8 @@ Used only, if `py-install-directory' is empty. "
                )
 
               ("Onetwo"
-               :help "Toggle onetwo docstring-style"
+               :help "Toggle onetwo value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle onetwo docstring style" toggle-py-onetwo-docstring-style
                 :help "If onetwo docstring-style should be on or off
@@ -12131,7 +12137,8 @@ Used only, if `py-install-directory' is empty. "
                )
 
               ("Pep 257"
-               :help "Toggle pep-257 docstring-style"
+               :help "Toggle pep-257 value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle pep 257 docstring style" toggle-py-pep-257-docstring-style
                 :help "If pep-257 docstring-style should be on or off
@@ -12146,7 +12153,8 @@ Used only, if `py-install-directory' is empty. "
                )
 
               ("Pep 257 nn"
-               :help "Toggle pep-257-nn docstring-style"
+               :help "Toggle pep-257-nn value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle pep 257 nn docstring style" toggle-py-pep-257-nn-docstring-style
                 :help "If pep-257-nn docstring-style should be on or off
@@ -12161,7 +12169,8 @@ Used only, if `py-install-directory' is empty. "
                )
 
               ("Symmetric"
-               :help "Toggle symmetric docstring-style"
+               :help "Toggle symmetric value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle symmetric docstring style" toggle-py-symmetric-docstring-style
                 :help "If symmetric docstring-style should be on or off
@@ -12176,7 +12185,8 @@ Used only, if `py-install-directory' is empty. "
                )
 
               ("Django"
-               :help "Toggle django docstring-style"
+               :help "Toggle django value of `py-docstring-style'
+In order to set permanently customize this variable"
 
                ["Toggle django docstring style" toggle-py-django-docstring-style
                 :help "If django docstring-style should be on or off
@@ -12306,10 +12316,13 @@ indent-width will be guessed from current major-mode"
               :help "Toggle py-smart-indentation'"
 
               ["Toggle py-smart-indentation" toggle-py-smart-indentation
-               :help "Toggles py-smart-indentation minor-mode "]
+               :help "Toggles py-smart-indentation "]
 
-              ["Py-smart-indentation on" py-smart-indentation-mode-on
-               :help "Switches py-smart-indentation minor-mode on "]
+              ["py-smart-indentation on" py-smart-indentation-on
+               :help "Switches py-smart-indentation on "]
+
+              ["py-smart-indentation off" py-smart-indentation-off
+               :help "Switches py-smart-indentation off "]
 
               )
 
