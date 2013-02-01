@@ -3702,15 +3702,21 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
 
+(defun py-doc-string-p (pos)
+  "Check to see if there is a docstring at POS."
+  (save-excursion
+    (goto-char pos)
+    (if (looking-at-p "'''\\|\"\"\"")
+        (progn
+          (py-beginning-of-statement)
+          (py-beginning-of-def-or-class-p))
+      nil)))
+
 (defun py-font-lock-syntactic-face-function (state)
   (if (nth 3 state)
-      (let ((startpos (nth 8 state)))
-        (save-excursion
-          (goto-char startpos)
-          (if (and (looking-at-p "'''\\|\"\"\"")
-                   (looking-back "\\(?:\\`\\|^\\s *\\(?:class\\|def\\)\\s +.*\\)\n*\\(?:\\s *#\\s *.*\n\\)*\\s *"))
-              font-lock-doc-face
-            font-lock-string-face)))
+      (if (py-doc-string-p (nth 8 state))
+          font-lock-doc-face
+        font-lock-string-face)
     font-lock-comment-face))
 
 (defun py-insert-default-shebang ()
