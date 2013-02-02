@@ -3709,7 +3709,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     (if (looking-at-p "'''\\|\"\"\"")
         (progn
           (py-beginning-of-statement)
-          (py-beginning-of-def-or-class-p))
+          (or (bobp)
+              (py-beginning-of-def-or-class-p)))
       nil)))
 
 (defun py-font-lock-syntactic-face-function (state)
