@@ -987,6 +987,44 @@ It should not contain a caret (^) at the beginning."
   :type 'string
   :group 'python-mode)
 
+
+(defvar py-ffap-p nil)
+(defvar py-ffap nil)
+(defvar python-ffap nil)
+(defvar ffap-alist nil)
+
+(defun py-set-ffap-form ()
+  (cond ((and py-ffap-p py-ffap)
+         (eval-after-load "ffap"
+           '(push '(python-mode . py-module-path) ffap-alist))
+         (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
+         (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
+                                  ffap-alist)))
+        ((and py-ffap-p (eq py-ffap-p 'python-ffap))
+         (eval-after-load "ffap"
+           '(push '(python-mode . py-ffap-module-path) ffap-alist))
+         (setq ffap-alist (remove '(python-mode . py-module-path) ffap-alist))
+         ffap-alist)
+        (t (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
+           (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
+                                    ffap-alist))
+           (setq ffap-alist (remove '(python-mode . py-module-path) ffap-alist)))))
+
+(defcustom py-ffap-p nil
+
+  "Select python-modes way to find file at point.
+
+Default is  nil "
+
+  :type '(choice
+          (const :tag "default" nil)
+          (const :tag "use py-ffap, emacs.py" py-ffap)
+          (const :tag "use python-ffap" python-ffap))
+  :group 'python-mode
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (py-set-ffap-form)))
+
 (defcustom python-ffap-setup-code
   "def __FFAP_get_module_path(module):
     try:
@@ -2791,24 +2829,6 @@ for options to pass to the DOCNAME interpreter. \"
       (when (interactive-p) (message "%s" "pdb.py not found, please customize `pdb-path'")))
     (concat "'" erg)))
 
-(defun py-ffap-module-path (module)
-  "Function for `ffap-alist' to return path for MODULE."
-  (let ((process (or
-                  (and (eq major-mode 'inferior-python-mode)
-                       (get-buffer-process (current-buffer)))
-                  (py-shell-get-process))))
-    (if (not process)
-        nil
-      (let ((module-file
-             (py-shell-send-string-no-output
-              (format python-ffap-string-code module) process)))
-        (when module-file
-          (substring-no-properties module-file 1 -1))))))
-
-(eval-after-load "ffap"
-  '(progn
-     (push '(python-mode . py-ffap-module-path) ffap-alist)
-     (push '(inferior-python-mode . py-ffap-module-path) ffap-alist)))
 
 ;; Strip CHARS from STRING
 (defun string-strip (str &optional chars-before chars-after)
@@ -3364,8 +3384,22 @@ of current line."
   "Function for `ffap-alist' to return path to MODULE."
   (py-send-receive (format "emacs.modpath (%S)" module)))
 
-(eval-after-load "ffap"
-  '(push '(python-mode . py-module-path) ffap-alist))
+(defun py-ffap-module-path (module)
+  "Function for `ffap-alist' to return path for MODULE."
+  (let ((process (or
+                  (and (eq major-mode 'inferior-python-mode)
+                       (get-buffer-process (current-buffer)))
+                  (py-shell-get-process))))
+    (if (not process)
+        nil
+      (let ((module-file
+             (py-shell-send-string-no-output
+              (format python-ffap-string-code module) process)))
+        (when module-file
+          (substring-no-properties module-file 1 -1))))))
+
+(add-hook 'python-mode-hook 'py-set-ffap-form)
+
 
 ;;;
 (defconst py-space-backslash-table
