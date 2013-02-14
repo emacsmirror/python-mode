@@ -2691,6 +2691,33 @@ the output."
                  python-shell-prompt-regexp))
        "" output-buffer))))
 
+(defun py-send-string-return-output (string &optional process msg)
+  "Send STRING to PROCESS and return output.
+
+When MSG is non-nil messages the first line of STRING.  Return
+the output."
+  (let* (output-buffer
+         (process (or process (get-buffer-process (py-shell))))
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
+                  '(ansi-color-filter-apply
+                    (lambda (string)
+                      (setq output-buffer (concat output-buffer string))
+                      "")))))
+    (py-shell-send-string string process msg)
+    (accept-process-output process 1)
+    (when output-buffer
+      (setq output-buffer
+            (replace-regexp-in-string
+             (if (> (length py-shell-prompt-output-regexp) 0)
+                 (format "\n*%s$\\|^%s\\|\n$"
+                         python-shell-prompt-regexp
+                         (or py-shell-prompt-output-regexp ""))
+               (format "\n*$\\|^%s\\|\n$"
+                       python-shell-prompt-regexp))
+             "" output-buffer)))
+    output-buffer))
+
 (defun py-shell-send-file (file-name &optional process temp-file-name)
   "Send FILE-NAME to inferior Python PROCESS.
 If TEMP-FILE-NAME is passed then that file is used for processing
@@ -5378,6 +5405,15 @@ the default"
           ;;paragraph-start paragraph-separate)
           (fill-paragraph justify))))
     t))
+
+(defun py-until-found (search-string liste)
+  "Search liste for search-string until found. "
+  (let ((liste liste) element)
+    (while liste
+      (if (member search-string (car liste))
+          (setq element (car liste) liste nil))
+      (setq liste (cdr liste)))
+    element))
 
 (defun py-end-of-string-intern (pps)
   "Go to end of string at point, return position.
@@ -10566,40 +10602,59 @@ This is a no-op if `py-check-comint-prompt' returns nil."
 	  (kill-local-variable 'py-preoutput-result))))))
 
 (defalias 'py-find-function 'py-find-definition)
-(defun py-find-definition (&optional arg)
-  "Find source of definition of function NAME.
+(defun py-find-definition (&optional symbol)
+  "Find source of definition of SYMBOL.
 
-Interactively, prompt for name.
-
-Search in current buffer first. "
+Interactively, prompt for name."
   (interactive)
-  (let* ((py-imports (py-find-imports))
-         (symbol (or arg
-                     (with-syntax-table py-dotted-expression-syntax-table
-                       (current-word))))
-         ;; (enable-recursive-minibuffers t)
-         (erg (progn (goto-char (point-min))
-                     (when
-                         (re-search-forward (concat "^[ \t]*def " symbol "(") nil t 1))
-                     (forward-char -2)
-                     (point))))
-    (unless erg
-      (setq name (list (read-string (if symbol
-                                        (format "Find location of (default %s): " symbol)
-                                      "Find location of: ")
-                                    nil nil symbol)))
-      (unless py-imports
-        (error "Not called from buffer visiting Python file"))
-      (let* ((loc (py-send-receive (format "emacs.location_of (%S, %s)"
-                                           name py-imports)))
-             (loc (car (read-from-string loc)))
-             (file (car loc))
-             (line (cdr loc)))
-        (unless file (error "Don't know where `%s' is defined" name))
-        (pop-to-buffer (find-file-noselect file))
-        (when (integerp line)
-          (goto-char (point-min))
-          (forward-line (1- line)))))))
+  (set-register 98888888 (list (current-window-configuration) (point-marker)))
+  (let* ((oldbuf (current-buffer))
+         (imports (py-find-imports))
+         (symbol (or symbol (with-syntax-table py-dotted-expression-syntax-table
+                              (current-word))))
+         (enable-recursive-minibuffers t)
+         (symbol
+          (if (interactive-p)
+              (read-string (if symbol
+                               (format "Find location of (default %s): " symbol)
+                             "Find location of: ")
+                           nil nil symbol)
+            symbol))
+         (orig (point))
+         (local (or
+                 (py-until-found (concat "class " name) imenu--index-alist)
+                 (py-until-found name imenu--index-alist)))
+         source sourcefile path)
+    ;; ismethod(), isclass(), isfunction() or isbuiltin()
+    ;; ismethod isclass isfunction isbuiltin)
+    (if local
+        (if (numberp local)
+            (progn
+              (goto-char local)
+              (search-forward name (line-end-position) nil 1)
+              (push-mark)
+              (goto-char (match-beginning 0))
+              (exchange-point-and-mark))
+          (error "%s" "local not a number"))
+      (setq source (py-send-string-return-output (concat imports "import inspect;inspect.getmodule(" symbol ")")))
+      (cond ((string-match "SyntaxError" source)
+             (setq source (substring-no-properties source (match-beginning 0)))
+             (jump-to-register 98888888)
+             (message "Can't get source: %s" source))
+            ((and source (string-match "builtin" source))
+             (progn (jump-to-register 98888888)
+                    (message "%s" source)))
+            ((and source (setq path (replace-regexp-in-string "'" "" (py-send-string-return-output "import os;os.getcwd()")))
+                  (setq sourcefile (replace-regexp-in-string "'" "" (py-send-string-return-output (concat "inspect.getsourcefile(" symbol ")"))))
+                  (interactive-p) (message "sourcefile: %s" sourcefile)
+                  (find-file (concat path (char-to-string py-separator-char) sourcefile))
+                  (goto-char (point-min))
+                  (re-search-forward (concat py-def-or-class-re symbol) nil nil 1))
+             (push-mark)
+             (goto-char (match-beginning 0))
+             (exchange-point-and-mark)
+             (display-buffer oldbuf)))
+      sourcefile)))
 
 ;;; Miscellanus
 (defun py-insert-super ()
