@@ -1692,7 +1692,8 @@ alternative for finding the index.")
         (define-key map [tab] 'py-complete-function)
       (define-key map [tab] 'py-completion-at-point))
     (define-key map "\C-c-" 'py-up-exception)
-    (define-key map "\C-c=" 'py-down-exception)))
+    (define-key map "\C-c=" 'py-down-exception))
+  map)
 
 (defvar py-menu)
 
