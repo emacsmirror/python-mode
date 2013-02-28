@@ -14704,6 +14704,20 @@ See available styles at `py-fill-paragraph' or var `py-docstring-style'"])
             ("Electric... "
              :help "electric commands'"
 
+             ["Hungry delete backwards" py-hungry-delete-backwards
+              :help " `py-hungry-delete-backwards'
+
+Delete the preceding character or all preceding whitespace
+back to the previous non-whitespace character\.
+See also C-c <delete>\.. "]
+
+             ["Hungry delete forward" py-hungry-delete-forward
+              :help " `py-hungry-delete-forward'
+
+Delete the following character or all following whitespace
+up to the next non-whitespace character\.
+See also C-c <C-backspace>\.. "]
+
              ["Electric colon" py-electric-colon
               :help " `py-electric-colon'
 Insert a colon and indent accordingly.
