@@ -115,13 +115,28 @@ See original source: http://pymacs.progiciels-bpi.ca"
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-smart-operator-mode-p nil
+(defun py-smart-operator-check ()
+  "Check, if smart-operator-mode is loaded resp. available.
+
+Give some hints, if not."
+  (interactive)
+  (if (featurep 'smart-operator)
+      't
+    (progn
+      (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: http://xwl.appspot.com/ref/smart-operator.el")
+      nil)))
+
+(defcustom py-smart-operator-mode-p t
   "If python-mode calls (smart-operator-mode-on)
 
 Default is non-nil. "
 
   :type 'boolean
-  :group 'python-mode)
+  :group 'python-mode
+  :set (lambda (symbol value)
+         (and (py-smart-operator-check)
+              (set-default symbol value)
+              (smart-operator-mode (if value 1 0)))))
 (make-variable-buffer-local 'py-smart-operator-mode-p)
 
 (defcustom py-sexp-function nil
@@ -2461,38 +2476,28 @@ Returns value of `py-smart-indentation'. "
   py-smart-indentation)
 
 ;; Smart operator
-(defalias 'toggle-py-smart-operator 'py-toggle-smart-operator)
-(defun py-toggle-smart-operator (&optional arg)
+(defun toggle-py-smart-operator-mode-p (&optional arg)
   "If `py-smart-operator-mode-p' should be on or off.
 
-Returns value of `py-smart-operator-mode-p' switched to. "
+  Returns value of `py-smart-operator-mode-p' switched to. "
   (interactive)
-  (let ((arg (or arg (if py-smart-operator-mode-p -1 1))))
-    (if (< 0 arg)
-        (setq py-smart-operator-mode-p t)
-      (setq py-smart-operator-mode-p nil))
-    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-    py-smart-operator-mode-p))
+  (and (py-smart-operator-check)
+       (setq py-smart-operator-mode-p (smart-operator-mode (if smart-operator-mode 0 1)))))
 
-(defun py-smart-operator-mode-on (&optional arg)
-  "Make sure, `py-smart-operator-mode-p' is on.
+(defun py-smart-operator-mode-p-on ()
+  "Make sure, py-smart-operator-mode-p' is on.
 
 Returns value of `py-smart-operator-mode-p'. "
-  (interactive "p")
-  (let ((arg (or arg 1)))
-    (py-toggle-smart-operator arg))
-  (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-  py-smart-operator-mode-p)
+  (interactive)
+  (and (py-smart-operator-check)
+       (setq py-smart-operator-mode-p (smart-operator-mode 1))))
 
-(defun py-smart-operator-mode-off (&optional arg)
-  "Make sure, `py-smart-operator-mode-p' is off.
+(defun py-smart-operator-mode-p-off ()
+  "Make sure, py-smart-operator-mode-p' is off.
 
 Returns value of `py-smart-operator-mode-p'. "
-  (interactive "p")
-  (let ((arg (if arg (- arg) -1)))
-    (py-toggle-smart-operator arg)
-    (when (interactive-p) (message "py-smart-operator-mode-p: %s" py-smart-operator-mode-p))
-    py-smart-operator-mode-p))
+  (interactive)
+  (setq py-smart-operator-mode-p (smart-operator-mode 0)))
 
 ;; py-use-current-dir-when-execute-p forms
 (defun toggle-py-use-current-dir-when-execute-p (&optional arg)
@@ -2532,7 +2537,7 @@ Returns value of `py-use-current-dir-when-execute-p'. "
   (interactive)
   (unless (featurep 'autopair)
     (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el")))
-  (autopair-mode)
+  (if autopair-mode (autopair-mode 0) (autopair-mode 1))
   (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
   autopair-mode)
 
@@ -5603,7 +5608,8 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
              (orig (point-marker))
              (pps (or pps (syntax-ppss)))
              ;; if beginning of string is closer than arg beg, use this
-             (beg (or (ignore-errors (copy-marker beg))
+             (beg (or (and (numberp beg)
+                           (ignore-errors (copy-marker beg)))
                       (cond ((and (nth 3 pps) (nth 8 pps))
                              (goto-char (nth 8 pps))
                              (skip-chars-forward "\"'")
@@ -6948,13 +6954,12 @@ http://docs.python.org/reference/compound_stmts.html"
   (let* ((orig (point))
          (indent (or indent (progn
                               (back-to-indentation)
-                              (if (py-beginning-of-statement-p)
-                                  (current-indentation)
-                                (py-beginning-of-statement)
-                                (current-indentation)))))
+                              (or (py-beginning-of-statement-p)
+                                  (py-beginning-of-statement))
+                              (current-indentation))))
          (erg (cond ((and (< (point) orig) (looking-at regexp))
                      (point))
-                    ((and (eq 0 (current-column)) (numberp indent))
+                    ((and (eq 0 (current-column)) (numberp indent) (< 0 indent))
                      (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
                        (py-beginning-of-statement)
                        (unless (looking-at regexp)
@@ -7074,7 +7079,9 @@ Returns beginning of clause if successful, nil otherwise
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (py-beginning-of-form-intern py-block-or-clause-re (interactive-p) indent))
+  (let ((indent (and (looking-at py-clause-re)
+                     (current-indentation))))
+    (py-beginning-of-form-intern py-block-or-clause-re (interactive-p) indent)))
 
 (defun py-end-of-clause (&optional indent)
   "Go to end of clause.
@@ -12281,6 +12288,7 @@ Use `M-x customize-variable' to set it permanently"]
                 :help "Restores default value of `py-docstring-style'
 
 Use `M-x customize-variable' to set it permanently"]))
+
              ("Underscore word syntax"
               :help "Toggle `py-underscore-word-syntax-p'"
 
@@ -12439,13 +12447,33 @@ Use `M-x customize-variable' to set it permanently"]
 
 Use `M-x customize-variable' to set it permanently"])
 
-             ["Smart operator mode "
-              (setq py-smart-operator-mode-p
-                    (not py-smart-operator-mode-p))
-              :help "Toggle `py-smart-operator-mode-p'
+             ;; py-smart-operator-mode-p forms
 
-Use `M-x customize-variable' to set it permanently"
-              :style toggle :selected py-smart-operator-mode-p ]
+             ("Smart operator mode"
+              :help "Toggle `smart-operator-mode'"
+
+              ["Toggle smart operator mode" toggle-py-smart-operator-mode-p
+               :help " `toggle-smart-operator-mode'
+
+If `smart-operator-mode' should be on or off\.
+
+  Returns value of `smart-operator-mode ' switched to\. . "]
+
+              ["Smart operator mode on" py-smart-operator-mode-p-on
+               :help " `smart-operator-mode -on'
+
+Make sure, `smart-operator-mode' is on\.
+
+Returns value of `smart-operator-mode'\. . "]
+
+              ["Smart operator mode off" py-smart-operator-mode-p-off
+               :help " `smart-operator-mode' off
+
+Make sure, `smart-operator-mode' is off\.
+
+Returns value of `smart-operator-mode'\. . "]
+
+              )
 
              ["Electric comment "
               (setq py-electric-comment-p
@@ -19746,10 +19774,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
     )
   ;; (run-mode-hooks 'python-mode-hook)
   (when py-outline-minor-mode-p (outline-minor-mode 1))
-  (when py-smart-operator-mode-p
-    (unless (featurep 'py-smart-operator)
-      (load (concat (py-normalize-directory py-install-directory) "extensions/py-smart-operator.el")))
-    (py-smart-operator-mode-on))
   (when (interactive-p) (message "python-mode loaded from: %s" python-mode-message-string)))
 
 (define-derived-mode python2-mode python-mode "Python2"
