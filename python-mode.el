@@ -123,8 +123,21 @@ Give some hints, if not."
   (if (featurep 'smart-operator)
       't
     (progn
-      (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: http://xwl.appspot.com/ref/smart-operator.el")
+      (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
       nil)))
+
+
+(defun py-autopair-check ()
+  "Check, if autopair-mode is available.
+
+Give some hints, if not."
+  (interactive)
+  (if (featurep 'autopair)
+      't
+    (progn
+      (message "%s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
+      nil)))
+
 
 (defcustom py-smart-operator-mode-p t
   "If python-mode calls (smart-operator-mode-on)
@@ -151,13 +164,20 @@ Default is nil. "
   :group 'python-mode)
 (make-variable-buffer-local 'py-sexp-function)
 
-(defcustom py-prepare-autopair-mode-p nil
-  "If autopair-mode stuff should be loaded. Default is `nil'
 
-When non-nil, M-x `autopair-mode' will toggle it.
-See also `autopair-mode-on'. "
+(defvar py-autopair-mode nil)
+(defcustom py-autopair-mode nil
+  "If python-mode calls (autopair-mode-on)
+
+Default is nil
+Load `autopair-mode' written by Joao Tavora <joaotavora [at] gmail.com>
+URL: http://autopair.googlecode.com "
   :type 'boolean
-  :group 'python-mode)
+  :group 'python-mode
+  :set (lambda (symbol value)
+         (and (py-autopair-check)
+              (set-default symbol value)
+              (autopair-mode (if value 1 0)))))
 
 (defcustom py-no-completion-calls-dabbrev-expand-p t
   "If completion function should call dabbrev-expand when no completion found. Default is `t'
@@ -2531,24 +2551,30 @@ Returns value of `py-use-current-dir-when-execute-p'. "
   (when (or py-verbose-p (interactive-p)) (message "py-use-current-dir-when-execute-p: %s" py-use-current-dir-when-execute-p))
   py-use-current-dir-when-execute-p)
 
-;; autopair
-(defun py-toggle-autopair-mode ()
-  "If `autopair-p' should be on or off. "
+;; py-autopair-mode forms
+(defalias 'toggle-py-autopair-mode 'py-toggle-autopair-mode)
+(defun py-toggle-autopair-mode (&optional arg)
+  "If `py-autopair-mode' should be on or off.
+
+  Returns value of `py-autopair-mode' switched to. "
   (interactive)
-  (unless (featurep 'autopair)
-    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el")))
-  (if autopair-mode (autopair-mode 0) (autopair-mode 1))
-  (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
-  autopair-mode)
+  (and (py-autopair-check)
+       (setq py-autopair-mode (autopair-mode (if autopair-mode 0 1)))))
 
 (defun py-autopair-mode-on ()
-  "Make sure, autopair' is on. "
+  "Make sure, py-autopair-mode' is on.
+
+Returns value of `py-autopair-mode'. "
   (interactive)
-  (unless (featurep 'autopair)
-    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el")))
-  (autopair-on)
-  (when py-verbose-p (message "autopair-mode: %s" autopair-mode))
-  autopair-mode)
+  (and (py-autopair-check)
+       (setq py-autopair-mode (autopair-mode 1))))
+
+(defun py-autopair-mode-off ()
+  "Make sure, py-autopair-mode' is off.
+
+Returns value of `py-autopair-mode'. "
+  (interactive)
+  (setq py-autopair-mode (autopair-mode 0)))
 
 ;; py-switch-buffers-on-execute-p forms
 (defun toggle-py-switch-buffers-on-execute-p (&optional arg)
@@ -12412,20 +12438,31 @@ Use `M-x customize-variable' to set it permanently"
 Use `M-x customize-variable' to set it permanently"
               :style toggle :selected indent-tabs-mode]
 
-             ("Autopair"
-              :help "Toggle autopair-mode'
+             ("Autopair mode"
+              :help "Toggle `autopair-mode'"
 
-Use `M-x customize-variable' to set it permanently"
+              ["Toggle autopair mode" toggle-py-autopair-mode
+               :help " `toggle-autopair-mode'
 
-              ["Toggle autopair-mode" py-toggle-autopair-mode
-               :help "Toggles py-autopair minor-mode
+If `autopair-mode' should be on or off\.
 
-Use `M-x customize-variable' to set it permanently"]
+  Returns value of `autopair-mode ' switched to\. . "]
 
-              ["Autopair on" py-autopair-mode-on
-               :help "Switches autopair minor-mode on
+              ["Autopair mode on" py-autopair-mode-on
+               :help " `autopair-mode on'
 
-Use `M-x customize-variable' to set it permanently"])
+Make sure, `autopair-mode' is on\.
+
+Returns value of `autopair-mode'\. . "]
+
+              ["Autopair mode off" py-autopair-mode-off
+               :help " `autopair-mode' off
+
+Make sure, `autopair-mode' is off\.
+
+Returns value of `autopair-mode'\. . "]
+
+              )
 
              ("Smart indentation"
               :help "Toggle py-smart-indentation'
@@ -12445,10 +12482,11 @@ Use `M-x customize-variable' to set it permanently"]
               ["py-smart-indentation off" py-smart-indentation-off
                :help "Switches py-smart-indentation off
 
-Use `M-x customize-variable' to set it permanently"])
+Use `M-x customize-variable' to set it permanently"]
+
+              )
 
              ;; py-smart-operator-mode-p forms
-
              ("Smart operator mode"
               :help "Toggle `smart-operator-mode'"
 
@@ -19730,13 +19768,16 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (py-set-load-path)
   ;; (add-to-list 'load-path py-install-directory)
   ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
-  (when py-prepare-autopair-mode-p
-    (load (concat (py-normalize-directory py-install-directory) "autopair" (char-to-string py-separator-char) "autopair.el") nil t)
-    (add-hook 'python-mode-hook
-              #'(lambda ()
-                  (setq autopair-handle-action-fns
-                        (list #'autopair-default-handle-action
-                              #'autopair-python-triple-quote-action)))))
+  (when py-autopair-mode
+    (if (featurep 'autopair)
+        (progn
+          (load-library "autopair")
+          (add-hook 'python-mode-hook
+                    #'(lambda ()
+                        (setq autopair-handle-action-fns
+                              (list #'autopair-default-handle-action
+                                    #'autopair-python-triple-quote-action)))))
+      (message "%s" "`py-autopair-mode' is set to `t' but autopair.el not available resp. not in `load-path'")))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
   (cond
