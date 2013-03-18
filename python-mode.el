@@ -10771,6 +10771,15 @@ Returns the string inserted. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
+(defun py-beginning-of-commented-section ()
+  "Leave upwards comments and/or empty lines. "
+  (interactive)
+  (let ((pps (syntax-ppss)))
+    (and (nth 4 pps)(goto-char (nth 8 pps)))
+    (while (and (looking-back "^[ \t]*")(not (bobp)))
+      (skip-chars-backward " \t\r\n\f")
+      (py-beginning-of-commented-section))))
+
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line inside repeat indent-offset)
   "Compute Python indentation.
@@ -10839,19 +10848,31 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                       line
                       (if py-indent-honors-inline-comment
                           (current-column)
-                        (progn (back-to-indentation)
-                               (if (looking-at py-block-or-clause-re)
-                                   (+ (current-indentation) py-indent-offset)
-                                 (current-indentation))))
+                        (if py-indent-comments
+                            (progn
+                              (py-beginning-of-commented-section)
+                              (py-compute-indentation orig origline closing line inside repeat indent-offset))
+                          0))
                     (forward-char -1)
                     (py-compute-indentation orig origline closing line inside repeat indent-offset))))
-               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not py-indent-comments)(not line)(eq origline (py-count-lines)))
-                0)
+               ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not line)(eq origline (py-count-lines)))
+                (if py-indent-comments
+                    (progn
+                      (setq line t)
+                      (skip-chars-backward " \t\r\n\f")
+                      ;; as previous comment-line might
+                      ;; be wrongly unindented, travel
+                      ;; whole commented section
+                      (py-beginning-of-commented-section)
+
+                      (py-compute-indentation orig origline closing line inside repeat indent-offset))
+                  0))
                ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not (eq (line-beginning-position) (point-min))))
-                (forward-line -1)
-                (end-of-line)
+                (skip-chars-backward " \t\r\n\f")
                 (setq line t)
                 (py-compute-indentation orig origline closing line inside repeat indent-offset))
+               ((and (eq ?\# (char-after)) line py-indent-honors-inline-comment)
+                (current-column))
                ;; lists
                ((nth 1 pps)
                 (cond ((and inside (not line))
@@ -10963,12 +10984,12 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                ((looking-at py-assignment-re)
                 (py-beginning-of-statement)
                 (py-compute-indentation orig origline closing line inside repeat indent-offset))
-               ((and (< (current-indentation) (current-column)))
+               ((and (< (current-indentation) (current-column))(not line))
                 (back-to-indentation)
                 (unless line
                   (setq inside (nth 1 (syntax-ppss))))
                 (py-compute-indentation orig origline closing line inside repeat indent-offset))
-               ((not (py-beginning-of-statement-p))
+               ((and (not (py-beginning-of-statement-p)) (not (and line (eq ?\# (char-after)))))
                 (if (bobp)
                     (current-column)
                   (if (eq (point) orig)
@@ -12531,7 +12552,16 @@ Use `M-x customize-variable' to set it permanently"
               :help "If comments should be indented like code. Default is `nil'.
 
 Use `M-x customize-variable' to set it permanently"
-              :style toggle :selected py-indent-comments])
+              :style toggle :selected py-indent-comments]
+
+             ["Indent honors inline comment"
+              (setq py-indent-honors-inline-comment
+                    (not py-indent-honors-inline-comment))
+              :help "If non-nil, indents to column of inlined comment start\.
+Default is nil\. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-indent-honors-inline-comment]
+
+             )
 
             "-"
 
