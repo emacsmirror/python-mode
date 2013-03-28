@@ -869,6 +869,20 @@ Also used by (minor-)outline-mode "
   :type 'boolean
   :group 'python-mode)
 
+
+(defcustom py-paragraph-fill-docstring-p nil
+  "If `py-fill-paragraph', when inside a docstring, should fill the complete string.
+
+Default is nil.
+
+Convenient use of `M-q' inside docstrings
+See also `py-docstring-style'
+"
+
+  :type 'boolean
+  :group 'python-mode)
+(make-variable-buffer-local 'py-paragraph-fill-docstring-p)
+
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
   :group 'python-mode
@@ -3813,16 +3827,17 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
 
-(defun py-docstring-p (pos)
+(defun py-docstring-p (&optional beginning-of-string-position)
   "Check to see if there is a docstring at POS."
-  (save-excursion
-    (goto-char pos)
-    (if (looking-at-p "'''\\|\"\"\"")
-        (progn
-          (py-beginning-of-statement)
-          (or (bobp)
-              (py-beginning-of-def-or-class-p)))
-      nil)))
+  (let ((pos (or beginning-of-string-position (and (nth 3 (syntax-ppss)) (nth 8 (syntax-ppss))))))
+    (save-excursion
+      (goto-char pos)
+      (if (looking-at-p "'''\\|\"\"\"")
+          (progn
+            (py-beginning-of-statement)
+            (or (bobp)
+                (py-beginning-of-def-or-class-p)))
+        nil))))
 
 (defun py-font-lock-syntactic-face-function (state)
   (if (nth 3 state)
@@ -5479,20 +5494,106 @@ the default"
       (setq liste (cdr liste)))
     element))
 
-(defun py-end-of-string-intern (pps)
+(defun py-end-of-string (&optional beginning-of-string-position)
   "Go to end of string at point, return position.
 
 Takes the result of (syntax-ppss)"
-  (goto-char (nth 8 pps))
-  (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")
-       (goto-char (match-end 0))
-       (search-forward (match-string-no-properties 0))))
+  (interactive) 
+  (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss))))))
+    (goto-char beginning-of-string-position)
+    ;; (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")
+    (forward-sexp))
+  (point))
 
-(defun py-fill-paragraph (&optional justify style start end)
-  "`fill-paragraph-function'
+(defun py-fill-paragraph (&optional justify style start end docstring)
+  "`fill-paragraph-function' 
 
-commands py-fill-paragraph-SUFFIX
-choose one of the following implemented styles:
+See also `py-fill-string' "
+  (interactive "P")
+  (or (fill-comment-paragraph justify)
+      (let* ((orig (copy-marker (point)))
+             (pps (syntax-ppss))
+             (docstring (and py-paragraph-fill-docstring-p (or docstring (py-docstring-p (nth 8 pps)))))
+             (beg (or start (and (use-region-p) (region-beginning)) (and py-paragraph-fill-docstring-p docstring (nth 8 pps)) (py-beginning-of-paragraph-position)))
+             (end (copy-marker (or end (and (use-region-p) (region-end)) (and py-paragraph-fill-docstring-p docstring (py-end-of-string (nth 8 pps))) (py-end-of-paragraph-position))))
+             (style (or style py-docstring-style))
+             (this-end (point-min)))
+        (when (and (nth 3 pps) (< beg (nth 8 pps))
+                   (py-docstring-p (nth 8 pps))
+                   (setq beg (nth 8 pps)))
+          (setq end (py-end-of-string (nth 8 pps))))
+        (save-excursion
+          (save-restriction
+            (narrow-to-region beg end)
+            (cond
+             ;; Comments
+             ((nth 4 pps)
+              (py-fill-comment justify))
+             ;; Strings/Docstrings
+             ((or (nth 3 pps)
+                  (equal (string-to-syntax "|")
+                         (syntax-after (point)))
+                  (looking-at py-string-delim-re))
+              (goto-char beg)
+              (py-fill-string justify style beg end pps)
+              (goto-char this-end))
+             ;; Decorators
+             ((save-excursion
+                (and (py-beginning-of-statement)
+                     (equal (char-after)
+                            ;; (back-to-indentation)
+                            ;; (point))
+                            ?\@)))
+              (py-fill-decorator justify))
+             ;; Parens
+             ;; is there a need to fill parentized expressions?
+             ;; ((or (nth 1 pps)
+             ;;      (looking-at (python-rx open-paren))
+             ;;      (save-excursion
+             ;;        (skip-syntax-forward "^(" (line-end-position))
+             ;;        (looking-at (python-rx open-paren))))
+             ;;  (py-fill-paren pps justify))
+             (t t))))
+        (goto-char orig)
+        (back-to-indentation))
+        (recenter-top-bottom)
+      ;; fill-paragraph expexts t
+      t))
+
+(defun py-fill-labelled-string (beg end)
+  "Fill string or paragraph containing lines starting with label
+
+See lp:1066489 "
+  (interactive "r*")
+  (let ((end (copy-marker end))
+        (last (copy-marker (point)))
+        this-beg this-end)
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (skip-chars-forward " \t\r\n\f")
+        (if (looking-at py-labelled-re)
+            (progn
+              (setq this-beg (line-beginning-position))
+              (goto-char (match-end 0))
+              (while (and (not (eobp)) (re-search-forward py-labelled-re end t 1)(< last (match-beginning 0))(setq last (match-beginning 0)))
+                (save-match-data (fill-region this-beg (1- (line-beginning-position))))
+                (setq this-beg (line-beginning-position))
+                (goto-char (match-end 0)))))))))
+
+(defun py-fill-string (&optional justify style beg end pps)
+  "String fill function for `py-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'.
+
+If `py-paragraph-fill-docstring-p' is `t', `M-q` fills the
+complete docstring according to setting of `py-docstring-style'
+
+Implemented docstring styles are:
+
+DJANGO, ONETWO, PEP-257, PEP-257-NN, SYMMETRIC
+
+Explanation:
 
 DJANGO, ONETWO, PEP-257, PEP-257-NN, SYMMETRIC
 
@@ -5549,79 +5650,8 @@ SYMMETRIC:
 
     If processing fails throw ProcessingError.
     \"\"\"
+
 "
-  (interactive "P")
-  (or (fill-comment-paragraph justify)
-      (let ((orig (copy-marker (point)))
-            (pps (syntax-ppss))
-            (beg (or start (if (use-region-p) (region-beginning) (py-beginning-of-paragraph-position))))
-            (end (copy-marker (or end (if (use-region-p) (region-end) (py-end-of-paragraph-position)))))
-            (style (or style py-docstring-style))
-            (this-end (point-min)))
-        (when (and (nth 3 pps) (< beg (nth 8 pps))
-                   (py-docstring-p (nth 8 pps))
-                   (setq beg (nth 8 pps)))
-          (setq end (py-end-of-string-intern pps)))
-        (save-excursion
-          (save-restriction
-            (narrow-to-region beg end)
-            (cond
-             ;; Comments
-             ((nth 4 pps)
-              (py-fill-comment justify))
-             ;; Strings/Docstrings
-             ((or (nth 3 pps)
-                  (equal (string-to-syntax "|")
-                         (syntax-after (point)))
-                  (looking-at py-string-delim-re))
-              (goto-char beg)
-              (py-fill-string justify style nil nil pps)
-              (goto-char this-end))
-             ;; Decorators
-             ((save-excursion
-                (and (py-beginning-of-statement)
-                     (equal (char-after)
-                            ;; (back-to-indentation)
-                            ;; (point))
-                            ?\@)))
-              (py-fill-decorator justify))
-             ;; Parens
-             ;; is there a need to fill parentized expressions?
-             ;; ((or (nth 1 pps)
-             ;;      (looking-at (python-rx open-paren))
-             ;;      (save-excursion
-             ;;        (skip-syntax-forward "^(" (line-end-position))
-             ;;        (looking-at (python-rx open-paren))))
-             ;;  (py-fill-paren pps justify))
-             (t t)))))
-      ;; fill-paragraph expexts t
-      t))
-
-(defun py-fill-labelled-string (beg end)
-  "Fill string or paragraph containing lines starting with label
-
-See lp:1066489 "
-  (interactive "r*")
-  (let ((end (copy-marker end))
-        (last (copy-marker (point)))
-        this-beg this-end)
-    (save-excursion
-      (save-restriction
-        (narrow-to-region beg end)
-        (goto-char beg)
-        (skip-chars-forward " \t\r\n\f")
-        (if (looking-at py-labelled-re)
-            (progn
-              (setq this-beg (line-beginning-position))
-              (goto-char (match-end 0))
-              (while (and (not (eobp)) (re-search-forward py-labelled-re end t 1)(< last (match-beginning 0))(setq last (match-beginning 0)))
-                (save-match-data (fill-region this-beg (1- (line-beginning-position))))
-                (setq this-beg (line-beginning-position))
-                (goto-char (match-end 0)))))))))
-
-(defun py-fill-string (&optional justify style beg end pps)
-  "String fill function for `py-fill-paragraph'.
-JUSTIFY should be used (if applicable) as in `fill-paragraph'."
   (interactive "P")
   (save-excursion
     (save-restriction
@@ -5644,7 +5674,9 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
                                     (syntax-after (point)))
                              (point-marker)))))
              ;; Assume docstrings at BOL resp. indentation
-             (docstring-p (progn (goto-char beg)(skip-chars-backward "\"'") (py-docstring-p (point))))
+             (docstring-p (py-docstring-p (nth 8 pps))) 
+             ;; (progn (goto-char beg)(skip-chars-backward "\"'") (py-docstring-p (point)))
+              
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
                       (progn (goto-char (nth 8 pps)) (forward-sexp) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
@@ -12213,6 +12245,7 @@ Used only, if `py-install-directory' is empty. "
 
             ("Switches"
              :help "Toggle useful modes like `highlight-indentation'"
+
              ("Docstring styles"
               :help "Toggle values of `py-docstring-style'
 In order to set permanently customize this variable"
@@ -12335,7 +12368,8 @@ Use `M-x customize-variable' to set it permanently"]
                ["Django off" py-django-docstring-style-off
                 :help "Restores default value of `py-docstring-style'
 
-Use `M-x customize-variable' to set it permanently"]))
+Use `M-x customize-variable' to set it permanently"])
+              )
 
              ("Underscore word syntax"
               :help "Toggle `py-underscore-word-syntax-p'"
@@ -12366,6 +12400,19 @@ Make sure, `py-underscore-word-syntax-p' is off\.
 Returns value of `py-underscore-word-syntax-p'\. .
 
 Use `M-x customize-variable' to set it permanently"])
+
+
+             ["Fill-paragraph fill docstring "
+              (setq py-paragraph-fill-docstring-p
+                    (not py-paragraph-fill-docstring-p))
+              :help "If `py-fill-paragraph', when inside a docstring, should fill the complete string\.
+
+Default is nil\.
+
+Convenient use of `M-q' inside docstrings
+See also `py-docstring-style'
+Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-paragraph-fill-docstring-p]
 
              ["Tab shifts region "
               (setq py-tab-shifts-region-p
@@ -19812,16 +19859,14 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (py-set-load-path)
   ;; (add-to-list 'load-path py-install-directory)
   ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
-  (when py-autopair-mode
-    (if (featurep 'autopair)
-        (progn
-          (load-library "autopair")
-          (add-hook 'python-mode-hook
-                    #'(lambda ()
-                        (setq autopair-handle-action-fns
-                              (list #'autopair-default-handle-action
-                                    #'autopair-python-triple-quote-action)))))
-      (message "%s" "`py-autopair-mode' is set to `t' but autopair.el not available resp. not in `load-path'")))
+  (and py-autopair-mode (py-autopair-check)
+       (load-library "autopair")
+       (add-hook 'python-mode-hook
+                 #'(lambda ()
+                     (setq autopair-handle-action-fns
+                           (list #'autopair-default-handle-action
+                                 #'autopair-python-triple-quote-action))))
+       (py-autopair-mode-on))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
   (cond
