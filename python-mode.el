@@ -2733,7 +2733,7 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
                 (string-match "\n[ \t].*\n?$" string))
         (comint-send-string process "\n")))))
 
-(defun py-shell-send-string-no-output (string &optional process msg)
+(defun py-send-string-no-output (string &optional process msg)
   "Send STRING to PROCESS and inhibit output.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
@@ -2818,15 +2818,15 @@ Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (with-current-buffer (process-buffer process)
     (let ((completions
-           (py-shell-send-string-no-output
+           (py-send-string-no-output
             (format completion-code input) process)))
       (when (> (length completions) 2)
         (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
 
-(defun python-shell-completion--do-completion-at-point (process imports input)
+(defun py-shell--do-completion-at-point (process imports input)
   "Do completion at point for PROCESS."
   (with-syntax-table py-dotty-syntax-table
-    (when imports (py-shell-send-string-no-output imports process))
+    (when imports (py-send-string-no-output imports process))
     (let* ((code python-shell-module-completion-string-code)
            (completions
             (python-shell-completion--get-completions
@@ -2871,7 +2871,7 @@ completions on the current context."
   (interactive)
   (and comint-last-prompt-overlay
        (> (point-marker) (overlay-end comint-last-prompt-overlay))
-       (python-shell-completion--do-completion-at-point
+       (py-shell--do-completion-at-point
 	(get-buffer-process (current-buffer))(buffer-substring-no-properties beg end) word)))
 
 (defun python-shell-completion-complete-or-indent ()
@@ -3484,7 +3484,7 @@ of current line."
     (if (not process)
         nil
       (let ((module-file
-             (py-shell-send-string-no-output
+             (py-send-string-no-output
               (format python-ffap-string-code module) process)))
         (when module-file
           (substring-no-properties module-file 1 -1))))))
@@ -5498,7 +5498,7 @@ the default"
   "Go to end of string at point, return position.
 
 Takes the result of (syntax-ppss)"
-  (interactive) 
+  (interactive)
   (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss))))))
     (goto-char beginning-of-string-position)
     ;; (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")
@@ -5506,7 +5506,7 @@ Takes the result of (syntax-ppss)"
   (point))
 
 (defun py-fill-paragraph (&optional justify style start end docstring)
-  "`fill-paragraph-function' 
+  "`fill-paragraph-function'
 
 See also `py-fill-string' "
   (interactive "P")
@@ -5556,7 +5556,7 @@ See also `py-fill-string' "
              (t t))))
         (goto-char orig)
         (back-to-indentation))
-        (recenter-top-bottom)
+      (recenter-top-bottom)
       ;; fill-paragraph expexts t
       t))
 
@@ -5674,9 +5674,9 @@ SYMMETRIC:
                                     (syntax-after (point)))
                              (point-marker)))))
              ;; Assume docstrings at BOL resp. indentation
-             (docstring-p (py-docstring-p (nth 8 pps))) 
+             (docstring-p (py-docstring-p (nth 8 pps)))
              ;; (progn (goto-char beg)(skip-chars-backward "\"'") (py-docstring-p (point)))
-              
+
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
                       (progn (goto-char (nth 8 pps)) (forward-sexp) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
@@ -10689,7 +10689,7 @@ Used with `eval-after-load'."
 
 The result is what follows `_emacs_out' in the output.
 This is a no-op if `py-check-comint-prompt' returns nil."
-  (py-shell-send-string-no-output string)
+  (py-send-string-no-output string)
   (let ((proc (py-proc)))
     (with-current-buffer (process-buffer proc)
       (when (py-check-comint-prompt proc)
@@ -11291,7 +11291,7 @@ This function takes the list of setup code to send from the
 `py-setup-codes' list."
   (accept-process-output process 1)
   (dolist (code py-setup-codes)
-    (py-shell-send-string-no-output
+    (py-send-string-no-output
      (symbol-value code) process)
     (sit-for 0.1)))
 
@@ -11319,12 +11319,6 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
          (args py-python-command-args)
          (oldbuf (current-buffer))
          (path (getenv "PYTHONPATH"))
-         ;; make classic python.el forms usable, to import emacs.py
-         (process-environment
-          (cons (concat "PYTHONPATH="
-                        (if path (concat path path-separator))
-                        data-directory)
-                process-environment))
          ;; reset later on
          (py-buffer-name
           (or py-buffer-name
@@ -15448,7 +15442,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                            (if imports
                                (setq imports (concat imports (match-string-no-properties 0) ";"))
                              (setq imports (match-string-no-properties 0)))))))
-                   (python-shell-completion--do-completion-at-point proc imports word))
+                   (py-shell--do-completion-at-point proc imports word))
                (error "No completion process at proc"))))))
 
 (defun py-python2-shell-complete (&optional shell)
@@ -15466,7 +15460,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
           (t (or (setq proc (get-buffer-process shell))
                  (setq proc (get-buffer-process (py-shell nil nil shell))))
              (message "%s" (processp proc))
-             (python-shell-completion--do-completion-at-point proc nil word))))
+             (py-shell--do-completion-at-point proc nil word))))
   nil)
 
 (defun py-python3-shell-complete (&optional shell)
@@ -15481,7 +15475,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (message "%s" "Nothing to complete. ")
            (tab-to-tab-stop))
           (t
-           (python-shell-completion--do-completion-at-point (get-buffer-process (current-buffer)) nil word)
+           (py-shell--do-completion-at-point (get-buffer-process (current-buffer)) nil word)
            nil))))
 
 (defun py-shell-complete (&optional shell debug)
@@ -15511,7 +15505,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                 (cond ((string= word "")
                        (tab-to-tab-stop))
                       ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-                       (python-shell-completion--do-completion-at-point proc imports word))
+                       (py-shell--do-completion-at-point proc imports word))
                       (t (py-shell-complete-intern word beg end shell imports proc))))))
         ;; complete in script buffer
         (let* (
@@ -15531,7 +15525,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                 ((string-match "[iI][pP]ython" shell)
                  (ipython-complete nil nil beg end word nil debug imports))
                 ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-                 (python-shell-completion--do-completion-at-point proc (buffer-substring-no-properties beg end) word))
+                 (py-shell--do-completion-at-point proc (buffer-substring-no-properties beg end) word))
                 ;; deals better with imports
                 ;; (imports
                 ;; (py-python-script-complete shell imports beg end word))
@@ -15539,7 +15533,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
 
 (defun py-shell-complete-intern (word &optional beg end shell imports proc debug)
   (when imports
-    (py-shell-send-string-no-output imports proc))
+    (py-send-string-no-output imports proc))
   (let ((result (py-shell-execute-string-now (format "
 def print_completions(namespace, text, prefix=''):
    for name in namespace:
@@ -19847,7 +19841,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
   (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
   (set (make-local-variable 'require-final-newline) mode-require-final-newline)
-  (make-local-variable 'python-saved-check-command)
   (set (make-local-variable 'tab-width) py-indent-offset)
   (set (make-local-variable 'eldoc-documentation-function)
        #'py-eldoc-function)
