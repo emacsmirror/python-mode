@@ -6366,6 +6366,41 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
+(defun py-which-def-or-class ()
+  "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
+
+Returns \"???\" otherwise
+Used by variable `which-func-functions' "
+  (interactive)
+  (let* ((orig (point))
+         (first t)
+         def-or-class
+         done last erg)
+    (and first (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")(not (nth 8 (syntax-ppss)))
+         (add-to-list 'def-or-class (match-string-no-properties 2)))
+    (while
+        (and (not (bobp)) (not done) (or (< 0 (current-indentation)) first))
+      (py-beginning-of-def-or-class)
+      (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
+      (setq last (point))
+      (setq name (match-string-no-properties 2))
+      (if first
+          (progn
+            (setq first nil)
+            (py-end-of-def-or-class)
+            (if
+                (<= orig (point))
+                (goto-char last)
+              (setq done t)
+              (goto-char orig)))
+        t)
+      (unless done (add-to-list 'def-or-class name)))
+    (unless done (setq def-or-class (mapconcat 'identity def-or-class ".")))
+    (goto-char orig)
+    (or def-or-class (setq def-or-class "???"))
+    (when (interactive-p) (message "%s" def-or-class))
+    def-or-class))
+
 (defun py-which-function ()
   "Return the name of the function or class, if curser is in, return nil otherwise. "
   (interactive)
@@ -19821,6 +19856,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
          '(py-font-lock-keywords nil nil nil nil
                                  (font-lock-syntactic-keywords
                                   . py-font-lock-syntactic-keywords))))
+  (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-start) "#")
