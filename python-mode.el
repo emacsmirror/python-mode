@@ -5,7 +5,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2011 https://launchpad.net/python-mode
+;; Author: 2003-2013 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -126,7 +126,6 @@ Give some hints, if not."
       (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
       nil)))
 
-
 (defun py-autopair-check ()
   "Check, if autopair-mode is available.
 
@@ -137,7 +136,6 @@ Give some hints, if not."
     (progn
       (message "%s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
       nil)))
-
 
 (defcustom py-smart-operator-mode-p t
   "If python-mode calls (smart-operator-mode-on)
@@ -163,7 +161,6 @@ Default is nil. "
           (const :tag "py-end-of-expression" py-end-of-expression))
   :group 'python-mode)
 (make-variable-buffer-local 'py-sexp-function)
-
 
 (defvar py-autopair-mode nil)
 (defcustom py-autopair-mode nil
@@ -495,6 +492,11 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
 
 (defcustom py-cleanup-temporary t
   "If temporary buffers and files used by functions executing region should be deleted afterwards. "
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-use-execute-ge24-3-p nil
+  "Seems Emacs-24.3 provided a way executing stuff without temporary files. "
   :type 'boolean
   :group 'python-mode)
 
@@ -869,7 +871,6 @@ Also used by (minor-)outline-mode "
   :type 'boolean
   :group 'python-mode)
 
-
 (defcustom py-paragraph-fill-docstring-p nil
   "If `py-fill-paragraph', when inside a docstring, should fill the complete string.
 
@@ -1107,6 +1108,7 @@ Default is  nil "
   :type 'string
   :group 'python-mode)
 
+
 (defcustom python-ffap-string-code
   "__FFAP_get_module_path('''%s''')\n"
   "Python code used to get a string with the path of a module."
@@ -1155,6 +1157,14 @@ Default is  nil "
   :type '(repeat symbol)
   :group 'python-mode
   :safe 'listp)
+
+
+(defcustom py-shell-prompt-regexp ">>> "
+  "Regular Expression matching top\-level input prompt of python shell.
+It should not contain a caret (^) at the beginning."
+  :type 'string
+  :group 'python-mode)
+(defvar py-shell-prompt-regexp ">>> ")
 
 (defcustom python-shell-completion-setup-code
   "try:
@@ -1620,12 +1630,7 @@ set in py-execute-region and used in py-jump-to-exception.")
 (defvar match-paren-no-use-syntax-pps nil)
 
 (defvar py-traceback-line-re
-  "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
-  "Regular expression that describes tracebacks.
-Inludes Python shell-prompt in order to stop further searches. ")
-
-(defvar py-traceback-line-re
-  "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
+  "^IPython\\|^In \\[[0-9]+\\]: *\\|[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)"
   "Regular expression that describes tracebacks.
 Inludes Python shell-prompt in order to stop further searches. ")
 
@@ -2711,23 +2716,28 @@ in the `same-window-buffer-names' list."
     (when (interactive-p) (message "%S" erg))
     erg))
 
-(defun py-shell-send-string (string &optional process msg)
+(defun py-shell-send-string (string &optional process msg filename)
   "Send STRING to inferior Python PROCESS.
 When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
   (interactive "sPython command: ")
   (let* ((process (or process (get-buffer-process (py-shell))))
-         (lines (split-string string "\n" t))
+         (lines (split-string string "\n"))
          (temp-file-name (concat (with-current-buffer (process-buffer process)
                                    (file-remote-p default-directory))
                                  (py-normalize-directory py-temp-directory)
                                  "psss-temp.py"))
-         (file-name (or (buffer-file-name) temp-file-name)))
+         (file-name (or filename (buffer-file-name) temp-file-name)))
     (if (> (length lines) 1)
-        (progn
+        (let* ((temporary-file-directory
+                (if (file-remote-p default-directory)
+                    (concat (file-remote-p default-directory) "/tmp")
+                  temporary-file-directory))
+               (temp-file-name (make-temp-file "py"))
+               (file-name (or (buffer-file-name) temp-file-name)))
           (with-temp-file temp-file-name
             (insert string)
             (delete-trailing-whitespace))
-          (py-shell-send-file file-name process temp-file-name))
+          (py-send-file file-name process temp-file-name))
       (comint-send-string process string)
       (when (or (not (string-match "\n$" string))
                 (string-match "\n[ \t].*\n?$" string))
@@ -2751,10 +2761,10 @@ the output."
       (replace-regexp-in-string
        (if (> (length py-shell-prompt-output-regexp) 0)
            (format "\n*%s$\\|^%s\\|\n$"
-                   python-shell-prompt-regexp
+                   py-shell-prompt-regexp
                    (or py-shell-prompt-output-regexp ""))
          (format "\n*$\\|^%s\\|\n$"
-                 python-shell-prompt-regexp))
+                 py-shell-prompt-regexp))
        "" output-buffer))))
 
 (defun py-send-string-return-output (string &optional process msg)
@@ -5270,20 +5280,7 @@ Returns position, nil if not in comment."
           (point))
       last)))
 
-(defun py-uncomment ()
-  "Uncomment lines at point.
-
-If region is active, restrict uncommenting at region "
-  (interactive "*")
-  (save-excursion
-    (save-restriction
-      (when (use-region-p)
-        (narrow-to-region (region-beginning) (region-end)))
-      (let ((beg (or (py-beginning-of-comment)(and (looking-at (concat "[ \t]*" comment-start)) (point)))))
-        (push-mark)
-        (py-end-of-comment)
-        (uncomment-region beg (point))))))
-
+;;; Comment forms
 (defun py-comment-region (beg end &optional arg)
   "Like `comment-region' but uses double hash (`#') comment starter."
   (interactive "r\nP")
@@ -5411,6 +5408,61 @@ the default"
       (goto-char end)
       (comment-region beg end arg))))
 
+;;; Uncomment forms
+(defun py-uncomment ()
+  "Uncomment lines at point.
+
+If region is active, restrict uncommenting at region "
+  (interactive "*")
+  (save-excursion
+    (save-restriction
+      (when (use-region-p)
+        (narrow-to-region (region-beginning) (region-end)))
+      (let ((beg (or (py-beginning-of-comment)(and (looking-at (concat "[ \t]*" comment-start)) (point)))))
+        (push-mark)
+        (py-end-of-comment)
+        (uncomment-region beg (point))))))
+
+(defun py-delete-comments-in-def-or-class ()
+  "Delete all commented lines in def-or-class at point"
+  (interactive "*")
+  (save-excursion
+    (let ((beg (py-beginning-of-def-or-class-position))
+          (end (py-end-of-def-or-class-position)))
+      (and beg end (py--delete-comments-intern beg end)))))
+
+(defun py-delete-comments-in-class ()
+  "Delete all commented lines in class at point"
+  (interactive "*")
+  (save-excursion
+    (let ((beg (py-beginning-of-class-position))
+          (end (py-end-of-class-position)))
+      (and beg end (py--delete-comments-intern beg end)))))
+
+(defun py-delete-comments-in-block ()
+  "Delete all commented lines in block at point"
+  (interactive "*")
+  (save-excursion
+    (let ((beg (py-beginning-of-block-position))
+          (end (py-end-of-block-position)))
+      (and beg end (py--delete-comments-intern beg end)))))
+
+(defun py-delete-comments-in-region (beg end)
+  "Delete all commented lines in region. "
+  (interactive "r*")
+  (save-excursion
+    (py--delete-comments-intern beg end)))
+
+(defun py--delete-comments-intern (beg end)
+  (save-restriction
+    (narrow-to-region beg end)
+    (goto-char beg)
+    (while (and (< (line-end-position) end) (not (eobp)))
+      (beginning-of-line)
+      (if (looking-at (concat "[ \t]*" comment-start))
+          (delete-region (point) (1+ (line-end-position)))
+        (forward-line 1)))))
+;;;
 (defun py-join-words-wrapping (words separator line-prefix line-length)
   (let ((lines ())
         (current-line line-prefix))
@@ -9495,7 +9547,7 @@ When called from a programm, it accepts a string specifying a shell which will b
             (sit-for py-ipython-execute-delay))
           (setq erg (py-execute-file-base proc file pec procbuf))
           (sit-for 0.2)
-          (unless (py-postprocess-output-buffer procbuf oldbuf start end file)
+          (unless (py-postprocess-output-buffer procbuf)
             (pop-to-buffer oldbuf)
             (py-shell-manage-windows switch split oldbuf py-buffer-name))
           (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
@@ -9555,7 +9607,7 @@ When called from a programm, it accepts a string specifying a shell which will b
             (sit-for py-ipython-execute-delay))
           (setq erg (py-execute-file-base proc file pec procbuf))
           (sit-for 0.1)
-          (setq err-p (py-postprocess-output-buffer procbuf oldbuf start end file))
+          (setq err-p (py-postprocess-output-buffer py-buffer-name))
           (py-shell-manage-windows switch split oldbuf py-buffer-name)
           (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
             (when py-verbose-p (message "Output buffer: %s" procbuf))
@@ -9565,7 +9617,7 @@ When called from a programm, it accepts a string specifying a shell which will b
       (message "%s not readable. %s" file "Do you have write permissions?"))
     erg))
 
-(defun py-execute-python-mode-v5 (start end &optional pyshellname dedicated switch nostars sepchar split file)
+(defun py-execute-python-mode-v5 (start end &optional pyshellname)
   (let ((py-exception-buffer (current-buffer))
         (cmd (concat (or pyshellname py-shell-name) (if (string-equal py-which-bufname
                                                                       "Jython")
@@ -9578,17 +9630,92 @@ When called from a programm, it accepts a string specifying a shell which will b
     (if (not (get-buffer py-output-buffer))
         (message "No output.")
 
-      (let ((err-p (py-postprocess-output-buffer py-output-buffer py-exception-buffer start end)))
+      (let* ((err-p (py-postprocess-output-buffer py-output-buffer))
+             (line (cadr err-p)))
         (if err-p
             (pop-to-buffer py-exception-buffer)
           (pop-to-buffer py-output-buffer)
           (goto-char (point-max))
           (setq erg (copy-marker (point))))))))
 
+(defun py-execute-ge24.3 (start end &optional pyshellname dedicated switch nostars sepchar split file)
+  "Select the handler. "
+  (and (buffer-file-name) buffer-offer-save (buffer-modified-p) (y-or-n-p "Save buffer before executing? ")
+       (write-file (buffer-file-name)))
+  (let* ((start (copy-marker start))
+         (end (copy-marker end))
+         (py-exception-buffer (current-buffer))
+         (line (count-lines (point-min) start))
+         (pyshellname (or pyshellname (py-choose-shell)))
+         (execute-directory
+          (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
+                ((and py-use-current-dir-when-execute-p (buffer-file-name))
+                 (file-name-directory (buffer-file-name)))
+                ((and py-use-current-dir-when-execute-p
+                      py-fileless-buffer-use-default-directory-p)
+                 (expand-file-name default-directory))
+                ((stringp py-execute-directory)
+                 py-execute-directory)
+                ((getenv "VIRTUAL_ENV"))
+                (t (getenv "HOME"))))
+         (strg (buffer-substring-no-properties start end))
+         (sepchar (or sepchar (char-to-string py-separator-char)))
+         (py-buffer-name (py-buffer-name-prepare pyshellname sepchar))
+         (temp (make-temp-name
+                (concat (replace-regexp-in-string (regexp-quote sepchar) "-" (replace-regexp-in-string (concat "^" (regexp-quote sepchar)) "" (replace-regexp-in-string ":" "-" pyshellname))) "-")))
+         (localname (or (buffer-file-name) (concat (expand-file-name py-temp-directory) sepchar (replace-regexp-in-string (regexp-quote sepchar) "-" temp) ".py")))
+         (switch (or switch py-switch-buffers-on-execute-p))
+         (split (or split py-split-windows-on-execute-p))
+         (proc (if dedicated
+                   (get-buffer-process (py-shell nil dedicated pyshellname switch sepchar py-buffer-name t))
+                 (or (get-buffer-process py-buffer-name)
+                     (get-buffer-process (py-shell nil dedicated pyshellname switch sepchar py-buffer-name t)))))
+         (procbuf (process-buffer proc))
+         (file (or file (with-current-buffer py-buffer-name ; create the file to be executed in context of the shell
+                          (concat (file-remote-p default-directory) localname))))
+         (filebuf (get-buffer-create file))
+         (pec (if (string-match "[pP]ython ?3" py-buffer-name)
+                  (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" localname localname)
+                (format "execfile(r'%s') # PYTHON-MODE\n" localname)))
+         (comint-scroll-to-bottom-on-output t)
+         err-p)
+    (set-buffer filebuf)
+    (erase-buffer)
+    ;; (switch-to-buffer (current-buffer))
+    (newline line)
+    (save-excursion
+      (insert strg))
+    (py-fix-start (point) (point-max))
+    (unless (string-match "[jJ]ython" pyshellname)
+      (when (and execute-directory py-use-current-dir-when-execute-p
+                 (not (string= execute-directory default-directory)))
+        (message "Warning: options `execute-directory' and `py-use-current-dir-when-execute-p' may conflict"))
+      (and execute-directory
+           (process-send-string proc (concat "import os; os.chdir(\"" execute-directory "\")\n"))
+           ;; (py-send-string-no-output (concat "import os; os.chdir(\"" execute-directory "\")\n") proc)
+           ))
+    (set-buffer filebuf)
+    (process-send-string proc
+                         (buffer-substring-no-properties
+                          (point-min) (point-max)))
+    ;; (write-file (buffer-name filebuf))
+    ;; (py-execute-file-base proc file pec procbuf)
+    ;; (py-shell-send-string (buffer-substring-no-properties (point-min) (point-max)) proc t file)
+    (sit-for 0.1)
+    (if (and (setq err-string (py-postprocess-output-buffer procbuf))
+             (car err-string)
+             (not (markerp err-string)))
+        (py-jump-to-exception err-string beg end)
+      (py-shell-manage-windows switch split py-exception-buffer py-buffer-name)
+      (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
+        (when py-verbose-p (message "Output buffer: %s" procbuf))))))
+
 (defun py-execute-base (start end &optional pyshellname dedicated switch nostars sepchar split file)
   "Select the handler. "
   (cond (;; enforce proceeding as python-mode.el v5
          python-mode-v5-behavior-p (py-execute-python-mode-v5 start end pyshellname dedicated switch nostars sepchar split file))
+        (py-use-execute-ge24-3-p
+         (py-execute-ge24.3 start end pyshellname dedicated switch nostars sepchar split file))
         ;; No need for a temporary file than
         ((and (not (buffer-modified-p)) file)
          (py-execute-buffer-file start end pyshellname dedicated switch nostars sepchar split file))
@@ -9681,16 +9808,16 @@ Avoid empty lines at the beginning. "
   ;; (switch-to-buffer (current-buffer))
   (python-mode)
   (goto-char start)
-  (let ((beg (copy-marker start)))
-    (while (empty-line-p)
-      (delete-region (line-beginning-position) (1+ (line-end-position))))
-    (back-to-indentation)
-    (unless (py-beginning-of-statement-p)
-      (py-down-statement))
-    (while (not (eq (current-indentation) 0))
-      (py-shift-left py-indent-offset start end))
-    (setq py-line-number-offset (count-lines 1 start))
-    beg))
+  (while (empty-line-p)
+    (delete-region (line-beginning-position) (1+ (line-end-position))))
+  (back-to-indentation)
+  (unless (py-beginning-of-statement-p)
+    (py-down-statement))
+  (while (not (eq (current-indentation) 0))
+    (py-shift-left py-indent-offset start end))
+  (goto-char (point-max))
+  (unless (empty-line-p)
+    (newline)))
 
 (defun py-fetch-py-master-file ()
   "Lookup if a `py-master-file' is specified.
@@ -11262,12 +11389,13 @@ Needed when file-path names are contructed from maybe numbered buffer names like
           py-split-windows-on-execute-p
           (or (eq switch 'noswitch)
               (not (eq switch 'switch))))
+         (delete-other-windows)
          (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
+               (pop-to-buffer oldbuf)
                (display-buffer py-buffer-name 'display-buffer-reuse-window))
-           (display-buffer py-buffer-name 'display-buffer-reuse-window))
-         (pop-to-buffer oldbuf))
+           (display-buffer py-buffer-name 'display-buffer-reuse-window)))
         ;; no split, switch
         ((or (eq switch 'switch)
              (and (not (eq switch 'noswitch))
@@ -12403,7 +12531,6 @@ Make sure, `py-underscore-word-syntax-p' is off\.
 Returns value of `py-underscore-word-syntax-p'\. .
 
 Use `M-x customize-variable' to set it permanently"])
-
 
              ["Fill-paragraph fill docstring "
               (setq py-paragraph-fill-docstring-p
@@ -19398,66 +19525,65 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
 
 ;;: Subprocess utilities and filters
 
-(defun py-postprocess-output-buffer (buf exception-buffer start end &optional file)
+(defun py-postprocess-output-buffer (buf)
   "Highlight exceptions found in BUF.
-If an exception occurred return t, otherwise return nil.  BUF must exist."
-  (let ((file file)
-        (expression (concat "^[ 	]+File \"\\(" file "\\)\", line \\([0-9]+\\)"))
-        line err-p pattern)
-    (when
-        (or (and file (re-search-forward expression nil t))
-            (and file (re-search-backward expression nil t))
-            ;; File "/tmp/python-2246WCK.py", line 7, in <module>
-            ;; "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>> \\|^[ 	]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)\\|^[^ 	>]+>[^0-9]+\\([0-9]+\\)"
-            (re-search-forward py-traceback-line-re nil t)
-            (re-search-backward py-traceback-line-re nil t))
-      (or file (setq file (match-string 1)))
-      (setq line (if (and (match-string-no-properties 2)
-                          (save-match-data (string-match "[0-9]" (match-string-no-properties 2))))
-                     (string-to-number (match-string 2))
-                   (when (and (match-string-no-properties 3)
-                              (save-match-data (string-match "[0-9]" (match-string-no-properties 3))))
-                     (string-to-number (match-string-no-properties 3))))))
-    (overlay-put (make-overlay (match-beginning 0) (match-end 0))
-                 'face 'highlight)
-    (setq pattern (progn (forward-line 1)(back-to-indentation)(looking-at ".+")(match-string-no-properties 0)))
-    (goto-char (point-max))
-    (when (and py-jump-on-exception line)
-      (beep)
-      (py-jump-to-exception file line py-line-number-offset exception-buffer pattern start end)
-      (setq err-p t))
-    err-p))
+If an exception occurred return error-string, otherwise return nil.  BUF must exist."
+  (let ((poma (point-max))
+        line file bol err-p estring ecode)
+    (save-excursion
+      (set-buffer buf)
+      (display-buffer buf)
+      ;; (switch-to-buffer (current-buffer))
+      (goto-char poma)
+      (forward-line -1)
+      (end-of-line)
+      (when (and (re-search-backward (concat comint-prompt-regexp "\\|" py-traceback-line-re) nil t)
+                 (looking-at py-traceback-line-re))
+        (setq file (substring-no-properties (match-string 1))
+              line (string-to-number (match-string 2)))
+        (add-to-list 'err-p line)
+        (add-to-list 'err-p file)
+        (overlay-put (make-overlay (match-beginning 0) (match-end 0))
+                     'face 'highlight)
+        (forward-line 1)
+        (if (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
+            (progn
+              (setq estring (match-string-no-properties 1))
+              (add-to-list 'err-p estring t)
+              (setq ecode (buffer-substring-no-properties (line-end-position)
+                                                          (progn (re-search-forward comint-prompt-regexp nil t 1)(match-beginning 0))))
+              ;; (setq ecode (concat (split-string ecode "[ \n\t\f\r^]" t)))
+              (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
+              (add-to-list 'err-p ecode t))
+          (setq err-p t)))
+      (goto-char poma)
+      ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
+      err-p)))
 
-(defun py-jump-to-exception (file line py-line-number-offset &optional buffer pattern start end)
+(defun py-jump-to-exception (file line)
   "Jump to the Python code in FILE at LINE."
-  (if buffer
-      (progn
-        (set-buffer buffer)
-        ;; (switch-to-buffer (current-buffer))
-        (goto-char start)
-        (search-forward pattern end nil))
-    (let ((buffer (cond ((string-equal file "<stdin>")
-                         (if (consp py-exception-buffer)
-                             (cdr py-exception-buffer)
-                           py-exception-buffer))
-                        ((and (consp py-exception-buffer)
-                              (string-equal file (car py-exception-buffer)))
-                         (cdr py-exception-buffer))
-                        ((ignore-errors (find-file-noselect file)))
-                        ;; could not figure out what file the exception
-                        ;; is pointing to, so prompt for it
-                        (t (find-file (read-file-name "Exception file: "
-                                                      nil
-                                                      file t))))))
-      ;; Fiddle about with line number
-      (setq line (+ py-line-number-offset line))
-      (pop-to-buffer buffer)
-      ;; Force Python mode
-      (unless (eq major-mode 'python-mode)
+  (let ((buffer (cond ((string-equal file "<stdin>")
+                       (if (consp py-exception-buffer)
+                           (cdr py-exception-buffer)
+                         py-exception-buffer))
+                      ((and (consp py-exception-buffer)
+                            (string-equal file (car py-exception-buffer)))
+                       (cdr py-exception-buffer))
+                      ((py-safe (find-file-noselect file)))
+                      ;; could not figure out what file the exception
+                      ;; is pointing to, so prompt for it
+                      (t (find-file (read-file-name "Exception file: "
+                                                    nil
+                                                    file t))))))
+    ;; Fiddle about with line number
+    (setq line (+ py-line-number-offset line))
+
+    (pop-to-buffer buffer)
+    ;; Force Python mode
+    (if (not (eq major-mode 'python-mode))
         (python-mode))
-      (goto-char (point-min))
-      (forward-line (1- line))
-      (message "Jumping to exception in file %s on line %d" file line))))
+    (forward-line (1+ line))
+    (message "Jumping to exception in file %s on line %d" file line)))
 
 (defun py-down-exception (&optional bottom)
   "Go to the next line down in the traceback.
@@ -19540,6 +19666,20 @@ bottom) of the trackback stack is encountered."
             (goto-char orig)
             (error "%s of traceback" errwhere))))))
 
+
+(defun py-goto-exception ()
+  "Go to the line indicated by the traceback."
+  (interactive)
+  (let (file line)
+    (save-excursion
+      (beginning-of-line)
+      (if (looking-at py-traceback-line-re)
+          (setq file (match-string 1)
+                line (string-to-number (match-string 2)))))
+    (if (not file)
+        (error "Not on a traceback line"))
+    (py-jump-to-exception file line)))
+
 ;; python-mode-send.el
 (defun py-output-buffer-filter (&optional beg end)
   "Clear output buffer from py-shell-input prompt etc. "
@@ -19570,6 +19710,27 @@ bottom) of the trackback stack is encountered."
       ;; as to make sure we terminate the multiline instruction.
       (comint-send-string proc "\n"))))
 
+(defun py-send-file (file-name &optional process temp-file-name)
+  "Send FILE-NAME to inferior Python PROCESS.
+If TEMP-FILE-NAME is passed then that file is used for processing
+instead, while internally the shell will continue to use
+FILE-NAME."
+  (interactive "fFile to send: ")
+  (let* ((process (or process (get-buffer-process (py-shell))))
+         (temp-file-name (when temp-file-name
+                           (expand-file-name temp-file-name)))
+         (file-name (or (expand-file-name file-name) temp-file-name))
+         py-python-command-args)
+    (when (not file-name)
+      (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
+    (py-shell-send-string
+     (format
+      (concat "__pyfile = open('''%s''');"
+              "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
+              "__pyfile.close()")
+      ;; (or (file-remote-p temp-file-name 'localname) file-name) file-name)
+      (or (file-remote-p temp-file-name 'localname) file-name) "Fehlerdatei")
+     process)))
 ;;;
 
 ;; Pymacs
