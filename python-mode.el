@@ -88,6 +88,13 @@ you're editing someone else's Python code."
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-offset)
 
+(defcustom py-backslashed-lines-indent-offset 5
+  "*Amount of offset per level of indentation of backslashed.
+No semantic indent,  which diff to `py-indent-offset' indicates "
+  :type 'integer
+  :group 'python-mode)
+(make-variable-buffer-local 'py-backslashed-lines-indent-offset)
+
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
 
@@ -11084,7 +11091,7 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                   (if (< 1 (- origline this-line))
                       (py-fetch-previous-indent orig)
                     (if (looking-at "from +\\([^ \t\n]+\\) +import")
-                        5
+                        py-backslashed-lines-indent-offset
                       (+ (current-indentation) py-continuation-offset)))))
                ((and (looking-at py-block-closing-keywords-re)(eq (py-count-lines) origline))
                 (skip-chars-backward "[ \t\r\n\f]")
