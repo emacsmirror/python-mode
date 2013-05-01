@@ -16737,12 +16737,11 @@ When called from a programm, it accepts a string specifying a shell which will b
 
 Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch)"
   (interactive "P")
-  (save-excursion
-    (let ((beg (prog1
-                   (or (py-beginning-of-statement-p)
-                       (py-beginning-of-statement))))
-          (end (py-end-of-statement)))
-      (py-execute-region beg end shell dedicated switch))))
+  (let ((beg (prog1
+                 (or (py-beginning-of-statement-p)
+                     (py-beginning-of-statement))))
+        (end (py-end-of-statement)))
+    (py-execute-region beg end shell dedicated switch)))
 
 (defun py-execute-block (&optional shell dedicated switch)
   "Send block at point to a Python interpreter.
