@@ -3947,6 +3947,30 @@ Used by `py-electric-colon', which will not indent than. "
 
 
 ;; Electric deletion
+(defun py-empty-out-list-backward ()
+  "Deletes all elements from list before point. "
+  (interactive "*")
+  (and (member (char-before) (list ?\) ?\] ?\}))
+       (let ((orig (point))
+             (thischar (char-before))
+             pps cn)
+         (forward-char -1)
+         (setq pps (syntax-ppss))
+         (if (and (not (nth 8 pps)) (nth 1 pps))
+             (progn
+               (goto-char (nth 1 pps))
+               (forward-char 1))
+           (cond ((or (eq thischar 41)(eq thischar ?\)))
+                  (setq cn "("))
+                 ((or (eq thischar 125) (eq thischar ?\}))
+                  (setq cn "{"))
+                 ((or (eq thischar 93)(eq thischar ?\]))
+                  (setq cn "[")))
+           (skip-chars-backward (concat "^" cn)))
+         (delete-region (point) orig)
+         (insert-char thischar 1)
+         (forward-char -1))))
+
 (defun py-electric-backspace (&optional arg)
   "Delete preceding character or level of indentation.
 
@@ -3962,17 +3986,7 @@ Returns column reached. "
                    (delete-char (- remains))
                  (indent-line-to (- (current-indentation) py-indent-offset)))))
             ((and py-electric-kill-backward-p (member (char-before) (list ?\) ?\] ?\})))
-             (let ((orig (point))
-                   (thischar (char-before))
-                   pps)
-               (forward-char -1)
-               (setq pps (syntax-ppss))
-               (when (nth 1 pps)
-                 (goto-char (nth 1 pps))
-                 (forward-char 1)
-                 (delete-region (point) orig)
-                 (insert-char thischar 1)
-                 (forward-char -1))))
+             (py-empty-out-list-backward))
             (t (delete-char (- 1)))))
     (setq erg (current-column))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
@@ -13388,8 +13402,13 @@ Shift def left. "]
 Shift block-or-clause left. "]
 
                     )
-                   ("Extended "
+                   ("More"
                     :help "extended edit commands'"
+
+                    ["Empty out list backward" py-empty-out-list-backward
+                     :help " `py-empty-out-list-backward'
+Deletes all elements from list before point. "]
+
                     ["Revert boolean assignent" py-boolswitch
                      :help " `py-boolswitch'
 Edit the assigment of a boolean variable, rever them.
