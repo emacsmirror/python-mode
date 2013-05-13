@@ -4698,7 +4698,7 @@ Returns outmost indentation reached. "
     (forward-line 1))
   (back-to-indentation))
 
-(defun py-indent-region (start end &optional indent-offset)
+(defun py-indent-region (start end &optional indent-offset recursive)
   "Reindent a region of Python code.
 
 With optional INDENT-OFFSET specify a different value than `py-indent-offset' at place.
@@ -4713,7 +4713,9 @@ Returns and keeps relative position "
                            (or indent-offset py-indent-offset))))
     (goto-char beg)
     (while (< (line-end-position) end)
-      (py-indent-and-forward))
+      (if (empty-line-p)
+          (forward-line 1)
+        (py-indent-and-forward)))
     (unless (empty-line-p) (py-indent-line))
     (goto-char orig)))
 
