@@ -391,6 +391,11 @@ Default is nil. "
   :type 'number
   :group 'python-mode)
 
+(defcustom py-closing-list-keeps-space nil
+  "If non-nil, closing parentesis dedents onto column of opening plus `py-closing-list-space', default is nil "
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-electric-kill-backward-p nil
   "Affects `py-electric-backspace'. Default is nil.
 
@@ -1120,7 +1125,6 @@ Default is  nil "
   :type 'string
   :group 'python-mode)
 
-
 (defcustom python-ffap-string-code
   "__FFAP_get_module_path('''%s''')\n"
   "Python code used to get a string with the path of a module."
@@ -1472,7 +1476,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-bol-forms-last-indent nil
   "For internal use. Stores indent from last py-end-of-FORM-bol command.
 When this-command is py-beginning-of-FORM-bol, last-command's indent will be considered in order to jump onto right beginning position.")
-
 
 ;; Skip's XE workaround
 (unless (fboundp 'string-to-syntax)
@@ -10965,6 +10968,18 @@ Returns the string inserted. "
       (skip-chars-backward " \t\r\n\f")
       (py-beginning-of-commented-section))))
 
+(defun py-empty-arglist-indent (nesting py-indent-offset)
+  "Internally used by `py-compute-indentation'"
+  (if
+      (and (eq 1 nesting)
+           (save-excursion
+             (back-to-indentation)
+             (looking-at py-extended-block-or-clause-re)))
+      (progn
+        (back-to-indentation)
+        (+ (current-column) (* 2 (or indent-offset py-indent-offset))))
+    (+ (current-indentation) py-indent-offset)))
+
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line nesting repeat indent-offset)
   "Compute Python indentation.
@@ -11074,10 +11089,12 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                            (closing
                             (cond ((looking-back "^[ \t]*")
                                    (current-column))
-                                  ((eq 1 closing)
-                                   (if py-closing-list-dedents-bos
-                                       (current-indentation)
-                                     (+ (current-column) py-closing-list-space)))
+                                  ((and (eq 1 closing) (looking-at "\\s([ \t]*$") py-closing-list-dedents-bos)
+                                   (current-indentation))
+                                  ((and (eq 1 closing) (looking-at "\\s([ \t]*$") py-closing-list-keeps-space)
+                                   (+ (current-column) py-closing-list-space))
+                                  ((and (eq 1 closing)(looking-at "\\s([ \t]*$"))
+                                   (py-empty-arglist-indent nesting py-indent-offset))
                                   (t (py-fetch-previous-indent orig))))
                            ;; (if py-closing-list-dedents-bos
                            ;;     (current-indentation)
@@ -11086,21 +11103,14 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                             (+ (current-indentation) py-indent-offset))
                            (t (py-fetch-previous-indent orig)))
                         (cond ((looking-at "\\s([ \t]*$")
-                               (if
-                                   (and (eq 1 nesting)
-                                        ;; (progn
-                                        (save-excursion
-                                          (back-to-indentation)
-                                          (looking-at py-extended-block-or-clause-re)))
-                                   (progn
-                                     (back-to-indentation)
-                                     (+ (current-column) (* 2 (or indent-offset py-indent-offset))))
-                                 (+ (current-indentation) py-indent-offset)))
+                               (py-empty-arglist-indent nesting py-indent-offset))
                               ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
                                (goto-char (match-beginning 1))
                                (current-column))
                               (t (+ (current-column) (* (nth 0 pps)))))))
-
+                     ((not (py-beginning-of-statement-p))
+                      (py-beginning-of-statement)
+                      (py-compute-indentation orig origline closing line nesting repeat indent-offset))
                      (t (1+ (current-column))))))
                  ((and (not nesting) line)
                   (py-beginning-of-statement)
@@ -12712,7 +12722,6 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                    )
                   )
 
-
                  "-"
                  ["Mark current block"   py-mark-block t]
                  ["Mark current def"     py-mark-def-or-class t]
@@ -14026,7 +14035,6 @@ Use `M-x customize-variable' to set it permanently"]
 Use `M-x customize-variable' to set it permanently"])
                      )
 
-
                     ["Fill-paragraph fill docstring "
                      (setq py-paragraph-fill-docstring-p
                            (not py-paragraph-fill-docstring-p))
@@ -14038,7 +14046,6 @@ Convenient use of `M-q' inside docstrings
 See also `py-docstring-style'
 Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-paragraph-fill-docstring-p]
-
 
                     ["Auto-fill mode"
                      (setq py-set-fill-column-p
@@ -14059,7 +14066,6 @@ Use `M-x customize-variable' to set it permanently"
                     )
 
                    ("Indent"
-
 
                     ["Indent comment "
                      (setq py-indent-comments
@@ -14109,7 +14115,6 @@ indent-width will be guessed from current major-mode
 Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected highlight-indentation]
 
-
                     ["Electric comment "
                      (setq py-electric-comment-p
                            (not py-electric-comment-p))
@@ -14119,7 +14124,6 @@ Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-electric-comment-p]
 
                     )
-
 
                    ("Underscore word syntax"
                     :help "Toggle `py-underscore-word-syntax-p'"
@@ -14213,12 +14217,9 @@ Returns value of `autopair-mode'\. . "]
 
                     )
 
-
-
                    ["Switch index-function" py-switch-imenu-index-function
                     :help "`py-switch-imenu-index-function'
 Switch between `py-imenu-create-index' from 5.1 series and `py-imenu-create-index-new'."]
-
 
                    ;; py-smart-operator-mode-p forms
                    ("Smart operator mode"
@@ -14540,7 +14541,6 @@ Returns indentation if block found, nil otherwise. "]
 Go upwards to the beginning of next block below in buffer.
 
 Returns indentation if block found, nil otherwise. "]
-
 
                     ["Copy block" py-copy-block
                      :help "`py-copy-block'
@@ -15377,7 +15377,6 @@ Needs Pymacs"]
                     :help " `py-electric-yank'
 Perform command `yank' followed by an `indent-according-to-mode' . "])
 
-
                   ("Abbrevs"
                    :help "see also `py-add-abbrev'"
                    :filter (lambda (&rest junk)
@@ -15511,7 +15510,6 @@ Use pydoc on symbol at point"]
                     :help " Print object's signature\n
 Needs Pymacs"])
 
-
                   ("Completion"
                    :help "Completion options"
 
@@ -15527,14 +15525,11 @@ Complete symbol before point using Pymacs . "])
                    :help "`py-find-function'
 Try to find source definition of function at point"]
 
-
-
                   )
 
                  )
 
                ))
-
 
         map))
 
@@ -19984,7 +19979,6 @@ bottom) of the trackback stack is encountered."
                   (error "%s of traceback" errwhere)))
             (goto-char orig)
             (error "%s of traceback" errwhere))))))
-
 
 (defun py-goto-exception ()
   "Go to the line indicated by the traceback."
