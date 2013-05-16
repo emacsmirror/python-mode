@@ -5730,7 +5730,8 @@ complete docstring according to setting of `py-docstring-style' "
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
                       (progn (goto-char (nth 8 pps)) (forward-sexp) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
-             delimiters-style)
+             delimiters-style
+             erg)
         ;; whitespace and newline will be added according to mode again
         (goto-char beg)
         (setq beg (progn (skip-chars-forward "\"'") (copy-marker (point))))
@@ -5780,9 +5781,15 @@ complete docstring according to setting of `py-docstring-style' "
               (and
                (cdr delimiters-style)
                (or (newline (cdr delimiters-style)) t)))
-            (setq end (progn (skip-chars-forward " \t\r\n\f")(skip-chars-forward "\"'")(point)))
-            (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (point)))
-            (indent-region beg end)))))))
+            (setq end (progn (skip-chars-forward " \t\r\n\f")(skip-chars-forward "\"'")(copy-marker (point))))
+            (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (copy-marker (point))))
+            (indent-region beg end)
+            ;; indent-region fails sometimes at last line
+            (goto-char end)
+            (beginning-of-line)
+            (unless (eq (current-indentation) (setq erg (py-compute-indentation)))
+              (fixup-whitespace)
+              (indent-to erg))))))))
 
 (defun py-fill-decorator (&optional justify)
   "Decorator fill function for `py-fill-paragraph'.
@@ -20309,6 +20316,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
+  (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start) "#")
   (if empty-comment-line-separates-paragraph-p
       (progn
