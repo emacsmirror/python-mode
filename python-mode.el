@@ -12731,25 +12731,65 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                    )
                   )
 
+
                  "-"
-                 ["Mark current block"   py-mark-block t]
-                 ["Mark current def"     py-mark-def-or-class t]
-                 ["Mark current class"   (py-mark-def-or-class t) t]
+                 ("Mark"
+                  ["Mark current block"   py-mark-block t]
+                  ["Mark current def"     py-mark-def-or-class t]
+                  ["Mark current class"   (py-mark-def-or-class t) t]
+                  ("More "
+                   ["Mark statement" py-mark-statement
+                    :help "`py-mark-statement'
+Mark statement at point"]
+
+                   ["Mark clause" py-mark-clause
+                    :help "`py-mark-clause'
+Mark innermost compound statement at point"]
+
+                   ["Mark def" py-mark-def
+                    :help "`py-mark-def'
+Mark innermost definition at point"]
+                   ["Mark expression" py-mark-expression
+                    :help "`py-mark-expression'
+Mark expression at point"]
+                   ["Mark partial expression" py-mark-partial-expression
+                    :help "`py-mark-partial-expression'
+\".\" operators delimit a partial-expression expression on it's level"]
+                   ["Mark class" py-mark-class
+                    :help "`py-mark-class'
+Mark innermost definition at point"]
+
+                   ["Mark Def-or-Class" py-mark-def-or-class
+                    :help "`py-mark-def-or-class'
+Mark innermost definition at point"]
+
+                   ["Mark comment" py-mark-comment
+                    :help "`py-mark-comment'
+Mark commented section at point"]
+
+                   )
+                  )
                  "-"
                  ["Shift region left"    py-shift-region-left]
                  ["Shift region right"   py-shift-region-right]
-                 ["Comment Region"   py-comment-region (point) (mark)
-                  :help "Like `comment-region' but uses double hash (`#') comment starter." ]
-                 ["Uncomment Region"     (py-comment-region (point) (mark) '(4))
-                  :help "(py-comment-region (point) (mark) '(4))" ]
+                 "-"
+                 ("Comment"
+                  ["Comment Region"   py-comment-region (point) (mark)
+                   :help "Like `comment-region' but uses double hash (`#') comment starter." ]
+                  ["Uncomment Region"     (py-comment-region (point) (mark) '(4))
+                   :help "(py-comment-region (point) (mark) '(4))" ]
+                  )
                  "-"
                  ("Moves"
                   ["Go to start of block" py-beginning-of-block]
                   ["Go to end of block" py-end-of-block]
-                  ["Go to start of class" (py-beginning-of-def-or-class t) t]
-                  ["Move to end of class" (py-end-of-def-or-class t) t]
+                  "-"
+                  ["Go to start of def or class" (py-beginning-of-def-or-class t) t]
+                  ["Move to end of def or class" (py-end-of-def-or-class t) t]
+                  "-"
                   ["Move to start of def" py-beginning-of-def-or-class t]
                   ["Move to end of def"   py-end-of-def-or-class t]
+                  "-"
                   ["Backward into nomenclature" py-backward-into-nomenclature
                    :help " `py-backward-into-nomenclature'
 Go backward into nomenclature
@@ -12760,11 +12800,19 @@ A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
 Go forward into nomenclature
 
 A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
+                  "-"
+                  ["Go to start of expression" (py-beginning-of-expression t) t]
+                  ["Move to end of expression" (py-end-of-expression t) t]
+                  "-"
+                  "-"
+                  ["Go to start of minor-expression" (py-beginning-of-minor-expression t) t]
+                  ["Move to end of minor-expression" (py-end-of-minor-expression t) t]
+                  "-"
 
                   ["Up level" py-up
                    :help " `py-up'
 Go to beginning one level above of compound statement or definition at point. "]
-
+                  "-"
                   ["Down level" py-down
                    :help " `py-down'
 Go to beginning one level below of compound statement or definition at point. "]
@@ -13860,6 +13908,94 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                  ["Import/reload file"   py-execute-import-or-reload t]
                  ["Describe mode"        py-describe-mode t]
                  ["Debugger" pdb :help "`pdb' Run pdb under GUD"]
+                 ("Checks"
+
+                  ["pychecker-run" py-pychecker-run
+                   :help "`py-pychecker-run'
+Run pychecker"]
+
+                  ("Pylint "
+                   :help "Extendet report options
+call `easy_install pylint' if not available"
+
+                   ["pylint-run" py-pylint-run
+                    :help "`pylint-run'
+Pylint will display a number of messages as it analyzes the code,
+as well as some statistics about the number of warnings and
+errors found in different files - unless called with arg \"--errors-only\". The messages are classified
+under various categories such as errors and warnings
+
+Pylint checks length of lines of code, if variable names are
+well-formed according to your coding standard, if declared
+interfaces are truly implemented, and much more. Additionally, it
+is possible to write plugins.
+
+call `easy_install pylint' if not available
+"]
+
+                   ["pylint-help" pylint-help
+                    :help "`pylint-help'
+List extendet report options
+"]
+                   ["pylint-flymake-mode" pylint-flymake-mode
+                    :help "`pylint-flymake-mode'
+Toggle flymake-mode running `pylint'
+"])
+
+                  ("pep8 "
+                   :help "Check formatting
+call `easy_install pep8' if not available"
+
+                   ["pep8-run" py-pep8-run
+                    :help "`py-pep8-run'
+Check formatting (default on the file currently visited)
+call `easy_install pep8' if not available
+"]
+
+                   ["pep8-help" py-pep8-help
+                    :help "`py-pep8-help'
+Display help for pep8 format checker)
+"]
+
+                   ["pep8-flymake-mode" pep8-flymake-mode
+                    :help "`pep8-flymake-mode'
+Toggle flymake-mode running `pep8'
+"])
+
+                  ("Pyflakes " :help "Non intrusive code
+             checker call `easy_install pyflakes' if
+             not available"
+
+                   ["pyflakes-run" py-pyflakes-run :help
+                    "`py-pyflakes-run' Run pyflakes call
+              `easy_install pyflakes' if not
+              available"]
+
+                   ["pyflakes-help" py-pyflakes-help :help
+                    "`py-pyflakes-help' Display help for
+              Pyflakes "]
+
+                   ["pyflakes-flymake-mode" pyflakes-flymake-mode :help
+                    "`pyflakes-flymake-mode'
+Toggle flymake-mode running `pyflakes' "])
+
+                  ("Pyflakes-pep8 " :help
+                   "Non intrusive code checker running `pyflakes' and `pep8'
+call `easy_install pyflakes' and `easy_install pep8' if basics not available"
+
+                   ["pyflakespep8-run" py-pyflakespep8-run :help
+                    "`py-pyflakespep8-run' Run `pyflakespep8'
+call `easy_install pyflakes' if not available"]
+
+                   ["pyflakespep8-help" py-pyflakespep8-help :help
+                    "`py-pyflakespep8-help' Display help for
+              Pyflakespep8 "]
+
+                   ["pyflakespep8-flymake-mode" pyflakespep8-flymake-mode :help
+                    "`pyflakespep8-flymake-mode'
+Toggle flymake-mode running `pyflakespep8' "])
+
+                  )
                  ("Customize"
 
                   ["Python-mode customize group" (customize-group 'python-mode)
@@ -14076,6 +14212,7 @@ Use `M-x customize-variable' to set it permanently"
 
                    ("Indent"
 
+
                     ["Indent comment "
                      (setq py-indent-comments
                            (not py-indent-comments))
@@ -14133,6 +14270,7 @@ Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-electric-comment-p]
 
                     )
+
 
                    ("Underscore word syntax"
                     :help "Toggle `py-underscore-word-syntax-p'"
@@ -14230,6 +14368,7 @@ Returns value of `autopair-mode'\. . "]
                     :help "`py-switch-imenu-index-function'
 Switch between `py-imenu-create-index' from 5.1 series and `py-imenu-create-index-new'."]
 
+
                    ;; py-smart-operator-mode-p forms
                    ("Smart operator mode"
                     :help "Toggle `smart-operator-mode'"
@@ -14260,35 +14399,7 @@ Returns value of `smart-operator-mode'\. . "]
                   )
                  ("More... "
                   ("Edit commands "
-                   ("Mark "
-                    ["Mark statement" py-mark-statement
-                     :help "`py-mark-statement'
-Mark statement at point"]
 
-                    ["Mark clause" py-mark-clause
-                     :help "`py-mark-clause'
-Mark innermost compound statement at point"]
-
-                    ["Mark def" py-mark-def
-                     :help "`py-mark-def'
-Mark innermost definition at point"]
-                    ["Mark expression" py-mark-expression
-                     :help "`py-mark-expression'
-Mark expression at point"]
-                    ["Mark partial expression" py-mark-partial-expression
-                     :help "`py-mark-partial-expression'
-\".\" operators delimit a partial-expression expression on it's level"]
-                    ["Mark class" py-mark-class
-                     :help "`py-mark-class'
-Mark innermost definition at point"]
-
-                    ["Mark Def-or-Class" py-mark-def-or-class
-                     :help "`py-mark-def-or-class'
-Mark innermost definition at point"]
-
-                    ["Mark comment" py-mark-comment
-                     :help "`py-mark-comment'
-Mark commented section at point"])
 
                    ("Copy "
                     ["Copy statement" py-copy-statement
@@ -15386,6 +15497,7 @@ Needs Pymacs"]
                     :help " `py-electric-yank'
 Perform command `yank' followed by an `indent-according-to-mode' . "])
 
+
                   ("Abbrevs"
                    :help "see also `py-add-abbrev'"
                    :filter (lambda (&rest junk)
@@ -15394,94 +15506,6 @@ Perform command `yank' followed by an `indent-according-to-mode' . "])
                    :help "Defines python-mode specific abbrev for last expressions before point.
 Argument is how many `py-partial-expression's form the expansion; or zero means the region is the expansion. "]
 
-                  ("Checks"
-
-                   ["pychecker-run" py-pychecker-run
-                    :help "`py-pychecker-run'
-Run pychecker"]
-
-                   ("Pylint "
-                    :help "Extendet report options
-call `easy_install pylint' if not available"
-
-                    ["pylint-run" py-pylint-run
-                     :help "`pylint-run'
-Pylint will display a number of messages as it analyzes the code,
-as well as some statistics about the number of warnings and
-errors found in different files - unless called with arg \"--errors-only\". The messages are classified
-under various categories such as errors and warnings
-
-Pylint checks length of lines of code, if variable names are
-well-formed according to your coding standard, if declared
-interfaces are truly implemented, and much more. Additionally, it
-is possible to write plugins.
-
-call `easy_install pylint' if not available
-"]
-
-                    ["pylint-help" pylint-help
-                     :help "`pylint-help'
-List extendet report options
-"]
-                    ["pylint-flymake-mode" pylint-flymake-mode
-                     :help "`pylint-flymake-mode'
-Toggle flymake-mode running `pylint'
-"])
-
-                   ("pep8 "
-                    :help "Check formatting
-call `easy_install pep8' if not available"
-
-                    ["pep8-run" py-pep8-run
-                     :help "`py-pep8-run'
-Check formatting (default on the file currently visited)
-call `easy_install pep8' if not available
-"]
-
-                    ["pep8-help" py-pep8-help
-                     :help "`py-pep8-help'
-Display help for pep8 format checker)
-"]
-
-                    ["pep8-flymake-mode" pep8-flymake-mode
-                     :help "`pep8-flymake-mode'
-Toggle flymake-mode running `pep8'
-"])
-
-                   ("Pyflakes " :help "Non intrusive code
-             checker call `easy_install pyflakes' if
-             not available"
-
-                    ["pyflakes-run" py-pyflakes-run :help
-                     "`py-pyflakes-run' Run pyflakes call
-              `easy_install pyflakes' if not
-              available"]
-
-                    ["pyflakes-help" py-pyflakes-help :help
-                     "`py-pyflakes-help' Display help for
-              Pyflakes "]
-
-                    ["pyflakes-flymake-mode" pyflakes-flymake-mode :help
-                     "`pyflakes-flymake-mode'
-Toggle flymake-mode running `pyflakes' "])
-
-                   ("Pyflakes-pep8 " :help
-                    "Non intrusive code checker running `pyflakes' and `pep8'
-call `easy_install pyflakes' and `easy_install pep8' if basics not available"
-
-                    ["pyflakespep8-run" py-pyflakespep8-run :help
-                     "`py-pyflakespep8-run' Run `pyflakespep8'
-call `easy_install pyflakes' if not available"]
-
-                    ["pyflakespep8-help" py-pyflakespep8-help :help
-                     "`py-pyflakespep8-help' Display help for
-              Pyflakespep8 "]
-
-                    ["pyflakespep8-flymake-mode" pyflakespep8-flymake-mode :help
-                     "`pyflakespep8-flymake-mode'
-Toggle flymake-mode running `pyflakespep8' "])
-
-                   )
 
                   ("Skeletons"
                    :help "See also templates in YASnippet"
@@ -15519,6 +15543,7 @@ Use pydoc on symbol at point"]
                     :help " Print object's signature\n
 Needs Pymacs"])
 
+
                   ("Completion"
                    :help "Completion options"
 
@@ -15538,8 +15563,9 @@ Try to find source definition of function at point"]
 
                  )
 
-               ))
+               )
 
+             )
         map))
 
 (defvaralias 'py-mode-map 'python-mode-map)
