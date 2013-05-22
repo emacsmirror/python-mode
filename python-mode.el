@@ -12250,7 +12250,7 @@ tem")))))
 
 (defalias 'py-toggle-shells 'py-choose-shell)
 (defalias 'py-which-shell 'py-choose-shell)
-(defun py-choose-shell (&optional arg pyshell dedicated)
+(defun py-choose-shell (&optional arg pyshell dedicated py-edit-only-p)
   "Return an appropriate executable as a string.
 
 Returns nil, if no executable found.
@@ -12274,7 +12274,8 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there.
                        (if (not (string= "" py-shell-local-path))
                            (expand-file-name py-shell-local-path)
                          (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
-                      ((comint-check-proc (current-buffer))
+                      ((and (comint-check-proc (current-buffer))
+                            (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
                        (process-name (get-buffer-process (current-buffer))))
                       ((py-choose-shell-by-shebang))
                       ((py-choose-shell-by-import))
