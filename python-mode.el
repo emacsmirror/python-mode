@@ -7238,17 +7238,12 @@ http://docs.python.org/reference/compound_stmts.html"
     erg))
 
 (defun py-beginning-of-clause (&optional indent)
-  "Go to beginning of clause.
-
-With \\[universal-argument], go to beginning one level above.
-Returns beginning of clause if successful, nil otherwise
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
-  (interactive "P")
+  "Goto beginning of line where clause starts.
+  Returns position reached, if successful, nil otherwise."
+  (interactive)
   (let ((indent (and (looking-at py-clause-re)
                      (current-indentation))))
-    (py-beginning-of-form-intern py-block-or-clause-re (interactive-p) indent)))
+    (py-beginning-of-form-intern py-extended-block-or-clause-re (interactive-p) indent)))
 
 (defun py-end-of-clause (&optional indent)
   "Go to end of clause.
