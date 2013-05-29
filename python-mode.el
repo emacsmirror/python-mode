@@ -7107,7 +7107,7 @@ http://docs.python.org/reference/compound_stmts.html"
   (let ((erg (ignore-errors (cdr (py-go-to-keyword py-block-re 0)))))
     erg))
 
-(defun py-beginning-of-form-intern (regexp &optional iact indent)
+(defun py-beginning-of-form-intern (regexp &optional iact indent orig)
   "Go to beginning of FORM.
 
 With INDENT, go to beginning one level above.
@@ -7118,7 +7118,7 @@ Returns beginning of FORM if successful, nil otherwise
 Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive "P")
-  (let* ((orig (point))
+  (let* ((orig (or orig (point)))
          (indent (or indent (progn
                               (back-to-indentation)
                               (or (py-beginning-of-statement-p)
@@ -7131,6 +7131,11 @@ http://docs.python.org/reference/compound_stmts.html"
                        (py-beginning-of-statement)
                        (unless (looking-at regexp)
                          (cdr (py-go-to-keyword regexp (current-indentation))))))
+                    ;; indent from first beginning of clause matters
+                    ((not (looking-at py-extended-block-or-clause-re))
+                     (py-go-to-keyword py-extended-block-or-clause-re (current-indentation))
+                     (py-beginning-of-form-intern regexp iact (current-indentation) orig))
+
                     ((numberp indent)
                      (ignore-errors
                        (cdr (py-go-to-keyword regexp indent))))
