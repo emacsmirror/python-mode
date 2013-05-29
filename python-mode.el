@@ -7730,7 +7730,47 @@ To go just beyond the final line of the current statement, use `py-down-statemen
       (py-end-of-statement)
       (py-beginning-of-statement))))
 
-;;; Mark forms
+;; Decorator
+(defun py-beginning-of-decorator ()
+  "Go to the beginning of a decorator.
+
+Returns position if succesful "
+  (interactive)
+  (back-to-indentation)
+  (while (and (not (looking-at "@\\w+"))(not (empty-line-p))(not (bobp))(forward-line -1))
+    (back-to-indentation))
+  (let ((erg (when (looking-at "@\\w+")(match-beginning 0))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defun py-end-of-decorator ()
+  "Go to the end of a decorator.
+
+Returns position if succesful "
+  (interactive)
+  (let ((orig (point)) erg)
+    (unless (looking-at "@\\w+")
+      (setq erg (py-beginning-of-decorator)))
+    (when erg
+      (if
+          (re-search-forward py-def-or-class-re nil t)
+          (progn
+            (back-to-indentation)
+            (skip-chars-backward " \t\r\n\f")
+            (py-leave-comment-or-string-backward)
+            (skip-chars-backward " \t\r\n\f")
+            (setq erg (point)))
+        (goto-char orig)
+        (end-of-line)
+        (skip-chars-backward " \t\r\n\f")
+        (when (ignore-errors (goto-char (py-in-list-p)))
+          (forward-list))
+        (when (< orig (point))
+          (setq erg (point))))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+;;; Mark
 (defun py-mark-base (form &optional py-mark-decorators)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
          (endform (intern-soft (concat "py-end-of-" form)))
@@ -7751,6 +7791,7 @@ To go just beyond the final line of the current statement, use `py-down-statemen
                   (setq end (point))))
     (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
+
 
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
@@ -7878,46 +7919,6 @@ Returns beginning and end positions of marked area, a cons. "
     (exchange-point-and-mark)
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
-
-;; Decorator
-(defun py-beginning-of-decorator ()
-  "Go to the beginning of a decorator.
-
-Returns position if succesful "
-  (interactive)
-  (back-to-indentation)
-  (while (and (not (looking-at "@\\w+"))(not (empty-line-p))(not (bobp))(forward-line -1))
-    (back-to-indentation))
-  (let ((erg (when (looking-at "@\\w+")(match-beginning 0))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
-
-(defun py-end-of-decorator ()
-  "Go to the end of a decorator.
-
-Returns position if succesful "
-  (interactive)
-  (let ((orig (point)) erg)
-    (unless (looking-at "@\\w+")
-      (setq erg (py-beginning-of-decorator)))
-    (when erg
-      (if
-          (re-search-forward py-def-or-class-re nil t)
-          (progn
-            (back-to-indentation)
-            (skip-chars-backward " \t\r\n\f")
-            (py-leave-comment-or-string-backward)
-            (skip-chars-backward " \t\r\n\f")
-            (setq erg (point)))
-        (goto-char orig)
-        (end-of-line)
-        (skip-chars-backward " \t\r\n\f")
-        (when (ignore-errors (goto-char (py-in-list-p)))
-          (forward-list))
-        (when (< orig (point))
-          (setq erg (point))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
 
 ;;; Copyin
 (defalias 'py-copy-declarations 'py-declarations)
@@ -11041,9 +11042,9 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                       (forward-line -1)
                       (end-of-line)
                       (skip-chars-backward " \t\r\n\f")
-                      (if (ignore-errors (< (nth 2 (syntax-ppss)) (line-beginning-position)))
+                      (if (ignore-errors (< (nth 8 (syntax-ppss)) (line-beginning-position)))
                           (current-indentation)
-                        (ignore-errors (goto-char (nth 2 pps)))
+                        (ignore-errors (goto-char (nth 8 pps)))
                         (py-line-backward-maybe)
                         (back-to-indentation)
                         (py-compute-indentation orig origline closing line nesting repeat indent-offset)))
@@ -11558,13 +11559,14 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
          (executable (cond (pyshellname)
                            (py-buffer-name
                             (py-report-executable py-buffer-name))))
-         proc)
+         proc py-smart-indentation)
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (string= py-buffer-name (buffer-name oldbuf))
          (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
 
     (unless (comint-check-proc py-buffer-name)
       (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
+      (unless (interactive-p) (sit-for 0.3))
       (set (make-local-variable 'comint-prompt-regexp)
            (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
                   (concat "\\("
@@ -11583,29 +11585,23 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
       (set (make-local-variable 'compilation-error-regexp-alist)
            python-compilation-regexp-alist)
       ;; (setq completion-at-point-functions nil)
-      (when py-fontify-shell-buffer-p
-        (set (make-local-variable 'font-lock-defaults)
-             '(py-font-lock-keywords nil nil nil nil
-                                     (font-lock-syntactic-keywords
-                                      . py-font-lock-syntactic-keywords))))
+      (and py-fontify-shell-buffer-p
+           (set (make-local-variable 'font-lock-defaults)
+                '(py-font-lock-keywords nil nil nil nil
+                                        (font-lock-syntactic-keywords
+                                         . py-font-lock-syntactic-keywords))))
       (set (make-local-variable 'comment-start) "# ")
       (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
       (set (make-local-variable 'comment-column) 40)
       (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
-      (setq py-smart-indentation)
-      (font-lock-fontify-buffer)
       (set (make-local-variable 'indent-region-function) 'py-indent-region)
       (set (make-local-variable 'indent-line-function) 'py-indent-line)
-      ;; (font-lock-unfontify-region (point-min) (line-beginning-position))
       (setq proc (get-buffer-process py-buffer-name))
-      ;; (goto-char (point-max))
       (move-marker (process-mark proc) (point-max))
-      ;; (funcall (process-filter proc) proc "")
       (py-shell-send-setup-code proc)
-      ;; (accept-process-output proc 1)
       (compilation-shell-minor-mode 1)
-      ;; (sit-for 0.1)
       (setq comint-input-sender 'py-shell-simple-send)
+      (sit-for 1)
       (setq comint-input-ring-file-name
             (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
                    (if py-honor-IPYTHONDIR-p
@@ -11618,13 +11614,7 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
                        (if (getenv "PYTHONHISTORY")
                            (concat (getenv "PYTHONHISTORY") "/" (py-report-executable py-buffer-name) "_history")
                          py-ipython-history)
-                     py-ipython-history))
-                  ;; (dedicated
-                  ;; (concat "~/." (substring py-buffer-name 0 (string-match "-" py-buffer-name)) "_history"))
-                  ;; .pyhistory might be locked from outside Emacs
-                  ;; (t "~/.pyhistory")
-                  ;; (t (concat "~/." (py-report-executable py-buffer-name) "_history"))
-                  ))
+                     py-ipython-history))))
       (comint-read-input-ring t)
       (set-process-sentinel (get-buffer-process py-buffer-name)
                             #'shell-write-history-on-exit)
@@ -11632,12 +11622,6 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
       ;; (process-send-string proc "import emacs")
       (add-hook 'comint-output-filter-functions
                 'ansi-color-process-output)
-
-      ;; (add-hook 'comint-preoutput-filter-functions
-      ;; '(ansi-color-filter-apply
-      ;; (lambda (string) (buffer-substring comint-last-output-start
-      ;; (process-mark (get-buffer-process (current-buffer)))))))
-      ;; (ansi-color-for-comint-mode-on)
       (use-local-map py-shell-map)
       ;; pdbtrack
       (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file t)
@@ -11646,6 +11630,7 @@ Optional symbol SPLIT ('split/'nosplit) precedes `py-split-buffers-on-execute-p'
       (set-syntax-table python-mode-syntax-table))
     (goto-char (point-max))
     ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
+    (and py-fontify-shell-buffer-p (font-lock-fontify-buffer))
     (when py-shell-hook (run-hooks 'py-shell-hook))
     (unless done (py-shell-manage-windows switch split oldbuf py-buffer-name))
     py-buffer-name))
@@ -12747,40 +12732,92 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
 
                  "-"
                  ("Mark"
-                  ["Mark current block"   py-mark-block t]
-                  ["Mark current def"     py-mark-def-or-class t]
-                  ["Mark current class"   (py-mark-def-or-class t) t]
-                  ("More "
-                   ["Mark statement" py-mark-statement
-                    :help "`py-mark-statement'
+
+                  ["Mark block" py-mark-block
+                   :help " `py-mark-block'
+
+Mark block at point\.
+
+Returns beginning and end positions of marked area, a cons\. "]
+
+                  ["Mark def or class" py-mark-def-or-class
+                   :help " `py-mark-def-or-class'
+
+Mark def-or-class at point\.
+
+Returns beginning and end positions of marked area, a cons\. "]
+
+                  ["Mark statement" py-mark-statement
+                   :help "`py-mark-statement'
 Mark statement at point"]
 
-                   ["Mark clause" py-mark-clause
-                    :help "`py-mark-clause'
+                  ["Mark clause" py-mark-clause
+                   :help "`py-mark-clause'
 Mark innermost compound statement at point"]
 
-                   ["Mark def" py-mark-def
-                    :help "`py-mark-def'
+                  ["Mark def" py-mark-def
+                   :help "`py-mark-def'
 Mark innermost definition at point"]
-                   ["Mark expression" py-mark-expression
-                    :help "`py-mark-expression'
+                  ["Mark expression" py-mark-expression
+                   :help "`py-mark-expression'
 Mark expression at point"]
-                   ["Mark partial expression" py-mark-partial-expression
-                    :help "`py-mark-partial-expression'
+                  ["Mark partial expression" py-mark-partial-expression
+                   :help "`py-mark-partial-expression'
 \".\" operators delimit a partial-expression expression on it's level"]
-                   ["Mark class" py-mark-class
-                    :help "`py-mark-class'
+
+                  ["Mark class" py-mark-class
+                   :help "`py-mark-class'
 Mark innermost definition at point"]
 
-                   ["Mark Def-or-Class" py-mark-def-or-class
-                    :help "`py-mark-def-or-class'
-Mark innermost definition at point"]
-
-                   ["Mark comment" py-mark-comment
-                    :help "`py-mark-comment'
+                  ["Mark comment" py-mark-comment
+                   :help "`py-mark-comment'
 Mark commented section at point"]
+                  ["Mark if-block" py-mark-if-block
+                   :help "`py-mark-if-block'
+Mark if-block at point. "]
 
-                   )
+                  ["Mark try-block" py-mark-try-block
+                   :help "`py-mark-try-block'
+Mark try-block at point. "]
+
+                  "-"
+
+                  ["Mark block bol" py-mark-block-bol
+                   :help "`py-mark-block-bol'
+Mark block at point reaching beginning-of-line. "]
+
+                  ["Mark clause bol" py-mark-clause-bol
+                   :help "`py-mark-clause-bol'
+Mark clause at point reaching beginning-of-line. "]
+
+                  ["Mark block-or-clause bol" py-mark-block-or-clause-bol
+                   :help "`py-mark-block-or-clause-bol'
+Mark block-or-clause at point reaching beginning-of-line. "]
+
+                  ["Mark def bol" py-mark-def-bol
+                   :help "`py-mark-def-bol'
+Mark def at point reaching beginning-of-line. "]
+
+                  ["Mark class bol" py-mark-class-bol
+                   :help "`py-mark-class-bol'
+Mark class at point reaching beginning-of-line. "]
+
+                  ["Mark def-or-class bol" py-mark-def-or-class-bol
+                   :help "`py-mark-def-or-class-bol'
+Mark def-or-class at point reaching beginning-of-line. "]
+
+                  ["Mark if-block bol" py-mark-if-block-bol
+                   :help "`py-mark-if-block-bol'
+Mark if-block at point reaching beginning-of-line. "]
+
+                  ["Mark try-block bol" py-mark-try-block-bol
+                   :help "`py-mark-try-block-bol'
+Mark try-block at point reaching beginning-of-line. "]
+
+                  ["Mark minor-block bol" py-mark-minor-block-bol
+                   :help "`py-mark-minor-block-bol'
+Mark minor-block at point reaching beginning-of-line. "]
+
                   )
                  "-"
                  ["Shift region left"    py-shift-region-left]
@@ -15998,7 +16035,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
     (setq py-completion-last-window-configuration
           (current-window-configuration)))
   (let ((orig (point)))
-    (ignore-errors (comint-dynamic-complete))
+    ;; (ignore-errors (comint-dynamic-complete))
     (when (eq (point) orig)
       (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
           ;;  kind of completion resp. to shell
@@ -16566,6 +16603,52 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
   (set-buffer (get-buffer-create "*pyflakespep8-Help*"))
   (erase-buffer)
   (shell-command "pyflakespep8 --help" "*pyflakespep8-Help*"))
+
+;; flakes8
+(defalias 'flakes8 'py-flakes8-run)
+(defun py-flakes8-run (command)
+  "Run flakes8, check formatting (default on the file currently visited).
+"
+  (interactive
+   (let ((default
+           (if (buffer-file-name)
+               (format "%s %s %s" py-flakes8-command
+                       (mapconcat 'identity py-flakes8-command-args " ")
+                       (buffer-file-name))
+             (format "%s %s" py-flakes8-command
+                     (mapconcat 'identity py-flakes8-command-args " "))))
+         (last (when py-flakes8-history
+                 (let* ((lastcmd (car py-flakes8-history))
+                        (cmd (cdr (reverse (split-string lastcmd))))
+                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                   (mapconcat 'identity newcmd " ")))))
+
+     (list
+      (if (fboundp 'read-shell-command)
+          (read-shell-command "Run flakes8 like this: "
+                              (if last
+                                  last
+                                default)
+                              'py-flakes8-history)
+        (read-string "Run flakes8 like this: "
+                     (if last
+                         last
+                       default)
+                     'py-flakes8-history)))))
+  (save-some-buffers (not py-ask-about-save) nil)
+  (if (fboundp 'compilation-start)
+      ;; Emacs.
+      (compilation-start command)
+    ;; XEmacs.
+    (when (featurep 'xemacs)
+      (compile-internal command "No more errors"))))
+
+(defun py-flakes8-help ()
+  "Display flakes8 command line help messages. "
+  (interactive)
+  (set-buffer (get-buffer-create "*flakes8-Help*"))
+  (erase-buffer)
+  (shell-command "flakes8 --help" "*flakes8-Help*"))
 
 ;; Pychecker
 (defun py-pychecker-run (command)
