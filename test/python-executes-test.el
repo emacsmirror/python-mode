@@ -81,14 +81,6 @@
 (defun py-execute-expression-base ()
   (assert (markerp (py-execute-expression)) nil "py-execute-expression-test failed"))
 
-(defun py-execute-partial-expression-test (&optional arg load-branch-function)
-  (interactive "p")
-  (let ((teststring "print(\"I'm the py-execute-partial-expression-test\")"))
-    (py-bug-tests-intern 'py-execute-partial-expression-base arg teststring)))
-
-(defun py-execute-partial-expression-base ()
-  (assert (markerp (py-execute-partial-expression)) nil "py-execute-partial-expression-test failed"))
-
 (defun py-execute-line-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "print(\"I'm the py-execute-line-test\")"))
