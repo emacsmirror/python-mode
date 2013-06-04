@@ -12680,14 +12680,29 @@ the default. "]
 
 Go to the very beginning of current block. "]
 
-                  ["Go to start of block" py-beginning-of-block]
+                  ["Beginning of block" py-beginning-of-block
+                   :help " `py-beginning-of-block'
+
+Go to beginning block, skip whitespace at BOL\. "]
+
                   ["Go to end of block" py-end-of-block]
                   "-"
                   ["Go to start of def or class" (py-beginning-of-def-or-class t) t]
                   ["Move to end of def or class" (py-end-of-def-or-class t) t]
                   "-"
-                  ["Move to start of def" py-beginning-of-def-or-class t]
-                  ["Move to end of def"   py-end-of-def-or-class t]
+                  ["Move to start of def" py-beginning-of-def t]
+                  ["Move to end of def"   py-end-of-def t]
+                  "-"
+
+                  ["Beginning of clause" py-beginning-of-clause
+                   :help " `py-beginning-of-clause'
+
+Go to beginning clause, skip whitespace at BOL\. "]
+
+                  ["End of clause" py-end-of-clause
+                   :help " `py-end-of-clause'
+
+Go to end of clause\. "]
                   "-"
                   ["Beginning of comment" py-beginning-of-comment
                    :help " `py-beginning-of-comment'
