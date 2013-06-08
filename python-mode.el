@@ -1605,14 +1605,12 @@ It should not contain a caret (^) at the beginning."
 (defvar py-not-expression-chars " .=#\t\r\n\f"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 
-(defvar py-partial-expression-skip-chars "^ ,\"'()[]{}:#\t\r\n\f"
+(defvar py-partial-expression-backward-chars "^ ,\"'()[]{}:#\t\r\n\f"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
+;; (setq py-partial-expression-backward-chars "^ ,\"'([{:#\t\r\n\f")
 
-(defvar py-partial-expression-skip-backward-chars "^ .\"(){}[]=:#\t\r\n\f"
-  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
-
-(defvar py-not-partial-expression-skip-chars " \\.=:#\t\r\n\f"
-  "py-partial-expression assumes chars indicated may not compose a py-partial-expression, skip it. ")
+(defvar py-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
+;; (setq py-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
 
 (defvar py-partial-expression-regexp "[^ .=:#\t\r\n\f]"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, when looking-at or -back. ")
@@ -6744,8 +6742,8 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
 (defun py-beginning-of-partial-expression (&optional orig)
   (interactive)
   (let (erg)
-    (and (< 0 (abs (skip-chars-backward py-partial-expression-skip-chars)))
-         (setq erg (point)))
+    (skip-chars-backward py-partial-expression-forward-chars)
+    (setq erg (point))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -6753,12 +6751,10 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
 (defun py-end-of-partial-expression (&optional orig)
   (interactive)
   (let (erg)
-    (when (< 0 (abs (skip-chars-forward py-partial-expression-skip-chars)))
+    (when (< 0 (abs (skip-chars-forward py-partial-expression-backward-chars)))
       ;; group arg
       (when
-          ;; (looking-at "[\[{(][[:alnum:]-+]+[]})]");;[i]
           (looking-at "[\[{(]")
-        ;; (goto-char (match-end 0))
         (forward-sexp))
       (setq erg (point)))
     (when (interactive-p) (message "%s" erg))
@@ -7704,8 +7700,8 @@ Returns position if succesful "
       (save-excursion
         (when (setq erg (py-beginning-of-decorator))
           (setq beg erg))))
-    (setq end (funcall endform))
     (push-mark beg t t)
+    (setq end (funcall endform))
     (unless end (when (< beg (point))
                   (setq end (point))))
     (when (interactive-p) (message "%s %s" beg end))
@@ -8072,6 +8068,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
   (let ((erg (py-mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
+(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
 ;;; Beginning of line forms
 (defun py-mark-base-bol (form &optional py-mark-decorators)
   (let* ((begform (intern-soft (concat "py-beginning-of-" form "-bol")))
@@ -9552,7 +9549,8 @@ When called from a programm, it accepts a string specifying a shell which will b
 (defun py-execute-base (start end &optional pyshellname dedicated switch nostars sepchar split file)
   "Select the handler. "
   (cond (;; enforce proceeding as python-mode.el v5
-         python-mode-v5-behavior-p (py-execute-python-mode-v5 start end pyshellname dedicated switch nostars sepchar split file))
+         python-mode-v5-behavior-p
+         (py-execute-python-mode-v5 start end pyshellname))
         (py-use-execute-ge24-3-p
          (py-execute-ge24.3 start end pyshellname dedicated switch nostars sepchar split file))
         ;; No need for a temporary file than
@@ -9802,7 +9800,7 @@ Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch) "
                       (set-buffer
                        (or (get-file-buffer filename)
                            (get-file-buffer (find-file-noselect filename))))))
-                (when (buffer-file-name) (buffer-file-name))))
+                (buffer-file-name)))
          (beg (point-min))
          (end (point-max)))
     (py-execute-region beg end shell dedicated switch nostars sepchar split file)))
@@ -12673,7 +12671,7 @@ the default. "]
 
                   )
                  "-"
-                 ("Moves"
+                 ("Move"
 
                   ["Beginning of top level" py-beginning-of-top-level
                    :help " `py-beginning-of-top-level'
@@ -12741,6 +12739,35 @@ Go to beginning one level above of compound statement or definition at point. "]
 Go to beginning one level below of compound statement or definition at point. "]
 
                   )
+                 "-"
+                 ("Copy "
+                  ["Copy statement" py-copy-statement
+                   :help "`py-copy-statement'
+Copy statement at point"]
+                  ["Copy clause" py-copy-clause
+                   :help "`py-copy-clause'
+Copy innermost compound statement at point"]
+
+                  ["Copy block" py-copy-block
+                   :help "`py-copy-block'
+Copy innermost compound statement at point"]
+
+                  ["Copy def" py-copy-def
+                   :help "`py-copy-def'
+Copy innermost definition at point"]
+                  ["Copy expression" py-copy-expression
+                   :help "`py-copy-expression'
+Copy expression at point"]
+                  ["Copy partial expression" py-copy-partial-expression
+                   :help "`py-copy-partial-expression'
+\".\" operators delimit a partial-expression expression on it's level"]
+                  ["Copy class" py-copy-class
+                   :help "`py-copy-class'
+Copy innermost definition at point"]
+
+                  ["Copy Def-or-Class" py-copy-def-or-class
+                   :help "`py-copy-def-or-class'
+Copy innermost definition at point"])
                  "-"
 
                  ["Execute region" py-execute-region
@@ -14327,34 +14354,6 @@ Returns value of `smart-operator-mode'\. . "]
                   ("Edit commands "
 
 
-                   ("Copy "
-                    ["Copy statement" py-copy-statement
-                     :help "`py-copy-statement'
-Copy statement at point"]
-                    ["Copy clause" py-copy-clause
-                     :help "`py-copy-clause'
-Copy innermost compound statement at point"]
-
-                    ["Copy block" py-copy-block
-                     :help "`py-copy-block'
-Copy innermost compound statement at point"]
-
-                    ["Copy def" py-copy-def
-                     :help "`py-copy-def'
-Copy innermost definition at point"]
-                    ["Copy expression" py-copy-expression
-                     :help "`py-copy-expression'
-Copy expression at point"]
-                    ["Copy partial expression" py-copy-partial-expression
-                     :help "`py-copy-partial-expression'
-\".\" operators delimit a partial-expression expression on it's level"]
-                    ["Copy class" py-copy-class
-                     :help "`py-copy-class'
-Copy innermost definition at point"]
-
-                    ["Copy Def-or-Class" py-copy-def-or-class
-                     :help "`py-copy-def-or-class'
-Copy innermost definition at point"])
                    ("Kill "
 
                     ["Kill statement" py-kill-statement
