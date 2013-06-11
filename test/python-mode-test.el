@@ -590,6 +590,7 @@
     (py-bug-tests-intern 'py-end-of-def-base arg teststring)))
 
 (defun py-end-of-def-base ()
+  (goto-char 627)
   (py-beginning-of-def)
   (py-end-of-def)
   (assert (eq (point) 626) nil "py-end-of-def-test failed")
