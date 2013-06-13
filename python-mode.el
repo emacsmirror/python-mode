@@ -5565,7 +5565,7 @@ Takes the result of (syntax-ppss)"
   (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss))))))
     (goto-char beginning-of-string-position)
     ;; (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")
-    (forward-sexp))
+    (goto-char (scan-sexps (point) 1)))
   (point))
 
 (defun py-fill-paragraph (&optional justify style start end docstring)
@@ -5693,7 +5693,7 @@ complete docstring according to setting of `py-docstring-style' "
              ;; (progn (goto-char beg)(skip-chars-backward "\"'") (py-docstring-p (point)))
 
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
-                      (progn (goto-char (nth 8 pps)) (forward-sexp) (skip-chars-backward "\"'") (point-marker))))
+                      (progn (goto-char (nth 8 pps)) (scan-sexps (point) 1) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
              delimiters-style
              erg)
@@ -6727,12 +6727,12 @@ Operators however are left aside resp. limit py-expression designed for edit-pur
 (defun py-end-of-partial-expression (&optional orig)
   (interactive)
   (let (erg)
-    (when (< 0 (abs (skip-chars-forward py-partial-expression-backward-chars)))
-      ;; group arg
-      (when
-          (looking-at "[\[{(]")
-        (forward-sexp))
-      (setq erg (point)))
+    (skip-chars-forward py-partial-expression-backward-chars)
+    ;; group arg
+    (and
+     (looking-at "[\[{(]")
+     (goto-char (scan-sexps (point) 1)))
+    (setq erg (point))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -7463,7 +7463,7 @@ More general than py-declarations, which would stop at keywords like a print-sta
 (defun py-eos-handle-singlequoted-string-start ()
   "Internal use, find possible end of statement from string start. "
   (when
-      (and (setq this (point)) (progn (ignore-errors (forward-sexp)) (< this (point))))
+      (and (setq this (point)) (progn (ignore-errors (goto-char (scan-sexps (point) 1))) (< this (point))))
     (skip-chars-forward (concat "^" comment-start) (line-end-position))
     (skip-chars-backward " \t\r\n\f")))
 
@@ -7471,6 +7471,13 @@ More general than py-declarations, which would stop at keywords like a print-sta
   (skip-chars-backward " \t\r\n\f" (line-beginning-position))
   (when (py-beginning-of-comment)
     (skip-chars-backward " \t\r\n\f" (line-beginning-position))))
+
+(defun py-eos-handle-string-start ()
+  "Internal use, find possible end of statement from string start. "
+  (when
+      (and (setq this (point)) (progn (or (if (save-match-data (string-match "'" (match-string-no-properties 0))) (ignore-errors (goto-char (scan-sexps (point) 1)))) (while (and (search-forward (match-string-no-properties 0) nil t 1) (nth 8 (syntax-ppss))))) (< this (point))))
+    (skip-chars-forward (concat "^" comment-start) (line-end-position))
+    (skip-chars-backward " \t\r\n\f")))
 
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
