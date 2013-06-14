@@ -776,7 +776,7 @@ Default is \"\" "
   :group 'python-mode
   :tag "PEP 8 Command Args")
 
-(defcustom py-pyflakespep8-command (concat py-install-directory "pyflakespep8.py")
+(defcustom py-pyflakespep8-command (concat py-install-directory "/pyflakespep8.py")
   "*Shell command used to run `pyflakespep8'."
   :type 'string
   :group 'python-mode
@@ -16123,22 +16123,24 @@ Default is \"\\.py\\'\" "
   (unless (string-match "pyflakespep8" name)
     (unless (executable-find name)
       (when py-verbose-p (message "Don't see %s. Use `easy_install' %s? " name name))))
-  (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                     'flymake-create-temp-inplace))
-         (local-file (file-relative-name
-                      temp-file
-                      (file-name-directory buffer-file-name))))
-    (add-to-list 'flymake-allowed-file-name-masks (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))))
-    (list command (list local-file))))
+  (if (buffer-file-name)
+      (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                         'flymake-create-temp-inplace))
+             (local-file (file-relative-name
+                          temp-file
+                          (file-name-directory buffer-file-name))))
+        (add-to-list 'flymake-allowed-file-name-masks (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))))
+        (list command (list local-file)))
+    (message "%s" "flymake needs a `buffer-file-name'. Please save before calling.")))
 
 (defun pylint-flymake-mode ()
   "Toggle `pylint' `flymake-mode'. "
   (interactive)
   (if flymake-mode
       ;; switch off
-      (flymake-mode)
+      (flymake-mode 0)
     (py-toggle-flymake-intern "pylint" "pylint")
-    (flymake-mode)))
+    (flymake-mode 1)))
 
 (defun pyflakes-flymake-mode ()
   "Toggle `pyflakes' `flymake-mode'. "
