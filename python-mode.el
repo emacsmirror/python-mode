@@ -3823,15 +3823,17 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 
 (defun py-docstring-p (&optional beginning-of-string-position)
   "Check to see if there is a docstring at POS."
-  (let ((pos (or beginning-of-string-position (and (nth 3 (syntax-ppss)) (nth 8 (syntax-ppss))))))
-    (save-excursion
-      (goto-char pos)
-      (if (looking-at-p "'''\\|\"\"\"")
-          (progn
-            (py-beginning-of-statement)
-            (or (bobp)
-                (py-beginning-of-def-or-class-p)))
-        nil))))
+  (let ((pos (or beginning-of-string-position (and (nth 3 (syntax-ppss)) (nth (syntax-ppss))))))
+    (save-restriction
+      (widen)
+      (save-excursion
+        (and pos (goto-char pos))
+        (if (looking-at-p "'''\\|\"\"\"")
+            (progn
+              (py-beginning-of-statement)
+              (or (bobp)
+                  (py-beginning-of-def-or-class-p)))
+          nil)))))
 
 (defun py-font-lock-syntactic-face-function (state)
   (if (nth 3 state)
@@ -5690,8 +5692,6 @@ complete docstring according to setting of `py-docstring-style' "
                              (point-marker)))))
              ;; Assume docstrings at BOL resp. indentation
              (docstring (and (not (eq 'no docstring))(py-docstring-p (nth 8 pps))))
-             ;; (progn (goto-char beg)(skip-chars-backward "\"'") (py-docstring-p (point)))
-
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
                       (progn (goto-char (nth 8 pps)) (scan-sexps (point) 1) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
@@ -5700,13 +5700,16 @@ complete docstring according to setting of `py-docstring-style' "
         ;; whitespace and newline will be added according to mode again
         (goto-char beg)
         (setq beg (progn (skip-chars-forward "\"'") (copy-marker (point))))
-        (and docstring py-paragraph-fill-docstring-p (delete-region (point) (progn (skip-chars-forward " \t\r\n\f") (skip-chars-forward " \t\r\n\f")(point))))
+        (and docstring
+             (delete-region (point) (progn (skip-chars-forward " \t\r\n\f") (skip-chars-forward " \t\r\n\f")(point))))
         (goto-char end)
-        (and docstring py-paragraph-fill-docstring-p (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point))))
+        (and docstring
+             (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point))))
         (cond
-         ((and docstring py-paragraph-fill-docstring-p (string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end)))
+         ((and docstring
+               (string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end)))
           (py-fill-labelled-string beg end))
-         ((and docstring py-paragraph-fill-docstring-p)
+         ((and docstring)
           (narrow-to-region beg end)
           (fill-region (point-min) (point-max)))
          (t (narrow-to-region beg end)
@@ -5747,14 +5750,13 @@ complete docstring according to setting of `py-docstring-style' "
                (cdr delimiters-style)
                (or (newline (cdr delimiters-style)) t)))
             (setq end (progn (skip-chars-forward " \t\r\n\f")(skip-chars-forward "\"'")(copy-marker (point))))
-            (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (copy-marker (point))))
-            (indent-region beg end)
-            ;; indent-region fails sometimes at last line
-            (goto-char end)
-            (beginning-of-line)
-            (unless (eq (current-indentation) (setq erg (py-compute-indentation)))
-              (fixup-whitespace)
-              (indent-to erg))))))))
+            (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (copy-marker (point)))))
+          (indent-region beg end)
+          (goto-char end)
+          (beginning-of-line)
+          (unless (eq (current-indentation) (setq erg (py-compute-indentation)))
+            (fixup-whitespace)
+            (indent-to erg)))))))
 
 (defun py-fill-decorator (&optional justify)
   "Decorator fill function for `py-fill-paragraph'.
