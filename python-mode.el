@@ -1145,7 +1145,7 @@ Default is  nil "
   :type 'string
   :group 'python-mode)
 
-(defcustom python-ffap-string-code
+(defcustom py-ffap-string-code
   "__FFAP_get_module_path('''%s''')\n"
   "Python code used to get a string with the path of a module."
   :type 'string
@@ -3646,20 +3646,6 @@ This function does not modify point or mark."
 
 
 ;; Font-lock and syntax
-(defun py-info-ppss-context (type &optional syntax-ppss)
-  "Return non-nil if point is on TYPE using SYNTAX-PPSS.
-TYPE can be 'comment, 'string or 'paren.  It returns the start
-character address of the specified TYPE."
-  (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (cond ((eq type 'comment)
-           (and (nth 4 ppss)
-                (nth 8 ppss)))
-          ((eq type 'string)
-           (nth 8 ppss))
-          ((eq type 'paren)
-           (nth 1 ppss))
-          (t nil))))
-
 (setq py-font-lock-keywords
       ;; Keywords
       `(,(rx symbol-start
@@ -3729,9 +3715,9 @@ character address of the specified TYPE."
                                  (? ?\[ (+ (not (any ?\]))) ?\]) (* space)
                                  assignment-operator)))
               (when (re-search-forward re limit t)
-                (while (and (py-info-ppss-context 'paren)
+                (while (and (nth 1 (syntax-ppss))
                             (re-search-forward re limit t)))
-                (if (and (not (py-info-ppss-context 'paren))
+                (if (and (not (nth 1 (syntax-ppss)))
                          (not (equal (char-after (point-marker)) ?=)))
                     t
                   (set-match-data nil)))))
@@ -3744,10 +3730,10 @@ character address of the specified TYPE."
                                  assignment-operator)))
               (when (and (re-search-forward re limit t)
                          (goto-char (nth 3 (match-data))))
-                (while (and (py-info-ppss-context 'paren)
+                (while (and (nth 1 (syntax-ppss))
                             (re-search-forward re limit t))
                   (goto-char (nth 3 (match-data))))
-                (if (not (py-info-ppss-context 'paren))
+                (if (not (nth 1 (syntax-ppss)))
                     t
                   (set-match-data nil)))))
          (1 py-variable-name-face nil nil))
