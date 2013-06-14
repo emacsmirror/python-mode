@@ -9020,6 +9020,7 @@ Command expects Python3.3 installed at your system. "
   (interactive "P")
   (py-shell argprompt dedicated "python3.3" switch))
 
+
 ;; dedicated
 (defun python-dedicated (&optional argprompt switch)
   "Start an unique Python interpreter in another window.
@@ -9226,6 +9227,12 @@ Optional \\[universal-argument] prompts for options to pass to the Python3.2 int
   (py-shell argprompt t "python3.2" 'switch))
 
 
+;;;
+(defalias 'Python 'python)
+(defalias 'Python2 'python2)
+(defalias 'Python3 'python3)
+(defalias 'IPython 'ipython)
+(defalias 'Ipython 'ipython)
 ;;; Code execution
 (declare-function compilation-shell-minor-mode "compile" (&optional arg))
 
