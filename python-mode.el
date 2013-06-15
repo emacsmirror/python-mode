@@ -3818,7 +3818,9 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 
 (defun py-docstring-p (&optional beginning-of-string-position)
   "Check to see if there is a docstring at POS."
-  (let ((pos (or beginning-of-string-position (and (nth 3 (syntax-ppss)) (nth (syntax-ppss))))))
+  (let* (pps
+         (pos (or beginning-of-string-position
+                  (and (nth 3 (setq pps (syntax-ppss))) (nth 8 pps)))))
     (save-restriction
       (widen)
       (save-excursion
@@ -3915,8 +3917,11 @@ Used by `py-electric-colon', which will not indent than. "
   (let (erg)
     (save-excursion
       (beginning-of-line)
-      (setq erg (or (looking-at py-class-re)
-                    (looking-at py-def-re))))
+      (skip-chars-forward " \t")
+      (setq erg (looking-at py-extended-block-or-clause-re)
+            ;; (or (looking-at py-class-re)
+            ;; (looking-at py-def-re))
+            ))
     erg))
 
 
@@ -4187,12 +4192,16 @@ If `py-tab-indents-region-p' is `t' and first TAB doesn't shift
 When indent is set back manually, this is honoured in following lines. "
   (interactive "*")
   (let ((orig (point))
-        erg)
+        erg pos)
     (newline)
     (when (or py-newline-delete-trailing-whitespace-p py-trailing-whitespace-smart-delete-p)
+      (setq pos (copy-marker (point)))
       (save-excursion
         (goto-char orig)
-        (delete-trailing-whitespace)))
+        (if (empty-line-p)
+            (delete-trailing-whitespace (line-beginning-position) pos)
+          (skip-chars-backward " \t")
+          (delete-trailing-whitespace (point)  pos))))
     (setq erg (indent-to-column (py-compute-indentation)))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
@@ -5558,9 +5567,17 @@ See also `py-fill-string' "
   (or (fill-comment-paragraph justify)
       (let* ((orig (copy-marker (point)))
              (pps (syntax-ppss))
-             (docstring (and py-paragraph-fill-docstring-p (or docstring (py-docstring-p (nth 8 pps)))))
-             (beg (or start (and (use-region-p) (region-beginning)) (and py-paragraph-fill-docstring-p docstring (nth 8 pps)) (py-beginning-of-paragraph-position)))
-             (end (copy-marker (or end (and (use-region-p) (region-end)) (and py-paragraph-fill-docstring-p docstring (py-end-of-string (nth 8 pps))) (py-end-of-paragraph-position))))
+             (docstring (and
+                         ;; py-paragraph-fill-docstring-p
+
+                         (or docstring (py-docstring-p (nth 8 pps)))))
+             (beg (or start (and (use-region-p) (region-beginning)) (and
+                                                                     ;; py-paragraph-fill-docstring-p
+                                                                     docstring (nth 8 pps)) (py-beginning-of-paragraph-position)))
+             (end (copy-marker (or end (and (use-region-p) (region-end)) (and
+                                                                          ;; py-paragraph-fill-docstring-p
+
+                                                                          docstring (py-end-of-string (nth 8 pps))) (py-end-of-paragraph-position))))
              (style (or style py-docstring-style))
              (this-end (point-min)))
         (when (and (nth 3 pps) (< beg (nth 8 pps))
@@ -5604,14 +5621,6 @@ See also `py-fill-string' "
                             ;; (point))
                             ?\@)))
               (py-fill-decorator justify))
-             ;; Parens
-             ;; is there a need to fill parentized expressions?
-             ;; ((or (nth 1 pps)
-             ;;      (looking-at (python-rx open-paren))
-             ;;      (save-excursion
-             ;;        (skip-syntax-forward "^(" (line-end-position))
-             ;;        (looking-at (python-rx open-paren))))
-             ;;  (py-fill-paren pps justify))
              (t t))))
         (goto-char orig)
         (back-to-indentation))
@@ -5742,35 +5751,6 @@ complete docstring according to setting of `py-docstring-style' "
 "
   ;; (interactive "*P")
   t)
-
-(defun py-fill-paren (&optional justify)
-  "Paren fill function for `py-fill-paragraph'.
-"
-  (interactive "*P")
-  (save-restriction
-    (narrow-to-region
-     (progn
-       (while (python-syntax-context 'paren)
-         (goto-char (1- (point-marker))))
-       (point-marker)
-       (line-beginning-position))
-     (progn
-       (when (not (python-syntax-context 'paren))
-         (end-of-line)
-         (when (not (python-syntax-context 'paren))
-           (skip-syntax-backward "^)")))
-       (while (python-syntax-context 'paren)
-         (goto-char (1+ (point-marker))))
-       (point-marker)))
-    (let ((paragraph-start "\f\\|[ \t]*$")
-          (paragraph-separate ",")
-          (fill-paragraph-function))
-      (goto-char (point-min))
-      (fill-paragraph justify))
-    (while (not (eobp))
-      (forward-line 1)
-      (py-indent-line)
-      (goto-char (line-end-position)))) t)
 
 (defun py-fill-string-django (&optional justify)
   "Fill docstring according to Django's coding standards style.
