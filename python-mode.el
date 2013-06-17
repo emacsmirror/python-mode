@@ -389,6 +389,24 @@ Default is `nil'. "
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-indent-paren-spanned-multilines-p nil
+  "If non-nil, indents elements of list a value of `py-indent-offset' to first element:
+
+def foo():
+    if (foo &&
+            baz):
+        bar()
+
+Default lines up with first element:
+
+def foo():
+    if (foo &&
+        baz):
+        bar()
+"
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-indent-honors-inline-comment nil
   "If non-nil, indents to column of inlined comment start.
 Default is nil. "
@@ -10894,7 +10912,9 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                                (py-empty-arglist-indent nesting py-indent-offset))
                               ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
                                (goto-char (match-beginning 1))
-                               (current-column))
+                               (if py-indent-paren-spanned-multilines-p
+                                   (+ (current-column) py-indent-offset)
+                                 (current-column)))
                               (t (+ (current-column) (* (nth 0 pps)))))))
                      ((not (py-beginning-of-statement-p))
                       (py-beginning-of-statement)
