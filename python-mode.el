@@ -278,7 +278,6 @@ Default is nil "
   :type 'string
   :group 'python-mode)
 
-
 (defcustom py-pylint-offer-current-p t
   "If current buffers file should be offered for check.
 
@@ -1842,44 +1841,52 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
   "Regular expression matching keyword which closes a try-block. ")
 
 (defconst py-except-re
-  "[ \t]*\\_<except\\_>[: \n\t]"
+  "[ \t]*\\_<except\\_>[:( \n\t]*"
   "Regular expression matching keyword which composes a try-block. ")
 
 (defconst py-else-re
-  "[ \t]*\\_<else\\_>[: \n\t]"
+  "[ \t]*\\_<else\\_>[: \n\t]*"
   "Regular expression matching keyword which closes a for- if- or try-block. ")
 
 (defconst py-return-re
-  ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]"
+  ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]*"
   "Regular expression matching keyword which typically closes a function. ")
 
-(defconst py-no-outdent-re "\\(try:\\|except\\(\\s +.*\\)?:\\|while\\s +.*:\\|for\\s +.*:\\|if\\s +.*:\\|elif\\s +.*:\\)\\([ 	]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ 	\n]\\)")
-
-;; (defconst py-no-outdent-re
-;;   (concat
-;;    "\\("
-;;    (mapconcat 'identity
-;;               (list "try:"
-;;                     "except\\(\\s +.*\\)?:"
-;;                     "while\\s +.*:"
-;;                     "for\\s +.*:"
-;;                     "if\\s +.*:"
-;;                     "elif\\s +.*:"
-;;                     (concat py-block-closing-keywords-re "[ \t\n]"))
-;;               "\\|")
-;;    "\\)")
-;;   "Regular expression matching lines not to dedent after.")
-
-;; (setq py-traceback-line-re
-;; "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)\\|^[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)")
+(defconst py-no-outdent-re
+  (concat
+   "[ \t]*\\_<\\("
+   (mapconcat 'identity
+              (list
+               "try:"
+               "except"
+               "while"
+               "for"
+               "if"
+               "elif"
+               )
+              "\\|"
+              )
+   "\\)\\_>[( \t]+.*:[( \t]\\_<\\("
+   (mapconcat 'identity
+              (list
+               "return"
+               "raise"
+               "break"
+               "continue"
+               "pass"
+               )
+              "\\|"
+              )
+   "\\)\\_>[ )\t]*$")
+  "Regular expression matching lines not to augment indent after.")
 
 (defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
 
-(defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[: \n\t]"
+(defconst py-block-re "[ \t]*\\_<\\(class\\|def\\|for\\|if\\|try\\|while\\|with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement. ")
 
-(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\|with\\)\\_>[: \n\t]"
+(defconst py-minor-block-re "[ \t]*\\_<\\(for\\|if\\|try\\|with\\)\\_>[:( \n\t]*"
   "Matches the beginning of an `for', `if', `try' or `with' block. ")
 
 (defconst py-try-block-re "[ \t]*\\_<try\\_>[: \n\t]"
@@ -1894,28 +1901,47 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement or it's clause. ")
 ;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
 
-(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]"
+(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement or it's clause.
 Includes def and class. ")
 
-(defconst py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]"
-  "Matches the beginning of a compound statement's clause. ")
+(defconst py-clause-re
+  (concat
+   "[ \t]*\\_<\\("
+   (mapconcat 'identity
+              (list
+               "elif"
+               "else"
+               "except"
+               "finally")
+              "\\|")
+   "\\)\\_>[( \t]*.*:?")
+  "Regular expression matching lines not to augment indent after.")
 ;; (setq py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]")
 
-(defconst py-elif-re "[ \t]*\\_<\\elif\\_>[: \n\t]"
+(defconst py-elif-re "[ \t]*\\_<\\elif\\_>[:( \n\t]*"
   "Matches the beginning of a compound if-statement's clause exclusively. ")
 
-(defconst py-try-clause-re "[ \t]*\\_<\\(except\\|else\\|finally\\)\\_>[: \n\t]"
+(defconst py-try-clause-re
+  (concat
+   "[ \t]*\\_<\\("
+   (mapconcat 'identity
+              (list
+               "else"
+               "except"
+               "finally")
+              "\\|")
+   "\\)\\_>[( \t]*.*:")
   "Matches the beginning of a compound try-statement's clause. ")
 
-(defconst py-if-re "[ \t]*\\_<if\\_>[ \n\t]"
+(defconst py-if-re "[ \t]*\\_<if\\_>[( \n\t]*"
   "Matches the beginning of a compound statement saying `if'. ")
 
-(defconst py-try-re "[ \t]*\\_<try\\_>[: \n\t]"
+(defconst py-try-re "[ \t]*\\_<try\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement saying `try'. " )
 
 ;;; Macro definitions
@@ -4238,7 +4264,6 @@ Returns value of `indent-tabs-mode' switched to. "
 (defun py-guessed-sanity-check (guessed)
   (and (>= guessed 2)(<= guessed 8)(eq 0 (% guessed 2))))
 
-
 (defun py-guess-indent-final (indents orig)
   "Calculate and do sanity-check. "
   (let* ((first (car indents))
@@ -4251,7 +4276,6 @@ Returns value of `indent-tabs-mode' switched to. "
                 (default-value 'py-indent-offset))))
     (setq erg (and (py-guessed-sanity-check erg) erg))
     erg))
-
 
 (defun py-guess-indent-forward ()
   "Called when moving to end of a form and `py-smart-indentation' is on. "
@@ -6875,7 +6899,6 @@ http://docs.python.org/reference/compound_stmts.html"
     (when (and py-verbose-p iact) (message "%s" erg))
     erg))
 
-
 (defun py-beginning-of-prepare (indent final-re &optional inter-re iact lc)
   (let ((orig (point))
         (indent (or indent
@@ -6895,7 +6918,6 @@ http://docs.python.org/reference/compound_stmts.html"
           (when (and py-verbose-p iact) (message "%s" erg))
           erg)
       (py-beginning-of-form-intern final-re iact indent orig lc))))
-
 
 (defun py-beginning-of-block (&optional indent)
   "Go to beginning block, skip whitespace at BOL.
@@ -7650,7 +7672,6 @@ Returns position if succesful "
                   (setq end (point))))
     (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
-
 
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
@@ -8999,7 +9020,6 @@ Optional \\[universal-argument] prompts for options to pass to the Python3.3 int
 Command expects Python3.3 installed at your system. "
   (interactive "P")
   (py-shell argprompt dedicated "python3.3" switch))
-
 
 ;; dedicated
 (defun python-dedicated (&optional argprompt switch)
@@ -10951,8 +10971,11 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                ((looking-at py-block-closing-keywords-re)
                 (py-beginning-of-block)
                 (current-indentation))
-               ((and (< (py-count-lines) origline)(looking-at py-assignment-re))
-                (goto-char (match-end 0))
+               ((and (< (py-count-lines) origline)
+                     (eq (current-column) (current-indentation)))
+                (and
+                 (looking-at py-assignment-re)
+                 (goto-char (match-end 0)))
                 ;; multiline-assignment
                 (if (and nesting (looking-at " *[[{(]")(not (looking-at ".+[]})][ \t]*$")))
                     (+ (current-indentation) py-indent-offset)
@@ -14316,7 +14339,6 @@ Returns value of `smart-operator-mode'\. . "]
                  ("More... "
                   ("Edit commands "
 
-
                    ("Kill "
 
                     ["Kill statement" py-kill-statement
@@ -15327,7 +15349,6 @@ Needs Pymacs"]
                    ["Electric yank" py-electric-yank
                     :help " `py-electric-yank'
 Perform command `yank' followed by an `indent-according-to-mode' . "])
-
 
                   ("Abbrevs"
                    :help "see also `py-add-abbrev'"
