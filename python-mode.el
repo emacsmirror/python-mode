@@ -544,7 +544,7 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-use-execute-ge24-3-p nil
+(defcustom py-execute-no-temp-p nil
   "Seems Emacs-24.3 provided a way executing stuff without temporary files. "
   :type 'boolean
   :group 'python-mode)
@@ -883,6 +883,13 @@ variable will only effect new shells."
   "Don't change Python shell's current working directory when sending code.
 
 See also `py-execute-directory'"
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-execute-fake-imported-p nil
+  "When non-nil, code inside `if __name__ == \"__main__:\"' block is  not send to interpreter.
+
+Default is nil "
   :type 'boolean
   :group 'python-mode)
 
@@ -9380,10 +9387,12 @@ When called from a programm, it accepts a string specifying a shell which will b
       (message "%s not readable. %s" file "Do you have permissions?"))
     erg))
 
-(defun py-execute-buffer-finally (start end &optional pyshellname dedicated switch nostars sepchar split)
-  (let* ((oldbuf (current-buffer))
+(defun py-execute-buffer-finally (start end &optional pyshell--name dedicated switch nostars sepchar split)
+  (let* ((windows-config (window-configuration-to-register 313465889))
+         (windows-displayed (window-list-1))
+         (oldbuf (current-buffer))
          (py-exception-buffer (or py-exception-buffer oldbuf))
-         (pyshellname (or pyshellname (py-choose-shell)))
+         (pyshellname (or pyshell--name (py-choose-shell)))
          (execute-directory
           (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
                 ((and py-use-current-dir-when-execute-p (buffer-file-name))
@@ -9396,6 +9405,7 @@ When called from a programm, it accepts a string specifying a shell which will b
                 ((getenv "VIRTUAL_ENV"))
                 (t (getenv "HOME"))))
          (strg (buffer-substring-no-properties start end))
+         (line (save-restriction (widen) (count-lines (point-min) start)))
          (sepchar (or sepchar (char-to-string py-separator-char)))
          (py-buffer-name (py-buffer-name-prepare pyshellname sepchar))
          (temp (make-temp-name
@@ -9416,33 +9426,43 @@ When called from a programm, it accepts a string specifying a shell which will b
                 (format "execfile(r'%s') # PYTHON-MODE\n" localname)))
          (wholebuf (when (boundp 'wholebuf) wholebuf))
          (comint-scroll-to-bottom-on-output t)
-         erg err-p)
+         erg err-p lineadd)
     (set-buffer filebuf)
     (erase-buffer)
+    (switch-to-buffer (current-buffer))
     (insert strg)
     (py-fix-start (point-min)(point-max))
-    (py-if-needed-insert-shell (prin1-to-string proc) sepchar)
+    (py-if-needed-insert-shell pyshellname sepchar)
+    ;; supress if __name__ == "__main__" forms
+    (and py-execute-fake-imported-p (py-execute-fake-imported))
     (unless wholebuf (py-insert-coding))
     (unless (string-match "[jJ]ython" pyshellname) (py-insert-execute-directory execute-directory))
+    ;; fix offline amount, make erorr point at the corect line
+    (setq lineadd (- line (+ 2 (count-lines (point-min) (point)))))
+    (and (< 0 lineadd) (insert (make-string  lineadd 10)))
     (set-buffer filebuf)
     (write-region (point-min) (point-max) file nil t nil 'ask)
     (set-buffer-modified-p 'nil)
-    (if (file-readable-p file)
-        (progn
-          (when (string-match "ipython" (process-name proc))
-            (sit-for py-ipython-execute-delay))
-          (setq erg (py-execute-file-base proc file pec procbuf))
-          (sit-for 0.1)
-          (setq err-p (py-postprocess-output-buffer py-buffer-name))
-          (if err-p
-              (py-jump-to-exception err-p py-exception-buffer)
-            (py-shell-manage-windows switch split oldbuf py-buffer-name))
-          (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
-            (when py-verbose-p (message "Output buffer: %s" procbuf))
-            (when (and (not err-p) py-cleanup-temporary)
-              (py-delete-temporary file localname filebuf))
-            (sit-for 0.1)))
-      (message "%s not readable. %s" file "Do you have write permissions?"))
+    (unwind-protect
+        (if (file-readable-p file)
+            (progn
+              (and (string-match "ipython" (process-name proc))
+                   (sit-for py-ipython-execute-delay))
+              (setq erg (py-execute-file-base proc file pec procbuf))
+              (sit-for 0.1)
+              (setq err-p (py-postprocess-output-buffer py-buffer-name))
+              ;; (if err-p
+              ;; (progn
+              ;; (setnth 1 err-p (1- (nth 1 err-p)))
+              ;; (py-jump-to-exception err-p py-exception-buffer))
+              (py-shell-manage-windows switch split oldbuf py-buffer-name windows-displayed windows-config err-p)
+              (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
+                (when py-verbose-p (message "Output buffer: %s" procbuf)))
+              (sit-for 0.1))
+          ;;)
+          (message "%s not readable. %s" file "Do you have write permissions?")))
+    (and py-cleanup-temporary
+         (py-delete-temporary file localname filebuf))
     erg))
 
 (defun py-execute-python-mode-v5 (start end &optional pyshellname)
@@ -9544,7 +9564,7 @@ When called from a programm, it accepts a string specifying a shell which will b
   (cond (;; enforce proceeding as python-mode.el v5
          python-mode-v5-behavior-p
          (py-execute-python-mode-v5 start end pyshellname))
-        (py-use-execute-ge24-3-p
+        (py-execute-no-temp-p
          (py-execute-ge24.3 start end pyshellname dedicated switch nostars sepchar split file))
         ;; No need for a temporary file than
         ((and (not (buffer-modified-p)) file)
@@ -9954,7 +9974,6 @@ Returns position where output starts. "
       (unwind-protect
           (save-excursion
             (set-buffer procbuf)
-            ;; (switch-to-buffer (current-buffer))
             (funcall (process-filter proc) proc msg))))
     (set-buffer procbuf)
     (process-send-string proc cmd)
@@ -11232,9 +11251,13 @@ Needed when file-path names are contructed from maybe numbered buffer names like
     "\*" ""
     string)))
 
-(defun py-shell-manage-windows (switch split oldbuf py-buffer-name)
-  (cond (;; split and switch
-         (and (not (eq split 'nosplit))
+(defun py-shell-manage-windows (switch split oldbuf py-buffer-name &optional windows-displayed windows-config err-p)
+  (cond (err-p
+         (and (eq 1 (length windows-displayed))
+              (funcall py-split-windows-on-execute-function))
+         (py-jump-to-exception err-p py-exception-buffer))
+        ;; split and switch
+        ((and (not (eq split 'nosplit))
               py-split-windows-on-execute-p
               (not (eq switch 'noswitch))
               (or (eq switch 'switch)
@@ -11253,7 +11276,9 @@ Needed when file-path names are contructed from maybe numbered buffer names like
          (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
-               (pop-to-buffer oldbuf)
+               ;; (pop-to-buffer oldbuf)
+               (set-buffer oldbuf)
+               (switch-to-buffer (current-buffer))
                (display-buffer py-buffer-name 'display-buffer-reuse-window))
            (display-buffer py-buffer-name 'display-buffer-reuse-window)))
         ;; no split, switch
@@ -11265,9 +11290,11 @@ Needed when file-path names are contructed from maybe numbered buffer names like
         ;; no split, no switch
         ((or (eq switch 'noswitch)
              (not py-switch-buffers-on-execute-p))
-         (let (pop-up-windows)
-           (set-buffer oldbuf)
-           (switch-to-buffer (current-buffer))))))
+         (if (equal (window-list-1) windows-displayed)
+             (jump-to-register 313465889)
+           (let (pop-up-windows)
+             (set-buffer oldbuf)
+             (switch-to-buffer (current-buffer)))))))
 
 (defun py-report-executable (py-buffer-name)
   (let ((erg (downcase (replace-regexp-in-string
@@ -19801,6 +19828,7 @@ If an exception occurred return error-string, otherwise return nil.  BUF must ex
       (goto-char (point-max))
       (forward-line -1)
       (end-of-line)
+      (switch-to-buffer (current-buffer))
       (save-excursion
         (setq limit (re-search-backward py-shell-prompt-regexp nil t 1)))
       (when (and (re-search-backward py-traceback-line-re limit t)
@@ -19825,25 +19853,25 @@ If an exception occurred return error-string, otherwise return nil.  BUF must ex
       ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
       err-p)))
 
-(defun py-jump-to-exception (err-p py-exception-buffer)
+(defun py-jump-to-exception (err-p py-exception-buffer &optional file)
   "Jump to the Python code in FILE at LINE."
-  (message "%s" py-exception-buffer)
-  (let ((file (car err-p))
+  (let (
+        (inhibit-point-motion-hooks t)
+        (file (or file (car err-p)))
         (line (cadr err-p))
         (action (nth 2 err-p))
         (errm (nth 3 err-p)))
-    ;; Fiddle about with line number
-    (setq line (+ py-line-number-offset line))
     (cond ((and py-exception-buffer
                 (buffer-live-p py-exception-buffer))
-           (pop-to-buffer py-exception-buffer))
+           ;; (pop-to-buffer py-exception-buffer)
+           (py-jump-to-exception-intern line action py-exception-buffer))
           ((file-readable-p file)
            (find-file file)
-           (forward-line (1+ line)))
+           (py-jump-to-exception-intern line action))
           (t (find-file (read-file-name "Exception file: "
                                         nil
-                                        file t))))
-    (message "Jumping to exception in file %s on line %d" file line)))
+                                        file t))
+             (py-jump-to-exception-intern line action)))))
 
 (defun py-down-exception (&optional bottom)
   "Go to the next line down in the traceback.

@@ -72,6 +72,7 @@
     (insert "pri")
     (py-shell-complete)
     (forward-word -1)
+    (sit-for 0.1) 
     (assert (looking-at "print") nil "usr-bin-python-shell-complete-test failed")
     (when py-verbose-p (message "%s" "usr-bin-python-shell-complete-test passed"))))
 
