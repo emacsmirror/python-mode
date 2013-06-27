@@ -299,6 +299,15 @@ Default is  non-nil"
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-if-name-main-permission-p t
+  "Allow execution of code inside blocks started
+by \"if __name__== '__main__':\".
+
+Default is non-nil"
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-use-font-lock-doc-face-p nil
   "If documention string inside of def or class get `font-lock-doc-face'.
 
@@ -883,13 +892,6 @@ variable will only effect new shells."
   "Don't change Python shell's current working directory when sending code.
 
 See also `py-execute-directory'"
-  :type 'boolean
-  :group 'python-mode)
-
-(defcustom py-execute-fake-imported-p nil
-  "When non-nil, code inside `if __name__ == \"__main__:\"' block is  not send to interpreter.
-
-Default is nil "
   :type 'boolean
   :group 'python-mode)
 
@@ -9429,12 +9431,14 @@ When called from a programm, it accepts a string specifying a shell which will b
          erg err-p lineadd)
     (set-buffer filebuf)
     (erase-buffer)
-    (switch-to-buffer (current-buffer))
+    (unless py-if-name-main-permission-p
+      (setq strg (replace-regexp-in-string
+                  "if[( ]__name__[) ]*==[( ]*['\"]\\{1,3\\}__main__['\"]\\{1,3\\}[ )]:"
+                  ;; space after __main__, i.e. will not be executed
+                  "if __name__ == '__main__ ':" strg)))
     (insert strg)
     (py-fix-start (point-min)(point-max))
     (py-if-needed-insert-shell pyshellname sepchar)
-    ;; supress if __name__ == "__main__" forms
-    (and py-execute-fake-imported-p (py-execute-fake-imported))
     (unless wholebuf (py-insert-coding))
     (unless (string-match "[jJ]ython" pyshellname) (py-insert-execute-directory execute-directory))
     ;; fix offline amount, make erorr point at the corect line
@@ -11264,7 +11268,8 @@ Needed when file-path names are contructed from maybe numbered buffer names like
                   py-switch-buffers-on-execute-p))
          (when (< (count-windows) py-max-split-windows)
            (funcall py-split-windows-on-execute-function))
-         (pop-to-buffer py-buffer-name)
+         (set-buffer py-buffer-name)
+         (switch-to-buffer (current-buffer))
          (display-buffer oldbuf))
         ;; split, not switch
         ((and
@@ -11286,7 +11291,9 @@ Needed when file-path names are contructed from maybe numbered buffer names like
              (and (not (eq switch 'noswitch))
                   py-switch-buffers-on-execute-p))
          (let (pop-up-windows)
-           (pop-to-buffer py-buffer-name)))
+
+           (set-buffer py-buffer-name)
+           (switch-to-buffer (current-buffer))))
         ;; no split, no switch
         ((or (eq switch 'noswitch)
              (not py-switch-buffers-on-execute-p))
@@ -14288,6 +14295,17 @@ Make sure, `py-underscore-word-syntax-p' is off\.
 Returns value of `py-underscore-word-syntax-p'\. .
 
 Use `M-x customize-variable' to set it permanently"])
+
+                   ["Execute \"if name == main\" blocks p"
+                    (setq py-if-name-main-permission-p
+                          (not py-if-name-main-permission-p))
+                    :help " `py-if-name-main-permission-p'
+
+Allow execution of code inside blocks delimited by
+if __name__ == '__main__'
+
+Default is non-nil. "
+                    :style toggle :selected py-if-name-main-permission-p]
 
                    ["Jump on exception"
                     (setq py-jump-on-exception
