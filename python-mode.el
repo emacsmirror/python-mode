@@ -1132,11 +1132,6 @@ It should not contain a caret (^) at the beginning."
          (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
          (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
                                   ffap-alist)))
-        ((and py-ffap-p (eq py-ffap-p 'python-ffap))
-         (eval-after-load "ffap"
-           '(push '(python-mode . py-ffap-module-path) ffap-alist))
-         (setq ffap-alist (remove '(python-mode . py-module-path) ffap-alist))
-         ffap-alist)
         (t (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
            (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
                                     ffap-alist))
@@ -1146,12 +1141,11 @@ It should not contain a caret (^) at the beginning."
 
   "Select python-modes way to find file at point.
 
-Default is  nil "
+Default is nil "
 
   :type '(choice
           (const :tag "default" nil)
-          (const :tag "use py-ffap, emacs.py" py-ffap)
-          (const :tag "use python-ffap" python-ffap))
+          (const :tag "use py-ffap" py-ffap))
   :group 'python-mode
   :set (lambda (symbol value)
          (set-default symbol value)
@@ -1684,10 +1678,6 @@ Inludes Python shell-prompt in order to stop further searches. ")
 
 (defvar py-preoutput-result nil
   "Data from last `_emacs_out' line seen by the preoutput filter.")
-
-(defvar python-prev-dir/file nil
-  "Caches (directory . file) pair used in the last `py-load-file' command.
-Used for determining the default in the next one.")
 
 (defvar py-file-queue nil
   "Queue of Python temp files awaiting execution.
@@ -3439,28 +3429,6 @@ With prefix arg, position cursor at end of buffer."
     (push-mark)
     (goto-char (point-max))))
 
-(defun py-load-file (file-name)
-  "Load a Python file FILE-NAME into the inferior Python process.
-If the file has extension `.py' import or reload it as a module.
-Treating it as a module keeps the global namespace clean, provides
-function location information for debugging, and supports users of
-module-qualified names."
-  (interactive (comint-get-source "Load Python file: " python-prev-dir/file
-                                  python-source-modes
-                                  t))	; because execfile needs exact name
-  (comint-check-source file-name)     ; Check to see if buffer needs saving.
-  (setq python-prev-dir/file (cons (file-name-directory file-name)
-                                   (file-name-nondirectory file-name)))
-  (with-current-buffer (process-buffer (py-proc)) ;Runs python if needed.
-    ;; Fixme: I'm not convinced by this logic from python-mode.el.
-    (py-send-command
-     (if (string-match "\\.py\\'" file-name)
-         (let ((module (file-name-sans-extension
-                        (file-name-nondirectory file-name))))
-           (format "emacs.eimport(%S,%S)"
-                   module (file-name-directory file-name)))
-       (format "execfile(%S)" file-name)))
-    (message "%s loaded" file-name)))
 
 (defun py-proc (&optional dedicated)
   "Return the current Python process.
@@ -3527,9 +3495,7 @@ of current line."
     erg))
 
 ;; FFAP support
-(defun py-module-path (module)
-  "Function for `ffap-alist' to return path to MODULE."
-  (py-send-receive (format "emacs.modpath (%S)" module)))
+(defalias 'py-module-path 'py-ffap-module-path)
 
 (defun py-ffap-module-path (module)
   "Function for `ffap-alist' to return path for MODULE."
@@ -10682,6 +10648,16 @@ This is a no-op if `py-check-comint-prompt' returns nil."
 	(prog1 py-preoutput-result
 	  (kill-local-variable 'py-preoutput-result))))))
 
+(defun py-load-file (file-name)
+  "Load a Python file FILE-NAME into the inferior Python process.
+
+If the file has extension `.py' import or reload it as a module.
+Treating it as a module keeps the global namespace clean, provides
+function location information for debugging, and supports users of
+module-qualified names."
+  (interactive "f")
+  (py-execute-file-base (get-buffer-process (get-buffer (py-shell))) file-name))
+
 (defalias 'py-find-function 'py-find-definition)
 (defun py-find-definition (&optional symbol)
   "Find source of definition of SYMBOL.
@@ -15672,30 +15648,6 @@ With prefix arg, position cursor at end of buffer."
     (push-mark)
     (goto-char (point-max))))
 
-(defun py-load-file (file-name)
-  "Load a Python file FILE-NAME into the inferior Python process.
-
-If the file has extension `.py' import or reload it as a module.
-Treating it as a module keeps the global namespace clean, provides
-function location information for debugging, and supports users of
-module-qualified names."
-  (interactive (comint-get-source "Load Python file: " python-prev-dir/file
-                                  python-source-modes
-                                  t))	; because execfile needs exact name
-  (comint-check-source file-name)     ; Check to see if buffer needs saving.
-  (setq python-prev-dir/file (cons (file-name-directory file-name)
-                                   (file-name-nondirectory file-name)))
-  (with-current-buffer (process-buffer (py-proc)) ;Runs python if needed.
-    ;; Fixme: I'm not convinced by this logic from python-mode.el.
-    (py-send-command
-     (if (string-match "\\.py\\'" file-name)
-         (let ((module (file-name-sans-extension
-                        (file-name-nondirectory file-name))))
-           (format "emacs.eimport(%S,%S)"
-                   module (file-name-directory file-name)))
-       (format "execfile(%S)" file-name)))
-    (message "%s loaded" file-name)))
-
 (defun py-input-filter (str)
   "`comint-input-filter' function for inferior Python.
 Don't save anything for STR matching `inferior-python-filter-regexp'."
@@ -15780,37 +15732,7 @@ and return collected output"
       (tab-to-tab-stop))))
 
 ;; started from python.el
-(defun py-script-complete ()
-  (interactive "*")
-  (let ((end (point))
-	(start (save-excursion
-		 (and (re-search-backward
-		       (rx (or buffer-start (regexp "[^[:alnum:]._]"))
-			   (group (1+ (regexp "[[:alnum:]._]"))) point)
-		       nil t)
-		      (match-beginning 1)))))
-    (when start
-      (list start end
-            (completion-table-dynamic 'py-symbol-completions)))))
-
-(defun py-symbol-completions (symbol)
-  "Return a list of completions of the string SYMBOL from Python process.
-
-The list is sorted. "
-  (when (stringp symbol)
-    (let* ((py-imports (py-find-imports))
-           (completions
-            (condition-case ()
-                (car (read-from-string
-                      (py-send-receive
-                       (format "emacs.complete(%S,%s)"
-                               (substring-no-properties symbol)
-                               py-imports))))
-              (error nil))))
-      (sort
-       ;; We can get duplicates from the above -- don't know why.
-       (delete-dups completions)
-       #'string<))))
+(defalias 'py-script-complete 'py-shell-complete)
 
 (defun py-python-script-complete (&optional shell imports beg end word)
   "Complete word before point, if any.
@@ -20222,9 +20144,9 @@ that order.
 
 You can send text to the inferior Python process from other buffers
 containing Python source.
- * \\[python-switch-to-python] switches the current buffer to the Python
+ * \\[py-switch-to-shell] switches the current buffer to the Python
     process buffer.
- * \\[py-send-region] sends the current region to the Python process.
+ * \\[py-execute-region] sends the current region to the Python process.
  * \\[py-send-region-and-go] switches to the Python process buffer
     after sending the text.
 
