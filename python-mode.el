@@ -5593,6 +5593,11 @@ Takes the result of (syntax-ppss)"
     (goto-char (scan-sexps (point) 1)))
   (point))
 
+(defun py-fill-this-paragraph ()
+  "Fill just the paragraph at point. "
+  (interactive "*")
+  (py-fill-string justify style (if (py-beginning-of-paragraph-p) (point) (progn (py-beginning-of-paragraph)(point))) (progn (py-end-of-paragraph)(point))))
+
 (defun py-fill-paragraph (&optional justify style start end docstring)
   "`fill-paragraph-function'
 
@@ -5606,19 +5611,30 @@ See also `py-fill-string' "
                          ;; py-paragraph-fill-docstring-p
 
                          (or docstring (py-docstring-p (nth 8 pps)))))
-             (beg (or start (and (use-region-p) (region-beginning)) (and
-                                                                     ;; py-paragraph-fill-docstring-p
-                                                                     docstring (nth 8 pps)) (py-beginning-of-paragraph-position)))
-             (end (copy-marker (or end (and (use-region-p) (region-end)) (and
-                                                                          ;; py-paragraph-fill-docstring-p
-
-                                                                          docstring (py-end-of-string (nth 8 pps))) (py-end-of-paragraph-position))))
+             (beg (cond (start)
+                        ((use-region-p)
+                         (region-beginning))
+                        ((and docstring
+                              ;; (or py-paragraph-fill-docstring-p
+                              ;; pep-257-nn, delimiters are on first line
+                              ;; (and
+                              ;; (eq py-docstring-style 'pep-257-nn)
+                              (ignore-errors (<= (py-beginning-of-paragraph-position)(nth 8 pps))))
+                         (nth 8 pps))
+                        (t (py-beginning-of-paragraph-position))))
+             (end (copy-marker
+                   (cond (end)
+                         ((use-region-p) (region-end))
+                         (docstring (py-end-of-string (nth 8 pps)))
+                         (t (if (or (looking-at paragraph-start)(re-search-forward paragraph-start nil t 1))
+                                (progn (skip-chars-backward " \t\r\n\f")(point))
+                              (point))))))
              (style (or style py-docstring-style))
              (this-end (point-min)))
-        (when (and (nth 3 pps) (< beg (nth 8 pps))
-                   (py-docstring-p (nth 8 pps))
-                   (setq beg (nth 8 pps)))
-          (setq end (py-end-of-string (nth 8 pps))))
+        ;; (when (and (nth 3 pps) (< beg (nth 8 pps))
+        ;; docstring
+        ;; (setq beg (nth 8 pps)))
+        ;; (setq end (py-end-of-string (nth 8 pps))))
         (save-excursion
           (save-restriction
             (narrow-to-region beg end)
@@ -5632,7 +5648,9 @@ See also `py-fill-string' "
                          (syntax-after (point)))
                   (looking-at py-string-delim-re))
               (goto-char beg)
-              (if (and py-paragraph-fill-docstring-p docstring (re-search-forward (concat "^" py-labelled-re) nil t))
+              (if (and py-paragraph-fill-docstring-p docstring
+                       ;; (re-search-forward (concat "^" py-labelled-re) nil t)
+                       )
                   (progn
                     (goto-char beg)
                     ;; must process one by one
@@ -5640,14 +5658,15 @@ See also `py-fill-string' "
                       (save-restriction
                         (narrow-to-region last this-end)
                         (goto-char last)
-                        (if (re-search-forward (concat "^" py-labelled-re) nil t this-end)
-                            (py-fill-labelled-string last this-end)
+                        ;; (if (re-search-forward (concat "^" py-labelled-re) nil t this-end)
+                        ;; (py-fill-labelled-string last this-end)
 
-                          (py-fill-string justify style last this-end pps 'no))
+                        (py-fill-string justify style last this-end pps 'no)
+                        ;;)
                         (goto-char this-end)
                         (widen))))
-                (py-fill-string justify style beg end pps))
-              (goto-char this-end))
+                (goto-char orig)
+                (py-fill-this-paragraph)))
              ;; Decorators
              ((save-excursion
                 (and (py-beginning-of-statement)
@@ -5656,7 +5675,8 @@ See also `py-fill-string' "
                             ;; (point))
                             ?\@)))
               (py-fill-decorator justify))
-             (t t))))
+             (t (goto-char orig)
+                (py-fill-string justify style (if (py-beginning-of-paragraph-p) (point) (py-beginning-of-paragraph)) (py-end-of-paragraph))))))
         (goto-char orig)
         (back-to-indentation))
       (recenter-top-bottom)
@@ -10961,6 +10981,10 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                                    (+ (current-column) py-indent-offset)
                                  (current-column)))
                               (t (+ (current-column) (* (nth 0 pps)))))))
+                     ((nth 1 (syntax-ppss))
+                      (goto-char (nth 1 (syntax-ppss)))
+                      (setq line (< (py-count-lines) origline))
+                      (py-compute-indentation orig origline closing line nesting repeat indent-offset))
                      ((not (py-beginning-of-statement-p))
                       (py-beginning-of-statement)
                       (py-compute-indentation orig origline closing line nesting repeat indent-offset))
@@ -10976,6 +11000,8 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                  (t
                   (goto-char (nth 1 pps))
                   (py-compute-indentation orig origline closing line nesting repeat indent-offset))))
+               ((and (eq (char-after) (or ?\( ?\{ ?\[)) line)
+                (1+ (current-column)))
                ((py-preceding-line-backslashed-p)
                 (progn
                   (py-beginning-of-statement)
@@ -20295,10 +20321,10 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'comment-start) "#")
   (if empty-comment-line-separates-paragraph-p
       (progn
-        (set (make-local-variable 'paragraph-separate) "^[ \t\f]*$\\|^#[ \t]*$")
-        (set (make-local-variable 'paragraph-start) "^[ \t\f]*$\\|^#[ \t]*$"))
-    (set (make-local-variable 'paragraph-separate) "^[ \t]*$")
-    (set (make-local-variable 'paragraph-start) "^[ \t]*$"))
+        (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
+        (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
+    (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
+    (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
   (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
@@ -20313,10 +20339,12 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (set (make-local-variable 'tab-width) py-indent-offset)
   (set (make-local-variable 'eldoc-documentation-function)
        #'py-eldoc-function)
-  (set (make-local-variable 'skeleton-further-elements)
-       '((< '(backward-delete-char-untabify (min py-indent-offset
-                                                 (current-column))))
-         (^ '(- (1+ (current-indentation))))))
+  (and py-load-skeletons-p
+       (py-load-skeletons)
+       (set (make-local-variable 'skeleton-further-elements)
+            '((< '(backward-delete-char-untabify (min py-indent-offset
+                                                      (current-column))))
+              (^ '(- (1+ (current-indentation)))))))
   (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
   (py-set-load-path)
   ;; (add-to-list 'load-path py-install-directory)
