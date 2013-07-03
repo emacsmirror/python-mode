@@ -20346,7 +20346,7 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
   (set (make-local-variable 'imenu-create-index-function) 'py-imenu-create-index-function)
-  (py-set-load-path)
+  (and py-guess-py-install-directory-p (py-set-load-path))
   ;; (add-to-list 'load-path py-install-directory)
   ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
   (and py-autopair-mode (py-autopair-check)
