@@ -1,6 +1,6 @@
 ;; python-mode.el --- Towards an Python-IDE in Emacs
 
-;; Maintainer: Andreas Roehler <andreas.roehler@online.de>
+;; Maintainer: Andreas Röhler <andreas.roehler@online.de>
 ;; Keywords: languages, processes, python, oop
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
@@ -98,8 +98,7 @@ No semantic indent,  which diff to `py-indent-offset' indicates "
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
 
-If you ignore the location `M-x py-guess-pdb-path' might display it.
-"
+If you ignore the location `M-x py-guess-pdb-path' might display it"
   :type 'variable
   :group 'python-mode)
 
@@ -193,9 +192,10 @@ URL: http://autopair.googlecode.com "
   :type 'boolean
   :group 'python-mode
   :set (lambda (symbol value)
-         (and (py-autopair-check)
-              (set-default symbol value)
-              (autopair-mode (if value 1 0)))))
+         (and
+          ;; (py-autopair-check)
+          (set-default symbol value)
+          (autopair-mode (if value 1 0)))))
 
 (defcustom py-no-completion-calls-dabbrev-expand-p t
   "If completion function should call dabbrev-expand when no completion found. Default is `t'
@@ -10703,16 +10703,15 @@ Used with `eval-after-load'."
 (defun py-send-receive (string)
   "Send STRING to inferior Python (if any) and return result.
 
-The result is what follows `_emacs_out' in the output.
 This is a no-op if `py-check-comint-prompt' returns nil."
-  (py-send-string-no-output string)
-  (let ((proc (py-proc)))
-    (with-current-buffer (process-buffer proc)
-      (when (py-check-comint-prompt proc)
-	(set (make-local-variable 'py-preoutput-result) nil)
-        (accept-process-output proc 5)
-	(prog1 py-preoutput-result
-	  (kill-local-variable 'py-preoutput-result))))))
+  (or (py-send-string-no-output string)
+      (let ((proc (py-proc)))
+        (with-current-buffer (process-buffer proc)
+          (when (py-check-comint-prompt proc)
+            (set (make-local-variable 'py-preoutput-result) nil)
+            (accept-process-output proc 5)
+            (prog1 py-preoutput-result
+              (kill-local-variable 'py-preoutput-result)))))))
 
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the inferior Python process.
@@ -20349,7 +20348,8 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (and py-guess-py-install-directory-p (py-set-load-path))
   ;; (add-to-list 'load-path py-install-directory)
   ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
-  (and py-autopair-mode (py-autopair-check)
+  (and py-autopair-mode
+       ;; (py-autopair-check)
        (load-library "autopair")
        (add-hook 'python-mode-hook
                  #'(lambda ()
