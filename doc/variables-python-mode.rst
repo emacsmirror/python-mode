@@ -8,13 +8,13 @@ String to display in Emacs modeline
 
 py-indent-offset
 ----------------
-*Amount of offset per level of indentation.
+Amount of offset per level of indentation.
 `M-x py-guess-indent-offset' can usually guess a good value when
 you're editing someone else's Python code.
 
 py-backslashed-lines-indent-offset
 ----------------------------------
-*Amount of offset per level of indentation of backslashed.
+Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates 
 
 pdb-path
@@ -307,7 +307,7 @@ If py-mark-def-or-class functions should mark decorators too. Default is `nil'.
 
 py-tab-indent
 -------------
-*Non-nil means TAB in Python mode calls `py-indent-line'.
+Non-nil means TAB in Python mode calls `py-indent-line'.
 
 py-return-key
 -------------
@@ -333,11 +333,11 @@ Detecting the shell in head of file.
 
 py-python-command-args
 ----------------------
-*List of string arguments to be used when starting a Python shell.
+List of string arguments to be used when starting a Python shell.
 
 py-jython-command-args
 ----------------------
-*List of string arguments to be used when starting a Jython shell.
+List of string arguments to be used when starting a Jython shell.
 
 py-cleanup-temporary
 --------------------
@@ -353,7 +353,7 @@ When line starts a multiline-assignment: How many colums indent should be more t
 
 py-continuation-offset
 ----------------------
-*Additional amount of offset to give for some continuation lines.
+Additional amount of offset to give for some continuation lines.
 Continuation lines are those that immediately follow a backslash
 terminated line. 
 
@@ -363,7 +363,7 @@ Python-mode starts `indent-tabs-mode' with the value specified here, default is 
 
 py-smart-indentation
 --------------------
-*Should `python-mode' try to automagically set some indentation variables?
+Should `python-mode' try to automagically set some indentation variables?
 When this variable is non-nil, two things happen when a buffer is set
 to `python-mode':
 
@@ -384,7 +384,7 @@ set `py-smart-indentation' to nil in your `python-mode-hook'.
 
 py-block-comment-prefix
 -----------------------
-*String used by M-x comment-region to comment out a block of code.
+String used by M-x comment-region to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
 that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
@@ -410,7 +410,7 @@ When set, make sure the directory exists.
 
 py-beep-if-tab-change
 ---------------------
-*Ring the bell if `tab-width' is changed.
+Ring the bell if `tab-width' is changed.
 If a comment of the form
 
   	# vi:set tabsize=<number>:
@@ -423,7 +423,7 @@ the Emacs bell is also rung as a warning.
 
 py-jump-on-exception
 --------------------
-*Jump to innermost exception frame in *Python Output* buffer.
+Jump to innermost exception frame in *Python Output* buffer.
 When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame.
@@ -435,15 +435,15 @@ Otherwise, all modified buffers are saved without asking.
 
 py-backspace-function
 ---------------------
-*Function called by `py-electric-backspace' when deleting backwards.
+Function called by `py-electric-backspace' when deleting backwards.
 
 py-delete-function
 ------------------
-*Function called by `py-electric-delete' when deleting forwards.
+Function called by `py-electric-delete' when deleting forwards.
 
 py-pdbtrack-do-tracking-p
 -------------------------
-*Controls whether the pdbtrack feature is enabled or not.
+Controls whether the pdbtrack feature is enabled or not.
 When non-nil, pdbtrack is enabled in all comint-based buffers,
 e.g. shell buffers and the *Python* buffer.  When using pdb to debug a
 Python program, pdbtrack notices the pdb prompt and displays the
@@ -458,7 +458,7 @@ to paths in Emacs.
 
 py-pdbtrack-minor-mode-string
 -----------------------------
-*String to use in the minor mode list when pdbtrack is enabled.
+String to use in the minor mode list when pdbtrack is enabled.
 
 py-import-check-point-max
 -------------------------
@@ -526,59 +526,59 @@ variable section, e.g.:
 
 py-pychecker-command
 --------------------
-*Shell command used to run Pychecker.
+Shell command used to run Pychecker.
 
 py-pychecker-command-args
 -------------------------
-*List of string arguments to be passed to pychecker.
+List of string arguments to be passed to pychecker.
 
 py-pep8-command
 ---------------
-*Shell command used to run pep8.
+Shell command used to run pep8.
 
 py-pep8-command-args
 --------------------
-*List of string arguments to be passed to pylint.
+List of string arguments to be passed to pylint.
 
 Default is "" 
 
 py-pyflakespep8-command
 -----------------------
-*Shell command used to run `pyflakespep8'.
+Shell command used to run `pyflakespep8'.
 
 py-pyflakespep8-command-args
 ----------------------------
-*List of string arguments to be passed to pyflakespep8.
+List of string arguments to be passed to pyflakespep8.
 
 Default is "" 
 
 py-pyflakes-command
 -------------------
-*Shell command used to run Pyflakes.
+Shell command used to run Pyflakes.
 
 py-pyflakes-command-args
 ------------------------
-*List of string arguments to be passed to pyflakes.
+List of string arguments to be passed to pyflakes.
 
 Default is "" 
 
 py-pylint-command
 -----------------
-*Shell command used to run Pylint.
+Shell command used to run Pylint.
 
 py-pylint-command-args
 ----------------------
-*List of string arguments to be passed to pylint.
+List of string arguments to be passed to pylint.
 
 Default is "--errors-only" 
 
 py-shell-input-prompt-1-regexp
 ------------------------------
-*A regular expression to match the input prompt of the shell.
+A regular expression to match the input prompt of the shell.
 
 py-shell-input-prompt-2-regexp
 ------------------------------
-*A regular expression to match the input prompt of the shell after the
+A regular expression to match the input prompt of the shell after the
   first line of input.
 
 py-shell-prompt-read-only
@@ -620,7 +620,7 @@ Also used by (minor-)outline-mode
 
 py-hide-show-hide-docstrings
 ----------------------------
-*Controls if doc strings can be hidden by hide-show
+Controls if doc strings can be hidden by hide-show
 
 py-paragraph-fill-docstring-p
 -----------------------------
@@ -660,14 +660,14 @@ A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'.
 
 py-match-paren-mode
 -------------------
-*Non-nil means, cursor will jump to beginning or end of a block.
+Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
 Sets `py-match-paren-key' in python-mode-map.
 Customize `py-match-paren-key' which key to use. 
 
 py-match-paren-key
 ------------------
-*String used by M-x comment-region to comment out a block of code.
+String used by M-x comment-region to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
 that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
@@ -675,7 +675,7 @@ should be of the form `#x...' where `x' is not a blank or a tab, and
 
 py-kill-empty-line
 ------------------
-*If t, py-indent-forward-line kills empty lines. 
+If t, py-indent-forward-line kills empty lines. 
 
 py-remove-cwd-from-path
 -----------------------
@@ -687,7 +687,7 @@ without the user's realization (e.g. to perform completion).
 
 py-imenu-show-method-args-p
 ---------------------------
-*Controls echoing of arguments of functions & methods in the Imenu buffer.
+Controls echoing of arguments of functions & methods in the Imenu buffer.
 When non-nil, arguments are printed.
 
 py-history-filter-regexp

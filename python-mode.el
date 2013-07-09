@@ -81,7 +81,7 @@
   :group 'python-mode)
 
 (defcustom py-indent-offset 4
-  "*Amount of offset per level of indentation.
+  "Amount of offset per level of indentation.
 `\\[py-guess-indent-offset]' can usually guess a good value when
 you're editing someone else's Python code."
   :type 'integer
@@ -89,7 +89,7 @@ you're editing someone else's Python code."
 (make-variable-buffer-local 'py-indent-offset)
 
 (defcustom py-backslashed-lines-indent-offset 5
-  "*Amount of offset per level of indentation of backslashed.
+  "Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates "
   :type 'integer
   :group 'python-mode)
@@ -498,7 +498,7 @@ If nil, default, it will not move from at any reasonable level. "
   :group 'python-mode)
 
 (defcustom py-tab-indent t
-  "*Non-nil means TAB in Python mode calls `py-indent-line'."
+  "Non-nil means TAB in Python mode calls `py-indent-line'."
   :type 'boolean
   :group 'python-mode)
 
@@ -545,13 +545,13 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :group 'python-mode)
 
 (defcustom py-python-command-args '("-i")
-  "*List of string arguments to be used when starting a Python shell."
+  "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python-mode)
 (make-variable-buffer-local 'py-python-command-args)
 
 (defcustom py-jython-command-args '("-i")
-  "*List of string arguments to be used when starting a Jython shell."
+  "List of string arguments to be used when starting a Jython shell."
   :type '(repeat string)
   :group 'python-mode
   :tag "Jython Command Args")
@@ -573,7 +573,7 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
 (make-variable-buffer-local 'py-lhs-inbound-indent)
 
 (defcustom py-continuation-offset 2
-  "*Additional amount of offset to give for some continuation lines.
+  "Additional amount of offset to give for some continuation lines.
 Continuation lines are those that immediately follow a backslash
 terminated line. "
   :type 'integer
@@ -585,7 +585,7 @@ terminated line. "
   :group 'python-mode)
 
 (defcustom py-smart-indentation t
-  "*Should `python-mode' try to automagically set some indentation variables?
+  "Should `python-mode' try to automagically set some indentation variables?
 When this variable is non-nil, two things happen when a buffer is set
 to `python-mode':
 
@@ -608,7 +608,7 @@ set `py-smart-indentation' to nil in your `python-mode-hook'."
 (make-variable-buffer-local 'py-smart-indentation)
 
 (defcustom py-block-comment-prefix "##"
-  "*String used by \\[comment-region] to comment out a block of code.
+  "String used by \\[comment-region] to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
 that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
@@ -641,7 +641,7 @@ When set, make sure the directory exists. "
   :group 'python-mode)
 
 (defcustom py-beep-if-tab-change t
-  "*Ring the bell if `tab-width' is changed.
+  "Ring the bell if `tab-width' is changed.
 If a comment of the form
 
   \t# vi:set tabsize=<number>:
@@ -655,7 +655,7 @@ the Emacs bell is also rung as a warning."
   :group 'python-mode)
 
 (defcustom py-jump-on-exception t
-  "*Jump to innermost exception frame in *Python Output* buffer.
+  "Jump to innermost exception frame in *Python Output* buffer.
 When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame."
@@ -669,17 +669,17 @@ Otherwise, all modified buffers are saved without asking."
   :group 'python-mode)
 
 (defcustom py-backspace-function 'backward-delete-char-untabify
-  "*Function called by `py-electric-backspace' when deleting backwards."
+  "Function called by `py-electric-backspace' when deleting backwards."
   :type 'function
   :group 'python-mode)
 
 (defcustom py-delete-function 'delete-char
-  "*Function called by `py-electric-delete' when deleting forwards."
+  "Function called by `py-electric-delete' when deleting forwards."
   :type 'function
   :group 'python-mode)
 
 (defcustom py-pdbtrack-do-tracking-p t
-  "*Controls whether the pdbtrack feature is enabled or not.
+  "Controls whether the pdbtrack feature is enabled or not.
 When non-nil, pdbtrack is enabled in all comint-based buffers,
 e.g. shell buffers and the *Python* buffer.  When using pdb to debug a
 Python program, pdbtrack notices the pdb prompt and displays the
@@ -697,7 +697,7 @@ to paths in Emacs."
   :group 'python-mode)
 
 (defcustom py-pdbtrack-minor-mode-string " PDB"
-  "*String to use in the minor mode list when pdbtrack is enabled."
+  "String to use in the minor mode list when pdbtrack is enabled."
   :type 'string
   :group 'python-mode)
 
@@ -785,25 +785,25 @@ variable section, e.g.:
 (make-variable-buffer-local 'py-master-file)
 
 (defcustom py-pychecker-command "pychecker"
-  "*Shell command used to run Pychecker."
+  "Shell command used to run Pychecker."
   :type 'string
   :group 'python-mode
   :tag "Pychecker Command")
 
 (defcustom py-pychecker-command-args '("--stdlib")
-  "*List of string arguments to be passed to pychecker."
+  "List of string arguments to be passed to pychecker."
   :type '(repeat string)
   :group 'python-mode
   :tag "Pychecker Command Args")
 
 (defcustom py-pep8-command "pep8"
-  "*Shell command used to run pep8."
+  "Shell command used to run pep8."
   :type 'string
   :group 'python-mode
   :tag "PEP 8 Command")
 
 (defcustom py-pep8-command-args '("")
-  "*List of string arguments to be passed to pep8.
+  "List of string arguments to be passed to pep8.
 
 Default is \"\" "
   :type '(repeat string)
@@ -811,19 +811,19 @@ Default is \"\" "
   :tag "PEP 8 Command Args")
 
 (defcustom py-pyflakespep8-command (concat py-install-directory "/pyflakespep8.py")
-  "*Shell command used to run `pyflakespep8'."
+  "Shell command used to run `pyflakespep8'."
   :type 'string
   :group 'python-mode
   :tag "Pyflakespep8 Command")
 
 (defcustom py-pep8-command "pep8"
-  "*Shell command used to run pep8."
+  "Shell command used to run pep8."
   :type 'string
   :group 'python-mode
   :tag "PEP 8 Command")
 
 (defcustom py-pep8-command-args '("")
-  "*List of string arguments to be passed to pep8.
+  "List of string arguments to be passed to pep8.
 
 Default is \"\" "
   :type '(repeat string)
@@ -831,7 +831,7 @@ Default is \"\" "
   :tag "PEP 8 Command Args")
 
 (defcustom py-pyflakespep8-command-args '("")
-  "*List of string arguments to be passed to pyflakespep8.
+  "List of string arguments to be passed to pyflakespep8.
 
 Default is \"\" "
   :type '(repeat string)
@@ -839,13 +839,13 @@ Default is \"\" "
   :tag "Pyflakes-pep8 Command Args")
 
 (defcustom py-pyflakes-command "pyflakes"
-  "*Shell command used to run Pyflakes."
+  "Shell command used to run Pyflakes."
   :type 'string
   :group 'python-mode
   :tag "Pyflakes Command")
 
 (defcustom py-pyflakes-command-args '("")
-  "*List of string arguments to be passed to pyflakes.
+  "List of string arguments to be passed to pyflakes.
 
 Default is \"\" "
   :type '(repeat string)
@@ -853,7 +853,7 @@ Default is \"\" "
   :tag "Pyflakes Command Args")
 
 (defcustom py-pep8-command-args '("")
-  "*List of string arguments to be passed to pylint.
+  "List of string arguments to be passed to pylint.
 
 Default is \"\" "
   :type '(repeat string)
@@ -861,13 +861,13 @@ Default is \"\" "
   :tag "PEP 8 Command Args")
 
 (defcustom py-pylint-command "pylint"
-  "*Shell command used to run Pylint."
+  "Shell command used to run Pylint."
   :type 'string
   :group 'python-mode
   :tag "Pylint Command")
 
 (defcustom py-pylint-command-args '("--errors-only")
-  "*List of string arguments to be passed to pylint.
+  "List of string arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
   :type '(repeat string)
@@ -875,12 +875,12 @@ Default is \"--errors-only\" "
   :tag "Pylint Command Args")
 
 (defcustom py-shell-input-prompt-1-regexp "^>>> "
-  "*A regular expression to match the input prompt of the shell."
+  "A regular expression to match the input prompt of the shell."
   :type 'string
   :group 'python-mode)
 
 (defcustom py-shell-input-prompt-2-regexp "^[.][.][.] "
-  "*A regular expression to match the input prompt of the shell after the
+  "A regular expression to match the input prompt of the shell after the
   first line of input."
   :type 'string
   :group 'python-mode)
@@ -938,7 +938,7 @@ Also used by (minor-)outline-mode "
   :group 'python-mode)
 
 (defcustom py-hide-show-hide-docstrings t
-  "*Controls if doc strings can be hidden by hide-show"
+  "Controls if doc strings can be hidden by hide-show"
   :type 'boolean
   :group 'python-mode)
 
@@ -991,7 +991,7 @@ See also `py-docstring-style'
 (make-variable-buffer-local 'py-shell-toggle-2)
 
 (defcustom py-match-paren-mode nil
-  "*Non-nil means, cursor will jump to beginning or end of a block.
+  "Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
 Sets `py-match-paren-key' in python-mode-map.
 Customize `py-match-paren-key' which key to use. "
@@ -999,7 +999,7 @@ Customize `py-match-paren-key' which key to use. "
   :group 'python-mode)
 
 (defcustom py-match-paren-key "%"
-  "*String used by \\[comment-region] to comment out a block of code.
+  "String used by \\[comment-region] to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
 that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
@@ -1008,7 +1008,7 @@ should be of the form `#x...' where `x' is not a blank or a tab, and
   :group 'python-mode)
 
 (defcustom py-kill-empty-line t
-  "*If t, py-indent-forward-line kills empty lines. "
+  "If t, py-indent-forward-line kills empty lines. "
   :type 'boolean
   :group 'python-mode)
 
@@ -1022,7 +1022,7 @@ without the user's realization (e.g. to perform completion)."
   :group 'python-mode)
 
 (defcustom py-imenu-show-method-args-p nil
-  "*Controls echoing of arguments of functions & methods in the Imenu buffer.
+  "Controls echoing of arguments of functions & methods in the Imenu buffer.
 When non-nil, arguments are printed."
   :type 'boolean
   :group 'python-mode)
@@ -1479,7 +1479,7 @@ See also command `toggle-py-underscore-word-syntax-p' ")
      (error
       "Couldn't find a usable temp directory -- set `py-temp-directory'"))
     (when erg (setq py-temp-directory erg)))
-  "*Directory used for temporary files created by a *Python* process.
+  "Directory used for temporary files created by a *Python* process.
 By default, guesses the first directory from this list that exists and that you
 can write into: the value (if any) of the environment variable TMPDIR,
 /usr/tmp, /tmp, /var/tmp, or the current directory.
@@ -1720,11 +1720,11 @@ Currently-active file is at the head of the list.")
   "Additional expressions to highlight in Python mode.")
 
 (defvar jython-mode-hook nil
-  "*Hook called by `jython-mode'. `jython-mode' also calls
+  "Hook called by `jython-mode'. `jython-mode' also calls
 `python-mode-hook'.")
 
 (defvar py-shell-hook nil
-  "*Hook called by `py-shell'.")
+  "Hook called by `py-shell'.")
 
 (defvar ipython-completion-command-string nil
   "Either ipython0.10-completion-command-string or ipython0.11-completion-command-string.
@@ -16240,7 +16240,7 @@ Keegan Carruthers-Smith
 
 ;; pep8
 (defun py-pep8-run (command)
-  "*Run pep8, check formatting (default on the file currently visited).
+  "Run pep8, check formatting (default on the file currently visited).
 "
   (interactive
    (let ((default
@@ -16286,7 +16286,7 @@ Keegan Carruthers-Smith
 ;; Pylint
 (defalias 'pylint 'py-pylint-run)
 (defun py-pylint-run (command)
-  "*Run pylint (default on the file currently visited).
+  "Run pylint (default on the file currently visited).
 
 For help see M-x pylint-help resp. M-x pylint-long-help.
 Home-page: http://www.logilab.org/project/pylint "
@@ -16342,7 +16342,7 @@ Calls `pylint --full-documentation'"
 ;; Pyflakes
 (defalias 'pyflakes 'py-pyflakes-run)
 (defun py-pyflakes-run (command)
-  "*Run pyflakes (default on the file currently visited).
+  "Run pyflakes (default on the file currently visited).
 
 For help see M-x pyflakes-help resp. M-x pyflakes-long-help.
 Home-page: http://www.logilab.org/project/pyflakes "
@@ -16420,7 +16420,7 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
 ;; Pyflakes-pep8
 (defalias 'pyflakespep8 'py-pyflakespep8-run)
 (defun py-pyflakespep8-run (command)
-  "*Run pyflakespep8, check formatting (default on the file currently visited).
+  "Run pyflakespep8, check formatting (default on the file currently visited).
 "
   (interactive
    (let ((default
@@ -16511,7 +16511,7 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
 
 ;; Pychecker
 (defun py-pychecker-run (command)
-  "*Run pychecker (default on the file currently visited)."
+  "Run pychecker (default on the file currently visited)."
   (interactive
    (let ((default
            (if (buffer-file-name)
