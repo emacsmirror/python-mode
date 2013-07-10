@@ -14064,6 +14064,36 @@ Toggle flymake-mode running `pyflakespep8' "])
 
                     )
 
+                   ("Execute"
+                    ["Enforce py-output-buffer"
+                     (setq py-enforce-output-buffer-p
+                           (not py-enforce-output-buffer-p))
+                     :help " `py-enforce-output-buffer-p'
+
+When non-nil, value of `py-output-buffer' is used for output,
+regardless of environment\. Default is nil."
+                     :style toggle :selected py-enforce-output-buffer-p]
+
+                    ["Execute \"if name == main\" blocks p"
+                     (setq py-if-name-main-permission-p
+                           (not py-if-name-main-permission-p))
+                     :help " `py-if-name-main-permission-p'
+
+Allow execution of code inside blocks delimited by
+if __name__ == '__main__'
+
+Default is non-nil. "
+                     :style toggle :selected py-if-name-main-permission-p]
+
+
+                    ["Store result" py-store-result-p
+                     :help " `py-store-result-p'
+
+When non-nil, put resulting string of `py-execute-\.\.\.' into kill-ring, so it might be yanked\. . "
+                     :style toggle :selected py-store-result-p]
+
+                    )
+
                    ("TAB related"
 
                     ["indent-tabs-mode"
@@ -14294,16 +14324,14 @@ Use `M-x customize-variable' to set it permanently"]
 
                      )
 
-                    ["Highlight indentation"
-                     (setq highlight-indentation
-                           (not highlight-indentation))
+                    ["Highlight indentation" highlight-indentation
                      :help "Toggle highlight indentation\.
-Optional argument INDENT-WIDTH specifies which indentation
-level (spaces only) should be highlighted, if omitted
-indent-width will be guessed from current major-mode
 
-Use `M-x customize-variable' to set it permanently"
-                     :style toggle :selected highlight-indentation]
+Use `M-x customize-variable' to set it permanently
+
+Make sure `highlight-indentation' is  installed"
+
+                     ]
 
                     ["Electric comment "
                      (setq py-electric-comment-p
@@ -14344,17 +14372,6 @@ Make sure, `py-underscore-word-syntax-p' is off\.
 Returns value of `py-underscore-word-syntax-p'\. .
 
 Use `M-x customize-variable' to set it permanently"])
-
-                   ["Execute \"if name == main\" blocks p"
-                    (setq py-if-name-main-permission-p
-                          (not py-if-name-main-permission-p))
-                    :help " `py-if-name-main-permission-p'
-
-Allow execution of code inside blocks delimited by
-if __name__ == '__main__'
-
-Default is non-nil. "
-                    :style toggle :selected py-if-name-main-permission-p]
 
                    ["Jump on exception"
                     (setq py-jump-on-exception
@@ -20286,13 +20303,22 @@ continuation lines.  Paragraphs are separated by blank lines only.
 
 COMMANDS
 
+`py-shell'\tStart an interactive Python interpreter in another window
+`py-execute-statement'\tSend statement at point to a Python interpreter
+`py-beginning-of-statement'\tGo to the initial line of a simple statement
+
+etc.
+
+See available commands listed in files commands-python-mode at directory doc
+
 VARIABLES
 
-py-indent-offset\t\tindentation increment
-py-block-comment-prefix\t\tcomment string used by `comment-region'
-py-shell-name\t\tshell command to invoke Python interpreter
-py-temp-directory\t\tdirectory used for temp files (if needed)
-py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
+`py-indent-offset'	indentation increment
+`py-shell-name'		shell command to invoke Python interpreter
+`py-split-windows-on-execute-p'		When non-nil split windows
+`py-switch-buffers-on-execute-p'	When non-nil switch to the Python output buffer
+
+See available customizations listed in files variables-python-mode at directory doc
 
 \\{python-mode-map}"
   :group 'python-mode
@@ -20380,7 +20406,6 @@ py-beep-if-tab-change\t\tring the bell if `tab-width' is changed
   (when py-menu
     (easy-menu-add py-menu))
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
-  ;; (py-send-string "import emacs")
 
   (when py-start-run-py-shell
     ;; py-shell may split window, provide restore
