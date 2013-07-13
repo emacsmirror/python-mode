@@ -1852,10 +1852,6 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
     ;; (modify-syntax-entry ?\" "." st)
     st))
 
-(defvar virtualenv-workon-home nil)
-
-(defvar virtualenv-name nil)
-
 (defvar py-imports nil)
 
 (defvar highlight-indentation nil
@@ -2906,7 +2902,7 @@ FILE-NAME."
 
 ;;;
 
-(defun python-shell-completion--get-completions (input process completion-code)
+(defun py-shell-completion--get-completions (input process completion-code)
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
@@ -2923,7 +2919,7 @@ completions on the current context."
     (when imports (py-send-string-no-output imports process))
     (let* ((code python-shell-module-completion-string-code)
            (completions
-            (python-shell-completion--get-completions
+            (py-shell-completion--get-completions
              input process code))
            (completion (when completions
                          (try-completion input completions))))
@@ -9819,8 +9815,6 @@ named file instead of the buffer's file.
 
 When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
 
-When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
-
 Optional arguments DEDICATED (boolean) and SWITCH (symbols 'noswitch/'switch) "
   (interactive "P")
   (let* ((wholebuf t)
@@ -11966,6 +11960,19 @@ of the first definition found."
         (define-key map [(meta tab)] 'py-shell-complete)
         map))
 
+(defun py-toggle-local-default-use ()
+  (interactive)
+  "Toggle boolean value of `py-use-local-default'.
+
+Returns `py-use-local-default'
+
+See also `py-install-local-shells'
+Installing named virualenv shells is the preffered way,
+as it leaves your system default unchanged."
+  (setq py-use-local-default (not py-use-local-default))
+  (when (interactive-p) (message "py-use-local-default set to %s" py-use-local-default))
+  py-use-local-default)
+
 (defun py-choose-shell-by-path (&optional file-separator-char)
   "Select Python executable according to version desplayed in path, current buffer-file is selected from.
 
@@ -12168,6 +12175,7 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there.
       erg)))
 
 ;;;
+
 
 (defun py-normalize-directory (directory &optional file-separator-char)
   "Make sure DIRECTORY ends with a file-path separator char.
@@ -13944,7 +13952,60 @@ Send file to a Bpython interpreter\.
 Uses a dedicated shell\.
 Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "])))
                  "-"
-                 ["Import/reload file"   py-execute-import-or-reload t]
+                 ("Virtualenv"
+
+                  ["Virtualenv workon" virtualenv-workon
+                   :help " runs `virtualenv-workon'
+
+Make sure virtualenv is provided
+
+"]
+
+                  ["Virtualenv activate" virtualenv-activate
+                   :help " `virtualenv-activate'
+
+Activate the virtualenv located in DIR. "]
+
+                  ["Virtualenv deactivate" virtualenv-deactivate
+                   :help " `virtualenv-deactivate'
+
+Deactivate the current virtual enviroment. "]
+
+
+                  ["Virtualenv p" virtualenv-p
+                   :help " `virtualenv-p'
+
+Check if a directory is a virtualenv. "]
+
+                  )
+
+                 ["Execute import or reload" py-execute-import-or-reload
+                  :help " `py-execute-import-or-reload'
+
+Import the current buffer's file in a Python interpreter\.
+
+If the file has already been imported, then do reload instead to get
+the latest version\.
+
+If the file's name does not end in "\.py", then do execfile instead\.
+
+If the current buffer is not visiting a file, do `py-execute-buffer'
+instead\.
+
+If the file local variable `py-master-file' is non-nil, import or
+reload the named file instead of the buffer's file\.  The file may be
+saved based on the value of `py-execute-import-or-reload-save-p'\.
+
+See also `M-x py-execute-region'\.
+
+This may be preferable to `M-x py-execute-buffer' because:
+
+ - Definitions stay in their module rather than appearing at top
+   level, where they would clutter the global namespace and not affect
+   uses of qualified names (MODULE\.NAME)\.
+
+ - The Python debugger gets line number information about the functions\.. "]
+
                  ["Describe mode"        py-describe-mode t]
                  ["Debugger" pdb :help "`pdb' Run pdb under GUD"]
                  ("Checks"
@@ -14049,6 +14110,14 @@ Toggle flymake-mode running `pyflakespep8' "])
                    :help "Toggle useful modes like `highlight-indentation'"
 
                    ("Interpreter"
+
+                    ["Execute without temporary file"
+                     (setq py-execute-no-temp-p
+                           (not py-execute-no-temp-p))
+                     :help " `py-execute-no-temp-p'
+Seems Emacs-24\.3 provided a way executing stuff without temporary files.
+In experimental state yet "
+                     :style toggle :selected py-execute-no-temp-p]
 
                     ["Enforce py-shell-name" force-py-shell-name-p-on
                      :help "Enforce customized default `py-shell-name' should upon execution. "]
@@ -16667,6 +16736,11 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
 
 ;; M-x virtualenv-deactivate
 
+
+(defvar virtualenv-workon-home nil)
+
+(defvar virtualenv-name nil)
+
 (if (getenv "WORKON_HOME")
     (setq virtualenv-workon-home (getenv "WORKON_HOME"))
   (setq virtualenv-workon-home "~/.virtualenvs"))
@@ -16698,7 +16772,7 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
                                   (getenv "PATH"))))
 
 (defun virtualenv-current ()
-  "barfs the current activated virtualenv"
+  "Barfs the current activated virtualenv"
   (interactive)
   (message virtualenv-name))
 
@@ -16734,7 +16808,7 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
 
   (setq virtualenv-name nil))
 
-(defun virtualenvp (dir)
+(defun virtualenv-p (dir)
   "Check if a directory is a virtualenv"
   (file-exists-p (concat dir "/bin/activate")))
 
@@ -16747,7 +16821,7 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
     ;; paths
     (mapcar 'file-name-nondirectory
             ;; Filter the directories and then the virtual environments
-            (virtualenv-filter 'virtualenvp
+            (virtualenv-filter 'virtualenv-p
                                (virtualenv-filter 'file-directory-p filelist)))))
 
 (defun virtualenv-workon (name)
@@ -16756,19 +16830,6 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
   (if (getenv "WORKON_HOME")
       (virtualenv-activate (concat (py-normalize-directory (getenv "WORKON_HOME")) name))
     (virtualenv-activate (concat (py-normalize-directory virtualenv-workon-home) name))))
-
-(defun py-toggle-local-default-use ()
-  (interactive)
-  "Toggle boolean value of `py-use-local-default'.
-
-Returns `py-use-local-default'
-
-See also `py-install-local-shells'
-Installing named virualenv shells is the preffered way,
-as it leaves your system default unchanged."
-  (setq py-use-local-default (not py-use-local-default))
-  (when (interactive-p) (message "py-use-local-default set to %s" py-use-local-default))
-  py-use-local-default)
 
 ;;; Execute
 (defun py-execute-statement (&optional shell dedicated switch)
