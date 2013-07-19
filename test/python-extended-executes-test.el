@@ -18,8 +18,6 @@
 ;;; Code:
 
 
-(require 'py-bug-numbered-tests)
-
 (defun py-execute-statement-python-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "print(\"I'm the py-execute-statement-python-test\")"))
