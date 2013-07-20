@@ -1494,14 +1494,13 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (make-variable-buffer-local 'py-exec-command)
 
 (defvar py-buffer-name nil
-  "Internally set. ")
+  "Internal use. ")
 
 (defvar py-dedicated-process-p nil
-  "Internally set. ")
-
+  "Internal use. ")
 
 (defvar py-orig-buffer-or-file nil
-  "Internally set. ")
+  "Internal use. ")
 
 (defvar py-python-major-version nil
   "Internally used. ")
@@ -9365,25 +9364,6 @@ When called from a programm, it accepts a string specifying a shell which will b
   (when (buffer-live-p localname)
     (kill-buffer localname)))
 
-(defun py-execute-file-intern ()
-  (if (file-readable-p tempfile)
-      (progn
-        ;; (and (string-match "[Ii]python" py-shell-name)
-        ;; (sit-for py-ipython-execute-delay))
-        (setq erg (py-execute-file-base nil tempfile nil nil py-orig-buffer-or-file))
-        (sit-for 0.1)
-        (setq err-p (py-postprocess-output-buffer py-buffer-name))
-        (when py-enforce-output-buffer-p
-          (setq output-buffer py-output-buffer)
-          ;; maybe (or py-execute-python-mode-v5 ?
-          (set-buffer (get-buffer-create output-buffer))
-          (erase-buffer)
-          (insert erg))
-        (py-shell-manage-windows (or output-buffer py-buffer-name) windows-displayed windows-config err-p)
-        (when py-verbose-p (message "Output buffer: %s" py-buffer-name))
-        (sit-for 0.1))
-    (message "%s not readable. %s" file "Do you have write permissions?")))
-
 (defun py-execute-buffer-file (py-dedicated-process-p file)
   (if (file-readable-p file)
       (progn
@@ -9432,7 +9412,7 @@ When called from a programm, it accepts a string specifying a shell which will b
     (write-region (point-min) (point-max) tempfile nil t nil 'ask)
     (set-buffer-modified-p 'nil)
     (unwind-protect
-        (py-execute-file-intern)
+        (py-execute-file tempfile)
       (and py-cleanup-temporary
            (py-delete-temporary tempfile tempbuf)))
     (and py-store-result-p (kill-new erg))
@@ -9842,24 +9822,26 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
   (replace-regexp-in-string
    (concat "\n?\\(" py-shell-input-prompt-1-regexp "\\|" py-shell-input-prompt-2-regexp "\\|" "^In \\[[0-9]+\\]: *" "\\)") "" string))
 
-(defun py-execute-file (&optional filename shell py-dedicated-process-p switch)
+(defun py-execute-file (file)
   "When called interactively, user is prompted for filename. "
-  (interactive "fFile: ")
-  (let* ((file (or (expand-file-name filename) (when (ignore-errors (file-readable-p (buffer-file-name))) (buffer-file-name))))
-         (shell (or shell (progn (with-temp-buffer (insert-file-contents file)(py-choose-shell)))))
-         (name (py-process-name shell py-dedicated-process-p))
-         (proc (get-buffer-process (py-shell nil py-dedicated-process-p (or shell (downcase name)))))
-         (py-buffer-name (buffer-name (process-buffer proc)))
-         (comint-scroll-to-bottom-on-output t)
-         erg)
-    (if (file-readable-p file)
-        (progn
-          (setq py-exception-buffer file)
-          (setq erg (py-execute-file-base proc file))
-          (py-shell-manage-windows py-buffer-name)
-          (sit-for 0.1)
-          erg)
-      (message "File not readable: %s" "Do you have write permissions?"))))
+  (interactive "fFilename")
+  (if (file-readable-p file)
+      (progn
+        ;; (and (string-match "[Ii]python" py-shell-name)
+        ;; (sit-for py-ipython-execute-delay))
+        (setq erg (py-execute-file-base nil file nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) file)))
+        (sit-for 0.1)
+        (setq err-p (py-postprocess-output-buffer py-buffer-name))
+        (if py-enforce-output-buffer-p
+            (progn
+              (set-buffer (get-buffer-create py-output-buffer))
+              (erase-buffer)
+              (insert erg)
+              (py-shell-manage-windows py-output-buffer windows-displayed windows-config err-p))
+          (py-shell-manage-windows py-buffer-name windows-displayed windows-config err-p))
+        (when py-verbose-p (message "Output buffer: %s" py-buffer-name))
+        (sit-for 0.1))
+    (message "%s not readable. %s" file "Do you have write permissions?")))
 
 (defun py-update-separator-char ()
   "Return the file-path separator char from current machine.
