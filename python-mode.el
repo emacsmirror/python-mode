@@ -9364,26 +9364,6 @@ When called from a programm, it accepts a string specifying a shell which will b
   (when (buffer-live-p localname)
     (kill-buffer localname)))
 
-(defun py-execute-buffer-file (py-dedicated-process-p file)
-  (if (file-readable-p file)
-      (progn
-        (when (string-match "ipython" (process-name proc))
-          (sit-for py-ipython-execute-delay))
-        (setq erg (py-execute-file-base nil file))
-        (sit-for 0.2)
-        (if (string-match (concat py-pdbtrack-input-prompt "\\|" py-pydbtrack-input-prompt) erg)
-            (set-buffer procbuf)
-          (setq err-p (py-postprocess-output-buffer procbuf py-exception-buffer))
-          (if err-p
-              (progn
-                (setnth 1 err-p (1- (nth 1 err-p)))
-                (py-jump-to-exception err-p py-exception-buffer))
-            (py-shell-manage-windows py-buffer-name))
-          (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
-            (when py-verbose-p (message "Output buffer: %s" procbuf)))))
-    (message "%s not readable. %s" file "Do you have permissions?"))
-  erg)
-
 (defun py-execute-buffer-finally (start end &optional py-dedicated-process-p)
   (let* ((strg (buffer-substring-no-properties start end))
          (line (save-restriction (widen) (count-lines (point-min) start)))
@@ -9514,7 +9494,7 @@ When called from a programm, it accepts a string specifying a shell which will b
            (py-execute-ge24.3 start end py-dedicated-process-p file))
           ;; No need for a temporary file than
           ((and (not (buffer-modified-p)) file)
-           (py-execute-buffer-file py-dedicated-process-p file))
+           (py-execute-file file))
           (t (py-execute-buffer-finally start end py-dedicated-process-p)))))
 
 (defun py-execute-string (&optional string shell py-dedicated-process-p)
