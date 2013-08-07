@@ -11208,11 +11208,11 @@ Needed when file-path names are contructed from maybe numbered buffer names like
         ;; no split, no switch
         ((not py-switch-buffers-on-execute-p)
          ;; (if (equal (window-list-1) windows-displayed)
-             ;; (jump-to-register 313465889)
-           (let (pop-up-windows)
-             (set-buffer py-exception-buffer)
-             (switch-to-buffer (current-buffer)))
-           ;; )
+         ;; (jump-to-register 313465889)
+         (let (pop-up-windows)
+           (set-buffer py-exception-buffer)
+           (switch-to-buffer (current-buffer)))
+         ;; )
          )))
 
 (defun py-report-executable (py-buffer-name)
@@ -14241,6 +14241,13 @@ Use `M-x customize-variable' to set it permanently"
                     )
 
                    ("Indent"
+
+                    ["Electric colon"
+                     (setq py-electric-colon-active-p
+                           (not py-electric-colon-active-p))
+                     :help " `py-electric-colon-active-p'
+
+`py-electric-colon' feature\.  Default is `nil'\. See lp:837065 for discussions\. . "]
 
                     ["Indent comment "
                      (setq py-indent-comments
