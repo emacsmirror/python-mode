@@ -4250,9 +4250,17 @@ When indent is set back manually, this is honoured in following lines. "
       (save-excursion
         (goto-char orig)
         (if (empty-line-p)
-            (delete-trailing-whitespace (line-beginning-position) pos)
+            (if (string-match "23.4" emacs-version)
+                (progn (save-restriction
+                         (narrow-to-region (point) pos)
+                         (delete-trailing-whitespace)))
+              (delete-trailing-whitespace (line-beginning-position) pos))
           (skip-chars-backward " \t")
-          (delete-trailing-whitespace (point)  pos))))
+          (if (string-match "23.4" emacs-version)
+              (progn (save-restriction
+                       (narrow-to-region (point) pos)
+                       (delete-trailing-whitespace)))
+            (delete-trailing-whitespace (point) (marker-position pos))))))
     (setq erg (indent-to-column (py-compute-indentation)))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
@@ -5749,7 +5757,7 @@ complete docstring according to setting of `py-docstring-style' "
                              (point-marker)))))
              ;; Assume docstrings at BOL resp. indentation
              (docstring (and (not (eq 'no docstring))(py-docstring-p (nth 8 pps))))
-             (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"'")(copy-marker (point))))
+             (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"' \t\f\n")(copy-marker (point))))
                       (progn (goto-char (nth 8 pps)) (scan-sexps (point) 1) (skip-chars-backward "\"'") (point-marker))))
              multi-line-p
              delimiters-style
@@ -9471,7 +9479,6 @@ When called from a programm, it accepts a string specifying a shell which will b
 (defun py-execute-base (start end &optional py-dedicated-process-p file)
   "Select the handler. "
   (let* ((windows-config (window-configuration-to-register 313465889))
-         (windows-displayed (window-list-1))
          (py-shell-name (or py-shell-name (py-choose-shell)))
          (py-exception-buffer (current-buffer))
          (execute-directory
@@ -9817,8 +9824,8 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
               (set-buffer (get-buffer-create py-output-buffer))
               (erase-buffer)
               (insert erg)
-              (py-shell-manage-windows py-output-buffer windows-displayed windows-config err-p))
-          (py-shell-manage-windows py-buffer-name windows-displayed windows-config err-p))
+              (py-shell-manage-windows py-output-buffer nil windows-config err-p))
+          (py-shell-manage-windows py-buffer-name nil windows-config err-p))
         (when py-verbose-p (message "Output buffer: %s" py-buffer-name))
         (sit-for 0.1))
     (message "%s not readable. %s" file "Do you have write permissions?")))
@@ -11167,7 +11174,7 @@ Needed when file-path names are contructed from maybe numbered buffer names like
 
 (defun py-shell-manage-windows (output-buffer &optional windows-displayed windows-config err-p)
   (cond (err-p
-         (and (eq 1 (length windows-displayed))
+         (and windows-displayed (eq 1 (length windows-displayed))
               (funcall py-split-windows-on-execute-function)
               (display-buffer output-buffer))
          (py-jump-to-exception err-p py-exception-buffer))
@@ -11200,11 +11207,13 @@ Needed when file-path names are contructed from maybe numbered buffer names like
            (switch-to-buffer (current-buffer))))
         ;; no split, no switch
         ((not py-switch-buffers-on-execute-p)
-         (if (equal (window-list-1) windows-displayed)
-             (jump-to-register 313465889)
+         ;; (if (equal (window-list-1) windows-displayed)
+             ;; (jump-to-register 313465889)
            (let (pop-up-windows)
              (set-buffer py-exception-buffer)
-             (switch-to-buffer (current-buffer)))))))
+             (switch-to-buffer (current-buffer)))
+           ;; )
+         )))
 
 (defun py-report-executable (py-buffer-name)
   (let ((erg (downcase (replace-regexp-in-string

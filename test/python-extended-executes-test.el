@@ -2262,7 +2262,7 @@
 (defun py-execute-line-python-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "print(\"I'm the py-execute-line-python-test\")"))
-    (py-bug-tests-intern 'py-execute-line-python-base arg teststring)))
+    (py-bug-tests-intern 'py-execute-line-python-base t teststring)))
 
 (defun py-execute-line-python-base ()
   (assert (stringp (py-execute-line-python)) nil "py-execute-line-python-test failed"))
