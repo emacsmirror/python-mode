@@ -469,7 +469,20 @@ In result cursor is insided emptied delimited form."
   :group 'python-mode)
 
 (defcustom py-electric-colon-active-p nil
-  "`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions. "
+  "`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions.
+
+See also `py-electric-colon-bobl-only' "
+  :type 'boolean
+  :group 'python-mode)
+
+
+
+(defcustom py-electric-colon-bobl-only t
+
+  "When inserting a colon, do not indent lines unless at beginning of block
+
+See lp:1207405 resp. `py-electric-colon-active-p' "
+
   :type 'boolean
   :group 'python-mode)
 
@@ -3917,6 +3930,8 @@ Switched by `py-electric-colon-active-p', default is nil
 See also `py-electric-colon-greedy-p' "
   (interactive "*P")
   (cond ((not py-electric-colon-active-p)
+         (self-insert-command (prefix-numeric-value arg)))
+        ((and py-electric-colon-bobl-only (save-excursion (py-beginning-of-statement) (not (py-beginning-of-block-p))))
          (self-insert-command (prefix-numeric-value arg)))
         ((eq 4 (prefix-numeric-value arg))
          (self-insert-command 1))
@@ -14004,6 +14019,15 @@ In experimental state yet "
                     ["Remove local Python shell enforcement, restore default" py-force-local-shell-off
                      :help "Restore `py-shell-name' default value and `behaviour'. "]
 
+
+                    ["Run `py-shell' at start"
+                     (setq py-start-run-py-shell
+                           (not py-start-run-py-shell))
+                     :help "If `python-mode' should start a python-shell, `py-shell'\.
+
+Default is `nil'\. Use `M-x customize-variable' to set it permanently"
+                     :style toggle :selected py-start-run-py-shell]
+
                     )
 
                    ("Execute"
@@ -14234,6 +14258,15 @@ Use `M-x customize-variable' to set it permanently"
                      :help " `py-electric-colon-active-p'
 
 `py-electric-colon' feature\.  Default is `nil'\. See lp:837065 for discussions\. . "]
+
+
+                    ["Electric colon at beginning of block only"
+                     (setq py-electric-colon-bobl-only
+                           (not py-electric-colon-bobl-only))
+                     :help "When inserting a colon, do not indent lines unless at beginning of block.
+
+Use `M-x customize-variable' to set it permanently"
+                     :style toggle :selected py-electric-colon-bobl-only]
 
                     ["Indent comment "
                      (setq py-indent-comments
