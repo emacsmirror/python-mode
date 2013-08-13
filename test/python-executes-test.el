@@ -89,5 +89,23 @@
 (defun py-execute-line-base ()
   (assert (eq nil (py-execute-line)) nil "py-execute-line-test failed"))
 
+
+
+(defun beginning-of-block-fails-from-wrong-indent-test (&optional arg)
+  (interactive "p")
+  (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+with file(\"roulette-\" + zeit + \".csv\", 'w') as datei:
+ for i in range(anzahl):
+        klauf.pylauf()
+            datei.write(str(spiel[i]) + \"\\n\")
+"))
+  (py-bug-tests-intern 'beginning-of-block-fails-from-wrong-indent-base arg teststring)))
+
+(defun beginning-of-block-fails-from-wrong-indent-base ()
+    (goto-char 102)
+    (assert (eq 48 (py-beginning-of-block)) nil "beginning-of-block-fails-from-wrong-indent-test failed"))
+
+
 (provide 'python-executes-test)
 ;;; python-executes-test.el ends here
