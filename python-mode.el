@@ -475,8 +475,6 @@ See also `py-electric-colon-bobl-only' "
   :type 'boolean
   :group 'python-mode)
 
-
-
 (defcustom py-electric-colon-bobl-only t
 
   "When inserting a colon, do not indent lines unless at beginning of block
@@ -1076,6 +1074,14 @@ Making switch between several virtualenv's easier,
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-prompt-on-changed-p t
+  "When called interactively, ask for save before a changed buffer is sent to interpreter.
+
+Default is `t'"
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-dedicated-process-p nil
   "If commands executing code use a dedicated shell.
 
@@ -1422,7 +1428,6 @@ SYMMETRIC:
   "."
   :group 'python-mode)
 (defvar py-exception-name-face 'py-exception-name-face)
-
 
 (defvar virtualenv-old-path)
 
@@ -9474,6 +9479,7 @@ When called from a programm, it accepts a string specifying a shell which will b
          (tempbuf (get-buffer-create temp))
          (wholebuf (when (boundp 'wholebuf) wholebuf))
          erg err-p lineadd output-buffer)
+    ;; (message "%s" strg)
     (set-buffer tempbuf)
     (erase-buffer)
     (unless py-if-name-main-permission-p
@@ -9483,17 +9489,18 @@ When called from a programm, it accepts a string specifying a shell which will b
                   "if __name__ == '__main__ ':" strg)))
     (insert strg)
     (py-fix-start (point-min)(point-max))
-    (py-if-needed-insert-shell)
-    (unless wholebuf (py-insert-coding))
-    (unless (string-match "[jJ]ython" py-shell-name) (py-insert-execute-directory execute-directory))
+    ;; (py-if-needed-insert-shell)
+    ;; (unless wholebuf (py-insert-coding))
+    ;; (unless (string-match "[jJ]ython" py-shell-name) (py-insert-execute-directory execute-directory))
     ;; fix offline amount, make erorr point at the correct line
-    (setq lineadd (- line (+ 2 (count-lines (point-min) (point)))))
-    (and (< 0 lineadd) (insert (make-string lineadd 10)))
+    ;; (setq lineadd (- line (+ 2 (count-lines (point-min) (point)))))
+    ;; (and (< 0 lineadd) (insert (make-string lineadd 10)))
     (set-buffer tempbuf)
     (write-region (point-min) (point-max) tempfile nil t nil 'ask)
     (set-buffer-modified-p 'nil)
     (unwind-protect
-        (py-execute-file tempfile)
+        (py-execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory)
+      (sit-for 0.1)
       (and py-cleanup-temporary
            (py-delete-temporary tempfile tempbuf)))
     (and py-store-result-p (kill-new erg))
@@ -9569,8 +9576,10 @@ When called from a programm, it accepts a string specifying a shell which will b
       (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
         (when py-verbose-p (message "Output buffer: %s" procbuf))))))
 
-(defun py-execute-base (start end &optional shell file)
-  "Select the handler. "
+(defun py-execute-base (&optional start end shell filename proc file)
+  "Select the handler.
+
+When optional FILE is `t', no temporary file is needed. "
   (let* ((windows-config (window-configuration-to-register 313465889))
          (py-shell-name (or shell (py-choose-shell)))
          (py-exception-buffer (current-buffer))
@@ -9586,16 +9595,27 @@ When called from a programm, it accepts a string specifying a shell which will b
                 ((getenv "VIRTUAL_ENV"))
                 (t (getenv "HOME"))))
          (py-buffer-name (or py-buffer-name (py-buffer-name-prepare)))
-         (py-orig-buffer-or-file (or file (current-buffer))))
+         (filename (and filename (expand-file-name filename)))
+         (py-orig-buffer-or-file (or filename (current-buffer)))
+         (proc (or proc (if py-dedicated-process-p
+                            (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))
+                          (or (and (boundp 'py-buffer-name) (get-buffer-process py-buffer-name))
+                              (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t)))))))
+    (set-buffer py-exception-buffer)
+    (py-update-execute-directory proc py-buffer-name execute-directory)
     (cond (;; enforce proceeding as python-mode.el v5
            python-mode-v5-behavior-p
            (py-execute-python-mode-v5 start end))
           (py-execute-no-temp-p
-           (py-execute-ge24.3 start end file execute-directory))
-          ;; No need for a temporary file than
-          ((and (not (buffer-modified-p)) file)
-           (py-execute-file file))
-          (t (py-execute-buffer-finally start end execute-directory)))))
+           (py-execute-ge24.3 start end filename execute-directory))
+          ;; No need for a temporary filename than
+          ((or file (and (not (buffer-modified-p)) filename))
+           (py-execute-file-base proc filename nil py-buffer-name filename execute-directory)
+           ;; (py-execute-file filename)
+           )
+          (t
+           ;; (message "%s" (current-buffer) )
+           (py-execute-buffer-finally start end execute-directory)))))
 
 (defun py-execute-string (&optional string shell)
   "Send the argument STRING to a Python interpreter.
@@ -9795,7 +9815,15 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
 (defun py-execute-buffer ()
   "Send the contents of the buffer to a Python interpreter. "
   (interactive)
-  (py-execute-buffer-base))
+  (if (and py-prompt-on-changed-p (buffer-file-name) (interactive-p) (buffer-modified-p))
+      (if (y-or-n-p "Buffer changed, save first? ")
+          (progn
+            (write-file (buffer-file-name))
+            (py-execute-buffer-base))
+        (py-execute-region (point-min) (point-max)))
+    (if (buffer-file-name)
+        (py-execute-buffer-base)
+      (py-execute-region (point-min) (point-max)))))
 
 (defun py-execute-buffer-base ()
   "Honor `py-master-file'. "
@@ -9803,12 +9831,8 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
          (file
           (if py-master-file
               (expand-file-name py-master-file)
-            (buffer-file-name)))
-         (beg (point-min))
-         (end (point-max)))
-    (if file
-        (py-execute-file file)
-      (py-execute-region beg end))))
+            (buffer-file-name))))
+    (py-execute-file file)))
 
 (defun py-execute-buffer-no-switch ()
   "Send the contents of the buffer to a Python interpreter but don't switch to output. "
@@ -9855,26 +9879,12 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
 
 (defun py-execute-file (file)
   "When called interactively, user is prompted for filename. "
-  (interactive "fFilename")
-  (let ((windows-config (window-configuration-to-register 313465889))
-        erg err-p)
+  (interactive "fFilename: ")
+  (let (erg)
     (if (file-readable-p file)
-        (progn
-          ;; (and (string-match "[Ii]python" py-shell-name)
-          ;; (sit-for py-ipython-execute-delay))
-          (setq erg (py-execute-file-base nil file nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) file)))
-          (sit-for 0.1)
-          (setq err-p (py-postprocess-output-buffer py-buffer-name))
-          (if py-enforce-output-buffer-p
-              (progn
-                (set-buffer (get-buffer-create py-output-buffer))
-                (erase-buffer)
-                (insert erg)
-                (py-shell-manage-windows py-output-buffer nil windows-config err-p))
-            (py-shell-manage-windows py-buffer-name nil windows-config err-p))
-          (when py-verbose-p (message "Output buffer: %s" py-buffer-name))
-          (sit-for 0.1))
-      (message "%s not readable. %s" file "Do you have write permissions?"))))
+        (setq erg (py-execute-base nil nil nil file nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) file)))
+      (message "%s not readable. %s" file "Do you have write permissions?"))
+    erg))
 
 (defun py-update-separator-char ()
   "Return the file-path separator char from current machine.
@@ -9894,42 +9904,56 @@ Returns char found. "
       (setq erg (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -W ignore" " -c \"import os; print(os.sep)\"")))))
     erg))
 
-(defun py-execute-file-base (&optional proc filename cmd procbuf origfile)
+(defun py-current-working-directory (&optional shell)
+  "Return the directory of current `py-shell'."
+  (replace-regexp-in-string "\n" "" (shell-command-to-string (concat (or shell py-shell-name) " -c \"import os; print(os.getcwd())\""))))
+
+(defun py-update-execute-directory-intern (dir proc)
+  (comint-send-string proc (concat "import os;os.chdir(\"" dir "\")\n")))
+
+(defun py-update-execute-directory (proc procbuf execute-directory)
+  (let ((orig (point))
+        (oldbuf (current-buffer)))
+    (set-buffer procbuf)
+    (unless (string= execute-directory (py-current-working-directory))
+      (py-update-execute-directory-intern (or py-execute-directory execute-directory) proc))
+    ;; (delete-region orig (point-max))
+    (set-buffer oldbuf)))
+
+(defun py-execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 
 Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 `kill-output-from-shell' does The Right Thing.
 Returns position where output starts. "
-  (let* ((proc (or proc (if py-dedicated-process-p
-                            (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))
-                          (or (and (boundp 'py-buffer-name) (get-buffer-process py-buffer-name))
-                              (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t))))))
-         (procbuf (or procbuf (process-buffer proc)))
-         ;; filename might be a temporary, message the orig rather
+  (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
          (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
-         (cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
          erg orig)
-    (and py-verbose-p
-         (unwind-protect
-             (save-excursion
-               (set-buffer procbuf)
-               (funcall (process-filter proc) proc msg))))
     (set-buffer procbuf)
+    ;; (and py-verbose-p (funcall (process-filter proc) proc msg))
     (goto-char (point-max))
+    ;; (switch-to-buffer (current-buffer))
     (setq orig (point))
     (comint-send-string proc cmd)
-    (goto-char (point-max))
-    (sit-for 0.1)
-    (setq py-output-buffer (current-buffer))
-    ;; (process-send-string proc cmd)
-    (setq erg
-          (py-output-filter
-           (buffer-substring-no-properties orig (point))))
-    ;; "Traceback (most recent call last):\n File \"<stdin>\", line 1, in <module>\n File \"/tmp/python3-6503yvo.py\", line 135\n print(44*0e)\n ^\nSyntaxError: invalid token"
-    (and origfile (string-match "\\(.+\\) File \"[^\"]+\", line \\(.+\\)" erg)
-         (setq erg (replace-regexp-in-string "\\(.+\\) File \"[^\"]+\", line \\(.+\\)" (concat (match-string-no-properties 1) " File \"" (or (and (stringp origfile) origfile)(buffer-name origfile)) "\", line " (match-string-no-properties 2)) erg)))
-    erg))
+    ;; (switch-to-buffer (current-buffer))
+    ;; (goto-char (point-max))
+    ;; (sit-for 0.1)
+    ;; no exception-buffer if just a file is executed
+    (if
+        (setq err-p (py-postprocess-output-buffer (buffer-name (current-buffer))))
+        (progn
+          (py-jump-to-exception err-p procbuf origfile)
+          (py-shell-manage-windows (current-buffer) nil windows-config))
+
+      (setq erg
+            (py-output-filter
+             (buffer-substring-no-properties orig (point))))
+      ;; "Traceback (most recent call last):\n File \"<stdin>\", line 1, in <module>\n File \"/tmp/python3-6503yvo.py\", line 135\n print(44*0e)\n ^\nSyntaxError: invalid token"
+      ;; (and origfile (string-match "\\(.+\\) File \"[^\"]+\", line \\(.+\\)" erg)
+      ;;      (setq erg (replace-regexp-in-string "\\(.+\\) File \"[^\"]+\", line \\(.+\\)" (concat (match-string-no-properties 1) " File \"" (or (and (stringp origfile) origfile)(buffer-name origfile)) "\", line " (match-string-no-properties 2)) erg)))
+      (py-shell-manage-windows (current-buffer) nil windows-config)
+      erg)))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -11197,10 +11221,10 @@ Needed when file-path names are contructed from maybe numbered buffer names like
          (if (< (count-windows) py-max-split-windows)
              (progn
                (funcall py-split-windows-on-execute-function)
-               (and (bufferp py-exception-buffer)(set-buffer py-exception-buffer))
-               (switch-to-buffer (current-buffer))
-               (display-buffer output-buffer 'display-buffer-reuse-window))
-           (display-buffer output-buffer 'display-buffer-reuse-window)))
+               (and (bufferp py-exception-buffer)(set-buffer py-exception-buffer)
+                    (switch-to-buffer (current-buffer))
+                    (display-buffer output-buffer 'display-buffer-reuse-window))
+               (display-buffer output-buffer 'display-buffer-reuse-window))))
         ;; no split, switch
         ((and
           py-switch-buffers-on-execute-p
@@ -11215,7 +11239,7 @@ Needed when file-path names are contructed from maybe numbered buffer names like
          (let (pop-up-windows)
            (set-buffer py-exception-buffer)
            (switch-to-buffer (current-buffer)))
-         ;; )
+         ;;)
          )))
 
 (defun py-report-executable (py-buffer-name)
@@ -14262,7 +14286,6 @@ Use `M-x customize-variable' to set it permanently"
 
 `py-electric-colon' feature\.  Default is `nil'\. See lp:837065 for discussions\. . "
                      :style toggle :selected py-electric-colon-active-p]
-
 
                     ["Electric colon at beginning of block only"
                      (setq py-electric-colon-bobl-only
@@ -20447,48 +20470,47 @@ If an exception occurred return error-string, otherwise return nil.  BUF must ex
 
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
   (let (line file bol err-p estring ecode limit)
+    (goto-char (point-max))
     (save-excursion
-      (set-buffer buf)
-      (goto-char (point-max))
+      ;; (set-buffer buf)
       (forward-line -1)
       (end-of-line)
-      (save-excursion
-        (when (re-search-backward py-shell-prompt-regexp nil t 1)
-          ;; not a useful message, delete it - please tell when thinking otherwise
-          (and (re-search-forward "File \"<stdin>\", line 1,.*\n" nil t)
-               (replace-match ""))
-          (when (and (re-search-forward py-traceback-line-re limit t)
-                     (or (match-string 1) (match-string 3)))
-            (when (match-string-no-properties 1)
-              (replace-match (buffer-name py-exception-buffer) nil nil nil 1)
-              (setq file py-exception-buffer)
-              (setq line (string-to-number (match-string-no-properties 2)))
-              (goto-char (match-beginning 0))
-              ;; if no buffer-file exists, signal "Buffer", not "File"
-              (save-match-data
-                (and (not (buffer-file-name
-                           (or
-                            (get-buffer py-exception-buffer)
-                            (get-buffer (file-name-nondirectory py-exception-buffer))))) (string-match "^[ \t]*File" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
-                            (looking-at "[ \t]*File")
-                            (replace-match "Buffer"))))
+      (when (re-search-backward py-shell-prompt-regexp nil t 1)
+        ;; not a useful message, delete it - please tell when thinking otherwise
+        (and (re-search-forward "File \"<stdin>\", line 1,.*\n" nil t)
+             (replace-match ""))
+        (when (and (re-search-forward py-traceback-line-re limit t)
+                   (or (match-string 1) (match-string 3)))
+          (when (match-string-no-properties 1)
+            (replace-match (buffer-name py-exception-buffer) nil nil nil 1)
+            (setq file py-exception-buffer)
+            (setq line (string-to-number (match-string-no-properties 2)))
+            (goto-char (match-beginning 0))
+            ;; if no buffer-file exists, signal "Buffer", not "File"
+            (save-match-data
+              (and (not (buffer-file-name
+                         (or
+                          (get-buffer py-exception-buffer)
+                          (get-buffer (file-name-nondirectory py-exception-buffer))))) (string-match "^[ \t]*File" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
+                          (looking-at "[ \t]*File")
+                          (replace-match "Buffer")))
             (add-to-list 'err-p line)
             (add-to-list 'err-p file)
             (overlay-put (make-overlay (match-beginning 0) (match-end 0))
-                         'face 'highlight)
-            ;; If not file exists, just a buffer, correct message
+                         'face 'highlight))
+          ;; If not file exists, just a buffer, correct message
 
-            (forward-line 1)
-            (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
-              (setq estring (match-string-no-properties 1))
-              (add-to-list 'err-p estring t)
-              (setq ecode (buffer-substring-no-properties (line-end-position)
-                                                          (progn (re-search-forward comint-prompt-regexp nil t 1)(match-beginning 0))))
-              ;; (setq ecode (concat (split-string ecode "[ \n\t\f\r^]" t)))
-              (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
-              (add-to-list 'err-p ecode t)))
-          ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
-          err-p)))))
+          (forward-line 1)
+          (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
+            (setq estring (match-string-no-properties 1))
+            (add-to-list 'err-p estring t)
+            (setq ecode (buffer-substring-no-properties (line-end-position)
+                                                        (progn (re-search-forward comint-prompt-regexp nil t 1)(match-beginning 0))))
+            ;; (setq ecode (concat (split-string ecode "[ \n\t\f\r^]" t)))
+            (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
+            (add-to-list 'err-p ecode t)))
+        ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
+        err-p))))
 
 (defun py-jump-to-exception (err-p exception-buffer &optional file)
   "Jump to the Python code in FILE at LINE."
