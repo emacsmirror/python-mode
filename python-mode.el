@@ -186,6 +186,9 @@ Default is nil. "
 (defvar highlight-indent-active nil)
 (defvar smart-operator-mode nil)
 
+(defvar py-fill-column-orig fill-column)
+(defvar py-autofill-timer nil)
+
 (defcustom py-autopair-mode nil
   "If python-mode calls (autopair-mode-on)
 
@@ -9931,7 +9934,7 @@ comint believe the user typed this string so that
 Returns position where output starts. "
   (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
          (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
-         erg orig)
+         erg orig err-p)
     (set-buffer procbuf)
     (setq orig (point))
     (comint-send-string proc cmd)
@@ -16069,12 +16072,8 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
 
          (ccs (or completion-command-string
                   (if imports
-                      (concat imports (py-set-ipython-completion-command-string
-                                       ;; (process-name python-process)
-                                       ))
-                    (py-set-ipython-completion-command-string
-                     ;; (process-name python-process)
-                     ))))
+                      (concat imports (py-set-ipython-completion-command-string))
+                    (py-set-ipython-completion-command-string))))
          completion completions completion-table ugly-return)
     (if (string= pattern "")
         (tab-to-tab-stop)
@@ -16112,62 +16111,6 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
               (when py-indent-no-completion-p
                 (tab-to-tab-stop))))
         (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
-
-(defun ipython-complete-py-shell-name (&optional done)
-  "Complete the python symbol before point.
-
-If no completion available, insert a TAB.
-Returns the completed symbol, a string, if successful, nil otherwise.
-
-Bug: if no IPython-shell is running, fails first time due to header returned, which messes up the result. Please repeat once then. "
-  (interactive "*")
-  (let* (py-split-windows-on-execute-p
-         py-switch-buffers-on-execute-p
-         (beg (progn (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
-                                     (point))))
-         (end (point))
-         (pattern (buffer-substring-no-properties beg end))
-         (sep ";")
-         (py-process (or (get-buffer-process (current-buffer))
-                         (get-buffer-process (py-shell))
-                         (get-buffer-process (py-shell nil nil "ipython" 'no-switch nil))))
-
-         (comint-output-filter-functions
-          (delq 'py-comint-output-filter-function comint-output-filter-functions))
-         (comint-output-filter-functions
-          (append comint-output-filter-functions
-                  '(ansi-color-filter-apply
-                    (lambda (string)
-                      (setq ugly-return (concat ugly-return string))
-                      (delete-region comint-last-output-start
-                                     (process-mark (get-buffer-process (current-buffer))))))))
-         completion completions completion-table ugly-return)
-    (if (string= pattern "")
-        (tab-to-tab-stop)
-      (process-send-string py-process
-                           (format (py-set-ipython-completion-command-string (downcase (process-name py-process))) pattern))
-      (accept-process-output py-process)
-      (setq completions
-            (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
-      (setq completion-table (loop for str in completions
-                                   collect (list str nil)))
-      (setq completion (try-completion pattern completion-table))
-      (cond ((eq completion t))
-            ((null completion)
-             ;; if an (I)Python shell didn't run
-             ;; before, first completion are not delivered
-             ;; (if done (ipython-complete done)
-             (message "Can't find completion for \"%s\"" pattern)
-             (ding))
-            ((not (string= pattern completion))
-             (delete-region beg end)
-             (insert completion))
-            (t
-             (message "Making completion list...")
-             (with-output-to-temp-buffer "*Python Completions*"
-               (display-completion-list (all-completions pattern completion-table)))
-             (message "Making completion list...%s" "done"))))
-    completion))
 
 ;;; Checker
 ;; flymake
@@ -17150,15 +17093,17 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
                           (find-file-noselect filename))))
          (set-buffer buffer))))
 
-(defun py-execute-prepare (form &optional shell dedicated switch beg end)
+(defun py-execute-prepare (form &optional shell dedicated switch beg end file)
   "Used by python-extended-executes ."
   (save-excursion
-    (let ((beg (prog1
-                   (or beg (funcall (intern-soft (concat "py-beginning-of-" form "-p")))
+    (let ((beg (unless file
+                 (prog1
+                     (or beg (funcall (intern-soft (concat "py-beginning-of-" form "-p")))
 
-                       (funcall (intern-soft (concat "py-beginning-of-" form)))
-                       (push-mark))))
-          (end (or end (funcall (intern-soft (concat "py-end-of-" form)))))
+                         (funcall (intern-soft (concat "py-beginning-of-" form)))
+                         (push-mark)))))
+          (end (unless file
+                 (or end (funcall (intern-soft (concat "py-end-of-" form))))))
           (py-shell-name shell)
           (py-dedicated-process-p dedicated)
           (py-switch-buffers-on-execute-p (cond ((eq 'switch switch)
@@ -17166,9 +17111,14 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
                                                 ((eq 'no-switch switch)
                                                  nil)
                                                 (t py-switch-buffers-on-execute-p)))
-
-          )
-      (py-execute-base beg end))))
+          filename erg)
+      (if file
+          (progn
+            (setq filename (expand-file-name form))
+            (if (file-readable-p filename)
+                (setq erg (py-execute-file-base nil filename nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) filename)))
+              (message "%s not readable. %s" file "Do you have write permissions?")))
+        (py-execute-base beg end)))))
 
 (defun py-execute-statement-python ()
   "Send statement at point to Python interpreter. "
@@ -20513,10 +20463,10 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
            (set-buffer file)
            (switch-to-buffer (current-buffer))
            (py-jump-to-exception-intern line action file))
-          (t setq file (find-file (read-file-name "Exception file: "
-                                                  nil
-                                                  file t)))
-          (py-jump-to-exception-intern line action file))))
+          (t (setq file (find-file (read-file-name "Exception file: "
+                                                   nil
+                                                   file t)))
+             (py-jump-to-exception-intern line action file)))))
 
 (defun py-down-exception (&optional bottom)
   "Go to the next line down in the traceback.
@@ -20561,56 +20511,33 @@ for an exception.  SEARCHDIR is a function, either
 `re-search-backward' or `re-search-forward' indicating the direction
 to search.  ERRWHERE is used in an error message if the limit (top or
 bottom) of the trackback stack is encountered."
-  (let ((orig (point))
-        (origline (py-count-lines))
-        file line pos)
-    (goto-char (py-point start))
-    (if (funcall searchdir py-traceback-line-re nil t)
-        (if (save-match-data (eq (py-count-lines) origline))
-            (progn
-              (forward-line (if (string= errwhere "Top") -1 1))
-              (py-find-next-exception start buffer searchdir errwhere))
-          (if (not (save-match-data (string-match "^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>" (match-string-no-properties 0))))
-              (progn
-                (setq py-last-exeption-buffer (current-buffer))
-                (if (save-match-data (string-match "File" (match-string-no-properties 0)))
-                    (progn
-                      (setq file (match-string-no-properties 2)
-                            pos (point)
-                            line (string-to-number (match-string-no-properties 3))))
-                  (save-excursion
-                    ;; file and line-number are in different lines
-                    (setq line (string-to-number (match-string-no-properties 1))
-                          pos (point)
-                          file (progn
-                                 (when (and (re-search-backward "\\(^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>\\|^[^\t >]+\\)>?[ \t]+in[ \t]+\\([^ \t\n]+\\)" nil t 1)
-                                            (not (save-match-data (string-match "<\\|^IPython\\|^In \\[[0-9]+\\]: *\\|^>>>" (match-string-no-properties 1)))))
-                                   (match-string-no-properties 1))))))
-                (if file
-                    (when (string-match ".+\.pyc" file)
-                      (setq file (substring file 0 -1)))
-                  (error "%s of traceback" errwhere))
-                (if (and file line)
-                    (if
-                        (and (string= "<stdin>" file) (eq 1 line))
-                        (error "%s of traceback" errwhere)
-                      (py-jump-to-exception file line py-line-number-offset))
-                  (error "%s of traceback" errwhere)))
-            (goto-char orig)
-            (error "%s of traceback" errwhere))))))
-
-(defun py-goto-exception ()
-  "Go to the line indicated by the traceback."
-  (interactive)
   (let (file line)
     (save-excursion
-      (beginning-of-line)
-      (if (looking-at py-traceback-line-re)
+      (set-buffer buffer)
+      (goto-char (py-point start))
+      (if (funcall searchdir py-traceback-line-re nil t)
           (setq file (match-string 1)
                 line (string-to-number (match-string 2)))))
+    (if (and file line)
+        (py-goto-exception file line)
+      (error "%s of traceback" errwhere))))
+
+(defun py-goto-exception (&optional file line)
+  "Go to the line indicated by the traceback."
+  (interactive)
+  (let ((file file)
+        (line line))
+    (unless (and file line)
+      (save-excursion
+        (beginning-of-line)
+        (if (looking-at py-traceback-line-re)
+            (setq file (substring-no-properties (match-string 1))
+                  line (string-to-number (match-string 2))))))
     (if (not file)
         (error "Not on a traceback line"))
-    (py-jump-to-exception file line)))
+    (find-file file)
+    (goto-char (point-min))
+    (forward-line (1- line))))
 
 ;; python-mode-send.el
 (defun py-output-buffer-filter (&optional beg end)
