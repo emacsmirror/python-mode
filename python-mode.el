@@ -1077,6 +1077,19 @@ Making switch between several virtualenv's easier,
   :type 'boolean
   :group 'python-mode)
 
+
+(defcustom py-set-pager-cat-p nil
+  "If the shell environment variable $PAGER should set to `cat'.
+
+If `t', use `C-c C-r' to jump to beginning of output. Then scroll normally.
+
+Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in python-shell
+
+When non-nil, imports module `os' "
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-prompt-on-changed-p t
   "When called interactively, ask for save before a changed buffer is sent to interpreter.
 
@@ -11307,7 +11320,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
          ;; correctly (Bug#5794) and IPython does not work at
          ;; all (Bug#5390). python.el
          (process-connection-type t)
-         (comint-scroll-to-bottom-on-output t)
+         ;; (comint-scroll-to-bottom-on-output t)
          ;; already in py-choose-shell
          (py-use-local-default
           (if (not (string= "" py-shell-local-path))
@@ -11357,6 +11370,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
       (set (make-local-variable 'indent-line-function) 'py-indent-line)
       (setq proc (get-buffer-process (current-buffer)))
       (py-shell-send-setup-code proc)
+      (and py-set-pager-cat-p (comint-simple-send proc "import os;os.environ['PAGER'] = 'cat'"))
       (compilation-shell-minor-mode 1)
       (setq comint-input-sender 'py-shell-simple-send)
       ;; (sit-for 0.1)
