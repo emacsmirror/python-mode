@@ -9435,12 +9435,13 @@ When called from a programm, it accepts a string specifying a shell which will b
 Optional DEDICATED (boolean)
 "
   (interactive "r\nP")
-  (let ((py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
-                             ((and (numberp shell) (not (eq 1 (prefix-numeric-value shell))))
-                              (read-from-minibuffer "(path-to-)shell-name: " (default-value 'py-shell-name)))
-                             (t shell)))
-        (py-dedicated-process-p (or dedicated py-dedicated-process-p)))
-    (py-execute-base start end)))
+  (save-excursion
+    (let ((py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
+                               ((and (numberp shell) (not (eq 1 (prefix-numeric-value shell))))
+                                (read-from-minibuffer "(path-to-)shell-name: " (default-value 'py-shell-name)))
+                               (t shell)))
+          (py-dedicated-process-p (or dedicated py-dedicated-process-p)))
+      (py-execute-base start end))))
 
 (defun py-execute-region-default (start end)
   "Send the region to the systems default Python interpreter. "
@@ -9591,7 +9592,13 @@ When called from a programm, it accepts a string specifying a shell which will b
 
 When optional FILE is `t', no temporary file is needed. "
   (let* ((windows-config (window-configuration-to-register 313465889))
-         (origline (save-restriction (widen) (count-lines (point-min) start)))
+         (origline
+          (save-restriction
+            (widen)
+            (count-lines
+             (point-min)
+             ;; count-lines doesn't honor current line when at BOL
+             (or (and (eq start (line-beginning-position)) (not (eobp)) (1+ start)) start))))
          (py-shell-name (or shell (py-choose-shell)))
          (py-exception-buffer (current-buffer))
          (execute-directory
@@ -9611,7 +9618,8 @@ When optional FILE is `t', no temporary file is needed. "
          (proc (or proc (if py-dedicated-process-p
                             (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))
                           (or (and (boundp 'py-buffer-name) (get-buffer-process py-buffer-name))
-                              (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t)))))))
+                              (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t))))))
+         err-p)
     (set-buffer py-exception-buffer)
     (py-update-execute-directory proc py-buffer-name execute-directory)
     (cond (;; enforce proceeding as python-mode.el v5
@@ -9621,11 +9629,9 @@ When optional FILE is `t', no temporary file is needed. "
            (py-execute-ge24.3 start end filename execute-directory))
           ;; No need for a temporary filename than
           ((or file (and (not (buffer-modified-p)) filename))
-           (py-execute-file-base proc filename nil py-buffer-name filename execute-directory)
-           ;; (py-execute-file filename)
-           )
+           (py-execute-file-base proc filename nil py-buffer-name filename execute-directory))
           (t
-           ;; (message "%s" (current-buffer) )
+           ;; (message "%s" (current-buffer))
            (py-execute-buffer-finally start end execute-directory)))))
 
 (defun py-execute-string (&optional string shell)
@@ -10744,6 +10750,33 @@ Returns the string inserted. "
         (+ (current-column) (* 2 (or indent-offset py-indent-offset))))
     (+ (current-indentation) py-indent-offset)))
 
+(defun py-line-backward-maybe ()
+  (skip-chars-backward " \t\f" (line-beginning-position))
+  (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+    (setq line t)))
+
+(defun py-fetch-previous-indent (orig)
+  "Report the preceding indent. "
+  (save-excursion
+    (goto-char orig)
+    (forward-line -1)
+    (end-of-line)
+    (skip-chars-backward " \t\r\n\f")
+    (current-indentation)))
+
+
+(defun py-continuation-offset (&optional arg)
+  "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. "
+  (interactive "p")
+  (let ((erg (if (eq 1 arg)
+                 py-continuation-offset
+               (when (numberp arg)
+                 (prog1
+                     arg
+                   (setq py-continuation-offset arg))))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" py-continuation-offset))
+    py-continuation-offset))
+
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line nesting repeat indent-offset)
   "Compute Python indentation.
@@ -11007,32 +11040,6 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
         (when (and py-verbose-p (interactive-p)) (message "%s" indent))
         indent))))
 
-(defun py-line-backward-maybe ()
-  (skip-chars-backward " \t\f" (line-beginning-position))
-  (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-    (setq line t)))
-
-(defun py-fetch-previous-indent (orig)
-  "Report the preceding indent. "
-  (save-excursion
-    (goto-char orig)
-    (forward-line -1)
-    (end-of-line)
-    (skip-chars-backward " \t\r\n\f")
-    (current-indentation)))
-
-(defun py-continuation-offset (&optional arg)
-  "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. "
-  (interactive "p")
-  (let ((erg (if (eq 1 arg)
-                 py-continuation-offset
-               (when (numberp arg)
-                 (prog1
-                     arg
-                   (setq py-continuation-offset arg))))))
-    (when (and py-verbose-p (interactive-p)) (message "%s" py-continuation-offset))
-    py-continuation-offset))
-
 (defalias 'pios 'py-indentation-of-statement)
 (defalias 'ios 'py-indentation-of-statement)
 (defun py-indentation-of-statement ()
@@ -11200,7 +11207,7 @@ Needed when file-path names are contructed from maybe numbered buffer names like
     string)))
 
 (defun py-shell-manage-windows (output-buffer &optional windows-displayed windows-config)
-  (cond (err-p
+  (cond ((and (boundp 'err-p) err-p)
          (py-jump-to-exception err-p py-exception-buffer)
          ;; (and windows-displayed (eq 1 (length windows-displayed))
          ;; (funcall py-split-windows-on-execute-function)
