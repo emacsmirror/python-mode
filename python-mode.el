@@ -12681,8 +12681,22 @@ Go to the very beginning of current block. "]
                    :help " `py-beginning-of-block'
 
 Go to beginning block, skip whitespace at BOL\. "]
-
                   ["Go to end of block" py-end-of-block]
+                  "-"
+
+                  ["Beginning of statement" py-beginning-of-statement
+                   :help " `py-beginning-of-statement'
+
+Go to the initial line of a simple statement. "]
+
+
+                  ["End of statement" py-end-of-statement
+                   :help " `py-end-of-statement'
+
+Go to the last char of current statement.
+
+To go just beyond the final line of the current statement, use `py-down-statement-bol'. . "]
+
                   "-"
                   ["Go to start of def or class" (py-beginning-of-def-or-class t) t]
                   ["Move to end of def or class" (py-end-of-def-or-class t) t]
@@ -14054,6 +14068,7 @@ In experimental state yet "
                     ["Remove local Python shell enforcement, restore default" py-force-local-shell-off
                      :help "Restore `py-shell-name' default value and `behaviour'. "]
 
+
                     ["Run `py-shell' at start"
                      (setq py-start-run-py-shell
                            (not py-start-run-py-shell))
@@ -14402,6 +14417,7 @@ source code of the innermost traceback frame\.
 
 Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-jump-on-exception]
+
 
                     ["Highlight error in source "
                      (setq py-highlight-error-source-p

@@ -281,7 +281,15 @@ In result cursor is insided emptied delimited form.
 
 py-electric-colon-active-p
 --------------------------
-`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions. 
+`py-electric-colon' feature.  Default is `nil'. See lp:837065 for discussions.
+
+See also `py-electric-colon-bobl-only' 
+
+py-electric-colon-bobl-only
+---------------------------
+When inserting a colon, do not indent lines unless at beginning of block
+
+See lp:1207405 resp. `py-electric-colon-active-p' 
 
 py-electric-colon-greedy-p
 --------------------------
@@ -695,6 +703,11 @@ py-history-filter-regexp
 Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.
 
+inferior-python-filter-regexp
+-----------------------------
+Input matching this regexp is not saved on the history list.
+Default ignores all inputs of 0, 1, or 2 non-blank characters.
+
 py-set-complete-keymap-p
 ------------------------
 If `py-complete-initialize', which sets up enviroment for Pymacs based py-complete, should load it's keys into `python-mode-map'
@@ -709,6 +722,35 @@ If `t', py-shell will use `py-shell-local-path' instead
 
 Making switch between several virtualenv's easier,
  `python-mode' should deliver an installer, so named-shells pointing to virtualenv's will be available. 
+
+py-highlight-error-source-p
+---------------------------
+When py-execute-... commands raise an error, respective code in source-buffer will be highlighted. Default is nil.
+
+M-x `py-remove-overlays-at-point' removes that highlighting.
+ 
+
+py-set-pager-cat-p
+------------------
+If the shell environment variable $PAGER should set to `cat'.
+
+If `t', use `C-c C-r' to jump to beginning of output. Then scroll normally.
+
+Avoids lp:783828, "Terminal not fully functional", for help('COMMAND') in python-shell
+
+When non-nil, imports module `os' 
+
+py-prompt-on-changed-p
+----------------------
+When called interactively, ask for save before a changed buffer is sent to interpreter.
+
+Default is `t'
+
+py-dedicated-process-p
+----------------------
+If commands executing code use a dedicated shell.
+
+Default is nil
 
 py-shell-local-path
 -------------------
