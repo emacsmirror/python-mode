@@ -143,8 +143,8 @@ Give some hints, if not."
   (if (featurep 'smart-operator)
       't
     (progn
-      (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
-      nil)))
+      (and (boundp 'py-smart-operator-mode-p) py-smart-operator-mode-p (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
+           nil))))
 
 (defun py-autopair-check ()
   "Check, if autopair-mode is available.
