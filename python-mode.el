@@ -71,7 +71,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.1.2")
+(defconst py-version "6.1.3")
 
 ;;; Customization
 (defcustom python-mode-modeline-display "Py"
