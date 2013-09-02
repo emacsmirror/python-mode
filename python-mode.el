@@ -157,7 +157,7 @@ Give some hints, if not."
       (message "%s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
       nil)))
 
-(defcustom py-smart-operator-mode-p t
+(defcustom py-smart-operator-mode-p nil
   "If python-mode calls (smart-operator-mode-on)
 
 Default is non-nil. "
