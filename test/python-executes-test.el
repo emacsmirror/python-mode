@@ -23,7 +23,7 @@
     (py-bug-tests-intern 'py-execute-statement-base arg teststring)))
 
 (defun py-execute-statement-base ()
-  (assert (eq nil (py-execute-statement)) nil "py-execute-statement-test failed"))
+  (assert (py-execute-statement) nil "py-execute-statement-test failed"))
 
 (defun py-execute-block-test (&optional arg load-branch-function)
   (interactive "p")
@@ -31,7 +31,7 @@
     (py-bug-tests-intern 'py-execute-block-base arg teststring)))
 
 (defun py-execute-block-base ()
-  (assert (eq nil (py-execute-block)) nil "py-execute-block-test failed"))
+  (assert (py-execute-block) nil "py-execute-block-test failed"))
 
 (defun py-execute-block-or-clause-test (&optional arg load-branch-function)
   (interactive "p")
@@ -39,7 +39,7 @@
     (py-bug-tests-intern 'py-execute-block-or-clause-base arg teststring)))
 
 (defun py-execute-block-or-clause-base ()
-  (assert (eq nil (py-execute-block-or-clause)) nil "py-execute-block-or-clause-test failed"))
+  (assert (py-execute-block-or-clause) nil "py-execute-block-or-clause-test failed"))
 
 (defun py-execute-def-test (&optional arg load-branch-function)
   (interactive "p")
@@ -47,7 +47,7 @@
     (py-bug-tests-intern 'py-execute-def-base arg teststring)))
 
 (defun py-execute-def-base ()
-  (assert (eq nil (py-execute-def)) nil "py-execute-def-test failed"))
+  (assert (py-execute-def) nil "py-execute-def-test failed"))
 
 (defun py-execute-class-test (&optional arg load-branch-function)
   (interactive "p")
@@ -55,7 +55,7 @@
     (py-bug-tests-intern 'py-execute-class-base arg teststring)))
 
 (defun py-execute-class-base ()
-  (assert (eq nil (py-execute-class)) nil "py-execute-class-test failed"))
+  (assert (py-execute-class) nil "py-execute-class-test failed"))
 
 (defun py-execute-region-test (&optional arg load-branch-function)
   (interactive "p")
@@ -71,7 +71,7 @@
     (py-bug-tests-intern 'py-execute-buffer-test-base arg teststring)))
 
 (defun py-execute-buffer-test-base ()
-  (assert (eq nil (py-execute-buffer)) nil "py-execute-buffer-test failed"))
+  (assert (py-execute-buffer) nil "py-execute-buffer-test failed"))
 
 (defun py-execute-expression-test (&optional arg load-branch-function)
   (interactive "p")
@@ -79,7 +79,7 @@
     (py-bug-tests-intern 'py-execute-expression-base arg teststring)))
 
 (defun py-execute-expression-base ()
-  (assert (eq nil (py-execute-expression)) nil "py-execute-expression-test failed"))
+  (assert (py-execute-expression) nil "py-execute-expression-test failed"))
 
 (defun py-execute-line-test (&optional arg load-branch-function)
   (interactive "p")
@@ -87,7 +87,7 @@
     (py-bug-tests-intern 'py-execute-line-base arg teststring)))
 
 (defun py-execute-line-base ()
-  (assert (eq nil (py-execute-line)) nil "py-execute-line-test failed"))
+  (assert (py-execute-line) nil "py-execute-line-test failed"))
 
 
 
