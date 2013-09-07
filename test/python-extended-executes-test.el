@@ -305,7 +305,7 @@
     (py-bug-tests-intern 'py-execute-block-python-base arg teststring)))
 
 (defun py-execute-block-python-base ()
-  (sit-for 1)
+  (sit-for 0.1)
   (assert (py-execute-block-python) nil "py-execute-block-python-test failed"))
 
 (defun py-execute-block-python-switch-test (&optional arg load-branch-function)

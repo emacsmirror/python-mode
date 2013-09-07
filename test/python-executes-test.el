@@ -89,8 +89,6 @@
 (defun py-execute-line-base ()
   (assert (py-execute-line) nil "py-execute-line-test failed"))
 
-
-
 (defun beginning-of-block-fails-from-wrong-indent-test (&optional arg)
   (interactive "p")
   (let ((teststring "#! /usr/bin/env python
@@ -106,6 +104,20 @@ with file(\"roulette-\" + zeit + \".csv\", 'w') as datei:
     (goto-char 102)
     (assert (eq 48 (py-beginning-of-block)) nil "beginning-of-block-fails-from-wrong-indent-test failed"))
 
+(defun py-execute-file-test (&optional arg)
+  (interactive "p")
+   (let ((teststring "print(3)"))
+  (py-bug-tests-intern 'py-execute-file-intern arg teststring)))
+
+(defun py-execute-file-intern ()
+  (let ((py-store-result-p t)
+        (file (concat py-temp-directory "/py-execute-file-test.py")))
+    (write-file file)
+    ;; (sit-for 0.1)
+    (unwind-protect
+        (setq erg (py-execute-file file))
+      (assert (string= "3" erg) nil "py-execute-file-test failed")
+      (delete-file file))))
 
 (provide 'python-executes-test)
 ;;; python-executes-test.el ends here
