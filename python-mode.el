@@ -2858,10 +2858,10 @@ in the `same-window-buffer-names' list."
                                             (format "*%s*" process-name)))
     process-name))
 
-(defun py-shell-get-process (&optional argprompt py-dedicated-process-p shell switch py-buffer-name done)
+(defun py-shell-get-process (&optional argprompt py-dedicated-process-p shell switch py-buffer-name)
   "Get appropriate Python process for current buffer and return it."
   (interactive)
-  (let ((erg (get-buffer-process (py-shell argprompt py-dedicated-process-p shell py-buffer-name done))))
+  (let ((erg (get-buffer-process (py-shell argprompt py-dedicated-process-p shell py-buffer-name t))))
     (when (interactive-p) (message "%S" erg))
     erg))
 
@@ -3507,7 +3507,7 @@ With prefix arg, position cursor at end of buffer."
     (push-mark)
     (goto-char (point-max))))
 
-(defun py-proc (&optional dedicated)
+(defun py-proc (&optional py-dedicated-process-p)
   "Return the current Python process.
 
 Start a new process if necessary. "
@@ -3517,8 +3517,8 @@ Start a new process if necessary. "
          (cond ((and (not py-dedicated-process-p) (comint-check-proc (current-buffer)))
                 (get-buffer-process (buffer-name (current-buffer))))
                ((not py-dedicated-process-p)
-                (get-buffer-process (py-shell)))
-               ((py-shell nil py-dedicated-process-p)))))
+                (get-buffer-process (py-shell nil nil nil nil t)))
+               ((py-shell nil py-dedicated-process-p nil nil t)))))
     (when (interactive-p) (message "%S" erg))
     erg))
 
@@ -4119,10 +4119,9 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
              (py-indent-fix-region-intern beg end))
         (cond ((eq need cui)
                (if (or (eq this-command last-command)
-                       ;; (eq this-command 'exchange-point-and-mark)
                        (eq this-command 'py-indent-line))
                    (if (and py-tab-shifts-region-p region)
-                       (while (save-excursion (goto-char beg) (< 0 (current-indentation)))
+                       (while (and (goto-char beg) (< 0 (current-indentation)))
                          (py-shift-region-left 1 beg end))
                      (beginning-of-line)
                      (delete-horizontal-space)
@@ -4130,7 +4129,6 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
                          (forward-char (- col cui))
                        (beginning-of-line)))))
               ((< cui need)
-               ;; (if (eq this-command last-command)
                (if (and py-tab-shifts-region-p region)
                    (progn
                      (py-shift-region-right 1))
@@ -4139,13 +4137,6 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
                    (delete-horizontal-space)
                    (indent-to (+ (* (/ cui py-indent-offset) py-indent-offset) py-indent-offset))
                    (forward-char (- col cui)))))
-              ;; (if (and py-tab-shifts-region-p region)
-              ;;     (while (< (current-indentation) need)
-              ;;       (py-shift-region-right 1))
-              ;;   (beginning-of-line)
-              ;;   (delete-horizontal-space)
-              ;;   (indent-to need)
-              ;;   (forward-char (- col cui)))))
               ((< need cui)
                (if (and py-tab-shifts-region-p region)
                    (progn
@@ -4192,53 +4183,53 @@ If `py-tab-indents-region-p' is `t' and first TAB doesn't shift
   (interactive "P")
   (if (interactive-p)
       ;; TAB-leaves-point-in-the-wrong-lp-1178453-test
-      ;; (save-excursion
       (let ((orig (copy-marker (point)))
-	    (region (use-region-p))
-	    beg end)
-	(and region (setq beg (region-beginning))
-	     (setq end (region-end)))
-	(let ((cui (current-indentation))
-	      (col (current-column))
-	      (this-indent-offset (cond ((and py-smart-indentation (not (eq this-command last-command)))
-					 (py-guess-indent-offset))
-					((and py-smart-indentation (eq this-command last-command) py-already-guessed-indent-offset)
-					 py-already-guessed-indent-offset)
-					(t (default-value 'py-indent-offset))))
-	      (need (if (and (eq this-command last-command) py-already-guessed-indent-offset)
-			(if region
-			    (save-excursion
-			      ;; if previous command was an indent
-			      ;; already, position reached might
-			      ;; produce false guesses
-			      (goto-char beg) (py-compute-indentation beg nil nil nil nil nil py-already-guessed-indent-offset))
-			  (py-compute-indentation beg nil nil nil nil nil py-already-guessed-indent-offset))
-		      (if region
-			  (save-excursion
-			    (goto-char beg)
-			    (save-excursion (goto-char beg) (py-compute-indentation)))
-			(py-compute-indentation)))))
-	  (unless (eq this-command last-command)
-	    (setq py-already-guessed-indent-offset this-indent-offset))
-	  (cond ((eq 4 (prefix-numeric-value arg))
-		 (beginning-of-line)
-		 (delete-horizontal-space)
-		 (indent-to (+ need py-indent-offset)))
-		((not (eq 1 (prefix-numeric-value arg)))
-		 (py-smart-indentation-off)
-		 (py-indent-line-intern need cui this-indent-offset col beg end region))
-		(t (py-indent-line-intern need cui this-indent-offset col beg end region)))
-	  (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
-	  (current-indentation))
-	(goto-char orig)
-	(if region
-	    (progn
-	      (or py-tab-shifts-region-p
-		  py-tab-indents-region-p)
-	      (eq (point) end)
-	      (not (eq (point) orig))
-	      (exchange-point-and-mark))
-	  (and (< (current-column) (current-indentation))(back-to-indentation))))
+            (region (use-region-p))
+            cui col beg end)
+        (and region
+             (setq beg (region-beginning))
+             (setq end (region-end))
+             (save-excursion
+               (goto-char beg)
+               (setq cui (current-indentation))
+               (setq col (current-column))))
+        (let* ((cui (or cui (current-indentation)))
+               (col (current-column))
+               (this-indent-offset (cond ((and py-smart-indentation (not (eq this-command last-command)))
+                                          (py-guess-indent-offset))
+                                         ((and py-smart-indentation (eq this-command last-command) py-already-guessed-indent-offset)
+                                          py-already-guessed-indent-offset)
+                                         (t (default-value 'py-indent-offset))))
+               (need (if (and (eq this-command last-command) py-already-guessed-indent-offset)
+                         (if region
+                             (save-excursion
+                               ;; if previous command was an indent
+                               ;; already, position reached might
+                               ;; produce false guesses
+                               (goto-char beg) (py-compute-indentation beg nil nil nil nil nil py-already-guessed-indent-offset))
+                           (py-compute-indentation nil nil nil nil nil nil py-already-guessed-indent-offset))
+                       (if region
+                           (save-excursion (goto-char beg) (py-compute-indentation nil nil nil nil nil nil this-indent-offset))
+                         (py-compute-indentation nil nil nil nil nil nil this-indent-offset)))))
+          (unless (eq this-command last-command)
+            (setq py-already-guessed-indent-offset this-indent-offset))
+          (cond ((eq 4 (prefix-numeric-value arg))
+                 (beginning-of-line)
+                 (delete-horizontal-space)
+                 (indent-to (+ need py-indent-offset)))
+                ((not (eq 1 (prefix-numeric-value arg)))
+                 (py-smart-indentation-off)
+                 (py-indent-line-intern need cui this-indent-offset col beg end region))
+                (t (py-indent-line-intern need cui this-indent-offset col beg end region)))
+          (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
+          (current-indentation))
+        (goto-char orig)
+        (if region
+            (and (or py-tab-shifts-region-p
+                     py-tab-indents-region-p)
+                 (not (eq (point) orig))
+                 (exchange-point-and-mark))
+          (and (< (current-column) (current-indentation))(back-to-indentation))))
     (beginning-of-line)
     (delete-horizontal-space)
     (indent-to (py-compute-indentation))))
@@ -6857,12 +6848,11 @@ http://docs.python.org/reference/compound_stmts.html
         (back-to-indentation)
         (unless (bobp)
           (py-beginning-of-statement orig done)))
-       ((looking-at py-string-delim-re)
-        (unless done
-          (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-            (setq done t))
-          (back-to-indentation)
-          (py-beginning-of-statement orig done)))
+       ((and (not done) (looking-at py-string-delim-re))
+        (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+          (setq done t))
+        (back-to-indentation)
+        (py-beginning-of-statement orig done))
        ((and (not (eq (point) orig))(looking-back "^[ \t]*"))
         (setq erg (point)))
        ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
@@ -9514,7 +9504,7 @@ When called from a programm, it accepts a string specifying a shell which will b
       (sit-for 0.1)
       (and py-cleanup-temporary
            (py-delete-temporary tempfile tempbuf)))
-    (and py-store-result-p (kill-new erg))
+    (and erg py-store-result-p (kill-new erg))
     erg))
 
 (defun py-execute-python-mode-v5 (start end)
@@ -9781,7 +9771,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
-                     (get-buffer-process (py-shell argprompt py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
+                     (get-buffer-process (py-shell argprompt py-dedicated-process-p shell (or shell (default-value 'py-shell-name)) t)))))
           ;; Maybe save some buffers
           (save-some-buffers (not py-ask-about-save) nil)
           (py-execute-file-base proc file
@@ -9896,12 +9886,18 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
   (replace-regexp-in-string
    (concat "\\(\n\\|" py-shell-input-prompt-1-regexp "\\|" py-shell-input-prompt-2-regexp "\\|" "^In \\[[0-9]+\\]: *" "\\)") "" string))
 
-(defun py-execute-file (file)
+(defun py-execute-file (filename &optional proc cmd
+                                 procbuf origfile execute-directory)
   "When called interactively, user is prompted for filename. "
   (interactive "fFilename: ")
-  (let (erg)
-    (if (file-readable-p file)
-        (setq erg (py-execute-base nil nil nil file nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) file)))
+  (let ((windows-config (window-configuration-to-register 313465889))
+        (py-exception-buffer filename)
+        erg)
+    (if (file-readable-p filename)
+        (if py-store-result-p
+            (setq erg (py-execute-file-base proc (expand-file-name filename) cmd procbuf origfile execute-directory))
+          (py-execute-file-base proc (expand-file-name filename) cmd
+                                procbuf origfile execute-directory))
       (message "%s not readable. %s" file "Do you have write permissions?"))
     erg))
 
@@ -9950,6 +9946,8 @@ comint believe the user typed this string so that
 Returns position where output starts. "
   (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
          (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
+         (procbuf (or procbuf (py-shell nil nil nil procbuf t)))
+         (proc (or proc (get-buffer-process procbuf)))
          erg orig err-p)
     (set-buffer procbuf)
     (goto-char (point-max))
@@ -9959,9 +9957,10 @@ Returns position where output starts. "
     (if
         (setq err-p (save-excursion (py-postprocess-output-buffer procbuf)))
         (py-shell-manage-windows py-buffer-name nil windows-config)
-      (setq erg
-            (py-output-filter
-             (buffer-substring-no-properties orig (point-max))))
+      (and py-store-result-p
+           (setq erg
+                 (py-output-filter
+                  (buffer-substring-no-properties orig (point-max)))))
       (py-shell-manage-windows (current-buffer) nil windows-config)
       erg)))
 
@@ -10807,6 +10806,7 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
              (repeat repeat)
              ;; nesting: started nesting a list
              (nesting nesting)
+             (indent-offset (or indent-offset py-indent-offset))
              erg indent this-line)
         (unless repeat (setq nesting (nth 0 pps))
                 (setq repeat t))
@@ -11211,53 +11211,57 @@ Needed when file-path names are contructed from maybe numbered buffer names like
     string)))
 
 (defun py-shell-manage-windows (output-buffer &optional windows-displayed windows-config)
-  (cond ((and (boundp 'err-p) err-p)
-         (py-jump-to-exception err-p py-exception-buffer)
-         ;; (and windows-displayed (eq 1 (length windows-displayed))
-         ;; (funcall py-split-windows-on-execute-function)
-         (display-buffer output-buffer)
-         (goto-char (point-max)) )
+  "Adapt or restore window configuration. Return nil "
+  (let (val)
+    (cond ((and (boundp 'err-p) err-p)
+           (py-jump-to-exception err-p py-exception-buffer)
+           ;; (and windows-displayed (eq 1 (length windows-displayed))
+           ;; (funcall py-split-windows-on-execute-function)
+           (display-buffer output-buffer)
+           (goto-char (point-max))
+           nil)
 
-        ;; split and switch
-        ((and py-split-windows-on-execute-p
-              py-switch-buffers-on-execute-p)
-         (when (< (count-windows) py-max-split-windows)
-           (funcall py-split-windows-on-execute-function))
-         (set-buffer output-buffer)
-         (goto-char (point-max))
-         (switch-to-buffer (current-buffer))
-         (display-buffer py-exception-buffer))
-        ;; split, not switch
-        ((and
-          py-split-windows-on-execute-p
-          (not py-switch-buffers-on-execute-p))
-         (delete-other-windows)
-         (if (< (count-windows) py-max-split-windows)
-             (progn
-               (funcall py-split-windows-on-execute-function)
-               (set-buffer output-buffer)
-               (goto-char (point-max))
-               (and (bufferp py-exception-buffer)(set-buffer py-exception-buffer)
-                    (switch-to-buffer (current-buffer))
-                    (display-buffer output-buffer 'display-buffer-reuse-window))
-               (display-buffer output-buffer 'display-buffer-reuse-window))))
-        ;; no split, switch
-        ((and
-          py-switch-buffers-on-execute-p
-          (not py-split-windows-on-execute-p))
-         (let (pop-up-windows)
+          ;; split and switch
+          ((and py-split-windows-on-execute-p
+                py-switch-buffers-on-execute-p)
+           (when (< (count-windows) py-max-split-windows)
+             (funcall py-split-windows-on-execute-function))
            (set-buffer output-buffer)
            (goto-char (point-max))
-           (switch-to-buffer (current-buffer))))
-        ;; no split, no switch
-        ((not py-switch-buffers-on-execute-p)
-         ;; (if (equal (window-list-1) windows-displayed)
-         ;; (jump-to-register 313465889)
-         (let (pop-up-windows)
-           (set-buffer py-exception-buffer)
-           (switch-to-buffer (current-buffer)))
-         ;;)
-         )))
+           (switch-to-buffer (current-buffer))
+           (display-buffer py-exception-buffer)
+           nil)
+          ;; split, not switch
+          ((and
+            py-split-windows-on-execute-p
+            (not py-switch-buffers-on-execute-p))
+           (delete-other-windows)
+           (if (< (count-windows) py-max-split-windows)
+               (progn
+                 (funcall py-split-windows-on-execute-function)
+                 (set-buffer output-buffer)
+                 (goto-char (point-max))
+                 (and (bufferp py-exception-buffer)(set-buffer py-exception-buffer)
+                      (switch-to-buffer (current-buffer))
+                      (display-buffer output-buffer 'display-buffer-reuse-window))
+                 (display-buffer output-buffer 'display-buffer-reuse-window)))
+           nil)
+          ;; no split, switch
+          ((and
+            py-switch-buffers-on-execute-p
+            (not py-split-windows-on-execute-p))
+           (let (pop-up-windows)
+             (set-buffer output-buffer)
+             (goto-char (point-max))
+             (switch-to-buffer (current-buffer)))
+           nil)
+          ;; no split, no switch
+          ((not py-switch-buffers-on-execute-p)
+           ;; (if (equal (window-list-1) windows-displayed)
+           ;; (jump-to-register 313465889)
+           (let (pop-up-windows)
+             (py-restore-window-configuration))
+           nil))))
 
 (defun py-report-executable (py-buffer-name)
   (let ((erg (downcase (replace-regexp-in-string
@@ -15817,7 +15821,8 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
 
 (defun py-restore-window-configuration ()
   "Restore py-restore-window-configuration when completion is done resp. abandoned. "
-  (set-window-configuration py-completion-last-window-configuration))
+  (and (setq val (get-register 313465889))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
+       (jump-to-register 313465889)))
 
 (defun py-shell-simple-send (proc string)
   (comint-simple-send proc string))
@@ -15825,7 +15830,8 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
 (defun py-shell-execute-string-now (string &optional shell buffer proc)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
-  (let* ((procbuf (or buffer (process-buffer proc) (py-shell nil nil shell)))
+  (let* ((procbuf (or buffer (process-buffer proc) (py-shell nil nil shell t)))
+
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
@@ -15966,7 +15972,12 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
   (unless (buffer-live-p (get-buffer "*Python Completions*"))
     (setq py-completion-last-window-configuration
           (current-window-configuration)))
-  (let ((orig (point)))
+  (let* ((orig (point))
+         (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
+         (end (point))
+         (word (buffer-substring-no-properties beg end))
+
+         (word (py-get-word-before-point)))
     ;; (ignore-errors (comint-dynamic-complete))
     (when (eq (point) orig)
       (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
@@ -15977,9 +15988,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
             (if (string-match "[iI][pP]ython" shell)
                 (ipython-complete nil nil nil nil nil shell debug imports)
               (let* ((orig (point))
-                     (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
-                     (end (point))
-                     (word (buffer-substring-no-properties beg end))
+
                      (proc (get-buffer-process (current-buffer))))
                 (cond ((string= word "")
                        (tab-to-tab-stop))
@@ -15993,10 +16002,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                py-split-windows-on-execute-p
                py-switch-buffers-on-execute-p
                (proc (or (get-process shell)
-                         (get-buffer-process (py-shell nil nil shell 'no-switch nil))))
-               (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
-               (end (point))
-               (word (buffer-substring-no-properties beg end))
+                         (get-buffer-process (py-shell nil nil shell nil t))))
                (imports (py-find-imports)))
           ;; (window-configuration-to-register a)
           (cond ((string= word "")
@@ -16100,7 +16106,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
          (end (or end (point)))
          (pattern (or word (buffer-substring-no-properties beg end)))
          (sep ";")
-         (shell (or shell (py-choose-shell)))
+         (py-shell-name (or shell (py-choose-shell)))
          (processlist (process-list))
          (imports (or imports (py-find-imports)))
          done
@@ -20463,7 +20469,7 @@ If an exception occurred return error-string, otherwise return nil.  BUF must ex
 
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
   (let (file bol err-p estring ecode limit)
-    (set-buffer py-buffer-name)
+    (set-buffer buf)
     ;; (switch-to-buffer py-buffer-name)
     (goto-char (point-max))
     (sit-for 0.1)
