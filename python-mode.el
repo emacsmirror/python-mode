@@ -95,6 +95,13 @@ No semantic indent,  which diff to `py-indent-offset' indicates "
   :group 'python-mode)
 (make-variable-buffer-local 'py-backslashed-lines-indent-offset)
 
+(defcustom py-hanging-indent-p t
+  ""
+
+  :type 'boolean
+  :group 'python-mode)
+(make-variable-buffer-local 'py-hanging-indent-p)
+
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
 
@@ -2814,9 +2821,6 @@ Returns value of `py-split-windows-on-execute-p'. "
   (customize-variable 'py-sexp-function))
 
 ;;;
-
-;;;
-
 ;; Stolen from org-mode
 (defun py-util-clone-local-variables (from-buffer &optional regexp)
   "Clone local variables from FROM-BUFFER.
@@ -9057,6 +9061,13 @@ Optional \\[universal-argument] prompts for options to pass to the Python3.3 int
   (interactive "P")
   (py-shell argprompt nil "python3.3"))
 
+(defun python3.4 (&optional argprompt)
+  "Start an Python3.3 interpreter.
+
+Optional \\[universal-argument] prompts for options to pass to the Python3.3 interpreter. See `py-python-command-args'. "
+  (interactive "P")
+  (py-shell argprompt nil "python3.4"))
+
 (defun bpython (&optional argprompt)
   "Start an Bpython interpreter.
 
@@ -10767,7 +10778,6 @@ Returns the string inserted. "
     (skip-chars-backward " \t\r\n\f")
     (current-indentation)))
 
-
 (defun py-continuation-offset (&optional arg)
   "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. "
   (interactive "p")
@@ -12276,6 +12286,12 @@ Start an Python3.3 interpreter.
 
 Optional C-u prompts for options to pass to the Python3.3 interpreter. See `py-python-command-args'."]
 
+                   ["python3.4" python3.4
+                    :help "`python3.3'
+Start an Python3.4 interpreter.
+
+Optional C-u prompts for options to pass to the Python3.4 interpreter. See `py-python-command-args'."]
+
                    "-"
                    ["python-dedicated" python-dedicated
                     :help "`python-dedicated'
@@ -12696,7 +12712,6 @@ Go to beginning block, skip whitespace at BOL\. "]
                    :help " `py-beginning-of-statement'
 
 Go to the initial line of a simple statement. "]
-
 
                   ["End of statement" py-end-of-statement
                    :help " `py-end-of-statement'
@@ -14108,7 +14123,9 @@ if __name__ == '__main__'
 Default is non-nil. "
                      :style toggle :selected py-if-name-main-permission-p]
 
-                    ["Store result" py-store-result-p
+                    ["Store result"
+                     (setq py-store-result-p
+                           (not py-store-result-p))
                      :help " `py-store-result-p'
 
 When non-nil, put resulting string of `py-execute-\.\.\.' into kill-ring, so it might be yanked\. . "
@@ -14425,7 +14442,6 @@ source code of the innermost traceback frame\.
 
 Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-jump-on-exception]
-
 
                     ["Highlight error in source "
                      (setq py-highlight-error-source-p
@@ -15972,12 +15988,13 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
   (unless (buffer-live-p (get-buffer "*Python Completions*"))
     (setq py-completion-last-window-configuration
           (current-window-configuration)))
-  (let* ((orig (point))
+  (let* ((windows-config (window-configuration-to-register 313465889))
+         (orig (point))
          (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
          (end (point))
          (word (buffer-substring-no-properties beg end))
-
-         (word (py-get-word-before-point)))
+         ;; used by window-configuration
+         val)
     ;; (ignore-errors (comint-dynamic-complete))
     (when (eq (point) orig)
       (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
@@ -16014,7 +16031,10 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                 ;; deals better with imports
                 ;; (imports
                 ;; (py-python-script-complete shell imports beg end word))
-                (t (py-shell-complete-intern word beg end shell imports proc debug))))))))
+                (t (py-shell-complete-intern word beg end shell imports proc debug)))))
+      (and (setq val (get-register 313465889))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
+           (jump-to-register 313465889))
+      )))
 
 (defun py-shell-complete-intern (word &optional beg end shell imports proc debug)
   (when imports
@@ -16068,6 +16088,8 @@ complete('%s')" word) shell nil proc)))
                          (set-window-configuration
                           py-completion-last-window-configuration)))
                    (setq py-completion-last-window-configuration nil)
+                   (when (buffer-live-p (get-buffer "*Python Completions*"))
+                     (kill-buffer (get-buffer "*Python Completions*")))
                    (message "Can't find completion for \"%s\"" word)
                    (ding)
                    nil)
@@ -16082,11 +16104,15 @@ complete('%s')" word) shell nil proc)))
                    ;; (progn (delete-char (- (length word)))
                    ;; (insert (car completions))
                    (py-restore-window-configuration)
+                   (when (buffer-live-p (get-buffer "*Python Completions*"))
+                     (kill-buffer (get-buffer "*Python Completions*")))
                    nil))
           (when py-no-completion-calls-dabbrev-expand-p
             (ignore-errors (dabbrev-expand nil)))
           (when py-indent-no-completion-p
-            (tab-to-tab-stop)))))))
+            (tab-to-tab-stop)
+            (when (buffer-live-p (get-buffer "*Python Completions*"))
+              (kill-buffer (get-buffer "*Python Completions*")))))))))
 
 ;; ipython shell complete
 ;; see also
@@ -20835,16 +20861,23 @@ FILE-NAME."
 ;; with the latter, we can't.  So we just won't add them if they're
 ;; already added.
 
-(let ((modes '(("jython" . jython-mode)
+(let ((modes '(("ipython" . python-mode)
+               ("ipython2" . python-mode)
+               ("ipython3" . python-mode)
+               ("jython" . jython-mode)
                ("python" . python-mode)
                ("python2" . python-mode)
+               ("python2.4" . python-mode)
+               ("python2.5" . python-mode)
                ("python2.6" . python-mode)
                ("python2.7" . python-mode)
                ("python3" . python-mode)
                ("python3.0" . python-mode)
                ("python3.1" . python-mode)
                ("python3.2" . python-mode)
-               ("python3.3" . python-mode))))
+               ("python3.3" . python-mode)
+               ("python3.4" . python-mode)
+               )))
   (while modes
     (when (not (assoc (car modes) interpreter-mode-alist))
       (push (car modes) interpreter-mode-alist))
