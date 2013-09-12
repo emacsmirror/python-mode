@@ -88,19 +88,13 @@ you're editing someone else's Python code."
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-offset)
 
+
 (defcustom py-backslashed-lines-indent-offset 5
   "Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates "
   :type 'integer
   :group 'python-mode)
 (make-variable-buffer-local 'py-backslashed-lines-indent-offset)
-
-(defcustom py-hanging-indent-p t
-  ""
-
-  :type 'boolean
-  :group 'python-mode)
-(make-variable-buffer-local 'py-hanging-indent-p)
 
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
@@ -444,17 +438,45 @@ Default is nil. "
   :group 'python-mode)
 
 (defcustom py-closing-list-dedents-bos nil
-  "If non-nil, closing parentesis dedents onto column of statement, otherwise keeps additional `py-indent-offset', default is nil "
+  "When non-nil, indent list's closing delimiter like start-column.
+
+It will be lined up under the first character of
+ the line that starts the multi-line construct, as in:
+
+my_list = [
+    1, 2, 3,
+    4, 5, 6,
+]
+
+result = some_function_that_takes_arguments(
+    'a', 'b', 'c',
+    'd', 'e', 'f',
+)
+
+Default is nil, i.e.
+
+my_list = [
+    1, 2, 3,
+    4, 5, 6,
+    ]
+result = some_function_that_takes_arguments(
+    'a', 'b', 'c',
+    'd', 'e', 'f',
+    )
+
+Examples from PEP8
+"
+
   :type 'boolean
   :group 'python-mode)
 
 (defcustom py-closing-list-space 1
-  "Number of chars, closing parentesis outdent from opening, default is 1 "
+  "Number of chars, closing parenthesis outdent from opening, default is 1 "
   :type 'number
   :group 'python-mode)
 
 (defcustom py-closing-list-keeps-space nil
-  "If non-nil, closing parentesis dedents onto column of opening plus `py-closing-list-space', default is nil "
+  "If non-nil, closing parenthesis dedents onto column of opening plus `py-closing-list-space', default is nil "
   :type 'boolean
   :group 'python-mode)
 
@@ -9909,7 +9931,7 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
             (setq erg (py-execute-file-base proc (expand-file-name filename) cmd procbuf origfile execute-directory))
           (py-execute-file-base proc (expand-file-name filename) cmd
                                 procbuf origfile execute-directory))
-      (message "%s not readable. %s" file "Do you have write permissions?"))
+      (message "%s not readable. %s" filename "Do you have write permissions?"))
     erg))
 
 (defun py-update-separator-char ()
@@ -10803,6 +10825,8 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
   (save-excursion
     (save-restriction
       (widen)
+      ;; needed by closing
+      (unless orig (back-to-indentation))
       (let* ((orig (or orig (point)))
              (origline (or origline (py-count-lines)))
              ;; closing indicates: when started, looked
@@ -10810,7 +10834,13 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
              ;; line: moved already a line backward
              (line line)
              (pps (syntax-ppss))
-             (closing (or closing (and (nth 1 pps) (looking-at ".*\\s)")(nth 0 pps))))
+             (closing
+              (or closing
+                  (and (nth 1 pps)
+                       (looking-at ".*\\(\\s)\\)")(nth 0 pps)
+                       ;; char doesn't matter for now, maybe drop
+                       (string-to-char (match-string-no-properties 1))
+                       )))
 
              ;; in a recursive call already
              (repeat repeat)
@@ -10900,15 +10930,20 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                       (if (< 1 (- origline this-line))
                           (cond
                            (closing
-                            (cond ((looking-back "^[ \t]*")
-                                   (current-column))
-                                  ((and (eq 1 closing) (looking-at "\\s([ \t]*$") py-closing-list-dedents-bos)
-                                   (current-indentation))
-                                  ((and (eq 1 closing) (looking-at "\\s([ \t]*$") py-closing-list-keeps-space)
-                                   (+ (current-column) py-closing-list-space))
-                                  ((and (eq 1 closing)(looking-at "\\s([ \t]*$"))
-                                   (py-empty-arglist-indent nesting py-indent-offset indent-offset))
-                                  (t (py-fetch-previous-indent orig))))
+                            (cond
+                             (py-closing-list-dedents-bos
+                              (goto-char (nth 1 pps))
+                              (current-indentation))
+                             ((looking-back "^[ \t]*")
+                              (current-column))
+                             (
+                              (and
+                               ;; (or (eq closing ?\})(eq closing ?\]))
+                               (looking-at "\\s([ \t]*$") py-closing-list-keeps-space)
+                              (+ (current-column) py-closing-list-space))
+                             ((looking-at "\\s([ \t]*$")
+                              (py-empty-arglist-indent nesting py-indent-offset indent-offset))
+                             (t (py-fetch-previous-indent orig))))
                            ;; already behind a dedented element in list
                            ((<= 2 (- origline this-line))
                             (py-fetch-previous-indent orig))
@@ -11603,7 +11638,7 @@ With arg, do it that many times.
   "Inserts a print statement out of current `(car kill-ring)' by default, inserts ARG instead if delivered. "
   (interactive "*")
   (let* ((name (string-strip (or arg (car kill-ring))))
-         ;; guess if doublequotes or parentesis are needed
+         ;; guess if doublequotes or parentheses are needed
          (numbered (and (string-match "^[0-9]" name) (string-match "^[ \t]*[0-9]" name)(string-match "[0-9][ \t]*$" name)))
          (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'inferior-python-mode))
                       (if numbered

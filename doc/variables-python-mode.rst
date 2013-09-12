@@ -12,10 +12,26 @@ Amount of offset per level of indentation.
 `M-x py-guess-indent-offset' can usually guess a good value when
 you're editing someone else's Python code.
 
+py-hanging-extra-indent
+-----------------------
+Applied when `py-hanging-indent-p', is non-nil
+
+Make indent inside argument-lists distinguished from the rest:
+
+def long_function_name(
+        var_one, var_two, var_three,
+        var_four):
+    print(var_one)
+
+
 py-backslashed-lines-indent-offset
 ----------------------------------
 Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates 
+
+py-hanging-indent-p
+-------------------
+
 
 pdb-path
 --------
@@ -251,15 +267,15 @@ Default is nil.
 
 py-closing-list-dedents-bos
 ---------------------------
-If non-nil, closing parentesis dedents onto column of statement, otherwise keeps additional `py-indent-offset', default is nil 
+If non-nil, closing parenthesis dedents onto column of statement, otherwise keeps additional `py-indent-offset', default is nil 
 
 py-closing-list-space
 ---------------------
-Number of chars, closing parentesis outdent from opening, default is 1 
+Number of chars, closing parenthesis outdent from opening, default is 1 
 
 py-closing-list-keeps-space
 ---------------------------
-If non-nil, closing parentesis dedents onto column of opening plus `py-closing-list-space', default is nil 
+If non-nil, closing parenthesis dedents onto column of opening plus `py-closing-list-space', default is nil 
 
 py-electric-kill-backward-p
 ---------------------------
