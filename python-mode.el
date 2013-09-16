@@ -189,7 +189,7 @@ Default is nil. "
 (defvar py-fill-column-orig fill-column)
 (defvar py-autofill-timer nil)
 
-(defvar py-python-completions "Python Completions"
+(defvar py-python-completions "*Python Completions*"
   "Buffer name for Python-shell completions, internally used")
 
 (defvar py-ipython-completions "IPython Completions"
@@ -1793,9 +1793,8 @@ set in py-execute-region and used in py-jump-to-exception.")
 (defvar match-paren-no-use-syntax-pps nil)
 
 (defvar py-traceback-line-re
-  "^IPython\\|^In \\[[0-9]+\\]: *\\|[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)\\|^[^ \t>]+>[^0-9]+\\([0-9]+\\)"
-  "Regular expression that describes tracebacks.
-Inludes Python shell-prompt in order to stop further searches. ")
+  "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
+  "Regular expression that describes tracebacks.")
 
 (defvar py-preoutput-result nil
   "Data from last `_emacs_out' line seen by the preoutput filter.")
@@ -16577,7 +16576,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
          (end (point))
          (word (buffer-substring-no-properties beg end))
          (imports (py-find-imports))
-         val)
+         py-fontify-shell-buffer-p)
     ;; (ignore-errors (comint-dynamic-complete))
     (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
         ;;  kind of completion resp. to shell
@@ -16709,7 +16708,8 @@ If no completion available, insert a TAB.
 Returns the completed symbol, a string, if successful, nil otherwise. "
 
   (interactive "*")
-  (let* ((beg (or beg (progn (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
+  (let* (py-fontify-shell-buffer-p
+         (beg (or beg (progn (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
                                              (point)))))
          (end (or end (point)))
          (pattern (or word (buffer-substring-no-properties beg end)))
