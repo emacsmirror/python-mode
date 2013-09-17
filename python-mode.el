@@ -572,7 +572,6 @@ If nil, default, it will not move from at any reasonable level. "
 Normally python-mode, resp. inferior-python-mode know best which function to use. "
   :type '(choice
           (const :tag "default" nil)
-          (const :tag "py-completion-at-point" py-completion-at-point)
           (const :tag "Pymacs based py-complete-completion-at-point" py-complete-completion-at-point)
           (const :tag "py-shell-complete" py-shell-complete)
           (const :tag "IPython's ipython-complete" ipython-complete)
@@ -581,8 +580,7 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
 
 (defcustom ipython-complete-function 'ipython-complete
   "Function used for completion in IPython shell buffers. "
-  :type '(choice (const :tag "py-completion-at-point" py-completion-at-point)
-                 (const :tag "py-shell-complete" py-shell-complete)
+  :type '(choice (const :tag "py-shell-complete" py-shell-complete)
                  (const :tag "Pymacs based py-complete" py-complete)
                  (const :tag "IPython's ipython-complete" ipython-complete))
   :group 'python-mode)
@@ -1922,7 +1920,7 @@ alternative for finding the index.")
     (define-key map (kbd "RET") 'comint-send-input)
     (if py-complete-function
         (define-key map [tab] 'py-complete-function)
-      (define-key map [tab] 'py-completion-at-point))
+      (define-key map [tab] 'py-shell-complete))
     (define-key map "\C-c-" 'py-up-exception)
     (define-key map "\C-c=" 'py-down-exception))
   map)
@@ -3710,8 +3708,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      )))
 
 
-;; Keymap and syntax
-;; used by py-completion-at-point, the way of python.el
 (defun py-point (position)
   "Returns the value of point at certain commonly referenced POSITIONs.
 POSITION can be one of the following symbols:
@@ -3744,6 +3740,7 @@ This function does not modify point or mark."
     erg))
 
 
+;;; Keymap and syntax
 ;; Font-lock and syntax
 (setq py-font-lock-keywords
       ;; Keywords
@@ -9999,6 +9996,7 @@ Returns position where output starts. "
         (setq err-p (save-excursion (py-postprocess-output-buffer procbuf)))
         (py-shell-manage-windows py-buffer-name nil windows-config)
       (and py-store-result-p
+           (sit-for 0.1)
            (setq erg
                  (py-output-filter
                   (buffer-substring-no-properties orig (point-max)))))
@@ -11276,10 +11274,9 @@ Needed when file-path names are contructed from maybe numbered buffer names like
   "Adapt or restore window configuration. Return nil "
   (let (val)
     (cond ((and (boundp 'err-p) err-p)
-           (py-jump-to-exception err-p py-exception-buffer)
-           ;; (and windows-displayed (eq 1 (length windows-displayed))
-           ;; (funcall py-split-windows-on-execute-function)
+           (py-restore-window-configuration)
            (display-buffer output-buffer)
+           (py-jump-to-exception err-p py-exception-buffer)
            (goto-char (point-max))
            nil)
 
@@ -16480,19 +16477,6 @@ and return collected output"
    (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point))
    (point)))
 
-(defun py-completion-at-point ()
-  "An alternative completion, similar the way python.el does it. "
-  (interactive "*")
-  (let* ((start (when (skip-chars-backward "[[:alnum:]_]")(point)))
-         (end (progn (skip-chars-forward "[[:alnum:]_]")(point)))
-         (completion (when start
-                       (py-symbol-completions (buffer-substring-no-properties start end)))))
-    (if completion
-        (progn
-          (delete-region start end)
-          (insert (car completion)))
-      (tab-to-tab-stop))))
-
 ;; started from python.el
 (defalias 'py-script-complete 'py-shell-complete)
 
@@ -21069,20 +21053,24 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 If an exception occurred return error-string, otherwise return nil.  BUF must exist.
 
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
-  (let (file bol err-p estring ecode limit)
-    (set-buffer buf)
-    ;; (switch-to-buffer (current-buffer))
-    (goto-char (point-max))
-    (sit-for 0.1)
+  (set-buffer buf)
+  ;; (sit-for 0.1)
+  (let ((pmx (copy-marker (point-max)))
+        file bol err-p estring ecode limit)
     (unless (looking-back py-pdbtrack-input-prompt)
       (save-excursion
         (forward-line -1)
         (end-of-line)
-        (when (re-search-backward py-shell-prompt-regexp nil t 1)
+        (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
+                  ;; (and (string= "ipython" (process-name proc))
+                  (re-search-backward ipython-de-input-prompt-regexp nil t 1))
           ;; not a useful message, delete it - please tell when thinking otherwise
           (and (re-search-forward "File \"<stdin>\", line 1,.*\n" nil t)
                (replace-match ""))
+          ;; File "/tmp/ipython-3984xMQ.py", line 1
+          ;; print(3*5f)
           (when (and (re-search-forward py-traceback-line-re limit t)
+                     (match-string-no-properties 0)
                      (or (match-string 1) (match-string 3)))
             (when (match-string-no-properties 1)
               (replace-match (buffer-name py-exception-buffer) nil nil nil 1)
@@ -21097,7 +21085,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
                             (get-buffer py-exception-buffer)
                             (get-buffer (file-name-nondirectory py-exception-buffer))))) (string-match "^[ \t]*File" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
                             (looking-at "[ \t]*File")
-                            (replace-match "Buffer")))
+                            (replace-match " Buffer")))
               (add-to-list 'err-p origline)
               (add-to-list 'err-p file)
               (overlay-put (make-overlay (match-beginning 0) (match-end 0))
@@ -21113,7 +21101,10 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
               (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
               (add-to-list 'err-p ecode t)))
           ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
-          err-p)))))
+          )))
+
+    ;; (goto-char pmx)
+    err-p))
 
 (defun py-remove-overlays-at-point ()
   "Remove overlays as set when `py-highlight-error-source-p' is non-nil. "
@@ -21526,7 +21517,7 @@ containing Python source.
       (add-hook 'completion-at-point-functions
                 py-complete-function nil 'local)
     (add-hook 'completion-at-point-functions
-              'py-completion-at-point nil 'local))
+              'py-shell-complete nil 'local))
   (compilation-shell-minor-mode 1))
 
 (define-derived-mode python-mode fundamental-mode python-mode-modeline-display
