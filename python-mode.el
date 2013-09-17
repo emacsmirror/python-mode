@@ -192,7 +192,7 @@ Default is nil. "
 (defvar py-python-completions "*Python Completions*"
   "Buffer name for Python-shell completions, internally used")
 
-(defvar py-ipython-completions "IPython Completions"
+(defvar py-ipython-completions "*IPython Completions*"
   "Buffer name for IPython-shell completions, internally used")
 
 (defvar py-close-completions-timer nil
@@ -336,6 +336,20 @@ Default is non-nil"
 
 `font-lock-doc-face' inherits `font-lock-string-face'.
 Call M-x `customize-face' in order to have a visible effect. "
+
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-defun-use-top-level-p nil
+  "When non-nil, keys C-M-a, C-M-e address top-level form.
+
+Default is nil.
+
+Beginning- end-of-defun forms use
+commands `py-beginning-of-top-level', `py-end-of-top-level'
+
+mark-defun marks top-level form at point etc.
+"
 
   :type 'boolean
   :group 'python-mode)
@@ -3402,9 +3416,9 @@ Don't save anything for STR matching `py-history-filter-regexp'."
     (cond ((null where) (list string))
           ((not (= where 0))
            (cons (substring string 0 where)
-                 (python-args-to-list (substring string (+ 1 where)))))
+                 (py-args-to-list (substring string (+ 1 where)))))
           (t (let ((pos (string-match "[^ \t]" string)))
-               (if pos (python-args-to-list (substring string pos))))))))
+               (if pos (py-args-to-list (substring string pos))))))))
 
 ;; Using this stops us getting lines in the buffer like
 ;; >>> ... ... >>>
@@ -5368,6 +5382,23 @@ the default"
       (goto-char end)
       (comment-region beg end arg))))
 
+(defun py-comment-top-level (&optional beg end arg)
+  "Comments top-level form at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-top-level-position)))
+          (end (or end (py-end-of-top-level-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
 (defun py-comment-clause (&optional beg end arg)
   "Comments clause at point.
 
@@ -5971,6 +6002,15 @@ See available styles at `py-fill-paragraph' or var `py-docstring-style'
 ;;             (py-fill-string (nth 8 pps)))))))))
 
 ;; Beginning-of- p
+(defun py-beginning-of-top-level-p ()
+  "Returns position, if cursor is at the beginning of a top-level, nil otherwise. "
+  (interactive)
+  (let (erg)
+    (and (py-beginning-of-statement-p)
+         (eq 0 (current-column))
+         (setq erg (point))
+         erg)))
+
 (defun py-beginning-of-line-p ()
   "Returns position, if cursor is at the beginning of a line, nil otherwise. "
   (when (bolp)(point)))
@@ -7204,6 +7244,47 @@ http://docs.python.org/reference/compound_stmts.html"
   (py-beginning-of-prepare indent 'py-minor-block-re 'py-clause-re (interactive-p) t))
 
 ;;;
+(defun py-beginning-of-top-level ()
+  "Go up to beginning of statments until level of indentation is null.
+
+Returns position if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (let (erg)
+    (unless (bobp)
+      (while (and (not (bobp)) (setq erg (py-beginning-of-statement))
+                  (< 0 (current-indentation))))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-top-level ()
+  "Go to end of top-level form at point.
+
+Returns position if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (let ((orig (point))
+        erg)
+    (unless (eobp)
+      (unless (py-beginning-of-statement-p)
+        (py-beginning-of-statement))
+      (unless (eq 0 (current-column))
+        (py-beginning-of-top-level))
+      (if (looking-at py-block-re)
+          (setq erg (py-end-of-block))
+        (setq erg (py-end-of-statement)))
+      (unless (< orig (point))
+        (while (and (not (eobp)) (py-down-statement)(< 0 (current-indentation))))
+        (if (looking-at py-block-re)
+            (setq erg (py-end-of-block))
+          (setq erg (py-end-of-statement))))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
 (defun py-beginning ()
   "Go to beginning of compound statement or definition at point.
 
@@ -7864,6 +7945,17 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
+(defun py-mark-top-level ()
+  "Mark top-level form at point.
+
+Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base "top-level"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
 (defun py-mark-expression ()
   "Mark expression at point.
 
@@ -7892,14 +7984,18 @@ Returns beginning and end positions of marked area, a cons. "
 
 (defalias 'py-expression 'py-copy-expression)
 (defun py-copy-expression ()
-  "Mark expression at point.
-
-Returns beginning and end positions of marked area, a cons. "
+  "Mark expression at point. "
   (interactive)
   (let ((erg (py-mark-base "expression")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
+
+(defun py-copy-top-level ()
+  "Copy top-level form at point. "
+  (interactive)
+  (let ((erg (py-mark-base "top-level")))
+    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defalias 'py-minor-expression 'py-copy-partial-expression)
 (defalias 'py-partial-expression 'py-copy-partial-expression)
@@ -7949,27 +8045,21 @@ Also for existing commands a shorthand is defined:
 
 (defalias 'py-statement 'py-copy-statement)
 (defun py-copy-statement ()
-  "Mark statement at point.
-
-Returns beginning and end positions of marked area, a cons. "
+  "Mark statement at point. "
   (interactive)
   (let ((erg (py-mark-base "statement")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defalias 'py-block 'py-copy-block)
 (defun py-copy-block ()
-  "Mark block at point.
-
-Returns beginning and end positions of marked area, a cons. "
+  "Mark block at point. "
   (interactive)
   (let ((erg (py-mark-base "block")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
 (defalias 'py-block-or-clause 'py-copy-block-or-clause)
 (defun py-copy-block-or-clause ()
-  "Mark block-or-clause at point.
-
-Returns beginning and end positions of marked area, a cons. "
+  "Mark block-or-clause at point. "
   (interactive)
   (let ((erg (py-mark-base "block-or-clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
@@ -8016,7 +8106,88 @@ Returns beginning and end positions of marked area, a cons."
   (let ((erg (py-mark-base "clause")))
     (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
 
-;;; Deleting
+;;; Delete
+(defun py-delete-statement ()
+  "Delete STATEMENT at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "statement")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-top-level ()
+  "Delete TOP-LEVEL at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "top-level")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-block ()
+  "Delete BLOCK at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "block")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-block-or-clause ()
+  "Delete BLOCK-OR-CLAUSE at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "block-or-clause")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-def ()
+  "Delete DEF at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "def")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-class ()
+  "Delete CLASS at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "class")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-def-or-class ()
+  "Delete DEF-OR-CLASS at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "def-or-class")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-expression ()
+  "Delete EXPRESSION at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "expression")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-partial-expression ()
+  "Delete PARTIAL-EXPRESSION at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "partial-expression")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-minor-block ()
+  "Delete MINOR-BLOCK at point.
+
+Don't store data in kill ring. "
+  (interactive "*")
+  (let ((erg (py-mark-base "minor-block")))
+    (delete-region (car erg) (cdr erg))))
+
+;;; Kill
 (defun py-kill-statements ()
   "Delete statements declared in current level.
 
@@ -8069,6 +8240,14 @@ Store deleted variables in kill-ring "
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
   (let ((erg (py-mark-base "statement")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-kill-top-level ()
+  "Delete top-level form at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base "top-level")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block ()
@@ -15947,6 +16126,13 @@ Returns position reached, if successful, nil otherwise. "]
                      :help "`py-mark-statement-bol'
 Mark statement at point. "]
 
+                    ["Mark top level" py-mark-top-level
+                     :help " `py-mark-top-level'
+
+Mark top-level form at point\.
+
+Returns beginning and end positions of marked area, a cons\. . "]
+
                     ["Copy statement bol" py-copy-statement-bol
                      :help "`py-copy-statement-bol'
 Copy statement at point. "]
@@ -16704,9 +16890,9 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
          done
          (process
           (if ipython-complete-use-separate-shell-p
-              (unless (and (buffer-live-p " *IPython-Complete*")
-                           (comint-check-proc (process-name (get-buffer-process " *IPython-Complete*"))))
-                (get-buffer-process (py-shell nil nil py-shell-name " *IPython-Complete*")))
+              (unless (and (buffer-live-p py-ipython-completions)
+                           (comint-check-proc (process-name (get-buffer-process py-ipython-completions))))
+                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions)))
             (progn
               (while (and processlist (not done))
                 (when (and
@@ -17365,6 +17551,16 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
                    (or (py-beginning-of-statement-p)
                        (py-beginning-of-statement))))
           (end (py-end-of-statement)))
+      (py-execute-region beg end))))
+
+(defun py-execute-top-level ()
+  "Send top-level at point to a Python interpreter. "
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-top-level-p)
+                       (py-beginning-of-top-level))))
+          (end (py-end-of-top-level)))
       (py-execute-region beg end))))
 
 (defun py-execute-block ()
@@ -21676,6 +21872,9 @@ Like `python-mode', but sets up parameters for Jython subprocesses.
 Runs `jython-mode-hook' after `python-mode-hook'."
   :group 'python-mode
   (py-toggle-shell "jython"))
+
+(defalias 'py-beginning-of-decorator-bol 'py-beginning-of-decorator)
+(defalias 'py-top-level 'py-copy-top-level)
 
 (provide 'python-mode)
 ;; python-mode.el ends here
