@@ -4765,70 +4765,20 @@ Returns and keeps relative position "
     (goto-char orig)))
 
 ;;; Positions
-
-(defun py-def-or-class-beginning-position ()
-  "Returns beginning position of function or class definition. "
-  (interactive)
-  (let ((here (point))
-        (pos (progn (py-beginning-of-def-or-class)(point))))
-    (prog1
-        (point)
-      (when (and py-verbose-p (interactive-p)) (message "%s" pos))
-      (goto-char here))))
-
-(defun py-def-or-class-end-position ()
-  "Returns end position of function or class definition. "
-  (interactive)
-  (let ((here (point))
-        (pos (progn (py-end-of-def-or-class) (point))))
-    (prog1
-        (point)
-      (when (and py-verbose-p (interactive-p)) (message "%s" pos))
-      (goto-char here))))
-
-(defun py-statement-beginning-position ()
-  "Returns beginning position of statement. "
-  (interactive)
-  (let ((here (point))
-        (pos (progn (py-beginning-of-statement)(point))))
-    (prog1
-        (point)
-      (when (and py-verbose-p (interactive-p)) (message "%s" pos))
-      (goto-char here))))
-
-(defun py-statement-end-position ()
-  "Returns end position of statement. "
-  (interactive)
-  (let (erg)
-    (save-excursion
-      (setq erg (py-end-of-statement)))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
-
-(defun py-current-indentation ()
-  "Returns beginning position of code in line. "
-  (interactive)
-  (let ((here (point))
-        (pos (progn (back-to-indentation)(point))))
-    (prog1
-        (point)
-      (when (and py-verbose-p (interactive-p)) (message "%s" pos))
-      (goto-char here))))
-
 (defun py-beginning-of-paragraph-position ()
   "Returns beginning of paragraph position. "
   (interactive)
   (save-excursion
-    (let ((erg (progn (py-beginning-of-paragraph) (point))))
-      (when (interactive-p) (message "%s" erg))
+    (let ((erg (py-beginning-of-paragraph)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py-end-of-paragraph-position ()
   "Returns end of paragraph position. "
   (interactive)
   (save-excursion
-    (let ((erg (progn (py-end-of-paragraph) (point))))
-      (when (interactive-p) (message "%s" erg))
+    (let ((erg (py-end-of-paragraph)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py-beginning-of-block-position ()
@@ -4844,6 +4794,22 @@ Returns and keeps relative position "
   (interactive)
   (save-excursion
     (let ((erg (py-end-of-block)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-beginning-of-minor-block-position ()
+  "Returns beginning of minor-block position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-beginning-of-minor-block)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-minor-block-position ()
+  "Returns end of minor-block position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-end-of-minor-block)))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4959,6 +4925,72 @@ Returns and keeps relative position "
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
+(defun py-beginning-of-comment-position ()
+  "Returns beginning of comment position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-beginning-of-comment)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-comment-position ()
+  "Returns end of comment position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-end-of-comment)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-beginning-of-top-level-position ()
+  "Returns beginning of top-level position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-beginning-of-top-level)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-top-level-position ()
+  "Returns end of top-level position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-end-of-top-level)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-beginning-of-partial-expression-position ()
+  "Returns beginning of partial-expression position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-beginning-of-partial-expression)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-partial-expression-position ()
+  "Returns end of partial-expression position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-end-of-partial-expression)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-beginning-of-expression-position ()
+  "Returns beginning of expression position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-beginning-of-expression)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+(defun py-end-of-expression-position ()
+  "Returns end of expression position. "
+  (interactive)
+  (save-excursion
+    (let ((erg (py-end-of-expression)))
+      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+      erg)))
+
+;;; some more Positions not generated by
+;; `py-write-beg-end-position-forms'
 (defun py-beginning-of-expression-position ()
   "Returns beginning of expression position. "
   (interactive)
@@ -6316,51 +6348,44 @@ and `pass'.  This doesn't catch embedded statements."
   (unless (eobp)
     (let* ((orig (or orig (point)))
            (regexp (or regexp 'py-extended-block-or-clause-re))
+           (thisregexp
+            (cond ((eq regexp 'py-def-or-class-re)
+                   (concat "@\\|" py-def-or-class-re))
+                  ((eq regexp 'py-def-re)
+                   (concat "@\\|" py-def-re))
+                  ((eq regexp 'py-class-re)
+                   (concat "@\\|" py-class-re))
+                  ((eq regexp 'py-minor-block-re)
+                   py-minor-block-re)
+                  (t (concat "@\\|" py-extended-block-or-clause-re))))
+
+           bofst
            (this (progn (back-to-indentation)
-                        (cond ((and (py-beginning-of-statement-p)(eq regexp 'py-clause-re)(looking-at py-extended-block-or-clause-re))
+                        (setq bofst (py-beginning-of-statement-p))
+                        (cond ((and bofst (eq regexp 'py-clause-re)(looking-at py-extended-block-or-clause-re))
                                (point))
-                              ((and (py-beginning-of-statement-p)(looking-at (symbol-value regexp)))
+                              ((and bofst (looking-at (symbol-value regexp)))
                                (point))
                               (t
                                (when
                                    (cdr-safe
                                     (py-go-to-keyword
-                                     (cond ((eq regexp 'py-def-or-class-re)
-                                            py-def-or-class-re)
-                                           ((eq regexp 'py-def-re)
-                                            py-def-re)
-                                           ((eq regexp 'py-class-re)
-                                            py-class-re)
-                                           (t py-extended-block-or-clause-re))))
+                                     thisregexp))
                                  (when (py-statement-opens-block-p py-extended-block-or-clause-re)
                                    (point)))))))
            ind erg last pps)
       (if this
           (progn
-            (setq py-bol-forms-last-indent (cons this-command (current-indentation)))
-            (setq ind (+ (progn (if py-smart-indentation (py-guess-indent-offset) py-indent-offset)) (current-indentation)))
-            (py-end-of-statement)
-            (setq last (point))
-            (skip-chars-forward " \t\r\n\f")
-            (if (eobp)
-                (goto-char last)
-              (if (and (< (current-indentation) ind) (looking-at (symbol-value regexp)))
-                  ;; clause matched
-                  (skip-chars-backward " \t\r\n\f")
-                (py-travel-current-indent ind (point))
-                (cond ((or (eq 'py-clause-re regexp) (eq 'py-block-or-clause-re regexp))
-                       (unless (< orig (point))
-                         (if
-                             (and (setq last (point)) (prog1 (py-end-of-statement)(beginning-of-line))(looking-at py-clause-re))
-                             (py-travel-current-indent (+ (current-indentation) py-indent-offset) (point))
-                           (goto-char last))))
-                      ((eq 'py-block-re regexp)
-                       (while
-                           (and (setq last (point)) (prog1 (py-end-of-statement)(py-beginning-of-statement))
-                                (or (and (looking-at py-clause-re) (<= ind (+ (current-indentation) py-indent-offset))(py-end-of-statement) (py-end-of-statement))
-                                    (<= ind (current-indentation))))
-                         (py-travel-current-indent ind (point)))
-                       (goto-char last))))))
+            (setq thisindent (current-indentation))
+            (while
+                (and (py-down-statement)
+                     (or (< thisindent (current-indentation))
+                         (and (eq thisindent (current-indentation))
+                              (or (eq regexp 'py-minor-block-re)
+                                  (eq regexp 'py-block-re))
+                              (looking-at py-clause-re)))
+                     (py-end-of-statement)(setq last (point))))
+            (goto-char last))
         (goto-char orig))
       (when (and (<= (point) orig)(not (looking-at (symbol-value regexp))))
         ;; found the end above
@@ -11253,7 +11278,7 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                         (py-compute-indentation orig origline closing line nesting repeat indent-offset))
                     (py-beginning-of-statement)
                     (py-compute-indentation orig origline closing line nesting repeat indent-offset))))
-               ((py-statement-opens-block-p py-extended-block-or-clause-re)
+               ((or (py-statement-opens-block-p py-extended-block-or-clause-re)(looking-at "@"))
                 (if (< (py-count-lines) origline)
                     (+ (if py-smart-indentation (py-guess-indent-offset) indent-offset) (current-indentation))
                   (skip-chars-backward " \t\r\n\f")
