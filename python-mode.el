@@ -4563,6 +4563,32 @@ Returns outmost indentation reached. "
     (when (interactive-p) (message "%s" erg))
     erg))
 
+(defun py-shift-minor-block-left (&optional arg)
+  "Dedent minor-block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached.
+A minor block is started by a `for', `if', `try' or `with'. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "minor-block" (- (or arg py-indent-offset)))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defun py-shift-minor-block-right (&optional arg)
+  "Indent minor-block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached.
+A minor block is started by a `for', `if', `try' or `with'. "
+  (interactive "*P")
+  (let ((erg (py-shift-forms-base "minor-block" (or arg py-indent-offset))))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
 (defun py-shift-clause-right (&optional arg)
   "Indent clause by COUNT spaces.
 
@@ -4765,6 +4791,7 @@ Returns and keeps relative position "
     (goto-char orig)))
 
 ;;; Positions
+;;; Positions
 (defun py-beginning-of-paragraph-position ()
   "Returns beginning of paragraph position. "
   (interactive)
@@ -4777,7 +4804,11 @@ Returns and keeps relative position "
   "Returns end of paragraph position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-paragraph)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-paragraph))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4793,7 +4824,11 @@ Returns and keeps relative position "
   "Returns end of block position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-block)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-block))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4809,7 +4844,11 @@ Returns and keeps relative position "
   "Returns end of minor-block position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-minor-block)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-minor-block))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4825,7 +4864,11 @@ Returns and keeps relative position "
   "Returns end of clause position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-clause)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-clause))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4841,7 +4884,11 @@ Returns and keeps relative position "
   "Returns end of block-or-clause position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-block-or-clause)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-block-or-clause))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4857,7 +4904,11 @@ Returns and keeps relative position "
   "Returns end of def position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-def)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-def))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4873,7 +4924,11 @@ Returns and keeps relative position "
   "Returns end of class position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-class)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-class))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4889,7 +4944,11 @@ Returns and keeps relative position "
   "Returns end of def-or-class position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-def-or-class)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-def-or-class))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4905,7 +4964,11 @@ Returns and keeps relative position "
   "Returns end of line position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-line)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-line))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4921,7 +4984,11 @@ Returns and keeps relative position "
   "Returns end of statement position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-statement)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-statement))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4937,7 +5004,11 @@ Returns and keeps relative position "
   "Returns end of comment position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-comment)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-comment))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4953,7 +5024,11 @@ Returns and keeps relative position "
   "Returns end of top-level position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-top-level)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-top-level))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4969,7 +5044,11 @@ Returns and keeps relative position "
   "Returns end of partial-expression position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-partial-expression)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-partial-expression))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
@@ -4985,44 +5064,16 @@ Returns and keeps relative position "
   "Returns end of expression position. "
   (interactive)
   (save-excursion
-    (let ((erg (py-end-of-expression)))
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-end-of-expression))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 ;;; some more Positions not generated by
 ;; `py-write-beg-end-position-forms'
-(defun py-beginning-of-expression-position ()
-  "Returns beginning of expression position. "
-  (interactive)
-  (save-excursion
-    (let ((erg (py-beginning-of-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
-
-(defun py-end-of-expression-position ()
-  "Returns end of expression position. "
-  (interactive)
-  (save-excursion
-    (let ((erg (py-end-of-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
-
-(defun py-beginning-of-partial-expression-position ()
-  "Returns beginning of partial-expression position. "
-  (interactive)
-  (save-excursion
-    (let ((erg (py-beginning-of-partial-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
-
-(defun py-end-of-partial-expression-position ()
-  "Returns end of partial-expression position. "
-  (interactive)
-  (save-excursion
-    (let ((erg (py-end-of-partial-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-      erg)))
-
 (defalias 'py-in-list-p 'py-list-beginning-position)
 (defun py-list-beginning-position (&optional start)
   "Return lists beginning position, nil if not inside.
@@ -5414,6 +5465,23 @@ the default"
       (goto-char end)
       (comment-region beg end arg))))
 
+(defun py-comment-minor-block (&optional beg end arg)
+  "Comments minor-block at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-minor-block-position)))
+          (end (or end (py-end-of-minor-block-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
 (defun py-comment-top-level (&optional beg end arg)
   "Comments top-level form at point.
 
@@ -5548,11 +5616,11 @@ If region is active, restrict uncommenting at region "
     (save-restriction
       (when (use-region-p)
         (narrow-to-region (region-beginning) (region-end)))
-      (let ((beg (or beg (progn (goto-char (point-min))
-                                (search-forward comment-start)
-                                (match-beginning 0))))
-            end)
-        (setq end (or end (py-end-of-comment)))
+      (let* (last
+             (beg (or beg (save-excursion
+                            (while (and (py-beginning-of-comment) (setq last (point))(prog1 (forward-line -1)(end-of-line))))
+                            last))))
+        (and (py-end-of-comment))
         (py-uncomment-intern beg (point))))))
 
 (defun py-delete-comments-in-def-or-class ()
@@ -6133,6 +6201,15 @@ See available styles at `py-fill-paragraph' or var `py-docstring-style'
              (not (py-in-string-or-comment-p)))
     (point)))
 
+(defun py-beginning-of-minor-block-p ()
+  "Returns position, if cursor is at the beginning of a minor-block, nil otherwise.
+
+A minor block is started by a `for', `if', `try' or `with'.
+"
+  (when (and (looking-at py-minor-block-re)
+             (not (py-in-string-or-comment-p)))
+    (point)))
+
 ;; End-of- p
 (defun py-end-of-line-p ()
   "Returns position, if cursor is at the end of a line, nil otherwise. "
@@ -6373,7 +6450,7 @@ and `pass'.  This doesn't catch embedded statements."
                                      thisregexp))
                                  (when (py-statement-opens-block-p py-extended-block-or-clause-re)
                                    (point)))))))
-           ind erg last pps)
+           ind erg last pps thisindent)
       (if this
           (progn
             (setq thisindent (current-indentation))
@@ -6988,18 +7065,6 @@ http://docs.python.org/reference/compound_stmts.html
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-beginning-of-top-level ()
-  "Go to beginning of block until level of indentation is null.
-
-Returns beginning of block if successful, nil otherwise
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
-  (interactive)
-  (py-beginning-of-block)
-  (unless (or (bobp) (bolp))
-    (py-beginning-of-top-level)))
-
 ;;; Beginning of forms
 (defun py-beginning-of-form-intern (regexp &optional iact indent orig lc)
   "Go to beginning of FORM.
@@ -7157,9 +7222,8 @@ http://docs.python.org/reference/compound_stmts.html"
   "Go to beginning minor-block, skip whitespace at BOL.
 
 Returns beginning of minor-block if successful, nil otherwise
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
+A minor block is started by a `for', `if', `try' or `with'.
+"
   (interactive)
   (py-beginning-of-prepare indent 'py-minor-block-re 'py-clause-re (interactive-p)))
 
@@ -7272,10 +7336,7 @@ http://docs.python.org/reference/compound_stmts.html"
 (defun py-beginning-of-top-level ()
   "Go up to beginning of statments until level of indentation is null.
 
-Returns position if successful, nil otherwise
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
+Returns position if successful, nil otherwise "
   (interactive)
   (let (erg)
     (unless (bobp)
@@ -7498,8 +7559,8 @@ http://docs.python.org/reference/compound_stmts.html"
 
 Returns end of minor-block if successful, nil otherwise
 
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
+A minor block is started by a `for', `if', `try' or `with'.
+"
   (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base 'py-minor-block-re orig)))
@@ -7887,6 +7948,18 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
+
+(defun py-mark-minor-block ()
+  "Mark minor-block at point.
+
+Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py-mark-base "minor-block"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
 (defun py-mark-clause ()
   "Mark clause at point.
 
@@ -8003,133 +8076,106 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-;;; Copyin
-(defalias 'py-copy-declarations 'py-declarations)
-(defalias 'py-copy-statements 'py-statements)
-
-(defalias 'py-expression 'py-copy-expression)
-(defun py-copy-expression ()
-  "Mark expression at point. "
-  (interactive)
-  (let ((erg (py-mark-base "expression")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
-    erg))
-
-(defun py-copy-top-level ()
-  "Copy top-level form at point. "
-  (interactive)
-  (let ((erg (py-mark-base "top-level")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
-(defalias 'py-minor-expression 'py-copy-partial-expression)
-(defalias 'py-partial-expression 'py-copy-partial-expression)
-(defun py-copy-partial-expression ()
-  "Mark partial-expression at point.
-
-Returns beginning and end positions of marked area, a cons.
-
-\".\" operators delimit a partial-expression expression on it's level, that's the difference to compound expressions.
-
-Given the function below, `py-partial-expression'
-called at pipe symbol would copy and return:
-
-def usage():
-    print \"\"\"Usage: %s
-    ....\"\"\" % (
-        os.path.basename(sys.argv[0]))
-------------|-------------------------
-==> path
-
-        os.path.basename(sys.argv[0]))
-------------------|-------------------
-==> basename(sys.argv[0]))
-
-        os.path.basename(sys.argv[0]))
---------------------------|-----------
-==> sys
-
-        os.path.basename(sys.argv[0]))
-------------------------------|-------
-==> argv[0]
-
-while `py-expression' would copy and return
-
-\(
-        os.path.basename(sys.argv[0]))
-
-\;;
-
-Also for existing commands a shorthand is defined:
-
-\(defalias 'py-statement 'py-copy-statement)"
-
-  (interactive)
-  (let ((erg (py-mark-base "partial-expression")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+;;; Copy
 
 (defalias 'py-statement 'py-copy-statement)
 (defun py-copy-statement ()
-  "Mark statement at point. "
-  (interactive)
+  "Copy statement at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
   (let ((erg (py-mark-base "statement")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-top-level 'py-copy-top-level)
+(defun py-copy-top-level ()
+  "Copy top-level at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "top-level")))
+    (copy-region-as-kill (car erg) (cdr erg))))
 
 (defalias 'py-block 'py-copy-block)
 (defun py-copy-block ()
-  "Mark block at point. "
-  (interactive)
+  "Copy block at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
   (let ((erg (py-mark-base "block")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
-(defalias 'py-block-or-clause 'py-copy-block-or-clause)
-(defun py-copy-block-or-clause ()
-  "Mark block-or-clause at point. "
-  (interactive)
-  (let ((erg (py-mark-base "block-or-clause")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
-(defalias 'py-def 'py-copy-def)
-(defun py-copy-def (&optional arg)
-  "Mark def at point.
-
-With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
-Returns beginning and end positions of marked area, a cons."
-
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        (erg (py-mark-base "def" py-mark-decorators)))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
-(defun py-copy-def-or-class (&optional arg)
-  "Mark def-or-class at point.
-
-With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
-Returns beginning and end positions of marked area, a cons."
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        (erg (py-mark-base "def-or-class" py-mark-decorators)))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
-
-(defalias 'py-class 'py-copy-class)
-(defun py-copy-class (&optional arg)
-  "Mark class at point.
-
-With universal argument or `py-mark-decorators' set to `t' decorators are copied too.
-Returns beginning and end positions of marked area, a cons."
-
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        (erg (py-mark-base "class" py-mark-decorators)))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+    (copy-region-as-kill (car erg) (cdr erg))))
 
 (defalias 'py-clause 'py-copy-clause)
 (defun py-copy-clause ()
-  "Mark clause at point.
-  Returns beginning and end positions of marked area, a cons. "
-  (interactive)
+  "Copy clause at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
   (let ((erg (py-mark-base "clause")))
-    (kill-new (buffer-substring-no-properties (car erg) (cdr erg)))))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-block-or-clause 'py-copy-block-or-clause)
+(defun py-copy-block-or-clause ()
+  "Copy block-or-clause at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "block-or-clause")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-def 'py-copy-def)
+(defun py-copy-def ()
+  "Copy def at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "def")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-class 'py-copy-class)
+(defun py-copy-class ()
+  "Copy class at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "class")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-def-or-class 'py-copy-def-or-class)
+(defun py-copy-def-or-class ()
+  "Copy def-or-class at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "def-or-class")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-expression 'py-copy-expression)
+(defun py-copy-expression ()
+  "Copy expression at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "expression")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-partial-expression 'py-copy-partial-expression)
+(defun py-copy-partial-expression ()
+  "Copy partial-expression at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "partial-expression")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defalias 'py-minor-block 'py-copy-minor-block)
+(defun py-copy-minor-block ()
+  "Copy minor-block at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py-mark-base "minor-block")))
+    (copy-region-as-kill (car erg) (cdr erg))))
 
 ;;; Delete
 (defun py-delete-statement ()
@@ -8207,7 +8253,8 @@ Don't store data in kill ring. "
 (defun py-delete-minor-block ()
   "Delete MINOR-BLOCK at point.
 
-Don't store data in kill ring. "
+Don't store data in kill ring.
+A minor block is started by a `for', `if', `try' or `with'."
   (interactive "*")
   (let ((erg (py-mark-base "minor-block")))
     (delete-region (car erg) (cdr erg))))
@@ -8281,6 +8328,15 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
   (let ((erg (py-mark-base "block")))
+    (kill-region (car erg) (cdr erg))))
+
+
+(defun py-kill-minor-block ()
+  "Delete minor-block at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py-mark-base "minor-block")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-block-or-clause ()
@@ -12801,6 +12857,15 @@ Mark block at point\.
 
 Returns beginning and end positions of marked area, a cons\. "]
 
+
+                  ["Mark minor block" py-mark-minor-block
+                   :help " `py-mark-minor-block'
+
+Mark minor-block at point\.
+
+A minor block is started by a `for', `if', `try' or `with'.
+Returns beginning and end positions of marked area, a cons\. . "]
+
                   ["Mark def or class" py-mark-def-or-class
                    :help " `py-mark-def-or-class'
 
@@ -12812,6 +12877,13 @@ Returns beginning and end positions of marked area, a cons\. "]
                    :help "`py-mark-statement'
 Mark statement at point"]
 
+                  ["Mark top level" py-mark-top-level
+                   :help " `py-mark-top-level'
+
+Mark top-level form at point\.
+
+Returns beginning and end positions of marked area, a cons\. . "]
+
                   ["Mark clause" py-mark-clause
                    :help "`py-mark-clause'
 Mark innermost compound statement at point"]
@@ -12819,9 +12891,11 @@ Mark innermost compound statement at point"]
                   ["Mark def" py-mark-def
                    :help "`py-mark-def'
 Mark innermost definition at point"]
+
                   ["Mark expression" py-mark-expression
                    :help "`py-mark-expression'
 Mark expression at point"]
+
                   ["Mark partial expression" py-mark-partial-expression
                    :help "`py-mark-partial-expression'
 \".\" operators delimit a partial-expression expression on it's level"]
@@ -12870,13 +12944,32 @@ Mark try-block at point reaching beginning-of-line. "]
 
                   ["Mark minor-block bol" py-mark-minor-block-bol
                    :help "`py-mark-minor-block-bol'
-Mark minor-block at point reaching beginning-of-line. "]
+
+Mark minor-block at point reaching beginning-of-line.
+A minor block is started by a `for', `if', `try' or `with'."]
 
                   )
+
                  "-"
-                 ["Shift region left"    py-shift-region-left]
-                 ["Shift region right"   py-shift-region-right]
+
+                 ["Shift region left" py-shift-region-left
+                  :help " `py-shift-region-left'
+
+Dedent region according to `py-indent-offset' by COUNT times\.
+
+If no region is active, current line is dedented\.
+Returns indentation reached. "]
+
+                 ["Shift region right" py-shift-region-right
+                  :help " `py-shift-region-right'
+
+Indent region according to `py-indent-offset' by COUNT times\.
+
+If no region is active, current line is indented\.
+Returns indentation reached. "]
+
                  "-"
+
                  ("Comment"
                   ["Comment Region"   py-comment-region (point) (mark)
                    :help "Like `comment-region' but uses double hash (`#') comment starter." ]
@@ -12895,6 +12988,22 @@ If region is active, restrict uncommenting at region . "]
 Comments block at point\.
 
 Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is `t',
+the default. "]
+
+                  ["Comment minor-block" py-comment-minor-block
+                   :help " `py-comment-minor-block'
+Comments minor-block at point\.
+
+A minor block is started by a `for', `if', `try' or `with'.
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is `t',
+the default. "]
+
+                  ["Comment top level" py-comment-top-level
+                   :help " `py-comment-top-level'
+
+Comments top-level form at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
 the default. "]
 
                   ["Comment clause" py-comment-clause
@@ -12940,13 +13049,46 @@ Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is `t',
 the default. "]
 
                   )
+
                  "-"
+
                  ("Move"
+
+                  ["Up level" py-up
+                   :help " `py-up'
+Go to beginning one level above of compound statement or definition at point. "]
+
+                  ["Down level" py-down
+                   :help " `py-down'
+Go to beginning one level below of compound statement or definition at point. "]
+
+                  "-"
 
                   ["Beginning of top level" py-beginning-of-top-level
                    :help " `py-beginning-of-top-level'
 
-Go to the very beginning of current block. "]
+Go to the very beginning of top-level form at point. "]
+
+                  ["End of top level" py-end-of-top-level
+                   :help " `py-end-of-top-level'
+
+Go to end of top-level form at point. "]
+
+                  "-"
+
+                  ["Backward into nomenclature" py-backward-into-nomenclature
+                   :help " `py-backward-into-nomenclature'
+Go backward into nomenclature
+
+A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
+                  ["Forward into nomenclature" py-forward-into-nomenclature
+                   :help " `py-forward-into-nomenclature'
+Go forward into nomenclature
+
+A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
+
+
+                  "-"
 
                   ["Beginning of block" py-beginning-of-block
                    :help " `py-beginning-of-block'
@@ -12994,17 +13136,6 @@ Go to beginning of comment at point. "]
 Go to end of comment at point. "]
 
                   "-"
-                  ["Backward into nomenclature" py-backward-into-nomenclature
-                   :help " `py-backward-into-nomenclature'
-Go backward into nomenclature
-
-A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
-                  ["Forward into nomenclature" py-forward-into-nomenclature
-                   :help " `py-forward-into-nomenclature'
-Go forward into nomenclature
-
-A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
-                  "-"
                   ["Go to start of expression" (py-beginning-of-expression t) t]
                   ["Move to end of expression" (py-end-of-expression t) t]
                   "-"
@@ -13013,27 +13144,56 @@ A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
                   ["Move to end of minor-expression" (py-end-of-minor-expression t) t]
                   "-"
 
-                  ["Up level" py-up
-                   :help " `py-up'
-Go to beginning one level above of compound statement or definition at point. "]
-                  "-"
-                  ["Down level" py-down
-                   :help " `py-down'
-Go to beginning one level below of compound statement or definition at point. "]
+                  ["Beginning of minor block" py-beginning-of-minor-block
+                   :help " `py-beginning-of-minor-block'
+
+Go to beginning minor-block, skip whitespace at BOL\.
+
+Returns beginning of minor-block if successful, nil otherwise
+
+A minor block is started by a `for', `if', `try' or `with'.
+
+"]
+
+
+                  ["End of minor block" py-end-of-minor-block
+                   :help " `py-end-of-minor-block'
+
+Go to end of minor-block\.
+
+Returns end of minor-block if successful, nil otherwise
+
+A minor block is started by a `for', `if', `try' or `with'. "]
 
                   )
+
                  "-"
+
                  ("Copy "
                   ["Copy statement" py-copy-statement
                    :help "`py-copy-statement'
 Copy statement at point"]
+
+                  ["Copy top level" py-copy-top-level
+                   :help " `py-copy-top-level'
+
+Copy top-level form at point. "]
+
                   ["Copy clause" py-copy-clause
                    :help "`py-copy-clause'
-Copy innermost compound statement at point"]
+Copy innermost clause at point"]
 
                   ["Copy block" py-copy-block
                    :help "`py-copy-block'
-Copy innermost compound statement at point"]
+Copy innermost block at point"]
+
+                  ["Copy minor block" py-copy-minor-block
+                   :help " `py-copy-minor-block'
+
+Copy minor-block at point\.
+
+Store data in kill ring, so it might yanked back.
+A minor block is started by a `for', `if', `try' or `with'. "]
 
                   ["Copy def" py-copy-def
                    :help "`py-copy-def'
@@ -13050,7 +13210,10 @@ Copy innermost definition at point"]
 
                   ["Copy Def-or-Class" py-copy-def-or-class
                    :help "`py-copy-def-or-class'
-Copy innermost definition at point"])
+Copy innermost definition at point"]
+
+                  )
+
                  "-"
 
                  ["Execute region" py-execute-region
@@ -13100,9 +13263,22 @@ See also `py-execute-region'\. . "]
                  ("More... "
                   :help "Python-specific features"
 
+                  ["Execute top level" py-execute-top-level
+                   :help " `py-execute-top-level'
+
+Send top-level form at point to a Python interpreter\. . "]
+
                   ["Execute block" py-execute-block
                    :help "`py-execute-block'
        Send block at point to Python interpreter. "]
+
+                  ["Execute minor block" py-execute-minor-block
+                   :help " `py-execute-minor-block'
+
+Send minor-block at point to a Python interpreter\.
+
+A minor block is started by a `for', `if', `try' or `with'\.
+. "]
 
                   ["Execute def" py-execute-def
                    :help "`py-execute-def'
@@ -14136,8 +14312,13 @@ Uses a dedicated shell\.. "]
 Send file to a Bpython interpreter\.
 
 Uses a dedicated shell\.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "])))
+Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+                    )
+                   )
+                  )
+
                  "-"
+
                  ("Virtualenv"
 
                   ["Virtualenv workon" virtualenv-workon
@@ -14215,6 +14396,7 @@ Use pydoc on symbol at point"]
                   )
 
                  ["Debugger" pdb :help "`pdb' Run pdb under GUD"]
+
                  ("Checks"
 
                   ["pychecker-run" py-pychecker-run
@@ -14309,6 +14491,7 @@ Call `easy_install pyflakes' resp. `pip...' if not available"]
 Toggle flymake-mode running `pyflakespep8' "])
 
                   )
+
                  ("Customize"
 
                   ["Python-mode customize group" (customize-group 'python-mode)
@@ -15103,6 +15286,17 @@ Use `M-x customize-variable' to set it permanently"
 
                    ("Other"
 
+                    ["Defun use top level "
+                     (setq py-defun-use-top-level-p
+                           (not py-defun-use-top-level-p))
+                     :help "When non-nil, keys C-M-a, C-M-e address top-level form\.
+
+Beginning- end-of-defun forms use
+commands `py-beginning-of-top-level', `py-end-of-top-level'
+
+mark-defun marks top-level form at point etc. "
+                     :style toggle :selected py-defun-use-top-level-p]
+
                     ["Python mode v5 behavior"
                      (setq python-mode-v5-behavior-p
                            (not python-mode-v5-behavior-p))
@@ -15303,6 +15497,7 @@ Returns value of `smart-operator-mode'\. . "]
                     )
                    )
                   )
+
                  ("More... "
                   ("Edit commands "
 
@@ -15312,6 +15507,13 @@ Returns value of `smart-operator-mode'\. . "]
                      :help "`py-kill-statement'
 Delete innermost compound statement at point, store deleted string in kill-ring"]
 
+                    ["Kill top level" py-kill-top-level
+                     :help " `py-kill-top-level'
+
+Delete top-level form at point\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\. . "]
+
                     ["Kill clause" py-kill-clause
                      :help "`py-kill-clause'
 Delete innermost compound statement at point, store deleted string in kill-ring"]
@@ -15319,6 +15521,13 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
                     ["Kill block" py-kill-block
                      :help "`py-kill-block'
 Delete innermost compound statement at point, store deleted string in kill-ring"]
+
+                    ["Kill minor block" py-kill-minor-block
+                     :help " `py-kill-minor-block'
+
+Delete minor-block at point\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\. . "]
 
                     ["Kill def-or-class" py-kill-def-or-class
                      :help "`py-kill-def-or-class'
@@ -15339,37 +15548,53 @@ Delete innermost compound statement at point, store deleted string in kill-ring"
                     ["Kill def" py-kill-def
                      :help "`py-kill-def'
 Delete innermost compound statement at point, store deleted string in kill-ring"])
-                   ("Delete "
-                    ["Delete block" py-delete-block
-                     :help "`py-delete-block'
-Delete innermost compound statement at point, don't store deleted string in kill-ring"]
 
-                    ["Delete def-or-class" py-delete-def-or-class
-                     :help "`py-delete-def-or-class'
-Delete def-or-class at point, don't store deleted string in kill-ring"]
-
-                    ["Delete clause" py-delete-clause
-                     :help "`py-delete-clause'
-Delete innermost compound statement at point, don't store deleted string in kill-ring"]
-                    ["Delete statement" py-delete-statement
+                   ("Delete"
+                    ["Delete statement " py-delete-statement
                      :help "`py-delete-statement'
-Delete statement at point, don't store deleted string in kill-ring"]
+Delete STATEMENT at point, don't store in kill-ring. "]
 
-                    ["Delete expression" py-delete-expression
-                     :help "`py-delete-expression'
-Delete expression at point, don't store deleted string in kill-ring"]
+                    ["Delete top-level " py-delete-top-level
+                     :help "`py-delete-top-level'
+Delete TOP-LEVEL at point, don't store in kill-ring. "]
 
-                    ["Delete partial-expression" py-delete-partial-expression
-                     :help "`py-delete-partial-expression'
-Delete partial-expression at point, don't store deleted string in kill-ring"]
+                    ["Delete block " py-delete-block
+                     :help "`py-delete-block'
+Delete BLOCK at point, don't store in kill-ring. "]
 
-                    ["Delete class" py-delete-class
-                     :help "`py-delete-class'
-Delete class at point, don't store deleted string in kill-ring"]
+                    ["Delete block-or-clause " py-delete-block-or-clause
+                     :help "`py-delete-block-or-clause'
+Delete BLOCK-OR-CLAUSE at point, don't store in kill-ring. "]
 
-                    ["Delete def" py-delete-def
+                    ["Delete def " py-delete-def
                      :help "`py-delete-def'
-Delete def at point, don't store deleted string in kill-ring"])
+Delete DEF at point, don't store in kill-ring. "]
+
+                    ["Delete class " py-delete-class
+                     :help "`py-delete-class'
+Delete CLASS at point, don't store in kill-ring. "]
+
+                    ["Delete def-or-class " py-delete-def-or-class
+                     :help "`py-delete-def-or-class'
+Delete DEF-OR-CLASS at point, don't store in kill-ring. "]
+
+                    ["Delete expression " py-delete-expression
+                     :help "`py-delete-expression'
+Delete EXPRESSION at point, don't store in kill-ring. "]
+
+                    ["Delete partial-expression " py-delete-partial-expression
+                     :help "`py-delete-partial-expression'
+Delete PARTIAL-EXPRESSION at point, don't store in kill-ring. "]
+
+                    ["Delete minor-block " py-delete-minor-block
+                     :help "`py-delete-minor-block'
+Delete MINOR-BLOCK at point, don't store in kill-ring.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+                    )
+                   "-"
+
+
 
                    ("Shift right "
                     ["Shift block right" py-shift-block-right
@@ -15383,6 +15608,17 @@ Shift clause right. "]
                     ["Shift statement right" py-shift-statement-right
                      :help "`py-shift-statement-right'
 Shift statement right. "]
+
+
+                    ["Shift minor block right" py-shift-minor-block-right
+                     :help " `py-shift-minor-block-right'
+
+Indent minor-block by COUNT spaces\.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value\.
+
+Returns outmost indentation reached. "]
 
                     ["Shift def-or-class right" py-shift-def-or-class-right
                      :help "`py-shift-def-or-class-right'
@@ -15398,9 +15634,28 @@ Shift def right. "]
 
                     ["Shift block-or-clause right" py-shift-block-or-clause-right
                      :help "`py-shift-block-or-clause-right'
-Shift block-or-clause right. "])
+Shift block-or-clause right. "]
+
+                    ["Shift region left" py-shift-region-left
+                     :help " `py-shift-region-left'
+
+Dedent region according to `py-indent-offset' by COUNT times\.
+
+If no region is active, current line is dedented\.
+Returns indentation reached. "]
+
+                    ["Shift region right" py-shift-region-right
+                     :help " `py-shift-region-right'
+
+Indent region according to `py-indent-offset' by COUNT times\.
+
+If no region is active, current line is indented\.
+Returns indentation reached. "]
+
+                    )
 
                    ("Shift left "
+
                     ["Shift block left" py-shift-block-left
                      :help "`py-shift-block-left'
 Shift block left. "]
@@ -15412,6 +15667,16 @@ Shift clause left. "]
                     ["Shift statement left" py-shift-statement-left
                      :help "`py-shift-statement-left'
 Shift statement left. "]
+
+                    ["Shift minor block left" py-shift-minor-block-left
+                     :help " `py-shift-minor-block-left'
+
+Dedent minor-block by COUNT spaces\.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value\.
+
+Returns outmost indentation reached. "]
 
                     ["Shift def-or-class left" py-shift-def-or-class-left
                      :help "`py-shift-def-or-class-left'
@@ -15514,6 +15779,102 @@ Comments block at point\.
 
 Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is `t',
 the default. "]
+
+                    )
+
+                   ("Top-level form"
+
+                    ["Beginning of top-level form" py-beginning-of-top-level
+                     :help "`py-beginning-of-top-level'
+Go to start of top-level form form at point"]
+
+                    ["End of top-level form" py-end-of-top-level
+                     :help "`py-end-of-top-level'
+Go to end of top-level form at point"]
+
+                    ["Down top-level form" py-down-top-level
+                     :help "`py-down-top-level'
+
+Go to the beginning of top-level form below in buffer. "]
+
+                    ["Up top-level form" py-up-top-level
+                     :help "`py-up-top-level'
+
+Go upwards to the beginning of next top-level form in buffer. "]
+
+                    ["Copy top-level form" py-copy-top-level
+                     :help "`py-copy-top-level'
+Copy innermost top-level form at point"]
+
+                    ["Kill top-level form" py-kill-top-level
+                     :help "`py-kill-top-level'
+Delete top-level form at point, store deleted string in kill-ring"]
+
+                    ["Delete top-level form" py-delete-top-level
+                     :help "`py-delete-top-level'
+Delete top-level form at point, don't store deleted string in kill-ring"]
+
+                    ["Comment top-level form" py-comment-top-level
+                     :help " `py-comment-top-level'
+
+Comments top-level form at point\.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is `t',
+the default. "]
+
+                    )
+
+                   ("Minor-block"
+
+                    ["Beginning of minor-block" py-beginning-of-minor-block
+                     :help "`py-beginning-of-minor-block'
+Go to start of innermost minor-block at point"]
+                    ["End of minor-block" py-end-of-minor-block
+                     :help "`py-end-of-minor-block'
+Go to end of innermost minor-block at point"]
+
+                    ["Down minor-block" py-down-minor-block
+                     :help "`py-down-minor-block'
+
+Go to the beginning of next minor-block below in buffer.
+
+Returns indentation if minor-block found, nil otherwise. "]
+
+                    ["Up minor-block" py-up-minor-block
+                     :help "`py-up-minor-block'
+
+Go upwards to the beginning of next minor-block below in buffer.
+
+Returns indentation if minor-block found, nil otherwise. "]
+
+                    ["Copy minor-block" py-copy-minor-block
+                     :help "`py-copy-minor-block'
+Copy innermost minor-block at point"]
+
+                    ["Kill minor-block" py-kill-minor-block
+                     :help "`py-kill-minor-block'
+Delete innermost minor-block at point, store deleted string in kill-ring"]
+
+                    ["Delete minor-block" py-delete-minor-block
+                     :help "`py-delete-minor-block'
+Delete innermost minor-block at point, don't store deleted string in kill-ring"]
+
+                    ["Shift minor-block right" py-shift-minor-block-right
+                     :help "`py-shift-minor-block-right'
+Shift minor-block right. "]
+
+                    ["Shift minor-block left" py-shift-minor-block-left
+                     :help "`py-shift-minor-block-left'
+Shift minor-block left. "]
+
+                    ["Comment minor-block" py-comment-minor-block
+                     :help " `py-comment-minor-block'
+
+Comments minor-block at point\.
+
+Uses double hash (`#') comment starter when `py-minor-block-comment-prefix-p' is `t',
+the default. "]
+
                     )
 
                    ("Def-or-class "
@@ -15830,7 +16191,9 @@ the default. "]
 
                     )
 
-                   (" Block bol "
+                   "-"
+
+                   ("Block bol "
 
                     ["Beginning of block bol" py-beginning-of-block-bol
                      :help "`py-beginning-of-block-bol'
@@ -15878,9 +16241,85 @@ Shift block right. "]
 
                     ["Shift block left" py-shift-block-left
                      :help "`py-shift-block-left'
-Shift block left. "])
+Shift block left. "]
+                    )
 
-                   (" Clause bol "
+                   ("Minor-block bol "
+
+                    ["Beginning of minor-block bol" py-beginning-of-minor-block-bol
+                     :help "`py-beginning-of-minor-block-bol'
+Go to beginning of line at beginning of minor-block.
+
+Returns position reached, if successful, nil otherwise.
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+                    ["End of minor-block bol" py-end-of-minor-block-bol
+                     :help "`py-end-of-minor-block-bol'
+Go to beginning of line following end of minor-block.
+
+Returns position reached, if successful, nil otherwise.
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Up minor-block bol" py-up-minor-block-bol
+                     :help "`py-up-minor-block-bol'
+Go to next minor-block upwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise.
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Down minor-block bol" py-down-minor-block-bol
+                     :help "`py-down-minor-block-bol'
+Go to next minor-block downwards in buffer if any. Go to beginning of line.
+
+Returns position reached, if successful, nil otherwise.
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+                    ["Mark minor-block bol" py-mark-minor-block-bol
+                     :help "`py-mark-minor-block-bol'
+Mark minor-block at point.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Copy minor-block bol" py-copy-minor-block-bol
+                     :help "`py-copy-minor-block-bol'
+Copy minor-block at point.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Kill minor-block bol" py-kill-minor-block-bol
+                     :help "`py-kill-minor-block-bol'
+Kill minor-block at point.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Delete minor-block bol" py-delete-minor-block-bol
+                     :help "`py-delete-minor-block-bol'
+Delete minor-block at point.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Shift minor-block right" py-shift-minor-block-right
+                     :help "`py-shift-minor-block-right'
+Shift minor-block right.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+
+                    ["Shift minor-block left" py-shift-minor-block-left
+                     :help "`py-shift-minor-block-left'
+Shift minor-block left.
+
+A minor block is started by a `for', `if', `try' or `with'. "]
+
+                    )
+
+                   ("Clause bol "
 
                     ["Beginning of clause bol" py-beginning-of-clause-bol
                      :help "`py-beginning-of-clause-bol'
@@ -15930,7 +16369,7 @@ Shift clause right. "]
                      :help "`py-shift-clause-left'
 Shift clause left. "])
 
-                   (" Block-Or-Clause bol "
+                   ("Block-Or-Clause bol "
 
                     ["Beginning of block-or-clause bol" py-beginning-of-block-or-clause-bol
                      :help "`py-beginning-of-block-or-clause-bol'
@@ -15980,7 +16419,7 @@ Shift block-or-clause right. "]
                      :help "`py-shift-block-or-clause-left'
 Shift block-or-clause left. "])
 
-                   (" Def bol "
+                   ("Def bol "
 
                     ["Beginning of def bol" py-beginning-of-def-bol
                      :help "`py-beginning-of-def-bol'
@@ -16030,7 +16469,7 @@ Shift def right. "]
                      :help "`py-shift-def-left'
 Shift def left. "])
 
-                   (" Class bol "
+                   ("Class bol "
                     ["Beginning of class bol" py-beginning-of-class-bol
                      :help "`py-beginning-of-class-bol'
 Go to beginning of line at beginning of class.
@@ -16079,7 +16518,7 @@ Shift class right. "]
                      :help "`py-shift-class-left'
 Shift class left. "])
 
-                   (" Def-Or-Class bol "
+                   ("Def-Or-Class bol "
                     ["Beginning of def-or-class bol" py-beginning-of-def-or-class-bol
                      :help "`py-beginning-of-def-or-class-bol'
 Go to beginning of line at beginning of def-or-class.
@@ -16126,9 +16565,11 @@ Shift def-or-class right. "]
 
                     ["Shift def-or-class left" py-shift-def-or-class-left
                      :help "`py-shift-def-or-class-left'
-Shift def-or-class left. "])
+Shift def-or-class left. "]
 
-                   (" Statement bol "
+                    )
+
+                   ("Statement bol "
                     ["Beginning of statement bol" py-beginning-of-statement-bol
                      :help "`py-beginning-of-statement-bol'
 Go to beginning of line at beginning of statement.
@@ -16144,13 +16585,6 @@ Returns position reached, if successful, nil otherwise. "]
                     ["Mark statement bol" py-mark-statement-bol
                      :help "`py-mark-statement-bol'
 Mark statement at point. "]
-
-                    ["Mark top level" py-mark-top-level
-                     :help " `py-mark-top-level'
-
-Mark top-level form at point\.
-
-Returns beginning and end positions of marked area, a cons\. . "]
 
                     ["Copy statement bol" py-copy-statement-bol
                      :help "`py-copy-statement-bol'
@@ -16386,12 +16820,7 @@ Complete symbol before point using Pymacs . "])
                    :help "`py-find-function'
 Try to find source definition of function at point"]
 
-                  )
-
-                 )
-
-               ))
-
+                  ))))
         map))
 
 (defvaralias 'py-mode-map 'python-mode-map)
@@ -17590,6 +18019,19 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html
                    (or (py-beginning-of-block-p)
                        (py-beginning-of-block))))
           (end (py-end-of-block)))
+      (py-execute-region beg end))))
+
+(defun py-execute-minor-block ()
+  "Send minor-block at point to a Python interpreter.
+
+A minor block is started by a `for', `if', `try' or `with'.
+"
+  (interactive)
+  (save-excursion
+    (let ((beg (prog1
+                   (or (py-beginning-of-minor-block-p)
+                       (py-beginning-of-minor-block))))
+          (end (py-end-of-minor-block)))
       (py-execute-region beg end))))
 
 (defun py-execute-block-or-clause ()
@@ -21891,9 +22333,6 @@ Like `python-mode', but sets up parameters for Jython subprocesses.
 Runs `jython-mode-hook' after `python-mode-hook'."
   :group 'python-mode
   (py-toggle-shell "jython"))
-
-(defalias 'py-beginning-of-decorator-bol 'py-beginning-of-decorator)
-(defalias 'py-top-level 'py-copy-top-level)
 
 (provide 'python-mode)
 ;; python-mode.el ends here
