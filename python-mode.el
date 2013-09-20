@@ -17353,14 +17353,12 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                    (get-buffer-process (py-shell nil nil (if (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython") nil))))
          (comint-output-filter-functions
           (delq 'py-comint-output-filter-function comint-output-filter-functions))
-         (comint-output-filter-functions
-          (append comint-output-filter-functions
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
                   '(ansi-color-filter-apply
                     (lambda (string)
                       (setq ugly-return (concat ugly-return string))
-                      (delete-region comint-last-output-start
-                                     (process-mark (get-buffer-process (current-buffer))))))))
-
+                      ""))))
          (ccs (or completion-command-string
                   (if imports
                       (concat imports (py-set-ipython-completion-command-string))
@@ -17385,13 +17383,15 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                        (with-output-to-temp-buffer "*IPython Completions*"
                          (display-completion-list
                           (all-completions pattern completions)))
-                       (recenter))
+                       (recenter)
+                       (skip-chars-forward "^ \t\r\n\f"))
                       ((not (string= pattern (car completions)))
                        (progn (delete-char (- (length pattern)))
                               (insert (car completions))
                               nil)))
               (when py-no-completion-calls-dabbrev-expand-p
-                (ignore-errors (dabbrev-expand nil)))
+                (ignore-errors (dabbrev-expand nil))
+                (and py-verbose-p (< end (point))(message "%s" "Completion found by dabbrev-expand")))
               (when py-indent-no-completion-p
                 (tab-to-tab-stop))))
         (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
