@@ -17060,7 +17060,7 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
 (defun py-shell-simple-send (proc string)
   (comint-simple-send proc string))
 
-(defun py-shell-execute-string-now (string &optional shell buffer proc)
+(defun py-shell-execute-string-now (string &optional shell buffer proc output-buffer)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
   (let* ((procbuf (or buffer (process-buffer proc) (py-shell nil nil shell t)))
@@ -17068,20 +17068,10 @@ and return collected output"
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
-         (outbuf (get-buffer-create " *pyshellcomplete-output*"))
-         ;; (lines (reverse py-shell-input-lines))
-         )
-    ;; (when proc
+         (outbuf (get-buffer-create (or output-buffer py-output-buffer))))
     (unwind-protect
         (condition-case nil
             (progn
-              ;; (if lines
-              ;;     (with-current-buffer procbuf
-              ;;       (comint-redirect-send-command-to-process
-              ;;        "\C-c" outbuf proc nil t)
-              ;;       ;; wait for output
-              ;;       (while (not comint-redirect-completed)
-              ;;         (accept-process-output proc 1))))
               (with-current-buffer outbuf
                 (delete-region (point-min) (point-max)))
               (with-current-buffer procbuf
@@ -17095,15 +17085,7 @@ and return collected output"
                   (interrupt-process proc comint-ptyp)
                   (while (not comint-redirect-completed) ; wait for output
                     (accept-process-output proc 1)))
-                (signal 'quit nil)))
-      ;; (if (with-current-buffer procbuf comint-redirect-completed)
-      ;;     (while lines
-      ;;       (with-current-buffer procbuf
-      ;;         (comint-redirect-send-command-to-process
-      ;;          (car lines) outbuf proc nil t))
-      ;;       (accept-process-output proc 1)
-      ;;       (setq lines (cdr lines))))
-      )))
+                (signal 'quit nil))))))
 
 ;;; Completion
 (defun py-dot-word-before-point ()
@@ -17335,6 +17317,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
          (py-shell-name (or shell (py-choose-shell)))
          (processlist (process-list))
          (imports (or imports (py-find-imports)))
+         (py-completion-buffer py-ipython-completions)
          done
          (process
           (if ipython-complete-use-separate-shell-p
@@ -17373,27 +17356,8 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
             (setq completions
                   (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
             (when debug (setq py-shell-complete-debug completions))
-            (if (and completions (not (string= "" (car completions))))
-                (cond ((eq completions t)
-                       (message "Can't find completion for \"%s\"" pattern)
-                       (ding)
-                       nil)
-                      ((< 1 (length completions))
-                       (sit-for 0.1)
-                       (with-output-to-temp-buffer "*IPython Completions*"
-                         (display-completion-list
-                          (all-completions pattern completions)))
-                       (recenter)
-                       (skip-chars-forward "^ \t\r\n\f"))
-                      ((not (string= pattern (car completions)))
-                       (progn (delete-char (- (length pattern)))
-                              (insert (car completions))
-                              nil)))
-              (when py-no-completion-calls-dabbrev-expand-p
-                (ignore-errors (dabbrev-expand nil))
-                (and py-verbose-p (< end (point))(message "%s" "Completion found by dabbrev-expand")))
-              (when py-indent-no-completion-p
-                (tab-to-tab-stop))))
+
+            (py-shell-complete-finally))
         (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
 
 ;;; Checker
