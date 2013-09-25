@@ -11454,15 +11454,14 @@ Returns char found. "
 (defun py-set-ipython-completion-command-string ()
   "Set and return `ipython-completion-command-string'. "
   (interactive)
-  (let* ((ipython-version
-          (if (string-match "ipython" py-shell-name)
-              (string-to-number (substring (shell-command-to-string (concat py-shell-name " -V")) 2 -1))
-            ;; choose default installed IPython
-            (string-to-number (substring (shell-command-to-string (concat "ipython" " -V")) 2 -1))
-            )))
-    (when ipython-version
-      (setq ipython-completion-command-string (if (< ipython-version 11) ipython0.10-completion-command-string ipython0.11-completion-command-string))
-      ipython-completion-command-string)))
+  (let* ((ipython-version (shell-command-to-string (concat py-shell-name " -V"))))
+    (setq ipython-completion-command-string
+          (cond ((string-match "^1.1.*" ipython-version)
+                 ipython0.11-completion-command-string)
+                ((string-match "^0.1[1-3]" ipython-version)
+                 ipython0.11-completion-command-string)
+                ((string= "^0.10" ipython-version)
+                 ipython0.10-completion-command-string)))))
 
 (defalias 'py-dedicated-shell 'py-shell-dedicated)
 (defun py-shell-dedicated (&optional argprompt)
@@ -11646,8 +11645,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
          ;; If we use a pipe, Unicode characters are not printed
          ;; correctly (Bug#5794) and IPython does not work at
          ;; all (Bug#5390). python.el
-         (process-connection-type t)
-         ;; (comint-scroll-to-bottom-on-output t)
+         ;; (process-connection-type t)
          ;; already in py-choose-shell
          (py-use-local-default
           (if (not (string= "" py-shell-local-path))
@@ -11695,6 +11693,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
       (set (make-local-variable 'comment-indent-function) #'py-comment-indent-function)
       (set (make-local-variable 'indent-region-function) 'py-indent-region)
       (set (make-local-variable 'indent-line-function) 'py-indent-line)
+      (set (make-local-variable 'inhibit-point-motion-hooks) t)
       (setq proc (get-buffer-process (current-buffer)))
       (py-shell-send-setup-code proc)
       (and py-set-pager-cat-p (comint-simple-send proc "import os;os.environ['PAGER'] = 'cat'"))
@@ -11719,6 +11718,20 @@ When DONE is `t', `py-shell-manage-windows' is omitted
                             #'shell-write-history-on-exit)
       (add-hook 'comint-output-filter-functions
                 'ansi-color-process-output)
+      ;; Introduce `remove-hook
+      ;; comint-output-filter-functions', got the
+      ;; following error running ipython-complete:
+      ;;
+      ;; Debugger entered--Lisp error: (args-out-of-range 9285 9285)
+      ;; get-text-property(9285 font-lock-multiline)
+      ;; font-lock-extend-jit-lock-region-after-change(9286 9295 9)
+      ;; run-hook-with-args(font-lock-extend-jit-lock-region-after-change 9286 9295 9)
+      ;; jit-lock-after-change(9286 9295 9)
+      ;; remove-text-properties(#<marker at 9286 in *Ipython*> #<marker at 9295 in *Ipython*> (font-lock-face))
+      ;; comint-output-filter(#<process ipython> "except;exe-shell.el;exec;execfile;exit\n")
+      ;; accept-process-output(#<process ipython> 0.2)
+      (remove-hook 'comint-output-filter-functions
+                   'font-lock-extend-jit-lock-region-after-change)
       (use-local-map py-shell-map)
       ;; pdbtrack
       (and py-pdbtrack-do-tracking-p
@@ -17171,12 +17184,14 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
   (setq py-completion-last-window-configuration
         (current-window-configuration))
   (when debug (setq py-shell-complete-debug nil))
-  (let* ((orig (point))
-         (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
+  (let* ((pos (copy-marker (point)))
+         (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.('") (point)))
          (end (point))
          (word (buffer-substring-no-properties beg end))
          (imports (py-find-imports))
-         py-fontify-shell-buffer-p)
+         py-fontify-shell-buffer-p py-completion-buffer)
+    ;; (and (string= "open('" word)
+    ;; (comint-dynamic-complete-filename))
     ;; (ignore-errors (comint-dynamic-complete))
     (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
         ;;  kind of completion resp. to shell
@@ -17197,12 +17212,9 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
         (cond ((string= word "")
                (tab-to-tab-stop))
               ((string-match "[iI][pP]ython" shell)
-               (ipython-complete nil nil beg end word shell debug imports))
+               (ipython-complete nil nil beg end word shell debug imports pos))
               ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
                (py-shell--do-completion-at-point proc imports word))
-              ;; deals better with imports
-              ;; (imports
-              ;; (py-python-script-complete shell imports beg end word))
               (t (py-shell-complete-intern word beg end shell imports proc debug)))))))
 
 (defun py-after-change-function (beg end len)
@@ -17223,10 +17235,42 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
      py-completion-last-window-configuration))
   (goto-char end))
 
+
+(defun py-shell-complete-finally ()
+  (if (and completions (not (string= "" (car completions))))
+      (cond ((eq completions t)
+             (when (buffer-live-p (get-buffer py-completion-buffer))
+               (kill-buffer (get-buffer py-python-completions)))
+             (message "Can't find completion for \"%s\"" word)
+             (ding)
+             nil)
+            ((< 1 (length completions))
+             (with-output-to-temp-buffer py-completion-buffer
+               (display-completion-list completions
+                                        word)
+               nil))
+            ((not (string= word (car completions)))
+             (sit-for 0.1)
+             (completion-in-region beg end completions)
+             (move-marker pos (point))
+             (when (buffer-live-p (get-buffer py-python-completions))
+               (kill-buffer (get-buffer py-python-completions)))
+             nil))
+    (when py-no-completion-calls-dabbrev-expand-p
+      (ignore-errors (dabbrev-expand nil)))
+    (when py-indent-no-completion-p
+      (tab-to-tab-stop)
+      (when (buffer-live-p (get-buffer py-python-completions))
+        (kill-buffer (get-buffer py-python-completions)))))
+  (and (goto-char pos)
+       ;; completion-at-point requires a list as return value, so givem
+       nil))
+
 (defun py-shell-complete-intern (word &optional beg end shell imports proc debug)
   (when imports
     (py-send-string-no-output imports proc))
-  (let ((result (py-shell-execute-string-now (format "
+  (let ((py-completion-buffer py-python-completions)
+        (result (py-shell-execute-string-now (format "
 def print_completions(namespace, text, prefix=''):
    for name in namespace:
        if name.startswith(text):
@@ -17268,49 +17312,24 @@ complete('%s')" word) shell nil proc)))
                              (split-string result "\n")))
               #'string<)))
         (when debug (setq py-shell-complete-debug completions))
-        (if (and completions (not (string= "" (car completions))))
-            (cond ((eq completions t)
-                   ;; (if (eq this-command last-command)
-                   ;; (when py-completion-last-window-configuration
-                   ;; (set-window-configuration
-                   ;; py-completion-last-window-configuration)))
-                   ;; (setq py-completion-last-window-configuration nil)
-                   (when (buffer-live-p (get-buffer py-python-completions))
-                     (kill-buffer (get-buffer py-python-completions)))
-                   (message "Can't find completion for \"%s\"" word)
-                   (ding)
-                   nil)
-                  ((< 1 (length completions))
-                   (with-output-to-temp-buffer py-python-completions
-                     (display-completion-list
-                      (all-completions word completions)
-                      word))
-                   nil)
-                  ((not (string= word (car completions)))
-                   (completion-in-region beg end completions)
-                   (when (buffer-live-p (get-buffer py-python-completions))
-                     (kill-buffer (get-buffer py-python-completions)))
-                   nil))
-          (when py-no-completion-calls-dabbrev-expand-p
-            (ignore-errors (dabbrev-expand nil)))
-          (when py-indent-no-completion-p
-            (tab-to-tab-stop)
-            (when (buffer-live-p (get-buffer py-python-completions))
-              (kill-buffer (get-buffer py-python-completions)))))))))
+        (py-shell-complete-finally)))))
 
 ;; ipython shell complete
 ;; see also
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
-(defun ipython-complete (&optional done completion-command-string beg end word shell debug imports)
+(defun ipython-complete (&optional done completion-command-string beg end word shell debug imports pos)
   "Complete the python symbol before point.
 
 If no completion available, insert a TAB.
 Returns the completed symbol, a string, if successful, nil otherwise. "
 
   (interactive "*")
+  (setq py-completion-last-window-configuration
+        (current-window-configuration))
   (let* (py-fontify-shell-buffer-p
-         (beg (or beg (progn (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
-                                             (point)))))
+         (pos (or pos (copy-marker (point))))
+         (beg (or beg (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
+                                      (point))))
          (end (or end (point)))
          (pattern (or word (buffer-substring-no-properties beg end)))
          (sep ";")
@@ -17350,7 +17369,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
     (if (string= pattern "")
         (tab-to-tab-stop)
       (process-send-string proc (format ccs pattern))
-      (accept-process-output proc 0.1)
+      (accept-process-output proc 0.2)
       (if ugly-return
           (progn
             (setq completions
@@ -21840,9 +21859,7 @@ EVENT is usually a mouse click."
            (info (and e (extent-property e 'py-exc-info))))
       (message "Event point: %d, info: %s" point info)
       (and info
-           (py-jump-to-exception (car info) (cdr info)))))
-   ;; Emacs -- Please port this!
-   ))
+           (py-jump-to-exception (car info) (cdr info)))))))
 
 (defun py-goto-exception (&optional file line)
   "Go to the line indicated by the traceback."
