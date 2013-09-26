@@ -11455,13 +11455,15 @@ Returns char found. "
   "Set and return `ipython-completion-command-string'. "
   (interactive)
   (let* ((ipython-version (shell-command-to-string (concat py-shell-name " -V"))))
-    (setq ipython-completion-command-string
-          (cond ((string-match "^1.1.*" ipython-version)
-                 ipython0.11-completion-command-string)
-                ((string-match "^0.1[1-3]" ipython-version)
-                 ipython0.11-completion-command-string)
-                ((string= "^0.10" ipython-version)
-                 ipython0.10-completion-command-string)))))
+    (if (string-match "[0-9]" ipython-version)
+        (setq ipython-completion-command-string
+              (cond ((string-match "^1.1.*" ipython-version)
+                     ipython0.11-completion-command-string)
+                    ((string-match "^0.1[1-3]" ipython-version)
+                     ipython0.11-completion-command-string)
+                    ((string= "^0.10" ipython-version)
+                     ipython0.10-completion-command-string))))
+    (error ipython-version)))
 
 (defalias 'py-dedicated-shell 'py-shell-dedicated)
 (defun py-shell-dedicated (&optional argprompt)
@@ -11718,6 +11720,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
                             #'shell-write-history-on-exit)
       (add-hook 'comint-output-filter-functions
                 'ansi-color-process-output)
+      (add-hook 'after-change-functions 'py-after-change-function nil t)
       ;; Introduce `remove-hook
       ;; comint-output-filter-functions', got the
       ;; following error running ipython-complete:
