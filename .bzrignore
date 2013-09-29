@@ -10,3 +10,5 @@ dist/
 pymacs.el
 ToDo.org
 devel/notes.org
+eypi.py
+eyp.py

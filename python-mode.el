@@ -17020,7 +17020,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (message "%s" "Nothing to complete. ")
            (tab-to-tab-stop))
           (t (or (setq proc (get-buffer-process shell))
-                 (setq proc (get-buffer-process (py-shell nil nil shell))))
+                 (setq proc (get-buffer-process (py-shell nil nil shell t))))
              (py-shell--do-completion-at-point proc nil word))))
   nil)
 
@@ -17203,7 +17203,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
           (if ipython-complete-use-separate-shell-p
               (unless (and (buffer-live-p py-ipython-completions)
                            (comint-check-proc (process-name (get-buffer-process py-ipython-completions))))
-                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions)))
+                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions t)))
             (progn
               (while (and processlist (not done))
                 (when (and
@@ -17213,7 +17213,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                 (setq processlist (cdr processlist)))
               done)))
          (proc (or process
-                   (get-buffer-process (py-shell nil nil (if (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython") nil))))
+                   (get-buffer-process (py-shell nil nil (if (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython") nil t))))
          (comint-output-filter-functions
           (delq 'py-comint-output-filter-function comint-output-filter-functions))
          (comint-preoutput-filter-functions
