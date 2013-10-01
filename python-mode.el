@@ -801,6 +801,12 @@ Default is `t'."
   :type 'number
   :group 'python-mode)
 
+(defcustom py-new-shell-delay 0.2
+  "If a new comint buffer is connected to Python, commands like completion might need some delay. "
+
+  :type 'integer
+  :group 'python-mode)
+
 (defcustom py-send-receive-delay  5
   "Seconds to wait for output, used by `py-send-receive'. "
 
@@ -2933,23 +2939,27 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
             (insert string)
             (delete-trailing-whitespace))
           (py-send-file temp-file-name process temp-file-name))
-      (comint-send-string process string)
+      (process-send-string process string)
+      ;; (comint-send-string process string)
       (when (or (not (string-match "\n$" string))
                 (string-match "\n[ \t].*\n?$" string))
-        (comint-send-string process "\n")))))
+        (process-send-string process "\n")))))
 
 (defun py-send-string-no-output (string &optional process msg)
   "Send STRING to PROCESS and inhibit output.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (let* ((output-buffer)
-         (process (or process (get-buffer-process (py-shell))))
-         (comint-preoutput-filter-functions
-          (append comint-preoutput-filter-functions
-                  '(ansi-color-filter-apply
-                    (lambda (string)
-                      (setq output-buffer (concat output-buffer string))
-                      "")))))
+         wait
+         (process (or process (progn (setq wait 0.2)(get-buffer-process (py-shell)))))
+         ;; (comint-preoutput-filter-functions
+         ;;  (append comint-preoutput-filter-functions
+         ;;          '(ansi-color-filter-apply
+         ;;            (lambda (string)
+         ;;              (setq output-buffer (concat output-buffer string))
+         ;;              ""))))
+         )
+    (and wait (sit-for wait))
     (py-shell-send-string string process msg)
     (accept-process-output process 1)
     (when output-buffer
@@ -3038,12 +3048,8 @@ completions on the current context."
              input process code))
            (completion (when completions
                          (try-completion input completions))))
+      (set-buffer oldbuf)
       (cond ((eq completion t)
-             (if (eq this-command last-command)
-                 (when py-completion-last-window-configuration
-                   (set-window-configuration
-                    py-completion-last-window-configuration)))
-             ;; (setq py-completion-last-window-configuration nil)
              (if py-no-completion-calls-dabbrev-expand-p
                  (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
                                                            (tab-to-tab-stop)))
@@ -3060,16 +3066,17 @@ completions on the current context."
             ((not (string= input completion))
              (progn (delete-char (- (length input)))
                     (insert completion)
+                    (move-marker pos (point))
                     ;; minibuffer.el expects a list, a bug IMO
                     nil))
             (t
-             (unless py-completion-last-window-configuration
-               (setq py-completion-last-window-configuration
-                     (current-window-configuration)))
-             (with-output-to-temp-buffer "*Python Completions*"
+             (with-output-to-temp-buffer py-python-completions
                (display-completion-list
                 (all-completions input completions)))
-             nil)))))
+             (move-marker pos (point))
+             nil))
+      (and (goto-char pos)
+           nil))))
 
 (defun python-shell-completion-complete-or-indent ()
   "Complete or indent depending on the context.
@@ -10182,7 +10189,9 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
 (defun py-execute-file (filename)
   "When called interactively, user is prompted for filename. "
   (interactive "fFilename: ")
-  (let ((windows-config (window-configuration-to-register 313465889))
+  (let (;; py-postprocess-output-buffer might want origline
+        (origline 1)
+        (windows-config (window-configuration-to-register 313465889))
         (py-exception-buffer filename)
         erg)
     (if (file-readable-p filename)
@@ -11462,8 +11471,8 @@ Returns char found. "
                     ((string-match "^0.1[1-3]" ipython-version)
                      ipython0.11-completion-command-string)
                     ((string= "^0.10" ipython-version)
-                     ipython0.10-completion-command-string))))
-    (error ipython-version)))
+                     ipython0.10-completion-command-string)))
+      (error ipython-version))))
 
 (defalias 'py-dedicated-shell 'py-shell-dedicated)
 (defun py-shell-dedicated (&optional argprompt)
@@ -11600,7 +11609,7 @@ This function takes the list of setup code to send from the
      (symbol-value code) process)
     (sit-for 0.1)))
 
-(defun py-shell (&optional argprompt dedicated shell buffer-name done)
+(defun py-shell (&optional argprompt dedicated shell buffer-name no-window-managment)
   "Start an interactive Python interpreter in another window.
 Interactively, \\[universal-argument] 4 prompts for a buffer.
 \\[universal-argument] 2 prompts for `py-python-command-args'.
@@ -11665,7 +11674,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
 
     (unless (comint-check-proc py-buffer-name)
       (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
-      (unless (interactive-p) (sit-for 0.3))
+      (unless (interactive-p) (sit-for 0.1))
       (set (make-local-variable 'comint-prompt-regexp)
            (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
                   (concat "\\("
@@ -11746,7 +11755,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
     (and py-fontify-shell-buffer-p (font-lock-fontify-buffer))
     ;; (py-send-string-return-output
 
-    (unless done (py-shell-manage-windows py-buffer-name))
+    (unless no-window-managment (py-shell-manage-windows py-buffer-name))
     (when py-shell-hook (run-hooks 'py-shell-hook))
     py-buffer-name))
 
@@ -16937,22 +16946,24 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
 (defun py-shell-execute-string-now (string &optional shell buffer proc output-buffer)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
-  (let* ((procbuf (or buffer (process-buffer proc) (py-shell nil nil shell t)))
-
+  (let* (wait
+         (procbuf (or buffer (process-buffer proc) (progn (setq wait py-new-shell-delay) (py-shell nil nil shell nil t))))
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
          (outbuf (get-buffer-create (or output-buffer py-output-buffer))))
+    ;; wait is used only when a new py-shell buffer was connected
+    (and wait (sit-for wait))
     (unwind-protect
         (condition-case nil
             (progn
               (with-current-buffer outbuf
                 (delete-region (point-min) (point-max)))
               (with-current-buffer procbuf
+                ;; (sit-for 3)
                 (comint-redirect-send-command-to-process
                  cmd outbuf proc nil t)
-                (while (not comint-redirect-completed) ; wait for output
-                  (accept-process-output proc 1)))
+                (accept-process-output proc 1 1))
               (with-current-buffer outbuf
                 (buffer-substring (point-min) (point-max))))
           (quit (with-current-buffer procbuf
@@ -17039,13 +17050,41 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (py-shell--do-completion-at-point (get-buffer-process (current-buffer)) nil word)
            nil))))
 
+(defun py-comint--complete (shell pos beg end word imports debug)
+  (message "current-buffer: %s" (current-buffer))
+  (message "%s" (point))
+  (let ((shell (or shell (py-report-executable (buffer-name (current-buffer)))))
+        py-fontify-shell-buffer-p)
+    (if (string-match "[iI][pP]ython" shell)
+        (ipython-complete nil nil beg end word shell debug imports)
+      (let ((proc (get-buffer-process (current-buffer))))
+        (cond ((string= word "")
+               (tab-to-tab-stop))
+              ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
+               (py-shell--do-completion-at-point proc imports word))
+              (t (py-shell-complete-intern word beg end shell imports proc)))))))
+
+(defun py-complete--base (shell pos beg end word imports debug)
+  (let* (wait
+         (shell (or shell (py-choose-shell)))
+         (proc (or (get-process shell)
+                   (get-buffer-process (progn (setq wait py-new-shell-delay) (py-shell nil nil shell nil t))))))
+    (cond ((string= word "")
+           (tab-to-tab-stop))
+          ((string-match "[iI][pP]ython" shell)
+           (ipython-complete nil nil beg end word shell debug imports pos))
+          ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
+           (py-shell--do-completion-at-point proc imports word))
+          (t (py-shell-complete-intern word beg end shell imports proc debug)))))
+
 (defun py-shell-complete (&optional shell debug)
   "Complete word before point, if any. Otherwise insert TAB. "
   (interactive)
   (setq py-completion-last-window-configuration
         (current-window-configuration))
   (when debug (setq py-shell-complete-debug nil))
-  (let* ((pos (copy-marker (point)))
+  (let* ((oldbuf (current-buffer))
+         (pos (copy-marker (point)))
          (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.('") (point)))
          (end (point))
          (word (buffer-substring-no-properties beg end))
@@ -17055,28 +17094,8 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
     ;; (comint-dynamic-complete-filename))
     ;; (ignore-errors (comint-dynamic-complete))
     (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
-        ;;  kind of completion resp. to shell
-        (let ((shell (or shell (py-report-executable (buffer-name (current-buffer)))))
-              py-fontify-shell-buffer-p)
-          (if (string-match "[iI][pP]ython" shell)
-              (ipython-complete nil nil beg end word shell debug imports)
-            (let ((proc (get-buffer-process (current-buffer))))
-              (cond ((string= word "")
-                     (tab-to-tab-stop))
-                    ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-                     (py-shell--do-completion-at-point proc imports word))
-                    (t (py-shell-complete-intern word beg end shell imports proc))))))
-      ;; complete in script buffer
-      (let* ((shell (or shell (py-choose-shell)))
-             (proc (or (get-process shell)
-                       (get-buffer-process (py-shell nil nil shell nil t)))))
-        (cond ((string= word "")
-               (tab-to-tab-stop))
-              ((string-match "[iI][pP]ython" shell)
-               (ipython-complete nil nil beg end word shell debug imports pos))
-              ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-               (py-shell--do-completion-at-point proc imports word))
-              (t (py-shell-complete-intern word beg end shell imports proc debug)))))))
+        (py-comint--complete shell pos beg end word imports debug)
+      (py-complete--base shell pos beg end word imports debug))))
 
 (defun py-after-change-function (beg end len)
   "Restore window-confiuration after completion. "
@@ -17096,8 +17115,9 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
      py-completion-last-window-configuration))
   (goto-char end))
 
-
 (defun py-shell-complete-finally ()
+  (set-buffer oldbuf)
+  (goto-char pos)
   (if (and completions (not (string= "" (car completions))))
       (cond ((eq completions t)
              (when (buffer-live-p (get-buffer py-completion-buffer))
@@ -17188,6 +17208,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
   (setq py-completion-last-window-configuration
         (current-window-configuration))
   (let* (py-fontify-shell-buffer-p
+         (oldbuf (current-buffer))
          (pos (or pos (copy-marker (point))))
          (beg (or beg (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
                                       (point))))
@@ -21598,13 +21619,8 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
               (add-to-list 'err-p estring t)
               (setq ecode (buffer-substring-no-properties (line-end-position)
                                                           (progn (re-search-forward comint-prompt-regexp nil t 1)(match-beginning 0))))
-              ;; (setq ecode (concat (split-string ecode "[ \n\t\f\r^]" t)))
               (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
-              (add-to-list 'err-p ecode t)))
-          ;; (and py-verbose-p (message "%s" (nth 2 err-p)))
-          )))
-
-    ;; (goto-char pmx)
+              (add-to-list 'err-p ecode t))))))
     err-p))
 
 (defun py-remove-overlays-at-point ()
