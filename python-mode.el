@@ -12207,6 +12207,7 @@ of the first definition found."
         (define-key map "\C-c=" 'py-down-exception)
         ;; defined three times... one should succed
         (define-key map (kbd "TAB") 'py-shell-complete)
+        (define-key map [(control c)(!)] 'py-shell)
         (define-key map [(meta tab)] 'py-shell-complete)
         map))
 
