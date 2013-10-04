@@ -146,6 +146,23 @@ Give some hints, if not."
       (and (boundp 'py-smart-operator-mode-p) py-smart-operator-mode-p (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
            nil))))
 
+
+(defcustom py-empty-line-closes-p nil
+  "When non-nil, dedent after empty line following block
+
+if True:
+    print(\"Part of the if-statement\")
+
+print(\"Not part of the if-statement\")
+
+Default is nil
+
+If non-nil, a C-j from empty line dedents.
+"
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defun py-autopair-check ()
   "Check, if autopair-mode is available.
 
@@ -4292,23 +4309,25 @@ When indent is set back manually, this is honoured in following lines. "
   (let ((orig (point))
         erg pos)
     (newline)
-    (when (or py-newline-delete-trailing-whitespace-p py-trailing-whitespace-smart-delete-p)
-      (setq pos (copy-marker (point)))
-      (save-excursion
-        (goto-char orig)
-        (if (empty-line-p)
+    (if (and py-empty-line-closes-p (or (eq this-command last-command)(py-after-empty-line)))
+        (setq erg (indent-to-column (save-excursion (py-beginning-of-statement)(- (current-indentation) py-indent-offset))))
+      (when (or py-newline-delete-trailing-whitespace-p py-trailing-whitespace-smart-delete-p)
+        (setq pos (copy-marker (point)))
+        (save-excursion
+          (goto-char orig)
+          (if (empty-line-p)
+              (if (string-match "23.4" emacs-version)
+                  (progn (save-restriction
+                           (narrow-to-region (point) pos)
+                           (delete-trailing-whitespace)))
+                (delete-trailing-whitespace (line-beginning-position) pos))
+            (skip-chars-backward " \t")
             (if (string-match "23.4" emacs-version)
                 (progn (save-restriction
                          (narrow-to-region (point) pos)
                          (delete-trailing-whitespace)))
-              (delete-trailing-whitespace (line-beginning-position) pos))
-          (skip-chars-backward " \t")
-          (if (string-match "23.4" emacs-version)
-              (progn (save-restriction
-                       (narrow-to-region (point) pos)
-                       (delete-trailing-whitespace)))
-            (delete-trailing-whitespace (point) (marker-position pos))))))
-    (setq erg (indent-to-column (py-compute-indentation)))
+              (delete-trailing-whitespace (point) (marker-position pos))))))
+      (setq erg (indent-to-column (py-compute-indentation))))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
@@ -7955,7 +7974,6 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-
 (defun py-mark-minor-block ()
   "Mark minor-block at point.
 
@@ -8336,7 +8354,6 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
   (let ((erg (py-mark-base "block")))
     (kill-region (car erg) (cdr erg))))
-
 
 (defun py-kill-minor-block ()
   "Delete minor-block at point.
@@ -11090,6 +11107,14 @@ Returns the string inserted. "
     (when (and py-verbose-p (interactive-p)) (message "%s" py-continuation-offset))
     py-continuation-offset))
 
+(defun py-after-empty-line ()
+  "Return `t' if line before contains only whitespace characters. "
+  (save-excursion
+    (beginning-of-line)
+    (forward-line -1)
+    (beginning-of-line)
+    (looking-at "\\s-*$")))
+
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line nesting repeat indent-offset)
   "Compute Python indentation.
@@ -11350,6 +11375,10 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                   (setq line t)
                   (back-to-indentation)
                   (py-compute-indentation orig origline closing line nesting t indent-offset)))
+               ((and py-empty-line-closes-p (py-after-empty-line))
+                (progn (py-beginning-of-statement)
+                       (- (current-indentation) py-indent-offset)))
+
                ((and (not line)(eq origline (py-count-lines))
                      (save-excursion
                        (and (setq erg (py-go-to-keyword py-extended-block-or-clause-re))
@@ -14965,6 +14994,22 @@ Use `M-x customize-variable' to set it permanently"
                      :help "If py-electric-comment should add a space\.  Default is `nil'\. Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-electric-comment-add-space-p]
 
+                    ["Empty line closes "
+                     (setq py-empty-line-closes-p
+                           (not py-empty-line-closes-p))
+                     :help "When non-nil, dedent after empty line following block
+
+if True:
+    print(\"Part of the if-statement\")
+
+print(\"Not part of the if-statement\")
+
+Default is nil
+
+If non-nil, a C-j from empty line dedents.
+Use `M-x customize-variable' to set it permanently"
+                     :style toggle :selected py-empty-line-closes-p]
+
                     )
 
                    ("Fontification"
@@ -15478,8 +15523,6 @@ A minor block is started by a `for', `if', `try' or `with'. "]
                     )
                    "-"
 
-
-
                    ("Shift right "
                     ["Shift block right" py-shift-block-right
                      :help "`py-shift-block-right'
@@ -15492,7 +15535,6 @@ Shift clause right. "]
                     ["Shift statement right" py-shift-statement-right
                      :help "`py-shift-statement-right'
 Shift statement right. "]
-
 
                     ["Shift minor block right" py-shift-minor-block-right
                      :help " `py-shift-minor-block-right'
@@ -16144,14 +16186,12 @@ Go to beginning of line following end of minor-block.
 Returns position reached, if successful, nil otherwise.
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-
                     ["Up minor-block bol" py-up-minor-block-bol
                      :help "`py-up-minor-block-bol'
 Go to next minor-block upwards in buffer if any. Go to beginning of line.
 
 Returns position reached, if successful, nil otherwise.
 A minor block is started by a `for', `if', `try' or `with'. "]
-
 
                     ["Down minor-block bol" py-down-minor-block-bol
                      :help "`py-down-minor-block-bol'
@@ -16166,13 +16206,11 @@ Mark minor-block at point.
 
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-
                     ["Copy minor-block bol" py-copy-minor-block-bol
                      :help "`py-copy-minor-block-bol'
 Copy minor-block at point.
 
 A minor block is started by a `for', `if', `try' or `with'. "]
-
 
                     ["Kill minor-block bol" py-kill-minor-block-bol
                      :help "`py-kill-minor-block-bol'
@@ -16180,20 +16218,17 @@ Kill minor-block at point.
 
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-
                     ["Delete minor-block bol" py-delete-minor-block-bol
                      :help "`py-delete-minor-block-bol'
 Delete minor-block at point.
 
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-
                     ["Shift minor-block right" py-shift-minor-block-right
                      :help "`py-shift-minor-block-right'
 Shift minor-block right.
 
 A minor block is started by a `for', `if', `try' or `with'. "]
-
 
                     ["Shift minor-block left" py-shift-minor-block-left
                      :help "`py-shift-minor-block-left'
