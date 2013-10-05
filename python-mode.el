@@ -977,6 +977,17 @@ Default is \"--errors-only\" "
   :type 'string
   :group 'python-mode)
 
+
+(defcustom py-max-specpdl-size max-specpdl-size
+  "Heuristic exit. Limiting number of recursive calls by py-end-of-statement and related functions. Default is max-specpdl-size.
+
+This treshold is just an approximation. It might set far higher maybe.
+
+See lp:1235375. In case code is not to navigate due to errors, `which-function-mode' and others might make Emacs hang. Rather exit than. "
+
+  :type 'number
+  :group 'python-mode)
+
 (defcustom py-shell-prompt-read-only t
   "If non-nil, the python prompt is read only.  Setting this
 variable will only effect new shells."
@@ -5792,11 +5803,17 @@ If region is active, restrict uncommenting at region "
 
 Takes the result of (syntax-ppss)"
   (interactive)
-  (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss))))))
-    (goto-char beginning-of-string-position)
-    ;; (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")
-    (goto-char (scan-sexps (point) 1)))
-  (point))
+  (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss)))
+                                          (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")(match-beginning 0))))
+        erg)
+    (if beginning-of-string-position
+        (progn
+          (goto-char beginning-of-string-position)
+          (goto-char (scan-sexps (point) 1))
+          (setq erg (point)))
+      (error (concat "py-end-of-string: don't see end-of-string at " (buffer-name (current-buffer)) "at pos " (point))))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 (defun py-fill-this-paragraph (justify style)
   "Fill just the paragraph at point. "
@@ -7744,14 +7761,17 @@ More general than py-declarations, which would stop at keywords like a print-sta
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
 (defalias 'py-forward-statement 'py-end-of-statement)
-(defun py-end-of-statement (&optional orig done origline)
+(defun py-end-of-statement (&optional orig done origline repeat)
   "Go to the last char of current statement.
 
-To go just beyond the final line of the current statement, use `py-down-statement-bol'. "
+To go just beyond the final line of the current statement, use `py-down-statement-bol'.
+
+Optional argument REPEAT, the number of loops done already, is checked for py-max-specpdl-size error. Avoid eternal loops due to missing string delimters etc. "
   (interactive)
   (unless (eobp)
     (let ((pps (syntax-ppss))
           (origline (or origline (py-count-lines)))
+          (repeat (or (and repeat (1+ repeat)) 0))
           (orig (or orig (point)))
           erg this
           ;; use by scan-lists
@@ -7760,6 +7780,9 @@ To go just beyond the final line of the current statement, use `py-down-statemen
           stringchar stm)
 
       (cond
+       ;; wich-function-mode, lp:1235375
+       ((< py-max-specpdl-size repeat)
+        (error "py-end-of-statement reached loops max. If no error, customize `py-max-specpdl-size'"))
        ((nth 1 pps)
         (when (< orig (point))
           (setq orig (point)))
@@ -7772,7 +7795,7 @@ To go just beyond the final line of the current statement, use `py-down-statemen
                 (setq done t)
                 (skip-chars-forward (concat "^" comment-start) (line-end-position))
                 (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-                (py-end-of-statement orig done origline))
+                (py-end-of-statement orig done origline repeat))
             (goto-char orig))))
        ((and (nth 8 pps)(nth 3 pps))
         (goto-char (nth 8 pps))
@@ -7781,18 +7804,20 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (when (looking-at "'''\\|'")
           (py-eos-handle-singlequoted-string-start this))
         (when (looking-at "\"\"\"\\|\"")
-          (py-eos-handle-doublequoted-string-start this))
+          (py-end-of-string)
+          ;; (py-eos-handle-doublequoted-string-start this)
+          )
         (when stm (setq done t))
         (setq stm nil)
         (unless (nth 3 (syntax-ppss))
-          (py-end-of-statement orig done origline)))
+          (py-end-of-statement orig done origline repeat)))
        ;; in comment
        ((nth 4 pps)
         (unless (eobp)
           (skip-chars-forward (concat "^" comment-start) (line-end-position))
           (forward-comment 99999)
           (py-handle-eol)
-          (py-end-of-statement orig done origline)))
+          (py-end-of-statement orig done origline repeat)))
        ((py-current-line-backslashed-p)
         (end-of-line)
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
@@ -7802,29 +7827,29 @@ To go just beyond the final line of the current statement, use `py-down-statemen
           (end-of-line)
           (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
         (unless (eobp)
-          (py-end-of-statement orig done origline)))
+          (py-end-of-statement orig done origline repeat)))
        ((and (not done)(looking-at "[ \t]*#"))
         (py-eos-handle-comment-start)
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((looking-at "'''\\|'")
         (py-eos-handle-singlequoted-string-start this)
         ;; string not terminated
         (unless (nth 3 (syntax-ppss))
-          (py-end-of-statement orig done origline)))
+          (py-end-of-statement orig done origline repeat)))
        ((looking-at "\"\"\"\\|\"")
         (py-eos-handle-doublequoted-string-start this)
         ;; string not terminated
         (unless (nth 3 (syntax-ppss))
-          (py-end-of-statement orig done origline)))
+          (py-end-of-statement orig done origline repeat)))
        ((looking-at py-string-delim-re)
         (py-eos-handle-string-start this)
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and (looking-at py-no-outdent-re)(not (nth 8 pps)))
         (end-of-line)
         (py-handle-eol))
        ((and (eq (point) orig) (< (current-column) (current-indentation)))
         (back-to-indentation)
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and (not done)
              (or (eq (current-column) (current-indentation))
                  (eq origline (py-count-lines)))
@@ -7834,43 +7859,43 @@ To go just beyond the final line of the current statement, use `py-down-statemen
         (if (and (< orig (point)) (not (progn (setq pps (syntax-ppss))(or (nth 8 pps)(nth 1 pps)))))
             (setq done t)
           (if (or (nth 8 pps)(nth 1 pps))
-              (py-end-of-statement orig done origline)
+              (py-end-of-statement orig done origline repeat)
             (forward-line 1)
             (py-handle-eol)))
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and (not done)
              (or (eq (current-column) (current-indentation))
                  (eq origline (py-count-lines)))
              (< 0 (skip-chars-forward " \t\r\n\f")))
         (when (looking-at "[ \t]*#")
           (py-eos-handle-comment-start))
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and (not done) (eq (point) orig)(looking-at ";"))
         (skip-chars-forward ";" (line-end-position))
         (when (< 0 (skip-chars-forward (concat "^" comment-start) (line-end-position)))
           (py-beginning-of-comment)
           (skip-chars-backward " \t\r\n\f")
           (setq done t))
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((bolp)
         (end-of-line)
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
         (setq done t)
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and (not (ignore-errors (eq (point) done)))(looking-back py-string-delim-re) (progn (goto-char (match-beginning 0))(and (nth 8 (syntax-ppss))(nth 3 (syntax-ppss)))))
         (end-of-line)
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f")
         (setq done (point))
-        (py-end-of-statement orig done origline))
+        (py-end-of-statement orig done origline repeat))
        ((and done (eq (current-column) (current-indentation)))
         (skip-chars-forward (concat "^" comment-start) (line-end-position))
         (skip-chars-backward " \t\r\n\f")
         (py-beginning-of-comment)
         (skip-chars-backward " \t\r\n\f" (line-beginning-position))
         (setq done t)
-        (py-end-of-statement orig done origline)))
+        (py-end-of-statement orig done origline repeat)))
       (unless
           (or
            (eq (point) orig)
