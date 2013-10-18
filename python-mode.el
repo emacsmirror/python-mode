@@ -1962,16 +1962,14 @@ alternative for finding the index.")
 
 (defvar inferior-python-mode-map
   (let ((map (copy-keymap comint-mode-map)))
-    (substitute-key-definition 'complete-symbol 'py-shell-complete
-                               map global-map)
-
+    ;; (substitute-key-definition 'complete-symbol 'py-shell-complete map global-map)
+    (substitute-key-definition 'complete-symbol 'completion-at-point map global-map)
     (define-key map (kbd "RET") 'comint-send-input)
-    (if py-complete-function
-        (define-key map [tab] 'py-complete-function)
-      (define-key map [tab] 'py-shell-complete))
+    (and py-complete-function
+         (define-key map [tab] 'py-complete-function))
     (define-key map "\C-c-" 'py-up-exception)
-    (define-key map "\C-c=" 'py-down-exception))
-  map)
+    (define-key map "\C-c=" 'py-down-exception)
+    map))
 
 (defvar py-menu)
 
@@ -3066,7 +3064,7 @@ completions on the current context."
       (when (> (length completions) 2)
         (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
 
-(defun py-shell--do-completion-at-point (process imports input)
+(defun py-shell--do-completion-at-point (process imports input orig)
   "Do completion at point for PROCESS."
   (with-syntax-table py-dotted-expression-syntax-table
     (when imports (py-send-string-no-output imports process))
@@ -3076,35 +3074,37 @@ completions on the current context."
              input process code))
            (completion (when completions
                          (try-completion input completions))))
-      (set-buffer oldbuf)
-      (cond ((eq completion t)
-             (if py-no-completion-calls-dabbrev-expand-p
-                 (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
-                                                           (tab-to-tab-stop)))
-               (when py-indent-no-completion-p
-                 (tab-to-tab-stop)))
-             nil)
-            ((null completion)
-             (if py-no-completion-calls-dabbrev-expand-p
-                 (or (dabbrev-expand nil)(when py-indent-no-completion-p
-                                           (tab-to-tab-stop))(message "Can't find completion "))
-               (when py-indent-no-completion-p
-                 (tab-to-tab-stop)))
-             nil)
-            ((not (string= input completion))
-             (progn (delete-char (- (length input)))
-                    (insert completion)
-                    (move-marker pos (point))
-                    ;; minibuffer.el expects a list, a bug IMO
-                    nil))
-            (t
-             (with-output-to-temp-buffer py-python-completions
-               (display-completion-list
-                (all-completions input completions)))
-             (move-marker pos (point))
-             nil))
-      (and (goto-char pos)
-           nil))))
+      ;; (set-buffer oldbuf)
+      (with-current-buffer oldbuf
+        ;; (goto-char orig)
+        (cond ((eq completion t)
+               (if py-no-completion-calls-dabbrev-expand-p
+                   (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
+                                                             (tab-to-tab-stop)))
+                 (when py-indent-no-completion-p
+                   (tab-to-tab-stop)))
+               nil)
+              ((null completion)
+               (if py-no-completion-calls-dabbrev-expand-p
+                   (or (dabbrev-expand nil)(when py-indent-no-completion-p
+                                             (tab-to-tab-stop))(message "Can't find completion "))
+                 (when py-indent-no-completion-p
+                   (tab-to-tab-stop)))
+               nil)
+              ((not (string= input completion))
+               (progn (delete-char (- (length input)))
+                      (insert completion)
+                      (move-marker pos (point))
+                      ;; minibuffer.el expects a list, a bug IMO
+                      nil))
+              (t
+               (with-output-to-temp-buffer py-python-completions
+                 (display-completion-list
+                  (all-completions input completions)))
+               (move-marker pos (point))
+               nil))
+        (and (goto-char pos)
+             nil)))))
 
 (defun python-shell-completion-complete-or-indent ()
   "Complete or indent depending on the context.
@@ -17093,7 +17093,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (tab-to-tab-stop))
           (t (or (setq proc (get-buffer-process shell))
                  (setq proc (get-buffer-process (py-shell nil nil shell t))))
-             (py-shell--do-completion-at-point proc nil word))))
+             (py-shell--do-completion-at-point proc nil word orig))))
   nil)
 
 (defun py-python3-shell-complete (&optional shell)
@@ -17105,10 +17105,9 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
          (end (point))
          (word (buffer-substring-no-properties beg end)))
     (cond ((string= word "")
-           (message "%s" "Nothing to complete. ")
            (tab-to-tab-stop))
           (t
-           (py-shell--do-completion-at-point (get-buffer-process (current-buffer)) nil word)
+           (py-shell--do-completion-at-point (get-buffer-process (current-buffer)) nil word orig)
            nil))))
 
 (defun py-comint--complete (shell pos beg end word imports debug)
@@ -17121,9 +17120,11 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
       (let ((proc (get-buffer-process (current-buffer))))
         (cond ((string= word "")
                (tab-to-tab-stop))
-              ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-               (py-shell--do-completion-at-point proc imports word))
-              (t (py-shell-complete-intern word beg end shell imports proc)))))))
+              (t
+               ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
+               (py-shell--do-completion-at-point proc imports word pos))
+              ;; (t (py-shell-complete-intern word beg end shell imports proc))
+              )))))
 
 (defun py-complete--base (shell pos beg end word imports debug)
   (let* (wait
@@ -17134,9 +17135,12 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (tab-to-tab-stop))
           ((string-match "[iI][pP]ython" shell)
            (ipython-complete nil nil beg end word shell debug imports pos))
-          ((string-match "[pP]ython3[^[:alpha:]]*$" shell)
-           (py-shell--do-completion-at-point proc imports word))
-          (t (py-shell-complete-intern word beg end shell imports proc debug)))))
+          (t
+           ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
+           (py-shell--do-completion-at-point proc imports word pos)
+           )
+          ;; (t (py-shell-complete-intern word beg end shell imports proc debug))
+          )))
 
 (defun py-shell-complete (&optional shell debug)
   "Complete word before point, if any. Otherwise insert TAB. "
@@ -17156,7 +17160,9 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
     ;; (ignore-errors (comint-dynamic-complete))
     (if (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
         (py-comint--complete shell pos beg end word imports debug)
-      (py-complete--base shell pos beg end word imports debug))))
+      (py-complete--base shell pos beg end word imports debug))
+    (goto-char pos)
+    nil))
 
 (defun py-after-change-function (beg end len)
   "Restore window-confiuration after completion. "
@@ -17177,8 +17183,6 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
   (goto-char end))
 
 (defun py-shell-complete-finally ()
-  (set-buffer oldbuf)
-  (goto-char pos)
   (if (and completions (not (string= "" (car completions))))
       (cond ((eq completions t)
              (when (buffer-live-p (get-buffer py-completion-buffer))
@@ -17204,9 +17208,9 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
       (tab-to-tab-stop)
       (when (buffer-live-p (get-buffer py-python-completions))
         (kill-buffer (get-buffer py-python-completions)))))
-  (and (goto-char pos)
-       ;; completion-at-point requires a list as return value, so givem
-       nil))
+  (progn (set-buffer oldbuf)(goto-char pos)
+         ;; completion-at-point requires a list as return value, so givem
+         nil))
 
 (defun py-shell-complete-intern (word &optional beg end shell imports proc debug)
   (when imports
