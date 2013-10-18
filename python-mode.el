@@ -17011,10 +17011,6 @@ and return collected output"
                 (signal 'quit nil))))))
 
 ;;; Completion
-(defun py-dot-word-before-point ()
-  (buffer-substring
-   (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point))
-   (point)))
 
 ;; started from python.el
 (defalias 'py-script-complete 'py-shell-complete)
