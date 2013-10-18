@@ -7175,6 +7175,7 @@ http://docs.python.org/reference/compound_stmts.html"
           erg)
       (py-beginning-of-form-intern final-re iact indent orig lc))))
 
+
 (defun py-beginning-of-block (&optional indent)
   "Go to beginning block, skip whitespace at BOL.
 
@@ -7234,10 +7235,7 @@ http://docs.python.org/reference/compound_stmts.html"
 
 Returns beginning of def-or-class if successful, nil otherwise
 
-When `py-mark-decorators' is non-nil, decorators are considered too.
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
+When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
   (py-beginning-of-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (interactive-p)))
 
@@ -7561,14 +7559,12 @@ http://docs.python.org/reference/compound_stmts.html"
 
 Returns end of def-or-class if successful, nil otherwise
 
-With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too.
-
-Referring python program structures see for example:
-http://docs.python.org/reference/compound_stmts.html"
+With \\[universal argument] or `py-mark-decorators' set to `t', decorators are marked too. "
   (interactive "P")
   (let* ((orig (point))
          (erg (py-end-base 'py-def-or-class-re orig)))
-    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    (when (and py-verbose-p (interactive-p))
+      (message "%s" erg))
     erg))
 
 (defun py-end-of-if-block (&optional indent)
@@ -13101,46 +13097,34 @@ the default. "]
 
                  ("Move"
 
-                  ["Up level" py-up
-                   :help " `py-up'
-Go to beginning one level above of compound statement or definition at point. "]
-
-                  ["Down level" py-down
-                   :help " `py-down'
-Go to beginning one level below of compound statement or definition at point. "]
-
-                  "-"
-
-                  ["Beginning of top level" py-beginning-of-top-level
-                   :help " `py-beginning-of-top-level'
-
-Go to the very beginning of top-level form at point. "]
-
-                  ["End of top level" py-end-of-top-level
-                   :help " `py-end-of-top-level'
-
-Go to end of top-level form at point. "]
-
-                  "-"
-
-                  ["Backward into nomenclature" py-backward-into-nomenclature
-                   :help " `py-backward-into-nomenclature'
-Go backward into nomenclature
-
-A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
-                  ["Forward into nomenclature" py-forward-into-nomenclature
-                   :help " `py-forward-into-nomenclature'
-Go forward into nomenclature
-
-A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
-
-                  "-"
-
                   ["Beginning of block" py-beginning-of-block
                    :help " `py-beginning-of-block'
 
 Go to beginning block, skip whitespace at BOL\. "]
+
                   ["Go to end of block" py-end-of-block]
+
+                  "-"
+
+                  ["Beginning of def or class" py-beginning-of-def-or-class
+                   :help " `py-beginning-of-def-or-class'
+
+Go to beginning def-or-class, skip whitespace at BOL.
+
+Returns beginning of def-or-class if successful, nil otherwise
+
+When `py-mark-decorators' is non-nil, decorators are considered too. "]
+
+
+                  ["End of def or class" py-end-of-def-or-class
+                   :help " `py-end-of-def-or-class'
+
+Go to end of def-or-class.
+
+Returns end of def-or-class if successful, nil otherwise
+
+With M-x universal argument or `py-mark-decorators' set to `t', decorators are marked too. "]
+
                   "-"
 
                   ["Beginning of statement" py-beginning-of-statement
@@ -13156,42 +13140,85 @@ Go to the last char of current statement.
 To go just beyond the final line of the current statement, use `py-down-statement-bol'. . "]
 
                   "-"
-                  ["Go to start of def or class" (py-beginning-of-def-or-class t) t]
-                  ["Move to end of def or class" (py-end-of-def-or-class t) t]
-                  "-"
-                  ["Move to start of def" py-beginning-of-def t]
-                  ["Move to end of def"   py-end-of-def t]
+
+                  ["Backward into nomenclature" py-backward-into-nomenclature
+                   :help " `py-backward-into-nomenclature'
+Go backward into nomenclature
+
+A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
+
+                  ["Forward into nomenclature" py-forward-into-nomenclature
+                   :help " `py-forward-into-nomenclature'
+Go forward into nomenclature
+
+A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
+
                   "-"
 
-                  ["Beginning of clause" py-beginning-of-clause
-                   :help " `py-beginning-of-clause'
+                  ("More"
+
+
+                   ["Up level" py-up
+                    :help " `py-up'
+Go to beginning one level above of compound statement or definition at point. "]
+
+                   ["Down level" py-down
+                    :help " `py-down'
+Go to beginning one level below of compound statement or definition at point. "]
+
+                   "-"
+
+                   ["Beginning of top level" py-beginning-of-top-level
+                    :help " `py-beginning-of-top-level'
+
+Go to the very beginning of top-level form at point. "]
+
+                   ["End of top level" py-end-of-top-level
+                    :help " `py-end-of-top-level'
+
+Go to end of top-level form at point. "]
+
+                   "-"
+
+                   ["Move to start of def" py-beginning-of-def t]
+
+                   ["Move to end of def"   py-end-of-def t]
+
+
+                   "-"
+
+                   ["Beginning of clause" py-beginning-of-clause
+                    :help " `py-beginning-of-clause'
 
 Go to beginning clause, skip whitespace at BOL\. "]
 
-                  ["End of clause" py-end-of-clause
-                   :help " `py-end-of-clause'
+                   ["End of clause" py-end-of-clause
+                    :help " `py-end-of-clause'
 
 Go to end of clause\. "]
-                  "-"
-                  ["Beginning of comment" py-beginning-of-comment
-                   :help " `py-beginning-of-comment'
+                   "-"
+                   ["Beginning of comment" py-beginning-of-comment
+                    :help " `py-beginning-of-comment'
 Go to beginning of comment at point. "]
-                  ["End of comment" py-end-of-comment
-                   :help " `py-end-of-comment'
+                   ["End of comment" py-end-of-comment
+                    :help " `py-end-of-comment'
 
 Go to end of comment at point. "]
 
-                  "-"
-                  ["Go to start of expression" (py-beginning-of-expression t) t]
-                  ["Move to end of expression" (py-end-of-expression t) t]
-                  "-"
-                  "-"
-                  ["Go to start of minor-expression" (py-beginning-of-minor-expression t) t]
-                  ["Move to end of minor-expression" (py-end-of-minor-expression t) t]
-                  "-"
+                   "-"
 
-                  ["Beginning of minor block" py-beginning-of-minor-block
-                   :help " `py-beginning-of-minor-block'
+                   ["Go to start of expression" (py-beginning-of-expression t) t]
+                   ["Move to end of expression" (py-end-of-expression t) t]
+
+                   "-"
+
+                   ["Go to start of minor-expression" (py-beginning-of-minor-expression t) t]
+
+                   ["Move to end of minor-expression" (py-end-of-minor-expression t) t]
+                   "-"
+
+                   ["Beginning of minor block" py-beginning-of-minor-block
+                    :help " `py-beginning-of-minor-block'
 
 Go to beginning minor-block, skip whitespace at BOL\.
 
@@ -13201,8 +13228,8 @@ A minor block is started by a `for', `if', `try' or `with'.
 
 "]
 
-                  ["End of minor block" py-end-of-minor-block
-                   :help " `py-end-of-minor-block'
+                   ["End of minor block" py-end-of-minor-block
+                    :help " `py-end-of-minor-block'
 
 Go to end of minor-block\.
 
@@ -13210,7 +13237,7 @@ Returns end of minor-block if successful, nil otherwise
 
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-                  )
+                   ))
 
                  "-"
 
@@ -17137,8 +17164,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
            (ipython-complete nil nil beg end word shell debug imports pos))
           (t
            ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
-           (py-shell--do-completion-at-point proc imports word pos)
-           )
+           (py-shell--do-completion-at-point proc imports word pos))
           ;; (t (py-shell-complete-intern word beg end shell imports proc debug))
           )))
 
