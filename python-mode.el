@@ -146,7 +146,6 @@ Give some hints, if not."
       (and (boundp 'py-smart-operator-mode-p) py-smart-operator-mode-p (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
            nil))))
 
-
 (defcustom py-empty-line-closes-p nil
   "When non-nil, dedent after empty line following block
 
@@ -976,7 +975,6 @@ Default is \"--errors-only\" "
   first line of input."
   :type 'string
   :group 'python-mode)
-
 
 (defcustom py-max-specpdl-size max-specpdl-size
   "Heuristic exit. Limiting number of recursive calls by py-end-of-statement and related functions. Default is max-specpdl-size.
@@ -2106,6 +2104,9 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement or it's clause.
 Includes def and class. ")
+
+(defconst py-block-keywords "\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>"
+  "Matches known keywords opening a block. ")
 
 (defconst py-clause-re
   (concat
@@ -7167,7 +7168,6 @@ http://docs.python.org/reference/compound_stmts.html"
           erg)
       (py-beginning-of-form-intern final-re iact indent orig lc))))
 
-
 (defun py-beginning-of-block (&optional indent)
   "Go to beginning block, skip whitespace at BOL.
 
@@ -9315,6 +9315,21 @@ With universal arg \C-u insert a `%'. "
        ((looking-at "}")
         (ar-braced-beginning-atpt))
        (t (self-insert-command 1))))))
+
+(defun py-beginning-of-block-current-column ()
+  "Reach next beginning of block upwards which starts at current column.
+
+Return position"
+  (interactive)
+  (let* ((orig (point))
+         (cuco (current-column))
+         (str (make-string cuco ?\s))
+         pps erg)
+    (while (and (not (bobp))(re-search-backward (concat "^" str py-block-keywords) nil t)(or (nth 8 (setq pps (syntax-ppss))) (nth 1 pps))))
+    (back-to-indentation)
+    (and (< (point) orig)(setq erg (point)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 (defun py-travel-current-indent (indent &optional orig)
   "Moves down until clause is closed, i.e. current indentation is reached.
@@ -13123,7 +13138,6 @@ Returns beginning of def-or-class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "]
 
-
                   ["End of def or class" py-end-of-def-or-class
                    :help " `py-end-of-def-or-class'
 
@@ -13165,7 +13179,6 @@ A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
 
                   ("More"
 
-
                    ["Up level" py-up
                     :help " `py-up'
 Go to beginning one level above of compound statement or definition at point. "]
@@ -13191,7 +13204,6 @@ Go to end of top-level form at point. "]
                    ["Move to start of def" py-beginning-of-def t]
 
                    ["Move to end of def"   py-end-of-def t]
-
 
                    "-"
 
