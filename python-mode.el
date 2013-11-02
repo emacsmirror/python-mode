@@ -4224,6 +4224,9 @@ Returns current indentation
 
 When bound to TAB, C-q TAB inserts a TAB.
 
+If `tab-always-indent' is set to 'complete, it completes if max
+indent is reached. However cycling won't work than.
+
 When `py-tab-shifts-region-p' is `t', not just the current line,
 but the region is shiftet that way.
 
@@ -4234,7 +4237,7 @@ If `py-tab-indents-region-p' is `t' and first TAB doesn't shift
       ;; TAB-leaves-point-in-the-wrong-lp-1178453-test
       (let ((orig (copy-marker (point)))
             (region (use-region-p))
-            cui col beg end)
+            cui col beg end done)
         (and region
              (setq beg (region-beginning))
              (setq end (region-end))
@@ -4262,17 +4265,23 @@ If `py-tab-indents-region-p' is `t' and first TAB doesn't shift
                          (py-compute-indentation nil nil nil nil nil nil this-indent-offset)))))
           (unless (eq this-command last-command)
             (setq py-already-guessed-indent-offset this-indent-offset))
-          (cond ((eq 4 (prefix-numeric-value arg))
-                 (beginning-of-line)
-                 (delete-horizontal-space)
-                 (indent-to (+ need py-indent-offset)))
-                ((not (eq 1 (prefix-numeric-value arg)))
-                 (py-smart-indentation-off)
-                 (py-indent-line-intern need cui this-indent-offset col beg end region))
-                (t (py-indent-line-intern need cui this-indent-offset col beg end region)))
-          (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
-          (current-indentation))
-        (goto-char orig)
+          (if (and (eq tab-always-indent 'complete)
+                   (eq (current-indentation) need)
+                   (skip-syntax-forward "\sw")
+                   (setq done t))
+              (funcall py-complete-function)
+            (cond ((eq 4 (prefix-numeric-value arg))
+                   (beginning-of-line)
+                   (delete-horizontal-space)
+                   (indent-to (+ need py-indent-offset)))
+                  ((not (eq 1 (prefix-numeric-value arg)))
+                   (py-smart-indentation-off)
+                   (py-indent-line-intern need cui this-indent-offset col beg end region))
+                  (t (py-indent-line-intern need cui this-indent-offset col beg end region)))
+            (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
+            (current-indentation)))
+        ;; after completion, don't go to orig
+        (unless done (goto-char orig))
         (if region
             (and (or py-tab-shifts-region-p
                      py-tab-indents-region-p)
@@ -13201,6 +13210,15 @@ Go to end of top-level form at point. "]
 
                    "-"
 
+                   ["Beginning of block current-column" py-beginning-of-block-current-column
+                    :help " `py-beginning-of-block-current-column'
+
+Reach next beginning of block upwards which starts at current column\.
+
+Return position. "]
+
+                   "-"
+
                    ["Move to start of def" py-beginning-of-def t]
 
                    ["Move to end of def"   py-end-of-def t]
@@ -13216,6 +13234,7 @@ Go to beginning clause, skip whitespace at BOL\. "]
                     :help " `py-end-of-clause'
 
 Go to end of clause\. "]
+
                    "-"
                    ["Beginning of comment" py-beginning-of-comment
                     :help " `py-beginning-of-comment'
@@ -13257,7 +13276,9 @@ Returns end of minor-block if successful, nil otherwise
 
 A minor block is started by a `for', `if', `try' or `with'. "]
 
-                   ))
+                   )
+
+                  )
 
                  "-"
 
