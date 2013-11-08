@@ -646,7 +646,7 @@ If empty, python-mode will guess some "
   :group 'python-mode)
 
 (defcustom py-flake8-command-args ""
-  "Arguments used by flake8. 
+  "Arguments used by flake8.
 
 Default is the empty string. "
   :type 'string
@@ -2062,33 +2062,36 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
   ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]*"
   "Regular expression matching keyword which typically closes a function. ")
 
+(defconst py-no-outdent-1-re-raw
+  (list
+   "elif"
+   "else"
+   "except"
+   "for"
+   "if"
+   "try"
+   "while"
+   ))
+
+(defconst py-no-outdent-2-re-raw
+  (list
+   "break"
+   "continue"
+   "pass"
+   "raise"
+   "return"
+   ))
+
 (defconst py-no-outdent-re
   (concat
    "[ \t]*\\_<\\("
-   (mapconcat 'identity
-              (list
-               "try:"
-               "except"
-               "while"
-               "for"
-               "if"
-               "elif"
-               )
-              "\\|"
-              )
+   (regexp-opt py-no-outdent-1-re-raw)
    "\\)\\_>[( \t]+.*:[( \t]\\_<\\("
-   (mapconcat 'identity
-              (list
-               "return"
-               "raise"
-               "break"
-               "continue"
-               "pass"
-               )
-              "\\|"
-              )
-   "\\)\\_>[ )\t]*$")
-  "Regular expression matching lines not to augment indent after.")
+   (regexp-opt py-no-outdent-2-re-raw)
+   "\\)\\_>[)\t]*$")
+  "Regular expression matching lines not to augment indent after.
+
+See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content ")
 
 (defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
@@ -2114,30 +2117,70 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (defconst py-def-re "[ \t]*\\_<\\(def\\)\\_>[ \n\t]"
   "Matches the beginning of a functions definition. ")
 
-(defconst py-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[:( \n\t]*"
+(defconst py-block-or-clause-re-raw
+  (list
+   "elif"
+   "else"
+   "except"
+   "finally"
+   "for"
+   "if"
+   "try"
+   "while"
+   "with")
   "Matches the beginning of a compound statement or it's clause. ")
-;; (setq py-block-or-clause-re "[ \t]*\\_<\\(if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[: \n\t]")
 
-(defconst py-extended-block-or-clause-re "[ \t]*\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>[:( \n\t]*"
-  "Matches the beginning of a compound statement or it's clause.
-Includes def and class. ")
+(defvar py-block-or-clause-re
+  (concat
+   "[ \t]*\\_<\\("
+   (regexp-opt  py-block-or-clause-re-raw)
+   "\\)\\_>[( \t]*.*:?")
+  "See py-block-or-clause-re-raw, which it reads. ")
 
-(defconst py-block-keywords "\\_<\\(def\\|class\\|if\\|else\\|elif\\|while\\|for\\|try\\|except\\|finally\\|with\\)\\_>"
+(defconst py-extended-block-or-clause-re-raw
+  (list
+   "class"
+   "def"
+   "elif"
+   "else"
+   "except"
+   "finally"
+   "for"
+   "if"
+   "try"
+   "while"
+   "with")
+  "Matches the beginning of a compound statement or it's clause. ")
+
+(defconst py-extended-block-or-clause-re
+  (concat
+   "[ \t]*\\_<\\("
+   (regexp-opt  py-extended-block-or-clause-re-raw)
+   "\\)\\_>[( \t]*.*:?")
+  "See py-block-or-clause-re-raw, which it reads. ")
+
+(defconst py-block-keywords
+  (concat
+   "\\_<\\("
+   (regexp-opt py-block-or-clause-re-raw)
+   "\\)\\_>")
   "Matches known keywords opening a block. ")
+
+(defconst py-clause-re-raw
+  (list
+   "elif"
+   "else"
+   "except"
+   "finally"
+   )
+  "Matches the beginning of a clause. ")
 
 (defconst py-clause-re
   (concat
    "[ \t]*\\_<\\("
-   (mapconcat 'identity
-              (list
-               "elif"
-               "else"
-               "except"
-               "finally")
-              "\\|")
+   (regexp-opt  py-clause-re-raw)
    "\\)\\_>[( \t]*.*:?")
-  "Regular expression matching lines not to augment indent after.")
-;; (setq py-clause-re "[ \t]*\\_<\\(else\\|elif\\|except\\|finally\\)\\_>[: \n\t]")
+  "See py-clause-re-raw, which it reads. ")
 
 (defconst py-elif-re "[ \t]*\\_<\\elif\\_>[:( \n\t]*"
   "Matches the beginning of a compound if-statement's clause exclusively. ")
@@ -6607,20 +6650,6 @@ See customizable variables `py-current-defun-show' and `py-current-defun-delay'.
                    (sit-for py-current-defun-delay)))
         (when iact (message (prin1-to-string erg)))
         erg))))
-
-(defun py-outdent-p ()
-  "Returns non-nil if the current line should dedent one level."
-  (save-excursion
-    (and (progn (back-to-indentation)
-                (looking-at py-clause-re))
-         ;; short circuit infloop on illegal construct
-         (not (bobp))
-         (progn (forward-line -1)
-                (py-beginning-of-statement)
-                (back-to-indentation)
-                (when (looking-at py-blank-or-comment-re)
-                  (backward-to-indentation 1))
-                (not (looking-at py-no-outdent-re))))))
 
 (defun py-sort-imports ()
   "Sort multiline imports.
@@ -11402,7 +11431,7 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                          (car (py-clause-lookup-keyword py-elif-re -1 nil orig origline)))
                         ;; maybe at if, try, with
                         (t (car (py-clause-lookup-keyword py-block-or-clause-re -1 nil orig origline)))))
-                 ((looking-at py-block-or-clause-re)
+                 ((looking-at py-extended-block-or-clause-re)
                   (cond ((and (not line)(eq origline (py-count-lines)))
                          (py-line-backward-maybe)
                          (setq line t)
@@ -11413,9 +11442,6 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                                    (py-guess-indent-offset))
                                   (t py-indent-offset))
                             (current-indentation)))))
-                 ((looking-at py-block-closing-keywords-re)
-                  (py-beginning-of-block)
-                  (current-indentation))
                  ((and (< (py-count-lines) origline)
                        (eq (current-column) (current-indentation)))
                   (and
@@ -14501,12 +14527,12 @@ Call `easy_install pyflakes' resp. `pip...' if not available"]
                    ["pyflakes-flymake-mode" pyflakes-flymake-mode :help
                     "`pyflakes-flymake-mode'
 Toggle flymake-mode running `pyflakes' "]
-                   
+
                    )
-                  
+
                   ("Flake8 " :help
                    "code checker running "
-                   
+
                    ["Flake8 run" py-flake8-run
                     :help " `py-flake8-run'
 
@@ -14524,14 +14550,14 @@ Toggle flymake-mode running `pyflakes' "]
         - extendable through ``flake8.extension`` entry points.
 
 . "]
-                   
+
                    ["Flake8 help" py-flake8-help
                     :help " `py-flake8-help'
 
 Display flake8 command line help messages. "]
-                   
+
                    )
-                  
+
                   ("Pyflakes-pep8 " :help
                    "Non intrusive code checker running `pyflakes' and `pep8'
 call `easy_install pyflakes' resp. `pip...' and `easy_install pep8' if basics not available"
