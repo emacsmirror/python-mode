@@ -645,6 +645,8 @@ If empty, python-mode will guess some "
   :type 'string
   :group 'python-mode)
 
+(make-obsolete-variable 'py-jpython-command-args 'py-jython-command-args nil)
+
 (defcustom py-flake8-command-args ""
   "Arguments used by flake8.
 
@@ -1591,12 +1593,6 @@ some logging etc. "
 
 (defvar py-shebang-regexp "#![ \t]?\\([^ \t\n]+\\)[ \t]*\\([biptj]+ython[^ \t\n]*\\)"
   "Detecting the shell in head of file. ")
-
-(make-variable-buffer-local 'py-python-command-args)
-
-(set-default 'py-python-command-args  '("-i"))
-
-(make-obsolete-variable 'py-jpython-command-args 'py-jython-command-args nil)
 
 (defvar py-separator-char 47
   "Values set by defcustom only will not be seen in batch-mode. ")
