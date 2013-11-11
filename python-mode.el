@@ -1575,6 +1575,14 @@ See also command `toggle-py-underscore-word-syntax-p' ")
 (defvar py-shell-complete-debug nil
   "For interal use when debugging." )
 
+(defcustom py-debug-p nil
+  "When non-nil, keep resp. store information useful for debugging.
+
+Temporary files are not deleted. Other functions might implement
+some logging etc. "
+  :type 'boolean
+  :group 'python-mode)
+
 (defvar py-encoding-string-re "^[ \t]*#[ \t]*-\\*-[ \t]*coding:.+-\\*-"
   "Matches encoding string of a Python file. ")
 
@@ -9916,9 +9924,9 @@ When called from a programm, it accepts a string specifying a shell which will b
     (unwind-protect
         (setq erg (py-execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
       (sit-for 0.1)
-      (and py-cleanup-temporary
+      (and (or py-debug-p py-cleanup-temporary)
            (py-delete-temporary tempfile tempbuf)))
-    (and erg py-store-result-p (unless (string= (car kill-ring) erg) (kill-new erg)))
+    (and erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
     erg))
 
 (defun py-execute-python-mode-v5 (start end)
