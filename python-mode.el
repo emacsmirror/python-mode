@@ -8010,8 +8010,8 @@ Returns position if succesful "
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-;;; Mark
-(defun py-mark-base (form &optional py-mark-decorators)
+(defun py--base (form &optional py-mark-decorators)
+  "Returns boundaries of FORM, a cons. "
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
          (endform (intern-soft (concat "py-end-of-" form)))
          (begcheckform (intern-soft (concat "py-beginning-of-" form "-p")))
@@ -8021,16 +8021,109 @@ Returns position if succesful "
                   (setq beg (funcall begcheckform))
                   beg
                 (funcall begform)))
-    (when py-mark-decorators
-      (save-excursion
-        (when (setq erg (py-beginning-of-decorator))
-          (setq beg erg))))
-    (push-mark beg t t)
+    (and py-mark-decorators
+         (and (setq erg (py-beginning-of-decorator))
+              (setq beg erg)))
     (setq end (funcall endform))
     (unless end (when (< beg (point))
                   (setq end (point))))
     (when (interactive-p) (message "%s %s" beg end))
     (cons beg end)))
+
+;;; Forms
+(defun py-statement ()
+  "Statement at point.
+
+Return code of `py-statement' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "statement")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-top-level ()
+  "Top-Level at point.
+
+Return code of `py-top-level' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "top-level")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-block ()
+  "Block at point.
+
+Return code of `py-block' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "block")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-clause ()
+  "Clause at point.
+
+Return code of `py-clause' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "clause")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-block-or-clause ()
+  "Block-Or-Clause at point.
+
+Return code of `py-block-or-clause' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "block-or-clause")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-def ()
+  "Def at point.
+
+Return code of `py-def' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "def")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-class ()
+  "Class at point.
+
+Return code of `py-class' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "class")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-def-or-class ()
+  "Def-Or-Class at point.
+
+Return code of `py-def-or-class' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "def-or-class")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-expression ()
+  "Expression at point.
+
+Return code of `py-expression' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "expression")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-partial-expression ()
+  "Partial-Expression at point.
+
+Return code of `py-partial-expression' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "partial-expression")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-minor-block ()
+  "Minor-Block at point.
+
+Return code of `py-minor-block' at point, a string. "
+  (interactive)
+  (let ((erg (py--base "minor-block")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+;;; Mark
+(defun py-mark-base (form &optional py-mark-decorators)
+  "Calls py--base "
+  (let ((beg (car (py--base form py-mark-decorators))))
+    (push-mark beg t t)))
 
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
@@ -8183,7 +8276,6 @@ Returns beginning and end positions of marked area, a cons. "
 
 ;;; Copy
 
-(defalias 'py-statement 'py-copy-statement)
 (defun py-copy-statement ()
   "Copy statement at point.
 
@@ -8192,7 +8284,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "statement")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-top-level 'py-copy-top-level)
 (defun py-copy-top-level ()
   "Copy top-level at point.
 
@@ -8201,7 +8292,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "top-level")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-block 'py-copy-block)
 (defun py-copy-block ()
   "Copy block at point.
 
@@ -8210,7 +8300,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "block")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-clause 'py-copy-clause)
 (defun py-copy-clause ()
   "Copy clause at point.
 
@@ -8219,7 +8308,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "clause")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-block-or-clause 'py-copy-block-or-clause)
 (defun py-copy-block-or-clause ()
   "Copy block-or-clause at point.
 
@@ -8228,7 +8316,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "block-or-clause")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-def 'py-copy-def)
 (defun py-copy-def ()
   "Copy def at point.
 
@@ -8237,7 +8324,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "def")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-class 'py-copy-class)
 (defun py-copy-class ()
   "Copy class at point.
 
@@ -8246,7 +8332,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "class")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-def-or-class 'py-copy-def-or-class)
 (defun py-copy-def-or-class ()
   "Copy def-or-class at point.
 
@@ -8255,7 +8340,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "def-or-class")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-expression 'py-copy-expression)
 (defun py-copy-expression ()
   "Copy expression at point.
 
@@ -8264,7 +8348,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "expression")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-partial-expression 'py-copy-partial-expression)
 (defun py-copy-partial-expression ()
   "Copy partial-expression at point.
 
@@ -8273,7 +8356,6 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "partial-expression")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
-(defalias 'py-minor-block 'py-copy-minor-block)
 (defun py-copy-minor-block ()
   "Copy minor-block at point.
 
@@ -8281,8 +8363,6 @@ Store data in kill ring, so it might yanked back. "
   (interactive "*")
   (let ((erg (py-mark-base "minor-block")))
     (copy-region-as-kill (car erg) (cdr erg))))
-
-(defalias 'py-minor-expression 'py-copy-partial-expression)
 
 ;;; Delete
 (defun py-delete-statement ()
