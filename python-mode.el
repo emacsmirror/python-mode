@@ -7097,21 +7097,15 @@ http://docs.python.org/reference/compound_stmts.html
   (interactive)
   (save-restriction
     (unless (bobp)
+      (py--narrow-in-comint-modes done limit)
       (let* ((orig (or orig (point)))
              (this (point))
              (cui (current-indentation))
-             (limit
-              (or limit
-                  (and
-                   (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
-                   (if (re-search-backward comint-prompt-regexp nil t 1)
-                       (match-end 0)
-                     (error (format "py-beginning-of-statement: No prompt found in %s mode" major-mode))))))
+
              (pps (progn (goto-char this)
                          (parse-partial-sexp (or limit (point-min))(point))))
              (done done)
              erg)
-        (and limit (not done) (narrow-to-region limit orig))
         (cond
          ((and (bolp)(eolp))
           (skip-chars-backward " \t\r\n\f")
@@ -7227,6 +7221,17 @@ http://docs.python.org/reference/compound_stmts.html"
         (when lc (beginning-of-line) (setq erg (point)))))
     (when (and py-verbose-p iact) (message "%s" erg))
     erg))
+
+(defun py--narrow-in-comint-modes (&optional done limit)
+  "In comint-modes, limit region to previous prompt. "
+  (let ((limit
+         (or limit
+             (and
+              (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
+              (if (re-search-backward comint-prompt-regexp nil t 1)
+                  (match-end 0)
+                (error (format "py-beginning-of-statement: No prompt found in %s mode" major-mode)))))))
+    (and limit (not done) (narrow-to-region limit orig))))
 
 (defun py-beginning-of-prepare (indent final-re &optional inter-re iact lc)
   (let ((orig (point))
