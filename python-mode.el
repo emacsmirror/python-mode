@@ -4356,11 +4356,11 @@ C-q TAB inserts a literal TAB-character.
                            (py-compute-indentation nil nil nil nil nil nil this-indent-offset))))
             (py--indent-line-base)
             (if region
-                  (and (or py-tab-shifts-region-p
-                           py-tab-indents-region-p)
-                       (not (eq (point) orig))
-                       (exchange-point-and-mark))
-                (and (< (current-column) (current-indentation))(back-to-indentation)))
+                (and (or py-tab-shifts-region-p
+                         py-tab-indents-region-p)
+                     (not (eq (point) orig))
+                     (exchange-point-and-mark))
+              (and (< (current-column) (current-indentation))(back-to-indentation)))
             (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
             (current-indentation)))
       (setq need (py-compute-indentation))
