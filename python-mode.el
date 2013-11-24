@@ -9155,7 +9155,7 @@ Return position if form found, nil otherwise. "
            erg)
       (if (eobp)
           (setq erg nil)
-        (while (and (re-search-forward regexp nil t 1)
+        (while (and (re-search-forward regexp nil 'move 1)
                     (nth 8 (syntax-ppss))))
         (back-to-indentation)
         (when (looking-at regexp) (setq erg (point)))
@@ -11336,7 +11336,6 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
              (indent-offset (or indent-offset py-indent-offset))
              (name (current-buffer))
              erg indent this-line)
-        ;; indent in Shell
         (if (and (not repeat)
                  (and (comint-check-proc (current-buffer))
                       (re-search-backward (concat py-shell-prompt-regexp "\\|" ipython-de-output-prompt-regexp "\\|" ipython-de-input-prompt-regexp) nil t 1)))
@@ -11452,7 +11451,11 @@ Optional arguments are flags resp. values set and used by `py-compute-indentatio
                                 (t (+ (current-column) (* (nth 0 pps)))))))
                        ((nth 1 (syntax-ppss))
                         (goto-char (nth 1 (syntax-ppss)))
-                        (setq line (< (py-count-lines) origline))
+                        (setq line
+                              ;; should be faster
+                              (< (line-end-position) liep)
+                              ;; (< (py-count-lines) origline)
+                              )
                         (py-compute-indentation orig origline closing line nesting t indent-offset liep))
                        ((not (py-beginning-of-statement-p))
                         (py-beginning-of-statement)
