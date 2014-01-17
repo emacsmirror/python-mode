@@ -2641,7 +2641,7 @@ Returns value of `indent-tabs-mode' switched to. "
   (py-indent-tabs-mode (abs arg)(interactive-p)))
 
 (defun py-indent-tabs-mode-off (arg)
-  "Switch `indent-tabs-mode' on. "
+  "Switch `indent-tabs-mode' off. "
   (interactive "p")
   (py-indent-tabs-mode (- (abs arg))(interactive-p)))
 
