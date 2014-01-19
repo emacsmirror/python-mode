@@ -10011,7 +10011,7 @@ When called from a programm, it accepts a string specifying a shell which will b
   (when (buffer-live-p localname)
     (kill-buffer localname)))
 
-(defun py-execute-buffer-finally (start end execute-directory)
+(defun py-execute-buffer-finally (start end execute-directory wholebuf)
   (let* ((strg (buffer-substring-no-properties start end))
          (temp (make-temp-name
                 (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" py-shell-name))) "-")))
@@ -10029,12 +10029,6 @@ When called from a programm, it accepts a string specifying a shell which will b
                   "if __name__ == '__main__ ':" strg)))
     (insert strg)
     (py-fix-start (point-min)(point-max))
-    ;; (py-if-needed-insert-shell)
-    ;; (unless wholebuf (py-insert-coding))
-    ;; (unless (string-match "[jJ]ython" py-shell-name) (py-insert-execute-directory execute-directory))
-    ;; fix offline amount, make erorr point at the correct line
-    ;; (setq lineadd (- line (+ 2 (count-lines (point-min) (point)))))
-    ;; (and (< 0 lineadd) (insert (make-string lineadd 10)))
     (set-buffer tempbuf)
     (write-region (point-min) (point-max) tempfile nil t nil 'ask)
     (set-buffer-modified-p 'nil)
@@ -10118,12 +10112,13 @@ May we get rid of the temporary file? "
       (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
         (when py-verbose-p (message "Output buffer: %s" procbuf))))))
 
-(defun py-execute-base (&optional start end shell filename proc file)
+(defun py-execute-base (&optional start end shell filename proc file wholebuf)
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
   (let* ((start (or start (and (use-region-p) (region-beginning)) (point-min)))
          (end (or end (and (use-region-p) (region-end)) (point-max)))
+         (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
          (windows-config (window-configuration-to-register 313465889))
          (origline
           (save-restriction
@@ -10161,11 +10156,11 @@ When optional FILE is `t', no temporary file is needed. "
           (py-execute-no-temp-p
            (py-execute-ge24.3 start end filename execute-directory py-exception-buffer proc))
           ;; No need for a temporary filename than
-          (filename
+          ((and filename wholebuf)
            (py-execute-file-base proc filename nil py-buffer-name filename execute-directory))
           (t
            ;; (message "%s" (current-buffer))
-           (py-execute-buffer-finally start end execute-directory)))))
+           (py-execute-buffer-finally start end execute-directory wholebuf)))))
 
 (defun py-execute-string (&optional string shell)
   "Send the argument STRING to a Python interpreter.
@@ -18602,7 +18597,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
                           (find-file-noselect filename))))
          (set-buffer buffer))))
 
-(defun py-execute-prepare (form &optional shell dedicated switch beg end file)
+(defun py-execute-prepare (form &optional shell dedicated switch beg end file wholebuf)
   "Used by python-extended-executes ."
   (save-excursion
     (let ((beg (unless file
@@ -18627,7 +18622,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
             (if (file-readable-p filename)
                 (setq erg (py-execute-file-base nil filename nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) filename)))
               (message "%s not readable. %s" file "Do you have write permissions?")))
-        (py-execute-base beg end shell)))))
+        (py-execute-base beg end shell nil nil wholebuf)))))
 
 (defun py-execute-statement-python ()
   "Send statement at point to Python interpreter. "
