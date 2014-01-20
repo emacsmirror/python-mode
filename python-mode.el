@@ -22243,7 +22243,9 @@ FILE-NAME."
 
 ;; FixMe: for unknown reasons this is not done by mode
 (if (file-readable-p abbrev-file-name)
-    (add-hook 'python-mode-hook '(lambda () (load abbrev-file-name nil t)))
+    (progn
+      (add-hook 'python-mode-hook (lambda () (setq abbrev-changed nil)
+    (add-hook 'python-mode-hook (lambda () (load abbrev-file-name nil t))))))
   (message "Warning: %s" "no abbrev-file found, customize `abbrev-file-name' in order to make mode-specific abbrevs work. "))
 
 (when py-sexp-function
