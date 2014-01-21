@@ -1575,6 +1575,9 @@ See also command `toggle-py-underscore-word-syntax-p' ")
   "Returns locally used executable-name. ")
 (make-variable-buffer-local 'py-local-command)
 
+(defvar py-this-abbrevs-changed nil
+  "Internally used by python-mode-hook")
+
 (defvar py-local-versioned-command nil
   "Returns locally used executable-name including its version. ")
 (make-variable-buffer-local 'py-local-versioned-command)
@@ -22243,9 +22246,11 @@ FILE-NAME."
 
 ;; FixMe: for unknown reasons this is not done by mode
 (if (file-readable-p abbrev-file-name)
-    (progn
-      (add-hook 'python-mode-hook (lambda () (setq abbrev-changed nil)
-    (add-hook 'python-mode-hook (lambda () (load abbrev-file-name nil t))))))
+    (add-hook 'python-mode-hook
+              (lambda ()
+                (setq py-this-abbrevs-changed abbrevs-changed)
+                (load abbrev-file-name nil t)
+                (setq abbrevs-changed py-this-abbrevs-changed)))
   (message "Warning: %s" "no abbrev-file found, customize `abbrev-file-name' in order to make mode-specific abbrevs work. "))
 
 (when py-sexp-function
