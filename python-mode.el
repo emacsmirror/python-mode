@@ -427,6 +427,17 @@ Default is nil. "
   :type '(repeat string)
   :group 'python-mode)
 
+(defcustom py-hide-comments-when-hiding-all t
+  "Hide the comments too when you do an `hs-hide-all'."
+  :type 'boolean
+  :group 'python-mode)
+
+(defcustom py-company-pycomplete-p nil
+  "Load company-pycomplete stuff. Default is  nil"
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-start-run-py-shell nil
   "If `python-mode' should start a python-shell, `py-shell'.
 
