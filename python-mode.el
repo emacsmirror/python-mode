@@ -523,6 +523,13 @@ Examples from PEP8"
   :type 'boolean
   :group 'python-mode)
 
+(defcustom py-electric-yank-active-p nil
+  " When non-nil, `yank' will be followed by an `indent-according-to-mode'.
+
+Default is nil"
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-electric-kill-backward-p nil
   "Affects `py-electric-backspace'. Default is nil.
 
