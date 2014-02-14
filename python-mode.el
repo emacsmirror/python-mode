@@ -4398,18 +4398,18 @@ When indent is set back manually, this is honoured in following lines. "
         (setq pos (copy-marker (point)))
         (save-excursion
           (goto-char orig)
-          (if (and (bolp)(eolp))
-              (if (string-match "23.4" emacs-version)
-                  (progn (save-restriction
-                           (narrow-to-region (point) pos)
-                           (delete-trailing-whitespace)))
-                (delete-trailing-whitespace (line-beginning-position) pos))
+          (if (empty-line-p)
+              (if (<= 23 (string-to-number (car (split-string emacs-version "\\."))))
+                  (delete-trailing-whitespace (line-beginning-position) pos)
+                (save-restriction
+                  (narrow-to-region (point) pos)
+                  (delete-trailing-whitespace)))
             (skip-chars-backward " \t")
-            (if (string-match "23.4" emacs-version)
-                (progn (save-restriction
-                         (narrow-to-region (point) pos)
-                         (delete-trailing-whitespace)))
-              (delete-trailing-whitespace (point) (marker-position pos))))))
+            (if (<= 23 (string-to-number (car (split-string emacs-version "\\."))))
+                (delete-trailing-whitespace (line-beginning-position) pos)
+              (save-restriction
+                (narrow-to-region (point) pos)
+                (delete-trailing-whitespace))))))
       (setq erg (indent-to-column (py-compute-indentation))))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
