@@ -13,11 +13,19 @@ New in version 6.1.4
   https://bitbucket.org/andreas_roehler/pydoc-info
   See also INSTALL-INFO-FILES
 
-- command py-toggle-split-windows-function
+New commands
+
+- py-info-lookup-symbol ()
+  Calls `info-lookup-symbol'. Sends help if stuff is missing.
+
+- py-toggle-split-windows-function
   If window is splitted vertically or horizontally.
   Sets customizable variable
   `py-split-windows-on-execute-function'
   Also in menu Python/Customize/Switches/Display/Which split windows
+
+- py-symbol-at-point
+  Return the Python symbol under cursor
 
 New in version 6.1.3
 ---------------------
