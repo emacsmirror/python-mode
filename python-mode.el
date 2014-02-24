@@ -1418,7 +1418,7 @@ else:
   :type 'string
   :group 'python-mode)
 
-(defcustom python-shell-module-completion-string-code ""
+(defcustom python-shell-module-completion-string-code "';'.join(__COMPLETER_all_completions('''%s'''))"
   "Python code used to get completions separated by semicolons for imports.
 
 For IPython v0.11, add the following line to
@@ -3083,16 +3083,13 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (let* ((output-buffer)
-         wait
-         (process (or process (progn (setq wait 0.2)(get-buffer-process (py-shell)))))
-         ;; (comint-preoutput-filter-functions
-         ;;  (append comint-preoutput-filter-functions
-         ;;          '(ansi-color-filter-apply
-         ;;            (lambda (string)
-         ;;              (setq output-buffer (concat output-buffer string))
-         ;;              ""))))
-         )
-    (and wait (sit-for wait))
+         (process (or process (get-buffer-process (py-shell))))
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
+                  '(ansi-color-filter-apply
+                    (lambda (string)
+                      (setq output-buffer (concat output-buffer string))
+                      "")))))
     (py-shell-send-string string process msg)
     (accept-process-output process 1)
     (when output-buffer
@@ -3182,35 +3179,35 @@ completions on the current context."
                          (try-completion input completions))))
       ;; (set-buffer oldbuf)
       (with-current-buffer oldbuf
-        ;; (goto-char orig)
-        (cond ((eq completion t)
-               (if py-no-completion-calls-dabbrev-expand-p
-                   (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
-                                                             (tab-to-tab-stop)))
-                 (when py-indent-no-completion-p
-                   (tab-to-tab-stop)))
-               nil)
-              ((null completion)
-               (if py-no-completion-calls-dabbrev-expand-p
-                   (or (dabbrev-expand nil)(when py-indent-no-completion-p
-                                             (tab-to-tab-stop))(message "Can't find completion "))
-                 (when py-indent-no-completion-p
-                   (tab-to-tab-stop)))
-               nil)
-              ((not (string= input completion))
-               (progn (delete-char (- (length input)))
-                      (insert completion)
-                      (move-marker pos (point))
-                      ;; minibuffer.el expects a list, a bug IMO
-                      nil))
-              (t
-               (with-output-to-temp-buffer py-python-completions
-                 (display-completion-list
-                  (all-completions input completions)))
-               (move-marker pos (point))
-               nil))
-        (and (goto-char pos)
-             nil)))))
+      ;; (goto-char orig)
+      (cond ((eq completion t)
+             (if py-no-completion-calls-dabbrev-expand-p
+                 (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
+                                                           (tab-to-tab-stop)))
+               (when py-indent-no-completion-p
+                 (tab-to-tab-stop)))
+             nil)
+            ((null completion)
+             (if py-no-completion-calls-dabbrev-expand-p
+                 (or (dabbrev-expand nil)(when py-indent-no-completion-p
+                                           (tab-to-tab-stop))(message "Can't find completion "))
+               (when py-indent-no-completion-p
+                 (tab-to-tab-stop)))
+             nil)
+            ((not (string= input completion))
+             (progn (delete-char (- (length input)))
+                    (insert completion)
+                    (move-marker pos (point))
+                    ;; minibuffer.el expects a list, a bug IMO
+                    nil))
+            (t
+             (with-output-to-temp-buffer py-python-completions
+               (display-completion-list
+                (all-completions input completions)))
+             (move-marker pos (point))
+             nil))
+      (and (goto-char pos)
+           nil)))))
 
 (defun python-shell-completion-complete-or-indent ()
   "Complete or indent depending on the context.
@@ -6558,7 +6555,7 @@ and `pass'.  This doesn't catch embedded statements."
                                             (eq regexp 'py-block-re))
                                         (looking-at py-clause-re)))
                                (py-end-of-statement)(setq last (point))))
-                      (goto-char last))))
+                      (and last (goto-char last)))))
             (t (goto-char orig)))
       (when (and (<= (point) orig)(not (looking-at (symbol-value regexp))))
         ;; found the end above
