@@ -3561,57 +3561,6 @@ Don't save anything for STR matching `py-history-filter-regexp'."
           (t (let ((pos (string-match "[^ \t]" string)))
                (if pos (py-args-to-list (substring string pos))))))))
 
-;; Using this stops us getting lines in the buffer like
-;; >>> ... ... >>>
-;; Also look for (and delete) an `_emacs_ok' string and call
-;; `python-preoutput-continuation' if we get it.
-(defun py-preoutput-filter (s)
-  "`comint-preoutput-filter-functions' function: ignore prompts not at bol."
-  (when py-preoutput-leftover
-    (setq s (concat py-preoutput-leftover s))
-    (setq py-preoutput-leftover nil))
-  (let ((start 0)
-        (res ""))
-    ;; First process whole lines.
-    (while (string-match "\n" s start)
-      (let ((line (substring s start (setq start (match-end 0)))))
-        ;; Skip prompt if needed.
-        (when (and py-preoutput-skip-next-prompt
-                   (string-match comint-prompt-regexp line))
-          (setq py-preoutput-skip-next-prompt nil)
-          (setq line (substring line (match-end 0))))
-        ;; Recognize special _emacs_out lines.
-        (if (and (string-match "\\`_emacs_out \\(.*\\)\n\\'" line)
-                 (local-variable-p 'py-preoutput-result))
-            (progn
-              (setq py-preoutput-result (match-string 1 line))
-              (set (make-local-variable 'py-preoutput-skip-next-prompt) t))
-          (setq res (concat res line)))))
-    ;; Then process the remaining partial line.
-    (unless (zerop start) (setq s (substring s start)))
-    (cond ((and (string-match comint-prompt-regexp s)
-                ;; Drop this prompt if it follows an _emacs_out...
-                (or py-preoutput-skip-next-prompt
-                    ;; ... or if it's not gonna be inserted at BOL.
-                    ;; Maybe we could be more selective here.
-                    (if (zerop (length res))
-                        (not (bolp))
-                      (string-match ".\\'" res))))
-           ;; The need for this seems to be system-dependent:
-           ;; What is this all about, exactly?  --Stef
-           ;; (if (and (eq ?. (aref s 0)))
-           ;;     (accept-process-output (get-buffer-process (current-buffer)) 1))
-           (setq py-preoutput-skip-next-prompt nil)
-           res)
-          ((let ((end (min (length "_emacs_out ") (length s))))
-             (eq t (compare-strings s nil end "_emacs_out " nil end)))
-           ;; The leftover string is a prefix of _emacs_out so we don't know
-           ;; yet whether it's an _emacs_out or something else: wait until we
-           ;; get more output so we can resolve this ambiguity.
-           (set (make-local-variable 'py-preoutput-leftover) s)
-           res)
-          (t (concat res s)))))
-
 (defun py-send-command (command)
   "Like `py-send-string' but resets `compilation-shell-minor-mode'."
   (when (py-check-comint-prompt)
@@ -11849,7 +11798,6 @@ This function takes the list of setup code to send from the
   (py-shell-send-setup-code proc)
   (and py-set-pager-cat-p (comint-simple-send proc "import os;os.environ['PAGER'] = 'cat'"))
   (compilation-shell-minor-mode 1)
-  (setq comint-input-sender 'py-shell-simple-send)
   ;; (sit-for 0.1)
   (setq comint-input-ring-file-name
         (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
@@ -21667,9 +21615,6 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
   (and (setq val (get-register 313465889))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
        (jump-to-register 313465889)))
 
-(defun py-shell-simple-send (proc string)
-  (comint-simple-send proc string))
-
 (defun py-shell-execute-string-now (string &optional shell buffer proc output-buffer)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
@@ -26754,8 +26699,6 @@ containing Python source.
   (require 'ansi-color) ; for ipython
   (setq mode-line-process '(":%s"))
   (set (make-local-variable 'comint-input-filter) 'py-input-filter)
-  (add-hook 'comint-preoutput-filter-functions #'py-preoutput-filter
-	    nil t)
   (set (make-local-variable 'compilation-error-regexp-alist)
        python-compilation-regexp-alist)
   (set (make-local-variable 'comint-prompt-regexp)
