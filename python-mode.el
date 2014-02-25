@@ -7200,6 +7200,16 @@ http://docs.python.org/reference/compound_stmts.html"
                 (error (format "py-beginning-of-statement: No prompt found in %s mode" major-mode)))))))
     (and limit (not done) (goto-char (match-end 0)) (skip-chars-forward " \t") (narrow-to-region (point) pos))))
 
+(defun py--fetch-first-python-buffer ()
+  "Returns first (I)Python-buffer found in `buffer-list'"
+  (let ((buli (buffer-list))
+        erg)
+    (while (and buli (not erg))
+      (if (string-match "Python" (prin1-to-string (car buli)))
+          (setq erg (car buli))
+        (setq buli (cdr buli))))
+    erg))
+
 (defun py-beginning-of-prepare (indent final-re &optional inter-re iact lc)
   (let ((orig (point))
         (indent
