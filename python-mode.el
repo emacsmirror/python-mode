@@ -1517,6 +1517,7 @@ SYMMETRIC:
   ;; '((t (:inherit 'font-lock-variable-name-face)))
   "Highlight numbers. "
   :group 'python-mode)
+
 (defvar py-number-face 'py-number-face)
 
 (defface py-XXX-tag-face
@@ -1530,6 +1531,7 @@ SYMMETRIC:
   '((t (:inherit font-lock-keyword-face)))
   "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis."
   :group 'python-mode)
+
 (defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
 
 (defface py-variable-name-face
@@ -1551,13 +1553,37 @@ SYMMETRIC:
   '((t (:inherit font-lock-builtin-face)))
   "Face for builtins like TypeError, object, open, and exec."
   :group 'python-mode)
+
 (defvar py-builtins-face 'py-builtins-face)
 
 (defface py-class-name-face
   '((t (:inherit font-lock-type-face)))
   "Face for classes."
   :group 'python-mode)
+
 (defvar py-class-name-face 'py-class-name-face)
+
+(defvar py-try-if-face 'py-try-if-face)
+
+(defvar py-import-from-face 'py-import-from-face)
+
+(defvar py-def-class-face 'py-def-class-face)
+
+
+(defface py-try-if-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Highlight keywords. "
+  :group 'python-mode)
+
+(defface py-import-from-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Highlight keywords. "
+  :group 'python-mode)
+
+(defface py-def-class-face
+  '((t (:inherit font-lock-keyword-face)))
+  "Highlight keywords. "
+  :group 'python-mode)
 
 ;; XXX, TODO, and FIXME comments and such
 (defface py-exception-name-face
@@ -3783,17 +3809,20 @@ This function does not modify point or mark."
 (setq py-font-lock-keywords
       ;; Keywords
       `(,(rx symbol-start
-             (or "and" "del" "from" "not" "while" "as" "elif" "global" "or" "with"
-                 "assert" "else" "if" "pass" "yield" "break" "import"
+             (or "and" "del"  "not" "while" "as" "elif" "global" "or" "with"
+                 "assert" "else"  "pass" "yield" "break"
                  "print" "exec" "in" "continue" "finally" "is" "except" "raise"
-                 "return" "def" "for" "lambda" "try")
+                 "return"  "for" "lambda")
              symbol-end)
+        (,(rx symbol-start (or "def" "class") symbol-end) . py-def-class-face)
+        (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
+        ;; (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
         ;; functions
         (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
          (1 font-lock-function-name-face))
         ;; classes
         (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-keyword-face) (2 py-class-name-face))
+         (1 py-def-class-face) (2 py-class-name-face))
         ;; (,(rx symbol-start
         ;; (or "raise" "except")
         ;; symbol-end) . py-exception-name-face)
@@ -3801,8 +3830,11 @@ This function does not modify point or mark."
         ;; (,(rx symbol-start
         ;;       (or "None" "True" "False" "__debug__" "NotImplemented")
         ;;       symbol-end) . font-lock-constant-face)
+
         (,(rx symbol-start
-              (or "cls" "self" "cls" "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
+              (or "cls"
+                  ;; "self"
+                  "cls" "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
               symbol-end) . py-pseudo-keyword-face)
         ;; Decorators.
         (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
@@ -3826,7 +3858,7 @@ This function does not modify point or mark."
               word-end) . py-exception-name-face)
         ;; (,(rx (or space line-start) symbol-start "range
         ;; Builtins
-        (,(rx (or space line-start) symbol-start
+        (,(rx (or space (syntax open-parenthesis) line-start) symbol-start
               (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
                   "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
                   "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
@@ -5986,7 +6018,7 @@ complete docstring according to setting of `py-docstring-style' "
                              (copy-marker (point))))))
              ;; Assume docstrings at BOL resp. indentation
              (docstring (unless (eq 'no docstring)
-                          (py-docstring-p (nth 8 pps))))
+                          (py-docstring-p pps)))
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"' \t\f\n")(copy-marker (point))))
                       (progn (or (eq (marker-position beg) (point)) (goto-char (nth 8 pps)))
                              (forward-sexp)
@@ -6037,12 +6069,12 @@ complete docstring according to setting of `py-docstring-style' "
             (goto-char beg)
             (and
              (car delimiters-style)
-             (unless (or (and (bolp)(eolp)) (save-excursion (forward-line -1)(and (bolp)(eolp))))
+             (unless (or (empty-line-p) (save-excursion (forward-line -1)(empty-line-p)))
                (or (newline (car delimiters-style)) t))
              (indent-region beg end))
             (and multi-line-p
                  (forward-line 1)
-                 (unless (and (bolp)(eolp)) (insert "\n")))
+                 (unless (empty-line-p) (insert "\n")))
             ;; Add the number of newlines indicated by the selected style
             ;; at the end of the docstring.
             (goto-char end)
