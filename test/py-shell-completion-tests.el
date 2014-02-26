@@ -51,13 +51,14 @@
     ;; (set-buffer (py-shell nil t "python" nil "/"))
     (set-buffer (py-shell nil t "python"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (goto-char (point-max))
+    (re-search-backward py-shell-prompt-regexp nil t 1)
+    (delete-region (match-end 0) (point-max))
     (sit-for 0.2 t)
     (goto-char (point-max))
-    (save-excursion
-      (insert "pri")
-      (py-shell-complete))
-    (sit-for 0.5)
-    (assert (looking-at "print") nil "python-shell-complete-test failed")
+    (insert "pri")
+    (py-shell-complete)
+    (assert (looking-back "print") nil "python-shell-complete-test failed")
     (message "%s" "python-shell-complete-test passed")))
 
 
