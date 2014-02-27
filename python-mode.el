@@ -58,6 +58,7 @@
 (require 'custom)
 (eval-when-compile (require 'cl))
 (require 'compile)
+(require 'ansi-color)
 (require 'cc-cmds)
 (require 'shell)
 (require 'rx)
@@ -3116,8 +3117,7 @@ the output."
          (process (or process (get-buffer-process (py-shell))))
          (comint-preoutput-filter-functions
           (append comint-preoutput-filter-functions
-                  ;; ansi-color-filter-apply
-                  '(identity
+                  '(ansi-color-filter-apply
                     (lambda (string)
                       (setq output string)
                       "")))))
@@ -3139,7 +3139,13 @@ the output."
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (let* (output-buffer
-         (process (or process (get-buffer-process (py-shell)))))
+         (process (or process (get-buffer-process (py-shell))))
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
+                  '(ansi-color-filter-apply
+                    (lambda (string)
+                      (setq output-buffer (concat output-buffer string))
+                      "")))))
     (py-shell-send-string string process msg)
     (accept-process-output process 1)
     (when output-buffer
@@ -3147,10 +3153,10 @@ the output."
             (replace-regexp-in-string
              (if (> (length py-shell-prompt-output-regexp) 0)
                  (format "\n*%s$\\|^%s\\|\n$"
-                         python-shell-prompt-regexp
+                         py-shell-prompt-regexp
                          (or py-shell-prompt-output-regexp ""))
                (format "\n*$\\|^%s\\|\n$"
-                       python-shell-prompt-regexp))
+                       py-shell-prompt-regexp))
              "" output-buffer)))
     output-buffer))
 
@@ -21964,8 +21970,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
           (delq 'py-comint-output-filter-function comint-output-filter-functions))
          (comint-preoutput-filter-functions
           (append comint-preoutput-filter-functions
-                  ;; '(ansi-color-filter-apply
-                  '(identity
+                  '(ansi-color-filter-apply
                     (lambda (string)
                       (setq ugly-return (concat ugly-return string))
                       ""))))
