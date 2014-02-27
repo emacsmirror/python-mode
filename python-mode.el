@@ -654,6 +654,12 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
   :group 'python-mode)
 (make-variable-buffer-local 'py-python-command-args)
 
+(defcustom py-ipython-command-args '("")
+  "List of string arguments to be used when starting a Python shell."
+  :type '(repeat string)
+  :group 'python-mode)
+(make-variable-buffer-local 'py-ipython-command-args)
+
 (defcustom py-jython-command-args '("-i")
   "List of string arguments to be used when starting a Jython shell."
   :type '(repeat string)
@@ -1568,7 +1574,6 @@ SYMMETRIC:
 (defvar py-import-from-face 'py-import-from-face)
 
 (defvar py-def-class-face 'py-def-class-face)
-
 
 (defface py-try-if-face
   '((t (:inherit font-lock-keyword-face)))
@@ -3107,11 +3112,18 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
   "Send STRING to PROCESS and inhibit output.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
-  (let* (output-buffer
-         (process (or process (get-buffer-process (py-shell)))))
+  (let* (output
+         (process (or process (get-buffer-process (py-shell))))
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
+                  ;; ansi-color-filter-apply
+                  '(identity
+                    (lambda (string)
+                      (setq output string)
+                      "")))))
     (py-shell-send-string string process msg)
-    (accept-process-output process 1)
-    (when output-buffer
+    (accept-process-output process nil 11)
+    (when output
       (replace-regexp-in-string
        (if (> (length py-shell-prompt-output-regexp) 0)
            (format "\n*%s$\\|^%s\\|\n$"
@@ -3119,7 +3131,7 @@ the output."
                    (or py-shell-prompt-output-regexp ""))
          (format "\n*$\\|^%s\\|\n$"
                  py-shell-prompt-regexp))
-       "" output-buffer))))
+       "" output))))
 
 (defun py-send-string-return-output (string &optional process msg)
   "Send STRING to PROCESS and return output.
@@ -11620,6 +11632,17 @@ Returns char found. "
                      ipython0.10-completion-command-string)))
       (error ipython-version))))
 
+(defun py-ipython--module-completion-import (proc)
+  "Import module-completion "
+  (interactive)
+  (let ((ipython-version (shell-command-to-string (concat py-shell-name " -V"))))
+    (when (and (string-match "^[0-9]" ipython-version)
+               (string-match "^[^0].+" ipython-version))
+      (process-send-string proc "from IPython.core.completerlib import module_completion")
+      (process-send-string proc "\n")
+      ;; (sit-for 0.1)
+      )))
+
 (defalias 'py-dedicated-shell 'py-shell-dedicated)
 (defun py-shell-dedicated (&optional argprompt)
   "Start an interactive Python interpreter in another window.
@@ -11770,6 +11793,14 @@ This function takes the list of setup code to send from the
      (symbol-value code) process)
     (sit-for 0.1)))
 
+(defun py-shell-simple-send (proc string)
+  (let* ((strg (substring-no-properties string))
+         (nln (string-match "\n$" strg)))
+    ;; (or nln (setq strg (concat strg "\n")))
+    ;; (comint-simple-send proc (substring-no-properties string))
+    (process-send-string proc strg)
+    (or nln (process-send-string proc "\n"))))
+
 (defun py--shell-make-comint ()
   (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
   (unless (interactive-p) (sit-for 0.1))
@@ -11786,7 +11817,7 @@ This function takes the list of setup code to send from the
                                    "\\|")
                         "\\)")))))
 
-(defun py--shell-setup ()
+(defun py--shell-setup (proc)
   (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
   (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
   (set (make-local-variable 'comint-use-prompt-regexp) nil)
@@ -11806,6 +11837,8 @@ This function takes the list of setup code to send from the
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'inhibit-point-motion-hooks) t)
   (setq proc (get-buffer-process (current-buffer)))
+  (and (string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+       (py-ipython--module-completion-import proc))
   (py-shell-send-setup-code proc)
   (and py-set-pager-cat-p (comint-simple-send proc "import os;os.environ['PAGER'] = 'cat'"))
   (compilation-shell-minor-mode 1)
@@ -11827,6 +11860,8 @@ This function takes the list of setup code to send from the
   (comint-read-input-ring t)
   (set-process-sentinel (get-buffer-process py-buffer-name)
                         #'shell-write-history-on-exit)
+  ;; (add-hook 'comint-preoutput-filter-functions
+  ;; 'ansi-color-process-output nil t)
   (add-hook 'after-change-functions 'py-after-change-function nil t)
 
   (remove-hook 'comint-output-filter-functions
@@ -11858,15 +11893,18 @@ to change if called with a prefix arg.
 Returns py-shell's buffer-name.
 Optional string PYSHELLNAME overrides default `py-shell-name'.
 BUFFER allows specifying a name, the Python process is connected to
-When DONE is `t', `py-shell-manage-windows' is omitted"
+When DONE is `t', `py-shell-manage-windows' is omitted
+"
   (interactive "P")
+  ;; (setenv "PAGER" "cat")
+  ;; (setenv "TERM" "dumb")
   (let* ((dedicated (or dedicated py-dedicated-process-p))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
          (coding-system-for-read 'utf-8)
          (coding-system-for-write 'utf-8)
-         (args py-python-command-args)
          (path (getenv "PYTHONPATH"))
          (py-shell-name (or shell py-shell-name (py-choose-shell)))
+         (args (if (string-match "^[Ii]" py-shell-name) py-ipython-command-args py-python-command-args))
 
          ;; reset later on
          (py-buffer-name
@@ -11912,12 +11950,14 @@ When DONE is `t', `py-shell-manage-windows' is omitted"
 
     (unless (comint-check-proc py-buffer-name)
       (py--shell-make-comint)
-      (py--shell-setup)
+      (py--shell-setup (get-buffer-process (current-buffer))))
+    ;; (py--init-easy-menu)
     ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
     (and py-fontify-shell-buffer-p (font-lock-fontify-buffer))
+    (goto-char (point-max))
     (unless no-window-managment (py-shell-manage-windows py-buffer-name))
     (when py-shell-hook (run-hooks 'py-shell-hook))
-    py-buffer-name)))
+    py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
   "Indent and move one line forward to next indentation.
@@ -19913,8 +19953,6 @@ When non-nil, imports module `os' Use `M-x customize-variable' to
 set it permanently"
                      :style toggle :selected py-set-pager-cat-p]
 
-
-
                     ["Edit only "
                      (setq py-edit-only-p
                            (not py-edit-only-p))
@@ -21924,6 +21962,13 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                    (get-buffer-process (py-shell nil nil (if (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython") nil t))))
          (comint-output-filter-functions
           (delq 'py-comint-output-filter-function comint-output-filter-functions))
+         (comint-preoutput-filter-functions
+          (append comint-preoutput-filter-functions
+                  ;; '(ansi-color-filter-apply
+                  '(identity
+                    (lambda (string)
+                      (setq ugly-return (concat ugly-return string))
+                      ""))))
          (ccs (or completion-command-string
                   (if imports
                       (concat imports (py-set-ipython-completion-command-string))
