@@ -3103,11 +3103,10 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
             (insert string)
             (delete-trailing-whitespace))
           (py-send-file temp-file-name process temp-file-name))
-      (process-send-string process string)
-      ;; (comint-send-string process string)
+      (comint-send-string process string)
       (when (or (not (string-match "\n$" string))
                 (string-match "\n[ \t].*\n?$" string))
-        (process-send-string process "\n")))))
+        (comint-send-string process "\n")))))
 
 (defun py-send-string-no-output (string &optional process msg)
   "Send STRING to PROCESS and inhibit output.
@@ -21800,13 +21799,13 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
                    (get-buffer-process (progn (setq wait py-new-shell-delay) (py-shell nil nil shell nil t))))))
     (cond ((string= word "")
            (tab-to-tab-stop))
-          ((string-match "[iI][pP]ython" shell)
-           (ipython-complete nil nil beg end word shell debug imports pos))
+          ;; ((string-match "[iI][pP]ython" shell)
+           ;; (ipython-complete nil nil beg end word shell debug imports pos))
           (t
            ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
            (py-shell--do-completion-at-point proc imports word pos))
           ;; (t (py-shell-complete-intern word beg end shell imports proc debug))
-          )))
+)))
 
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. Otherwise insert TAB. "
