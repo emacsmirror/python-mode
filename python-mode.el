@@ -10374,7 +10374,9 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
           (if py-master-file
               (expand-file-name py-master-file)
             (buffer-file-name))))
-    (py-execute-file file)))
+    (if file
+	(py-execute-file file)
+      (py-execute-region (point-min) (point-max)))))
 
 (defun py-execute-buffer-no-switch ()
   "Send the contents of the buffer to a Python interpreter but don't switch to output. "
