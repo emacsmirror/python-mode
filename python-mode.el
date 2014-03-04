@@ -26328,14 +26328,17 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   (set-buffer buf)
   ;; (sit-for 0.1)
   (let ((pmx (copy-marker (point-max)))
-        file bol err-p estring ecode limit)
-    (unless (looking-back py-pdbtrack-input-prompt)
-      (save-excursion
+	;;  (let ((pmx (copy-marker (process-mark (get-buffer-process (current-buffer)))))
+	file bol err-p estring ecode limit)
+    (goto-char pmx)
+    (sit-for 0.1)
+    (save-excursion
+      (unless (looking-back py-pdbtrack-input-prompt)
         (forward-line -1)
         (end-of-line)
         (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
                   ;; (and (string= "ipython" (process-name proc))
-                  (re-search-backward ipython-de-input-prompt-regexp nil t 1))
+                  (re-search-backward (concat ipython-de-input-prompt-regexp "\\|" ipython-de-output-prompt-regexp) nil t 1))
           ;; not a useful message, delete it - please tell when thinking otherwise
           (and (re-search-forward "File \"<stdin>\", line 1,.*\n" nil t)
                (replace-match ""))
@@ -26370,8 +26373,8 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
               (setq ecode (buffer-substring-no-properties (line-end-position)
                                                           (progn (re-search-forward comint-prompt-regexp nil t 1)(match-beginning 0))))
               (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " ecode))
-              (add-to-list 'err-p ecode t))))))
-    err-p))
+              (add-to-list 'err-p ecode t)))))
+      err-p)))
 
 (defun py-remove-overlays-at-point ()
   "Remove overlays as set when `py-highlight-error-source-p' is non-nil. "
