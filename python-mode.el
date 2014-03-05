@@ -17735,6 +17735,12 @@ When called with C-u followed by a number different from 4 and 1, user is prompt
 Send the argument STRING to a Python interpreter.
 
 See also `py-execute-region'. "]
+                 
+                 ["Execute line" py-execute-line
+                  :help " `py-execute-line'
+
+Send current line from beginning of indent to Python interpreter\.  "]
+
                  ("More... "
                   :help "Python-specific features"
 
@@ -19963,6 +19969,8 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 When non-nil, imports module `os' Use `M-x customize-variable' to
 set it permanently"
                      :style toggle :selected py-set-pager-cat-p]
+
+
 
                     ["Edit only "
                      (setq py-edit-only-p
