@@ -8428,7 +8428,7 @@ See `py-minor-block-re'"
     erg))
 
 (defun py-copy-minor-block-bol ()
-  "Delete minor block bol at point.
+  "Delete minor block, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. 
 
@@ -8438,7 +8438,7 @@ See `py-minor-block-re'"
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-minor-block-bol ()
-  "Delete minor block bol at point.
+  "Delete minor block, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. 
 
@@ -8448,7 +8448,7 @@ See `py-minor-block-re'"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-minor-block-bol ()
-  "Delete minor block bol at point.
+  "Delete minor block, use position from beginning-of-line.
 
 Don't store data in kill ring. 
 
@@ -8722,7 +8722,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-block-bol ()
-  "Delete block bol at point.
+  "Delete block, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8730,7 +8730,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-block-bol ()
-  "Delete block bol at point.
+  "Delete block, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8738,7 +8738,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-block-bol ()
-  "Delete block bol at point.
+  "Delete block, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -8786,7 +8786,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-clause-bol ()
-  "Delete clause bol at point.
+  "Delete clause, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8794,7 +8794,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-clause-bol ()
-  "Delete clause bol at point.
+  "Delete clause, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8802,7 +8802,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-clause-bol ()
-  "Delete clause bol at point.
+  "Delete clause, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -8850,7 +8850,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-block-or-clause-bol ()
-  "Delete block-or-clause bol at point.
+  "Delete block-or-clause, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8858,7 +8858,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-block-or-clause-bol ()
-  "Delete block-or-clause bol at point.
+  "Delete block-or-clause, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8866,7 +8866,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-block-or-clause-bol ()
-  "Delete block-or-clause bol at point.
+  "Delete block-or-clause, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -8916,7 +8916,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-def-bol ()
-  "Delete def bol at point.
+  "Delete def, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8924,7 +8924,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-def-bol ()
-  "Delete def bol at point.
+  "Delete def, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8932,7 +8932,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-def-bol ()
-  "Delete def bol at point.
+  "Delete def, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -8982,7 +8982,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-class-bol ()
-  "Delete class bol at point.
+  "Delete class, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8990,7 +8990,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-class-bol ()
-  "Delete class bol at point.
+  "Delete class, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -8998,7 +8998,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-class-bol ()
-  "Delete class bol at point.
+  "Delete class, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -9048,7 +9048,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-def-or-class-bol ()
-  "Delete def-or-class bol at point.
+  "Delete def-or-class, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -9056,7 +9056,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-def-or-class-bol ()
-  "Delete def-or-class bol at point.
+  "Delete def-or-class, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -9064,7 +9064,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-def-or-class-bol ()
-  "Delete def-or-class bol at point.
+  "Delete def-or-class, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
@@ -9133,7 +9133,7 @@ Returns beginning and end positions of region, a cons. "
     erg))
 
 (defun py-copy-statement-bol ()
-  "Delete statement bol at point.
+  "Delete statement, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -9141,7 +9141,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-kill-statement-bol ()
-  "Delete statement bol at point.
+  "Delete statement, use position from beginning-of-line.
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
@@ -9149,7 +9149,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
     (kill-region (car erg) (cdr erg))))
 
 (defun py-delete-statement-bol ()
-  "Delete statement bol at point.
+  "Delete statement, use position from beginning-of-line.
 
 Don't store data in kill ring. "
   (interactive "*")
