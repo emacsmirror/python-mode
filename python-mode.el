@@ -3125,7 +3125,7 @@ the output."
                       (setq output string)
                       "")))))
     (py-shell-send-string string process msg)
-    (accept-process-output process nil 11)
+    (accept-process-output process 5)
     (when output
       (replace-regexp-in-string
        (if (> (length py-shell-prompt-output-regexp) 0)
@@ -3213,35 +3213,35 @@ completions on the current context."
                          (try-completion input completions))))
       ;; (set-buffer oldbuf)
       (with-current-buffer oldbuf
-      ;; (goto-char orig)
-      (cond ((eq completion t)
-             (if py-no-completion-calls-dabbrev-expand-p
-                 (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
-                                                           (tab-to-tab-stop)))
-               (when py-indent-no-completion-p
-                 (tab-to-tab-stop)))
-             nil)
-            ((null completion)
-             (if py-no-completion-calls-dabbrev-expand-p
-                 (or (dabbrev-expand nil)(when py-indent-no-completion-p
-                                           (tab-to-tab-stop))(message "Can't find completion "))
-               (when py-indent-no-completion-p
-                 (tab-to-tab-stop)))
-             nil)
-            ((not (string= input completion))
-             (progn (delete-char (- (length input)))
-                    (insert completion)
-                    (move-marker pos (point))
-                    ;; minibuffer.el expects a list, a bug IMO
-                    nil))
-            (t
-             (with-output-to-temp-buffer py-python-completions
-               (display-completion-list
-                (all-completions input completions)))
-             (move-marker pos (point))
-             nil))
-      (and (goto-char pos)
-           nil)))))
+        ;; (goto-char orig)
+        (cond ((eq completion t)
+               (if py-no-completion-calls-dabbrev-expand-p
+                   (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
+                                                             (tab-to-tab-stop)))
+                 (when py-indent-no-completion-p
+                   (tab-to-tab-stop)))
+               nil)
+              ((null completion)
+               (if py-no-completion-calls-dabbrev-expand-p
+                   (or (dabbrev-expand nil)(when py-indent-no-completion-p
+                                             (tab-to-tab-stop))(message "Can't find completion "))
+                 (when py-indent-no-completion-p
+                   (tab-to-tab-stop)))
+               nil)
+              ((not (string= input completion))
+               (progn (delete-char (- (length input)))
+                      (insert completion)
+                      (move-marker pos (point))
+                      ;; minibuffer.el expects a list, a bug IMO
+                      nil))
+              (t
+               (with-output-to-temp-buffer py-python-completions
+                 (display-completion-list
+                  (all-completions input completions)))
+               (move-marker pos (point))
+               nil))
+        (and (goto-char pos)
+             nil)))))
 
 (defun python-shell-completion-complete-or-indent ()
   "Complete or indent depending on the context.
@@ -10011,15 +10011,17 @@ When called with \\[universal-argument] followed by a number different from 4 an
 
 When called from a programm, it accepts a string specifying a shell which will be forced upon execute as argument.
 
-Optional DEDICATED"
+Optional DEDICATED "
   (interactive "r\nP")
-  (save-excursion
-    (let ((py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
-                               ((and (numberp shell) (not (eq 1 (prefix-numeric-value shell))))
-                                (read-from-minibuffer "(path-to-)shell-name: " (default-value 'py-shell-name)))
-                               (t shell)))
-          (py-dedicated-process-p (or dedicated py-dedicated-process-p)))
-      (py-execute-base start end))))
+  (let ((orig (point))
+	(py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
+			     ((and (numberp shell) (not (eq 1 (prefix-numeric-value shell))))
+			      (read-from-minibuffer "(path-to-)shell-name: " (default-value 'py-shell-name)))
+			     (t shell)))
+	(py-dedicated-process-p (or dedicated py-dedicated-process-p)))
+    (py-execute-base start end)
+;;  (goto-char orig)
+  ))
 
 (defun py-execute-region-default (start end)
   "Send the region to the systems default Python interpreter. "
@@ -10294,7 +10296,8 @@ Inserts an incentive true form \"if 1:\\n.\" "
 Avoid empty lines at the beginning. "
   (python-mode)
   (goto-char start)
-  (while (and (bolp)(eolp))
+  (while  ;; (empty-line-p)
+      (eq 9 (char-after))
     (delete-region (line-beginning-position) (1+ (line-end-position))))
   (back-to-indentation)
   (unless (py-beginning-of-statement-p)
@@ -10302,7 +10305,7 @@ Avoid empty lines at the beginning. "
   (while (not (eq (current-indentation) 0))
     (py-shift-left py-indent-offset start end))
   (goto-char (point-max))
-  (unless (and (bolp)(eolp))
+  (unless (empty-line-p)
     (newline)))
 
 (defun py-fetch-py-master-file ()
@@ -10534,7 +10537,7 @@ Returns position where output starts. "
          erg orig err-p)
     (set-buffer procbuf)
     (goto-char (point-max))
-    ;; (switch-to-buffer (current-buffer))
+    (switch-to-buffer (current-buffer))
     (setq orig (point))
     (comint-send-string proc cmd)
     (if
@@ -10546,7 +10549,8 @@ Returns position where output starts. "
                  (py-output-filter
                   (buffer-substring-no-properties orig (point-max))))
            (unless (string= (car kill-ring) erg) (kill-new erg)))
-      (py-shell-manage-windows (current-buffer) nil windows-config)
+      ;; (py-shell-manage-windows (current-buffer) nil windows-config)
+      (py-shell-manage-windows procbuf nil windows-config)
       erg)))
 
 ;;; Pdb
@@ -11951,12 +11955,12 @@ BUFFER allows specifying a name, the Python process is connected to
 When DONE is `t', `py-shell-manage-windows' is omitted
 "
   (interactive "P")
-  ;; (setenv "PAGER" "cat")
-  ;; (setenv "TERM" "dumb")
+  (setenv "PAGER" "cat")
+  (setenv "TERM" "dumb")
   (let* ((dedicated (or dedicated py-dedicated-process-p))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
-         (coding-system-for-read 'utf-8)
-         (coding-system-for-write 'utf-8)
+         ;; (coding-system-for-read 'utf-8)
+         ;; (coding-system-for-write 'utf-8)
          (path (getenv "PYTHONPATH"))
          (py-shell-name (or shell py-shell-name (py-choose-shell)))
          (args (if (string-match "^[Ii]" py-shell-name) py-ipython-command-args py-python-command-args))
