@@ -13150,49 +13150,50 @@ Mark innermost definition at point"]
                    :help "`py-mark-comment'
 Mark commented section at point"]
 
-                  "-"
+                  ("BOL forms"
 
-                  ["Mark block bol" py-mark-block-bol
-                   :help "`py-mark-block-bol'
+		   ["Mark block bol" py-mark-block-bol
+		    :help "`py-mark-block-bol'
 Mark block at point reaching beginning-of-line. "]
 
-                  ["Mark clause bol" py-mark-clause-bol
-                   :help "`py-mark-clause-bol'
+		   ["Mark clause bol" py-mark-clause-bol
+		    :help "`py-mark-clause-bol'
 Mark clause at point reaching beginning-of-line. "]
 
-                  ["Mark block-or-clause bol" py-mark-block-or-clause-bol
-                   :help "`py-mark-block-or-clause-bol'
+		   ["Mark block-or-clause bol" py-mark-block-or-clause-bol
+		    :help "`py-mark-block-or-clause-bol'
 Mark block-or-clause at point reaching beginning-of-line. "]
 
-                  ["Mark def bol" py-mark-def-bol
-                   :help "`py-mark-def-bol'
+		   ["Mark def bol" py-mark-def-bol
+		    :help "`py-mark-def-bol'
 Mark def at point reaching beginning-of-line. "]
 
-                  ["Mark class bol" py-mark-class-bol
-                   :help "`py-mark-class-bol'
+		   ["Mark class bol" py-mark-class-bol
+		    :help "`py-mark-class-bol'
 Mark class at point reaching beginning-of-line. "]
 
-                  ["Mark def-or-class bol" py-mark-def-or-class-bol
-                   :help "`py-mark-def-or-class-bol'
+		   ["Mark def-or-class bol" py-mark-def-or-class-bol
+		    :help "`py-mark-def-or-class-bol'
 Mark def-or-class at point reaching beginning-of-line. "]
 
-                  ["Mark if-block bol" py-mark-if-block-bol
-                   :help "`py-mark-if-block-bol'
+		   ["Mark if-block bol" py-mark-if-block-bol
+		    :help "`py-mark-if-block-bol'
 Mark if-block at point reaching beginning-of-line. "]
 
-                  ["Mark try-block bol" py-mark-try-block-bol
-                   :help "`py-mark-try-block-bol'
+		   ["Mark try-block bol" py-mark-try-block-bol
+		    :help "`py-mark-try-block-bol'
 Mark try-block at point reaching beginning-of-line. "]
 
-                  ["Mark minor-block bol" py-mark-minor-block-bol
-                   :help "`py-mark-minor-block-bol'
+		   ["Mark minor-block bol" py-mark-minor-block-bol
+		    :help "`py-mark-minor-block-bol'
 
 Mark minor-block at point reaching beginning-of-line.
 A minor block is started by a `for', `if', `try' or `with'."]
 
-                  )
+		   )
+		  )
 
-                 "-"
+		 "-"
 
                  ["Shift region left" py-shift-region-left
                   :help " `py-shift-region-left'
@@ -13353,8 +13354,8 @@ A nomenclature is a fancy way of saying AWordWithMixedCaseNotUnderscores. "]
 
                   "-"
 
-                  ("Stop move at beginning of line"
-                   ("Beginning forms"
+                  ("BOL forms"
+                   ("Beginning"
 
                     ["Beginning of block bol" py-beginning-of-block-bol
                      :help " `py-beginning-of-block-bol'
@@ -13680,9 +13681,70 @@ Copy innermost definition at point"]
                    :help "`py-copy-def-or-class'
 Copy innermost definition at point"]
 
+                  ("BOL forms"
+
+                   ["Copy block bol" py-copy-block-bol
+                    :help " `py-copy-block-bol'
+
+Delete block, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy clause bol" py-copy-clause-bol
+                    :help " `py-copy-clause-bol'
+
+Delete clause, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy block or clause bol" py-copy-block-or-clause-bol
+                    :help " `py-copy-block-or-clause-bol'
+
+Delete block-or-clause, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy def bol" py-copy-def-bol
+                    :help " `py-copy-def-bol'
+
+Delete def, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy class bol" py-copy-class-bol
+                    :help " `py-copy-class-bol'
+
+Delete class, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy def or class bol" py-copy-def-or-class-bol
+                    :help " `py-copy-def-or-class-bol'
+
+Delete def-or-class, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+
+                   ["Copy statement bol" py-copy-statement-bol
+                    :help " `py-copy-statement-bol'
+
+Delete statement, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
+                   
+                   ["Copy minor block bol" py-copy-minor-block-bol
+                    :help " `py-copy-minor-block-bol'
+
+Delete block, use position from beginning-of-line\.
+
+Stores data in kill ring\. Might be yanked back using `C-y'\. 
+
+See `py-minor-block-re' "]
+
+                   )
                   )
 
-                 "-"
+                  "-"
 
                  ["Execute region" py-execute-region
                   :help " `py-execute-region'
