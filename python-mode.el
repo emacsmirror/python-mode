@@ -23018,5 +23018,10 @@ Runs `jython-mode-hook' after `python-mode-hook'."
   :group 'python-mode
   (py-toggle-shell "jython"))
 
+;; backward compatibility
+;; some third party stuff relying on v5 serie might use this
+(defalias 'py-goto-beyond-block 'py-end-of-block-bol)
+(defalias 'py-goto-beyond-final-line 'py-end-of-statement-bol)
+
 (provide 'python-mode)
 ;; python-mode.el ends here
