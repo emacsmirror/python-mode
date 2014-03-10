@@ -2355,7 +2355,9 @@
   (py-bug-tests-intern 'py-execute-region-python2.7-switch-base arg teststring)))
 
 (defun py-execute-region-python2.7-switch-base ()
-  (assert (progn (py-execute-region-python2.7-switch (line-beginning-position) (line-end-position))(set-buffer "*Python2.7*")(goto-char (point-min))(search-forward "the py-execute-region-python2.7-test")) nil "py-execute-region-python2.7-switch-test failed"))
+  (py-execute-region-python2.7-switch (line-beginning-position) (line-end-position))
+  (assert (search-backward "py-execute-region-python2.7-switch-test")
+	  nil "py-execute-region-python2.7-switch-test failed"))
 
 (defun py-execute-region-python2.7-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -2549,13 +2551,17 @@
 (defun py-execute-buffer-python-base ()
   (assert (progn (py-execute-buffer-python)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-buffer-python-test")) nil "py-execute-buffer-python-test failed"))
 
+
 (defun py-execute-buffer-python-switch-test (&optional arg load-branch-function)
   (interactive "p")
   (let ((teststring "print(\"I'm the py-execute-buffer-python-switch-test\")"))
   (py-bug-tests-intern 'py-execute-buffer-python-switch-base arg teststring)))
 
 (defun py-execute-buffer-python-switch-base ()
-  (assert (progn (py-execute-buffer-python-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-buffer-python-test")) nil "py-execute-buffer-python-switch-test failed"))
+  (py-execute-buffer-python-switch)
+;;  (switch-to-buffer (current-buffer)) 
+  (assert (search-backward "py-execute-buffer-python-switch-test")
+	  nil "py-execute-buffer-python-switch-test failed"))
 
 (defun py-execute-buffer-python-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -4343,4 +4349,3 @@
 
 (provide 'python-extended-executes-test)
 ;;; python-extended-executes-test.el ends here
- 
