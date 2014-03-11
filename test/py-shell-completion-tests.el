@@ -125,9 +125,11 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-windows-on-execute-p)
+    (and (buffer-live-p (get-buffer "*Ipython*"))
+	 (kill-buffer-unconditional "*Ipython*"))
     (set-buffer (py-shell nil t "ipython"))
     (switch-to-buffer (current-buffer))
-    (sit-for 2)
+    (sit-for 0.1)
     (goto-char (point-max))
     ;; (comint-send-input)
     (insert "pri")
