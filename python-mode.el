@@ -3204,7 +3204,8 @@ completions on the current context."
 (defun py-shell--do-completion-at-point (process imports input orig)
   "Do completion at point for PROCESS."
   (with-syntax-table py-dotted-expression-syntax-table
-    (when imports (py-send-string-no-output imports process))
+    (when imports
+      (py-send-string-no-output imports process))
     (let* ((code python-shell-module-completion-string-code)
            (completions
             (py-shell-completion--get-completions
@@ -10786,19 +10787,39 @@ Useful for newly defined symbol, not known to python yet. "
 
 Returns imports "
   (interactive)
-  (let (imports)
+  (let (imports erg)
     (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
-        (unless (py-end-of-statement-p)
-          (py-end-of-statement))
-        (setq imports
-              (concat
-               imports
-               (replace-regexp-in-string
-                "[\\]\r?\n?\s*" ""
-                (buffer-substring-no-properties (match-beginning 0) (point))) ";"))))
+      (if (eq major-mode 'comint-mode)
+	  (progn
+	    (re-search-backward comint-prompt-regexp nil t 1)
+	    (goto-char (match-end 0))
+	    (while (re-search-forward
+		    "import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
+	      (setq imports
+		    (concat
+		     imports
+		     (replace-regexp-in-string
+		      "[\\]\r?\n?\s*" ""
+		      (buffer-substring-no-properties (match-beginning 0) (point))) ";")))
+	    (when (ignore-errors (string-match ";" imports))
+	      (setq imports (split-string imports ";" t))
+	      (dolist (ele imports)
+		(and (string-match "import" ele)
+		     (if erg
+			 (setq erg (concat erg ";" ele))
+		       (setq erg ele)))
+		(setq imports erg))))
+	(goto-char (point-min))
+	(while (re-search-forward
+		"^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
+	  (unless (py-end-of-statement-p)
+	    (py-end-of-statement))
+	  (setq imports
+		(concat
+		 imports
+		 (replace-regexp-in-string
+		  "[\\]\r*\n*\s*" ""
+		  (buffer-substring-no-properties (match-beginning 0) (point))) ";")))))
     ;; (and imports
     ;; (setq imports (replace-regexp-in-string ";$" "" imports)))
     (when (and py-verbose-p (interactive-p)) (message "%s" imports))
@@ -17901,7 +17922,8 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
 			  (skip-chars-backward "^ \t\r\n\f")(looking-at "open")))
 
 		       (skip-chars-forward "\"'")(point)))
-		(progn (skip-chars-backward "a-zA-Z0-9_.('") (point)))))
+		(progn (and (eq (char-before) ?\()(forward-char -1))
+		       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
          (end (or end (point)))
 	 ;;
          (word (or word (buffer-substring-no-properties beg end)))
