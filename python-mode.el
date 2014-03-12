@@ -1099,7 +1099,6 @@ See also `py-docstring-style'"
 
   :type 'boolean
   :group 'python-mode)
-(make-variable-buffer-local 'py-paragraph-fill-docstring-p)
 
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
@@ -4000,13 +3999,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     (save-restriction
       (widen)
       (save-excursion
-        (and pos (goto-char pos))
-        (if (looking-at-p "'''\\|\"\"\"")
-            (progn
-              (py-beginning-of-statement)
-              (or (bobp)
-                  (py-beginning-of-def-or-class-p)))
-          nil)))))
+	(py-beginning-of-statement)
+        (looking-at-p "'''\\|\"\"\"")))))
 
 (defun py-font-lock-syntactic-face-function (state)
   (if (nth 3 state)
@@ -5889,11 +5883,6 @@ Takes the result of (syntax-ppss)"
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-fill-this-paragraph (justify style)
-  "Fill just the paragraph at point. "
-  (interactive "*")
-  (py-fill-string justify style (if (py-beginning-of-paragraph-p) (point) (progn (py-beginning-of-paragraph)(point))) (progn (py-end-of-paragraph)(point))))
-
 (defun py-fill-paragraph (&optional justify style start end docstring)
   "`fill-paragraph-function'
 
@@ -5903,18 +5892,11 @@ See also `py-fill-string' "
   (or (fill-comment-paragraph justify)
       (let* ((orig (copy-marker (point)))
              (pps (syntax-ppss))
-             (docstring (and
-                         ;; py-paragraph-fill-docstring-p
-
-                         (or docstring (py-docstring-p (nth 8 pps)))))
+             (docstring (or docstring (py-docstring-p (nth 8 pps))))
              (beg (cond (start)
                         ((use-region-p)
                          (region-beginning))
                         ((and docstring
-                              ;; (or py-paragraph-fill-docstring-p
-                              ;; pep-257-nn, delimiters are on first line
-                              ;; (and
-                              ;; (eq py-docstring-style 'pep-257-nn)
                               (ignore-errors (<= (py-beginning-of-paragraph-position)(nth 8 pps))))
                          (nth 8 pps))
                         (t (py-beginning-of-paragraph-position))))
@@ -5944,26 +5926,7 @@ See also `py-fill-string' "
                   (equal (string-to-syntax "|")
                          (syntax-after (point)))
                   (looking-at py-string-delim-re))
-              (goto-char beg)
-              (if (and py-paragraph-fill-docstring-p docstring
-                       ;; (re-search-forward (concat "^" py-labelled-re) nil t)
-                       )
-                  (progn
-                    (goto-char beg)
-                    ;; must process one by one
-                    (while (and (not (eobp)) (setq last (point)) (forward-paragraph) (< last (point))(< (point) end)(setq this-end (point)))
-                      (save-restriction
-                        (narrow-to-region last this-end)
-                        (goto-char last)
-                        ;; (if (re-search-forward (concat "^" py-labelled-re) nil t this-end)
-                        ;; (py-fill-labelled-string last this-end)
-
-                        (py-fill-string justify style last this-end pps 'no)
-                        ;;)
-                        (goto-char this-end)
-                        (widen))))
-                (goto-char orig)
-                (py-fill-this-paragraph justify style)))
+              (py-fill-string justify style beg end docstring))
              ;; Decorators
              ((save-excursion
                 (and (py-beginning-of-statement)
@@ -6002,7 +5965,7 @@ See lp:1066489 "
                 (setq this-beg (line-beginning-position))
                 (goto-char (match-end 0)))))))))
 
-(defun py-fill-string (&optional justify style beg end pps docstring)
+(defun py-fill-string (&optional justify style beg end docstring)
   "String fill function for `py-fill-paragraph'.
 JUSTIFY should be used (if applicable) as in `fill-paragraph'.
 
@@ -6018,19 +5981,15 @@ complete docstring according to setting of `py-docstring-style' "
                             fill-column))
              ;; unset python-mode value this time
              forward-sexp-function
-             (orig (point-marker))
-             (pps-raw (or pps (syntax-ppss)))
-             (pps (or (nth 8 pps-raw)(and (equal (string-to-syntax "|")
-                                                 (syntax-after (point)))
-                                          (skip-chars-forward "\"'")
-                                          (syntax-ppss))
-                      (and (equal (string-to-syntax "|")
-                                  (syntax-after (1- (point))))
-                           (skip-chars-backward "\"'")
-                           (syntax-ppss))))
+             (pps (or
+                   ;; not needed if beg and end are given
+                   (and beg end)
+                   (progn
+                     (and (eobp)(skip-chars-backward "\"'"))
+                     (syntax-ppss))))
              ;; if beginning of string is closer than arg beg, use this
-             (beg (or (and (numberp beg)
-                           (ignore-errors (copy-marker beg)))
+             (beg (or (and beg (copy-marker beg))
+                      ;; take the beginning of a TQS
                       (cond ((and (nth 3 pps) (nth 8 pps))
                              (goto-char (nth 8 pps))
                              (skip-chars-forward "\"'")
@@ -6039,8 +5998,8 @@ complete docstring according to setting of `py-docstring-style' "
                                     (syntax-after (point)))
                              (copy-marker (point))))))
              ;; Assume docstrings at BOL resp. indentation
-             (docstring (unless (eq 'no docstring)
-                          (py-docstring-p pps)))
+             (docstring (or docstring (unless (eq 'no docstring)
+                                        (py-docstring-p pps))))
              (end (or (ignore-errors (and end (goto-char end) (skip-chars-backward "\"' \t\f\n")(copy-marker (point))))
                       (progn (or (eq (marker-position beg) (point)) (goto-char (nth 8 pps)))
                              (forward-sexp)
@@ -6053,10 +6012,10 @@ complete docstring according to setting of `py-docstring-style' "
         (goto-char beg)
         (setq beg (progn (skip-chars-forward "\"'") (copy-marker (point))))
         (and docstring
-             (delete-region (point) (progn (skip-chars-forward " \t\r\n\f") (skip-chars-forward " \t\r\n\f")(point))))
+             (delete-region (point) (progn (skip-chars-forward " \t\r\n\f")(point))))
         (goto-char end)
         (and docstring
-             (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point))))
+             (delete-region (point) (progn (skip-chars-forward " \t\r\n\f")(point))))
         (cond
          ((and docstring
                (string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end)))
