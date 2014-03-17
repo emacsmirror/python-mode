@@ -13126,6 +13126,22 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                     )
 
                    )
+                  "-"
+                  
+                  ["Kill shell unconditional" py-kill-shell-unconditional
+                   :help " `py-kill-shell-unconditional'
+
+With optional argument SHELL\.
+
+Otherwise kill default (I)Python shell\.
+Kill buffer and its process.
+Receives a buffer-name as argument "]
+
+                  ["Kill default shell unconditional" py-kill-default-shell-unconditional
+                   :help " `py-kill-default-shell-unconditional'
+
+Kill buffer \"*Python*\" and its process\.  "]
+
                   )
 
                  "-"
@@ -13572,7 +13588,7 @@ Goto beginning of line following end of statement\.
   Returns position reached, if successful, nil otherwise\.
 
 See also `py-down-statement': down from current definition to next beginning of statement below\.  "]
-                   
+
                     )
                    )
 
@@ -13769,13 +13785,13 @@ Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
 Delete statement, use position from beginning-of-line\.
 
 Stores data in kill ring\. Might be yanked back using `C-y'\.  "]
-                   
+
                    ["Copy minor block bol" py-copy-minor-block-bol
                     :help " `py-copy-minor-block-bol'
 
 Delete block, use position from beginning-of-line\.
 
-Stores data in kill ring\. Might be yanked back using `C-y'\. 
+Stores data in kill ring\. Might be yanked back using `C-y'\.
 
 See `py-minor-block-re' "]
 
@@ -13784,15 +13800,15 @@ See `py-minor-block-re' "]
 
                   "-"
 
-                 ["Execute region" py-execute-region
-                  :help " `py-execute-region'
+                  ["Execute region" py-execute-region
+                   :help " `py-execute-region'
 
 Send the region to a Python interpreter.
 
 When called with C-u followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment. "]
 
-                 ["Execute buffer" py-execute-buffer
-                  :help " `py-execute-buffer'
+                  ["Execute buffer" py-execute-buffer
+                   :help " `py-execute-buffer'
 
 Send the contents of the buffer to a Python interpreter.
 
@@ -13802,8 +13818,8 @@ When called with C-u followed by a number different from 4 and 1, user is prompt
 If the file local variable `py-master-file' is non-nil, execute the
 named file instead of the buffer's file."]
 
-                 ["Execute def or class" py-execute-def-or-class
-                  :help " `py-execute-def-or-class'
+                  ["Execute def or class" py-execute-def-or-class
+                   :help " `py-execute-def-or-class'
 
 Send def-or-class at point to a Python interpreter.
 
@@ -13812,8 +13828,8 @@ See also `py-force-py-shell-name-p'.
 
 When called with C-u followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment."]
 
-                 ["Execute statement" py-execute-statement
-                  :help " `py-execute-statement'
+                  ["Execute statement" py-execute-statement
+                   :help " `py-execute-statement'
 
 Send statement at point to a Python interpreter.
 
@@ -13822,15 +13838,15 @@ See also `py-force-py-shell-name-p'.
 
 When called with C-u followed by a number different from 4 and 1, user is prompted to specify a shell. This might be the name of a system-wide shell or include the path to a virtual environment."]
 
-                 ["Execute string" py-execute-string
-                  :help " `py-execute-string'
+                  ["Execute string" py-execute-string
+                   :help " `py-execute-string'
 
 Send the argument STRING to a Python interpreter.
 
 See also `py-execute-region'. "]
-                 
-                 ["Execute line" py-execute-line
-                  :help " `py-execute-line'
+
+                  ["Execute line" py-execute-line
+                   :help " `py-execute-line'
 
 Send current line from beginning of indent to Python interpreter\.  "]
 
@@ -14784,6 +14800,113 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                    )
                   )
 
+                 ("Fast process..."
+
+                  ["Fast send string" py-fast-send-string
+                   :help " `py-fast-send-string'
+
+Process Python strings, being prepared for large output\.
+
+Output arrives in py-output-buffer, \"\\\*Python Output\\\*\" by default
+See also `py-fast-shell'"]
+
+                  ["Process region fast" py-process-region-fast
+                   :help " `py-process-region-fast'
+
+ "]
+
+                  ["Execute statement fast" py-execute-statement-fast
+                   :help " `py-execute-statement-fast'
+
+Process statement at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute block fast" py-execute-block-fast
+                   :help " `py-execute-block-fast'
+
+Process block at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute block or clause fast" py-execute-block-or-clause-fast
+                   :help " `py-execute-block-or-clause-fast'
+
+Process block-or-clause at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute def fast" py-execute-def-fast
+                   :help " `py-execute-def-fast'
+
+Process def at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute class fast" py-execute-class-fast
+                   :help " `py-execute-class-fast'
+
+Process class at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute def or class fast" py-execute-def-or-class-fast
+                   :help " `py-execute-def-or-class-fast'
+
+Process def-or-class at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute expression fast" py-execute-expression-fast
+                   :help " `py-execute-expression-fast'
+
+Process expression at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute partial expression fast" py-execute-partial-expression-fast
+                   :help " `py-execute-partial-expression-fast'
+
+Process partial-expression at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute top level fast" py-execute-top-level-fast
+                   :help " `py-execute-top-level-fast'
+
+Process top-level at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  ["Execute clause fast" py-execute-clause-fast
+                   :help " `py-execute-clause-fast'
+
+Process clause at point by a Python interpreter\. 
+
+Suitable for large output, doesn't mess up interactive shell\.
+Result arrives in `py-output-buffer', which is not in
+comint-mode "]
+
+                  )
+
                  "-"
 
                  ("Virtualenv"
@@ -15017,6 +15140,18 @@ Toggle flymake-mode running `pyflakespep8' "])
                    :help "Toggle useful modes like `highlight-indentation'"
 
                    ("Interpreter"
+
+                    ["Fast process "
+                     (setq py-fast-process-p
+                           (not py-fast-process-p))
+                     :help "Use `py-fast-process'\.
+
+Commands prefixed "py-fast-\.\.\." suitable for large output
+
+See: large output makes Emacs freeze, lp:1253907
+
+Results arrive in py-output-buffer, which is not in comint-modeUse `M-x customize-variable' to set it permanently"
+:style toggle :selected py-fast-process-p]
 
                     ["Run Python shell at start"
                      (setq py-start-run-py-shell
@@ -15399,18 +15534,6 @@ Use `M-x customize-variable' to set it permanently"]
 
 Use `M-x customize-variable' to set it permanently"])
                       )
-
-                     ["Fill-paragraph fill docstring "
-                      (setq py-paragraph-fill-docstring-p
-                            (not py-paragraph-fill-docstring-p))
-                      :help "If `py-fill-paragraph', when inside a docstring, should fill the complete string.
-
-Default is nil.
-
-Convenient use of `M-q' inside docstrings
-See also `py-docstring-style'
-Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected py-paragraph-fill-docstring-p]
 
                      ["Auto-fill mode"
                       (setq py-set-fill-column-p
@@ -16271,6 +16394,11 @@ Shift block-or-clause left. "]
                     )
                    ("More"
                     :help "extended edit commands'"
+
+                    ["Kill buffer unconditional" py-kill-buffer-unconditional
+                     :help " `py-kill-buffer-unconditional'
+
+Kill buffer unconditional, kill buffer-process if existing\. "]
 
                     ["Empty out list backward" py-empty-out-list-backward
                      :help " `py-empty-out-list-backward'
