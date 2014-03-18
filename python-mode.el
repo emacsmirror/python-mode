@@ -23175,6 +23175,7 @@ See available customizations listed in files variables-python-mode at directory 
 \\{python-mode-map}"
   :group 'python-mode
   ;; Local vars
+  (set (make-local-variable 'electric-indent-inhibit) nil)
   (set (make-local-variable 'outline-regexp)
        (concat (mapconcat 'identity
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
@@ -23250,7 +23251,8 @@ See available customizations listed in files variables-python-mode at directory 
   (if py-set-fill-column-p
       (add-hook 'python-mode-hook 'py-run-auto-fill-timer)
     (remove-hook 'python-mode-hook 'py-run-auto-fill-timer))
-  (add-hook 'after-change-functions 'py-after-change-function nil t)
+  ;; caused insert-file-contents error lp:1293172
+;;  (add-hook 'after-change-functions 'py-after-change-function nil t)
   (if py-defun-use-top-level-p
       (progn
         (set (make-local-variable 'beginning-of-defun-function) 'py-beginning-of-top-level)
