@@ -5981,7 +5981,8 @@ Fill according to `py-docstring-style' "
               (replace-match " "))
             (fill-region (point-min) (point-max))))
         (and docstring (setq multi-line-p
-                             (> (count-matches "\n" beg end) 0)))
+			     (or (< fill-column (- end beg))
+				 (> (count-matches "\n" beg end) 0))))
         (and docstring
              (setq delimiters-style
                    (case style
@@ -6017,8 +6018,10 @@ Fill according to `py-docstring-style' "
               (and
                (cdr delimiters-style)
                (or (newline (cdr delimiters-style)) t)))
-            (setq end (progn (skip-chars-forward " \t\r\n\f")(skip-chars-forward "\"'")(copy-marker (point))))
-            (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (copy-marker (point)))))
+	    ;; lp:1291493
+	    (setq end (progn (skip-chars-forward " \t\r\n\f")(skip-chars-forward "\"'")(copy-marker (point))))
+	    ;; (setq beg (progn (goto-char beg) (skip-chars-backward " \t\r\n\f")(skip-chars-backward "\"'") (copy-marker (point))))
+	    )
           (indent-region beg end)
           (goto-char end)
           (beginning-of-line)
