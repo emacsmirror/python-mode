@@ -3819,7 +3819,7 @@ This function does not modify point or mark."
 (setq py-font-lock-keywords
       ;; Keywords
       `(,(rx symbol-start
-             (or "and" "del"  "not" "while" "as" "elif" "global" "or" "with"
+             (or "if" "and" "del"  "not" "while" "as" "elif" "global" "or" "with"
                  "assert" "else"  "pass" "yield" "break"
                  "print" "exec" "in" "continue" "finally" "is" "except" "raise"
                  "return"  "for" "lambda")
