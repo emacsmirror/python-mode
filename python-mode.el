@@ -9944,7 +9944,7 @@ Optional DEDICATED "
 	  (py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
 			       ((and (numberp shell) (not (eq 1 (prefix-numeric-value shell))))
 				(read-from-minibuffer "(path-to-)shell-name: " (default-value 'py-shell-name)))
-			       (t shell)))
+			       (t (or shell py-shell-name))))
 	  (py-dedicated-process-p (or dedicated py-dedicated-process-p)))
       (py-execute-base start end))))
 
