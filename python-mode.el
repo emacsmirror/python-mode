@@ -340,14 +340,6 @@ Default is nil "
   :type 'string
   :group 'python-mode)
 
-(defcustom py-pylint-offer-current-p t
-  "If current buffers file should be offered for check.
-
-Default is non-nil. If nil, `py-pylint-run' offers filename from history "
-
-  :type 'boolean
-  :group 'python-mode)
-
 (defcustom py-hide-show-minor-mode-p nil
   "If hide-show minor-mode should be on, default is nil. "
 
@@ -18416,7 +18408,7 @@ Keegan Carruthers-Smith"
 ;; Pylint
 (defalias 'pylint 'py-pylint-run)
 (defun py-pylint-run (command)
-  "Run pylint (default on the file currently visited).
+  "*Run pylint (default on the file currently visited).
 
 For help see M-x pylint-help resp. M-x pylint-long-help.
 Home-page: http://www.logilab.org/project/pylint "
@@ -18435,14 +18427,10 @@ Home-page: http://www.logilab.org/project/pylint "
      (list
       (if (fboundp 'read-shell-command)
           (read-shell-command "Run pylint like this: "
-                              (if py-pylint-offer-current-p
-                                  (or default last)
-                                (or last default))
+			      (or last default)
                               'py-pylint-history)
         (read-string "Run pylint like this: "
-                     (if py-pylint-offer-current-p
-                         (or default last)
-                       (or last default))
+		     (or default last)
                      'py-pylint-history)))))
   (save-some-buffers (not py-ask-about-save))
   (unless (file-readable-p buffer-file-name)
