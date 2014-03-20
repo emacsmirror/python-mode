@@ -1541,6 +1541,12 @@ SYMMETRIC:
   :group 'python-mode)
 (defvar py-variable-name-face 'py-variable-name-face)
 
+(defvar py-object-reference-face 'py-object-reference-face)
+(defface py-object-reference-face
+  '((t (:inherit default)))
+  "Face when referencing object members from its class resp. method. , commonly \"cls\" and \"self\""
+  :group 'python-mode)
+
 ;; PEP 318 decorators
 (defface py-decorators-face
   '((t (:inherit font-lock-keyword-face)))
@@ -3804,7 +3810,7 @@ This function does not modify point or mark."
              symbol-end)
         (,(rx symbol-start (or "def" "class") symbol-end) . py-def-class-face)
         (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
-        ;; (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
+        (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
         ;; functions
         (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
          (1 font-lock-function-name-face))
@@ -3820,14 +3826,15 @@ This function does not modify point or mark."
         ;;       symbol-end) . font-lock-constant-face)
 
         (,(rx symbol-start
-              (or "cls"
-                  ;; "self"
-                  "cls" "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
+              (or "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
               symbol-end) . py-pseudo-keyword-face)
         ;; Decorators.
         (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
                                                 (0+ "." (1+ (or word ?_)))))
          (1 py-decorators-face))
+	(,(rx symbol-start (or "cls" "self")
+	      symbol-end) . py-object-reference-face)
+
         ;; Builtin Exceptions
         (,(rx word-start
               (or "ArithmeticError" "AssertionError" "AttributeError"
@@ -3882,6 +3889,7 @@ This function does not modify point or mark."
          (1 py-variable-name-face nil nil))
         ;; Numbers
         (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)))
+
 
 (defconst py-font-lock-syntactic-keywords
   '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
