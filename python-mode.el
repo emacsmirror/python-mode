@@ -13147,7 +13147,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
 
                    )
                   "-"
-                  
+
                   ["Kill shell unconditional" py-kill-shell-unconditional
                    :help " `py-kill-shell-unconditional'
 
@@ -14838,7 +14838,7 @@ See also `py-fast-shell'"]
                   ["Execute statement fast" py-execute-statement-fast
                    :help " `py-execute-statement-fast'
 
-Process statement at point by a Python interpreter\. 
+Process statement at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14847,7 +14847,7 @@ comint-mode "]
                   ["Execute block fast" py-execute-block-fast
                    :help " `py-execute-block-fast'
 
-Process block at point by a Python interpreter\. 
+Process block at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14856,7 +14856,7 @@ comint-mode "]
                   ["Execute block or clause fast" py-execute-block-or-clause-fast
                    :help " `py-execute-block-or-clause-fast'
 
-Process block-or-clause at point by a Python interpreter\. 
+Process block-or-clause at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14865,7 +14865,7 @@ comint-mode "]
                   ["Execute def fast" py-execute-def-fast
                    :help " `py-execute-def-fast'
 
-Process def at point by a Python interpreter\. 
+Process def at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14874,7 +14874,7 @@ comint-mode "]
                   ["Execute class fast" py-execute-class-fast
                    :help " `py-execute-class-fast'
 
-Process class at point by a Python interpreter\. 
+Process class at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14883,7 +14883,7 @@ comint-mode "]
                   ["Execute def or class fast" py-execute-def-or-class-fast
                    :help " `py-execute-def-or-class-fast'
 
-Process def-or-class at point by a Python interpreter\. 
+Process def-or-class at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14892,7 +14892,7 @@ comint-mode "]
                   ["Execute expression fast" py-execute-expression-fast
                    :help " `py-execute-expression-fast'
 
-Process expression at point by a Python interpreter\. 
+Process expression at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14901,7 +14901,7 @@ comint-mode "]
                   ["Execute partial expression fast" py-execute-partial-expression-fast
                    :help " `py-execute-partial-expression-fast'
 
-Process partial-expression at point by a Python interpreter\. 
+Process partial-expression at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14910,7 +14910,7 @@ comint-mode "]
                   ["Execute top level fast" py-execute-top-level-fast
                    :help " `py-execute-top-level-fast'
 
-Process top-level at point by a Python interpreter\. 
+Process top-level at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14919,7 +14919,7 @@ comint-mode "]
                   ["Execute clause fast" py-execute-clause-fast
                    :help " `py-execute-clause-fast'
 
-Process clause at point by a Python interpreter\. 
+Process clause at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
 Result arrives in `py-output-buffer', which is not in
@@ -14984,25 +14984,6 @@ This may be preferable to `M-x py-execute-buffer' because:
 
                  ("Help"
 
-                  ["Describe mode"        py-describe-mode t]
-
-                  ["Help on symbol" py-help-at-point
-                   :help "`py-help-at-point'\n
-Use pydoc on symbol at point"]
-
-                  ;;          ["py-complete-help" py-complete-help
-                  ;;           :help " `py-complete-help'
-                  ;; Get help on a Python expression.\n
-                  ;; Needs Pymacs "]
-                  ;;
-                  ;;          ["Help thing at point" py-complete-help-thing-at-point
-                  ;;           :help " `py-complete-help-thing-at-point'\n
-                  ;; Needs Pymacs "]
-
-                  ;;          ["Signature" py-complete-signature-expr
-                  ;;           :help " Print object's signature\n
-                  ;; Needs Pymacs"]
-
                   ["Info lookup symbol" py-info-lookup-symbol
                    :help " `py-info-lookup-symbol'
 
@@ -15015,7 +14996,26 @@ Sends help if stuff is missing. "]
 
 Return the current Python symbol\. "]
 
+		  "-"
+
+                  ["Describe mode"        py-describe-mode t]
+
+                  ["Help on symbol" py-help-at-point
+                   :help "`py-help-at-point'\n
+Use pydoc on symbol at point"]
+
+
+		  ["Report comint variable setting" py-report-comint-variable-setting
+		   :help " `py-report-comint-variable-setting'
+
+Display some comint-mode variables of interest for debugging\.
+
+Some vars like comint-mode maps and tables are not displayed here because of its amount\.
+
+Typing `q' will close the buffer displayed "]
+
                   )
+
                  ("Debugger"
 
                   ["pdb" pdb
@@ -16046,14 +16046,6 @@ Use `M-x customize-variable' to set it permanently"
                            (not py-highlight-error-source-p           ))
                      :help "Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-highlight-error-source-p]
-
-                    ["Pylint offer current "
-                     (setq py-pylint-offer-current-p
-                           (not py-pylint-offer-current-p))
-                     :help "If current buffers file should be offered for check.
-
-Default is non-nil. If nil, `py-pylint-run' offers filename from history Use `M-x customize-variable' to set it permanently"
-                     :style toggle :selected py-pylint-offer-current-p]
 
                     )
 
