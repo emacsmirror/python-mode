@@ -88,6 +88,9 @@ you're editing someone else's Python code."
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-offset)
 
+(defconst py-windows-config-register 313465889
+  "Internal used")
+
 (defcustom py-backslashed-lines-indent-offset 5
   "Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates "
@@ -3713,58 +3716,6 @@ of current line."
      1 2))
   "`compilation-error-regexp-alist' for inferior Python.")
 
-(defconst py-font-lock-syntactic-keywords
-  ;; Make outer chars of matching triple-quote sequences into generic
-  ;; string delimiters.  Fixme: Is there a better way?
-  ;; First avoid a sequence preceded by an odd number of backslashes.
-  `((,(concat "\\(?:^\\|[^\\]\\(?:\\\\.\\)*\\)" ;Prefix.
-              "\\(?1:\"\\)\\(?2:\"\\)\\(?3:\"\\)\\(?4:\"\\)\\(?5:\"\\)\\(?6:\"\\)\\|\\(?1:\"\\)\\(?2:\"\\)\\(?3:\"\\)\\|\\(?1:'\\)\\(?2:'\\)\\(?3:'\\)\\(?4:'\\)\\(?5:'\\)\\(?6:'\\)\\|\\(?1:'\\)\\(?2:'\\)\\(?3:'\\)\\(?4:'\\)\\(?5:'\\)\\(?6:'\\)\\|\\(?1:'\\)\\(?2:'\\)\\(?3:'\\)")
-     (1 (python-quote-syntax 1) t t)
-     (2 (python-quote-syntax 2) t t)
-     (3 (python-quote-syntax 3) t t)
-     (6 (python-quote-syntax 1) t t))))
-
-(defun python-quote-syntax (n)
-  "Put `syntax-table' property correctly on triple quote.
-Used for syntactic keywords.  N is the match number (1, 2 or 3)."
-  ;; Given a triple quote, we have to check the context to know
-  ;; whether this is an opening or closing triple or whether it's
-  ;; quoted anyhow, and should be ignored.  (For that we need to do
-  ;; the same job as `syntax-ppss' to be correct and it seems to be OK
-  ;; to use it here despite initial worries.)  We also have to sort
-  ;; out a possible prefix -- well, we don't _have_ to, but I think it
-  ;; should be treated as part of the string.
-
-  ;; Test cases:
-  ;;  ur"""ar""" x='"' # """
-  ;; x = ''' """ ' a
-  ;; '''
-  ;; x '"""' x """ \"""" x
-  (save-excursion
-    (goto-char (match-beginning 0))
-    (cond
-     ;; Consider property for the last char if in a fenced string.
-     ((= n 3)
-      (let* ((font-lock-syntactic-keywords nil)
-	     (syntax (syntax-ppss)))
-	(when (eq t (nth 3 syntax))	; after unclosed fence
-	  (goto-char (nth 8 syntax))	; fence position
-	  ;; (skip-chars-forward "uUrR")	; skip any prefix
-	  ;; Is it a matching sequence?
-	  (if (eq (char-after) (char-after (match-beginning 2)))
-	      (eval-when-compile (string-to-syntax "|"))))))
-     ;; Consider property for initial char, accounting for prefixes.
-     ((or (and (= n 2)			; leading quote (not prefix)
-	       (not (match-end 1)))     ; prefix is null
-	  (and (= n 1)			; prefix
-	       (match-end 1)))          ; non-empty
-      (let ((font-lock-syntactic-keywords nil))
-	(unless (eq 'string (syntax-ppss-context (syntax-ppss)))
-	  (eval-when-compile (string-to-syntax "|")))))
-     ;; Otherwise (we're in a non-matching string) the property is
-     ;; nil, which is OK.
-     )))
-
 
 (defun py-point (position)
   "Returns the value of point at certain commonly referenced POSITIONs.
@@ -3805,7 +3756,7 @@ This function does not modify point or mark."
       `(,(rx symbol-start
              (or "if" "and" "del"  "not" "while" "as" "elif" "global" "or" "with"
                  "assert" "else"  "pass" "yield" "break"
-                 "print" "exec" "in" "continue" "finally" "is" "except" "raise"
+                 "exec" "in" "continue" "finally" "is" "except" "raise"
                  "return"  "for" "lambda")
              symbol-end)
         (,(rx symbol-start (or "def" "class") symbol-end) . py-def-class-face)
@@ -3817,14 +3768,6 @@ This function does not modify point or mark."
         ;; classes
         (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
          (1 py-def-class-face) (2 py-class-name-face))
-        ;; (,(rx symbol-start
-        ;; (or "raise" "except")
-        ;; symbol-end) . py-exception-name-face)
-        ;; already pseudo-keyword
-        ;; (,(rx symbol-start
-        ;;       (or "None" "True" "False" "__debug__" "NotImplemented")
-        ;;       symbol-end) . font-lock-constant-face)
-
         (,(rx symbol-start
               (or "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
               symbol-end) . py-pseudo-keyword-face)
@@ -3834,8 +3777,7 @@ This function does not modify point or mark."
          (1 py-decorators-face))
 	(,(rx symbol-start (or "cls" "self")
 	      symbol-end) . py-object-reference-face)
-
-        ;; Builtin Exceptions
+        ;; Exceptions
         (,(rx word-start
               (or "ArithmeticError" "AssertionError" "AttributeError"
                   "BaseException" "BufferError" "BytesWarning" "DeprecationWarning"
@@ -3851,7 +3793,6 @@ This function does not modify point or mark."
                   "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
                   "UserWarning" "ValueError" "Warning" "ZeroDivisionError")
               word-end) . py-exception-name-face)
-        ;; (,(rx (or space line-start) symbol-start "range
         ;; Builtins
         (,(rx (or space (syntax open-parenthesis) line-start) symbol-start
               (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
@@ -3867,10 +3808,6 @@ This function does not modify point or mark."
                   "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
                   "unichr" "unicode" "vars" "xrange" "zip")
               symbol-end) . py-builtins-face)
-        ;; (,(python-rx line-start (* (any " \t"))(group (** 0 2 "_") word (0+ (or word ?_))(** 0 2 "_"))(* (any " \t")) assignment-operator)
-        ;; 1 py-variable-name-face)
-        ;; asignations
-        ;; support for a = b = c = 5
         ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
          (1 py-variable-name-face nil nil))
         ;; a, b, c = (1, 2, 3)
@@ -3882,14 +3819,11 @@ This function does not modify point or mark."
                   (res nil))
               (while (and (setq res (re-search-forward re limit t))
                           (goto-char (match-end 1))
-                          (nth 1 (syntax-ppss))
-                          ;; (python-syntax-context 'paren)
-                          ))
+                          (nth 1 (syntax-ppss))))
               res))
          (1 py-variable-name-face nil nil))
         ;; Numbers
         (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)))
-
 
 (defconst py-font-lock-syntactic-keywords
   '(("[^\\]\\\\\\(?:\\\\\\\\\\)*\\(\\s\"\\)\\1\\(\\1\\)"
@@ -4340,9 +4274,7 @@ When indent is set back manually, this is honoured in following lines. "
 	 (lkmd (prin1-to-string last-command))
 	 ;; lp:1280982, deliberatly dedented by user
 	 (this-dedent
-	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*")
-		     ;; (or (string-match "backspace" lkmd)(string-match "indent" lkmd) (string-match "newline" lkmd))
-                     )
+	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*"))
 	    (current-column)))
 	 erg pos)
     (newline)
@@ -6431,7 +6363,6 @@ Unclosed-string errors are not handled here, as made visible by fontification al
 	     (py-count-lines (point-min) (point)))))
     err))
 
-
 (defun py--message-error (err)
   "Receives a list (position line) "
   (message "Closing parent missed: line %s pos %s" (cadr err) (car err)))
@@ -8321,9 +8252,9 @@ Store data in kill ring, so it might yanked back. "
 
 ;;; minor-block BOL forms
 (defun py-mark-minor-block-bol ()
-  "Mark minor block, take beginning of line positions. 
+  "Mark minor block, take beginning of line positions.
 
-Returns beginning and end positions of region, a cons. 
+Returns beginning and end positions of region, a cons.
 
 See `py-minor-block-re'"
   (interactive)
@@ -8336,7 +8267,7 @@ See `py-minor-block-re'"
 (defun py-copy-minor-block-bol ()
   "Delete minor block, use position from beginning-of-line.
 
-Stores data in kill ring. Might be yanked back using `C-y'. 
+Stores data in kill ring. Might be yanked back using `C-y'.
 
 See `py-minor-block-re'"
   (interactive "*")
@@ -8346,7 +8277,7 @@ See `py-minor-block-re'"
 (defun py-kill-minor-block-bol ()
   "Delete minor block, use position from beginning-of-line.
 
-Stores data in kill ring. Might be yanked back using `C-y'. 
+Stores data in kill ring. Might be yanked back using `C-y'.
 
 See `py-minor-block-re'"
   (interactive "*")
@@ -8356,7 +8287,7 @@ See `py-minor-block-re'"
 (defun py-delete-minor-block-bol ()
   "Delete minor block, use position from beginning-of-line.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 
 See `py-minor-block-re'"
   (interactive "*")
@@ -10148,7 +10079,7 @@ When optional FILE is `t', no temporary file is needed. "
                      (t (or (and (boundp 'py-buffer-name) (get-buffer-process py-buffer-name))
                             (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t))))))
          err-p)
-    (and py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name))) 
+    (and py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
     (set-buffer py-exception-buffer)
     (py-update-execute-directory proc py-buffer-name execute-directory)
     (cond (;; enforce proceeding as python-mode.el v5
@@ -11862,7 +11793,6 @@ This function takes the list of setup code to send from the
     (process-send-string proc strg)
     (or nln (process-send-string proc "\n"))))
 
-
 (defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
 
@@ -12061,7 +11991,7 @@ When DONE is `t', `py-shell-manage-windows' is omitted
       (unless (comint-check-proc py-buffer-name)
         (py--shell-make-comint)
 	(sit-for 0.1)
-	(setq py-output-buffer (buffer-name (current-buffer)))  
+	(setq py-output-buffer (buffer-name (current-buffer)))
         (py--shell-setup (get-buffer-process (current-buffer))))
       ;; (py--init-easy-menu)
       ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
@@ -15003,7 +14933,6 @@ Return the current Python symbol\. "]
                    :help "`py-help-at-point'\n
 Use pydoc on symbol at point"]
 
-
 		  ["Report comint variable setting" py-report-comint-variable-setting
 		   :help " `py-report-comint-variable-setting'
 
@@ -16179,8 +16108,6 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 When non-nil, imports module `os' Use `M-x customize-variable' to
 set it permanently"
                      :style toggle :selected py-set-pager-cat-p]
-
-
 
                     ["Edit only "
                      (setq py-edit-only-p
@@ -18966,7 +18893,7 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
 
 ;;; Process fast forms
 (defun py-execute-statement-fast ()
-  "Process statement at point by a Python interpreter. 
+  "Process statement at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -18982,7 +18909,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-block-fast ()
-  "Process block at point by a Python interpreter. 
+  "Process block at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -18998,7 +18925,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-block-or-clause-fast ()
-  "Process block-or-clause at point by a Python interpreter. 
+  "Process block-or-clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19014,7 +18941,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-def-fast ()
-  "Process def at point by a Python interpreter. 
+  "Process def at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19030,7 +18957,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-class-fast ()
-  "Process class at point by a Python interpreter. 
+  "Process class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19046,7 +18973,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-def-or-class-fast ()
-  "Process def-or-class at point by a Python interpreter. 
+  "Process def-or-class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19062,7 +18989,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-expression-fast ()
-  "Process expression at point by a Python interpreter. 
+  "Process expression at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19078,7 +19005,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-partial-expression-fast ()
-  "Process partial-expression at point by a Python interpreter. 
+  "Process partial-expression at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19094,7 +19021,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-top-level-fast ()
-  "Process top-level at point by a Python interpreter. 
+  "Process top-level at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
@@ -19110,7 +19037,7 @@ comint-mode"
     (py-execute-region beg end)))
 
 (defun py-execute-clause-fast ()
-  "Process clause at point by a Python interpreter. 
+  "Process clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
