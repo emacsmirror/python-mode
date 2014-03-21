@@ -11759,12 +11759,11 @@ Internal use"
    (funcall py-split-windows-on-execute-function)))
 
 (defun py--manage-windows-set-and-switch (buffer)
-    "Switch to output-buffer, go to point-max.
+  "Switch to output-buffer, go to point-max.
 
 Internal use"
   (set-buffer buffer)
-  (goto-char (point-max))
-  (switch-to-buffer (current-buffer)))
+  (goto-char (process-mark (get-buffer-process (current-buffer)))))
 
 (defun py-shell-manage-windows (output-buffer &optional windows-displayed windows-config)
   "Adapt or restore window configuration. Return nil "
@@ -11789,8 +11788,7 @@ Internal use"
           (not py-switch-buffers-on-execute-p))
          (delete-other-windows)
          (py--manage-windows-split)
-	 (py--manage-windows-set-and-switch py-exception-buffer)
-         ;; 	 (py-restore-window-configuration)
+	 (py--manage-windows-set-and-switch py-output-buffer)
          (display-buffer output-buffer t))
         ;; no split, switch
         ((and
@@ -12056,13 +12054,14 @@ When DONE is `t', `py-shell-manage-windows' is omitted
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
          (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
-
     (if py-fast-process-p
-        (unless (get-buffer-process (get-buffer py-output-buffer))
+        (unless (get-buffer-process (get-buffer py-buffer-name))
           (py-fast-process)
-          (setq py-buffer-name py-output-buffer))
+          (setq py-output-buffer py-buffer-name))
       (unless (comint-check-proc py-buffer-name)
         (py--shell-make-comint)
+	(sit-for 0.1)
+	(setq py-output-buffer (buffer-name (current-buffer)))  
         (py--shell-setup (get-buffer-process (current-buffer))))
       ;; (py--init-easy-menu)
       ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
