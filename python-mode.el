@@ -1082,17 +1082,6 @@ Also used by (minor-)outline-mode "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-paragraph-fill-docstring-p nil
-  "If `py-fill-paragraph', when inside a docstring, should fill the complete string.
-
-Default is nil.
-
-Convenient use of `M-q' inside docstrings
-See also `py-docstring-style'"
-
-  :type 'boolean
-  :group 'python-mode)
-
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
   :group 'python-mode
