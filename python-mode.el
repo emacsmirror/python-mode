@@ -8122,6 +8122,169 @@ Store data in kill ring, so it might yanked back. "
   (let ((erg (py-mark-base "minor-block")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
+;;; Hide-Show
+(defun py-hide-base (form &optional beg end)
+  "Hide visibility of existing form at point. "
+  (hs-minor-mode 1)
+  (save-excursion
+    (let* ((form (prin1-to-string form))
+	   (beg (or beg (or (funcall (intern-soft (concat "py-beginning-of-" form "-p")))
+			    (funcall (intern-soft (concat "py-beginning-of-" form))))))
+	   (end (or end (funcall (intern-soft (concat "py-end-of-" form)))))
+	   (modified (buffer-modified-p))
+	   (inhibit-read-only t))
+      (if (and beg end)
+	  (progn
+	    (hs-make-overlay beg end 'code)
+	    (set-buffer-modified-p modified))
+	(error (concat "No " (format "%s" form) " at point!"))))))
+
+(defun py-show-base (form &optional beg end)
+  "Remove invisibility of existing form at point. "
+  (save-excursion
+    (let* ((form (prin1-to-string form))
+	   (beg (or beg (or (funcall (intern-soft (concat "py-beginning-of-" form "-p")))
+			    (funcall (intern-soft (concat "py-beginning-of-" form))))))
+	   (end (or end (funcall (intern-soft (concat "py-end-of-" form)))))
+	   (modified (buffer-modified-p))
+	   (inhibit-read-only t))
+      (if (and beg end)
+	  (progn
+	    (hs-discard-overlays beg end)
+	    (set-buffer-modified-p modified))
+	(error (concat "No " (format "%s" form) " at point!"))))))
+
+(defun py-hide-show (&optional form beg end)
+  "Toggle visibility of existing forms at point. "
+  (interactive)
+  (save-excursion
+    (let* ((form (prin1-to-string form))
+	   (beg (or beg (or (funcall (intern-soft (concat "py-beginning-of-" form "-p")))
+			    (funcall (intern-soft (concat "py-beginning-of-" form))))))
+	   (end (or end (funcall (intern-soft (concat "py-end-of-" form)))))
+	   (modified (buffer-modified-p))
+	   (inhibit-read-only t))
+      (if (and beg end)
+	  (if (overlays-in beg end)
+	      (hs-discard-overlays beg end)
+	    (hs-make-overlay beg end 'code))
+	(error (concat "No " (format "%s" form) " at point!")))
+      (set-buffer-modified-p modified))))
+
+(defun py-hide-region (beg end)
+  "Hide active region. "
+  (interactive
+   (list
+    (and (use-region-p) (region-beginning))(and (use-region-p) (region-end))))
+  (py-hide-base 'region beg end))
+
+(defun py-show-region (beg end)
+  "Un-hide active region. "
+  (interactive
+   (list
+    (and (use-region-p) (region-beginning))(and (use-region-p) (region-end))))
+  (py-show-base 'region beg end))
+
+(defun py-hide-statement ()
+  "Hide statement at point. "
+  (interactive)
+  (py-hide-base 'statement))
+
+(defun py-show-statement ()
+  "Show statement at point. "
+  (interactive)
+  (py-show-base 'statement))
+
+(defun py-hide-block ()
+  "Hide block at point. "
+  (interactive)
+  (py-hide-base 'block))
+
+(defun py-show-block ()
+  "Show block at point. "
+  (interactive)
+  (py-show-base 'block))
+
+(defun py-hide-clause ()
+  "Hide clause at point. "
+  (interactive)
+  (py-hide-base 'clause))
+
+(defun py-show-clause ()
+  "Show clause at point. "
+  (interactive)
+  (py-show-base 'clause))
+
+(defun py-hide-block-or-clause ()
+  "Hide block-or-clause at point. "
+  (interactive)
+  (py-hide-base 'block-or-clause))
+
+(defun py-show-block-or-clause ()
+  "Show block-or-clause at point. "
+  (interactive)
+  (py-show-base 'block-or-clause))
+
+(defun py-hide-def ()
+  "Hide def at point. "
+  (interactive)
+  (py-hide-base 'def))
+
+(defun py-show-def ()
+  "Show def at point. "
+  (interactive)
+  (py-show-base 'def))
+
+(defun py-hide-class ()
+  "Hide class at point. "
+  (interactive)
+  (py-hide-base 'class))
+
+(defun py-show-class ()
+  "Show class at point. "
+  (interactive)
+  (py-show-base 'class))
+
+(defun py-hide-expression ()
+  "Hide expression at point. "
+  (interactive)
+  (py-hide-base 'expression))
+
+(defun py-show-expression ()
+  "Show expression at point. "
+  (interactive)
+  (py-show-base 'expression))
+
+(defun py-hide-partial-expression ()
+  "Hide partial-expression at point. "
+  (interactive)
+  (py-hide-base 'partial-expression))
+
+(defun py-show-partial-expression ()
+  "Show partial-expression at point. "
+  (interactive)
+  (py-show-base 'partial-expression))
+
+(defun py-hide-line ()
+  "Hide line at point. "
+  (interactive)
+  (py-hide-base 'line))
+
+(defun py-show-line ()
+  "Show line at point. "
+  (interactive)
+  (py-show-base 'line))
+
+(defun py-hide-top-level ()
+  "Hide top-level at point. "
+  (interactive)
+  (py-hide-base 'top-level))
+
+(defun py-show-top-level ()
+  "Show top-level at point. "
+  (interactive)
+  (py-show-base 'top-level))
+
 ;;; minor-block BOL forms
 (defun py-mark-minor-block-bol ()
   "Mark minor block, take beginning of line positions.
@@ -13671,6 +13834,121 @@ Stores data in kill ring\. Might be yanked back using `C-y'\.
 
 See `py-minor-block-re' "]))
 
+		 ("Hide-Show"
+
+		  ["Hide region" py-hide-region
+		   :help " `py-hide-region'
+
+Hide active region\. "]
+
+		  ["Hide statement" py-hide-statement
+		   :help " `py-hide-statement'
+
+Hide statement at point\. "]
+
+		  ["Hide block" py-hide-block
+		   :help " `py-hide-block'
+
+Hide block at point\. "]
+
+		  ["Hide clause" py-hide-clause
+		   :help " `py-hide-clause'
+
+Hide clause at point\. "]
+
+		  ["Hide block or clause" py-hide-block-or-clause
+		   :help " `py-hide-block-or-clause'
+
+Hide block-or-clause at point\. "]
+
+		  ["Hide def" py-hide-def
+		   :help " `py-hide-def'
+
+Hide def at point\. "]
+
+		  ["Hide class" py-hide-class
+		   :help " `py-hide-class'
+
+Hide class at point\. "]
+
+		  ["Hide expression" py-hide-expression
+		   :help " `py-hide-expression'
+
+Hide expression at point\. "]
+
+		  ["Hide partial expression" py-hide-partial-expression
+		   :help " `py-hide-partial-expression'
+
+Hide partial-expression at point\. "]
+
+		  ["Hide line" py-hide-line
+		   :help " `py-hide-line'
+
+Hide line at point\. "]
+
+		  ["Hide top level" py-hide-top-level
+		   :help " `py-hide-top-level'
+
+Hide top-level at point\. "]
+
+		  ("Show"
+
+		   ["Show region" py-show-region
+		    :help " `py-show-region'
+
+Un-hide active region\. "]
+
+		   ["Show statement" py-show-statement
+		    :help " `py-show-statement'
+
+Show statement at point\. "]
+
+		   ["Show block" py-show-block
+		    :help " `py-show-block'
+
+Show block at point\. "]
+
+		   ["Show clause" py-show-clause
+		    :help " `py-show-clause'
+
+Show clause at point\. "]
+
+		   ["Show block or clause" py-show-block-or-clause
+		    :help " `py-show-block-or-clause'
+
+Show block-or-clause at point\. "]
+
+		   ["Show def" py-show-def
+		    :help " `py-show-def'
+
+Show def at point\. "]
+
+		   ["Show class" py-show-class
+		    :help " `py-show-class'
+
+Show class at point\. "]
+
+		   ["Show expression" py-show-expression
+		    :help " `py-show-expression'
+
+Show expression at point\. "]
+
+		   ["Show partial expression" py-show-partial-expression
+		    :help " `py-show-partial-expression'
+
+Show partial-expression at point\. "]
+
+		   ["Show line" py-show-line
+		    :help " `py-show-line'
+
+Show line at point\. "]
+
+		   ["Show top level" py-show-top-level
+		    :help " `py-show-top-level'
+
+Show top-level at point\. "]))
+
+
                  "-"
 
                  ["Execute region" py-execute-region
@@ -15903,7 +16181,112 @@ See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it p
                      :style toggle :selected py-edit-only-p])))
 
                  ("More... "
+		  
+
                   ("Edit commands "
+
+		   ("Hide"
+		    ["Hide statement" py-hide-statement
+		     :help " `py-hide-statement'
+
+Hide statement at point\. "]
+
+		    ["Hide block" py-hide-block
+		     :help " `py-hide-block'
+
+Hide block at point\. "]
+
+		    ["Hide clause" py-hide-clause
+		     :help " `py-hide-clause'
+
+Hide clause at point\. "]
+
+		    ["Hide block or clause" py-hide-block-or-clause
+		     :help " `py-hide-block-or-clause'
+
+Hide block-or-clause at point\. "]
+
+		    ["Hide def" py-hide-def
+		     :help " `py-hide-def'
+
+Hide def at point\. "]
+
+		    ["Hide class" py-hide-class
+		     :help " `py-hide-class'
+
+Hide class at point\. "]
+
+		    ["Hide expression" py-hide-expression
+		     :help " `py-hide-expression'
+
+Hide expression at point\. "]
+
+		    ["Hide partial expression" py-hide-partial-expression
+		     :help " `py-hide-partial-expression'
+
+Hide partial-expression at point\. "]
+
+		    ["Hide line" py-hide-line
+		     :help " `py-hide-line'
+
+Hide line at point\. "]
+
+		    ["Hide top level" py-hide-top-level
+		     :help " `py-hide-top-level'
+
+Hide top-level at point\. "])
+
+		   ("Show"
+
+		    ["Show statement" py-show-statement
+		     :help " `py-show-statement'
+
+Show statement at point\. "]
+
+		    ["Show block" py-show-block
+		     :help " `py-show-block'
+
+Show block at point\. "]
+
+		    ["Show clause" py-show-clause
+		     :help " `py-show-clause'
+
+Show clause at point\. "]
+
+		    ["Show block or clause" py-show-block-or-clause
+		     :help " `py-show-block-or-clause'
+
+Show block-or-clause at point\. "]
+
+		    ["Show def" py-show-def
+		     :help " `py-show-def'
+
+Show def at point\. "]
+
+		    ["Show class" py-show-class
+		     :help " `py-show-class'
+
+Show class at point\. "]
+
+		    ["Show expression" py-show-expression
+		     :help " `py-show-expression'
+
+Show expression at point\. "]
+
+		    ["Show partial expression" py-show-partial-expression
+		     :help " `py-show-partial-expression'
+
+Show partial-expression at point\. "]
+
+		    ["Show line" py-show-line
+		     :help " `py-show-line'
+
+Show line at point\. "]
+
+		    ["Show top level" py-show-top-level
+		     :help " `py-show-top-level'
+
+Show top-level at point\. "])
 
                    ("Kill "
 
