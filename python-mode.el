@@ -11815,7 +11815,11 @@ Internal use"
          (delete-other-windows)
          (py--manage-windows-split)
 	 (py--manage-windows-set-and-switch py-output-buffer)
-         (display-buffer output-buffer t))
+         (display-buffer output-buffer t)
+	 ;; fast-... fails
+	 (unless (eq (current-buffer) py-exception-buffer)
+	   (set-buffer py-exception-buffer)
+	   (switch-to-buffer (current-buffer))) )
         ;; no split, switch
         ((and
           py-switch-buffers-on-execute-p
@@ -11825,8 +11829,7 @@ Internal use"
         ;; no split, no switch
         ((not py-switch-buffers-on-execute-p)
          (let (pop-up-windows)
-           (py-restore-window-configuration))))
-  nil)
+           (py-restore-window-configuration)))))
 
 (defun py-kill-buffer-unconditional (&optional buffer)
   "Kill buffer unconditional, kill buffer-process if existing. "
@@ -11887,44 +11890,6 @@ This function takes the list of setup code to send from the
     ;; (comint-simple-send proc (substring-no-properties string))
     (process-send-string proc strg)
     (or nln (process-send-string proc "\n"))))
-
-(defun py-fast-process (&optional buffer)
-  "Connect am (I)Python process suitable for large output.
-
-Output arrives in py-output-buffer, \"\*Python Output\*\" by default
-It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907"
-  (interactive)
-  (let ((this-buffer
-         (set-buffer (or (and buffer (get-buffer-create buffer))
-                         (get-buffer-create py-output-buffer)))))
-    (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
-      (with-current-buffer this-buffer
-        (erase-buffer))
-      proc)))
-
-(defun py-fast-send-string (string)
-  "Process Python strings, being prepared for large output.
-
-Output arrives in py-output-buffer, \"\*Python Output\*\" by default
-See also `py-fast-shell'
-
-"
-  (let ((proc (or (get-buffer-process (get-buffer py-output-buffer))
-                  (py-fast-process))))
-    (with-current-buffer py-output-buffer
-      (erase-buffer))
-    (process-send-string proc string)
-    (or (string-match "\n$" string)
-	(process-send-string proc "\n"))
-    (accept-process-output proc 1)
-    (beginning-of-line)
-    (skip-chars-backward "\r\n")
-    (delete-region (point) (point-max))))
-
-(defun py-process-region-fast (beg end)
-  (interactive "r")
-  (let ((py-fast-process-p t))
-    (py-execute-region beg end)))
 
 (defun py--shell-make-comint ()
   (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
@@ -19016,6 +18981,45 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
   (py-execute-prepare "clause"))
 
 ;;; Process fast forms
+
+(defun py-fast-process (&optional buffer)
+  "Connect am (I)Python process suitable for large output.
+
+Output arrives in py-output-buffer, \"\*Python Output\*\" by default
+It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907"
+  (interactive)
+  (let ((this-buffer
+         (set-buffer (or (and buffer (get-buffer-create buffer))
+                         (get-buffer-create py-output-buffer)))))
+    (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
+      (with-current-buffer this-buffer
+        (erase-buffer))
+      proc)))
+
+(defun py-fast-send-string (string)
+  "Process Python strings, being prepared for large output.
+
+Output arrives in py-output-buffer, \"\*Python Output\*\" by default
+See also `py-fast-shell'
+
+"
+  (let ((proc (or (get-buffer-process (get-buffer py-output-buffer))
+                  (py-fast-process))))
+    (with-current-buffer py-output-buffer
+      (erase-buffer))
+    (process-send-string proc string)
+    (or (string-match "\n$" string)
+	(process-send-string proc "\n"))
+    (accept-process-output proc 1)
+    (beginning-of-line)
+    (skip-chars-backward "\r\n")
+    (delete-region (point) (point-max))))
+
+(defun py-process-region-fast (beg end)
+  (interactive "r")
+  (let ((py-fast-process-p t))
+    (py-execute-region beg end)))
+
 (defun py-execute-statement-fast ()
   "Process statement at point by a Python interpreter.
 
@@ -19023,14 +19027,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-statement-p)
-		     (save-excursion
-		       (py-beginning-of-statement)))))
-	(end (save-excursion
-	       (py-end-of-statement))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "statement")))
 
 (defun py-execute-block-fast ()
   "Process block at point by a Python interpreter.
@@ -19039,14 +19037,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-block-p)
-		     (save-excursion
-		       (py-beginning-of-block)))))
-	(end (save-excursion
-	       (py-end-of-block))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "block")))
 
 (defun py-execute-block-or-clause-fast ()
   "Process block-or-clause at point by a Python interpreter.
@@ -19055,14 +19047,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-block-or-clause-p)
-		     (save-excursion
-		       (py-beginning-of-block-or-clause)))))
-	(end (save-excursion
-	       (py-end-of-block-or-clause))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "block-or-clause")))
 
 (defun py-execute-def-fast ()
   "Process def at point by a Python interpreter.
@@ -19071,14 +19057,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-def-p)
-		     (save-excursion
-		       (py-beginning-of-def)))))
-	(end (save-excursion
-	       (py-end-of-def))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "def")))
 
 (defun py-execute-class-fast ()
   "Process class at point by a Python interpreter.
@@ -19087,14 +19067,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-class-p)
-		     (save-excursion
-		       (py-beginning-of-class)))))
-	(end (save-excursion
-	       (py-end-of-class))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "class")))
 
 (defun py-execute-def-or-class-fast ()
   "Process def-or-class at point by a Python interpreter.
@@ -19103,14 +19077,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-def-or-class-p)
-		     (save-excursion
-		       (py-beginning-of-def-or-class)))))
-	(end (save-excursion
-	       (py-end-of-def-or-class))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "def-or-class")))
 
 (defun py-execute-expression-fast ()
   "Process expression at point by a Python interpreter.
@@ -19119,14 +19087,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-expression-p)
-		     (save-excursion
-		       (py-beginning-of-expression)))))
-	(end (save-excursion
-	       (py-end-of-expression))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "expression")))
 
 (defun py-execute-partial-expression-fast ()
   "Process partial-expression at point by a Python interpreter.
@@ -19135,14 +19097,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-partial-expression-p)
-		     (save-excursion
-		       (py-beginning-of-partial-expression)))))
-	(end (save-excursion
-	       (py-end-of-partial-expression))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "partial-expression")))
 
 (defun py-execute-top-level-fast ()
   "Process top-level at point by a Python interpreter.
@@ -19151,14 +19107,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-top-level-p)
-		     (save-excursion
-		       (py-beginning-of-top-level)))))
-	(end (save-excursion
-	       (py-end-of-top-level))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "top-level")))
 
 (defun py-execute-clause-fast ()
   "Process clause at point by a Python interpreter.
@@ -19167,14 +19117,8 @@ Suitable for large output, doesn't mess up interactive shell.
 Result arrives in `py-output-buffer', which is not in
 comint-mode"
   (interactive)
-  (let ((py-fast-process-p t)
-        (beg (prog1
-		 (or (py-beginning-of-clause-p)
-		     (save-excursion
-		       (py-beginning-of-clause)))))
-	(end (save-excursion
-	       (py-end-of-clause))))
-    (py-execute-region beg end)))
+  (let ((py-fast-process-p t))
+    (py-execute-prepare "clause")))
 
 ;;; Execute line
 (defalias 'ipython-send-and-indent 'py-execute-line-ipython)
