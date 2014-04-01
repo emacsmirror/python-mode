@@ -1840,18 +1840,10 @@ Default is nil "
   :group 'python-mode)
 
 (defcustom py-output-buffer "*Python Output*"
-  "When `py-enforce-output-buffer-p' is non-nil, provides the
-default for output-buffer. "
+  ""
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-output-buffer)
-
-(defcustom py-enforce-output-buffer-p nil
-  "When non-nil, current value of `py-output-buffer' is used for output,
-regardless of environment. Default is nil"
-
-  :type 'boolean
-  :group 'python-mode)
+(make-variable-buffer-local 'py-output-buffer)(make-variable-buffer-local 'py-output-buffer)
 
 (defvar py-exception-buffer nil
   "Set internally, remember source buffer where error might occur. ")
@@ -13839,7 +13831,7 @@ Stores data in kill ring\. Might be yanked back using `C-y'\.
 See `py-minor-block-re' "]))
 
 		 ("Hide-Show"
-
+		  
 		  ["Hide region" py-hide-region
 		   :help " `py-hide-region'
 
@@ -15343,15 +15335,6 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
                            (not py-force-py-shell-name-p))
                      :help "When `t', execution with kind of Python specified in `py-shell-name' is enforced, possibly shebang doesn't take precedence. Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-force-py-shell-name-p]
-
-                    ["Enforce py-output-buffer"
-                     (setq py-enforce-output-buffer-p
-                           (not py-enforce-output-buffer-p))
-                     :help " `py-enforce-output-buffer-p'
-
-When non-nil, value of `py-output-buffer' is used for output,
-regardless of environment. Default is nil."
-                     :style toggle :selected py-enforce-output-buffer-p]
 
                     ["Cleanup temporary"
                      (setq py-cleanup-temporary
