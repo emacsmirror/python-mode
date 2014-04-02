@@ -9963,20 +9963,23 @@ shell which will be forced upon execute as argument. "
                   "if __name__ == '__main__ ':" strg)))
     (insert strg)
     (py-fix-start (point-min)(point-max))
+    ;; fast-process avoids temporary files
     (if py-fast-process-p
-	(progn
-          (with-current-buffer py-buffer-name
-            (erase-buffer))
-	  (setq strg (buffer-substring-no-properties (point-min) (point-max)))
-	  (py-fast-send-string strg)
-          (py--postprocess))
+	(unwind-protect
+	    (with-current-buffer py-buffer-name
+	      (erase-buffer))
+	  (progn
+	    (setq strg (buffer-substring-no-properties (point-min) (point-max)))
+	    (py-fast-send-string strg))
+	  (py-kill-buffer-unconditional tempbuf))
       (write-region (point-min) (point-max) tempfile nil t nil 'ask)
       (set-buffer-modified-p 'nil)
       (unwind-protect
 	  (setq erg (py-execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
 	(sit-for 0.1)
-	(and (or py-debug-p py-cleanup-temporary)
-	     (py-delete-temporary tempfile tempbuf))))
+	(when py-cleanup-temporary
+	  (py-kill-buffer-unconditional tempbuf)
+	  (py-delete-temporary tempfile tempbuf))))
     (and erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
     erg))
 
@@ -10074,7 +10077,8 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
-  (let* ((start (or start (and (use-region-p) (region-beginning)) (point-min)))
+  (let* ((oldbuf (current-buffer))
+	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
          (end (or end (and (use-region-p) (region-end)) (point-max)))
          (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
          (windows-config (window-configuration-to-register 313465889))
@@ -10103,7 +10107,7 @@ When optional FILE is `t', no temporary file is needed. "
          (py-orig-buffer-or-file (or filename (current-buffer)))
          (proc (cond (proc)
                      (py-fast-process-p
-                      (or (get-buffer-process (get-buffer py-buffer-name))
+                      (or (get-buffer-process (get-buffer py-shell-name))
                           (py-fast-process py-buffer-name)))
                      (py-dedicated-process-p
                       (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t)))
@@ -10433,21 +10437,16 @@ Returns char found. "
       (delete-region orig (point-max)))
     (set-buffer oldbuf)))
 
-(defun py--postprocess ()
+(defun py--postprocess (windows-config)
   "Provide return values, check result for error, manage windows. "
   (if
       (setq err-p (save-excursion (py-postprocess-output-buffer py-output-buffer)))
       (py-shell-manage-windows py-buffer-name nil windows-config)
-    (when py-fast-process-p
-      (goto-char (point-min))
-      (while (re-search-forward py-shell-prompt-regexp nil t 1)
-	(replace-match "")))
-    (and py-store-result-p
-	 (sit-for 0.1)
-	 (setq erg
-	       (py-output-filter
-		(buffer-substring-no-properties orig (point-max))))
-	 (unless (string= (car kill-ring) erg) (kill-new erg)))
+    (when py-store-result-p
+      ;; 	(sit-for 0.1)
+      (setq erg
+	    (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
+    (and erg (not (string= (car kill-ring) erg)) (kill-new erg))
     (py-shell-manage-windows py-output-buffer nil windows-config)
     erg))
 
@@ -10465,10 +10464,9 @@ Returns position where output starts. "
          erg orig err-p)
     (set-buffer py-output-buffer)
     (goto-char (point-max))
-    (switch-to-buffer (current-buffer))
     (setq orig (point))
     (comint-send-string proc cmd)
-    (py--postprocess)))
+    (py--postprocess windows-config)))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -12014,7 +12012,8 @@ When DONE is `t', `py-shell-manage-windows' is omitted
   (interactive "P")
   (setenv "PAGER" "cat")
   (setenv "TERM" "dumb")
-  (let* ((py-fast-process-p (when (not (interactive-p)) py-fast-process-p))
+  (let* ((oldbuf (current-buffer))
+	 (py-fast-process-p (when (not (interactive-p)) py-fast-process-p))
          (dedicated (or dedicated py-dedicated-process-p))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
          ;; (coding-system-for-read 'utf-8)
@@ -12044,7 +12043,10 @@ When DONE is `t', `py-shell-manage-windows' is omitted
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
          (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
-    (if py-fast-process-p
+    (if (and py-fast-process-p
+	     ;; user may want just to open a interactive shell
+	     (not (interactive-p))
+	     )
         (unless (get-buffer-process (get-buffer py-buffer-name))
           (py-fast-process)
           (setq py-output-buffer py-buffer-name))
@@ -18990,30 +18992,42 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
   (interactive)
   (let ((this-buffer
          (set-buffer (or (and buffer (get-buffer-create buffer))
-                         (get-buffer-create py-output-buffer)))))
+                         (get-buffer-create py-buffer-name)))))
     (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
       (with-current-buffer this-buffer
         (erase-buffer))
+      (setq py-output-buffer this-buffer)
       proc)))
 
-(defun py-fast-send-string (string)
+(defun py-fast-send-string (string &optional windows-config)
   "Process Python strings, being prepared for large output.
 
 Output arrives in py-output-buffer, \"\*Python Output\*\" by default
 See also `py-fast-shell'
 
 "
-  (let ((proc (or (get-buffer-process (get-buffer py-output-buffer))
+  (let ((windows-config (or windows-config (window-configuration-to-register 313465889)))
+	(py-fast-filter (concat "\\("
+				(mapconcat 'identity
+					   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+					   "\\|")
+				"\\)"))
+
+	(proc (or (get-buffer-process (get-buffer py-output-buffer))
                   (py-fast-process))))
-    (with-current-buffer py-output-buffer
-      (erase-buffer))
     (process-send-string proc string)
-    (or (string-match "\n$" string)
-	(process-send-string proc "\n"))
-    (accept-process-output proc 1)
-    (beginning-of-line)
-    (skip-chars-backward "\r\n")
-    (delete-region (point) (point-max))))
+;;    (or (string-match "\n$" string)
+;; 	(process-send-string proc "\n"))
+    (process-send-string proc "\n")
+    (accept-process-output proc 5)
+    (sit-for 0.01)
+    (set-buffer py-output-buffer)
+    ;; py--fast-filter
+    (delete-region (point) (progn (skip-chars-backward "^\n")(point))) 
+    (goto-char (point-min))
+    (while (looking-at py-fast-filter)
+      (replace-match ""))
+    (py--postprocess windows-config)))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
