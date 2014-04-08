@@ -1922,9 +1922,9 @@ Currently-active file is at the head of the list.")
 (defvar inferior-python-mode-abbrev-table nil
   "Not in use.")
 
-(defvar py-pdbtrack-input-prompt)
+(defvar py-pdbtrack-input-prompt nil)
 
-(defvar py-pydbtrack-input-prompt)
+(defvar py-pydbtrack-input-prompt nil)
 
 (defvar py-pdbtrack-is-tracking-p nil)
 
@@ -2170,6 +2170,13 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
    (regexp-opt  py-block-or-clause-re-raw)
    "\\)\\_>[( \t]*.*:?")
   "See py-block-or-clause-re-raw, which it reads. ")
+
+(defvar py-fast-filter-re (concat "\\("
+			       (mapconcat 'identity
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+					  "\\|")
+			       "\\)")
+  "Internally used by `py-fast-filter'. ")
 
 (defconst py-extended-block-or-clause-re-raw
   (list
@@ -9964,24 +9971,21 @@ shell which will be forced upon execute as argument. "
     (insert strg)
     (py-fix-start (point-min)(point-max))
     ;; fast-process avoids temporary files
-    (if py-fast-process-p
-	(unwind-protect
-	    (with-current-buffer py-buffer-name
-	      (erase-buffer))
-	  (progn
-	    (setq strg (buffer-substring-no-properties (point-min) (point-max)))
-	    (py-fast-send-string strg))
-	  (py-kill-buffer-unconditional tempbuf))
-      (write-region (point-min) (point-max) tempfile nil t nil 'ask)
-      (set-buffer-modified-p 'nil)
-      (unwind-protect
+    (unwind-protect
+	(if py-fast-process-p
+	    (progn
+
+	      (with-current-buffer py-buffer-name
+		(erase-buffer))
+	      (setq strg (buffer-substring-no-properties (point-min) (point-max)))
+	      (setq erg (py--fast-send-string-intern strg proc py-output-buffer))
+	      (py-kill-buffer-unconditional tempbuf))
+	  (write-region (point-min) (point-max) tempfile nil t nil 'ask)
+	  (set-buffer-modified-p 'nil)
 	  (setq erg (py-execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
-	(sit-for 0.1)
-	(when py-cleanup-temporary
-	  (py-kill-buffer-unconditional tempbuf)
-	  (py-delete-temporary tempfile tempbuf))))
-    (and erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
-    erg))
+	  (sit-for 0.1))
+      (py--close-execution)
+      (py-shell-manage-windows py-buffer-name))))
 
 (defun py-execute-python-mode-v5 (start end)
   (interactive "r")
@@ -10069,7 +10073,7 @@ Both processes might run in
 Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
 
   (cond ((and py-fast-process-p py-dedicated-process-p)
-	 (py-buffer-name-prepare py-output-buffer))
+	 (py-buffer-name-prepare (default-value 'py-output-buffer)))
         (py-fast-process-p py-output-buffer)
         (t (py-buffer-name-prepare))))
 
@@ -10106,15 +10110,14 @@ When optional FILE is `t', no temporary file is needed. "
          (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
          (py-orig-buffer-or-file (or filename (current-buffer)))
          (proc (cond (proc)
-                     (py-fast-process-p
-                      (or (get-buffer-process (get-buffer py-shell-name))
-                          (py-fast-process py-buffer-name)))
+		     ;; will deal with py-dedicated-process-p also
+                     (py-fast-process-p (py-fast-process py-buffer-name))
                      (py-dedicated-process-p
                       (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t)))
-                     (t (or (and (boundp 'py-buffer-name) (get-buffer-process py-buffer-name))
-                            (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name (and (boundp 'py-buffer-name) py-buffer-name) t))))))
+                     (t (or (get-buffer-process py-buffer-name)
+                            (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))))))
          err-p)
-    (and py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
+    (when py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
     (set-buffer py-exception-buffer)
     (py-update-execute-directory proc py-buffer-name execute-directory)
     (cond (;; enforce proceeding as python-mode.el v5
@@ -10423,7 +10426,7 @@ Returns char found. "
   "Return the directory of current `py-shell'."
   (replace-regexp-in-string "\n" "" (shell-command-to-string (concat (or shell py-shell-name) " -c \"import os; print(os.getcwd())\""))))
 
-(defun py-update-execute-directory-intern (dir proc)
+(defun py--update-execute-directory-intern (dir proc)
   (comint-send-string proc (concat "import os;os.chdir(\"" dir "\")\n")))
 
 (defun py-update-execute-directory (proc procbuf execute-directory)
@@ -10433,9 +10436,23 @@ Returns char found. "
     (setq cwd (py-current-working-directory))
     (setq orig (point))
     (unless (string= execute-directory (concat cwd "/"))
-      (py-update-execute-directory-intern (or py-execute-directory execute-directory) proc)
+      (py--update-execute-directory-intern (or py-execute-directory execute-directory) proc)
       (delete-region orig (point-max)))
     (set-buffer oldbuf)))
+
+(defun py--close-execution ()
+  (when py-cleanup-temporary
+    (py-kill-buffer-unconditional tempbuf)
+    (py-delete-temporary tempfile tempbuf))
+  (and erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
+  erg)
+
+(defun py--fast-filter ()
+  "Run where fast-output arrives, normally at \"*Python Output*\" buffer. "
+  (delete-region (point) (progn (skip-chars-backward "^\n")(point)))
+  (goto-char (point-min))
+  (while (looking-at py-fast-filter-re)
+    (replace-match "")))
 
 (defun py--postprocess (windows-config)
   "Provide return values, check result for error, manage windows. "
@@ -10447,7 +10464,6 @@ Returns char found. "
       (setq erg
 	    (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
     (and erg (not (string= (car kill-ring) erg)) (kill-new erg))
-    (py-shell-manage-windows py-output-buffer nil windows-config)
     erg))
 
 (defun py-execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
@@ -11813,14 +11829,18 @@ Internal use"
         ((and
           py-split-windows-on-execute-p
           (not py-switch-buffers-on-execute-p))
+	 (set-buffer oldbuf)
+;; 	 (sit-for 0.1)
+	 (switch-to-buffer (current-buffer))
          (delete-other-windows)
          (py--manage-windows-split)
-	 (py--manage-windows-set-and-switch py-output-buffer)
+	 (py--manage-windows-set-and-switch output-buffer)
          (display-buffer output-buffer t)
 	 ;; fast-... fails
-	 (unless (eq (current-buffer) py-exception-buffer)
-	   (set-buffer py-exception-buffer)
-	   (switch-to-buffer (current-buffer))) )
+;; 	 (unless (eq (current-buffer) py-exception-buffer)
+;; 	   (set-buffer py-exception-buffer)
+;; 	   (switch-to-buffer (current-buffer)))
+	 )
         ;; no split, switch
         ((and
           py-switch-buffers-on-execute-p
@@ -11977,7 +11997,7 @@ This function takes the list of setup code to send from the
 (defun py--guess-buffer-name ()
   "Guess the buffer-name core string. "
   (cond
-   (py-fast-process-p py-output-buffer)
+   ((and py-fast-process-p (not py-dedicated-process-p)) py-output-buffer)
    (buffer-name)
    (t (and (not dedicated) argprompt
            (cond
@@ -19010,27 +19030,29 @@ See also `py-fast-shell'
 
 "
   (let ((windows-config (or windows-config (window-configuration-to-register 313465889)))
-	(py-fast-filter (concat "\\("
-				(mapconcat 'identity
-					   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-					   "\\|")
-				"\\)"))
-
-	(proc (or (get-buffer-process (get-buffer py-output-buffer))
+	(proc (or (get-buffer-process (get-buffer py-buffer-name))
                   (py-fast-process))))
+    (py--fast-send-string-intern string proc py-output-buffer)
+    (py--postprocess windows-config)))
+
+(defun py--fast-send-string-intern (string proc py-output-buffer)
+  (let (erg)
     (process-send-string proc string)
-;;    (or (string-match "\n$" string)
-;; 	(process-send-string proc "\n"))
+    ;;    (or (string-match "\n$" string)
+    ;; 	(process-send-string proc "\n"))
     (process-send-string proc "\n")
     (accept-process-output proc 5)
     (sit-for 0.01)
     (set-buffer py-output-buffer)
-    ;; py--fast-filter
-    (delete-region (point) (progn (skip-chars-backward "^\n")(point))) 
+    (switch-to-buffer (current-buffer))
+    ;; delete last line prompts
+    (delete-region (point) (progn (skip-chars-backward "^\n")(point)))
+    (delete-region (point) (progn (skip-chars-backward "\n\r \t\f")(point)))
     (goto-char (point-min))
-    (while (looking-at py-fast-filter)
+    (while (looking-at py-fast-filter-re)
       (replace-match ""))
-    (py--postprocess windows-config)))
+    (and py-store-result-p (setq erg (buffer-substring-no-properties (point-min) (point-max))))
+    erg))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
