@@ -23080,8 +23080,6 @@ FILE-NAME."
      (py-load-pycomplete))
 
 ;; Hooks
-(add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
-
 ;; arrange to kill temp files when Emacs exists
 (add-hook 'kill-emacs-hook 'py-kill-emacs-hook)
 (add-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
