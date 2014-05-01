@@ -1931,7 +1931,7 @@ Currently-active file is at the head of the list.")
 (defvar py-shell-map nil
   "Keymap used in *Python* shell buffers.")
 
-(defvar py-font-lock-keywords nil
+(defvar python-font-lock-keywords nil
   "Additional expressions to highlight in Python mode.")
 
 (defvar jython-mode-hook nil
@@ -3573,7 +3573,7 @@ This function does not modify point or mark."
 
 ;;; Keymap and syntax
 ;; Font-lock and syntax
-(setq py-font-lock-keywords
+(setq python-font-lock-keywords
       ;; Keywords
       `(,(rx symbol-start
              (or "if" "and" "del"  "not" "while" "as" "elif" "global" "or" "with"
@@ -11937,7 +11937,7 @@ This function takes the list of setup code to send from the
   ;; (setq completion-at-point-functions nil)
   (and py-fontify-shell-buffer-p
        (set (make-local-variable 'font-lock-defaults)
-            '(py-font-lock-keywords nil nil nil nil
+            '(python-font-lock-keywords nil nil nil nil
                                     (font-lock-syntactic-keywords
                                      . py-font-lock-syntactic-keywords))))
   (set (make-local-variable 'comment-start) "# ")
@@ -23274,13 +23274,13 @@ See available customizations listed in files variables-python-mode at directory 
                           "\\|")))
   (if py-use-font-lock-doc-face-p
       (set (make-local-variable 'font-lock-defaults)
-           '(py-font-lock-keywords nil nil nil nil
+           '(python-font-lock-keywords nil nil nil nil
                                    (font-lock-syntactic-keywords
                                     . py-font-lock-syntactic-keywords)
                                    (font-lock-syntactic-face-function
                                     . py-font-lock-syntactic-face-function)))
     (set (make-local-variable 'font-lock-defaults)
-         '(py-font-lock-keywords nil nil nil nil
+         '(python-font-lock-keywords nil nil nil nil
                                  (font-lock-syntactic-keywords
                                   . py-font-lock-syntactic-keywords))))
   (if (string-match "python3" (py-choose-shell))
