@@ -202,7 +202,7 @@ Give some hints, if not."
 (defcustom py-smart-operator-mode-p nil
   "If python-mode calls (smart-operator-mode-on)
 
-Default is non-nil. "
+Default is nil. "
 
   :type 'boolean
   :group 'python-mode
