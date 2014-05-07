@@ -1109,6 +1109,12 @@ Also used by (minor-)outline-mode "
 (make-variable-buffer-local 'py-shell-name)
 (defvaralias 'py-python-command 'py-shell-name)
 
+(defcustom py-ipython-command "ipython"
+  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command. "
+  :type 'string
+  :group 'python-mode)
+(make-variable-buffer-local 'py-ipython-command)
+
 (defcustom py-shell-toggle-1 py-shell-name
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
