@@ -1102,8 +1102,18 @@ Also used by (minor-)outline-mode "
                  (const :tag "py-imenu-create-index, series 5. index-machine" py-imenu-create-index-function))
   :group 'python-mode)
 
-(defcustom py-shell-name "python"
-  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command. "
+;;; Default shells
+(defcustom py-shell-name
+  (if (eq system-type 'windows)
+      "C:\Python27\python"
+    "/usr/bin/python3")
+
+  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command.
+
+On Windows default is C:\Python27\python
+--there is no garantee it exists, please check your system--
+
+Else python"
   :type 'string
   :group 'python-mode)
 (make-variable-buffer-local 'py-shell-name)
@@ -1126,6 +1136,51 @@ Also used by (minor-)outline-mode "
   :type 'string
   :group 'python-mode)
 (make-variable-buffer-local 'py-shell-toggle-2)
+
+(defcustom py-python3-command
+  (if (eq system-type 'windows)
+      "C:\Python33\python.exe"
+    "/usr/bin/python3")
+
+  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if
+  no shell is specified by command.
+
+On Windows default is C:\Python3\python.exe
+--there is no garantee it exists, please check your system--
+
+Else /usr/bin/python3"
+
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-python2-command
+  (if (eq system-type 'windows)
+      "C:\Python27\python"
+    "/usr/bin/python3")
+
+  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command.
+
+On Windows default is C:\Python33\python.exe
+--there is no garantee it exists, please check your system--
+
+at GNU systems default is /usr/bin/python3"
+
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-jpython-command ""
+  "Executable or PATH/TO/EXECUTABLE (required on Windows-systems)"
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-jython-command ""
+  "Executable or PATH/TO/EXECUTABLE (required on Windows-systems)"
+  :type 'string
+  :group 'python-mode)
+
+(defvaralias 'py-default-interpreter 'py-shell-name)
+;;;
+
 
 (defcustom py-match-paren-mode nil
   "Non-nil means, cursor will jump to beginning or end of a block.
@@ -1787,16 +1842,6 @@ When this-command is py-beginning-of-FORM-bol, last-command's indent will be con
   "Internal use: restore py-restore-window-configuration when completion is done resp. abandoned. ")
 
 (defvar ipython-version nil)
-
-(defvaralias 'py-python-command 'py-shell-name)
-
-(defvaralias 'py-jpython-command 'py-shell-name)
-
-(defvaralias 'py-jython-command 'py-shell-name)
-
-(defvaralias 'py-default-interpreter 'py-shell-name)
-
-;; (defvaralias 'python-command 'py-shell-name)
 
 (defvar py-shell-template "
 \(defun NAME (&optional argprompt)
