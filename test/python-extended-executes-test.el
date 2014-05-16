@@ -2559,7 +2559,7 @@
 
 (defun py-execute-buffer-python-switch-base ()
   (py-execute-buffer-python-switch)
-;;  (switch-to-buffer (current-buffer)) 
+;;  (switch-to-buffer (current-buffer))
   (assert (search-backward "py-execute-buffer-python-switch-test")
 	  nil "py-execute-buffer-python-switch-test failed"))
 
@@ -2913,7 +2913,8 @@
   (py-bug-tests-intern 'py-execute-expression-python-base arg teststring)))
 
 (defun py-execute-expression-python-base ()
-  (assert (progn (py-execute-expression-python)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-expression-python)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-test failed")))
 
 (defun py-execute-expression-python-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -2921,15 +2922,18 @@
   (py-bug-tests-intern 'py-execute-expression-python-switch-base arg teststring)))
 
 (defun py-execute-expression-python-switch-base ()
-  (assert (progn (py-execute-expression-python-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-expression-python-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-switch-test failed")))
 
 (defun py-execute-expression-python-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
-  (let ((teststring "print(\"I'm the py-execute-expression-python-no-switch-test\")"))
+  (let ((py-shell-name "python")
+	(teststring "print(\"I'm the py-execute-expression-python-no-switch-test\")"))
   (py-bug-tests-intern 'py-execute-expression-python-no-switch-base arg teststring)))
 
 (defun py-execute-expression-python-no-switch-base ()
-  (assert (progn (py-execute-expression-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-no-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-expression-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-no-switch-test failed")))
 
 (defun py-execute-expression-python-dedicated-test (&optional arg load-branch-function)
   (interactive "p")
@@ -2937,7 +2941,8 @@
   (py-bug-tests-intern 'py-execute-expression-python-dedicated-base arg teststring)))
 
 (defun py-execute-expression-python-dedicated-base ()
-  (assert (progn (py-execute-expression-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-dedicated-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-expression-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-dedicated-test failed")))
 
 (defun py-execute-expression-python-dedicated-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -2945,7 +2950,8 @@
   (py-bug-tests-intern 'py-execute-expression-python-dedicated-switch-base arg teststring)))
 
 (defun py-execute-expression-python-dedicated-switch-base ()
-  (assert (progn (py-execute-expression-python-dedicated-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-dedicated-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-expression-python-dedicated-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-expression-python-test")) nil "py-execute-expression-python-dedicated-switch-test failed")))
 
 (defun py-execute-expression-ipython-test (&optional arg load-branch-function)
   (interactive "p")
@@ -3633,7 +3639,8 @@
   (py-bug-tests-intern 'py-execute-line-python-base arg teststring)))
 
 (defun py-execute-line-python-base ()
-  (assert (progn (py-execute-line-python)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-line-python)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-test failed")))
 
 (defun py-execute-line-python-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -3641,7 +3648,8 @@
   (py-bug-tests-intern 'py-execute-line-python-switch-base arg teststring)))
 
 (defun py-execute-line-python-switch-base ()
-  (assert (progn (py-execute-line-python-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-line-python-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-switch-test failed")))
 
 (defun py-execute-line-python-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -3649,7 +3657,8 @@
   (py-bug-tests-intern 'py-execute-line-python-no-switch-base arg teststring)))
 
 (defun py-execute-line-python-no-switch-base ()
-  (assert (progn (py-execute-line-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-no-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-line-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-no-switch-test failed")))
 
 (defun py-execute-line-python-dedicated-test (&optional arg load-branch-function)
   (interactive "p")
@@ -3657,7 +3666,8 @@
   (py-bug-tests-intern 'py-execute-line-python-dedicated-base arg teststring)))
 
 (defun py-execute-line-python-dedicated-base ()
-  (assert (progn (py-execute-line-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-dedicated-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-line-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-dedicated-test failed")))
 
 (defun py-execute-line-python-dedicated-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -3665,7 +3675,8 @@
   (py-bug-tests-intern 'py-execute-line-python-dedicated-switch-base arg teststring)))
 
 (defun py-execute-line-python-dedicated-switch-base ()
-  (assert (progn (py-execute-line-python-dedicated-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-dedicated-switch-test failed"))
+  (let ((py-shell-name "python"))
+    (assert (progn (py-execute-line-python-dedicated-switch)(set-buffer "*Python*")(goto-char (point-min))(search-forward "the py-execute-line-python-test")) nil "py-execute-line-python-dedicated-switch-test failed")))
 
 (defun py-execute-line-ipython-test (&optional arg load-branch-function)
   (interactive "p")
