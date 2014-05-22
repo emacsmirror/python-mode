@@ -1081,7 +1081,7 @@ Also used by (minor-)outline-mode "
 (defcustom py--imenu-create-index-function 'py--imenu-create-index-new
   "Switch between `py--imenu-create-index-new', which also lists modules variables,  and series 5. index-machine"
   :type '(choice (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
-                 (const :tag "py--imenu-create-index, series 5. index-machine" py-imenu-create-index-function))
+                 (const :tag "py--imenu-create-index, series 5. index-machine" py--imenu-create-index-function))
   :group 'python-mode)
 
 ;;; Default shells
@@ -12342,7 +12342,7 @@ With arg, do it that many times.
   (if (eq major-mode 'python-mode)
       (progn
         (if (eq py--imenu-create-index-function 'py--imenu-create-index-new)
-            (set (make-local-variable 'py--imenu-create-index-function) 'py-imenu-create-index)
+            (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index)
           (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index-new))
         (when py-menu
           (easy-menu-add py-menu))
