@@ -6348,6 +6348,19 @@ Unclosed-string errors are not handled here, as made visible by fontification al
 	     (py-count-lines (point-min) (point)))))
     err))
 
+(defun py--skip-to-semicolon-backward (&optional limit)
+  "Fetch the beginning of statement after a semicolon.
+
+Returns position reached if point was moved. "
+  (let ((orig (point)))
+    (and (< 0 (abs (skip-chars-backward "^;" (or limit (line-beginning-position)))))
+	 ;; (if (eq ?\; (char-after))
+	 ;; (skip-chars-forward ";" (line-end-position))
+	   (skip-chars-forward " \t" (line-beginning-position))
+	   ;; )
+	 (setq done t)
+	 (and (< (point) orig) (point)))))
+
 (defun py--message-error (err)
   "Receives a list (position line) "
   (message "Closing parent missed: line %s pos %s" (cadr err) (car err)))
@@ -6916,6 +6929,7 @@ If already at end-of-line and not at EOB, go to end of next line. "
 (defalias 'py-backward-statement 'py-beginning-of-statement)
 (defalias 'py-previous-statement 'py-beginning-of-statement)
 (defalias 'py-statement-backward 'py-beginning-of-statement)
+
 (defun py-beginning-of-statement (&optional orig done limit)
   "Go to the initial line of a simple statement.
 
@@ -6945,6 +6959,7 @@ http://docs.python.org/reference/compound_stmts.html"
           (py-beginning-of-statement orig done limit))
          ((nth 1 pps)
           (goto-char (1- (nth 1 pps)))
+	  (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))) 
           (setq done t)
           (py-beginning-of-statement orig done limit))
          ((py-preceding-line-backslashed-p)
@@ -6959,10 +6974,12 @@ http://docs.python.org/reference/compound_stmts.html"
           (unless (bobp)
             (py-beginning-of-statement orig done limit)))
          ((looking-at "[ \t]*#")
-          (skip-chars-backward (concat "^" comment-start) (line-beginning-position))
-          (back-to-indentation)
-          (unless (bobp)
-            (py-beginning-of-statement orig done limit)))
+	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point)))
+	    ;; (skip-chars-backward (concat "^" comment-start) (line-beginning-position))
+	    ;; (back-to-indentation)
+	    (skip-chars-forward " \t") 
+	    (unless (bobp)
+	      (py-beginning-of-statement orig done limit))))
          ((and (not done) (looking-at py-string-delim-re))
           (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
             (setq done t))
@@ -6973,7 +6990,12 @@ http://docs.python.org/reference/compound_stmts.html"
          ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
           ;; (setq done t)
           (py-beginning-of-statement orig done limit))
-         ((not (eq (current-column) (current-indentation)))
+	 ((unless done)
+	  (and (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point)))
+	       (back-to-indentation)
+	       (not (bobp)) 
+	       (py-beginning-of-statement orig done limit)))
+         ((and (not done)(not (eq (current-column) (current-indentation))))
           (if (< 0 (abs (skip-chars-backward "^\t\r\n\f")))
               (progn
                 (setq done t)
@@ -9960,11 +9982,12 @@ shell which will be forced upon execute as argument. "
 (defun py-execute-buffer-finally (start end execute-directory wholebuf)
   (let* ((strg (buffer-substring-no-properties start end))
          (temp (make-temp-name
+		;; FixMe: that should be simpler
                 (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
          (tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
          (tempbuf (get-buffer-create temp))
          (wholebuf (when (boundp 'wholebuf) wholebuf))
-         erg lineadd output-buffer)
+         lineadd output-buffer)
     ;; (message "%s" strg)
     (set-buffer tempbuf)
     (erase-buffer)
@@ -10109,7 +10132,7 @@ When optional FILE is `t', no temporary file is needed. "
                  py-execute-directory)
                 ((getenv "VIRTUAL_ENV"))
                 (t (getenv "HOME"))))
-         (py-buffer-name (py--choose-buffer-name which-shell))
+         (py-buffer-name (or py-buffer-name (py--choose-buffer-name which-shell)))
          (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
          (py-orig-buffer-or-file (or filename (current-buffer)))
          (proc (cond (proc)
@@ -10118,7 +10141,8 @@ When optional FILE is `t', no temporary file is needed. "
                      (py-dedicated-process-p
                       (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name t)))
                      (t (or (get-buffer-process py-buffer-name)
-                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name t)))))))
+                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name t))))))
+	 erg)
     (setq py-error nil)
     (when py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
     (set-buffer py-exception-buffer)
@@ -10128,9 +10152,12 @@ When optional FILE is `t', no temporary file is needed. "
            (py-execute-python-mode-v5 start end))
           (py-execute-no-temp-p
            (py-execute-ge24.3 start end filename execute-directory py-exception-buffer proc))
-          ;; No need for a temporary filename than
           ((and filename wholebuf)
-           (py-execute-file-base proc filename nil py-buffer-name filename execute-directory))
+	   ;; No temporary file than
+	   (let (py-cleanup-temporary) 
+	     (py-execute-file-base proc filename nil py-buffer-name filename execute-directory)
+	     (py--close-execution)
+	     (py-shell-manage-windows py-buffer-name)))
           (t (py-execute-buffer-finally start end execute-directory wholebuf)))))
 
 (defun py-execute-string (&optional string shell)
