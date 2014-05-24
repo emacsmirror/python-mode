@@ -12045,7 +12045,7 @@ This function takes the list of setup code to send from the
                                       (concat
                                        (mapconcat 'identity py-python-command-args " ") " "))))))))))
 
-(defun py-shell (&optional argprompt dedicated shell buffer-name no-window-managment)
+(defun py-shell (&optional argprompt dedicated shell buffer-name)
   "Start an interactive Python interpreter in another window.
 Interactively, \\[universal-argument] prompts for a PATH/TO/EXECUTABLE to use.
 \\[universal-argument] 2 prompts for `py-python-command-args'.
@@ -12109,7 +12109,7 @@ When DONE is `t', `py--shell-manage-windows' is omitted
       ;; (add-hook 'py-shell-hook 'py-dirstack-hook)
       (and py-fontify-shell-buffer-p (font-lock-fontify-buffer))
       (goto-char (point-max))
-      (unless no-window-managment (py--shell-manage-windows py-buffer-name))
+      (when (interactive-p) (py--shell-manage-windows py-buffer-name))
       (when py-shell-hook (run-hooks 'py-shell-hook)))
     py-buffer-name))
 
