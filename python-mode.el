@@ -3028,7 +3028,7 @@ in the `same-window-buffer-names' list."
 (defun py-shell-get-process (&optional argprompt py-dedicated-process-p shell switch py-buffer-name)
   "Get appropriate Python process for current buffer and return it."
   (interactive)
-  (let ((erg (get-buffer-process (py-shell argprompt py-dedicated-process-p shell py-buffer-name t))))
+  (let ((erg (get-buffer-process (py-shell argprompt py-dedicated-process-p shell py-buffer-name))))
     (when (interactive-p) (message "%S" erg))
     erg))
 
@@ -3562,10 +3562,10 @@ Start a new process if necessary. "
   (let (py-split-windows-on-execute-p
         (erg
          (cond ((and (not py-dedicated-process-p) (comint-check-proc (current-buffer)))
-                (get-buffer-process (buffer-name (current-buffer))))
-               ((not py-dedicated-process-p)
-                (get-buffer-process (py-shell nil nil nil nil t)))
-               ((py-shell nil py-dedicated-process-p nil nil t)))))
+         (get-buffer-process (buffer-name (current-buffer))))
+        ((not py-dedicated-process-p)
+         (get-buffer-process (py-shell)))
+        ((py-shell nil py-dedicated-process-p)))))
     (when (interactive-p) (message "%S" erg))
     erg))
 
@@ -10043,9 +10043,9 @@ May we get rid of the temporary file? "
          (tempfile (or (buffer-file-name) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
          (proc (or proc (if py-dedicated-process-p
-                            (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))
+                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))
                           (or (get-buffer-process py-buffer-name)
-                              (get-buffer-process (py-shell nil py-dedicated-process-p py-shell-name py-buffer-name t))))))
+                              (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))))))
          (procbuf (process-buffer proc))
          (file (or file (with-current-buffer py-buffer-name
                           (concat (file-remote-p default-directory) tempfile))))
@@ -10056,7 +10056,7 @@ May we get rid of the temporary file? "
     (save-excursion
       (insert strg))
     (py--fix-start (point) (point-max))
-    (unless (string-match "[jJ]ython" py-shell-name)
+    (unless (string-match "[jJ]ython" which-shell)
       ;; (when (and execute-directory py-use-current-dir-when-execute-p
       ;; (not (string= execute-directory default-directory)))
       ;; (message "Warning: options `execute-directory' and `py-use-current-dir-when-execute-p' may conflict"))
@@ -10131,9 +10131,9 @@ When optional FILE is `t', no temporary file is needed. "
 		     ;; will deal with py-dedicated-process-p also
                      (py-fast-process-p (py-fast-process py-buffer-name))
                      (py-dedicated-process-p
-                      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name t)))
+                      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))
                      (t (or (get-buffer-process py-buffer-name)
-                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name t))))))
+                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))))))
 	 erg)
     (setq py-error nil)
     (when py-debug-p (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
@@ -10146,7 +10146,7 @@ When optional FILE is `t', no temporary file is needed. "
            (py--execute-ge24.3 start end filename execute-directory py-exception-buffer proc))
           ((and filename wholebuf)
 	   ;; No temporary file than
-	   (let (py-cleanup-temporary) 
+	   (let (py-cleanup-temporary)
 	     (py--execute-file-base proc filename nil py-buffer-name filename execute-directory)
 	     (py--close-execution)
 	     (py--shell-manage-windows py-buffer-name)))
@@ -10298,7 +10298,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
-                     (get-buffer-process (py-shell argprompt py-dedicated-process-p shell (or shell (default-value 'py-shell-name)) t)))))
+                     (get-buffer-process (py-shell argprompt py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
           ;; Maybe save some buffers
           (save-some-buffers (not py-ask-about-save) nil)
           (py--execute-file-base proc file
@@ -10499,7 +10499,7 @@ comint believe the user typed this string so that
 Returns position where output starts. "
   (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
          (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
-         (py-output-buffer (or procbuf (py-shell nil nil nil procbuf t)))
+         (py-output-buffer (or procbuf (py-shell nil nil nil procbuf)))
          (proc (or proc (get-buffer-process py-output-buffer)))
          erg orig)
     (set-buffer py-output-buffer)
@@ -12055,7 +12055,6 @@ to change if called with a prefix arg.
 Returns py-shell's buffer-name.
 Optional string PYSHELLNAME overrides default `py-shell-name'.
 BUFFER allows specifying a name, the Python process is connected to
-When DONE is `t', `py--shell-manage-windows' is omitted
 "
   (interactive "P")
   (setenv "PAGER" "cat")
@@ -18053,7 +18052,7 @@ Don't save anything for STR matching `inferior-python-filter-regexp'."
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
   (let* (wait
-         (procbuf (or buffer (process-buffer proc) (progn (setq wait py-new-shell-delay) (py-shell nil nil shell nil t))))
+         (procbuf (or buffer (process-buffer proc) (progn (setq wait py-new-shell-delay) (py-shell nil nil shell))))
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
@@ -18169,7 +18168,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
   (let* (wait
          (shell (or shell (py-choose-shell)))
          (proc (or (get-process shell)
-                   (get-buffer-process (progn (setq wait py-new-shell-delay) (py-shell nil nil shell nil t))))))
+                   (get-buffer-process (progn (setq wait py-new-shell-delay) (py-shell nil nil shell))))))
     (cond ((string= word "")
            (tab-to-tab-stop))
           ((string-match "[iI][pP]ython" shell)
@@ -18351,7 +18350,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
           (if ipython-complete-use-separate-shell-p
               (unless (and (buffer-live-p py-ipython-completions)
                            (comint-check-proc (process-name (get-buffer-process py-ipython-completions))))
-                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions t)))
+                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions)))
             (progn
               (while (and processlist (not done))
                 (when (and
@@ -18361,7 +18360,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                 (setq processlist (cdr processlist)))
               done)))
          (proc (or process
-                   (get-buffer-process (py-shell nil nil (if (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython") nil t))))
+                   (get-buffer-process (py-shell nil nil (when (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython")))))
          (comint-output-filter-functions
           (delq 'py-comint-output-filter-function comint-output-filter-functions))
          (comint-preoutput-filter-functions
