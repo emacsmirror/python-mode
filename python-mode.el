@@ -10476,19 +10476,14 @@ Returns char found. "
   (while (looking-at py-fast-filter-re)
     (replace-match "")))
 
-(defun py--postprocess (windows-config)
+(defun py--postprocess ()
   "Provide return values, check result for error, manage windows. "
-  (if
-      (setq py-error (save-excursion (py--postprocess-output-buffer py-output-buffer)))
-      (prog1
-	  (setq erg py-error)
-	(py--shell-manage-windows py-buffer-name nil windows-config))
-    (when py-store-result-p
-      ;; 	(sit-for 0.1)
-      (setq erg
-	    (py-output-filter (buffer-substring-no-properties (point) (point-max))))
-      (and erg (not (string= (car kill-ring) erg)) (kill-new erg)))
-    erg))
+  (setq py-error (save-excursion (py--postprocess-output-buffer py-output-buffer)))
+  (when py-store-result-p
+    (setq erg
+	  (py-output-filter (buffer-substring-no-properties (point) (point-max))))
+    (and erg (not (string= (car kill-ring) erg)) (kill-new erg)))
+  erg)
 
 (defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
@@ -10506,7 +10501,7 @@ Returns position where output starts. "
     (goto-char (point-max))
     (setq orig (point))
     (comint-send-string proc cmd)
-    (setq erg (py--postprocess windows-config))
+    (setq erg (py--postprocess))
     (message "%s" py-error)
     erg))
 
@@ -19067,7 +19062,7 @@ See also `py-fast-shell'
 	(proc (or (get-buffer-process (get-buffer py-buffer-name))
                   (py-fast-process))))
     (py--fast-send-string-intern string proc py-output-buffer)
-    (py--postprocess windows-config)))
+    (py--postprocess)))
 
 (defun py--fast-send-string-intern (string proc py-output-buffer)
   (let (erg)
