@@ -58,8 +58,8 @@
     (goto-char (point-max))
     (insert "pri")
     (py-shell-complete)
-    (assert (looking-back "print") nil "python-shell-complete-test failed")
-    (message "%s" "python-shell-complete-test passed")))
+    (sit-for 0.1) 
+    (assert (looking-back "print") nil "python-shell-complete-test failed")))
 
 
 (defun usr-bin-python-shell-complete-test ()

@@ -3149,11 +3149,12 @@ completions on the current context."
     (when imports
       (py--send-string-no-output imports process))
     (let* ((code python-shell-module-completion-string-code)
-           (completions
+           (completion
             (py--shell-completion--get-completions
              input process code))
-           (completion (when completions
-                         (try-completion input completions))))
+           ;; (completion (when completions
+	   ;; (try-completion input completions)))
+	   newlist)
       (with-current-buffer oldbuf
         (cond ((eq completion t)
                (if py-no-completion-calls-dabbrev-expand-p
@@ -3169,20 +3170,28 @@ completions on the current context."
                  (when py-indent-no-completion-p
                    (tab-to-tab-stop)))
                nil)
-              ((not (string= input completion))
+              ((ignore-errors (not (string= input completion)))
                (progn (delete-char (- (length input)))
                       (insert completion)
                       (move-marker pos (point))
                       ;; minibuffer.el expects a list, a bug IMO
                       nil))
               (t
+	       (when (and (stringp (setq erg (try-completion input completion)))
+			  (looking-back input)
+			  (not (string= input erg)))
+		 (delete-region (match-beginning 0) (match-end 0))
+		 (insert erg)
+		 (dolist (elt completion)
+		   (unless (string= erg elt)
+		     (add-to-list 'newlist elt))))
                (with-output-to-temp-buffer py-python-completions
                  (display-completion-list
-                  (all-completions input completions)))
+                  (all-completions input (or newlist completion))))
                (move-marker pos (point))
                nil))
-        (and (goto-char pos)
-             nil)))))
+	(and (goto-char pos)
+	     nil)))))
 
 (defun python-shell-completion-complete-or-indent ()
   "Complete or indent depending on the context.
@@ -18210,6 +18219,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
     ;; (and (string= "open('" word)
     ;; (comint-dynamic-complete-filename))
     ;; (ignore-errors (comint-dynamic-complete))
+    (sit-for 0.1)
     (cond ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
