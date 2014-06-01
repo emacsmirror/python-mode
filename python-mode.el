@@ -15139,6 +15139,18 @@ This may be preferable to `M-x py-execute-buffer' because:
 
                  ("Help"
 
+		  ["Find definition" py-find-definition
+		   :help " `py-find-definition'
+
+Find source of definition of SYMBOL\.
+
+Interactively, prompt for SYMBOL\."]
+
+		  ["Imenu" imenu
+		   :help " `imenu'
+
+Jump to a INDEX-ITEM "]
+
                   ["Info lookup symbol" py-info-lookup-symbol
                    :help " `py-info-lookup-symbol'
 
@@ -15302,7 +15314,6 @@ Toggle flymake-mode running `pyflakespep8' "]))
                    :help "Open the customization buffer for Python mode"]
                   ("Switches"
                    :help "Toggle useful modes like `highlight-indentation'"
-
                    ("Interpreter"
 
                     ["Shell prompt read only"
