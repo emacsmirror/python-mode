@@ -56,7 +56,7 @@
 
 (require 'comint)
 (require 'custom)
-(eval-when-compile (require 'cl))
+(require 'cl)
 (require 'compile)
 (require 'ansi-color)
 (require 'cc-cmds)
@@ -3468,7 +3468,12 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   (save-excursion
     (let ((count 0)
           (orig (point)))
-      (goto-char (point-min))
+      (save-match-data 
+	(if (eq major-mode 'python-mode)
+	    (goto-char (point-min))
+	  (if (re-search-backward py-fast-filter-re nil t 1)
+	  (goto-char (match-end 0))
+	  (error "py-count-lines: Don't see py-fast-filter-re here"))))
       (while (and (< (point) orig)(not (eobp)) (skip-chars-forward "^\n" orig))
         (setq count (1+ count))
         (unless (or (not (< (point) orig)) (eobp)) (forward-char 1)
@@ -12558,9 +12563,7 @@ of the first definition found."
         (define-key map (kbd "RET") 'comint-send-input)
         (define-key map "\C-c-" 'py-up-exception)
         (define-key map "\C-c=" 'py-down-exception)
-        (define-key map (kbd "TAB") 'py-indent-line)
-        ;; (define-key map [tab] 'tab-to-tab-stop)
-        ;; (define-key map "\t" 'py-shell-complete)
+        (define-key map (kbd "TAB") 'py-shell-complete-or-indent)
         (define-key map [(meta tab)] 'py-shell-complete)
         (define-key map [(control c)(!)] 'py-shell)
         map))
