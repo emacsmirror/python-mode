@@ -3068,7 +3068,7 @@ the output."
                       "")))))
     (py-shell-send-string string process msg)
     (accept-process-output process 5)
-    (when output
+    (when (and output (not (string= "" output)))
       (replace-regexp-in-string
        (if (> (length py-shell-prompt-output-regexp) 0)
            (format "\n*%s$\\|^%s\\|\n$"
@@ -3093,7 +3093,7 @@ the output."
                       "")))))
     (py-shell-send-string string process msg)
     (accept-process-output process 5)
-    (when output
+    (when (and output (not (string= "" output)))
       (setq output
             (replace-regexp-in-string
              (if (> (length py-shell-prompt-output-regexp) 0)
