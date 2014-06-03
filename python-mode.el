@@ -18240,11 +18240,38 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
 	     (insert erg)))
-	  ((or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
-	   (py-comint--complete shell pos beg end word imports debug))
+	  ;; ((or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
+	  ;; (py-comint--complete shell pos beg end word imports debug))
 	  (t (py-complete--base shell pos beg end word imports debug)))
     ;; (goto-char pos)
     nil))
+
+(defun py-shell-complete-or-indent ()
+  "Complete or indent depending on the context.
+
+If cursor is at current-indentation and further indent
+seems reasonable, indent. Otherwise try to complete "
+  (interactive "*")
+  (let ((current 0)
+	indent count cui)
+    (if (string-match "^[[:space:]]*$"
+		      (buffer-substring (comint-line-beginning-position)
+					(point-marker)))
+	(indent-for-tab-command)
+      (setq indent (py-compute-indentation))
+      (setq cui (current-indentation))
+      (if (or (eq cui indent)
+	      (progn
+		;; indent might be less than outmost
+		;; see if in list of reasonable values
+		(setq count (/ indent py-indent-offset))
+		(while (< 0 count)
+		  (setq current (+ current py-indent-offset))
+		  (add-to-list 'values current)
+		  (setq count (1- count)))
+		(member cui values)))
+	  (funcall py-complete-function)
+	(py-indent-line)))))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
