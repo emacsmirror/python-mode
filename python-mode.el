@@ -3055,7 +3055,7 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
         (comint-send-string process "\n")))))
 
 (defun py--send-string-no-output (string &optional process msg)
-  "Send STRING to PROCESS and inhibit output.
+  "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (let* (output
@@ -3083,27 +3083,28 @@ the output."
 
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
-  (let* (output
-         (process (or process (get-buffer-process (py-shell))))
-         (comint-preoutput-filter-functions
-          (append comint-preoutput-filter-functions
-                  '(ansi-color-filter-apply
-                    (lambda (string)
-                      (setq output (concat output string))
-                      "")))))
-    (py-shell-send-string string process msg)
-    (accept-process-output process 5)
-    (when (and output (not (string= "" output)))
-      (setq output
-            (replace-regexp-in-string
-             (if (> (length py-shell-prompt-output-regexp) 0)
-                 (format "\n*%s$\\|^%s\\|\n$"
-                         py-shell-prompt-regexp
-                         (or py-shell-prompt-output-regexp ""))
-               (format "\n*$\\|^%s\\|\n$"
-                       py-shell-prompt-regexp))
-             "" output)))
-    output))
+  (with-current-buffer (process-buffer process)
+    (let* (output
+	   (process (or process (get-buffer-process (py-shell))))
+	   (comint-preoutput-filter-functions
+	    (append comint-preoutput-filter-functions
+		    '(ansi-color-filter-apply
+		      (lambda (string)
+			(setq output (concat output string))
+			"")))))
+      (py-shell-send-string string process msg)
+      (accept-process-output process 5)
+      (when (and output (not (string= "" output)))
+	(setq output
+	      (replace-regexp-in-string
+	       (if (> (length py-shell-prompt-output-regexp) 0)
+		   (format "\n*%s$\\|^%s\\|\n$"
+			   py-shell-prompt-regexp
+			   (or py-shell-prompt-output-regexp ""))
+		 (format "\n*$\\|^%s\\|\n$"
+			 py-shell-prompt-regexp))
+	       "" output)))
+      output)))
 
 (defun py-shell-send-file (file-name &optional process temp-file-name)
   "Send FILE-NAME to inferior Python PROCESS.
@@ -3136,12 +3137,12 @@ FILE-NAME."
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
-  (with-current-buffer (process-buffer process)
-    (let ((completions
-           (py--send-string-no-output
-            (format completion-code input) process)))
-      (when (> (length completions) 2)
-        (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
+  (let ((completions
+	 (py--send-string-return-output
+	  (format completion-code input) process)))
+    (sit-for 0.1)
+    (when (> (length completions) 2)
+      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
 (defun py--shell--do-completion-at-point (process imports input orig)
   "Do completion at point for PROCESS."
@@ -9993,15 +9994,9 @@ shell which will be forced upon execute as argument. "
          (wholebuf (when (boundp 'wholebuf) wholebuf))
          lineadd output-buffer)
     ;; (message "%s" strg)
-    (set-buffer tempbuf)
-    (erase-buffer)
     (unless py-if-name-main-permission-p
-      (setq strg (replace-regexp-in-string
-                  "if[( ]*__name__[) ]*==[( ]*['\"]\\{1,3\\}__main__['\"]\\{1,3\\}[) ]*:"
-                  ;; space after __main__, i.e. will not be executed
-                  "if __name__ == '__main__ ':" strg)))
-    (insert strg)
-    (py--fix-start (point-min)(point-max))
+      (setq strg (py--fix-if-name-main-permission strg)))
+    (setq strg (py--fix-start strg))
     ;; fast-process avoids temporary files
     (unwind-protect
 	(if py-fast-process-p
@@ -10012,8 +10007,8 @@ shell which will be forced upon execute as argument. "
 	      (setq strg (buffer-substring-no-properties (point-min) (point-max)))
 	      (setq erg (py--fast-send-string-intern strg proc py-output-buffer))
 	      (py-kill-buffer-unconditional tempbuf))
-	  (write-region (point-min) (point-max) tempfile nil t nil 'ask)
-	  (set-buffer-modified-p 'nil)
+
+	  ;; (set-buffer-modified-p 'nil)
 	  (setq erg (py--execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
 	  (sit-for 0.1))
       (py--close-execution)
@@ -10242,15 +10237,22 @@ Inserts an incentive true form \"if 1:\\n.\" "
       (insert "if 1:\n")
       (setq py-line-number-offset (- py-line-number-offset 1)))))
 
-(defun py--fix-start (start end)
-  "Internal use by py-execute... functions.
-Avoid empty lines at the beginning. "
-  (python-mode)
-  (goto-char start)
-  (while  ;; (empty-line-p)
-      (eq 9 (char-after))
-    (delete-region (line-beginning-position) (1+ (line-end-position))))
-  (back-to-indentation)
+(defun py--fix-if-name-main-permission (string)
+  "Remove \"if __name__ == '__main__ '\" from code to execute.
+
+See `py-if-name-main-permission-p'"
+  (let ((strg (if py-if-name-main-permission-p string
+		(replace-regexp-in-string
+		 "if[( ]*__name__[) ]*==[( ]*['\"]\\{1,3\\}__main__['\"]\\{1,3\\}[) ]*:"
+		 ;; space after __main__, i.e. will not be executed
+		 "if __name__ == '__main__ ':" string))))
+    strg))
+
+(defun py--fix-start-intern ()
+  (goto-char (point-min))
+  (while
+      (member (char-after) (list 9 32))
+    (delete-char 1))
   (unless (py--beginning-of-statement-p)
     (py-down-statement))
   (while (not (eq (current-indentation) 0))
@@ -10258,6 +10260,18 @@ Avoid empty lines at the beginning. "
   (goto-char (point-max))
   (unless (empty-line-p)
     (newline)))
+
+(defun py--fix-start (string)
+  "Internal use by py-execute... functions.
+
+Avoid empty lines at the beginning. "
+  (with-temp-buffer
+    (insert string)
+    (py--fix-start-intern)
+    ;; FixMe: Maybe conditial from from some use-tempfile var?
+    (and (ignore-errors tempfile)
+	 (write-region (point-min) (point-max) tempfile nil t nil 'ask))
+    (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun py-fetch-py-master-file ()
   "Lookup if a `py-master-file' is specified.
@@ -11942,10 +11956,10 @@ Receives a buffer-name as argument"
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
 `py-setup-codes' list."
-  (accept-process-output process 1)
+  (accept-process-output process 5)
   (dolist (code py-setup-codes)
     (py--send-string-no-output
-     (symbol-value code) process)
+     (py--fix-start (symbol-value code)) process)
     (sit-for 0.1)))
 
 (defun py--shell-simple-send (proc string)
@@ -12017,7 +12031,7 @@ This function takes the list of setup code to send from the
                         #'shell-write-history-on-exit)
   ;; (add-hook 'comint-preoutput-filter-functions
   ;; 'ansi-color-process-output nil t)
-  (add-hook 'after-change-functions 'py--after-change-function nil t)
+  ;; (add-hook 'after-change-functions 'py--after-change-function nil t)
 
   (remove-hook 'comint-output-filter-functions
                'font-lock-extend-jit-lock-region-after-change t)
