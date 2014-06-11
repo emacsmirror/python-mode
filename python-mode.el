@@ -11952,15 +11952,23 @@ Receives a buffer-name as argument"
       (setq erg (substring erg 0 (string-match "-" erg))))
     erg))
 
+(defun py--delete-all-but-first-prompt ()
+  "Don't let prompts from setup-codes sent clutter buffer. "
+  (let (last erg)
+    (when (re-search-backward py-fast-filter-re nil t 1)
+      (setq erg (match-end 0))
+      (while (and (re-search-backward py-fast-filter-re nil t 1) (setq erg (match-end 0))))
+      (delete-region erg (point-max)))))
+
 (defun py--shell-send-setup-code (process)
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
 `py-setup-codes' list."
-  (accept-process-output process 5)
   (dolist (code py-setup-codes)
     (py--send-string-no-output
      (py--fix-start (symbol-value code)) process)
-    (sit-for 0.1)))
+    (sit-for 0.1))
+  (py--delete-all-but-first-prompt))
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
@@ -18033,7 +18041,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
          erg newshell prefix akt end orig curexe aktpath)
     (set-buffer (get-buffer-create py-extensions))
     (erase-buffer)
-;;    (switch-to-buffer (current-buffer))
     (dolist (elt shells)
       (setq prefix "")
       (setq curexe (substring elt (1+ (string-match "/[^/]+$" elt))))
@@ -22074,7 +22081,6 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 	file bol estring ecode limit erg)
     (goto-char pmx)
     (sit-for 0.1)
-    ;; (switch-to-buffer (current-buffer))
     (save-excursion
       (unless (looking-back py-pdbtrack-input-prompt)
         (forward-line -1)
