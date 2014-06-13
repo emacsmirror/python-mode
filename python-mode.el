@@ -3044,11 +3044,10 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
                                  "psss-temp.py"))
          (file-name (or filename (buffer-file-name) temp-file-name)))
     (if (> (length lines) 1)
-        (let* ()
-          (with-temp-file temp-file-name
-            (insert string)
-            (delete-trailing-whitespace))
-          (py-send-file temp-file-name process temp-file-name))
+	(with-temp-file temp-file-name
+	  (insert string)
+	  (delete-trailing-whitespace)
+	  (py-send-file temp-file-name process temp-file-name))
       (comint-send-string process string)
       (when (or (not (string-match "\n$" string))
                 (string-match "\n[ \t].*\n?$" string))
@@ -11968,7 +11967,9 @@ This function takes the list of setup code to send from the
     (py--send-string-no-output
      (py--fix-start (symbol-value code)) process)
     (sit-for 0.1))
-  (py--delete-all-but-first-prompt))
+  (py--delete-all-but-first-prompt)
+  ;; (when py-verbose-p (message "%s" "py--shell-send-setup-code sent"))
+  )
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
@@ -22308,17 +22309,15 @@ FILE-NAME."
   (let* ((process (or process (get-buffer-process (py-shell))))
          (temp-file-name (when temp-file-name
                            (expand-file-name temp-file-name)))
-         (file-name (or (expand-file-name file-name) temp-file-name))
-         py-python-command-args)
+         (file-name (or (expand-file-name file-name) temp-file-name)))
     (when (not file-name)
       (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
-    (py-shell-send-string
+    (py-send-string
      (format
       (concat "__pyfile = open('''%s''');"
               "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
               "__pyfile.close()")
-      ;; (or (file-remote-p temp-file-name 'localname) file-name) file-name)
-      (or (file-remote-p temp-file-name 'localname) file-name) "Fehlerdatei")
+      file-name file-name)
      process)))
 ;;;
 
