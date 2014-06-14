@@ -3157,18 +3157,10 @@ completions on the current context."
 	   newlist)
       (with-current-buffer oldbuf
         (cond ((eq completion t)
-               (if py-no-completion-calls-dabbrev-expand-p
-                   (or (ignore-errors (dabbrev-expand nil))(when py-indent-no-completion-p
-                                                             (tab-to-tab-stop)))
-                 (when py-indent-no-completion-p
-                   (tab-to-tab-stop)))
+	       (and py-verbose-p (message "py--shell--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
                nil)
               ((null completion)
-               (if py-no-completion-calls-dabbrev-expand-p
-                   (or (dabbrev-expand nil)(when py-indent-no-completion-p
-                                             (tab-to-tab-stop))(message "Can't find completion "))
-                 (when py-indent-no-completion-p
-                   (tab-to-tab-stop)))
+	       (and py-verbose-p (message "py--shell--do-completion-at-point %s" "Don't see a completion"))
                nil)
               ((ignore-errors (not (string= input completion)))
                (progn (delete-char (- (length input)))
@@ -18167,8 +18159,7 @@ When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. O
          (word (buffer-substring-no-properties beg end))
          proc)
     (cond ((string= word "")
-           (message "%s" "Nothing to complete. ")
-           (tab-to-tab-stop))
+           (and py-verbose-p (message "%s" "Nothing to complete. ")))
           (t (or (setq proc (get-buffer-process shell))
                  (setq proc (get-buffer-process (py-shell nil nil shell t))))
              (py--shell--do-completion-at-point proc nil word orig))))
@@ -18339,7 +18330,7 @@ seems reasonable, indent. Otherwise try to complete "
          ;; completion-at-point requires a list as return value, so givem
          nil))
 
-(defun py--shell-complete-intern (word &optional beg end shell imports proc debug)
+(defun py--shell-complete-intern (word &optional beg end shell imports proc debug oldbuf)
   (when imports
     (py--send-string-no-output imports proc))
   (let ((py-completion-buffer py-python-completions)
@@ -18385,7 +18376,7 @@ complete('%s')" word) shell nil proc)))
                              (split-string result "\n")))
               #'string<)))
         (when debug (setq py-shell-complete-debug completions))
-        (py--shell-complete-finally)))))
+        (py--shell-complete-finally oldbuf)))))
 
 ;; ipython shell complete
 ;; see also
