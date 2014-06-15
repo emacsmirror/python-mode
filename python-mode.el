@@ -11163,19 +11163,6 @@ Maybe call M-x describe-variable RET to query its value. "
       (org-mode))))
 
 ;;;
-(defun py--send-receive (string)
-  "Send STRING to inferior Python (if any) and return result.
-
-This is a no-op if `py--check-comint-prompt' returns nil."
-  (or (py--send-string-no-output string)
-      (let ((proc (py-proc)))
-        (with-current-buffer (process-buffer proc)
-          (when (py--check-comint-prompt proc)
-            (set (make-local-variable 'py-preoutput-result) nil)
-            (accept-process-output proc 5)
-            (prog1 py-preoutput-result
-              (kill-local-variable 'py-preoutput-result)))))))
-
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the inferior Python process.
 
