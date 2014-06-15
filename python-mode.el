@@ -12025,8 +12025,7 @@ This function takes the list of setup code to send from the
   ;; 'ansi-color-process-output nil t)
   ;; (add-hook 'after-change-functions 'py--after-change-function nil t)
 
-  (remove-hook 'comint-output-filter-functions
-               'font-lock-extend-jit-lock-region-after-change t)
+  (remove-hook 'comint-output-filter-functions 'font-lock-extend-jit-lock-region-after-change t)
   (use-local-map py-shell-map)
   (cond
    (py-complete-function
@@ -12039,8 +12038,7 @@ This function takes the list of setup code to send from the
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil t)))
   ;; pdbtrack
-  (and py-pdbtrack-do-tracking-p
-       (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
+  (and py-pdbtrack-do-tracking-p (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
        (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t))
   (set-syntax-table python-mode-syntax-table))
 
@@ -15178,14 +15176,7 @@ Return the current Python symbol\. "]
                    :help "`py-help-at-point'\n
 Use pydoc on symbol at point"]
 
-		  ["Report comint variable setting" py-report-comint-variable-setting
-		   :help " `py-report-comint-variable-setting'
-
-Display some comint-mode variables of interest for debugging\.
-
-Some vars like comint-mode maps and tables are not displayed here because of its amount\.
-
-Typing `q' will close the buffer displayed "])
+		  )
 
                  ("Debugger"
 
