@@ -18135,16 +18135,16 @@ seems reasonable, indent. Otherwise try to complete "
      py-completion-last-window-configuration))
   (goto-char end))
 
-(defun py--shell-complete-finally ()
+(defun py--shell-complete-finally (oldbuf completions completion-buffer)
   (if (and completions (not (string= "" (car completions))))
       (cond ((eq completions t)
-             (when (buffer-live-p (get-buffer py-completion-buffer))
+             (when (buffer-live-p (get-buffer completion-buffer))
                (kill-buffer (get-buffer py-python-completions)))
              (message "Can't find completion for \"%s\"" word)
              (ding)
              nil)
             ((< 1 (length completions))
-             (with-output-to-temp-buffer py-completion-buffer
+             (with-output-to-temp-buffer completion-buffer
                (display-completion-list completions
                                         word)
                nil))
@@ -18156,12 +18156,9 @@ seems reasonable, indent. Otherwise try to complete "
                (kill-buffer (get-buffer py-python-completions)))
              nil))
     (when py-no-completion-calls-dabbrev-expand-p
-      (ignore-errors (dabbrev-expand nil)))
-    (when py-indent-no-completion-p
-      (tab-to-tab-stop)
-      (when (buffer-live-p (get-buffer py-python-completions))
-        (kill-buffer (get-buffer py-python-completions)))))
-  (progn (set-buffer oldbuf)(goto-char pos)
+      (ignore-errors (dabbrev-expand nil))))
+  (progn (set-buffer oldbuf)
+         ;; (goto-char pos)
          ;; completion-at-point requires a list as return value, so givem
          nil))
 
@@ -18211,7 +18208,7 @@ complete('%s')" word) shell nil proc)))
                              (split-string result "\n")))
               #'string<)))
         (when debug (setq py-shell-complete-debug completions))
-        (py--shell-complete-finally oldbuf)))))
+        (py--shell-complete-finally oldbuf completions completion-buffer)))))
 
 ;; ipython shell complete
 ;; see also
@@ -18277,7 +18274,7 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
                   (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
             (when debug (setq py-shell-complete-debug completions))
 
-            (py--shell-complete-finally))
+            (py--shell-complete-finally oldbuf completions completion-buffer))
         (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
 
 (defalias 'py-python2-shell-complete 'py-shell-complete)
