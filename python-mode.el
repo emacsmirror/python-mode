@@ -18019,44 +18019,6 @@ and return collected output"
 ;;; Completion
 
 ;; started from python.el
-(defalias 'py-script-complete 'py-shell-complete)
-
-(defun py-python-script-complete (&optional shell imports beg end word)
-  "Complete word before point, if any.
-
-When `py-no-completion-calls-dabbrev-expand-p' is non-nil, try dabbrev-expand. Otherwise, when `py-indent-no-completion-p' is non-nil, call `tab-to-tab-stop'. "
-  (interactive)
-  (let* (py-split-windows-on-execute-p
-         py-switch-buffers-on-execute-p
-         (orig (point))
-         (shell (or shell py-local-versioned-command (py-choose-shell)))
-         (beg (or beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point))))
-         (end (or end (point)))
-         (word (or word (buffer-substring-no-properties beg end)))
-         (imports (or imports (py-find-imports)))
-         proc)
-    (cond ((string= word "")
-           (if py-indent-no-completion-p
-               (tab-to-tab-stop)
-             (message "%s" "Nothing to complete. ")))
-          (t (or (setq proc (get-buffer-process (py--buffer-name-prepare)))
-                 (setq proc (get-buffer-process (py-shell nil nil shell))))
-             (if (processp proc)
-                 (progn
-                   ;; when completing instances, make them known
-                   (when (string-match "^\\(^[a-zA-Z0-9_]+\\)\\.\\([a-zA-Z0-9_]+\\)$" word)
-                     ;; (message "%s" (match-string 1 word))
-                     (save-excursion
-                       (save-match-data
-                         (goto-char (point-min))
-                         (when (re-search-forward (concat "^[ \t]*" (match-string-no-properties 1 word) "[ \t]*=[ \t]*[^ \n\r\f\t]+") nil t 1)
-                           (when py-verbose-p (message "%s" (match-string-no-properties 0)))
-                           (if imports
-                               (setq imports (concat imports (match-string-no-properties 0) ";"))
-                             (setq imports (match-string-no-properties 0)))))))
-                   (py--shell--do-completion-at-point proc imports word))
-               (error "No completion process at proc"))))))
-
 (defun py-python2-shell-complete (&optional shell)
   (interactive)
   (let* (py-split-windows-on-execute-p
