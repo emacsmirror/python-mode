@@ -9939,7 +9939,7 @@ shell which will be forced upon execute as argument. "
 	  ;; (set-buffer-modified-p 'nil)
 	  (setq erg (py--execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
 	  (sit-for 0.1))
-      (py--close-execution)
+      (py--close-execution tempbuf erg)
       (py--shell-manage-windows py-buffer-name))))
 
 (defun py-execute-python-mode-v5 (start end)
@@ -10083,7 +10083,7 @@ When optional FILE is `t', no temporary file is needed. "
 	   ;; No temporary file than
 	   (let (py-cleanup-temporary)
 	     (py--execute-file-base proc filename nil py-buffer-name filename execute-directory)
-	     (py--close-execution)
+	     (py--close-execution tempbuf erg)
 	     (py--shell-manage-windows py-buffer-name)))
           (t (py--execute-buffer-finally start end execute-directory wholebuf which-shell proc)))))
 
@@ -10408,7 +10408,7 @@ Returns char found. "
       (delete-region orig (point-max)))
     (set-buffer oldbuf)))
 
-(defun py--close-execution ()
+(defun py--close-execution (tempbuf erg)
   (when py-cleanup-temporary
     (py-kill-buffer-unconditional tempbuf)
     (py-delete-temporary tempfile tempbuf))
