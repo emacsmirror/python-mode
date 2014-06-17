@@ -10003,7 +10003,7 @@ May we get rid of the temporary file? "
                          (buffer-substring-no-properties
                           (point-min) (point-max)))
     (sit-for 0.1)
-    (if (and (setq py-error (save-excursion (py--postprocess-output-buffer procbuf)))
+    (if (and (setq py-error (save-excursion (py--postprocess-output-buffer procbuf origline)))
              (car py-error)
              (not (markerp py-error)))
         (py--jump-to-exception py-error)
@@ -10424,7 +10424,7 @@ Returns char found. "
 
 (defun py--postprocess ()
   "Provide return values, check result for error, manage windows. "
-  (setq py-error (save-excursion (py--postprocess-output-buffer py-output-buffer)))
+  (setq py-error (save-excursion (py--postprocess-output-buffer py-output-buffer origline)))
   (when py-store-result-p
     (setq erg
 	  (py-output-filter (buffer-substring-no-properties (point) (point-max))))
@@ -21885,7 +21885,7 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 
 ;;; Subprocess utilities and filters
 
-(defun py--postprocess-output-buffer (buf)
+(defun py--postprocess-output-buffer (buf origline)
   "Highlight exceptions found in BUF.
 If an exception occurred return error-string, otherwise return nil.  BUF must exist.
 
