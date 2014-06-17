@@ -9912,7 +9912,7 @@ shell which will be forced upon execute as argument. "
   (when (buffer-live-p localname)
     (kill-buffer localname)))
 
-(defun py--execute-buffer-finally (start end execute-directory wholebuf)
+(defun py--execute-buffer-finally (start end execute-directory wholebuf which-shell proc)
   (let* ((strg (buffer-substring-no-properties start end))
          (temp (make-temp-name
 		;; FixMe: that should be simpler
@@ -9964,7 +9964,7 @@ shell which will be forced upon execute as argument. "
           (goto-char (point-max))
           (copy-marker (point)))))))
 
-(defun py--execute-ge24.3 (start end file execute-directory &optional py-exception-buffer proc)
+(defun py--execute-ge24.3 (start end filename execute-directory which-shell &optional py-exception-buffer proc)
   "An alternative way to do it.
 
 May we get rid of the temporary file? "
@@ -9990,7 +9990,7 @@ May we get rid of the temporary file? "
     (newline line)
     (save-excursion
       (insert strg))
-    (py--fix-start (point) (point-max))
+    (py--fix-start (buffer-substring-no-properties (point) (point-max)))
     (unless (string-match "[jJ]ython" which-shell)
       ;; (when (and execute-directory py-use-current-dir-when-execute-p
       ;; (not (string= execute-directory default-directory)))
@@ -10078,14 +10078,14 @@ When optional FILE is `t', no temporary file is needed. "
            python-mode-v5-behavior-p
            (py-execute-python-mode-v5 start end))
           (py-execute-no-temp-p
-           (py--execute-ge24.3 start end filename execute-directory py-exception-buffer proc))
+           (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc))
           ((and filename wholebuf)
 	   ;; No temporary file than
 	   (let (py-cleanup-temporary)
 	     (py--execute-file-base proc filename nil py-buffer-name filename execute-directory)
 	     (py--close-execution)
 	     (py--shell-manage-windows py-buffer-name)))
-          (t (py--execute-buffer-finally start end execute-directory wholebuf)))))
+          (t (py--execute-buffer-finally start end execute-directory wholebuf which-shell proc)))))
 
 (defun py-execute-string (&optional string shell)
   "Send the argument STRING to a Python interpreter.
