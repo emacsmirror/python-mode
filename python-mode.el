@@ -5760,7 +5760,7 @@ Takes the result of (syntax-ppss)"
       (fill-region beg end))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)))
 
-(defun py--fill-docstring (justify style docstring)
+(defun py--fill-docstring (justify style docstring orig)
   ;; Delete spaces after/before string fence
   (py--string-fence-delete-spaces docstring)
   (let* ((thisbeg docstring)
@@ -5817,7 +5817,7 @@ Fill according to `py-docstring-style' "
 		       (py--in-or-behind-or-before-a-docstring)
 		     docstring)))
     (if (and docstring (or style py-docstring-style))
-	(py--fill-docstring justify style docstring)
+	(py--fill-docstring justify style docstring orig)
       (fill-paragraph justify))))
 
 (defun py-fill-paragraph (&optional justify)
@@ -7657,7 +7657,7 @@ More general than py-declarations, which would stop at keywords like a print-sta
 	 (setq done t)
 	 (and (< orig (point)) (point)))))
 
-(defun py--eos-in-string ()
+(defun py--eos-in-string (pps)
   "Return stm, i.e. if string is part of a (print)-statement. "
   (let ((orig (point))
         pos stm)
@@ -7690,7 +7690,7 @@ More general than py-declarations, which would stop at keywords like a print-sta
         (pps (parse-partial-sexp (point-min) (point)))
         stm)
     (cond ((nth 3 pps)
-           (and (py--eos-in-string) (not (eobp)) (py--end-of-statement-intern)))
+           (and (py--eos-in-string pps) (not (eobp)) (py--end-of-statement-intern)))
           ((nth 4 pps)
            (py--end-of-comment-intern pos))
           ((nth 1 pps)
