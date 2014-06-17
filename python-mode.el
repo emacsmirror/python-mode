@@ -11968,7 +11968,7 @@ This function takes the list of setup code to send from the
        (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t))
   (set-syntax-table python-mode-syntax-table))
 
-(defun py--guess-buffer-name ()
+(defun py--guess-buffer-name (argprompt)
   "Guess the buffer-name core string. "
   (cond
    ((and py-fast-process-p (not py-dedicated-process-p)) py-output-buffer)
@@ -12020,7 +12020,7 @@ BUFFER allows specifying a name, the Python process is connected to
               (expand-file-name py-shell-local-path)
             (when py-use-local-default
               (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
-         (py-buffer-name (or buffer-name (py--guess-buffer-name)))
+         (py-buffer-name (or buffer-name (py--guess-buffer-name argprompt)))
          (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath)))
          (executable (cond (py-shell-name)
                            (py-buffer-name
@@ -12759,10 +12759,10 @@ Used only, if `py-install-directory' is empty. "
            (add-to-list 'load-path (concat (expand-file-name py-install-directory) "test"))
            (add-to-list 'load-path (concat (expand-file-name py-install-directory) "tools"))
            (add-to-list 'load-path (concat (expand-file-name py-install-directory) "autopair")))
-          ((when py-guess-py-install-directory-p
-             (let ((guessed-py-install-directory (py-guess-py-install-directory)))
-               (when guessed-py-install-directory
-                 (add-to-list 'load-path guessed-py-install-directory)))))
+          (py-guess-py-install-directory-p
+	   (let ((guessed-py-install-directory (py-guess-py-install-directory)))
+	     (when guessed-py-install-directory
+	       (add-to-list 'load-path guessed-py-install-directory))))
           (t (error "Please set `py-install-directory', see INSTALL"))
           (when (interactive-p) (message "%s" load-path)))))
 
