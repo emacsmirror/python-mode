@@ -11887,7 +11887,7 @@ This function takes the list of setup code to send from the
     (process-send-string proc strg)
     (or nln (process-send-string proc "\n"))))
 
-(defun py--shell-make-comint ()
+(defun py--shell-make-comint (executable py-buffer-name args)
   (set-buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args))
   (unless (interactive-p) (sit-for 0.1))
   (set (make-local-variable 'comint-prompt-regexp)
@@ -12037,7 +12037,7 @@ BUFFER allows specifying a name, the Python process is connected to
           (py-fast-process)
           (setq py-output-buffer py-buffer-name))
       (unless (comint-check-proc py-buffer-name)
-        (py--shell-make-comint)
+        (py--shell-make-comint executable py-buffer-name args)
 	(sit-for 0.1)
 	(setq py-output-buffer (buffer-name (current-buffer)))
         (py--shell-setup (get-buffer-process (current-buffer))))
