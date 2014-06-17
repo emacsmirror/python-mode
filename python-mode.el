@@ -18019,37 +18019,6 @@ and return collected output"
 ;;; Completion
 
 ;; started from python.el
-(defun py-python2-shell-complete (&optional shell)
-  (interactive)
-  (let* (py-split-windows-on-execute-p
-         py-switch-buffers-on-execute-p
-         (shell (or shell py-local-versioned-command))
-         (orig (point))
-         (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
-         (end (point))
-         (word (buffer-substring-no-properties beg end))
-         proc)
-    (cond ((string= word "")
-           (and py-verbose-p (message "%s" "Nothing to complete. ")))
-          (t (or (setq proc (get-buffer-process shell))
-                 (setq proc (get-buffer-process (py-shell nil nil shell t))))
-             (py--shell--do-completion-at-point proc nil word orig))))
-  nil)
-
-(defun py-python3-shell-complete (&optional shell)
-  "Complete word before point, if any. Otherwise insert TAB. "
-  (interactive)
-  (let* ((shell (or shell py-local-versioned-command))
-         (orig (point))
-         (beg (save-excursion (skip-chars-backward "a-zA-Z0-9_.") (point)))
-         (end (point))
-         (word (buffer-substring-no-properties beg end)))
-    (cond ((string= word "")
-           (tab-to-tab-stop))
-          (t
-           (py--shell--do-completion-at-point (get-buffer-process (current-buffer)) nil word orig)
-           nil))))
-
 (defun py-comint--complete (shell pos beg end word imports debug)
   (let ((shell (or shell (py--report-executable (buffer-name (current-buffer)))))
         py-fontify-shell-buffer-p)
@@ -18316,28 +18285,10 @@ Returns the completed symbol, a string, if successful, nil otherwise. "
             (py--shell-complete-finally))
         (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
 
+(defalias 'py-python2-shell-complete 'py-shell-complete)
+(defalias 'py-python3-shell-complete 'py-shell-complete)
+
 ;;; Checker
-;; flymake
-;; (defun clear-flymake-allowed-file-name-masks (&optional suffix)
-;;   "Remove entries with SUFFIX from `flymake-allowed-file-name-masks'.
-
-;; Default is \"\\.py\\'\" "
-;;   (interactive "P")
-;;   (let ((suffix (cond ((eq 4 (prefix-numeric-value suffix))
-;;                        (read-from-minibuffer "Suffix: " "\\\\.py\\\\'"))
-;;                       (suffix suffix)
-;;                       (t "\\\\.py\\\\'")))
-;;         (erg flymake-allowed-file-name-masks)
-;;         (newlist '()))
-;;     (dolist (ele flymake-allowed-file-name-masks)
-;;       (unless
-;;           ;; (string-match "\\\\.py\\\\'" (car ele))
-;;           (string-match suffix (car ele))
-;;         (add-to-list 'newlist ele t)))
-;;     (setq flymake-allowed-file-name-masks newlist)
-;;     (when (and py-verbose-p (interactive-p)) (message "%s" flymake-allowed-file-name-masks))
-;;     flymake-allowed-file-name-masks))
-
 (defun py-toggle-flymake-intern (name command)
   ;; (clear-flymake-allowed-file-name-masks)
   (unless (string-match "pyflakespep8" name)
