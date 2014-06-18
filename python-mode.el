@@ -2961,23 +2961,6 @@ This function takes the list of setup code to send from the
       (when code
         (py-send-string (symbol-value code) process)))))
 
-(defun py-shell-get-process-name (py-dedicated-process-p)
-  "Calculate the appropiate process name for inferior Python process.
-If DEDICATED is t and the variable `buffer-file-name' is non-nil
-returns a string with the form
-`python-shell-buffer-name'[variable `buffer-file-name'] else
-returns the value of `python-shell-buffer-name'.  After
-calculating the process name adds the buffer name for the process
-in the `same-window-buffer-names' list."
-  (let ((process-name
-         (if (and py-dedicated-process-p
-                  buffer-file-name)
-             (format "%s[%s]" python-shell-buffer-name buffer-file-name)
-           (format "%s" python-shell-buffer-name))))
-    (add-to-list 'same-window-buffer-names (purecopy
-                                            (format "*%s*" process-name)))
-    process-name))
-
 (defun py-shell-get-process (&optional argprompt py-dedicated-process-p shell switch py-buffer-name)
   "Get appropriate Python process for current buffer and return it."
   (interactive)
