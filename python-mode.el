@@ -241,9 +241,6 @@ Default is nil. "
 (defvar py-ipython-completions "*IPython Completions*"
   "Buffer name for IPython-shell completions, internally used")
 
-(defvar py-close-completions-timer nil
-  "Internally used by `py-timer-close-completion-buffer")
-
 (defcustom py-autopair-mode nil
   "If python-mode calls (autopair-mode-on)
 
@@ -1403,25 +1400,8 @@ Default is `t'. See lp:1100892 "
   :type 'float
   :group 'python-mode)
 
-(defcustom python-shell-buffer-name "Python"
-  "Default buffer name for Python interpreter."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-interpreter "python"
-  "Default Python interpreter for shell."
-  :type 'string
-  :group 'python-mode)
-
-(defcustom python-shell-prompt-regexp ">>> "
-  "Regular Expression matching top\-level input prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :group 'python-mode)
-
 (defvar py-ffap-p nil)
 (defvar py-ffap nil)
-(defvar python-ffap nil)
 (defvar ffap-alist nil)
 
 (defun py--set-ffap-form ()
@@ -1749,9 +1729,6 @@ See also command `toggle-py-underscore-word-syntax-p' ")
   "Returns locally used executable-name including its version. ")
 (make-variable-buffer-local 'py-local-versioned-command)
 
-(defvar py-preoutput-leftover nil)
-(defvar py-preoutput-skip-next-prompt nil)
-
 (defvar py-shell-complete-debug nil
   "For interal use when debugging." )
 
@@ -1859,8 +1836,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-force-local-shell-p nil
   "Used internally, see `toggle-force-local-shell'. ")
-
-(defvar python-mode-v5-behavior nil)
 
 (defvar py-bol-forms-last-indent nil
   "For internal use. Stores indent from last py-end-of-FORM-bol command.
@@ -2001,12 +1976,6 @@ Default is nil "
 (defvar py-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
 ;; (setq py-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
 
-(defvar py-partial-expression-regexp "[^ .=:#\t\r\n\f]"
-  "py-partial-expression assumes chars indicated possible composing a py-partial-expression, when looking-at or -back. ")
-
-(defvar py-not-partial-expression-regexp "[ .=:#\t\r\n\f)]"
-  "py-partial-expression assumes chars indicated probably will not compose a py-partial-expression. ")
-
 (defvar py-operator-regexp "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\)[ \t]*"
   "Matches most of Python operators inclusive whitespaces around.
 
@@ -2020,9 +1989,6 @@ See also `py-operator-regexp' ")
 (defvar py-delimiter-regexp "\\(\\.[[:alnum:]]\\|,\\|;\\|:\\)[ \t\n]"
   "Delimiting elements of lists or other programming constructs. ")
 
-(defvar py-delimiter-chars ",;."
-  "Chars delimiting elements of lists or other programming constructs. ")
-
 (defvar py-line-number-offset 0
   "When an exception occurs as a result of py-execute-region, a
 subsequent py-up-exception needs the line number where the region
@@ -2034,9 +2000,6 @@ set in py-execute-region and used in py--jump-to-exception.")
 (defvar py-traceback-line-re
   "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
   "Regular expression that describes tracebacks.")
-
-(defvar py-preoutput-result nil
-  "Data from last `_emacs_out' line seen by the preoutput filter.")
 
 (defvar py-file-queue nil
   "Queue of Python temp files awaiting execution.
@@ -2082,11 +2045,6 @@ ipython0.11-completion-command-string also covers version 0.12")
 (defvar py-last-exeption-buffer nil
   "Internal use only - when `py-up-exception' is called in
 source-buffer, this will deliver the exception-buffer again. ")
-
-(defvar py-preoutput-result nil
-  "Data from last `_emacs_out' line seen by the preoutput filter.")
-
-(defvar py-import nil)
 
 (defvar py-imenu-class-regexp
   (concat                               ; <<classes>>
@@ -2187,8 +2145,6 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
     ;; (modify-syntax-entry ?\" "." st)
     st))
 
-(defvar py-imports nil)
-
 (defvar smart-operator-mode nil)
 (defvar autopair-mode nil)
 
@@ -2198,9 +2154,6 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (make-variable-buffer-local 'highlight-indentation)
 
 ;;; Constants
-(defconst py-blank-or-comment-re "[ \t]*\\($\\|#\\)"
-  "Regular expression matching a blank or comment line.")
-
 (defconst py-block-closing-keywords-re
   "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
   "Matches the beginning of a class, method or compound statement. ")
