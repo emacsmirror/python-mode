@@ -3500,17 +3500,15 @@ With prefix arg, position cursor at end of buffer."
     (push-mark)
     (goto-char (point-max))))
 
-(defun py-proc (&optional py-dedicated-process-p)
+(defun py-proc (&optional argprompt)
   "Return the current Python process.
 
 Start a new process if necessary. "
-  (interactive)
+  (interactive "P")
   (let ((erg
-         (cond ((and (not py-dedicated-process-p) (comint-check-proc (current-buffer)))
+         (cond ((comint-check-proc (current-buffer))
 		(get-buffer-process (buffer-name (current-buffer))))
-	       ((not py-dedicated-process-p)
-		(get-buffer-process (py-shell)))
-	       ((py-shell nil py-dedicated-process-p)))))
+	       (t (py-shell argprompt)))))
     (when (interactive-p) (message "%S" erg))
     erg))
 
