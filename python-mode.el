@@ -2937,20 +2937,6 @@ Returns value of `py-split-windows-on-execute-p'. "
   (customize-variable 'py-sexp-function))
 
 ;;;
-;; Stolen from org-mode
-(defun py-util-clone-local-variables (from-buffer &optional regexp)
-  "Clone local variables from FROM-BUFFER.
-Optional argument REGEXP selects variables to clone and defaults
-to \"^python-\"."
-  (mapc
-   (lambda (pair)
-     (and (symbolp (car pair))
-          (string-match (or regexp "^python-")
-                        (symbol-name (car pair)))
-	  (set (make-local-variable (car pair))
-	       (cdr pair))))
-   (buffer-local-variables from-buffer)))
-
 (defun py-send-shell-setup-code ()
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
@@ -3446,25 +3432,6 @@ Start a new process if necessary. "
 		(get-buffer-process (buffer-name (current-buffer))))
 	       (t (py-shell argprompt)))))
     (when (interactive-p) (message "%S" erg))
-    erg))
-
-(defun py--check-comint-prompt (&optional proc)
-  "Return non-nil if and only if there's a normal prompt in the inferior buffer.
-If there isn't, it's probably not appropriate to send input to return Eldoc
-information etc.  If PROC is non-nil, check the buffer for that process."
-  (with-current-buffer (process-buffer (or proc (get-buffer-process (py-shell))))
-    (save-excursion
-      (save-match-data
-        (re-search-backward " *\\=" nil t)))))
-
-
-
-(defun py-outline-level ()
-  "`outline-level' function for Python mode.
-The level is the number of `py-indent-offset' steps of indentation
-of current line."
-  (let ((erg (1+ (/ (current-indentation) py-indent-offset))))
-    (when (interactive-p) (message "%s" erg))
     erg))
 
 ;; FFAP support
@@ -6168,35 +6135,6 @@ and `pass'.  This doesn't catch embedded statements."
         (looking-at py-block-closing-keywords-re)
       (goto-char here))))
 
-(defun py-end-of-clause-intern (&optional regexp orig)
-  "Used internal by functions going to the end of a current clause. "
-  (unless (eobp)
-    (let* ((regexp (or regexp py-block-or-clause-re))
-           (orig (or orig (point)))
-           (erg (if (py--statement-opens-block-p regexp)
-                    (point)
-                  (py--go-to-keyword py-extended-block-or-clause-re)
-                  (when (py--statement-opens-block-p regexp)
-                    (point))))
-           ind res)
-      (if erg
-          (progn
-            (setq ind (+ py-indent-offset (current-indentation)))
-            (py-end-of-statement)
-            (forward-line 1)
-            (setq erg (py--travel-current-indent ind)))
-        (goto-char orig)
-        (py-look-downward-for-clause))
-      (when (and (bolp)(eolp))
-        (skip-chars-backward " \t\r\n\f")
-        (py-beginning-of-comment)
-        (skip-chars-backward " \t\r\n\f"))
-      (when (eq (point) orig)
-        (py-look-downward-for-clause))
-      (when (< orig (point))
-        (setq res (point)))
-      res)))
-
 (defun py--record-list-error (pps)
   "When encountering a missing parenthesis, store its line, position. `py-verbose-p'  must be t
 
@@ -7519,64 +7457,6 @@ More general than py-declarations, which would stop at keywords like a print-sta
           (setq first nil))))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
-
-(defun py--go-to-keyword-above (regexp &optional maxindent)
-  "Returns a list, whose car is indentation, cdr position. "
-  (let ((orig (point))
-        (maxindent (or maxindent (and (< 0 (current-indentation))(current-indentation))
-                       ;; make maxindent large enough if not set
-                       (* 99 py-indent-offset)))
-        (first t)
-        done erg cui)
-    (while (and (not done) (not (bobp)))
-      (py-beginning-of-statement)
-      (if (and (looking-at regexp)(if maxindent
-                                      (< (current-indentation) maxindent) t))
-          (progn
-            (setq erg (point))
-            (setq done t))
-        (when (and first (not maxindent))
-          (setq maxindent (current-indentation))
-          (setq first nil))))
-    (when erg
-      (if (looking-at regexp)
-          (setq erg (cons (current-indentation) erg))
-        (setq erg nil
-              )))
-    erg))
-
-(defun py--eos-handle-comment-start ()
-  (end-of-line)
-  (forward-comment 99999)
-  ;; (skip-chars-forward (concat "^" comment-start) (line-end-position))
-  ;; (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-  )
-
-(defun py-eos-handle-doublequoted-string-start (this)
-  "Internal use, find possible end of statement from string start. "
-  (when
-      (and (setq this (point)) (progn (while (and (not (eobp)) (search-forward (match-string-no-properties 0) nil t 1) (nth 8 (syntax-ppss)))) (< this (point))))
-    (skip-chars-forward (concat "^" comment-start) (line-end-position))
-    (skip-chars-backward " \t\r\n\f")))
-
-(defun py--eos-handle-singlequoted-string-start (this)
-  "Internal use, find possible end of statement from string start. "
-  (when
-      (and (setq this (point)) (progn (ignore-errors (goto-char (scan-sexps (point) 1))) (< this (point))))
-    (skip-chars-forward (concat "^" comment-start) (line-end-position))
-    (skip-chars-backward " \t\r\n\f")))
-
-(defun py--handle-eol ()
-  (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-  (when (py-beginning-of-comment)
-    (skip-chars-backward " \t\r\n\f" (line-beginning-position))))
-
-(defun py--eos-handle-string-start (this)
-  "Internal use, find possible end of statement from string start. "
-  (when
-      (and (setq this (point)) (progn (or (if (save-match-data (string-match "'" (match-string-no-properties 0))) (ignore-errors (goto-char (scan-sexps (point) 1)))) (while (and (search-forward (match-string-no-properties 0) nil t 1) (nth 8 (syntax-ppss))))) (< this (point))))
-    (skip-chars-forward (concat "^" comment-start) (line-end-position))
-    (skip-chars-backward " \t\r\n\f")))
 
 (defalias 'py-statement-forward 'py-end-of-statement)
 (defalias 'py-next-statement 'py-end-of-statement)
@@ -10044,25 +9924,6 @@ See also `py-execute-region'. "
       (insert string)
       (py-execute-region (point-min) (point-max) shell))))
 
-(defun py--if-needed-insert-shell ()
-  (let ((erg (or (py-choose-shell-by-shebang)
-                 (py--choose-shell-by-import)
-                 py-shell-name)))
-    (when (string-match " " erg) (setq erg (substring erg (1+ (string-match " " erg))))
-          ;; closing ">"
-          (setq erg (substring erg 0 (1- (length erg)))))
-    (goto-char (point-min))
-    (while (and (bolp)(eolp)) (delete-region (point) (1+ (line-end-position))))
-    (unless (looking-at py-shebang-regexp)
-      (if (string-match (concat "^" erg) "ipython")
-          (progn
-            (shell-command "type ipython" t)
-            (when (looking-at "[^/\n\r]+")
-              (replace-match "#! ")))
-        (if (string-match py-separator-char erg)
-            (insert (concat "#! " erg "\n"))
-          (insert (concat py-shebang-startstring " " erg "\n")))))))
-
 (defun py--insert-execute-directory (directory &optional orig done)
   (let ((orig (or orig (point)))
         (done done))
@@ -10080,16 +9941,6 @@ See also `py-execute-region'. "
           (t (forward-line 1)
              (unless (and (bolp)(eolp)) (newline))
              (insert (concat "import os; os.chdir(\"" directory "\")\n"))))))
-
-(defun py--insert-coding ()
-  (goto-char (point-min))
-  (unless (re-search-forward py-encoding-string-re nil t)
-    (goto-char (point-min))
-    (if (re-search-forward py-shebang-regexp nil t 1)
-        (progn
-          (newline)
-          (insert (concat py-encoding-string "\n")))
-      (insert (concat py-encoding-string "\n")))))
 
 (defun py--fix-if-name-main-permission (string)
   "Remove \"if __name__ == '__main__ '\" from code to execute.
@@ -10324,6 +10175,8 @@ Returns char found. "
       (setq erg (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -W ignore" " -c \"import os; print(os.sep)\"")))))
     erg))
 
+(unless py-separator-char (setq py-separator-char (py-update-separator-char)))
+
 (defun py--current-working-directory (&optional shell)
   "Return the directory of current `py-shell'."
   (replace-regexp-in-string "\n" "" (shell-command-to-string (concat (or shell py-shell-name) " -c \"import os; print(os.getcwd())\""))))
@@ -10348,13 +10201,6 @@ Returns char found. "
     (py-delete-temporary tempfile tempbuf))
   (and (not py-error) erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
   erg)
-
-(defun py--fast-filter ()
-  "Run where fast-output arrives, normally at \"*Python Output*\" buffer. "
-  (delete-region (point) (progn (skip-chars-backward "^\n")(point)))
-  (goto-char (point-min))
-  (while (looking-at py-fast-filter-re)
-    (replace-match "")))
 
 (defun py--postprocess ()
   "Provide return values, check result for error, manage windows. "
@@ -11545,30 +11391,6 @@ Returns char found. "
 
 (unless py-separator-char (setq py-separator-char (py-separator-char)))
 
-(defun py--process-name (&optional name)
-  "Return the name of the running Python process, `get-process' willsee it. "
-  (let* ((thisname (if name
-                       (if (string-match py-separator-char name)
-                           (substring name (progn (string-match (concat "\\(.+\\)"py-separator-char "\\(.+\\)$") name) (match-beginning 2)))
-
-                         name)
-                     (substring py-shell-name (or (string-match (concat py-separator-char ".+$") py-shell-name) 0))))
-         (nname (cond (py-dedicated-process-p
-                       (make-temp-name (concat thisname "-")))
-                      ;; ((string-match "\*" (buffer-name))
-                      ;; (replace-regexp-in-string "\*" "" (buffer-name)))
-                      (t thisname)))
-         (erg (cond ((or (string-match "ipython" nname)
-                         (string-match "IPython" nname))
-                     "IPython")
-                    (nname))))
-    (unless (string-match "^\*" erg)(setq erg (concat "*" erg "*")))
-    erg))
-
-;; (make-variable-buffer-local 'ipython-completion-command-string)
-
-;; (setq ipython0.10-completion-command-string "print(';'.join(__IP.Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n")
-
 ;; from ipython.el
 (defun py-dirstack-hook ()
   ;; the following is to synchronize dir-changes
@@ -11667,16 +11489,6 @@ SEPCHAR is the file-path separator of your system. "
 
           (t (unless (string-match "^\*" erg)(setq erg (concat "*" erg "*")))))
     erg))
-
-(defun py--delete-numbers-and-stars-from-string (string)
-  "Delete numbering and star chars from string, return result.
-
-Needed when file-path names are contructed from maybe numbered buffer names like \"\*Python\*<2> \""
-  (replace-regexp-in-string
-   "<\\([0-9]+\\)>" ""
-   (replace-regexp-in-string
-    "\*" ""
-    string)))
 
 (defalias 'py-toggle-split-windows-on-execute-function 'py-toggle-split-windows-function)
 (defun py-toggle-split-windows-function ()
