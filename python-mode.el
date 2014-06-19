@@ -3492,10 +3492,7 @@ Start a new process if necessary. "
 
 
 ;; Bindings
-(defconst python-compilation-regexp-alist
-  ;; FIXME: maybe these should move to compilation-error-regexp-alist-alist.
-  ;;   The first already is (for CAML), but the second isn't.  Anyhow,
-  ;;   these are specific to the inferior buffer.  -- fx
+(defcustom py-compilation-regexp-alist
   `((,(rx line-start (1+ (any " \t")) "File \""
           (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
           "\", line " (group (1+ digit)))
@@ -3503,11 +3500,12 @@ Start a new process if necessary. "
     (,(rx " in file " (group (1+ not-newline)) " on line "
           (group (1+ digit)))
      1 2)
-    ;; pdb stack trace
     (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
           "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
      1 2))
-  "`compilation-error-regexp-alist' for inferior Python.")
+  "`compilation-error-regexp-alist' for Python-shell. "
+  :type '(alist string)
+  :group 'python-mode)
 
 
 (defun py--point (position)
@@ -11650,7 +11648,7 @@ This function takes the list of setup code to send from the
   ;; It might be useful having a different setting of `comint-use-prompt-regexp' in py-shell - please report when a use-case shows up
   ;; (set (make-local-variable 'comint-use-prompt-regexp) nil)
   (set (make-local-variable 'compilation-error-regexp-alist)
-       python-compilation-regexp-alist)
+       py-compilation-regexp-alist)
   ;; (setq completion-at-point-functions nil)
   (and py-fontify-shell-buffer-p
        (set (make-local-variable 'font-lock-defaults)
@@ -22070,7 +22068,7 @@ containing Python source.
   (setq mode-line-process '(":%s"))
   (set (make-local-variable 'comint-input-filter) 'py--input-filter)
   (set (make-local-variable 'compilation-error-regexp-alist)
-       python-compilation-regexp-alist)
+       py-compilation-regexp-alist)
   (set (make-local-variable 'comint-prompt-regexp)
        (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
               (concat "\\("
