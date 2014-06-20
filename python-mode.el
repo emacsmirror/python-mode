@@ -9741,12 +9741,11 @@ shell which will be forced upon execute as argument. "
     (unwind-protect
 	(if py-fast-process-p
 	    (progn
-
-	      (with-current-buffer py-buffer-name
-		(erase-buffer))
-	      (setq strg (buffer-substring-no-properties (point-min) (point-max)))
-	      (setq erg (py--fast-send-string-intern strg proc py-output-buffer))
-	      (py-kill-buffer-unconditional tempbuf))
+	      (setq output-buffer (default-value 'py-output-buffer))
+	      (with-current-buffer output-buffer
+		(erase-buffer)
+		(setq erg (py--fast-send-string-intern strg proc output-buffer))
+		(py-kill-buffer-unconditional tempbuf)))
 
 	  ;; (set-buffer-modified-p 'nil)
 	  (setq erg (py--execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
@@ -18658,15 +18657,20 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
   "Connect am (I)Python process suitable for large output.
 
 Output arrives in py-output-buffer, \"\*Python Output\*\" by default
-It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907"
+It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907
+
+Return the process"
   (interactive)
   (let ((this-buffer
-         (set-buffer (or (and buffer (get-buffer-create buffer))
-                         (get-buffer-create py-buffer-name)))))
-    (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
+	 (set-buffer (or (and buffer (get-buffer-create buffer))
+			 (get-buffer-create (default-value 'py-output-buffer))))))
+    (let ((proc
+	   (or (get-buffer-process this-buffer)
+
+	       (start-process py-shell-name this-buffer py-shell-name))))
       (with-current-buffer this-buffer
         (erase-buffer))
-      (setq py-output-buffer this-buffer)
+      ;; (setq py-output-buffer this-buffer)
       proc)))
 
 (defun py--fast-send-string (string &optional windows-config)
