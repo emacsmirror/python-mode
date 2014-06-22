@@ -11446,7 +11446,7 @@ interpreter."
   (interactive "P")
   (py-shell argprompt t))
 
-(defun py--buffer-name-prepare (&optional arg)
+(defun py--buffer-name-prepare (&optional arg dedicated)
   "Return an appropriate name to display in modeline.
 SEPCHAR is the file-path separator of your system. "
   (let* ((name-first (or arg py-shell-name))
@@ -11459,7 +11459,7 @@ SEPCHAR is the file-path separator of your system. "
 		;; it must not be shown
 		((and (string-match "/[^/]+$" name-raw)
 		      (setq ein (substring name-raw (1+ (string-match "/[^/]+$" name-raw))))
-		      (string= (eval (car (read-from-string (concat "py-" ein "-command")))) name-raw))
+		      (string= (eval (car (read-from-string (concat "py-" (downcase ein) "-command")))) name-raw))
 		 ;; (string-match "^/usr/bin" name-raw)
 		 (capitalize ein))
 		((string-match "^py-" name-raw)
@@ -11489,7 +11489,7 @@ SEPCHAR is the file-path separator of your system. "
                 ((string-match "python3" name)
                  (replace-regexp-in-string "python3" "Python3" name))
                 (t name)))
-    (when py-dedicated-process-p
+    (when (or dedicated py-dedicated-process-p)
       (setq erg (make-temp-name (concat erg "-"))))
     (cond ((and prefix (string-match "^\*" erg))
            (setq erg (replace-regexp-in-string "^\*" (concat "*" prefix " ") erg)))
@@ -11572,14 +11572,12 @@ Internal use"
   (interactive)
   (let ((buffer (or buffer (current-buffer)))
         proc kill-buffer-query-functions)
-    (if (buffer-live-p buffer)
-        (progn
-          (setq proc (get-buffer-process buffer))
-          (and proc (kill-process proc))
-          (set-buffer buffer)
-          (set-buffer-modified-p 'nil)
-          (kill-buffer (current-buffer)))
-      (message "Can't see a buffer %s" buffer))))
+    (ignore-errors
+      (setq proc (get-buffer-process buffer))
+      (and proc (kill-process proc))
+      (set-buffer buffer)
+      (set-buffer-modified-p 'nil)  
+      (kill-buffer (current-buffer)))))
 
 (defun py-kill-shell-unconditional (&optional shell)
   "With optional argument SHELL.
@@ -11734,7 +11732,7 @@ BUFFER allows specifying a name, the Python process is connected to
             (when py-use-local-default
               (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
          (py-buffer-name (or buffer-name (py--guess-buffer-name argprompt)))
-         (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath)))
+         (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath dedicated)))
          (executable (cond (py-shell-name)
                            (py-buffer-name
                             (py--report-executable py-buffer-name))))
