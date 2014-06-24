@@ -21097,7 +21097,8 @@ and return collected output"
 
 ;; started from python.el
 (defun py-comint--complete (shell pos beg end word imports debug)
-  (let ((shell (or shell (py--report-executable (buffer-name (current-buffer)))))
+  (let ((oldbuf (current-buffer))
+	(shell (or shell (py--report-executable (buffer-name (current-buffer)))))
         py-fontify-shell-buffer-p)
     (if (string-match "[iI][pP]ython" shell)
         (ipython-complete nil nil beg end word shell debug imports)
@@ -21106,9 +21107,7 @@ and return collected output"
                (tab-to-tab-stop))
               (t
                ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
-               (py--shell--do-completion-at-point proc imports word pos))
-              ;; (t (py--shell-complete-intern word beg end shell imports proc))
-              )))))
+               (py--shell--do-completion-at-point proc imports word pos oldbuf)))))))
 
 (defun py-complete--base (shell pos beg end word imports debug oldbuf)
   (let* (wait
@@ -21121,9 +21120,7 @@ and return collected output"
            (ipython-complete nil nil beg end word shell debug imports pos oldbuf))
           (t
            ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
-           (py--shell--do-completion-at-point proc imports word pos oldbuf))
-          ;; (t (py--shell-complete-intern word beg end shell imports proc debug))
-)))
+           (py--shell--do-completion-at-point proc imports word pos oldbuf)))))
 
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. Otherwise insert TAB. "
@@ -21244,53 +21241,6 @@ seems reasonable, indent. Otherwise try to complete "
          ;; completion-at-point requires a list as return value, so givem
          nil))
 
-(defun py--shell-complete-intern (word &optional beg end shell imports proc debug oldbuf)
-  (when imports
-    (py--send-string-no-output imports proc))
-  (let ((py-completion-buffer py-python-completions)
-        (result (py-shell-execute-string-now (format "
-def print_completions(namespace, text, prefix=''):
-   for name in namespace:
-       if name.startswith(text):
-           print(prefix + name)
-
-def complete(text):
-    import __builtin__
-    import __main__
-    if '.' in text:
-        terms = text.split('.')
-        try:
-            if hasattr(__main__, terms[0]):
-                obj = getattr(__main__, terms[0])
-            else:
-                obj = getattr(__builtin__, terms[0])
-            for term in terms[1:-1]:
-                obj = getattr(obj, term)
-            print_completions(dir(obj), terms[-1], text[:text.rfind('.') + 1])
-        except AttributeError:
-            pass
-    else:
-        import keyword
-        print_completions(keyword.kwlist, text)
-        print_completions(dir(__builtin__), text)
-        print_completions(dir(__main__), text)
-complete('%s')" word) shell nil proc)))
-    (if (or (eq result nil)(string= "" result))
-        (progn
-          (if py-no-completion-calls-dabbrev-expand-p
-              (or (ignore-errors (dabbrev-expand nil)) (message "Can't complete"))
-            (message "No completion found")))
-
-      (setq result (replace-regexp-in-string comint-prompt-regexp "" result))
-      (let ((comint-completion-addsuffix nil)
-            (completions
-             (sort
-              (delete-dups (if (split-string "\n" "\n")
-                               (split-string result "\n" t) ; XEmacs
-                             (split-string result "\n")))
-              #'string<)))
-        (when debug (setq py-shell-complete-debug completions))
-        (py--shell-complete-finally oldbuf completions completion-buffer)))))
 
 ;; ipython shell complete
 ;; see also
