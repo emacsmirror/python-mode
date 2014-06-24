@@ -1809,10 +1809,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-orig-buffer-or-file nil
   "Internal use. ")
 
-(defvar py-python-major-version nil
-  "Internally used. ")
-(make-variable-buffer-local 'py-python-major-version)
-
 (defvar py-exec-string-command nil
   "Mode commands will set this. ")
 (make-variable-buffer-local 'py-exec-string-command)
