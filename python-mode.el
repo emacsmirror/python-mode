@@ -1809,10 +1809,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-orig-buffer-or-file nil
   "Internal use. ")
 
-(defvar py-exec-string-command nil
-  "Mode commands will set this. ")
-(make-variable-buffer-local 'py-exec-string-command)
-
 (defvar py-which-bufname "Python")
 (make-variable-buffer-local 'py-which-bufname)
 
@@ -25572,30 +25568,6 @@ See available customizations listed in files variables-python-mode at directory 
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   (when py-outline-minor-mode-p (outline-minor-mode 1))
   (when (interactive-p) (message "python-mode loaded from: %s" python-mode-message-string)))
-
-(define-derived-mode python2-mode python-mode "Python2"
-  "Edit and run code used by Python version 2 series. "
-  :group 'Python
-  :abbrev nil
-  (set (make-local-variable 'py-exec-command) '(format "execfile(r'%s') # PYTHON-MODE\n" filename))
-  (set (make-local-variable 'py-exec-string-command) '(format "exec(r'%s') # PYTHON-MODE\n" string))
-  (py-toggle-shell "python2"))
-
-(define-derived-mode python3-mode python-mode "Python3"
-  "Edit and run code used by Python version 3 series. "
-  :group 'Python
-  :abbrev nil
-  (set (make-local-variable 'py-exec-command) '(format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" file file))
-  (set (make-local-variable 'py-exec-string-command) '(format "exec(r'(%s)') # PYTHON-MODE\n" string))
-  (py-toggle-shell "python3"))
-
-(make-obsolete 'jpython-mode 'jython-mode nil)
-(define-derived-mode jython-mode python-mode  "Jython"
-  "Major mode for editing Jython files.
-Like `python-mode', but sets up parameters for Jython subprocesses.
-Runs `jython-mode-hook' after `python-mode-hook'."
-  :group 'python-mode
-  (py-toggle-shell "jython"))
 
 ;; backward compatibility
 ;; some third party stuff relying on v5 serie might use this
