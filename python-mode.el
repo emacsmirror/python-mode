@@ -21096,19 +21096,6 @@ and return collected output"
 ;;; Completion
 
 ;; started from python.el
-(defun py-comint--complete (shell pos beg end word imports debug)
-  (let ((oldbuf (current-buffer))
-	(shell (or shell (py--report-executable (buffer-name (current-buffer)))))
-        py-fontify-shell-buffer-p)
-    (if (string-match "[iI][pP]ython" shell)
-        (ipython-complete nil nil beg end word shell debug imports)
-      (let ((proc (get-buffer-process (current-buffer))))
-        (cond ((string= word "")
-               (tab-to-tab-stop))
-              (t
-               ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
-               (py--shell--do-completion-at-point proc imports word pos oldbuf)))))))
-
 (defun py-complete--base (shell pos beg end word imports debug oldbuf)
   (let* (wait
          (shell (or shell (py-choose-shell)))
@@ -21155,18 +21142,12 @@ and return collected output"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p py-completion-buffer erg)
-    ;; (and (string= "open('" word)
-    ;; (comint-dynamic-complete-filename))
-    ;; (ignore-errors (comint-dynamic-complete))
     (sit-for 0.1)
     (cond ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
 	     (insert erg)))
-	  ;; ((or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
-	  ;; (py-comint--complete shell pos beg end word imports debug))
 	  (t (py-complete--base shell pos beg end word imports debug oldbuf)))
-    ;; (goto-char pos)
     nil))
 
 (defun py-shell-complete-or-indent ()
