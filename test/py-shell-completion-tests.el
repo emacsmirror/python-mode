@@ -59,7 +59,7 @@
     (insert "pri")
     (py-shell-complete)
     (sit-for 0.1) 
-    (assert (looking-back "print") nil "python-shell-complete-test failed")))
+    (assert (member (char-before) (list ?\( ?t)) nil "python-shell-complete-test failed")))
 
 
 (defun usr-bin-python-shell-complete-test ()
