@@ -1084,8 +1084,9 @@ Also used by (minor-)outline-mode "
 ;;; Default shells
 (defcustom py-shell-name
   (if (eq system-type 'windows-nt)
-      "C:/Python27/python"
-    "/usr/bin/python3")
+      ;; "C:/Python27/python"
+      "python"
+    "python")
 
   "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command.
 
@@ -1100,12 +1101,14 @@ Else python"
 
 (defcustom py-python-command
   (if (eq system-type 'windows-nt)
-   "C:\\Python27\\python.exe"
+      ;; "C:\\Python27\\python.exe"
+      "python"
    ;; "C:/Python33/Lib/site-packages/IPython"
-    "/usr/bin/python")
+    "python")
 
-  "Make sure, the directory where python.exe resides in in the PATH-variable. If needed, edit in \"Advanced System Settings/Environment Variables\"
+  "Make sure, the directory where python.exe resides in in the PATH-variable. 
 
+Windows: If needed, edit in \"Advanced System Settings/Environment Variables\" Commonly \"C:\\\\Python27\\\\python.exe\"
 With Anaconda for example the following works here:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\python.exe\"
 
@@ -1124,12 +1127,14 @@ Else /usr/bin/python"
 
 (defcustom py-python2-command
   (if (eq system-type 'windows-nt)
-   "C:\\Python27\\python.exe"
+      ;; "C:\\Python27\\python.exe"
+   "python"
    ;; "C:/Python33/Lib/site-packages/IPython"
-    "/usr/bin/python")
+    "python")
 
-  "Make sure, the directory where python.exe resides in in the PATH-variable. If needed, edit in \"Advanced System Settings/Environment Variables\"
+  "Make sure, the directory where python.exe resides in in the PATH-variable.
 
+Windows: If needed, edit in \"Advanced System Settings/Environment Variables\" Commonly \"C:\\\\Python27\\\\python.exe\"
 With Anaconda for example the following works here:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\python.exe\"
 
@@ -1147,15 +1152,14 @@ Else /usr/bin/python"
 
 (defcustom py-python3-command
   (if (eq system-type 'windows-nt)
-      "C:/Python33/python.exe"
-    "/usr/bin/python3")
+      ;; "C:/Python33/python.exe"
+      "python3"
+    "python3")
 
   "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command.
 
 On Windows default is C:/Python33/python.exe
-
-That may differ depending of enviroment installed.
-With Anaconda for example path might be:
+With Anaconda path might be:
 C:/Users/YOUR_NAME/Anaconda/python.exe
 
 at GNU systems default is /usr/bin/python3"
