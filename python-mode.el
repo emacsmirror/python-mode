@@ -3063,13 +3063,11 @@ completions on the current context."
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--shell--do-completion-at-point (process imports input orig oldbuf)
+(defun py--shell--do-completion-at-point (process imports input orig oldbuf code)
   "Do completion at point for PROCESS."
-  (with-syntax-table py-dotted-expression-syntax-table
     (when imports
       (py--send-string-no-output imports process))
-    (let* ((code python-shell-module-completion-string-code)
-           (completion
+    (let* ((completion
             (py--shell-completion--get-completions
              input process code))
            ;; (completion (when completions
@@ -3103,18 +3101,7 @@ completions on the current context."
                (move-marker orig (point))
                nil))
 	(and (goto-char orig)
-	     nil)))))
-
-(defun python-shell-completion-complete-or-indent ()
-  "Complete or indent depending on the context.
-If content before pointer is all whitespace indent.  If not try
-to complete."
-  (interactive)
-  (if (string-match "^[[:space:]]*$"
-                    (buffer-substring (comint-line-beginning-position)
-                                      (point-marker)))
-      (indent-for-tab-command)
-    (comint-dynamic-complete)))
+	     nil))))
 
 (setq py-shell-template "
 \(defun NAME (&optional argprompt)
@@ -4000,7 +3987,8 @@ C-q TAB inserts a literal TAB-character."
   (let ((orig (copy-marker (point)))
         (cui (current-indentation))
         need)
-    (if (interactive-p)
+    ;; this-command might be `py-indent-or-complete'
+    (if (or (interactive-p) (eq this-command last-command))
         ;; TAB-leaves-point-in-the-wrong-lp-1178453-test
         (let ((region (use-region-p))
               col beg end done)
@@ -17251,7 +17239,7 @@ Try to find source definition of function at point"]))))
 	(define-key map (kbd "RET") 'comint-send-input)
         (define-key map [(control c)(-)] 'py-up-exception)
         (define-key map [(control c)(=)] 'py-down-exception)
-	(define-key map (kbd "TAB") 'py-shell-complete-or-indent)
+	(define-key map (kbd "TAB") 'py-indent-or-complete)
 	(define-key map [(meta tab)] 'py-shell-complete)
 	(define-key map [(control c)(!)] 'py-shell)
 	(define-key map [(control c)(control t)] 'py-toggle-shell)
@@ -17330,8 +17318,8 @@ The input is entered into the input history ring, if the value of variable
 
 \(fn &optional NO-NEWLINE ARTIFICIAL)"]
 
-		  ["Shell complete or indent" py-shell-complete-or-indent
-		   :help " `py-shell-complete-or-indent'
+		  ["Complete or indent" py-indent-or-complete
+		   :help " `py-indent-or-complete'
 
 Complete or indent depending on the context\.
 
@@ -21105,10 +21093,13 @@ and return collected output"
 (defun py--complete-base (shell pos beg end word imports debug oldbuf)
   (let* ((shell (or shell (py-choose-shell)))
          (proc (or (get-process shell)
-		   (progn
-		     (get-buffer-process (py-shell nil nil shell))
-		     (sit-for py-new-shell-delay)))))
-    (py--shell--do-completion-at-point proc imports word pos oldbuf)))
+		   (prog1
+		       (get-buffer-process (py-shell nil nil shell))
+		     (sit-for py-new-shell-delay))))
+	 (code (if (string-match "^[Ii][Pp]ython" shell)
+		   (py-set-ipython-completion-command-string)
+		 python-shell-module-completion-string-code)))
+    (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
 
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. Otherwise insert TAB. "
@@ -21142,7 +21133,7 @@ and return collected output"
 	 (filenames (and in-string ausdruck
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
-         py-fontify-shell-buffer-p py-completion-buffer erg)
+         py-fontify-shell-buffer-p completion-buffer erg)
     (sit-for 0.1)
     (cond ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
@@ -21151,32 +21142,17 @@ and return collected output"
 	  (t (py--complete-base shell pos beg end word imports debug oldbuf)))
     nil))
 
-(defun py-shell-complete-or-indent ()
+(defun py-indent-or-complete ()
   "Complete or indent depending on the context.
 
-If cursor is at current-indentation and further indent
-seems reasonable, indent. Otherwise try to complete "
+If cursor is at end of line, try to complete
+Otherwise call `py-indent-line' 
+
+Use `C-q TAB' to insert a literally TAB-character "
   (interactive "*")
-  (let ((current 0)
-	indent count cui)
-    (if (string-match "^[[:space:]]*$"
-		      (buffer-substring (comint-line-beginning-position)
-					(point-marker)))
-	(indent-for-tab-command)
-      (setq indent (py-compute-indentation))
-      (setq cui (current-indentation))
-      (if (or (eq cui indent)
-	      (progn
-		;; indent might be less than outmost
-		;; see if in list of reasonable values
-		(setq count (/ indent py-indent-offset))
-		(while (< 0 count)
-		  (setq current (+ current py-indent-offset))
-		  (add-to-list 'values current)
-		  (setq count (1- count)))
-		(member cui values)))
-	  (funcall py-complete-function)
-	(py-indent-line)))))
+  (if (eolp)
+      (py-shell-complete)
+    (py-indent-line)))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
