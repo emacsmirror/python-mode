@@ -21103,17 +21103,12 @@ and return collected output"
 
 ;; started from python.el
 (defun py-complete--base (shell pos beg end word imports debug oldbuf)
-  (let* (wait
-         (shell (or shell (py-choose-shell)))
+  (let* ((shell (or shell (py-choose-shell)))
          (proc (or (get-process shell)
-                   (get-buffer-process (progn (setq wait py-new-shell-delay) (py-shell nil nil shell))))))
-    (cond ((string= word "")
-           (tab-to-tab-stop))
-          ((string-match "[iI][pP]ython" shell)
-           (ipython-complete nil nil beg end word shell debug imports pos oldbuf))
-          (t
-           ;; (string-match "[pP]ython3[^[:alpha:]]*$" shell)
-           (py--shell--do-completion-at-point proc imports word pos oldbuf)))))
+		   (progn
+		     (get-buffer-process (py-shell nil nil shell))
+		     (sit-for py-new-shell-delay)))))
+    (py--shell--do-completion-at-point proc imports word pos oldbuf)))
 
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. Otherwise insert TAB. "
