@@ -21097,7 +21097,7 @@ and return collected output"
 		   (prog1
 		       (get-buffer-process (py-shell nil nil shell))
 		     (sit-for py-new-shell-delay))))
-	 (code (if (string-match "^[Ii][Pp]ython" shell)
+	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string)
 		 python-shell-module-completion-string-code)))
     (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
