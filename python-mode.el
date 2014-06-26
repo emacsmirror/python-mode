@@ -12529,8 +12529,9 @@ Used only, if `py-install-directory' is empty. "
         (define-key map [(control c)(control b)] 'py-submit-bug-report)
         (define-key map [(control c)(control v)] 'py-version)
         (define-key map [(control c)(control w)] 'py-pychecker-run)
-        (define-key map (kbd "TAB") 'py-indent-line)
-        ;; (if py-complete-function
+        ;; (define-key map (kbd "TAB") 'py-indent-line)
+        (define-key map (kbd "TAB") 'py-indent-or-complete)
+	;; (if py-complete-function
         ;;     (progn
         ;;       (define-key map [(meta tab)] py-complete-function)
         ;;       (define-key map [(esc) (tab)] py-complete-function))
