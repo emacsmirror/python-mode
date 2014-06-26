@@ -842,7 +842,11 @@ Default is `t'."
   :type 'number
   :group 'python-mode)
 
-(defcustom py-new-shell-delay 0.2
+(defcustom py-new-shell-delay
+    (if (eq system-type 'windows-nt)
+      1
+    1)
+
   "If a new comint buffer is connected to Python, commands like completion might need some delay. "
 
   :type 'integer
@@ -11609,7 +11613,7 @@ This function takes the list of setup code to send from the
   (dolist (code py-setup-codes)
     (py--send-string-no-output
      (py--fix-start (symbol-value code)) process)
-    (sit-for 0.1))
+    (sit-for py-new-shell-delay))
   (py--delete-all-but-first-prompt))
 
 (defun py--shell-simple-send (proc string)
