@@ -844,12 +844,12 @@ Default is `t'."
 
 (defcustom py-new-shell-delay
     (if (eq system-type 'windows-nt)
-      1
-    1)
+      2.0
+    0.1)
 
   "If a new comint buffer is connected to Python, commands like completion might need some delay. "
 
-  :type 'integer
+  :type 'float
   :group 'python-mode)
 
 (defcustom py--send-receive-delay  5
