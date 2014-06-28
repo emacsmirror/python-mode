@@ -845,7 +845,7 @@ Default is `t'."
 (defcustom py-new-shell-delay
     (if (eq system-type 'windows-nt)
       2.0
-    0.1)
+    0.2)
 
   "If a new comint buffer is connected to Python, commands like completion might need some delay. "
 
@@ -1197,10 +1197,12 @@ Else /usr/bin/ipython"
 
 (defcustom py-ipython-command-args
   (if (eq system-type 'windows-nt)
-      "C:\\Python27\\Scripts\\ipython-script.py"
-    "")
+      "ipython-script.py"
+    '(""))
   "List of string arguments to be used when starting a Python shell.
-On windows with Anaconda the following is known to work:
+At Windows make sure ipython-script.py is PATH. Also setting PATH/TO/SCRIPT here should work, for example;
+C:\\Python27\\Scripts\\ipython-script.py
+With Anaconda the following is known to work:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\ipython-script-py\"
 "
   :type '(repeat string)
@@ -11721,6 +11723,20 @@ This function takes the list of setup code to send from the
 	   py-jython-command)
 	  (t py-python-command))))
 
+(defun py--unfontify-banner ()
+  "Unfontify the banner-text inserting at head of shell "
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    ;; (push-mark)
+    (let ((end
+	   ;; 133
+	   (progn (re-search-forward py-fast-filter-re)
+		  (forward-line -1)
+		  (end-of-line)
+		  (point))))
+      (font-lock-unfontify-region 1 end))))
+
 (defun py-shell (&optional argprompt dedicated shell buffer-name)
   "Start an interactive Python interpreter in another window.
   Interactively, \\[universal-argument] prompts for a PATH/TO/EXECUTABLE to use.
@@ -11739,17 +11755,18 @@ This function takes the list of setup code to send from the
 		    (read-shell-command "PATH/TO/EXECUTABLE/[I]python[version]: ")))
 	 (oldbuf (current-buffer))
 	 (dedicated (or dedicated py-dedicated-process-p))
-	 (py-exception-buffer (or py-exception-buffer (current-buffer)))
+	 (py-exception-buffer (or py-exception-buffer (and (or (eq 'major-mode 'python-mode)(eq 'major-mode 'py-shell-mode)) (current-buffer))))
 	 (path (getenv "PYTHONPATH"))
 	 (py-shell-name-raw (or newpath shell py-shell-name (py-choose-shell)))
+	 (args
+	  (cond (py-fast-process-p nil)
+		((string-match "^[Ii]" py-shell-name-raw)
+		 py-ipython-command-args)
+		(t py-python-command-args)))
 	 ;; unless Path is given with `py-shell-name'
 	 ;; call configured command
 	 (py-shell-name (py--configured-shell py-shell-name-raw))
-	 (args
-	  (cond (py-fast-process-p nil)
-		((string-match "^[Ii]" py-shell-name)
-		 py-ipython-command-args)
-		(t py-python-command-args)))
+
 	 ;; If we use a pipe, Unicode characters are not printed
 	 ;; correctly (Bug#5794) and IPython does not work at
 	 ;; all (Bug#5390). python.el
@@ -11786,7 +11803,12 @@ This function takes the list of setup code to send from the
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
       (when (or (string-match "[BbIi]*[Pp]ython" (prin1-to-string this-command))(interactive-p)) (py--shell-manage-windows py-buffer-name))
-      (when py-shell-hook (run-hooks 'py-shell-hook)))
+      ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
+      (when (string-match "[BbIi][Pp]ython" py-buffer-name)
+	(sit-for 0.3))
+      (sit-for 0.1)
+      (with-current-buffer py-buffer-name
+	(py--unfontify-banner)))
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
@@ -25519,7 +25541,7 @@ containing Python source.
 
 Sets basic comint variables, see also versions-related stuff in `py-shell'.
 \\{py-shell-mode-map}"
-  :group 'python
+  :group 'python-mode
   ;; (require 'ansi-color) ; for ipython
   (setq mode-line-process '(":%s"))
   (set-syntax-table python-mode-syntax-table)
@@ -25553,8 +25575,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   		 'py-shell-complete))
   (when py-shell-menu
     (easy-menu-add py-menu))
-
-  (and py-fontify-shell-buffer-p
+  (when py-fontify-shell-buffer-p
        (set (make-local-variable 'font-lock-defaults)
             '(python-font-lock-keywords nil nil nil nil
 					(font-lock-syntactic-keywords
