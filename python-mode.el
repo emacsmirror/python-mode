@@ -1180,9 +1180,11 @@ At GNU systems see /usr/bin/python3"
 
 (defcustom py-ipython-command
   (if (eq system-type 'windows-nt)
-   "C:\\Python27\\python.exe"
-   ;; "C:/Python33/Lib/site-packages/IPython"
-    "/usr/bin/ipython")
+      "ipython"
+    ;; "C:\\Python27\\python.exe"
+    ;; "C:/Python33/Lib/site-packages/IPython"
+    ;; "/usr/bin/ipython"
+    "ipython")
 
   "A PATH/TO/EXECUTABLE or default value `M-x IPython RET' may look for, if no IPython-shell is specified by command.
 
