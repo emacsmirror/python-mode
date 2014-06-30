@@ -3056,7 +3056,7 @@ FILE-NAME."
   (pop-to-buffer (py-shell) t))
 
 ;;;
-(defun py--shell-completion--get-completions (input process completion-code)
+(defun py--shell-completion-get-completions (input process completion-code)
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
@@ -3072,7 +3072,7 @@ completions on the current context."
     (when imports
       (py--send-string-no-output imports process))
     (let* ((completion
-            (py--shell-completion--get-completions
+            (py--shell-completion-get-completions
              input process code))
            ;; (completion (when completions
 	   ;; (try-completion input completions)))
@@ -22011,6 +22011,7 @@ and return collected output"
 		 python-shell-module-completion-string-code)))
     (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
 
+(defalias 'ipython-complete 'py-shell-complete)
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. Otherwise insert TAB. "
   (interactive)
