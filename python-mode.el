@@ -620,12 +620,12 @@ If nil, default, it will not move from at any reasonable level. "
 (defcustom py-complete-function 'py-shell-complete
   "When set, enforces function todo completion, default is nil.
 
-Normally python-mode, resp. inferior-python-mode know best which function to use. "
+Normally python-mode know best which function to use. "
   :type '(choice
           (const :tag "default" nil)
-          (const :tag "Pymacs based py-complete-completion-at-point" py-complete-completion-at-point)
+          (const :tag "Pymacs and company based py-complete" py-complete)
           (const :tag "py-shell-complete" py-shell-complete)
-          (const :tag "IPython's ipython-complete" ipython-complete)
+          (const :tag "py-indent-or-complete" py-indent-or-complete)
           )
   :group 'python-mode)
 
