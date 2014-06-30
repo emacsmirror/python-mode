@@ -96,7 +96,7 @@ you're editing someone else's Python code."
 No semantic indent,  which diff to `py-indent-offset' indicates "
   :type 'integer
   :group 'python-mode)
-(make-variable-buffer-local 'py-backslashed-lines-indent-offset)
+;; (make-variable-buffer-local 'py-backslashed-lines-indent-offset)
 
 (defcustom pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
@@ -210,7 +210,7 @@ Default is nil. "
          (and (py-smart-operator-check)
               (set-default symbol value)
               (smart-operator-mode (if value 1 0)))))
-(make-variable-buffer-local 'py-smart-operator-mode-p)
+;; (make-variable-buffer-local 'py-smart-operator-mode-p)
 
 (defcustom py-sexp-function nil
   "When set, it's value is called instead of `forward-sexp', `backward-sexp'
@@ -222,7 +222,7 @@ Default is nil. "
           (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
           (const :tag "py-end-of-expression" py-end-of-expression))
   :group 'python-mode)
-(make-variable-buffer-local 'py-sexp-function)
+;; (make-variable-buffer-local 'py-sexp-function)
 
 (defvar py-autopair-mode nil)
 
@@ -454,7 +454,7 @@ Default is nil. "
   "If a newline is inserted, when line after block isn't empty. Default is non-nil. "
   :type 'boolean
   :group 'python-mode)
-(make-variable-buffer-local 'py-close-provides-newline)
+;; (make-variable-buffer-local 'py-close-provides-newline)
 
 (defcustom py-dedent-keep-relative-column t
   "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. "
@@ -635,7 +635,7 @@ Normally python-mode, resp. inferior-python-mode know best which function to use
                  (const :tag "Pymacs based py-complete" py-complete)
                  (const :tag "IPython's ipython-complete" ipython-complete))
   :group 'python-mode)
-(make-variable-buffer-local 'ipython-complete-function)
+;; (make-variable-buffer-local 'ipython-complete-function)
 
 (defcustom py-encoding-string " # -*- coding: utf-8 -*-"
   "Default string specifying encoding of a Python file. "
@@ -677,7 +677,7 @@ Default is the empty string. "
   "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
   :type 'integer
   :group 'python-mode)
-(make-variable-buffer-local 'py-lhs-inbound-indent)
+;; (make-variable-buffer-local 'py-lhs-inbound-indent)
 
 (defcustom py-continuation-offset 2
   "Additional amount of offset to give for some continuation lines.
@@ -712,7 +712,7 @@ so if you want to defeat the automagic configuration, you must also
 set `py-smart-indentation' to nil in your `python-mode-hook'."
   :type 'boolean
   :group 'python-mode)
-(make-variable-buffer-local 'py-smart-indentation)
+;; (make-variable-buffer-local 'py-smart-indentation)
 
 (defcustom py-block-comment-prefix "##"
   "String used by \\[comment-region] to comment out a block of code.
@@ -1100,7 +1100,7 @@ On Windows default is C:/Python27/python
 Else python"
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-shell-name)
+;; (make-variable-buffer-local 'py-shell-name)
 (defvar py-default-interpreter py-shell-name)
 
 (defcustom py-python-command
@@ -1120,13 +1120,13 @@ Else /usr/bin/python"
 
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-python-command)
+;; (make-variable-buffer-local 'py-python-command)
 
 (defcustom py-python-command-args '("-i")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-python-command-args)
+;; (make-variable-buffer-local 'py-python-command-args)
 
 
 (defcustom py-python2-command
@@ -1146,27 +1146,28 @@ Else /usr/bin/python"
 
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-python2-command)
+;; (make-variable-buffer-local 'py-python2-command)
 
 (defcustom py-python2-command-args '("-i")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-python2-command-args)
+;; (make-variable-buffer-local 'py-python2-command-args)
 
 (defcustom py-python3-command
   (if (eq system-type 'windows-nt)
-      ;; "C:/Python33/python.exe"
       "python3"
+    ;; "C:/Python33/python.exe"
+    ;; "/usr/bin/python3"
     "python3")
 
-  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if no shell is specified by command.
+  "A PATH/TO/EXECUTABLE or default value `py-shell' may look for, if
+  no shell is specified by command.
 
-On Windows default is C:/Python33/python.exe
-With Anaconda path might be:
-C:/Users/YOUR_NAME/Anaconda/python.exe
+On Windows see C:/Python3/python.exe
+--there is no garantee it exists, please check your system--
 
-at GNU systems default is /usr/bin/python3"
+At GNU systems see /usr/bin/python3"
 
   :type 'string
   :group 'python-mode)
@@ -1175,7 +1176,7 @@ at GNU systems default is /usr/bin/python3"
   "List of string arguments to be used when starting a Python3 shell."
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-python3-command-args)
+;; (make-variable-buffer-local 'py-python3-command-args)
 
 (defcustom py-ipython-command
   (if (eq system-type 'windows-nt)
@@ -1193,7 +1194,7 @@ Else /usr/bin/ipython"
 
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-ipython-command)
+;; (make-variable-buffer-local 'py-ipython-command)
 
 (defcustom py-ipython-command-args
   (if (eq system-type 'windows-nt)
@@ -1207,7 +1208,7 @@ With Anaconda the following is known to work:
 "
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-ipython-command-args)
+;; (make-variable-buffer-local 'py-ipython-command-args)
 
 (defcustom py-jython-command
   (if (eq system-type 'windows-nt)
@@ -1221,13 +1222,13 @@ Default /usr/bin/jython"
 
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-jython-command)
+;; (make-variable-buffer-local 'py-jython-command)
 
 (defcustom py-jython-command-args '("")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-jython-command-args)
+;; (make-variable-buffer-local 'py-jython-command-args)
 
 (defcustom py-bpython-command
   (if (eq system-type 'windows-nt)
@@ -1242,25 +1243,25 @@ Default /usr/bin/bpython"
 
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-bpython-command)
+;; (make-variable-buffer-local 'py-bpython-command)
 
 (defcustom py-bpython-command-args '("")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
   :group 'python-mode)
-(make-variable-buffer-local 'py-bpython-command-args)
+;; (make-variable-buffer-local 'py-bpython-command-args)
 
 (defcustom py-shell-toggle-1 py-python2-command
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-shell-toggle-1)
+;; (make-variable-buffer-local 'py-shell-toggle-1)
 
 (defcustom py-shell-toggle-2 py-python3-command
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-shell-toggle-2)
+;; (make-variable-buffer-local 'py-shell-toggle-2)
 
 ;;;
 
@@ -1811,7 +1812,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-exec-command nil
   "Internally used. ")
-(make-variable-buffer-local 'py-exec-command)
+;; (make-variable-buffer-local 'py-exec-command)
 
 (defvar py-buffer-name nil
   "Internal use. ")
@@ -1820,7 +1821,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
   "Internal use. ")
 
 (defvar py-which-bufname "Python")
-(make-variable-buffer-local 'py-which-bufname)
+;; (make-variable-buffer-local 'py-which-bufname)
 
 (defvar py-pychecker-history nil)
 
@@ -1950,7 +1951,7 @@ Default is nil "
   ""
   :type 'string
   :group 'python-mode)
-(make-variable-buffer-local 'py-output-buffer)(make-variable-buffer-local 'py-output-buffer)
+;; (make-variable-buffer-local 'py-output-buffer)
 
 (defvar py-exception-buffer nil
   "Set internally, remember source buffer where error might occur. ")
@@ -2155,7 +2156,7 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (defvar highlight-indent-active nil)
 (defvar highlight-indentation nil
   "Menu  PyEdit fails when not bound")
-(make-variable-buffer-local 'highlight-indentation)
+;; (make-variable-buffer-local 'highlight-indentation)
 
 ;;; Constants
 (defconst py-block-closing-keywords-re
