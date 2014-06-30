@@ -420,11 +420,6 @@ Default is nil. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom ipython-complete-use-separate-shell-p nil
-
-  "If `ipython-complete' should use a separate shell. Thus prompt-counter is not incremented by completion. "
-  :type 'boolean :group 'python-mode)
-
 (defcustom py-outline-minor-mode-p t
   "If outline minor-mode should be on, default is `t'. "
 
@@ -15121,12 +15116,6 @@ In experimental state yet "
 See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
                       :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
 
-                     ["Ipython complete use separate shell "
-                      (setq ipython-complete-use-separate-shell-p
-                            (not ipython-complete-use-separate-shell-p))
-                      :help "If `ipython-complete' should use a separate shell. Thus prompt-counter is not incremented by completion. Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected ipython-complete-use-separate-shell-p]
-
                      ["Set Pymacs-based complete keymap "
                       (setq py-set-complete-keymap-p
                             (not py-set-complete-keymap-p))
@@ -18508,12 +18497,6 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
                       :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
 
-                     ["Ipython complete use separate shell "
-                      (setq ipython-complete-use-separate-shell-p
-                            (not ipython-complete-use-separate-shell-p))
-                      :help "If `ipython-complete' should use a separate shell. Thus prompt-counter is not incremented by completion. Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected ipython-complete-use-separate-shell-p]
-
                      ["Set Pymacs-based complete keymap "
                       (setq py-set-complete-keymap-p
                             (not py-set-complete-keymap-p))
@@ -19405,12 +19388,6 @@ In experimental state yet "
 
 See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
                       :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
-
-                     ["Ipython complete use separate shell "
-                      (setq ipython-complete-use-separate-shell-p
-                            (not ipython-complete-use-separate-shell-p))
-                      :help "If `ipython-complete' should use a separate shell. Thus prompt-counter is not incremented by completion. Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected ipython-complete-use-separate-shell-p]
 
                      ["Set Pymacs-based complete keymap "
                       (setq py-set-complete-keymap-p
@@ -22105,102 +22082,8 @@ Use `C-q TAB' to insert a literally TAB-character "
      py-completion-last-window-configuration))
   (goto-char end))
 
-(defun py--shell-complete-finally (oldbuf completions completion-buffer)
-  (if (and completions (not (string= "" (car completions))))
-      (cond ((eq completions t)
-             (when (buffer-live-p (get-buffer completion-buffer))
-               (kill-buffer (get-buffer py-python-completions)))
-             (message "Can't find completion for \"%s\"" word)
-             (ding)
-             nil)
-            ((< 1 (length completions))
-             (with-output-to-temp-buffer completion-buffer
-               (display-completion-list completions
-                                        word)
-               nil))
-            ((not (string= word (car completions)))
-             (sit-for 0.1)
-             (completion-in-region beg end completions)
-             (move-marker pos (point))
-             (when (buffer-live-p (get-buffer py-python-completions))
-               (kill-buffer (get-buffer py-python-completions)))
-             nil))
-    (when py-no-completion-calls-dabbrev-expand-p
-      (ignore-errors (dabbrev-expand nil))))
-  (progn (set-buffer oldbuf)
-         ;; (goto-char pos)
-         ;; completion-at-point requires a list as return value, so givem
-         nil))
-
-
-;; ipython shell complete
-;; see also
-;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
-(defun ipython-complete (&optional done completion-command-string beg end word shell debug imports pos oldbuf)
-  "Complete the python symbol before point.
-
-If no completion available, insert a TAB.
-Returns the completed symbol, a string, if successful, nil otherwise. "
-
-  (interactive "*")
-  (setq py-completion-last-window-configuration
-        (current-window-configuration))
-  (let* (py-fontify-shell-buffer-p
-         (oldbuf (current-buffer))
-         (pos (or pos (copy-marker (point))))
-         (beg (or beg (save-excursion (skip-chars-backward "a-z0-9A-Z_." (point-at-bol))
-                                      (point))))
-         (end (or end (point)))
-         (pattern (or word (buffer-substring-no-properties beg end)))
-         (sep ";")
-         (py-shell-name (or shell "ipython"))
-         (processlist (process-list))
-         (imports (or imports (py-find-imports)))
-         (py-completion-buffer py-ipython-completions)
-         done
-         (process
-          (if ipython-complete-use-separate-shell-p
-              (unless (and (buffer-live-p py-ipython-completions)
-                           (comint-check-proc (process-name (get-buffer-process py-ipython-completions))))
-                (get-buffer-process (py-shell nil nil py-shell-name py-ipython-completions)))
-            (progn
-              (while (and processlist (not done))
-                (when (and
-                       (string= py-shell-name (process-name (car processlist)))
-                       (processp (car processlist))
-                       (setq done (car processlist))))
-                (setq processlist (cdr processlist)))
-              done)))
-         (proc (or process
-                   (get-buffer-process (py-shell nil nil (when (string-match "[iI][pP]ython[^[:alpha:]]*$"  py-shell-name) "ipython")))))
-         (comint-preoutput-filter-functions
-          (append comint-preoutput-filter-functions
-                  '(ansi-color-filter-apply
-                    (lambda (string)
-                      (setq ugly-return (concat ugly-return string))
-                      ""))))
-         (ccs (or completion-command-string
-                  (if imports
-                      (concat imports (py-set-ipython-completion-command-string))
-                    (py-set-ipython-completion-command-string))))
-         completion completions completion-table ugly-return)
-    (unless (interactive-p) (sit-for 0.1))
-    (if (string= pattern "")
-        (py-indent-line) 
-      (process-send-string proc (format ccs pattern))
-      (accept-process-output proc 5)
-      (if ugly-return
-          (progn
-            (setq completions
-                  (split-string (substring ugly-return 0 (position ?\n ugly-return)) sep))
-            (when debug (setq py-shell-complete-debug completions))
-
-            (py--shell-complete-finally oldbuf completions completion-buffer))
-        (message "%s" "No response from Python process. Please check your configuration. If config is okay, please file a bug-regport at http://launchpad.net/python-mode")))))
-
 (defalias 'py-python2-shell-complete 'py-shell-complete)
 (defalias 'py-python3-shell-complete 'py-shell-complete)
-
 ;;; Checker
 (defun py-toggle-flymake-intern (name command)
   ;; (clear-flymake-allowed-file-name-masks)
