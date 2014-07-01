@@ -11735,6 +11735,8 @@ This function takes the list of setup code to send from the
 	  (cond (py-fast-process-p nil)
 		((string-match "^[Ii]" py-shell-name-raw)
 		 py-ipython-command-args)
+		((string-match "^[^-]+3" py-shell-name-raw)
+		 py-python3-command-args)
 		(t py-python-command-args)))
 	 ;; unless Path is given with `py-shell-name'
 	 ;; call configured command
@@ -11767,7 +11769,7 @@ This function takes the list of setup code to send from the
 	  (setq py-output-buffer (default-value 'py-buffer-name)))
       (unless (comint-check-proc py-buffer-name)
 	(py--shell-make-comint executable py-buffer-name args)
-	(sit-for 0.1)
+	(sit-for 0.1 t)
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
