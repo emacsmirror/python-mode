@@ -3058,9 +3058,9 @@ FILE-NAME."
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
-	 (py--send-string-return-output
+	 (py--send-string-no-output
 	  (format completion-code input) process)))
-    (sit-for 0.1)
+    (sit-for 0.1 t)
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -9804,7 +9804,7 @@ May we get rid of the temporary file? "
     (process-send-string proc
                          (buffer-substring-no-properties
                           (point-min) (point-max)))
-    (sit-for 0.1)
+    (sit-for 0.1 t)
     (if (and (setq py-error (save-excursion (py--postprocess-intern procbuf origline)))
              (car py-error)
              (not (markerp py-error)))
@@ -11662,7 +11662,7 @@ This function takes the list of setup code to send from the
   (let ((buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args)))
     (with-current-buffer buffer
       (py-shell-mode))
-    (sit-for 0.1)
+    (sit-for 0.1 t)
     buffer))
 
 (defun py--shell-setup (buffer proc)
@@ -22043,7 +22043,7 @@ and return collected output"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p completion-buffer erg)
-    (sit-for 0.1)
+    (sit-for 0.1 t)
     (cond ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
@@ -25682,11 +25682,10 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 If an exception occurred return error-string, otherwise return nil.  BUF must exist.
 
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
-  (set-buffer buf)
   (let* ((pmx (copy-marker (point-max)))
 	 file bol estring ecode limit erg)
     (goto-char pmx)
-    (sit-for 0.1)
+    (sit-for 0.1 t)
     (save-excursion
       (unless (looking-back py-pdbtrack-input-prompt)
         (forward-line -1)
