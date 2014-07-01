@@ -2992,14 +2992,11 @@ the output."
     (py-shell-send-string string process msg)
     (accept-process-output process 5)
     (when (and output (not (string= "" output)))
-      (replace-regexp-in-string
-       (if (> (length py-shell-prompt-output-regexp) 0)
-           (format "\n*%s$\\|^%s\\|\n$"
-                   py-shell-prompt-regexp
-                   (or py-shell-prompt-output-regexp ""))
-         (format "\n*$\\|^%s\\|\n$"
-                 py-shell-prompt-regexp))
-       "" output))))
+      (setq output
+	    (replace-regexp-in-string
+	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+	     "" output)))
+    output))
 
 (defun py--send-string-return-output (string &optional process msg)
   "Send STRING to PROCESS and return output.
@@ -10218,7 +10215,7 @@ Returns char found. "
     (setq py-error (py--postprocess-intern buffer))
     (when py-store-result-p
       (setq erg
-	    (if (eq major-mode 'comint-mode)
+	    (if (eq major-mode 'py-shell-mode)
 		(py-output-filter (py--fetch-comint-result))
 	      (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
       (and erg (not (string= (car kill-ring) erg)) (kill-new erg)))
@@ -11417,10 +11414,10 @@ Returns char found. "
   (setq shell-dirtrackp t)
   (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t))
 
-(defun py-set-ipython-completion-command-string ()
+(defun py-set-ipython-completion-command-string (shell)
   "Set and return `ipython-completion-command-string'. "
   (interactive)
-  (let* ((ipython-version (shell-command-to-string (concat py-shell-name " -V"))))
+  (let* ((ipython-version (shell-command-to-string (concat shell " -V"))))
     (if (string-match "[0-9]" ipython-version)
         (setq ipython-completion-command-string
               (cond ((string-match "^[^0].+" ipython-version)
@@ -11668,7 +11665,7 @@ This function takes the list of setup code to send from the
     (sit-for 0.1)
     buffer))
 
-(defun py--shell-setup (proc)
+(defun py--shell-setup (buffer proc)
   (py--shell-send-setup-code proc)
   (and (string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
        (py-ipython--module-completion-import proc))
@@ -11707,8 +11704,9 @@ This function takes the list of setup code to send from the
   (interactive)
   (when py-debug-p (message "%s" (concat "py--unfontify-banner: " (buffer-name (current-buffer)))))
   (goto-char (point-min))
+  (sit-for 0.2 t)
   (font-lock-unfontify-region (point-min)
-			      (or (ignore-errors (car comint-last-prompt))
+			      (or (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt)))
 				  (re-search-forward comint-prompt-regexp nil t 1)
 				  (error (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name (current-buffer))))))
   (goto-char (point-max)))
@@ -11773,14 +11771,14 @@ This function takes the list of setup code to send from the
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
-	      (py--shell-setup (get-buffer-process py-buffer-name)))
+	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
       (when (or (string-match "[BbIi]*[Pp]ython" (prin1-to-string this-command))(interactive-p)) (py--shell-manage-windows py-buffer-name))
       ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
-	(sit-for 0.3))
-      (sit-for 0.1)
+	(sit-for 0.3 t))
+      (sit-for 0.1 t)
       (with-current-buffer py-buffer-name
 	(py--unfontify-banner)))
     py-buffer-name))
@@ -22007,7 +22005,7 @@ and return collected output"
 		       (get-buffer-process (py-shell nil nil shell))
 		     (sit-for py-new-shell-delay))))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
-		   (py-set-ipython-completion-command-string)
+		   (py-set-ipython-completion-command-string shell)
 		 python-shell-module-completion-string-code)))
     (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
 
