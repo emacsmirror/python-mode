@@ -1027,13 +1027,17 @@ See also `py-execute-directory'"
   :group 'python-mode)
 
 (defcustom py-switch-buffers-on-execute-p nil
-  "When non-nil switch to the Python output buffer. "
+  "When non-nil switch to the Python output buffer. 
+
+If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
 
   :type 'boolean
   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-p t
-  "When non-nil split windows. "
+  "When non-nil split windows. 
+
+If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
   :type 'boolean
   :group 'python-mode)
 
@@ -1927,11 +1931,9 @@ It should not contain a caret (^) at the beginning."
   )
 
 (defcustom py-keep-windows-configuration nil
-  "If a windows is splitted displaying results, this is directed by variable `py-split-windows-on-execute-p'. Also setting `py-switch-buffers-on-execute-p' affects window-configuration. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config.
+  "Takes precedence over `py-split-windows-on-execute-p' and `py-switch-buffers-on-execute-p'. 
 
 See lp:1239498
-
-Setting `py-keep-windows-configuration' to `t' will restore windows-config regardless of settings mentioned above. However, if an error occurs, it's displayed.
 
 To suppres window-changes due to error-signaling also, set `py-keep-windows-configuration' onto 'force
 
@@ -10199,13 +10201,13 @@ Returns char found. "
 
 (defun py--fetch-comint-result ()
   (save-excursion
-    (if (and
-	 (goto-char (car comint-last-prompt))
-	 (re-search-backward py-fast-filter-re nil t 1))
-	(progn
-	  (goto-char (match-end 0))
-	  (buffer-substring-no-properties (point) (car comint-last-prompt)))
-      (error (concat "py--fetch-comint-result: Don't see a prompt at " (current-buffer))))))
+    (or (and
+	 (boundp 'comint-last-prompt)
+	 (goto-char (car comint-last-prompt)))
+	(goto-char (point-max)))
+    (re-search-backward py-fast-filter-re nil t 1))
+  (goto-char (match-end 0))
+  (buffer-substring-no-properties (point) (car comint-last-prompt)))
 
 (defun py--postprocess (buffer)
   "Provide return values, check result for error, manage windows. "
