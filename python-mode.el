@@ -141,6 +141,22 @@ Results arrive in py-output-buffer, which is not in comint-mode"
   :type 'boolean
   :group 'python-mode)
 
+(defvar py--timer nil
+  "Used by `py--run-unfontify-timer'")
+(make-variable-buffer-local 'py--timer)
+
+(defvar py--timer-delay nil
+  "Used by `py--run-unfontify-timer'")
+(make-variable-buffer-local 'py--timer-delay)
+
+(defcustom py-shell-unfontify-p t
+ "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
+
+Default is nil "
+
+:type 'boolean
+:group 'python-mode)
+
 (defcustom py-load-skeletons-p nil
   "If skeleton definitions should be loaded, default is nil. "
 
@@ -1027,7 +1043,7 @@ See also `py-execute-directory'"
   :group 'python-mode)
 
 (defcustom py-switch-buffers-on-execute-p nil
-  "When non-nil switch to the Python output buffer. 
+  "When non-nil switch to the Python output buffer.
 
 If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
 
@@ -1035,7 +1051,7 @@ If `py-keep-windows-configuration' is t, this will take precedence over setting 
   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-p t
-  "When non-nil split windows. 
+  "When non-nil split windows.
 
 If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
   :type 'boolean
@@ -9724,22 +9740,19 @@ shell which will be forced upon execute as argument. "
          (tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
          (tempbuf (get-buffer-create temp))
          (wholebuf (when (boundp 'wholebuf) wholebuf))
-         lineadd output-buffer)
+	 output-buffer)
     ;; (message "%s" strg)
     (unless py-if-name-main-permission-p
       (setq strg (py--fix-if-name-main-permission strg)))
     (setq strg (py--fix-start strg))
+
     ;; fast-process avoids temporary files
     (unwind-protect
 	(if py-fast-process-p
-	    (progn
-	      (setq output-buffer (default-value 'py-output-buffer))
-	      (with-current-buffer output-buffer
-		(erase-buffer)
-		(setq erg (py--fast-send-string-intern strg proc output-buffer))
-		(py-kill-buffer-unconditional tempbuf)))
-
-	  ;; (set-buffer-modified-p 'nil)
+	    (with-current-buffer (setq output-buffer (default-value 'py-output-buffer))
+	      (erase-buffer)
+	      (setq erg (py--fast-send-string-intern strg (py-fast-process output-buffer) output-buffer))
+	      (py-kill-buffer-unconditional tempbuf))
 	  (setq erg (py--execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
 	  (sit-for 0.1))
       (py--close-execution tempbuf erg)
@@ -10221,7 +10234,7 @@ Returns char found. "
 	      (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
       (and erg (not (string= (car kill-ring) erg)) (kill-new erg)))
     ;; (run-with-idle-timer 1 nil 'py--unfontify-banner)
-    (py--unfontify-banner))
+    (py--unfontify-banner buffer))
   erg)
 
 (defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
@@ -11700,18 +11713,19 @@ This function takes the list of setup code to send from the
 	   py-jython-command)
 	  (t py-python-command))))
 
-(defun py--unfontify-banner ()
-  "Unfontify the banner-text inserting at head of shell "
+(defun py--unfontify-banner (buffer)
+  "Unfontify the shell banner-text.
+
+Takes a buffer as argument. "
   (interactive)
-  (when py-debug-p (message "%s" (concat "py--unfontify-banner: " (buffer-name (current-buffer)))))
-  (goto-char (point-min))
-  (sit-for 0.3 t)
-  (font-lock-unfontify-region (point-min)
-			      (or (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt)))
-				  (re-search-forward comint-prompt-regexp nil t 1)
-				  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name (current-buffer)))))
-					 (point-max))))
-  (goto-char (point-max)))
+  (when (ignore-errors (buffer-live-p buffer))
+    (with-current-buffer buffer
+      ;; (when py-debug-p (message "%s" (concat "py--unfontify-banner: " (buffer-name buffer))))
+      ;; (sit-for 0.3 t)
+      (let ((erg (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt)))))
+	(if erg
+	    (font-lock-unfontify-region (point-min) erg)
+	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer))))))))))
 
 (defun py-shell (&optional argprompt dedicated shell buffer-name)
   "Start an interactive Python interpreter in another window.
@@ -11783,8 +11797,7 @@ This function takes the list of setup code to send from the
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
 	(sit-for 0.3 t))
       (sit-for 0.1 t)
-      (with-current-buffer py-buffer-name
-	(py--unfontify-banner)))
+      (py--unfontify-banner (get-buffer py-buffer-name)))
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
@@ -22742,7 +22755,7 @@ Return the process"
 (defun py--fast-send-string (string &optional windows-config)
   "Process Python strings, being prepared for large output.
 
-Output arrives in py-output-buffer, \"\*Python Output\*\" by default
+Result arrives in py-output-buffer, \"\*Python Output\*\" by default
 See also `py-fast-shell'
 
 "
@@ -22753,7 +22766,7 @@ See also `py-fast-shell'
     (py--fast-send-string-intern string proc buffer)
     (py--postprocess buffer)))
 
-(defun py--fast-send-string-intern (string proc py-output-buffer)
+(defun py--fast-send-string-intern (string proc output-buffer)
   (let (erg)
     (process-send-string proc string)
     ;;    (or (string-match "\n$" string)
@@ -22761,7 +22774,7 @@ See also `py-fast-shell'
     (process-send-string proc "\n")
     (accept-process-output proc 5)
     (sit-for 0.01)
-    (set-buffer py-output-buffer)
+    (set-buffer output-buffer)
     ;; (switch-to-buffer (current-buffer))
     ;; delete last line prompts
     (delete-region (point) (progn (skip-chars-backward "^\n")(point)))
@@ -25927,48 +25940,6 @@ FILE-NAME."
      process)))
 ;;;
 
-;; Pymacs
-;; (defun py-load-pymacs ()
-;;   "Load Pymacs as delivered with python-mode.el.
-;;
-;; Pymacs has been written by François Pinard and many others.
-;; See original source: http://pymacs.progiciels-bpi.ca"
-;;   (interactive)
-;;   (let* ((pyshell (py-choose-shell))
-;;          (path (getenv "PYTHONPATH"))
-;;          (py-install-directory (cond ((string= "" py-install-directory)
-;;                                       (py-guess-py-install-directory))
-;;                                      (t (py--normalize-directory py-install-directory))))
-;;          (pymacs-installed-p
-;;           (ignore-errors (string-match (expand-file-name (concat py-install-directory "Pymacs")) path))))
-;;     ;; Python side
-;;     (unless pymacs-installed-p
-;;       (setenv "PYTHONPATH" (concat
-;;                             (expand-file-name py-install-directory)
-;;                             path-separator
-;;                             (expand-file-name py-install-directory) "completion"
-;;                             (if path (concat path-separator path)))))
-;;
-;;     (if (py-install-directory-check)
-;;         (progn
-;;           ;; don't interfere with already installed Pymacs
-;;           (unless (featurep 'pymacs)
-;;             (load (concat py-install-directory "pymacs.el") nil t))
-;;           (setenv "PYMACS_PYTHON" (if (string-match "IP" pyshell)
-;;                                       "python"
-;;                                     pyshell))
-;;           (autoload 'pymacs-apply "pymacs")
-;;           (autoload 'pymacs-call "pymacs")
-;;           (autoload 'pymacs-eval "pymacs")
-;;           (autoload 'pymacs-exec "pymacs")
-;;           (autoload 'pymacs-load "pymacs")
-;;           (require 'pymacs)
-;;           (load (concat py-install-directory "completion/pycomplete.el") nil t)
-;;           (add-hook 'python-mode-hook 'py-complete-initialize))
-;;       (error "`py-install-directory' not set, see INSTALL"))))
-;;
-;; (when py-load-pymacs-p (py-load-pymacs))
-
 (when (or py-load-pymacs-p (featurep 'pymacs))
   (defun py-load-pycomplete ()
     "Load Pymacs based pycomplete."
@@ -25995,7 +25966,7 @@ FILE-NAME."
 (and (or (eq py-complete-function 'py-complete-completion-at-point) py-load-pymacs-p (featurep 'pymacs))
      (py-load-pycomplete))
 
-;; Hooks
+;;; Hooks
 ;; arrange to kill temp files when Emacs exists
 (add-hook 'kill-emacs-hook 'py--kill-emacs-hook)
 (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
@@ -26111,6 +26082,21 @@ FILE-NAME."
             (run-with-idle-timer
              py-autofill-timer-delay t
              'py--set-auto-fill-values)))))
+
+(defun py--run-unfontify-timer (&optional buffer)
+  "Unfontify the shell banner-text "
+  (when py--shell-unfontify
+    (let ((buffer (or buffer (current-buffer)))
+	  done)
+      (if (and (buffer-live-p buffer)(eq major-mode 'py-shell-mode))
+	  (unless py--timer
+	    (setq py--timer
+		  (run-with-idle-timer
+		   (if py--timer-delay (setq py--timer-delay 3)
+		     (setq py--timer-delay 0.3))
+		   t
+		   #'py--unfontify-banner buffer)))
+	(cancel-timer py--timer)))))
 
 ;;;
 (define-derived-mode inferior-python-mode comint-mode "Inferior Python"
@@ -26242,12 +26228,12 @@ See available customizations listed in files variables-python-mode at directory 
             '((< '(backward-delete-char-untabify (min py-indent-offset
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
-  (set (make-local-variable 'imenu-create-index-function) 'py--imenu-create-index-function)
+  ;; (set (make-local-variable 'imenu-create-index-function) 'py--imenu-create-index-function)
+  (setq imenu-create-index-function 'py--imenu-create-index-function)
+  (add-hook 'python-mode-hook (lambda ()(setq imenu-create-index-function 'py--imenu-create-index-function)))
   (and py-guess-py-install-directory-p (py-set-load-path))
-  ;; (add-to-list 'load-path py-install-directory)
-  ;; (add-to-list 'load-path (concat py-install-directory "extensions"))
+  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (buffer-file-name))))
   (and py-autopair-mode
-       ;; (py-autopair-check)
        (load-library "autopair")
        (add-hook 'python-mode-hook
                  #'(lambda ()
@@ -26257,6 +26243,8 @@ See available customizations listed in files variables-python-mode at directory 
        (py-autopair-mode-on))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
+  (when py-pdbtrack-do-tracking-p
+    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t))
   (cond
    (py-complete-function
     (add-hook 'completion-at-point-functions
@@ -26285,7 +26273,8 @@ See available customizations listed in files variables-python-mode at directory 
   (when (and py--imenu-create-index-p
              (fboundp 'imenu-add-to-menubar)
              (ignore-errors (require 'imenu)))
-    (setq imenu--index-alist (py--imenu-create-index-new))
+    (setq imenu--index-alist (funcall py--imenu-create-index-function))
+    ;; (setq imenu--index-alist (py--imenu-create-index-new))
     ;; (message "imenu--index-alist: %s" imenu--index-alist)
     (imenu-add-to-menubar "PyIndex"))
   ;; add the menu
@@ -26321,6 +26310,12 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (setenv "PAGER" "cat")
   (setenv "TERM" "dumb")
   (set-syntax-table python-mode-syntax-table)
+  (set (make-local-variable 'py--shell-unfontify) 'py-shell-unfontify-p)
+
+  (if py-shell-unfontify-p
+      (add-hook 'py-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
+    (remove-hook 'py-shell-mode-hook 'py--run-unfontify-timer))
+
   ;; comint settings
   (set (make-local-variable 'comint-prompt-regexp)
        (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
