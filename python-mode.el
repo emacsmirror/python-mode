@@ -11758,6 +11758,10 @@ Takes a buffer as argument. "
 	  (py-fast-process)
 	  (setq py-output-buffer (default-value 'py-buffer-name)))
       (unless (comint-check-proc py-buffer-name)
+	;; buffer might exist but not being empty
+	(when (buffer-live-p py-buffer-name)
+	  (with-current-buffer py-buffer-name
+	    (erase-buffer))) 
 	(py--shell-make-comint executable py-buffer-name args)
 	(sit-for 0.1 t)
 	(setq py-output-buffer py-buffer-name)
@@ -11771,7 +11775,8 @@ Takes a buffer as argument. "
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
 	(sit-for 0.3 t))
       (sit-for 0.1 t)
-      (py--unfontify-banner (get-buffer py-buffer-name)))
+      ;; (py--unfontify-banner (get-buffer py-buffer-name))
+      )
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
