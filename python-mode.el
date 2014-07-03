@@ -1306,7 +1306,7 @@ should be of the form `#x...' where `x' is not a blank or a tab, and
 (defcustom py-remove-cwd-from-path t
   "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
-an inferior Python process.  This is the default, for security
+a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion)."
   :type 'boolean
@@ -1324,11 +1324,12 @@ Default ignores all inputs of 0, 1, or 2 non-blank characters."
   :type 'regexp
   :group 'python-mode)
 
-(defcustom inferior-python-filter-regexp "\\`\\s-*\\S-?\\S-?\\s-*\\'"
+(defcustom py-input-filter-re "\\`\\s-*\\S-?\\S-?\\s-*\\'"
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters."
   :type 'regexp
   :group 'python-mode)
+(defvaralias 'inferior-python-filter-regexp 'py-input-filter-re)
 
 (defcustom py-set-complete-keymap-p  nil
   "If `py-complete-initialize', which sets up enviroment for Pymacs based py-complete, should load it's keys into `python-mode-map'
@@ -1441,10 +1442,10 @@ Default is `t'. See lp:1100892 "
          (eval-after-load "ffap"
            '(push '(python-mode . py-module-path) ffap-alist))
          (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
-         (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
+         (setq ffap-alist (remove '(py-shell-mode . py-ffap-module-path)
                                   ffap-alist)))
         (t (setq ffap-alist (remove '(python-mode . py-ffap-module-path) ffap-alist))
-           (setq ffap-alist (remove '(inferior-python-mode . py-ffap-module-path)
+           (setq ffap-alist (remove '(py-shell-mode . py-ffap-module-path)
                                     ffap-alist))
            (setq ffap-alist (remove '(python-mode . py-module-path) ffap-alist)))))
 
@@ -1552,7 +1553,7 @@ else:
         except NameError:
             pass
         return completions"
-  "Code used to setup completion in inferior Python processes."
+  "Code used to setup completion in Python processes."
   :type 'string
   :group 'python-mode)
 
@@ -2029,9 +2030,6 @@ Currently-active file is at the head of the list.")
 
 (defvar python-mode-abbrev-table nil)
 
-(defvar inferior-python-mode-abbrev-table nil
-  "Not in use.")
-
 (defvar py-pdbtrack-input-prompt nil)
 
 (defvar py-pydbtrack-input-prompt nil)
@@ -2130,17 +2128,6 @@ alternative for finding the index.")
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
 
-(defvar inferior-python-mode-map
-  (let ((map (copy-keymap comint-mode-map)))
-    ;; (substitute-key-definition 'complete-symbol 'py-shell-complete map global-map)
-    (substitute-key-definition 'complete-symbol 'completion-at-point map global-map)
-    (define-key map (kbd "RET") 'comint-send-input)
-    (and py-complete-function
-         (define-key map [tab] 'py-complete-function))
-    (define-key map "\C-c-" 'py-up-exception)
-    (define-key map "\C-c=" 'py-down-exception)
-    map))
-
 (defvar py-menu)
 
 (defvar py-already-guessed-indent-offset nil
@@ -2155,14 +2142,6 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
 (or (assq 'py-pdbtrack-is-tracking-p minor-mode-alist)
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
           minor-mode-alist))
-(defvar inferior-python-mode-syntax-table
-  (let ((st (make-syntax-table python-mode-syntax-table)))
-    ;; Don't get confused by apostrophes in the process's output (e.g. if
-    ;; you execute "help(os)").
-    (modify-syntax-entry ?\' "." st)
-    ;; Maybe we should do the same for double quotes?
-    ;; (modify-syntax-entry ?\" "." st)
-    st))
 
 (defvar smart-operator-mode nil)
 (defvar autopair-mode nil)
@@ -3065,7 +3044,7 @@ FILE-NAME."
      process)))
 
 (defun py-switch-to-shell ()
-  "Switch to inferior Python process buffer."
+  "Switch to Python process buffer."
   (interactive)
   (pop-to-buffer (py-shell) t))
 
@@ -3334,7 +3313,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
           (orig (point)))
       (save-match-data
 	(if (or (eq major-mode 'comint-mode)
-		(eq major-mode 'inferior-python-mode))
+		(eq major-mode 'py-shell-mode))
 	    (cond
 	     ((re-search-backward py-fast-filter-re nil t 1)
 	      (goto-char (match-end 0)))
@@ -3404,7 +3383,7 @@ Don't save anything for STR matching `py-history-filter-regexp'."
                (if pos (py--args-to-list (substring string pos))))))))
 
 (defun python-send-string (string)
-  "Evaluate STRING in inferior Python process."
+  "Evaluate STRING in Python process."
   (interactive "sPython command: ")
   (comint-send-string (py-proc) string)
   (unless (string-match "\n\\'" string)
@@ -3443,7 +3422,7 @@ Start a new process if necessary. "
 (defun py-ffap-module-path (module)
   "Function for `ffap-alist' to return path for MODULE."
   (let ((process (or
-                  (and (eq major-mode 'inferior-python-mode)
+                  (and (eq major-mode 'py-shell-mode)
                        (get-buffer-process (current-buffer)))
                   (py-shell-get-process))))
     (if (not process)
@@ -3460,7 +3439,7 @@ Start a new process if necessary. "
 ;;;
 (define-abbrev-table 'python-mode-abbrev-table ())
 
-(define-abbrev-table 'inferior-python-mode-abbrev-table ())
+(define-abbrev-table 'py-shell-mode-abbrev-table ())
 
 ;; pdbtrack constants
 (defconst py-pdbtrack-stack-entry-regexp
@@ -3472,14 +3451,6 @@ Start a new process if necessary. "
 ;;instead of '(Pdb)'
 (setq py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ ")
 (setq py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ ")
-
-;; pydb-328837.diff
-;; (defconst py-pydbtrack-stack-entry-regexp
-;;   "^(\\([-a-zA-Z0-9_/.]*\\):\\([0-9]+\\)):[ \t]?\\(.*\n\\)"
-;;   "Regular expression pdbtrack uses to find a stack trace entry for pydb.
-;;
-;; The debugger outputs program-location lines that look like this:
-;;    (/usr/bin/zonetab2pot.py:15): makePOT")
 
 (defconst py-pdbtrack-marker-regexp-file-group 2
   "Group position in gud-pydb-marker-regexp that matches the file name.")
@@ -6885,7 +6856,7 @@ http://docs.python.org/reference/compound_stmts.html"
         (limit
          (or limit
              (and
-              (or (eq major-mode 'comint-mode)(eq major-mode 'inferior-python-mode))
+              (or (eq major-mode 'comint-mode)(eq major-mode 'py-shell-mode))
               (if (re-search-backward comint-prompt-regexp nil t 1)
                   (match-end 0)
                 (error (format "py-beginning-of-statement: No prompt found in %s mode" major-mode)))))))
@@ -10121,7 +10092,7 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
 ;; Fixme: Try to define the function or class within the relevant
 ;; module, not just at top level.
 (defun py-execute-defun ()
-  "Send the current defun (class or method) to the inferior Python process."
+  "Send the current defun (class or method) to the Python process."
   (interactive)
   (save-excursion (py-execute-region (progn (beginning-of-defun) (point))
                                      (progn (end-of-defun) (point)))))
@@ -10911,7 +10882,7 @@ Maybe call M-x describe-variable RET to query its value. "
 
 ;;;
 (defun py-load-file (file-name)
-  "Load a Python file FILE-NAME into the inferior Python process.
+  "Load a Python file FILE-NAME into the Python process.
 
 If the file has extension `.py' import or reload it as a module.
 Treating it as a module keeps the global namespace clean, provides
@@ -11976,7 +11947,7 @@ With arg, do it that many times.
   (let* ((name (string-strip (or arg (car kill-ring))))
          ;; guess if doublequotes or parentheses are needed
          (numbered (and (string-match "^[0-9]" name) (string-match "^[ \t]*[0-9]" name)(string-match "[0-9][ \t]*$" name)))
-         (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'inferior-python-mode))
+         (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'py-shell-mode))
                       (if numbered
                           (concat "print(\"" name ": %s \" % (" name "))")
                         (concat "print(\"" name ": %s \" % \"" name "\")"))))))
@@ -12009,7 +11980,7 @@ With arg, do it that many times.
   "Transforms the item on current in a print statement. "
   (interactive "*")
   (let* ((name (thing-at-point 'word))
-         (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'inferior-python-mode))
+         (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'py-shell-mode))
                       (concat "print \"" name ": %s \" % " name)))))
     (delete-region (line-beginning-position) (line-end-position))
     (insert form))
@@ -14996,7 +14967,7 @@ Toggle flymake-mode running `pyflakespep8' "]))
                            (not py-remove-cwd-from-path))
                      :help "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
-an inferior Python process.  This is the default, for security
+a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion).Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-remove-cwd-from-path]
@@ -18466,7 +18437,7 @@ Toggle flymake-mode running `pyflakespep8' "]))
                            (not py-remove-cwd-from-path))
                      :help "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
-an inferior Python process.  This is the default, for security
+a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion).Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-remove-cwd-from-path]
@@ -19269,7 +19240,7 @@ See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it p
                            (not py-remove-cwd-from-path))
                      :help "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
-an inferior Python process.  This is the default, for security
+a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion).Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-remove-cwd-from-path]
@@ -21968,9 +21939,10 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
         (find-file (concat py-install-directory "/" py-extensions)))))
 
 (defun py--input-filter (str)
-  "`comint-input-filter' function for inferior Python.
-Don't save anything for STR matching `inferior-python-filter-regexp'."
-  (not (string-match inferior-python-filter-regexp str)))
+  "`comint-input-filter' function for Python.
+
+Don't save anything for STR matching `py-input-filter-re' "
+  (not (string-match py-input-filter-re str)))
 
 ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2008-01/msg00076.html
 (defalias
@@ -25910,7 +25882,7 @@ EVENT is usually a mouse click."
     (goto-char beg)))
 
 (defun py-send-string (string &optional process)
-  "Evaluate STRING in inferior Python process."
+  "Evaluate STRING in Python process."
   (interactive "sPython command: ")
   (let ((proc (or process (py-shell))))
     (comint-send-string proc string)
@@ -25923,7 +25895,7 @@ EVENT is usually a mouse click."
       (comint-send-string proc "\n"))))
 
 (defun py-send-file (file-name &optional process temp-file-name)
-  "Send FILE-NAME to inferior Python PROCESS.
+  "Send FILE-NAME to Python PROCESS.
 If TEMP-FILE-NAME is passed then that file is used for processing
 instead, while internally the shell will continue to use
 FILE-NAME."
@@ -25974,7 +25946,7 @@ FILE-NAME."
 (add-hook 'kill-emacs-hook 'py--kill-emacs-hook)
 (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
 
-(add-hook 'inferior-python-mode-hook 'py-send-shell-setup-code)
+;; (add-hook 'py-shell-mode-hook 'py-send-shell-setup-code)
 
 (remove-hook 'python-mode-hook 'python-setup-brm)
 ;; (add-hook 'python-mode-hook
@@ -26102,42 +26074,6 @@ FILE-NAME."
 	(cancel-timer py--timer)))))
 
 ;;;
-(define-derived-mode inferior-python-mode comint-mode "Inferior Python"
-  "Major mode for interacting with an inferior Python process.
-A Python process can be started with \\[py-shell].
-
-Hooks `comint-mode-hook' and `inferior-python-mode-hook' are run in
-that order.
-
-You can send text to the inferior Python process from other buffers
-containing Python source.
- * \\[py-execute-region] sends the current region to the Python process.
-
-\\{inferior-python-mode-map}"
-  :group 'python
-  (setq mode-line-process '(":%s"))
-  (set (make-local-variable 'comint-input-filter) 'py--input-filter)
-  (set (make-local-variable 'compilation-error-regexp-alist)
-       py-compilation-regexp-alist)
-  (set (make-local-variable 'comint-prompt-regexp)
-       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
-              (concat "\\("
-                      (mapconcat 'identity
-                                 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-                                 "\\|")
-                      "\\)"))
-             (t (concat "\\("
-                        (mapconcat 'identity
-                                   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-                                   "\\|")
-                        "\\)"))))
-  (if py-complete-function
-      (add-hook 'completion-at-point-functions
-                py-complete-function nil 'local)
-    (add-hook 'completion-at-point-functions
-              'py-shell-complete nil 'local))
-  (compilation-shell-minor-mode 1))
-
 (define-derived-mode python-mode fundamental-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
@@ -26293,10 +26229,10 @@ See available customizations listed in files variables-python-mode at directory 
 (defalias 'py-goto-beyond-final-line 'py-end-of-statement-bol)
 
 (define-derived-mode py-shell-mode comint-mode "Py"
-  "Major mode for interacting with an Python process.
+  "Major mode for interacting with a Python process.
 A Python process can be started with \\[py-shell].
 
-You can send text to the inferior Python process from other buffers
+You can send text to the Python process from other buffers
 containing Python source.
  * \\[py-execute-region] sends the current region to the Python process.
 
