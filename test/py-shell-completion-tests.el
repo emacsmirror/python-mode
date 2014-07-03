@@ -53,7 +53,7 @@
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     ;; (goto-char (point-max))
     (sit-for 0.1 t)
-    (delete-region (or (and (boundp 'comint-last-prompt)(cdr comint-last-prompt)) (point-max)) (point-max))
+    (goto-char (or (and (boundp 'comint-last-prompt)(cdr comint-last-prompt)) (point-max)))
     (sit-for 0.2 t)
     ;; (goto-char (point-max))
     (insert "pri")

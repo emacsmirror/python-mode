@@ -136,7 +136,7 @@ Commands prefixed \"py-fast-...\" suitable for large output
 
 See: large output makes Emacs freeze, lp:1253907
 
-Results arrive in py-output-buffer, which is not in comint-mode"
+Results arrive in output buffer, which is not in comint-mode"
 
   :type 'boolean
   :group 'python-mode)
@@ -1965,7 +1965,7 @@ Default is nil "
   ""
   :type 'string
   :group 'python-mode)
-;; (make-variable-buffer-local 'py-output-buffer)
+(make-variable-buffer-local 'py-output-buffer)
 
 (defvar py-exception-buffer nil
   "Set internally, remember source buffer where error might occur. ")
@@ -9745,13 +9745,16 @@ shell which will be forced upon execute as argument. "
     (unless py-if-name-main-permission-p
       (setq strg (py--fix-if-name-main-permission strg)))
     (setq strg (py--fix-start strg))
-
     ;; fast-process avoids temporary files
     (unwind-protect
 	(if py-fast-process-p
-	    (with-current-buffer (setq output-buffer (default-value 'py-output-buffer))
+	    (with-current-buffer (setq output-buffer (process-buffer  proc))
+	      (sit-for 0.1 t) 
 	      (erase-buffer)
-	      (setq erg (py--fast-send-string-intern strg (py-fast-process output-buffer) output-buffer))
+	      (setq erg (py--fast-send-string-intern strg
+						     proc
+						     ;; (py-fast-process output-buffer)
+						     output-buffer))
 	      (py-kill-buffer-unconditional tempbuf))
 	  (setq erg (py--execute-file-base proc tempfile nil py-buffer-name py-orig-buffer-or-file execute-directory))
 	  (sit-for 0.1))
@@ -26093,7 +26096,7 @@ FILE-NAME."
 	    (setq py--timer
 		  (run-with-idle-timer
 		   (if py--timer-delay (setq py--timer-delay 3)
-		     (setq py--timer-delay 0.3))
+		     (setq py--timer-delay 0.1))
 		   t
 		   #'py--unfontify-banner buffer)))
 	(cancel-timer py--timer)))))
