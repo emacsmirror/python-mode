@@ -3408,7 +3408,7 @@ With prefix arg, position cursor at end of buffer."
   "Return the current Python process.
 
 Start a new process if necessary. "
-  (interactive "P")
+  (interactive "p")
   (let ((erg
          (cond ((comint-check-proc (current-buffer))
 		(get-buffer-process (buffer-name (current-buffer))))
@@ -9341,42 +9341,42 @@ Takes a list, INDENT and START position. "
   "Start an Python interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python"))
 
 (defun ipython (&optional argprompt)
   "Start an IPython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "ipython"))
 
 (defun python2 (&optional argprompt)
   "Start an Python2 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python2"))
 
 (defun jython (&optional argprompt)
   "Start an Jython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "jython"))
 
 (defun python3 (&optional argprompt)
   "Start an Python3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python3"))
 
 (defun bpython (&optional argprompt)
   "Start an Bpython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "bpython"))
 
 ;; dedicated
@@ -9384,7 +9384,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python")))
 
@@ -9392,7 +9392,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "ipython")))
 
@@ -9400,7 +9400,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python2")))
 
@@ -9408,7 +9408,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "jython")))
 
@@ -9416,7 +9416,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python3")))
 
@@ -9424,7 +9424,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Start an unique Bpython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t))
     (py-shell argprompt t "bpython")))
 
@@ -9433,7 +9433,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python")))
 
@@ -9441,7 +9441,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "ipython")))
 
@@ -9449,7 +9449,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python2")))
 
@@ -9457,7 +9457,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "jython")))
 
@@ -9465,7 +9465,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python3")))
 
@@ -9473,7 +9473,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to Bpython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "bpython")))
 
@@ -9482,7 +9482,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an Python interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python")))
 
@@ -9490,7 +9490,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an IPython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "ipython")))
 
@@ -9498,7 +9498,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an Python2 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python2")))
 
@@ -9506,7 +9506,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an Jython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "jython")))
 
@@ -9514,7 +9514,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an Python3 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python3")))
 
@@ -9522,7 +9522,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Open an Bpython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "bpython")))
 
@@ -9532,7 +9532,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python")))
@@ -9542,7 +9542,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "ipython")))
@@ -9552,7 +9552,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python2")))
@@ -9562,7 +9562,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "jython")))
@@ -9572,7 +9572,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python3")))
@@ -9582,7 +9582,7 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
   "Switch to an unique Bpython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "bpython")))
@@ -10006,7 +10006,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
    uses of qualified names (MODULE.NAME).
 
  - The Python debugger gets line number information about the functions."
-  (interactive "P")
+  (interactive "p")
   ;; Check file local variable py-master-file
   (when py-master-file
     (let* ((filename (expand-file-name py-master-file))
@@ -11721,7 +11721,8 @@ Takes a buffer as argument. "
   "
   (interactive "P")
   ;; done by py-shell-mode
-  (let* ((newpath (when (eq 4 (prefix-numeric-value argprompt))
+  (let* ((iact (ignore-errors (eq 1 argprompt))) ;; interactively?
+	 (newpath (when (eq 4 (prefix-numeric-value argprompt))
 		    (read-shell-command "PATH/TO/EXECUTABLE/[I]python[version]: ")))
 	 (oldbuf (current-buffer))
 	 (dedicated (or dedicated py-dedicated-process-p))
@@ -11768,9 +11769,10 @@ Takes a buffer as argument. "
 	;; buffer might exist but not being empty
 	(when (buffer-live-p py-buffer-name)
 	  (with-current-buffer py-buffer-name
-	    (erase-buffer))) 
+	    (erase-buffer)))
 	(py--shell-make-comint executable py-buffer-name args)
-	(sit-for 0.1 t)
+	;; if called from a program, banner needs some delay
+	(or iact (sit-for 0.3 t))
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
