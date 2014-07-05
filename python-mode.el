@@ -9885,10 +9885,10 @@ When optional FILE is `t', no temporary file is needed. "
 	  (py-execute-no-temp-p
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc))
 	  ((and filename wholebuf)
-	   ;; No temporary file than
+	   ;; No temporary file needed than
 	   (let (py-cleanup-temporary)
 	     (py--execute-file-base proc filename nil py-buffer-name filename execute-directory)
-	     (py--close-execution tempbuf erg)
+	     (py--store-result-maybe erg)
 	     (py--shell-manage-windows py-buffer-name)))
 	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc)))))
 
@@ -10186,11 +10186,16 @@ Returns char found. "
       (delete-region orig (point-max)))
     (set-buffer oldbuf)))
 
+(defun py--store-result-maybe (erg)
+  "If no error occurred and `py-store-result-p' store result for yank. "
+  (and (not py-error) erg (or py-debug-p py-store-result-p) (kill-new erg)))
+
 (defun py--close-execution (tempbuf erg)
-  (when py-cleanup-temporary
+  "Delete temporary buffer and and run `py--store-result-maybe'" 
+  (when py-cleanup-temporary 
     (py-kill-buffer-unconditional tempbuf)
     (py-delete-temporary tempfile tempbuf))
-  (and (not py-error) erg (or py-debug-p py-store-result-p) (unless (string= (car kill-ring) erg) (kill-new erg)))
+  (py--store-result-maybe erg)
   erg)
 
 (defun py--fetch-comint-result ()
