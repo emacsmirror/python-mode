@@ -1125,7 +1125,7 @@ Else python"
    ;; "C:/Python33/Lib/site-packages/IPython"
     "python")
 
-  "Make sure, the directory where python.exe resides in in the PATH-variable. 
+  "Make sure, the directory where python.exe resides in in the PATH-variable.
 
 Windows: If needed, edit in \"Advanced System Settings/Environment Variables\" Commonly \"C:\\\\Python27\\\\python.exe\"
 With Anaconda for example the following works here:
@@ -1948,7 +1948,7 @@ It should not contain a caret (^) at the beginning."
   )
 
 (defcustom py-keep-windows-configuration nil
-  "Takes precedence over `py-split-windows-on-execute-p' and `py-switch-buffers-on-execute-p'. 
+  "Takes precedence over `py-split-windows-on-execute-p' and `py-switch-buffers-on-execute-p'.
 
 See lp:1239498
 
@@ -10191,8 +10191,8 @@ Returns char found. "
   (and (not py-error) erg (or py-debug-p py-store-result-p) (kill-new erg)))
 
 (defun py--close-execution (tempbuf erg)
-  "Delete temporary buffer and and run `py--store-result-maybe'" 
-  (when py-cleanup-temporary 
+  "Delete temporary buffer and and run `py--store-result-maybe'"
+  (when py-cleanup-temporary
     (py-kill-buffer-unconditional tempbuf)
     (py-delete-temporary tempfile tempbuf))
   (py--store-result-maybe erg)
@@ -17244,7 +17244,7 @@ Argument is how many `py-partial-expression's form the expansion; or zero means 
 
                   ("Completion"
                    :help "Completion options"
-		   
+
 		   ["Indent or complete" py-indent-or-complete
 		    :help " `py-indent-or-complete'
 
@@ -21521,6 +21521,9 @@ Argument is how many `py-partial-expression's form the expansion; or zero means 
 Try to find source definition of function at point"]))))
         map))
 
+(and py-load-skeletons-p (require 'python-components-skeletons))
+(and py-company-pycomplete-p (require 'company-pycomplete))
+
 ;; avoid errors from ipython.el - which isn't needed anymore
 (defvaralias 'py-shell-map 'py-shell-mode-map)
 
@@ -22072,7 +22075,7 @@ and return collected output"
   "Complete or indent depending on the context.
 
 If cursor is at end of line, try to complete
-Otherwise call `py-indent-line' 
+Otherwise call `py-indent-line'
 
 Use `C-q TAB' to insert a literally TAB-character "
   (interactive "*")
