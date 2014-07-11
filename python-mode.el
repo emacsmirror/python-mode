@@ -3961,7 +3961,6 @@ Similar to `toggle-py-smart-indentation' resp. `py-smart-indentation-off' follow
 
 This function is normally used by `indent-line-function' resp.
 \\[indent-for-tab-command].
-Returns current indentation
 
 When bound to TAB, C-q TAB inserts a TAB.
 
@@ -11779,7 +11778,7 @@ Takes a buffer as argument. "
 	    (erase-buffer)))
 	(py--shell-make-comint executable py-buffer-name args)
 	;; if called from a program, banner needs some delay
-	(or iact (sit-for 0.3 t))
+	(or iact (sit-for 0.6 t))
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
@@ -22079,7 +22078,7 @@ Otherwise call `py-indent-line'
 
 Use `C-q TAB' to insert a literally TAB-character "
   (interactive "*")
-  (if (eolp)
+  (if (and (eolp)(not (bolp)))
       (py-shell-complete)
     (py-indent-line)))
 

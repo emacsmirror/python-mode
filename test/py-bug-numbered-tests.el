@@ -5457,7 +5457,7 @@ def foo():
 
 \"\"\"Some docstring.\"\"\"
 
-__version__ = \"$Revision: 1.114 $\"
+__version__ = \"$Revision: 1.115 $\"
 
 "))
   (py-bug-tests-intern 'python-mode-very-slow-lp-1107037-base arg teststring)))
@@ -6505,6 +6505,20 @@ print(123)
 
 (defun execute-buffer-lp-1338134-base ()
   (assert (py-execute-buffer) nil "execute-buffer-lp-1338134-test failed"))
+
+
+(defun dont-complete-empty-line-lp-1340824-test (&optional arg)
+  (interactive "p")
+   (let ((teststring "#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+class Foo:a
+"))
+  (py-bug-tests-intern 'dont-complete-empty-line-lp-1340824-base arg teststring)))
+
+(defun dont-complete-empty-line-lp-1340824-base ()
+  (py-indent-or-complete)
+  (sit-for 0.1 t) 
+  (assert (eq 4 (current-indentation)) nil "dont-complete-empty-line-lp-1340824-test failed"))
 
 
 (provide 'py-bug-numbered-tests)
