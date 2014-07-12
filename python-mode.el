@@ -22078,9 +22078,9 @@ Otherwise call `py-indent-line'
 
 Use `C-q TAB' to insert a literally TAB-character "
   (interactive "*")
-  (if (and (eolp)(not (bolp)))
-      (py-shell-complete)
-    (py-indent-line)))
+  (if (member (char-before)(list 32 10 9))
+      (py-indent-line)
+    (py-shell-complete)))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
