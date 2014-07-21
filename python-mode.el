@@ -1669,7 +1669,10 @@ SYMMETRIC:
 ;; Face for None, True, False, self, and Ellipsis
 (defface py-pseudo-keyword-face
   '((t (:inherit font-lock-keyword-face)))
-  "Face for pseudo keywords in Python mode, like self, True, False, Ellipsis."
+  "Face for pseudo keywords in Python mode, like self, True, False,
+  Ellipsis.
+
+See also `py-object-reference-face'"
   :group 'python-mode)
 
 (defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
@@ -1683,8 +1686,8 @@ SYMMETRIC:
 
 (defvar py-object-reference-face 'py-object-reference-face)
 (defface py-object-reference-face
-  '((t (:inherit default)))
-  "Face when referencing object members from its class resp. method. , commonly \"cls\" and \"self\""
+  '((t (:inherit py-pseudo-keyword-face)))
+  "Face when referencing object members from its class resp. method., commonly \"cls\" and \"self\""
   :group 'python-mode)
 
 ;; PEP 318 decorators
