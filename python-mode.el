@@ -869,6 +869,51 @@ Default is `t'."
   :type 'number
   :group 'python-mode)
 
+(defcustom py-ac-length-min 2
+  "Auto-complete takes action only with minimum length of word before point, set here.
+
+Default is 2"
+
+  :type 'integer
+  :group 'python-mode)
+
+(defcustom py-completion-delay 4
+  "Seconds completion-buffer is shown, if any. "
+
+  :type 'integer
+  :group 'python-mode)
+
+
+(defvar py-auto-completion-mode-p nil
+  "Internally used by `py-auto-completion-mode'")
+
+(defvar py-complete-last-modified nil
+  "Internally used by `py-auto-completion-mode'")
+
+(defvar py--auto-complete-timer nil
+  "Internally used by `py-auto-completion-mode'")
+
+(defvar py-auto-completion-buffer nil
+  "Internally used by `py-auto-completion-mode'")
+
+(defvar py--auto-complete-timer nil)
+;; (make-variable-buffer-local 'py--auto-complete-timer)
+
+(defcustom py--auto-complete-timer-delay 1
+  "Seconds Emacs must be idle to trigger auto-completion.
+
+See `py-auto-completion-mode'"
+
+  :type 'number
+  :group 'python-mode)
+
+(defcustom py-auto-complete-p nil
+  "Run python-mode's built-in auto-completion via py-complete-function. Default is  nil"
+
+  :type 'boolean
+  :group 'python-mode)
+(make-variable-buffer-local 'py-auto-complete-p)
+
 (defcustom py-honor-IPYTHONDIR-p nil
   "When non-nil ipython-history file is constructed by $IPYTHONDIR
 followed by \"/history\". Default is nil.
@@ -4084,7 +4129,7 @@ When indent is set back manually, this is honoured in following lines. "
 		((and py-empty-line-closes-p (or (eq this-command last-command)(py--after-empty-line)))
 		 (indent-to-column (save-excursion (py-beginning-of-statement)(- (current-indentation) py-indent-offset))))
 		(t
-		 (fixup-whitespace) 
+		 (fixup-whitespace)
 		 (indent-to-column (py-compute-indentation)))))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
@@ -14677,7 +14722,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
 
 Process Python strings, being prepared for large output\.
 
-Output arrives in py-output-buffer, \"\\\*Python Output\\\*\" by default
+Result arrives in py-output-buffer, \"\\\*Python Output\\\*\" by default
 See also `py-fast-shell'"]
 
                   ["Process region fast" py-process-region-fast
@@ -17267,6 +17312,14 @@ Argument is how many `py-partial-expression's form the expansion; or zero means 
 
                   ("Completion"
                    :help "Completion options"
+
+		   ["Auto complete mode"
+		    (setq py-auto-complete-p
+			  (not py-auto-complete-p))
+		    :help "Auto complete mode
+
+Use `M-x customize-variable' to set it permanently"
+		    :style toggle :selected py-auto-complete-p]
 
 		   ["Indent or complete" py-indent-or-complete
 		    :help " `py-indent-or-complete'
@@ -26122,6 +26175,44 @@ FILE-NAME."
 		   t
 		   #'py--unfontify-banner buffer)))
 	(cancel-timer py--timer)))))
+;;;
+(defun py-complete-auto ()
+  "Auto-complete function using py-complete. "
+  ;; disable company
+  ;; (when company-mode (company-mode))
+  (let ((modified (buffer-chars-modified-tick)))
+    ;; don't try completion if buffer wasn't modified
+    (unless (eq modified py-complete-last-modified)
+      (if py-auto-completion-mode-p
+	  (if (string= "*PythonCompletions*" (buffer-name (current-buffer)))
+	      (sit-for 1 t)
+	    (if
+		(eq py-auto-completion-buffer (current-buffer))
+		;; not after whitespace, TAB or newline
+		(unless (member (char-before) (list 32 9 10))
+		  (py-complete)
+		  (setq py-complete-last-modified (buffer-chars-modified-tick)))
+	      (setq py-auto-completion-mode-p nil
+		    py-auto-completion-buffer nil)
+	      (cancel-timer py--auto-complete-timer)))))))
+
+(define-derived-mode py-auto-completion-mode python-mode "Pac"
+  "Run auto-completion"
+  ;; disable company
+  ;; (when company-mode (company-mode))
+  (if py-auto-completion-mode-p
+      (progn
+	(setq py-auto-completion-mode-p nil
+	      py-auto-completion-buffer nil)
+	(when (timerp py--auto-complete-timer)(cancel-timer py--auto-complete-timer)))
+    (setq py-auto-completion-mode-p t
+	  py-auto-completion-buffer (current-buffer))
+    (setq py--auto-complete-timer
+	  (run-with-idle-timer
+	   py--auto-complete-timer-delay
+	   ;; 1
+	   t
+	   #'py-complete-auto))))
 
 ;;;
 (define-derived-mode python-mode fundamental-mode python-mode-modeline-display
