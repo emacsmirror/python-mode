@@ -10273,8 +10273,8 @@ Returns char found. "
 	   (boundp 'comint-last-prompt)
 	   (goto-char (setq erg (car comint-last-prompt))))
 	  (goto-char (setq erg (point-max))))
-      (re-search-backward py-fast-filter-re nil t 1)
-      (goto-char (match-end 0))
+      (and (re-search-backward py-fast-filter-re nil t 1)
+	   (goto-char (match-end 0)))
       (buffer-substring-no-properties (point) erg))))
 
 (defun py--postprocess (buffer)
