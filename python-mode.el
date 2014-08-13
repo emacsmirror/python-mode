@@ -22114,7 +22114,7 @@ and return collected output"
 
 (defalias 'ipython-complete 'py-shell-complete)
 (defun py-shell-complete (&optional shell debug beg end word)
-  "Complete word before point, if any. Otherwise insert TAB. "
+  "Complete word before point, if any. "
   (interactive)
   (setq py-completion-last-window-configuration
         (current-window-configuration))
