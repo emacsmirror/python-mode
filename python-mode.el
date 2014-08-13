@@ -22859,6 +22859,7 @@ See also `py-fast-shell'
     (accept-process-output proc 5)
     (sit-for 0.01)
     (set-buffer output-buffer)
+    ;; (switch-to-buffer (current-buffer)) 
     ;; delete last line prompts
     (delete-region (point) (progn (skip-chars-backward "^\n")(point)))
     (delete-region (point) (progn (skip-chars-backward "\n\r \t\f")(point)))
@@ -22867,7 +22868,7 @@ See also `py-fast-shell'
       (replace-match ""))
     (and py-store-result-p
 	 (setq erg (buffer-substring-no-properties (point-min) (point-max)))
-	 (kill-new erg)
+	 (unless (string= "" erg)(kill-new erg))
 	 erg)))
 
 (defun py-process-region-fast (beg end)
