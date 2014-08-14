@@ -141,6 +141,9 @@ Results arrive in output buffer, which is not in comint-mode"
   :type 'boolean
   :group 'python-mode)
 
+(defvar py-result nil
+  "Internally used. May store result from Python process. ")
+
 (defvar py--timer nil
   "Used by `py--run-unfontify-timer'")
 (make-variable-buffer-local 'py--timer)
