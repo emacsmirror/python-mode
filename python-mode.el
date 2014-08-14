@@ -1050,12 +1050,12 @@ Default is \"--errors-only\" "
   :group 'python-mode
   :tag "Pylint Command Args")
 
-(defcustom py-shell-input-prompt-1-regexp "^>>> "
+(defcustom py-shell-input-prompt-1-regexp ">>> "
   "A regular expression to match the input prompt of the shell."
   :type 'string
   :group 'python-mode)
 
-(defcustom py-shell-input-prompt-2-regexp "^[.][.][.] "
+(defcustom py-shell-input-prompt-2-regexp "[.][.][.] "
   "A regular expression to match the input prompt of the shell after the
   first line of input."
   :type 'string
