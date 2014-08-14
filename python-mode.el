@@ -22116,8 +22116,9 @@ and return collected output"
 (defun py-shell-complete (&optional shell debug beg end word)
   "Complete word before point, if any. "
   (interactive)
-  (and (buffer-live-p (get-buffer "*Python Completions*"))
-       (py-kill-buffer-unconditional "*Python Completions*"))
+  (save-excursion
+    (and (buffer-live-p (get-buffer "*Python Completions*"))
+	 (py-kill-buffer-unconditional "*Python Completions*")))
   (setq py-completion-last-window-configuration
         (current-window-configuration))
   (when debug (setq py-shell-complete-debug nil))
