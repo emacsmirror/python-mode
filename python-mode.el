@@ -129,6 +129,11 @@ Default is nil"
   :type 'boolean
   :group 'python-mode)
 
+(defvar py-return-result-p t
+ "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
+
+Default is t")
+
 (defcustom py-fast-process-p nil
   "Use `py-fast-process'.
 
@@ -9866,7 +9871,7 @@ May we get rid of the temporary file? "
 (defun py--choose-buffer-name (&optional name)
   "Python code might be processed by an
 - interactive Python shell (DEFAULT)
-- non-interactive Python (py-fast-process-p), select for large
+- non-interactive Python py-fast-process-p, select for large
   output
 
 Both processes might run in
@@ -22115,16 +22120,7 @@ and return collected output"
 		 python-shell-module-completion-string-code)))
     (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
 
-(defalias 'ipython-complete 'py-shell-complete)
-(defun py-shell-complete (&optional shell debug beg end word)
-  "Complete word before point, if any. "
-  (interactive)
-  (save-excursion
-    (and (buffer-live-p (get-buffer "*Python Completions*"))
-	 (py-kill-buffer-unconditional "*Python Completions*")))
-  (setq py-completion-last-window-configuration
-        (current-window-configuration))
-  (when debug (setq py-shell-complete-debug nil))
+(defun py--complete-prepare (shell debug beg end word fast-complete)
   (let* ((oldbuf (current-buffer))
          (pos (copy-marker (point)))
 	 (pps (syntax-ppss))
@@ -22152,14 +22148,26 @@ and return collected output"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p completion-buffer erg)
-    (sit-for 0.1 t)
-    (cond ((and in-string filenames)
+    (cond (fast-complete (py--fast-complete-base shell pos beg end word imports debug oldbuf))
+	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
 	     (insert erg)))
 	  (t (py--complete-base shell pos beg end word imports debug oldbuf)))
     nil))
 
+(defun py-shell-complete (&optional shell debug beg end word)
+  "Complete word before point, if any. "
+  (interactive)
+  (save-excursion
+    (and (buffer-live-p (get-buffer "*Python Completions*"))
+	 (py-kill-buffer-unconditional "*Python Completions*")))
+  (setq py-completion-last-window-configuration
+        (current-window-configuration))
+  (when debug (setq py-shell-complete-debug nil))
+  (py--complete-prepare shell debug beg end word nil))
+
+(defalias 'ipython-complete 'py-shell-complete)
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
 
@@ -22170,7 +22178,7 @@ Use `C-q TAB' to insert a literally TAB-character "
   (interactive "*")
   (if (member (char-before)(list 32 10 9))
       (py-indent-line)
-    (py-shell-complete)))
+    (funcall py-complete-function)))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
@@ -22823,7 +22831,6 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
   (py--execute-prepare "clause"))
 
 ;;; Process fast forms
-
 (defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
 
@@ -22852,12 +22859,24 @@ Result arrives in py-fast-output-buffer, \"\*Python Fast Output\*\" by default
 See also `py-fast-shell'
 
 "
-  (let* ((windows-config (or windows-config (window-configuration-to-register 313465889)))
-	 (proc (or proc
-		   (ignore-errors (get-buffer-process (get-buffer py-buffer-name)))
+  (let* ((proc (or proc
+		   (ignore-errors (get-buffer-process (get-buffer py-fast-output-buffer)))
 		   (py-fast-process)))
 	 (buffer (process-buffer proc)))
     (py--fast-send-string-intern string proc buffer)))
+
+(defun py--filter-result ()
+  "Set `py-result' according to `py-fast-filter-re'.
+
+Remove trailing newline"
+  (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig (point-max))))
+  ;; remove trailing newline
+  (and (string-match "\n$" py-result)
+       (setq py-result (substring py-result 0 (match-beginning 0))))
+  (and py-store-result-p
+       (not (string= "" py-result))
+       (kill-new py-result))
+  (setq py-result (split-string py-result "\n")))
 
 (defun py--fast-send-string-intern (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -22868,13 +22887,12 @@ See also `py-fast-shell'
       (process-send-string proc string)
       (process-send-string proc "\n")
       (accept-process-output proc 5)
-      (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig (point-max))))
-      ;; remove trailing newline
-      (and (string-match "\n$" py-result)
-	   (setq py-result (substring py-result 0 (match-beginning 0))))
-      (and py-store-result-p (not (string= "" py-result))
-	   (kill-new py-result)
-	   py-result))))
+      ;; `py--fast-send-string-no-output' sets `py-store-result-p' to
+      ;; nil
+      (when (or py-store-result-p py-return-result-p)
+	(py--filter-result))
+      (when py-return-result-p
+	py-result))))
 
 (defun py-fast-send-string (string)
   "Evaluate STRING in Python process which is not in comint-mode.
@@ -22882,6 +22900,22 @@ See also `py-fast-shell'
 From a programm use `py--fast-send-string'"
   (interactive "sPython command: ")
   (py--fast-send-string string))
+
+(defun py--fast-send-string-no-output (string &optional proc)
+  "Process Python string, ignore output.
+
+Used to update Python process
+
+Result arrives in py-fast-output-buffer, \"\*Python Fast Output\*\" by default
+See also `py-fast-shell'
+
+"
+  (let* ((proc (or proc
+		   (ignore-errors (get-buffer-process (get-buffer py-fast-output)))
+		   (py-fast-process)))
+	 (buffer (process-buffer proc))
+	 py-store-result-p)
+    (py--fast-send-string-intern string proc buffer)))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
@@ -22987,6 +23021,84 @@ comint-mode"
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "clause")))
+
+;;; py-fast-complete
+(defun py--fast-completion-get-completions (input process completion-code)
+  "Retrieve available completions for INPUT using PROCESS.
+Argument COMPLETION-CODE is the python code used to get
+completions on the current context."
+  (let ((completions
+	 (py--fast-send-string-intern
+	  (format completion-code input) process py-fast-output-buffer)))
+    ;; (sit-for 0.2 t)
+    (when (> (length completions) 2)
+      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+
+(defun py--fast--do-completion-at-point (process imports input orig oldbuf code)
+  "Do completion at point for PROCESS."
+  ;; send setup-code
+  (let (py-return-result-p)
+    (py--fast-send-string-no-output py-shell-completion-setup-code process)
+    (when imports
+      ;; (message "%s" imports)
+      (py--fast-send-string-no-output imports process)))
+  (let* ((completion
+	  (py--fast-completion-get-completions
+	   input process code))
+	 ;; (completion (when completions
+	 ;; (try-completion input completions)))
+	 newlist erg)
+    ;; (message "%s" (current-buffer))
+    (set-buffer oldbuf)
+    ;; (sit-for 1 t)
+    (cond ((eq completion t)
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
+	   nil)
+	  ((null completion)
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Don't see a completion"))
+	   nil)
+	  ((and completion
+		(or (and (listp completion)
+			 (string= input (car completion)))
+		    (and (stringp completion)
+			 (string= input completion))))
+	   nil)
+	  ((and completion (stringp completion)(not (string= input completion)))
+	   (progn (delete-char (- (length input)))
+		  (insert completion)
+		  ;; (move-marker orig (point))
+		  ;; minibuffer.el expects a list
+		  nil))
+	  (t (py--try-completion input completion)))
+
+    nil))
+
+(defun py--fast-complete-base (shell pos beg end word imports debug oldbuf)
+  (let* ((shell (or shell (py-choose-shell)))
+         (proc (or (and (processp (get-buffer-process py-fast-output-buffer))		    (string-match shell (process-name (get-buffer-process py-fast-output-buffer)))
+		    (get-buffer-process py-fast-output-buffer))
+		   (get-process
+		    ;; (prog1
+			(py-fast-process py-fast-output-buffer)
+		      ;; (sit-for 0.1 t)
+		      ;; )
+)))
+	 (code (if (string-match "[Ii][Pp]ython*" shell)
+		   (py-set-ipython-completion-command-string shell)
+		 python-shell-module-completion-string-code)))
+    (with-current-buffer py-fast-output-buffer
+      (erase-buffer))
+    (py--fast--do-completion-at-point proc imports word pos oldbuf code)))
+
+(defun py-fast-complete (&optional shell debug beg end word)
+  "Complete word before point, if any.
+
+Use `py-fast-process' "
+  (interactive)
+  (setq py-completion-last-window-configuration
+        (current-window-configuration))
+  (let ((py-fast-complete-p t))
+    (py--complete-prepare shell debug beg end word t)))
 
 ;;; Execute line
 (defalias 'ipython-send-and-indent 'py-execute-line-ipython)
