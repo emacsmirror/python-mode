@@ -862,6 +862,12 @@ Default is `t'."
   :type 'number
   :group 'python-mode)
 
+(defcustom py-fast-completion-delay 0.1
+  "Used by py--fast-send-string-intern. "
+
+  :type 'float
+  :group 'python-mode)
+
 (defcustom py-new-shell-delay
     (if (eq system-type 'windows-nt)
       2.0
@@ -22865,6 +22871,7 @@ Remove trailing newline"
       ;; `py--fast-send-string-no-output' sets `py-store-result-p' to
       ;; nil
       (when (or store return)
+	(sit-for py-fast-completion-delay t)
 	(py--filter-result orig (point-max) store))
       (when return
 	py-result))))
