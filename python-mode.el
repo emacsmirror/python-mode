@@ -785,7 +785,7 @@ the Emacs bell is also rung as a warning."
   :group 'python-mode)
 
 (defcustom py-jump-on-exception t
-  "Jump to innermost exception frame in *Python Output* buffer.
+  "Jump to innermost exception frame in Python output buffer.
 When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame."
@@ -2017,15 +2017,10 @@ Default is nil "
           (const :tag "force" 'force))
   :group 'python-mode)
 
-(defvar py-fast-output-buffer "*Python Fast Output*"
-  "Output from py-fast-process arrives here")
+(defvar py-output-buffer "*Python Output*"
+    "Currently unused.
 
-(defcustom py-output-buffer "*Python Output*"
-  "Currently unused.
-
-Output arrives in interactive shell or py-fast-output-buffer"
-  :type 'string
-  :group 'python-mode)
+Output buffer is created dynamically according to Python version and kind of process-handling")
 (make-variable-buffer-local 'py-output-buffer)
 
 (defvar py-exception-buffer nil
@@ -9881,11 +9876,7 @@ Both processes might run in
 - dedicated, open or follow a separate line of execution
 
 Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
-
-  (cond ((and py-fast-process-p py-dedicated-process-p)
-	 (py--buffer-name-prepare (default-value 'py-output-buffer)))
-        (py-fast-process-p py-fast-output-buffer)
-        (t (py--buffer-name-prepare name))))
+  (py--buffer-name-prepare name))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
@@ -9907,10 +9898,11 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
 	     end)))
 	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
 	 (which-shell
-	  (if shell (progn
-		      (or (stringp shell) shell)
-		      (ignore-errors (eval shell))
-		      (and (symbolp shell) (prin1-to-string shell)))
+	  (if shell
+	      ;; shell might be specified in different ways
+	      (or (and (stringp shell) shell)
+		  (ignore-errors (eval shell))
+		  (and (symbolp shell) (prin1-to-string shell)))
 	    (py-choose-shell)))
 	 (py-exception-buffer (current-buffer))
 	 (execute-directory
@@ -9926,13 +9918,12 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
 		(t (getenv "HOME"))))
 	 (py-buffer-name
 	  (or py-buffer-name
-	      (and py-fast-process-p (default-value 'py-fast-output-buffer))
 	      (py--choose-buffer-name which-shell)))
 	 (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (cond (proc)
 		     ;; will deal with py-dedicated-process-p also
-		     (py-fast-process-p (py-fast-process py-buffer-name))
+		     (py-fast-process-p (get-buffer-process (py-fast-process py-buffer-name)))
 		     (py-dedicated-process-p
 		      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))
 		     (t (or (get-buffer-process py-buffer-name)
@@ -9946,7 +9937,7 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
     (erase-buffer)
     (py--fast-send-string-intern strg
 				 proc
-				 output-buffer)
+				 output-buffer py-store-result-p py-return-result-p)
     (sit-for 0.1)
     (py--shell-manage-windows output-buffer)))
 
@@ -11554,11 +11545,12 @@ interpreter."
       (setq erg (cdr erg)))
     (butlast liste)))
 
-(defun py--buffer-name-prepare (&optional arg dedicated)
+(defun py--buffer-name-prepare (&optional arg dedicated fast-process)
   "Return an appropriate name to display in modeline.
 SEPCHAR is the file-path separator of your system. "
   (let* ((name-first (or arg py-shell-name))
 	 (erg (when name-first (if (stringp name-first) name-first (prin1-to-string name-first))))
+	 (fast-process (or fast-process py-fast-process-p))
 	 prefix suffix liste)
     ;; remove suffix
     (when (string-match "[.]" erg)
@@ -11585,18 +11577,19 @@ SEPCHAR is the file-path separator of your system. "
 	    (setq prefix (py--compose-buffer-name-initials prefix))))
       (setq erg (or arg py-shell-name))
       (setq prefix nil))
+    (when fast-process (setq erg (concat erg " Fast")))
 
     ;; (setq name (substring name (1+ (string-match "/[^/]+\\|\\\\[[:alnum:].]+$" name)))))
     (setq erg
-          (cond ((string= "ipython" erg)
+          (cond ((string-match "^ipython" erg)
                  (replace-regexp-in-string "ipython" "IPython" erg))
-                ((string= "jython" erg)
+                ((string-match "^jython" erg)
                  (replace-regexp-in-string "jython" "Jython" erg))
-                ((string= "python" erg)
+                ((string-match "^python" erg)
                  (replace-regexp-in-string "python" "Python" erg))
-                ((string-match "python2" erg)
+                ((string-match "^python2" erg)
                  (replace-regexp-in-string "python2" "Python2" erg))
-                ((string-match "python3" erg)
+                ((string-match "^python3" erg)
                  (replace-regexp-in-string "python3" "Python3" erg))
                 (t erg)))
     (when (or dedicated py-dedicated-process-p)
@@ -11757,17 +11750,14 @@ This function takes the list of setup code to send from the
 
 (defun py--guess-buffer-name (argprompt)
   "Guess the buffer-name core string. "
-  (cond
-   ((and py-fast-process-p (not py-dedicated-process-p)) py-fast-output-buffer)
-   ;; (buffer-name)
-   (t (and (not dedicated) argprompt
+   (and (not dedicated) argprompt
            (cond
             ((and (eq 2 (prefix-numeric-value argprompt))
                   (fboundp 'split-string))
              (setq args (split-string
                          (read-string "Py-Shell arguments: "
                                       (concat
-                                       (mapconcat 'identity py-python-command-args " ") " "))))))))))
+                                       (mapconcat 'identity py-python-command-args " ") " "))))))))
 
 (defun py--configured-shell (name)
   "Return the configured PATH/TO/STRING if any. "
@@ -11797,7 +11787,13 @@ Takes a buffer as argument. "
 	    (font-lock-unfontify-region (point-min) erg)
 	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer))))))))))
 
-(defun py-shell (&optional argprompt dedicated shell buffer-name)
+(defun py--start-fast-process (shell buffer)
+  (let ((proc (start-process shell buffer shell)))
+    (with-current-buffer buffer
+      (erase-buffer))
+    proc))
+
+(defun py-shell (&optional argprompt dedicated shell buffer-name fast-process)
   "Start an interactive Python interpreter in another window.
   Interactively, \\[universal-argument] prompts for a PATH/TO/EXECUTABLE to use.
   \\[universal-argument] 2 prompts for `py-python-command-args'.
@@ -11811,6 +11807,7 @@ Takes a buffer as argument. "
   (interactive "P")
   ;; done by py-shell-mode
   (let* ((iact (ignore-errors (eq 1 argprompt))) ;; interactively?
+	 (fast-process (or fast-process py-fast-process-p))
 	 (newpath (when (eq 4 (prefix-numeric-value argprompt))
 		    (read-shell-command "PATH/TO/EXECUTABLE/[I]python[version]: ")))
 	 (oldbuf (current-buffer))
@@ -11821,7 +11818,7 @@ Takes a buffer as argument. "
 			    ;; (py--configured-shell (py-choose-shell))
 			    (py-choose-shell)))
 	 (args
-	  (cond (py-fast-process-p nil)
+	  (cond (fast-process nil)
 		((string-match "^[Ii]" py-shell-name)
 		 py-ipython-command-args)
 		((string-match "^[^-]+3" py-shell-name)
@@ -11842,7 +11839,7 @@ Takes a buffer as argument. "
 	    (when py-use-local-default
 	      (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
 	 (py-buffer-name (or buffer-name (py--guess-buffer-name argprompt)))
-	 (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath dedicated)))
+	 (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath dedicated fast-process)))
 	 (executable (cond (py-shell-name)
 			   (py-buffer-name
 			    (py--report-executable py-buffer-name))))
@@ -11850,12 +11847,11 @@ Takes a buffer as argument. "
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
-    (if (and py-fast-process-p
-	     ;; user may want just to open a interactive shell
-	     (not (interactive-p)))
-	(unless (get-buffer-process (get-buffer (default-value 'py-buffer-name)))
-	  (py-fast-process)
-	  (setq py-output-buffer (default-value 'py-buffer-name)))
+    (if fast-process
+	     ;; user rather wants an interactive shell
+	(unless (get-buffer-process (get-buffer py-buffer-name))
+	  (py--start-fast-process py-shell-name py-buffer-name)
+	  (setq py-output-buffer py-buffer-name))
       (unless (comint-check-proc py-buffer-name)
 	;; buffer might exist but not being empty
 	(when (buffer-live-p py-buffer-name)
@@ -14738,7 +14734,6 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
 
 Process Python strings, being prepared for large output\.
 
-Result arrives in py-fast-output-buffer, \"\\\*Python Fast Output\\\*\" by default
 See also `py-fast-shell'"]
 
                   ["Process region fast" py-process-region-fast
@@ -14752,8 +14747,7 @@ See also `py-fast-shell'"]
 Process statement at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute block fast" py-execute-block-fast
                    :help " `py-execute-block-fast'
@@ -14761,8 +14755,7 @@ comint-mode "]
 Process block at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute block or clause fast" py-execute-block-or-clause-fast
                    :help " `py-execute-block-or-clause-fast'
@@ -14770,8 +14763,7 @@ comint-mode "]
 Process block-or-clause at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute def fast" py-execute-def-fast
                    :help " `py-execute-def-fast'
@@ -14779,8 +14771,7 @@ comint-mode "]
 Process def at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute class fast" py-execute-class-fast
                    :help " `py-execute-class-fast'
@@ -14788,8 +14779,7 @@ comint-mode "]
 Process class at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute def or class fast" py-execute-def-or-class-fast
                    :help " `py-execute-def-or-class-fast'
@@ -14797,8 +14787,7 @@ comint-mode "]
 Process def-or-class at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute expression fast" py-execute-expression-fast
                    :help " `py-execute-expression-fast'
@@ -14806,8 +14795,7 @@ comint-mode "]
 Process expression at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute partial expression fast" py-execute-partial-expression-fast
                    :help " `py-execute-partial-expression-fast'
@@ -14815,8 +14803,7 @@ comint-mode "]
 Process partial-expression at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute top level fast" py-execute-top-level-fast
                    :help " `py-execute-top-level-fast'
@@ -14824,8 +14811,7 @@ comint-mode "]
 Process top-level at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "]
+Output-buffer is not in comint-mode "]
 
                   ["Execute clause fast" py-execute-clause-fast
                    :help " `py-execute-clause-fast'
@@ -14833,8 +14819,7 @@ comint-mode "]
 Process clause at point by a Python interpreter\.
 
 Suitable for large output, doesn't mess up interactive shell\.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode "])
+Result arrives in output-buffer, which is not in comint-mode "])
 
                  "-"
 
@@ -15118,7 +15103,7 @@ Commands prefixed \"py-fast-...\" suitable for large output
 
 See: large output makes Emacs freeze, lp:1253907
 
-Results arrive in py-fast-output-buffer, which is not in comint-mode"
+Output-buffer is not in comint-mode"
 		     :style toggle :selected py-fast-process-p]
 
 		    ["Python mode v5 behavior"
@@ -19400,7 +19385,7 @@ Commands prefixed \"py-fast-...\" suitable for large output
 
 See: large output makes Emacs freeze, lp:1253907
 
-Results arrive in py-fast-output-buffer, which is not in comint-mode"
+Output-buffer is not in comint-mode"
 		     :style toggle :selected py-fast-process-p]
 
 		    ["Python mode v5 behavior"
@@ -22086,7 +22071,8 @@ and return collected output"
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
 		      (mapconcat 'identity (split-string string "\n") "\\n")))
-         (outbuf (get-buffer-create (or output-buffer py-output-buffer))))
+	 ;; TBD remove redundant outbuf
+         (outbuf procbuf))
     ;; wait is used only when a new py-shell buffer was connected
     (and wait (sit-for wait))
     (unwind-protect
@@ -22832,54 +22818,42 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
   (py--execute-prepare "clause"))
 
 ;;; Process fast forms
-(defun py-fast-process (&optional buffer)
+(defun py-fast-process (&optional argprompt dedicated shell buffer-name)
   "Connect am (I)Python process suitable for large output.
 
-Output arrives in py-fast-output-buffer, \"\*Python Fast Output\*\" by default
+Output buffer displays \"Fast\" in name by default
 It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907
 
 Return the process"
-  (interactive)
-  (let ((this-buffer
-	 (set-buffer (or (and buffer (get-buffer-create buffer))
-			 (get-buffer-create (default-value 'py-fast-output-buffer))))))
-    (erase-buffer)
-    (let ((proc
-	   (or (get-buffer-process this-buffer)
-
-	       (start-process py-shell-name this-buffer py-shell-name))))
-      (with-current-buffer this-buffer
-        (erase-buffer))
-      ;; (setq py-fast-output-buffer this-buffer)
-      proc)))
+  (interactive "P")
+  (py-shell argprompt dedicated shell buffer-name t))
 
 (defun py--fast-send-string (string &optional proc windows-config)
   "Process Python strings, being prepared for large output.
 
-Result arrives in py-fast-output-buffer, \"\*Python Fast Output\*\" by default
+Output buffer displays \"Fast\" in name by default
 See also `py-fast-shell'
 
 "
-  (let* ((proc (or proc
-		   (ignore-errors (get-buffer-process (get-buffer py-fast-output-buffer)))
-		   (py-fast-process)))
+  (let* ((proc (or proc (get-buffer-process (py-fast-process))))
 	 (buffer (process-buffer proc)))
-    (py--fast-send-string-intern string proc buffer)))
+    (py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)))
 
-(defun py--filter-result ()
+(defun py--filter-result (orig pos &optional store)
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-  (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig (point-max))))
+  (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig pos)))
+  (sit-for 1 t) 
   ;; remove trailing newline
   (and (string-match "\n$" py-result)
        (setq py-result (substring py-result 0 (match-beginning 0))))
-  (and py-store-result-p
+  (and store
        (not (string= "" py-result))
        (kill-new py-result))
   (setq py-result (split-string py-result "\n")))
 
-(defun py--fast-send-string-intern (string proc output-buffer)
+(defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
     (widen)
     (erase-buffer)
@@ -22890,9 +22864,9 @@ Remove trailing newline"
       (accept-process-output proc 5)
       ;; `py--fast-send-string-no-output' sets `py-store-result-p' to
       ;; nil
-      (when (or py-store-result-p py-return-result-p)
-	(py--filter-result))
-      (when py-return-result-p
+      (when (or store return)
+	(py--filter-result orig (point-max) store))
+      (when return
 	py-result))))
 
 (defun py-fast-send-string (string)
@@ -22906,8 +22880,6 @@ From a programm use `py--fast-send-string'"
   "Process Python string, ignore output.
 
 Used to update Python process
-
-Result arrives in py-fast-output-buffer, \"\*Python Fast Output\*\" by default
 See also `py-fast-shell'
 
 "
@@ -22916,7 +22888,7 @@ See also `py-fast-shell'
 		   (py-fast-process)))
 	 (buffer (process-buffer proc))
 	 py-store-result-p)
-    (py--fast-send-string-intern string proc buffer)))
+    (py--fast-send-string-intern string proc buffer nil nil)))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
@@ -22927,8 +22899,7 @@ See also `py-fast-shell'
   "Process statement at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "statement")))
@@ -22937,8 +22908,7 @@ comint-mode"
   "Process block at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "block")))
@@ -22947,8 +22917,7 @@ comint-mode"
   "Process block-or-clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "block-or-clause")))
@@ -22957,8 +22926,7 @@ comint-mode"
   "Process def at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "def")))
@@ -22967,8 +22935,7 @@ comint-mode"
   "Process class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "class")))
@@ -22977,8 +22944,7 @@ comint-mode"
   "Process def-or-class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "def-or-class")))
@@ -22987,8 +22953,7 @@ comint-mode"
   "Process expression at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "expression")))
@@ -22997,8 +22962,7 @@ comint-mode"
   "Process partial-expression at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "partial-expression")))
@@ -23007,8 +22971,7 @@ comint-mode"
   "Process top-level at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "top-level")))
@@ -23017,8 +22980,7 @@ comint-mode"
   "Process clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Result arrives in `py-fast-output-buffer', which is not in
-comint-mode"
+Output-buffer is not in comint-mode "
   (interactive)
   (let ((py-fast-process-p t))
     (py--execute-prepare "clause")))
@@ -23029,9 +22991,8 @@ comint-mode"
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
-	 (py--fast-send-string-intern
-	  (format completion-code input) process py-fast-output-buffer)))
-    ;; (sit-for 0.2 t)
+	 (car (py--fast-send-string-intern
+	  (format completion-code input) process py-buffer-name nil t))))
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -23044,8 +23005,7 @@ completions on the current context."
       ;; (message "%s" imports)
       (py--fast-send-string-no-output imports process)))
   (let* ((completion
-	  (py--fast-completion-get-completions
-	   input process code))
+	  (py--fast-completion-get-completions input process code))
 	 ;; (completion (when completions
 	 ;; (try-completion input completions)))
 	 newlist erg)
@@ -23076,18 +23036,12 @@ completions on the current context."
 
 (defun py--fast-complete-base (shell pos beg end word imports debug oldbuf)
   (let* ((shell (or shell (py-choose-shell)))
-         (proc (or (and (processp (get-buffer-process py-fast-output-buffer))		    (string-match shell (process-name (get-buffer-process py-fast-output-buffer)))
-		    (get-buffer-process py-fast-output-buffer))
-		   (get-process
-		    ;; (prog1
-			(py-fast-process py-fast-output-buffer)
-		      ;; (sit-for 0.1 t)
-		      ;; )
-)))
+	 (py-buffer-name (py-shell nil nil shell nil t))
+	 (proc (get-buffer-process py-buffer-name))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 python-shell-module-completion-string-code)))
-    (with-current-buffer py-fast-output-buffer
+    (with-current-buffer py-buffer-name
       (erase-buffer))
     (py--fast--do-completion-at-point proc imports word pos oldbuf code)))
 
