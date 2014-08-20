@@ -12507,13 +12507,24 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there."
   (interactive "P")
   (if (eq 4 (prefix-numeric-value arg))
       (py-switch-shell '(4))
-    (let* ((erg (cond (py-force-py-shell-name-p
+    (let* (res
+	   (erg (cond (py-force-py-shell-name-p
                        (default-value 'py-shell-name))
                       (py-use-local-default
                        (if (not (string= "" py-shell-local-path))
                            (expand-file-name py-shell-local-path)
                          (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
-                      ((and (comint-check-proc (current-buffer))
+                      ((and py-fast-process-p
+			    (comint-check-proc (current-buffer))
+                            (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+		       (progn
+			 (setq res (process-name (get-buffer-process (current-buffer))))
+			 (if (string-match "<" res)
+			     ;; executable-find can't see a python<1>
+			     (substring res 0 (match-beginning 0))
+			   res)))
+		      ((and (not py-fast-process-p)
+			    (comint-check-proc (current-buffer))
                             (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
                        (process-name (get-buffer-process (current-buffer))))
                       ((py-choose-shell-by-shebang))
@@ -22167,11 +22178,16 @@ and return collected output"
 If cursor is at end of line, try to complete
 Otherwise call `py-indent-line'
 
-Use `C-q TAB' to insert a literally TAB-character "
+Use `C-q TAB' to insert a literally TAB-character 
+
+In python-mode `py-complete-function' is called,
+in py-shell-mode `py-shell-complete'"
   (interactive "*")
   (if (member (char-before)(list 32 10 9))
       (py-indent-line)
-    (funcall py-complete-function)))
+    (if (eq major-mode 'python-mode)
+	(funcall py-complete-function)
+      (py-shell-complete))))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
