@@ -6209,14 +6209,14 @@ and `pass'.  This doesn't catch embedded statements."
 
 Unclosed-string errors are not handled here, as made visible by fontification already.
 "
-  (save-excursion
-    (setq err
-	  (list
-	   (nth 1 pps)
-	   (progn
-	     (goto-char (nth 1 pps))
-	     (py-count-lines (point-min) (point)))))
-    err))
+  (let ((this-err
+         (save-excursion
+           (list
+            (nth 1 pps)
+            (progn
+              (goto-char (nth 1 pps))
+              (py-count-lines (point-min) (point)))))))
+    this-err))
 
 (defun py--skip-to-semicolon-backward (&optional limit)
   "Fetch the beginning of statement after a semicolon.
