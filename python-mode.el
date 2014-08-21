@@ -5654,7 +5654,7 @@ Takes the result of (syntax-ppss)"
       (skip-chars-backward "\"'")
       (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point))))))
 
-(defun py--fill-fix-end (thisend orig docstring)
+(defun py--fill-fix-end (thisend orig docstring delimiters-style)
   ;; Add the number of newlines indicated by the selected style
   ;; at the end.
   (widen)
@@ -5751,8 +5751,6 @@ Takes the result of (syntax-ppss)"
          (beg (copy-marker (if (< thisbeg parabeg) parabeg thisbeg)))
          (end (copy-marker (if (< thisend paraend) thisend paraend)))
 	 (multi-line-p (string-match "\n" (buffer-substring-no-properties thisbeg thisend)))
-	 ;; (strg (replace-regexp-in-string "[ \t]+" " " (buffer-substring-no-properties beg end)))
-         ;; (delimiters-style style)
 	 erg
          first-line-p)
     ;;    (narrow-to-region beg end)
@@ -14776,6 +14774,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
 
 Process Python strings, being prepared for large output\.
 
+Output buffer displays \"Fast\" in name by default
 See also `py-fast-shell'"]
 
                   ["Process region fast" py-process-region-fast
@@ -15761,6 +15760,15 @@ Default is nil Use `M-x customize-variable' to set it permanently"
 
                      :help "If `split-window-vertically' or `...-horizontally'. Use `M-x customize-variable' RET `py-split-windows-on-execute-function' RET to set it permanently"
                      :style toggle :selected py-split-windows-on-execute-function]
+		    
+		    ["More windows "
+		     (setq py-always-split-windows-p
+			   (not py-always-split-windows-p))
+		     :help "When `t', split current buffer's window unconditionally, default is nil\. 
+
+Split according to settings of `split-height-threshold', `split-width-threshold'; 
+as far as `window-min-height', `window-min-width' permit Use `M-x customize-variable' to set it permanently"
+		     :style toggle :selected py-always-split-windows-p]
 
                     ["Modeline display full path "
                      (setq py-modeline-display-full-path-p
