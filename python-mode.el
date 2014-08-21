@@ -11856,15 +11856,9 @@ With FAST-PROCESS, connect a Python-process to a buffer not in comint-mode
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
     (if fast-process
-	;; user rather wants an interactive shell
-	(if (get-buffer-process (get-buffer py-buffer-name))
-	    (with-current-buffer (get-buffer py-buffer-name)
-	      ;; (switch-to-buffer (current-buffer))
-	      (erase-buffer))
+	     ;; user rather wants an interactive shell
+	(unless (get-buffer-process (get-buffer py-buffer-name))
 	  (py--start-fast-process py-shell-name py-buffer-name)
-	  ;; (switch-to-buffer py-buffer-name)
-	  ;; delete the prompt, as buffer is not in comint-mode
-	  (delete-region (line-beginning-position) (line-end-position))
 	  (setq py-output-buffer py-buffer-name))
       (unless (comint-check-proc py-buffer-name)
 	;; buffer might exist but not being empty
@@ -11878,12 +11872,15 @@ With FAST-PROCESS, connect a Python-process to a buffer not in comint-mode
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
 	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
-	  (error (concat "py-shell: No process in " py-buffer-name)))))
-    (unless py-fast-process-p
-      (when (or (interactive-p)py-switch-buffers-on-execute-p py-split-windows-on-execute-p) (py--shell-manage-windows py-buffer-name)))
-    (when (string-match "[BbIi][Pp]ython" py-buffer-name)
-      (sit-for 0.3 t))
-    (sit-for 0.1 t)
+	  (error (concat "py-shell: No process in " py-buffer-name))))
+      ;; (goto-char (point-max))
+      (when (or (interactive-p)py-switch-buffers-on-execute-p py-split-windows-on-execute-p) (py--shell-manage-windows py-buffer-name))
+      ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
+      (when (string-match "[BbIi][Pp]ython" py-buffer-name)
+	(sit-for 0.3 t))
+      (sit-for 0.1 t)
+      ;; (py--unfontify-banner (get-buffer py-buffer-name))
+      )
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
