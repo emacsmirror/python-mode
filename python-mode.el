@@ -5699,7 +5699,7 @@ Takes the result of (syntax-ppss)"
 	 (unless (empty-line-p) (insert "\n"))))
   (py--fill-fix-end thisend orig docstring))
 
-(defun py--fill-docstring-last-line ()
+(defun py--fill-docstring-last-line (thisbeg thisend beg end style)
   (widen)
   (narrow-to-region thisbeg thisend)
   (goto-char thisend)
@@ -5764,7 +5764,7 @@ Takes the result of (syntax-ppss)"
                  (save-excursion (goto-char end)
                                  (or (member (char-after) (list ?\" ?\'))
                                      (member (char-before) (list ?\" ?\')))))
-           (py--fill-docstring-last-line))
+           (py--fill-docstring-last-line thisbeg thisend beg end style))
           (t (narrow-to-region beg end)
 	     (fill-region beg end justify)))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)))
