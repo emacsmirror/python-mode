@@ -1112,15 +1112,26 @@ If `py-keep-windows-configuration' is t, this will take precedence over setting 
 (defcustom py-split-windows-on-execute-p t
   "When non-nil split windows.
 
-If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
+If `py-keep-windows-configuration' is t, this will take precedence over setting here. 
+
+If screen is already splitted, reuse other window.
+See also `py-always-split-windows-p'"
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-max-split-windows 2
-  "When split windows is enabled the maximum windows to allow
-  before reusing other windows."
-  :type 'number
+(defcustom py-always-split-windows-p nil
+  "When `t', split current buffer's window unconditionally, default is nil. 
+
+Split according to settings of `split-height-threshold', `split-width-threshold'; 
+as far as `window-min-height', `window-min-width' permit "
+  :type 'boolean
   :group 'python-mode)
+
+;; currently unused
+;; (defcustom py-max-split-windows 2
+;;   "When split windows is enabled the maximum windows to allow. "
+;;   :type 'number
+;;   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-function 'split-window-vertically
   "How window should get splitted to display results of py-execute-... functions. "
@@ -11621,13 +11632,31 @@ Customizable variable `py-split-windows-on-execute-function' tells how to split 
   (when (and py-verbose-p (interactive-p))
     (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function)))
 
+
+(defun py--alternative-split-windows-on-execute-function ()
+  "If `py--split-windows-on-execute-function' is `split-window-vertically' return `split-window-horizontally' and vice versa"
+  (if (eq py-split-windows-on-execute-function 'split-window-vertically)
+      'split-window-horizontally
+    'split-window-vertically))
+
 (defun py--manage-windows-split ()
   "If one window, split according to `py-split-windows-on-execute-function.
 
-Internal use"
+With `py-always-split-windows-p' set to `t', look for suitable split"
   (and
-   (one-window-p t)
-   (funcall py-split-windows-on-execute-function)))
+   (or (one-window-p t) py-always-split-windows-p)
+   (unless
+       (ignore-errors (funcall py-split-windows-on-execute-function))
+     ;; If call didn't succeed according to settings of
+     ;; `split-height-threshold', `split-width-threshold'
+     ;; resp. `window-min-height', `window-min-width'
+     ;; try alternative split
+     ;; (py--manage-windows-set-and-switch py-output-buffer)
+     (set-buffer py-output-buffer)
+     (unless (ignore-errors (funcall (py--alternative-split-windows-on-execute-function)))
+       ;; if alternative split fails, look for larger window
+       (other-window 1)
+       (ignore-errors (funcall (py--alternative-split-windows-on-execute-function)))))))
 
 (defun py--manage-windows-set-and-switch (buffer)
   "Switch to output-buffer, go to point-max.
@@ -11644,26 +11673,20 @@ Internal use"
    ((and py-split-windows-on-execute-p
 	 py-switch-buffers-on-execute-p)
     (py-restore-window-configuration)
-    (delete-other-windows)
+    (unless py-always-split-windows-p (delete-other-windows))
     (py--manage-windows-split)
     (pop-to-buffer output-buffer)
-    (display-buffer py-exception-buffer))
+    (goto-char (point-max))
+    (and py-exception-buffer (display-buffer py-exception-buffer)))
    ;; split, not switch
    ((and
      py-split-windows-on-execute-p
      (not py-switch-buffers-on-execute-p))
     (set-buffer oldbuf)
-    ;; 	 (sit-for 0.1)
     (switch-to-buffer (current-buffer))
-    (delete-other-windows)
+    (unless py-always-split-windows-p (delete-other-windows))
     (py--manage-windows-split)
-    (py--manage-windows-set-and-switch output-buffer)
-    (display-buffer output-buffer t)
-    ;; fast-... fails
-    ;; 	 (unless (eq (current-buffer) py-exception-buffer)
-    ;; 	   (set-buffer py-exception-buffer)
-    ;; 	   (switch-to-buffer (current-buffer)))
-    )
+    (display-buffer output-buffer t))
    ;; no split, switch
    ((and
      py-switch-buffers-on-execute-p
