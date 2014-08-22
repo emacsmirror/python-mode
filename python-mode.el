@@ -9955,6 +9955,26 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
     (sit-for 0.1)
     (py--shell-manage-windows output-buffer)))
 
+(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
+  "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
+
+Make that process's buffer visible and force display.  Also make
+comint believe the user typed this string so that
+`kill-output-from-shell' does The Right Thing.
+Returns position where output starts. "
+  (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
+         (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
+         (buffer (or procbuf (py-shell nil nil nil procbuf)))
+         (proc (or proc (get-buffer-process buffer)))
+         erg orig)
+    (with-current-buffer buffer
+      (goto-char (point-max))
+      (setq orig (point))
+      (comint-send-string proc cmd)
+      (setq erg (py--postprocess buffer))
+      (message "%s" py-error)
+      erg)))
+
 (defun py--execute-base-intern (strg shell filename proc file wholebuf)
   "Select the handler.
 
@@ -10311,26 +10331,6 @@ Returns char found. "
     ;; xpco(py--unfontify-banner (current-buffer))
     )
   erg)
-
-(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
-  "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
-
-Make that process's buffer visible and force display.  Also make
-comint believe the user typed this string so that
-`kill-output-from-shell' does The Right Thing.
-Returns position where output starts. "
-  (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
-         (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
-         (buffer (or procbuf (py-shell nil nil nil procbuf)))
-         (proc (or proc (get-buffer-process buffer)))
-         erg orig)
-    (with-current-buffer buffer
-      (goto-char (point-max))
-      (setq orig (point))
-      (comint-send-string proc cmd)
-      (setq erg (py--postprocess buffer))
-      (message "%s" py-error)
-      erg)))
 
 ;;; Pdb
 ;; Autoloaded.
