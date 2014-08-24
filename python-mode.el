@@ -11802,16 +11802,22 @@ This function takes the list of setup code to send from the
 (defun py--unfontify-banner (buffer)
   "Unfontify the shell banner-text.
 
-Takes a buffer as argument. "
+Cancels `py--timer'
+Expects being called by `py--run-unfontify-timer' "
   (interactive)
   (when (ignore-errors (buffer-live-p buffer))
     (with-current-buffer buffer
-      ;; (when py-debug-p (message "%s" (concat "py--unfontify-banner: " (buffer-name buffer))))
-      ;; (sit-for 0.3 t)
-      (let ((erg (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt)))))
+      (goto-char (point-min))  
+      (let ((erg  (if
+		      (re-search-forward py-fast-filter-re nil t 1)
+		      (point) 
+		    (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt))))))
 	(if erg
+	    (progn 
 	    (font-lock-unfontify-region (point-min) erg)
-	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer))))))))))
+	    (goto-char (point-max))) 
+	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))
+      (and (timerp py--timer)(cancel-timer py--timer)))))
 
 (defun py--start-fast-process (shell buffer)
   (let ((proc (start-process shell buffer shell)))
