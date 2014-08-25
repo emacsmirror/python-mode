@@ -10322,16 +10322,14 @@ Returns char found. "
   "Provide return values, check result for error, manage windows. "
   ;; py--fast-send-string doesn't set origline
   (with-current-buffer buffer
+    ;; (switch-to-buffer (current-buffer))
     (setq py-error (py--postprocess-intern buffer))
     (when py-store-result-p
       (setq erg
 	    (if (eq major-mode 'py-shell-mode)
 		(py-output-filter (py--fetch-comint-result))
 	      (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
-      (and erg (not (string= (car kill-ring) erg)) (kill-new erg)))
-    ;; (run-with-idle-timer 1 nil 'py--unfontify-banner)
-    ;; xpco(py--unfontify-banner (current-buffer))
-    )
+      (and erg (not (string= "" erg))(not (string= (car kill-ring) erg)) (kill-new erg))))
   erg)
 
 ;;; Pdb
