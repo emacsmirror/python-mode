@@ -5699,7 +5699,7 @@ Takes the result of (syntax-ppss)"
     (and multi-line-p first-line-p
 	 (forward-line 1)
 	 (unless (empty-line-p) (insert "\n"))))
-  (py--fill-fix-end thisend orig docstring))
+  (py--fill-fix-end thisend orig docstring delimiters-style))
 
 (defun py--fill-docstring-last-line (thisbeg thisend beg end style)
   (widen)
@@ -11674,7 +11674,6 @@ Internal use"
    ((and py-split-windows-on-execute-p
 	 py-switch-buffers-on-execute-p)
     (py-restore-window-configuration)
-    (unless py-always-split-windows-p (delete-other-windows))
     (py--manage-windows-split)
     (pop-to-buffer output-buffer)
     (goto-char (point-max))
@@ -11685,14 +11684,13 @@ Internal use"
      (not py-switch-buffers-on-execute-p))
     (set-buffer oldbuf)
     (switch-to-buffer (current-buffer))
-    (unless py-always-split-windows-p (delete-other-windows))
-    (py--manage-windows-split)
     (display-buffer output-buffer t))
    ;; no split, switch
    ((and
      py-switch-buffers-on-execute-p
      (not py-split-windows-on-execute-p))
     (let (pop-up-windows)
+      (display-buffer-reuse-window output-buffer nil)
       (py--manage-windows-set-and-switch output-buffer)))
    ;; no split, no switch
    ((not py-switch-buffers-on-execute-p)
