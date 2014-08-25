@@ -11831,8 +11831,6 @@ Expects being called by `py--run-unfontify-timer' "
 
 (defun py-shell (&optional argprompt dedicated shell buffer-name fast-process)
   "Start an interactive Python interpreter in another window.
-
-With FAST-PROCESS, connect a Python-process to a buffer not in comint-mode
   Interactively, \\[universal-argument] prompts for a PATH/TO/EXECUTABLE to use.
   \\[universal-argument] 2 prompts for `py-python-command-args'.
   If `default-directory' is a remote file name, it is also prompted
@@ -11886,7 +11884,7 @@ With FAST-PROCESS, connect a Python-process to a buffer not in comint-mode
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
     (if fast-process
-	     ;; user rather wants an interactive shell
+	;; user rather wants an interactive shell
 	(unless (get-buffer-process (get-buffer py-buffer-name))
 	  (py--start-fast-process py-shell-name py-buffer-name)
 	  (setq py-output-buffer py-buffer-name))
@@ -11904,13 +11902,11 @@ With FAST-PROCESS, connect a Python-process to a buffer not in comint-mode
 	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
-      (when (or (interactive-p)py-switch-buffers-on-execute-p py-split-windows-on-execute-p) (py--shell-manage-windows py-buffer-name))
+      (when (and (interactive-p)(or py-switch-buffers-on-execute-p py-split-windows-on-execute-p) (py--shell-manage-windows py-buffer-name)))
       ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
 	(sit-for 0.3 t))
-      (sit-for 0.1 t)
-      ;; (py--unfontify-banner (get-buffer py-buffer-name))
-      )
+      (sit-for 0.1 t))
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
