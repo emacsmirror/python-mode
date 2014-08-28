@@ -1112,11 +1112,17 @@ If `py-keep-windows-configuration' is t, this will take precedence over setting 
 (defcustom py-split-windows-on-execute-p t
   "When non-nil split windows.
 
-If `py-keep-windows-configuration' is t, this will take precedence over setting here. 
+If `always' split according to settings of `split-height-threshold', `split-width-threshold';
+as far as `window-min-height', `window-min-width' permit.
 
 If screen is already splitted, reuse other window.
-See also `py-always-split-windows-p'"
-  :type 'boolean
+If `py-keep-windows-configuration' is t, this will take precedence over setting here.
+"
+      :type '(choice
+          (const :tag "single" t)
+          (const :tag "no split" nil)
+          (const :tag "multiple" always))
+
   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-function 'split-window-vertically
@@ -11745,17 +11751,25 @@ Receives a buffer-name as argument"
     (when (re-search-backward py-fast-filter-re nil t 1)
       (setq erg (match-end 0))
       (while (and (re-search-backward py-fast-filter-re nil t 1) (setq erg (match-end 0))))
-      (delete-region erg (point-max)))))
+      (delete-region erg (point-max))))
+  (goto-char (point-max)))
 
 (defun py--shell-send-setup-code (process)
   "Send all setup code for shell.
 This function takes the list of setup code to send from the
 `py-setup-codes' list."
-  (dolist (code py-setup-codes)
-    (py--send-string-no-output
-     (py--fix-start (symbol-value code)) process)
-    (sit-for py-new-shell-delay))
-  (py--delete-all-but-first-prompt))
+  (let ((erg (string-match "^i" (process-name process))))
+    (dolist (code py-setup-codes)
+      ;; (message "%s" code)
+      ;; `py--fast-send-string' doesn't word with IPython for now
+      ;; wants magic %paste %cpaste
+      (if erg
+	  (progn
+	    (py--send-string-no-output
+	     (py--fix-start (symbol-value code)) process)
+	    (sit-for py-new-shell-delay))
+	(py--fast-send-string (py--fix-start (symbol-value code)) process))
+      (py--delete-all-but-first-prompt))))
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
