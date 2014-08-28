@@ -9969,8 +9969,8 @@ Returns position where output starts. "
 When optional FILE is `t', no temporary file is needed. "
   (let (output-buffer erg)
     (setq py-error nil)
-    (when py-debug-p
-      (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
+    ;; (when py-debug-p
+    ;;   (with-temp-file "/tmp/py-buffer-name.txt" (insert py-buffer-name)))
     (set-buffer py-exception-buffer)
     (py--update-execute-directory proc py-buffer-name execute-directory)
     (cond (py-fast-process-p (py--send-to-fast-process strg proc output-buffer))
