@@ -11636,7 +11636,16 @@ Customizable variable `py-split-windows-on-execute-function' tells how to split 
       'split-window-horizontally
     'split-window-vertically))
 
-(defun py--manage-windows-split ()
+(defun py--get-splittable-window (output-buffer)
+  "If selected window doesn't permit a further split, search window-list for a suitable one. "
+  (let ((this-window (selected-window))
+	erg)
+    (or (and (window-left-child)(split-window (window-left-child)))
+	(and (window-top-child)(split-window (window-top-child)))
+	(and (window-parent)(ignore-errors (split-window (window-parent))))
+	(and (window-atom-root)(split-window (window-atom-root))))))
+
+(defun py--manage-windows-split (output-buffer)
   "If one window, split according to `py-split-windows-on-execute-function. "
   (interactive)
   (or
@@ -11645,11 +11654,9 @@ Customizable variable `py-split-windows-on-execute-function' tells how to split 
    ;; `split-height-threshold', `split-width-threshold'
    ;; resp. `window-min-height', `window-min-width'
    ;; try alternative split
-   ;; (py--manage-windows-set-and-switch py-output-buffer)
-
    (unless (ignore-errors (funcall (py--alternative-split-windows-on-execute-function)))
      ;; if alternative split fails, look for larger window
-     (other-window 1)
+     (py--get-splittable-window output-buffer)
      (ignore-errors (funcall (py--alternative-split-windows-on-execute-function))))))
 
 (defun py--manage-windows-set-and-switch (buffer)
@@ -11670,7 +11677,7 @@ Internal use"
     (if (member (get-buffer-window output-buffer)(window-list))
 	;; (delete-window (get-buffer-window output-buffer))
 	(select-window (get-buffer-window output-buffer))
-      (py--manage-windows-split)
+      (py--manage-windows-split output-buffer)
       ;; otherwise new window appears above
       (save-excursion
 	(other-window 1)
@@ -11682,7 +11689,7 @@ Internal use"
     (if (member (get-buffer-window output-buffer)(window-list))
 	;; (delete-window (get-buffer-window output-buffer))
 	(select-window (get-buffer-window output-buffer))
-      (py--manage-windows-split)
+      (py--manage-windows-split output-buffer)
       ;; otherwise new window appears above
       (save-excursion
 	(other-window 1)
@@ -11693,7 +11700,7 @@ Internal use"
      py-split-windows-on-execute-p
      (not py-switch-buffers-on-execute-p))
     (delete-other-windows)
-    (py--manage-windows-split)
+    (py--manage-windows-split output-buffer)
     (save-excursion
       (other-window 1)
       (switch-to-buffer output-buffer))
@@ -11770,9 +11777,9 @@ This function takes the list of setup code to send from the
 	  (progn
 	    (py--send-string-no-output
 	     (py--fix-start (symbol-value code)) process)
-	    (sit-for py-new-shell-delay))
-	(py--fast-send-string (py--fix-start (symbol-value code)) process))
-      (py--delete-all-but-first-prompt))))
+	    (sit-for py-new-shell-delay)
+	    (py--delete-all-but-first-prompt))
+	(py--fast-send-string-intern (py--fix-start (symbol-value code)) process (buffer-name (process-buffer process)) nil nil)))))
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
@@ -22928,19 +22935,23 @@ Remove trailing newline"
 
 (defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
-    (erase-buffer)
     (process-send-string proc "\n")
     (let ((orig (point)))
       (process-send-string proc string)
       (process-send-string proc "\n")
-      (accept-process-output proc 5)
       ;; `py--fast-send-string-no-output' sets `py-store-result-p' to
       ;; nil
-      (when (or store return)
-	(sit-for py-fast-completion-delay t)
-	(py--filter-result orig (point-max) store))
-      (when return
-	py-result))))
+      (accept-process-output proc 5)
+      ;; (switch-to-buffer (current-buffer)) 
+      (if (or store return)
+ 	  (progn
+	    (sit-for py-fast-completion-delay t)
+	    (py--filter-result orig (point-max) store)
+	    (when return
+	      py-result))
+	;; (switch-to-buffer (current-buffer))
+	(sit-for 0.1 t) 
+	(erase-buffer)))))
 
 (defun py-fast-send-string (string)
   "Evaluate STRING in Python process which is not in comint-mode.
