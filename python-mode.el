@@ -10069,8 +10069,8 @@ Avoid empty lines at the beginning. "
     (insert string)
     (py--fix-start-intern (point-min) (point-max))
     ;; FixMe: Maybe conditial from from some use-tempfile var?
-    (and (ignore-errors tempfile)
-	 (write-region (point-min) (point-max) tempfile nil t nil 'ask))
+    ;; (and (ignore-errors tempfile)
+    ;; (write-region (point-min) (point-max) tempfile nil t nil 'ask))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun py-fetch-py-master-file ()
@@ -22928,7 +22928,6 @@ Remove trailing newline"
 
 (defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
-    (widen)
     (erase-buffer)
     (process-send-string proc "\n")
     (let ((orig (point)))
