@@ -5601,18 +5601,23 @@ If region is active, restrict uncommenting at region "
     element))
 
 (defun py-end-of-string (&optional beginning-of-string-position)
-  "Go to end of string at point, return position.
-
-Takes the result of (syntax-ppss)"
+  "Go to end of string at point if any, if successful return position. "
   (interactive)
-  (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (syntax-ppss))(nth 8 (syntax-ppss)))
+  ;; (when py-debug-p (message "(current-buffer): %s" (current-buffer)))
+  ;; (when py-debug-p (message "major-mode): %s" major-mode))
+  (let ((beginning-of-string-position (or beginning-of-string-position (and (nth 3 (parse-partial-sexp 1 (point)))(nth 8 (parse-partial-sexp 1 (point))))
                                           (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")(match-beginning 0))))
         erg)
     (if beginning-of-string-position
         (progn
           (goto-char beginning-of-string-position)
-          (goto-char (scan-sexps (point) 1))
-          (setq erg (point)))
+	  (when
+	      ;; work around parse-partial-sexp error
+	      (and (nth 3 (parse-partial-sexp 1 (point)))(nth 8 (parse-partial-sexp 1 (point))))
+	    (goto-char (nth 3 (parse-partial-sexp 1 (point)))))
+          (and (ignore-errors (setq erg (scan-sexps (point) 1))
+			      (goto-char erg))))
+
       (error (concat "py-end-of-string: don't see end-of-string at " (buffer-name (current-buffer)) "at pos " (point))))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
@@ -7525,14 +7530,20 @@ More general than py-declarations, which would stop at keywords like a print-sta
 (defalias 'py-next-statement 'py-end-of-statement)
 (defalias 'py-forward-statement 'py-end-of-statement)
 (defun py--skip-to-comment-or-semicolon ()
-  "Returns position reached if point was moved. "
-  (let ((orig (point)))
-    (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
-	 (if (eq ?\; (char-after))
-	     (skip-chars-forward ";" (line-end-position))
-	   (skip-chars-backward " \t" (line-beginning-position)))
-	 (setq done t)
-	 (and (< orig (point)) (point)))))
+  "Returns position if comment or semicolon found. "
+  (let ((orig (point))
+	erg)
+    (if
+	(and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
+	     (member (char-after) (list ?# ?\;)))
+	(progn
+	  (if (eq ?\; (char-after))
+	      (skip-chars-forward ";" (line-end-position))
+	    (skip-chars-backward " \t" (line-beginning-position)))
+	  (setq done t)
+	  (point))
+      (goto-char orig)
+      nil)))
 
 (defun py--eos-in-string (pps)
   "Return stm, i.e. if string is part of a (print)-statement. "
@@ -7601,7 +7612,9 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
           forward-sexp-function
           stringchar stm pps err)
       (unless done
-        (py--skip-to-comment-or-semicolon))
+        (or
+	 (py--skip-to-comment-or-semicolon)
+	 (end-of-line)))
       (setq pps (parse-partial-sexp (point-min) (point)))
       ;; (origline (or origline (py-count-lines)))
       (cond
@@ -7656,7 +7669,7 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
        ((eq (current-indentation) (current-column))
 	(or (py--skip-to-comment-or-semicolon)
 	    (forward-char 1))
-	(setq pps (syntax-ppss))
+	(setq pps (parse-partial-sexp (point-min) (point)))
 	(unless done (py--end-of-statement-intern)
 		(py-end-of-statement orig done repeat)))
 
@@ -9730,6 +9743,7 @@ shell which will be forced upon execute as argument.
 
 Optional DEDICATED "
   (interactive "r\nP")
+  ;; (when py-debug-p (message "run: %s" "py-execute-region"))
   (save-excursion
     (let ((orig (point))
 	  (py-shell-name (cond ((or py-force-py-shell-name-p (eq 4 (prefix-numeric-value shell))) (default-value 'py-shell-name))
@@ -9891,55 +9905,59 @@ Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
+  ;; (when py-debug-p (message "run: %s" "py--execute-base"))
   (let* ((oldbuf (current-buffer))
 	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
 	 (end (or end (and (use-region-p) (region-end)) (point-max)))
-	 (strg (if py-if-name-main-permission-p
-		   (buffer-substring-no-properties start end)
-		 (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
-	 (strg (py--fix-start strg))
-	 (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
-	 (windows-config (window-configuration-to-register 313465889))
-	 (origline
-	  (save-restriction
-	    (widen)
-	    (count-lines
-	     (point-min)
-	     ;; count-lines doesn't honor current line when at BOL
-	     end)))
-	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
-	 (which-shell
-	  (if shell
-	      ;; shell might be specified in different ways
-	      (or (and (stringp shell) shell)
-		  (ignore-errors (eval shell))
-		  (and (symbolp shell) (prin1-to-string shell)))
-	    (py-choose-shell)))
-	 (py-exception-buffer (current-buffer))
-	 (execute-directory
-	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
-		((and py-use-current-dir-when-execute-p (buffer-file-name))
-		 (file-name-directory (buffer-file-name)))
-		((and py-use-current-dir-when-execute-p
-		      py-fileless-buffer-use-default-directory-p)
-		 (expand-file-name default-directory))
-		((stringp py-execute-directory)
-		 py-execute-directory)
-		((getenv "VIRTUAL_ENV"))
-		(t (getenv "HOME"))))
-	 (py-buffer-name
-	  (or py-buffer-name
-	      (py--choose-buffer-name which-shell)))
-	 (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
-	 (py-orig-buffer-or-file (or filename (current-buffer)))
-	 (proc (cond (proc)
-		     ;; will deal with py-dedicated-process-p also
-		     (py-fast-process-p (get-buffer-process (py-fast-process py-buffer-name)))
-		     (py-dedicated-process-p
-		      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))
-		     (t (or (get-buffer-process py-buffer-name)
-			    (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))))))
-    (py--execute-base-intern strg shell filename proc file wholebuf)))
+	 (strg-raw (if py-if-name-main-permission-p
+                       (buffer-substring-no-properties start end)
+                     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
+         (strg (py--fix-start strg-raw))
+         (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start)))))))
+    (when py-verbose-p (message "strg: %s" strg))
+    (let* (
+
+	   (windows-config (window-configuration-to-register 313465889))
+	   (origline
+	    (save-restriction
+	      (widen)
+	      (count-lines
+	       (point-min)
+	       ;; count-lines doesn't honor current line when at BOL
+	       end)))
+	   ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
+	   (which-shell
+	    (if shell
+		;; shell might be specified in different ways
+		(or (and (stringp shell) shell)
+		    (ignore-errors (eval shell))
+		    (and (symbolp shell) (prin1-to-string shell)))
+	      (py-choose-shell)))
+	   (py-exception-buffer (current-buffer))
+	   (execute-directory
+	    (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
+		  ((and py-use-current-dir-when-execute-p (buffer-file-name))
+		   (file-name-directory (buffer-file-name)))
+		  ((and py-use-current-dir-when-execute-p
+			py-fileless-buffer-use-default-directory-p)
+		   (expand-file-name default-directory))
+		  ((stringp py-execute-directory)
+		   py-execute-directory)
+		  ((getenv "VIRTUAL_ENV"))
+		  (t (getenv "HOME"))))
+	   (py-buffer-name
+	    (or py-buffer-name
+		(py--choose-buffer-name which-shell)))
+	   (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
+	   (py-orig-buffer-or-file (or filename (current-buffer)))
+	   (proc (cond (proc)
+		       ;; will deal with py-dedicated-process-p also
+		       (py-fast-process-p (get-buffer-process (py-fast-process py-buffer-name)))
+		       (py-dedicated-process-p
+			(get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))
+		       (t (or (get-buffer-process py-buffer-name)
+			      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name)))))))
+      (py--execute-base-intern strg shell filename proc file wholebuf))))
 
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
@@ -9976,6 +9994,7 @@ Returns position where output starts. "
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
+  ;; (when py-debug-p (message "run: %s" "py--execute-base-intern"))
   (let (output-buffer erg)
     (setq py-error nil)
     ;; (when py-debug-p
@@ -10065,13 +10084,29 @@ See `py-if-name-main-permission-p'"
   "Internal use by py-execute... functions.
 
 Avoid empty lines at the beginning. "
+  ;; (when py-debug-p (message "py--fix-start:"))
   (with-temp-buffer
     (insert string)
-    (py--fix-start-intern (point-min) (point-max))
+    (goto-char 1)
+    ;; (when py-debug-p (message "start: %s" (point))
+    ;; (setq buffer-read-only nil)
+    ;; (message "buffer-read-only: %s" buffer-read-only))
+    (while
+	(member (char-after) (list 9 32))
+      (delete-char 1))
+    (unless (py--beginning-of-statement-p)
+      (py-down-statement))
+    (while (not (eq (current-indentation) 0))
+      (py-shift-left py-indent-offset start end))
+    (goto-char (point-max))
+    (unless (empty-line-p)
+      (newline))
+    ;; (when py-debug-p (message "end: %s" (point)))
+    ;; (py--fix-start-intern (point-min) (point-max))
     ;; FixMe: Maybe conditial from from some use-tempfile var?
     ;; (and (ignore-errors tempfile)
     ;; (write-region (point-min) (point-max) tempfile nil t nil 'ask))
-    (buffer-substring-no-properties (point-min) (point-max))))
+    (buffer-substring-no-properties 1 (point-max))))
 
 (defun py-fetch-py-master-file ()
   "Lookup if a `py-master-file' is specified.
@@ -10177,6 +10212,7 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
 (defun py-execute-buffer ()
   "Send the contents of the buffer to a Python interpreter. "
   (interactive)
+  ;; (when py-debug-p (message "run: %s" "py-execute-buffer"))
   (let ((origline 1))
     (and py-prompt-on-changed-p (buffer-file-name) (interactive-p) (buffer-modified-p)
          (y-or-n-p "Buffer changed, save first? ")
@@ -11681,8 +11717,8 @@ Internal use"
       ;; otherwise new window appears above
       (save-excursion
 	(other-window 1)
-	(switch-to-buffer output-buffer)))
-    (display-buffer oldbuf))
+	(switch-to-buffer output-buffer))
+      (display-buffer oldbuf)))
    ((and
      (eq py-split-windows-on-execute-p 'always)
      (not py-switch-buffers-on-execute-p))
@@ -11693,17 +11729,19 @@ Internal use"
       ;; otherwise new window appears above
       (save-excursion
 	(other-window 1)
-	(switch-to-buffer output-buffer)))
-    (pop-to-buffer oldbuf))
+	(display-buffer output-buffer))
+      (pop-to-buffer oldbuf)))
    ((and
      ;; just two windows, `py-split-windows-on-execute-p' is `t'
      py-split-windows-on-execute-p
      (not py-switch-buffers-on-execute-p))
     (delete-other-windows)
+    ;; (sit-for py-new-shell-delay)
     (py--manage-windows-split output-buffer)
+    ;; otherwise new window appears above
     (save-excursion
       (other-window 1)
-      (switch-to-buffer output-buffer))
+      (display-buffer output-buffer))
     (pop-to-buffer oldbuf))
    ((and
      py-switch-buffers-on-execute-p
@@ -11779,7 +11817,7 @@ This function takes the list of setup code to send from the
 	     (py--fix-start (symbol-value code)) process)
 	    (sit-for py-new-shell-delay)
 	    (py--delete-all-but-first-prompt))
-	(py--fast-send-string-intern (py--fix-start (symbol-value code)) process (buffer-name (process-buffer process)) nil nil)))))
+	(py--fast-send-string-no-output (py--fix-start (symbol-value code)) process (buffer-name (process-buffer process)))))))
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
@@ -11927,9 +11965,10 @@ Expects being called by `py--run-unfontify-timer' "
 	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
-      (when (and (or (interactive-p)
-		     ;; M-x python RET sends from interactive "p"
-		     (eq 1 argprompt))(or py-switch-buffers-on-execute-p py-split-windows-on-execute-p) (py--shell-manage-windows py-buffer-name)))
+      (when (or (interactive-p)
+		;; M-x python RET sends from interactive "p"
+		(eq 1 argprompt)(or py-switch-buffers-on-execute-p py-split-windows-on-execute-p))
+	(py--shell-manage-windows py-buffer-name))
       ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
 	(sit-for 0.3 t))
@@ -22917,7 +22956,9 @@ See also `py-fast-shell'
 "
   (let* ((proc (or proc (get-buffer-process (py-fast-process))))
 	 (buffer (process-buffer proc)))
-    (py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)))
+    (if (or py-store-result-p py-return-result-p)
+	(py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)
+      (py--fast-send-string-no-output string proc buffer))))
 
 (defun py--filter-result (orig pos &optional store)
   "Set `py-result' according to `py-fast-filter-re'.
@@ -22933,6 +22974,22 @@ Remove trailing newline"
        (kill-new py-result))
   (setq py-result (split-string py-result "\n")))
 
+(defun py--fast-send-string-no-output (string proc output-buffer)
+  (with-current-buffer output-buffer
+    ;; in comint-mode, prompt might be read-only
+    ;; delete-region would fail
+    (let ((comint-prompt-read-only-old comint-prompt-read-only)
+	  comint-prompt-read-only)
+      (process-send-string proc "\n")
+      (let ((orig (point)))
+	(process-send-string proc string)
+	(process-send-string proc "\n")
+	(accept-process-output proc 5)
+	(sit-for 0.1 t)
+	;; (when py-verbose-p (message "py--fast-send-string-intern comint-prompt-read-only: %s" comint-prompt-read-only))
+	(delete-region orig (point-max))
+	(setq comint-prompt-read-only comint-prompt-read-only-old)))))
+
 (defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
     (process-send-string proc "\n")
@@ -22942,16 +22999,11 @@ Remove trailing newline"
       ;; `py--fast-send-string-no-output' sets `py-store-result-p' to
       ;; nil
       (accept-process-output proc 5)
-      ;; (switch-to-buffer (current-buffer)) 
-      (if (or store return)
- 	  (progn
-	    (sit-for py-fast-completion-delay t)
-	    (py--filter-result orig (point-max) store)
-	    (when return
-	      py-result))
-	;; (switch-to-buffer (current-buffer))
-	(sit-for 0.1 t) 
-	(erase-buffer)))))
+      (sit-for py-fast-completion-delay t)
+      ;; sets py-result
+      (py--filter-result orig (point-max) store)
+      (when return
+	py-result))))
 
 (defun py-fast-send-string (string)
   "Evaluate STRING in Python process which is not in comint-mode.
@@ -22959,20 +23011,6 @@ Remove trailing newline"
 From a programm use `py--fast-send-string'"
   (interactive "sPython command: ")
   (py--fast-send-string string))
-
-(defun py--fast-send-string-no-output (string &optional proc)
-  "Process Python string, ignore output.
-
-Used to update Python process
-See also `py-fast-shell'
-
-"
-  (let* ((proc (or proc
-		   (ignore-errors (get-buffer-process (get-buffer py-fast-output)))
-		   (py-fast-process)))
-	 (buffer (process-buffer proc))
-	 py-store-result-p)
-    (py--fast-send-string-intern string proc buffer nil nil)))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
