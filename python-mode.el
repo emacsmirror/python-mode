@@ -9889,20 +9889,6 @@ May we get rid of the temporary file? "
       (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
         (when py-verbose-p (message "Output buffer: %s" procbuf))))))
 
-(defun py--choose-buffer-name (&optional name)
-  "Python code might be processed by an
-- interactive Python shell (DEFAULT)
-- non-interactive Python py-fast-process-p, select for large
-  output
-
-Both processes might run in
-
-- session, i.e. start from previous state (DEFAULT)
-- dedicated, open or follow a separate line of execution
-
-Default is interactive, i.e. py-fast-process-p nil, and `py-session'"
-  (py--buffer-name-prepare name))
-
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
   ;; (when py-debug-p (message "run: %s" "py--execute-base"))
@@ -11595,7 +11581,7 @@ interpreter."
       (setq erg (cdr erg)))
     (butlast liste)))
 
-(defun py--buffer-name-prepare (&optional arg dedicated fast-process)
+(defun py--choose-buffer-name (&optional arg dedicated fast-process)
   "Return an appropriate name to display in modeline.
 SEPCHAR is the file-path separator of your system. "
   (let* ((name-first (or arg py-shell-name))
@@ -11938,7 +11924,7 @@ Expects being called by `py--run-unfontify-timer' "
 	    (when py-use-local-default
 	      (error "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'"))))
 	 (py-buffer-name (or buffer-name (py--guess-buffer-name argprompt)))
-	 (py-buffer-name (or py-buffer-name (py--buffer-name-prepare newpath dedicated fast-process)))
+	 (py-buffer-name (or py-buffer-name (py--choose-buffer-name newpath dedicated fast-process)))
 	 (executable (cond (py-shell-name)
 			   (py-buffer-name
 			    (py--report-executable py-buffer-name))))
@@ -12550,17 +12536,17 @@ Should you need more shells to select, extend this command by adding inside the 
                  mode-name "IPython"))
           ((string-match "python3" name)
            (setq py-shell-name name
-                 py-which-bufname (py--buffer-name-prepare)
+                 py-which-bufname (py--choose-buffer-name)
                  msg "CPython"
-                 mode-name (py--buffer-name-prepare)))
+                 mode-name (py--choose-buffer-name)))
           ((string-match "jython" name)
            (setq py-shell-name name
-                 py-which-bufname (py--buffer-name-prepare)
+                 py-which-bufname (py--choose-buffer-name)
                  msg "Jython"
-                 mode-name (py--buffer-name-prepare)))
+                 mode-name (py--choose-buffer-name)))
           ((string-match "python" name)
            (setq py-shell-name name
-                 py-which-bufname (py--buffer-name-prepare)
+                 py-which-bufname (py--choose-buffer-name)
                  msg "CPython"
                  mode-name py-which-bufname))
           (t
