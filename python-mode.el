@@ -11850,15 +11850,16 @@ Expects being called by `py--run-unfontify-timer' "
   (interactive)
   (when (ignore-errors (buffer-live-p buffer))
     (with-current-buffer buffer
-      (goto-char (point-min))  
+      (goto-char (point-min))
       (let ((erg  (if
 		      (re-search-forward py-fast-filter-re nil t 1)
-		      (point) 
+		      (point)
 		    (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt))))))
+	(sit-for 0.1 t) 
 	(if erg
-	    (progn 
+	    (progn
 	    (font-lock-unfontify-region (point-min) erg)
-	    (goto-char (point-max))) 
+	    (goto-char (point-max)))
 	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))
       (and (timerp py--timer)(cancel-timer py--timer)))))
 
