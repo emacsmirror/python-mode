@@ -11670,7 +11670,9 @@ Internal use"
   ;; (message "oldbuf: %s" oldbuf)
   (cond
    (py-keep-windows-configuration
-    (py-restore-window-configuration))
+    (py-restore-window-configuration)
+    (with-current-buffer output-buffer
+      (goto-char (point-max))))
    ((and (eq py-split-windows-on-execute-p 'always)
 	 py-switch-buffers-on-execute-p)
     (if (member (get-buffer-window output-buffer)(window-list))
@@ -11714,9 +11716,9 @@ Internal use"
     ;; (sit-for py-new-shell-delay)
     (py--manage-windows-split output-buffer)
     ;; otherwise new window appears above
-      (other-window 1)
-      (set-buffer output-buffer)
-      (switch-to-buffer (current-buffer)))
+    (other-window 1)
+    (set-buffer output-buffer)
+    (switch-to-buffer (current-buffer)))
    ((and
      py-switch-buffers-on-execute-p
      (not py-split-windows-on-execute-p))
