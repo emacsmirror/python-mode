@@ -637,9 +637,10 @@ If nil, default, it will not move from at any reasonable level. "
   :group 'python-mode)
 
 (defcustom py-complete-function 'py-fast-complete
-  "When set, enforces function todo completion, default is nil.
+  "When set, enforces function todo completion, default is `py-fast-complete'.
 
-Normally python-mode know best which function to use. "
+Might not affect IPython, as `py-shell-complete' is the only known working here.
+Normally python-mode knows best which function to use. "
   :type '(choice
           (const :tag "default" nil)
           (const :tag "Pymacs and company based py-complete" py-complete)
@@ -22259,7 +22260,9 @@ in py-shell-mode `py-shell-complete'"
 	  (and (not (eobp)) (not (member (char-after)(list 9 10 12 13 32)))))
       (py-indent-line)
     (if (eq major-mode 'python-mode)
-	(funcall py-complete-function)
+	(if (string-match "ipython" (py-choose-shell))
+	    (py-shell-complete)
+	  (funcall py-complete-function))
       (py-shell-complete))))
 
 (defun py--after-change-function (beg end len)
