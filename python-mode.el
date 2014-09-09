@@ -9795,11 +9795,13 @@ shell which will be forced upon execute as argument. "
       (write-file tempfile))
       ;; (and py-debug-p (message "py--execute-buffer-finally: %s" "wrote tempfile"))
       ;; (and py-debug-p (message "tempfile: %s" tempfile)))
-    (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil buffer py-orig-buffer-or-file execute-directory)))
+    ;; (unwind-protect
+	(setq erg (py--execute-file-base proc tempfile nil buffer py-orig-buffer-or-file execute-directory))
     (sit-for 0.1 t)
     (py--close-execution tempbuf erg)
-    (py--shell-manage-windows buffer)))
+    ;; (py--shell-manage-windows buffer)
+    ))
+  ;; )
 
 (defun py-execute-python-mode-v5 (start end)
   (interactive "r")
@@ -9881,7 +9883,7 @@ May we get rid of the temporary file? "
                      (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
          (strg (py--fix-start strg-raw))
          (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
-	 (windows-config (window-configuration-to-register 313465889))
+	 (windows-config (window-configuration-to-register py-windows-config-register))
 	 (origline
 	  (save-restriction
 	    (widen)
@@ -9975,7 +9977,8 @@ When optional FILE is `t', no temporary file is needed. "
 	   (let (py-cleanup-temporary)
 	     (py--execute-file-base proc filename nil buffer filename execute-directory)
 	     (py--store-result-maybe erg)
-	     (py--shell-manage-windows buffer)))
+	     (py--shell-manage-windows buffer)
+	     ))
 	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer)))))
 
 (defun py-execute-string (&optional string shell)
@@ -11806,8 +11809,8 @@ This function takes the list of setup code to send from the
 (defun py--shell-make-comint (executable py-buffer-name args)
   (let ((buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args)))
     (with-current-buffer buffer
-      (py-shell-mode))
-    (sit-for 0.1 t)
+      (py-shell-mode)
+      (sit-for 0.1 t))
     buffer))
 
 (defun py--shell-setup (buffer proc)
