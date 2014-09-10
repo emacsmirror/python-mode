@@ -1115,7 +1115,7 @@
   (py-bug-tests-intern 'py-execute-block-or-clause-python-switch-base arg teststring)))
 
 (defun py-execute-block-or-clause-python-switch-base ()
-  (assert (progn (py-execute-block-or-clause-python-switch)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-test")) nil "py-execute-block-or-clause-python-switch-test failed"))
+  (assert (progn (py-execute-block-or-clause-python-switch)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-switch-test")) nil "py-execute-block-or-clause-python-switch-test failed"))
 
 (defun py-execute-block-or-clause-python-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1123,7 +1123,7 @@
   (py-bug-tests-intern 'py-execute-block-or-clause-python-no-switch-base arg teststring)))
 
 (defun py-execute-block-or-clause-python-no-switch-base ()
-  (assert (progn (py-execute-block-or-clause-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-test")) nil "py-execute-block-or-clause-python-no-switch-test failed"))
+  (assert (progn (py-execute-block-or-clause-python-no-switch)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-no-switch-test")) nil "py-execute-block-or-clause-python-no-switch-test failed"))
 
 (defun py-execute-block-or-clause-python-dedicated-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1131,7 +1131,7 @@
   (py-bug-tests-intern 'py-execute-block-or-clause-python-dedicated-base arg teststring)))
 
 (defun py-execute-block-or-clause-python-dedicated-base ()
-  (assert (progn (py-execute-block-or-clause-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-test")) nil "py-execute-block-or-clause-python-dedicated-test failed"))
+  (assert (progn (py-execute-block-or-clause-python-dedicated)(set-buffer "*Python*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python-dedicated-test")) nil "py-execute-block-or-clause-python-dedicated-test failed"))
 
 (defun py-execute-block-or-clause-python-dedicated-switch-test (&optional arg load-branch-function)
   (interactive "p")
@@ -1235,7 +1235,7 @@
   (py-bug-tests-intern 'py-execute-block-or-clause-python2-switch-base arg teststring)))
 
 (defun py-execute-block-or-clause-python2-switch-base ()
-  (assert (progn (py-execute-block-or-clause-python2-switch)(set-buffer "*Python2*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python2-test")) nil "py-execute-block-or-clause-python2-switch-test failed"))
+  (assert (progn (py-execute-block-or-clause-python2-switch)(set-buffer "*Python2*")(goto-char (point-min))(sit-for 0.1 t)(search-forward "the py-execute-block-or-clause-python2-switch-test")) nil "py-execute-block-or-clause-python2-switch-test failed"))
 
 (defun py-execute-block-or-clause-python2-no-switch-test (&optional arg load-branch-function)
   (interactive "p")
