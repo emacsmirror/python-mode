@@ -1227,7 +1227,9 @@
   (py-bug-tests-intern 'py-execute-block-or-clause-python2-base arg teststring)))
 
 (defun py-execute-block-or-clause-python2-base ()
-  (assert (progn (py-execute-block-or-clause-python2)(set-buffer "*Python2*") (goto-char (point-min))(sit-for 0.2 t)(search-forward "the py-execute-block-or-clause-python2-test")) nil "py-execute-block-or-clause-python2-test failed"))
+  (assert (progn (py-execute-block-or-clause-python2)(set-buffer "*Python2*")
+		 ;; (switch-to-buffer (current-buffer))
+		 (goto-char (point-min))(sit-for 0.2 t)(search-forward "the py-execute-block-or-clause-python2-test")) nil "py-execute-block-or-clause-python2-test failed"))
 
 (defun py-execute-block-or-clause-python2-switch-test (&optional arg load-branch-function)
   (interactive "p")

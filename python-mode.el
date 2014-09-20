@@ -2034,7 +2034,7 @@ Output buffer is created dynamically according to Python version and kind of pro
 (make-variable-buffer-local 'py-output-buffer)
 
 (defvar py-exception-buffer nil
-  "Set internally, remember source buffer where error might occur. ")
+  "Will be set internally, let-bound, remember source buffer where error might occur. ")
 
 (defvar py-string-delim-re "\\(\"\"\"\\|'''\\|\"\\|'\\)"
   "When looking at beginning of string. ")
@@ -3153,7 +3153,7 @@ completions on the current context."
       ;; (move-marker orig (point))
       nil)))
 
-(defun py--shell--do-completion-at-point (process imports input orig oldbuf code)
+(defun py--shell--do-completion-at-point (process imports input orig py-exception-buffer code)
   "Do completion at point for PROCESS."
   (when imports
     (py--send-string-no-output imports process))
@@ -3163,7 +3163,7 @@ completions on the current context."
 	 ;; (completion (when completions
 	 ;; (try-completion input completions)))
 	 newlist erg)
-    (set-buffer oldbuf)
+    (set-buffer py-exception-buffer)
     (sit-for 0.1 t)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
@@ -9793,19 +9793,15 @@ shell which will be forced upon execute as argument. "
       ;; (and py-verbose-p (message "%s" "py--execute-buffer-finally"))
       (insert strg)
       (write-file tempfile))
-      ;; (and py-debug-p (message "py--execute-buffer-finally: %s" "wrote tempfile"))
-      ;; (and py-debug-p (message "tempfile: %s" tempfile)))
-    ;; (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil buffer py-orig-buffer-or-file execute-directory))
+    (unwind-protect
+	(setq erg (py--execute-file-base proc tempfile nil buffer py-orig-buffer-or-file execute-directory)))
     (sit-for 0.1 t)
-    (py--close-execution tempbuf erg)
-    ;; (py--shell-manage-windows buffer)
-    ))
+    (py--close-execution tempbuf erg)))
   ;; )
 
-(defun py-execute-python-mode-v5 (start end)
+(defun py-execute-python-mode-v5 (start end &optional py-exception-buffer)
   (interactive "r")
-  (let ((py-exception-buffer (current-buffer))
+  (let ((py-exception-buffer (or py-exception-buffer (current-buffer)))
         (pcmd (concat py-shell-name (if (string-equal py-which-bufname
                                                       "Jython")
                                         " -"
@@ -9816,7 +9812,7 @@ shell which will be forced upon execute as argument. "
                                pcmd py-output-buffer))
     (if (not (get-buffer py-output-buffer))
         (message "No output.")
-      (setq py-error (py--postprocess-intern py-output-buffer))
+      (setq py-error (py--postprocess-intern py-output-buffer origline py-exception-buffer))
       (let* ((line (cadr py-error)))
         (if py-error
             (when (and py-jump-on-exception line)
@@ -9858,24 +9854,24 @@ May we get rid of the temporary file? "
       ;; (message "Warning: options `execute-directory' and `py-use-current-dir-when-execute-p' may conflict"))
       (and execute-directory
            (process-send-string proc (concat "import os; os.chdir(\"" execute-directory "\")\n"))
-           ))
+	   ))
     (set-buffer filebuf)
     (process-send-string proc
                          (buffer-substring-no-properties
                           (point-min) (point-max)))
     (sit-for 0.1 t)
-    (if (and (setq py-error (save-excursion (py--postprocess-intern procbuf origline)))
+    (if (and (setq py-error (save-excursion (py--postprocess-intern procbuf origline py-exception-buffer)))
              (car py-error)
              (not (markerp py-error)))
         (py--jump-to-exception py-error origline)
-      (py--shell-manage-windows procbuf py-buffer-name)
       (unless (string= (buffer-name (current-buffer)) (buffer-name procbuf))
         (when py-verbose-p (message "Output buffer: %s" procbuf))))))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
   ;; (when py-debug-p (message "run: %s" "py--execute-base"))
-  (let* ((oldbuf (current-buffer))
+  (setq py-error nil)
+  (let* ((py-exception-buffer (current-buffer))
 	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
 	 (end (or end (and (use-region-p) (region-end)) (point-max)))
 	 (strg-raw (if py-if-name-main-permission-p
@@ -9922,7 +9918,8 @@ May we get rid of the temporary file? "
 		     (t (or (get-buffer-process buffer)
 			    (get-buffer-process (py-shell nil py-dedicated-process-p which-shell buffer)))))))
     (setq py-buffer-name buffer)
-    (py--execute-base-intern strg shell filename proc file wholebuf buffer)))
+    (py--execute-base-intern strg shell filename proc file wholebuf buffer origline)
+    (py--shell-manage-windows buffer windows-config py-exception-buffer)))
 
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
@@ -9932,10 +9929,37 @@ May we get rid of the temporary file? "
     (py--fast-send-string-intern strg
 				 proc
 				 output-buffer py-store-result-p py-return-result-p)
-    (sit-for 0.1)
-    (py--shell-manage-windows output-buffer)))
+    (sit-for 0.1)))
 
-(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory)
+(defun py--postprocess-comint (output-buffer origline windows-config py-exception-buffer)
+  "Provide return values, check result for error, manage windows. "
+  ;; py--fast-send-string doesn't set origline
+  (setq py-result nil)
+  (with-current-buffer output-buffer
+    ;; (when py-debug-p (switch-to-buffer (current-buffer)))
+    (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))
+    (unless py-result
+      (sit-for 0.1 t)
+      (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
+  ;; (and (string-match "\n$" py-result)
+  ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
+  (if py-result
+      (with-temp-buffer
+	(insert py-result)
+	(sit-for 0.1 t)
+	;; (switch-to-buffer (current-buffer))
+	(setq py-error (py--fetch-error (current-buffer) origline))
+	(unless py-error
+	  (when py-store-result-p
+	    (setq py-result
+		  (if (eq major-mode 'py-shell-mode)
+		      (py-output-filter (py--fetch-comint-result windows-config py-exception-buffer))
+		    (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
+	    (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
+    (message "py--postprocess-comint: %s" "Don't see any result"))
+  py-result)
+
+(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory py-exception-buffer)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 
 Make that process's buffer visible and force display.  Also make
@@ -9948,14 +9972,16 @@ Returns position where output starts. "
          (proc (or proc (get-buffer-process buffer)))
          erg orig)
     (with-current-buffer buffer
+      ;; (switch-to-buffer (current-buffer))
+      ;; (comint-send-string proc "\n")
       (goto-char (point-max))
       (setq orig (point))
       (comint-send-string proc cmd)
-      (setq erg (py--postprocess buffer))
+      (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer))
       (message "%s" py-error)
       erg)))
 
-(defun py--execute-base-intern (strg shell filename proc file wholebuf buffer)
+(defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline)
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
@@ -9969,16 +9995,13 @@ When optional FILE is `t', no temporary file is needed. "
     (cond (py-fast-process-p (py--send-to-fast-process strg proc output-buffer))
 	  ;; enforce proceeding as python-mode.el v5
 	  (python-mode-v5-behavior-p
-	   (py-execute-python-mode-v5 start end))
+	   (py-execute-python-mode-v5 start end py-exception-buffer))
 	  (py-execute-no-temp-p
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc))
 	  ((and filename wholebuf)
 	   ;; No temporary file needed than
 	   (let (py-cleanup-temporary)
-	     (py--execute-file-base proc filename nil buffer filename execute-directory)
-	     (py--store-result-maybe erg)
-	     (py--shell-manage-windows buffer)
-	     ))
+	     (py--execute-file-base proc filename nil buffer filename execute-directory py-exception-buffer)))
 	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer)))))
 
 (defun py-execute-string (&optional string shell)
@@ -10179,7 +10202,7 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
   "Send the contents of the buffer to a Python interpreter. "
   (interactive)
   ;; (when py-debug-p (message "run: %s" "py-execute-buffer"))
-  (let ((origline 1))
+  (let ((origline (or (ignore-errors origline) 1)))
     (and py-prompt-on-changed-p (buffer-file-name) (interactive-p) (buffer-modified-p)
          (y-or-n-p "Buffer changed, save first? ")
          (write-file (buffer-file-name)))
@@ -10282,7 +10305,7 @@ Returns char found. "
   (comint-send-string proc (concat "import os;os.chdir(\"" dir "\")\n")))
 
 (defun py--update-execute-directory (proc procbuf execute-directory)
-  (let ((oldbuf (current-buffer))
+  (let ((py-exception-buffer (current-buffer))
         orig cwd)
     (set-buffer procbuf)
     (setq cwd (py--current-working-directory))
@@ -10290,7 +10313,7 @@ Returns char found. "
     (unless (string= execute-directory (concat cwd "/"))
       (py--update-execute-directory-intern (or py-execute-directory execute-directory) proc)
       (delete-region orig (point-max)))
-    (set-buffer oldbuf)))
+    (set-buffer py-exception-buffer)))
 
 (defun py--store-result-maybe (erg)
   "If no error occurred and `py-store-result-p' store result for yank. "
@@ -10304,35 +10327,22 @@ Returns char found. "
   (py--store-result-maybe erg)
   erg)
 
-(defun py--fetch-comint-result ()
+(defun py--fetch-comint-result (windows-config py-exception-buffer)
   (save-excursion
-    (let (end)
-      (save-excursion
-	(or (and
-	     (boundp 'comint-last-prompt)
-	     (number-or-marker-p (cdr comint-last-prompt))
-	     ;; (switch-to-buffer (current-buffer))
-	     (goto-char (setq erg (cdr comint-last-prompt))))
-	    (goto-char (setq erg (point-max))))
-	(and (re-search-backward py-fast-filter-re nil t 1)
-	     (setq end (point))
-	     (re-search-backward py-fast-filter-re nil t 1)
-	     (goto-char (match-end 0)))
-	(buffer-substring-no-properties (point) end)))))
-
-(defun py--postprocess (buffer)
-  "Provide return values, check result for error, manage windows. "
-  ;; py--fast-send-string doesn't set origline
-  (with-current-buffer buffer
-    ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-    (setq py-error (py--postprocess-intern buffer))
-    (when py-store-result-p
-      (setq erg
-	    (if (eq major-mode 'py-shell-mode)
-		(py-output-filter (py--fetch-comint-result))
-	      (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
-      (and erg (not (string= "" erg))(not (string= (car kill-ring) erg)) (kill-new erg))))
-  erg)
+    (let (end erg)
+      (or (and
+	   (boundp 'comint-last-prompt)
+	   (number-or-marker-p (cdr comint-last-prompt))
+	   (goto-char (cdr comint-last-prompt))
+	   (sit-for 0.1 t)
+	   (goto-char (setq erg (point-max)))
+	   (sit-for 0.1 t)))
+      (and (re-search-backward py-fast-filter-re nil t 1)
+	   (setq end (point))
+	   (re-search-backward py-fast-filter-re nil t 1)
+	   (goto-char (match-end 0))
+	   (setq erg (buffer-substring-no-properties (point) end)))
+      erg)))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -10935,16 +10945,16 @@ Maybe call M-x describe-variable RET to query its value. "
 
 (defun variables-prepare (kind)
   "Used by variable-finds, variable-states. "
-  (let* ((oldbuf (buffer-name (or buffer (current-buffer))))
+  (let* ((py-exception-buffer (buffer-name (or buffer (current-buffer))))
          ;; (file (buffer-file-name))
-         (orgname (concat (substring oldbuf 0 (string-match "\\." oldbuf)) ".org"))
-         (reSTname (concat (substring oldbuf 0 (string-match "\\." oldbuf)) ".rst"))
+         (orgname (concat (substring py-exception-buffer 0 (string-match "\\." py-exception-buffer)) ".org"))
+         (reSTname (concat (substring py-exception-buffer 0 (string-match "\\." py-exception-buffer)) ".rst"))
          (directory-in (or directory-in (and (not (string= "" py-devel-directory-in)) py-devel-directory-in) default-directory))
          (directory-out (or directory-out (expand-file-name finds-directory-out)))
 	 (command (concat "variables-base-" kind)))
-    (funcall (intern-soft command) oldbuf orgname reSTname directory-in directory-out)))
+    (funcall (intern-soft command) py-exception-buffer orgname reSTname directory-in directory-out)))
 
-(defun variables-base-state (oldbuf orgname reSTname directory-in directory-out)
+(defun variables-base-state (py-exception-buffer orgname reSTname directory-in directory-out)
   (save-restriction
     (let ((suffix (file-name-nondirectory (buffer-file-name)))
           variableslist)
@@ -11001,7 +11011,7 @@ module-qualified names."
 Interactively, prompt for SYMBOL."
   (interactive)
   (set-register 98888888 (list (current-window-configuration) (point-marker)))
-  (let* ((oldbuf (current-buffer))
+  (let* ((py-exception-buffer (current-buffer))
          (imports (py-find-imports))
          (symbol (or symbol (with-syntax-table py-dotted-expression-syntax-table
                               (current-word))))
@@ -11046,7 +11056,7 @@ Interactively, prompt for SYMBOL."
              (push-mark)
              (goto-char (match-beginning 0))
              (exchange-point-and-mark)
-             (display-buffer oldbuf)))
+             (display-buffer py-exception-buffer)))
       sourcefile)))
 
 ;;; Miscellanus
@@ -11668,69 +11678,72 @@ Internal use"
   (set-buffer buffer)
   (goto-char (process-mark (get-buffer-process (current-buffer)))))
 
-(defun py--shell-manage-windows (output-buffer &optional windows-displayed windows-config)
+(defun py--shell-manage-windows (output-buffer windows-config py-exception-buffer)
   "Adapt or restore window configuration. Return nil "
-  ;; (message "oldbuf: %s" oldbuf)
-  (cond
-   (py-keep-windows-configuration
-    (py-restore-window-configuration)
-    (with-current-buffer output-buffer
-      (goto-char (point-max))))
-   ((and (eq py-split-windows-on-execute-p 'always)
-	 py-switch-buffers-on-execute-p)
-    (if (member (get-buffer-window output-buffer)(window-list))
-	;; (delete-window (get-buffer-window output-buffer))
-	(select-window (get-buffer-window output-buffer))
+  ;; (message "py-exception-buffer: %s" py-exception-buffer)
+  (let ((output-buffer (or output-buffer py-buffer-name)))
+    (cond
+     (py-keep-windows-configuration
+      (py-restore-window-configuration)
+      (set-buffer output-buffer)
+      (goto-char (point-max)))
+     ((and (eq py-split-windows-on-execute-p 'always)
+	   py-switch-buffers-on-execute-p)
+      (if (member (get-buffer-window output-buffer)(window-list))
+	  ;; (delete-window (get-buffer-window output-buffer))
+	  (select-window (get-buffer-window output-buffer))
+	(py--manage-windows-split output-buffer)
+	;; otherwise new window appears above
+	(save-excursion
+	  (other-window 1)
+	  (switch-to-buffer output-buffer))
+	(display-buffer py-exception-buffer)))
+     ((and
+       (eq py-split-windows-on-execute-p 'always)
+       (not py-switch-buffers-on-execute-p))
+      (if (member (get-buffer-window output-buffer)(window-list))
+	  ;; (delete-window (get-buffer-window output-buffer))
+	  (select-window (get-buffer-window output-buffer))
+	(py--manage-windows-split output-buffer)
+	;; otherwise new window appears above
+	;; (save-excursion
+	;; (other-window 1)
+	;; (display-buffer output-buffer)
+	;;)
+	(pop-to-buffer py-exception-buffer)))
+     ((and
+       ;; just two windows, `py-split-windows-on-execute-p' is `t'
+       py-split-windows-on-execute-p
+       (not py-switch-buffers-on-execute-p))
+      (delete-other-windows)
+      ;; (sit-for py-new-shell-delay)
       (py--manage-windows-split output-buffer)
       ;; otherwise new window appears above
       (save-excursion
 	(other-window 1)
-	(switch-to-buffer output-buffer))
-      (display-buffer oldbuf)))
-   ((and
-     (eq py-split-windows-on-execute-p 'always)
-     (not py-switch-buffers-on-execute-p))
-    (if (member (get-buffer-window output-buffer)(window-list))
-	;; (delete-window (get-buffer-window output-buffer))
-	(select-window (get-buffer-window output-buffer))
+	(display-buffer output-buffer)
+	(previous-window))
+      (pop-to-buffer py-exception-buffer))
+     ((and
+       ;; just two windows, `py-split-windows-on-execute-p' is `t'
+       py-split-windows-on-execute-p
+       py-switch-buffers-on-execute-p)
+      (delete-other-windows)
+      ;; (sit-for py-new-shell-delay)
       (py--manage-windows-split output-buffer)
       ;; otherwise new window appears above
-      (save-excursion
-	(other-window 1)
-	(display-buffer output-buffer))
-      (pop-to-buffer oldbuf)))
-   ((and
-     ;; just two windows, `py-split-windows-on-execute-p' is `t'
-     py-split-windows-on-execute-p
-     (not py-switch-buffers-on-execute-p))
-    (delete-other-windows)
-    ;; (sit-for py-new-shell-delay)
-    (py--manage-windows-split output-buffer)
-    ;; otherwise new window appears above
-    (save-excursion
       (other-window 1)
-      (display-buffer output-buffer))
-    (pop-to-buffer oldbuf))
-   ((and
-     ;; just two windows, `py-split-windows-on-execute-p' is `t'
-     py-split-windows-on-execute-p
-     py-switch-buffers-on-execute-p)
-    (delete-other-windows)
-    ;; (sit-for py-new-shell-delay)
-    (py--manage-windows-split output-buffer)
-    ;; otherwise new window appears above
-    (other-window 1)
-    (set-buffer output-buffer)
-    (switch-to-buffer (current-buffer)))
-   ((and
-     py-switch-buffers-on-execute-p
-     (not py-split-windows-on-execute-p))
-    (set-buffer output-buffer)
-    (switch-to-buffer (current-buffer)))
-   ;; no split, no switch
-   ((not py-switch-buffers-on-execute-p)
-    (let (pop-up-windows)
-      (py-restore-window-configuration)))))
+      (set-buffer output-buffer)
+      (switch-to-buffer (current-buffer)))
+     ((and
+       py-switch-buffers-on-execute-p
+       (not py-split-windows-on-execute-p))
+      (set-buffer output-buffer)
+      (switch-to-buffer (current-buffer)))
+     ;; no split, no switch
+     ((not py-switch-buffers-on-execute-p)
+      (let (pop-up-windows)
+	(py-restore-window-configuration))))))
 
 (defun py-kill-buffer-unconditional (&optional buffer)
   "Kill buffer unconditional, kill buffer-process if existing. "
@@ -11874,7 +11887,7 @@ Expects being called by `py--run-unfontify-timer' "
       (erase-buffer))
     proc))
 
-(defun py-shell (&optional argprompt dedicated shell buffer-name fast-process)
+(defun py-shell (&optional argprompt dedicated shell buffer-name fast-process py-exception-buffer)
   "Start an interactive Python interpreter in another window.
   Interactively, \\[universal-argument] prompts for a new buffer-name.
   \\[universal-argument] 2 prompts for `py-python-command-args'.
@@ -11887,14 +11900,13 @@ Expects being called by `py--run-unfontify-timer' "
   "
   (interactive "P")
   ;; done by py-shell-mode
-  (let* ((iact (interactive-p)) ;; interactively?
-	 (windows-config (and iact (window-configuration-to-register 313465889)))
+  (let* ((iact (or (interactive-p) (eq 1 argprompt))) ;; interactively?
+	 (windows-config (window-configuration-to-register 313465889))
 	 (fast-process (or fast-process py-fast-process-p))
 	 ;; (newpath (when (eq 4 (prefix-numeric-value argprompt))
 	 ;; (read-shell-command "PATH/TO/EXECUTABLE/[I]python[version]: ")))
-	 (oldbuf (current-buffer))
-	 (dedicated (or dedicated py-dedicated-process-p))
 	 (py-exception-buffer (or py-exception-buffer (and (or (eq 'major-mode 'python-mode)(eq 'major-mode 'py-shell-mode)) (current-buffer))))
+	 (dedicated (or dedicated py-dedicated-process-p))
 	 (path (getenv "PYTHONPATH"))
 	 (py-shell-name (or shell
 			    ;; (py--configured-shell (py-choose-shell))
@@ -11948,10 +11960,12 @@ Expects being called by `py--run-unfontify-timer' "
 	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
-      (when (or (interactive-p)
-		;; M-x python RET sends from interactive "p"
-		(eq 1 argprompt)(or py-switch-buffers-on-execute-p py-split-windows-on-execute-p))
-	(py--shell-manage-windows py-buffer-name))
+      (when (and (or (interactive-p)
+		     ;; M-x python RET sends from interactive "p"
+		     argprompt)
+		 (or py-switch-buffers-on-execute-p py-split-windows-on-execute-p))
+	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer))
+      (sit-for py-new-shell-delay t)
       ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
       (when (string-match "[BbIi][Pp]ython" py-buffer-name)
 	(sit-for 0.3 t))
@@ -22191,7 +22205,7 @@ and return collected output"
 ;;; Completion
 
 ;; started from python.el
-(defun py--complete-base (shell pos beg end word imports debug oldbuf)
+(defun py--complete-base (shell pos beg end word imports debug py-exception-buffer)
   (let* ((shell (or shell (py-choose-shell)))
          (proc (or (get-process shell)
 		   (prog1
@@ -22200,10 +22214,10 @@ and return collected output"
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 python-shell-module-completion-string-code)))
-    (py--shell--do-completion-at-point proc imports word pos oldbuf code)))
+    (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
 
 (defun py--complete-prepare (shell debug beg end word fast-complete)
-  (let* ((oldbuf (current-buffer))
+  (let* ((py-exception-buffer (current-buffer))
          (pos (copy-marker (point)))
 	 (pps (syntax-ppss))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
@@ -22230,12 +22244,12 @@ and return collected output"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p completion-buffer erg)
-    (cond (fast-complete (py--fast-complete-base shell pos beg end word imports debug oldbuf))
+    (cond (fast-complete (py--fast-complete-base shell pos beg end word imports debug py-exception-buffer))
 	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
 	     (insert erg)))
-	  (t (py--complete-base shell pos beg end word imports debug oldbuf)))
+	  (t (py--complete-base shell pos beg end word imports debug py-exception-buffer)))
     nil))
 
 (defun py-shell-complete (&optional shell debug beg end word)
@@ -23103,7 +23117,7 @@ completions on the current context."
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--fast--do-completion-at-point (process imports input orig oldbuf code)
+(defun py--fast--do-completion-at-point (process imports input orig py-exception-buffer code)
   "Do completion at point for PROCESS."
   ;; send setup-code
   (let (py-return-result-p)
@@ -23117,7 +23131,7 @@ completions on the current context."
 	 ;; (try-completion input completions)))
 	 newlist erg)
     ;; (message "%s" (current-buffer))
-    (set-buffer oldbuf)
+    (set-buffer py-exception-buffer)
     ;; (sit-for 1 t)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
@@ -23141,7 +23155,7 @@ completions on the current context."
 
     nil))
 
-(defun py--fast-complete-base (shell pos beg end word imports debug oldbuf)
+(defun py--fast-complete-base (shell pos beg end word imports debug py-exception-buffer)
   (let* ((shell (or shell (py-choose-shell)))
 	 (py-buffer-name (py-shell nil nil shell nil t))
 	 (proc (get-buffer-process py-buffer-name))
@@ -23150,7 +23164,7 @@ completions on the current context."
 		 python-shell-module-completion-string-code)))
     (with-current-buffer py-buffer-name
       (erase-buffer))
-    (py--fast--do-completion-at-point proc imports word pos oldbuf code)))
+    (py--fast--do-completion-at-point proc imports word pos py-exception-buffer code)))
 
 (defun py-fast-complete (&optional shell debug beg end word)
   "Complete word before point, if any.
@@ -26164,6 +26178,51 @@ EVENT is usually a mouse click."
     (goto-char (point-min))
     (forward-line (1- line))))
 
+(defun py--fetch-error (buf &optional origline)
+  "Highlight exceptions found in BUF.
+If an exception occurred return error-string, otherwise return nil.  BUF must exist.
+
+Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
+  (let* ((pmx (copy-marker (point-max)))
+	 file bol estring ecode limit erg)
+    ;; (switch-to-buffer (current-buffer))
+    (goto-char (point-min))
+    (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
+      (setq erg (copy-marker (point)))
+      (delete-region (progn (beginning-of-line)
+			    (save-match-data
+			      (when (looking-at
+				     ;; all prompt-regexp known
+				     py-fast-filter-re)
+				(goto-char (match-end 0))))
+
+			    (skip-chars-forward " \t\r\n\f")(point)) (line-end-position))
+      (insert (concat "    File " (buffer-name py-exception-buffer) ", line "
+		      (prin1-to-string origline))))
+    (when erg
+      (goto-char erg)
+      ;; (forward-char -1)
+      ;; (skip-chars-backward "^\t\r\n\f")
+      ;; (skip-chars-forward " \t")
+      (save-match-data
+	(and (not (buffer-file-name
+		   (or
+		    (get-buffer py-exception-buffer)
+		    (get-buffer (file-name-nondirectory py-exception-buffer)))))
+	     (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
+	     (looking-at "[ \t]*File")
+	     (replace-match " Buffer")))
+      (add-to-list 'py-error origline)
+      (add-to-list 'py-error (concat "Buffer " (buffer-name py-exception-buffer) ", line " (prin1-to-string origline)))
+      ;; If not file exists, just a buffer, correct message
+      ;; (forward-line 1)
+      ;; (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
+      ;; 	(setq estring (match-string-no-properties 1))
+      ;; 	(setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
+      ;; 	(add-to-list 'py-error ecode t)
+      ;;))
+      py-error)))
+
 ;; python-mode-send.el
 (defun py-output-buffer-filter (&optional beg end)
   "Clear output buffer from py-shell-input prompt etc. "
@@ -26305,11 +26364,14 @@ FILE-NAME."
 
 (add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
 
-(add-to-list 'interpreter-mode-alist
-	     (cons (purecopy "[bi]*python[0-9.]*") 'python-mode))
+;; (add-to-list 'interpreter-mode-alist
+;; (cons (purecopy "[bi]*python[0-9.]*") 'python-mode))
 
-(add-to-list 'interpreter-mode-alist
-	     (cons (purecopy "jython[0-9.]*") 'jython-mode))
+;; (add-to-list 'interpreter-mode-alist
+;; (cons (purecopy "jython[0-9.]*") 'jython-mode))
+
+(add-to-list 'magic-mode-alist
+	     '("!#[ \t]*/.*[jp]ython[0-9.]*" . python-mode))
 
 (defun py--set-auto-fill-values ()
   "Internal use by `py--run-auto-fill-timer'"
