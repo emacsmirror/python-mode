@@ -9938,6 +9938,7 @@ May we get rid of the temporary file? "
   (with-current-buffer output-buffer
     ;; (when py-debug-p (switch-to-buffer (current-buffer)))
     (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))
+    (sit-for 0.1 t)
     (unless py-result
       (sit-for 0.1 t)
       (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
@@ -9951,11 +9952,7 @@ May we get rid of the temporary file? "
 	(setq py-error (py--fetch-error (current-buffer) origline))
 	(unless py-error
 	  (when py-store-result-p
-	    (setq py-result
-		  (if (eq major-mode 'py-shell-mode)
-		      (py-output-filter (py--fetch-comint-result windows-config py-exception-buffer))
-		    (py-output-filter (buffer-substring-no-properties (point) (point-max)))))
-	    (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
+	    (and (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
     (message "py--postprocess-comint: %s" "Don't see any result"))
   py-result)
 
@@ -9972,8 +9969,6 @@ Returns position where output starts. "
          (proc (or proc (get-buffer-process buffer)))
          erg orig)
     (with-current-buffer buffer
-      ;; (switch-to-buffer (current-buffer))
-      ;; (comint-send-string proc "\n")
       (goto-char (point-max))
       (setq orig (point))
       (comint-send-string proc cmd)
@@ -10329,11 +10324,16 @@ Returns char found. "
 
 (defun py--fetch-comint-result (windows-config py-exception-buffer)
   (save-excursion
+    ;; (switch-to-buffer (current-buffer))
     (let (end erg)
       (or (and
 	   (boundp 'comint-last-prompt)
+	   (sit-for 0.1 t) 
+	   ;; (message "comint-last-prompt-1: %s" comint-last-prompt)
+	   ;; (message "major-mode: %s" major-mode)
 	   (number-or-marker-p (cdr comint-last-prompt))
 	   (goto-char (cdr comint-last-prompt))
+	   ;; (message "comint-last-prompt-2: %s" comint-last-prompt)
 	   (sit-for 0.1 t)
 	   (goto-char (setq erg (point-max)))
 	   (sit-for 0.1 t)))
@@ -10342,6 +10342,10 @@ Returns char found. "
 	   (re-search-backward py-fast-filter-re nil t 1)
 	   (goto-char (match-end 0))
 	   (setq erg (buffer-substring-no-properties (point) end)))
+      (sit-for 0.1 t)
+      ;; (message "py-exception-buffer: %s" (buffer-substring-no-properties (point-min) (point-max)))
+      ;; (message "py--fetch-comint-result erg: %s" erg)
+      (and erg (string-match "\n$" erg) (setq erg (substring erg 0 (1- (length erg)))))
       erg)))
 
 ;;; Pdb
@@ -23117,14 +23121,14 @@ completions on the current context."
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--fast--do-completion-at-point (process imports input orig py-exception-buffer code)
+(defun py--fast--do-completion-at-point (process imports input orig py-exception-buffer code output-buffer)
   "Do completion at point for PROCESS."
   ;; send setup-code
   (let (py-return-result-p)
-    (py--fast-send-string-no-output py-shell-completion-setup-code process)
+    (py--fast-send-string-no-output py-shell-completion-setup-code process output-buffer)
     (when imports
       ;; (message "%s" imports)
-      (py--fast-send-string-no-output imports process)))
+      (py--fast-send-string-no-output imports process output-buffer)))
   (let* ((completion
 	  (py--fast-completion-get-completions input process code))
 	 ;; (completion (when completions
@@ -23164,7 +23168,7 @@ completions on the current context."
 		 python-shell-module-completion-string-code)))
     (with-current-buffer py-buffer-name
       (erase-buffer))
-    (py--fast--do-completion-at-point proc imports word pos py-exception-buffer code)))
+    (py--fast--do-completion-at-point proc imports word pos py-exception-buffer code py-buffer-name)))
 
 (defun py-fast-complete (&optional shell debug beg end word)
   "Complete word before point, if any.
