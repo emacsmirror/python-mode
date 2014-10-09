@@ -10328,7 +10328,7 @@ Returns char found. "
     (let (end erg)
       (cond ((and
 	      (boundp 'comint-last-prompt)
-	      (sit-for 0.1 t)
+	      (sit-for 0.2 t)
 	      (number-or-marker-p (cdr comint-last-prompt))
 	      (number-or-marker-p (car comint-last-prompt))
 	      (< (point) (car comint-last-prompt)))
