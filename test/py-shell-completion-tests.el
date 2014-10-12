@@ -36,7 +36,7 @@
     ;; (goto-char (point-max))
     (insert "pri")
     (py-shell-complete)
-    (sit-for 0.1)
+    (sit-for 0.2 t)
     (assert (member (char-before) (list ?\( ?t)) nil "python-shell-complete-test failed")))
 
 (defun python2.7-shell-complete-test ()
