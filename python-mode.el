@@ -5695,12 +5695,13 @@ If region is active, restrict uncommenting at region "
     (skip-chars-forward "\'")
     (and
      (car delimiters-style)
-     (unless (or (empty-line-p) (save-excursion (forward-line -1)(empty-line-p)))
+     (unless (or (empty-line-p)(eolp)(save-excursion (forward-line -1)(empty-line-p)))
        (or (newline (car delimiters-style)) t))
      (indent-region beg end py-current-indent))
-    (and multi-line-p first-line-p
-	 (forward-line 1)
-	 (unless (empty-line-p) (insert "\n"))))
+    ;; (and multi-line-p first-line-p
+    ;; (forward-line 1)
+    ;; (unless (empty-line-p) (insert "\n")))
+    )
   (py--fill-fix-end thisend orig docstring delimiters-style))
 
 (defun py--fill-docstring-last-line (thisbeg thisend beg end style)
