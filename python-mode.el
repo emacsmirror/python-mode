@@ -9784,6 +9784,27 @@ shell which will be forced upon execute as argument. "
   (when (buffer-live-p localname)
     (kill-buffer localname)))
 
+(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory py-exception-buffer)
+  "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
+
+Make that process's buffer visible and force display.  Also make
+comint believe the user typed this string so that
+`kill-output-from-shell' does The Right Thing.
+Returns position where output starts. "
+  (when py-debug-p (message "py--execute-file-base: py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+  (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
+         (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
+         (buffer (or procbuf (py-shell nil nil nil procbuf)))
+         (proc (or proc (get-buffer-process buffer)))
+         erg orig)
+    (with-current-buffer buffer
+      (goto-char (point-max))
+      (setq orig (point))
+      (comint-send-string proc cmd)
+      (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer))
+      (when py-debug-p (message "%s" py-error))
+      erg)))
+
 (defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc buffer)
   (let* ((temp (make-temp-name
 		;; FixMe: that should be simpler
@@ -9934,54 +9955,52 @@ May we get rid of the temporary file? "
 
 (defun py--postprocess-comint (output-buffer origline windows-config py-exception-buffer)
   "Provide return values, check result for error, manage windows. "
-  ;; py--fast-send-string doesn't set origline
-  (setq py-result nil)
-  (with-current-buffer output-buffer
-    ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-    (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))
-    (sit-for 0.1 t)
-    (unless py-result
+  (let (beg end)
+    ;; py--fast-send-string doesn't set origline
+    (setq py-result nil
+	  py-result-raw nil
+	  py-error nil)
+    (when py-debug-p (message "py--postprocess-comint: py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+    (with-current-buffer output-buffer
+      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
+      (setq py-result-raw (py--fetch-comint-result windows-config py-exception-buffer))
       (sit-for 0.1 t)
-      (setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
-  ;; (and (string-match "\n$" py-result)
-  ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
-  (if py-result
-      (with-temp-buffer
-	(insert py-result)
+      (unless (ignore-errors (car py-result-raw))
 	(sit-for 0.1 t)
-	;; (switch-to-buffer (current-buffer))
-	(setq py-error (py--fetch-error (current-buffer) origline))
-	(unless py-error
-	  (when py-store-result-p
-	    (and (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
-    (message "py--postprocess-comint: %s" "Don't see any result"))
-  py-result)
-
-(defun py--execute-file-base (&optional proc filename cmd procbuf origfile execute-directory py-exception-buffer)
-  "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
-
-Make that process's buffer visible and force display.  Also make
-comint believe the user typed this string so that
-`kill-output-from-shell' does The Right Thing.
-Returns position where output starts. "
-  (let* ((cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
-         (msg (and py-verbose-p (format "## executing %s...\n" (or origfile filename))))
-         (buffer (or procbuf (py-shell nil nil nil procbuf)))
-         (proc (or proc (get-buffer-process buffer)))
-         erg orig)
-    (with-current-buffer buffer
-      (goto-char (point-max))
-      (setq orig (point))
-      (comint-send-string proc cmd)
-      (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer))
-      (message "%s" py-error)
-      erg)))
+	(setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
+    ;; (and (string-match "\n$" py-result)
+    ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
+    (if (ignore-errors (car py-result-raw))
+	(with-temp-buffer
+	  (when py-debug-p (message "py-result-raw: %s" py-result-raw))
+	  (sit-for 0.1 t)
+	  ;; values needed when updating output-buffer
+	  (setq beg (nth 1 py-result-raw))
+	  (setq end (nth 2 py-result-raw))
+	  (insert (car py-result-raw))
+	  (setq py-error (py--fetch-error (current-buffer) origline))
+	  (if py-error
+	      (with-current-buffer output-buffer
+		;; (switch-to-buffer (current-buffer))
+		(goto-char beg)
+		(delete-region beg end)
+		(insert py-error)
+		(newline)
+		(goto-char (point-max)))
+	    ;; position no longer needed, no need to correct
+	    (setq py-result (car py-result-raw))
+	    (when py-store-result-p
+	      (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
+      (message "py--postprocess-comint: %s" "Don't see any result"))
+    (or py-error py-result)))
 
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline)
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
   ;; (when py-debug-p (message "run: %s" "py--execute-base-intern"))
+  (when py-debug-p (message "py--execute-base-intern: py-split-windows-on-execute-p: %s" py-split-windows-on-execute-p))
+
   (let (output-buffer erg)
     (setq py-error nil)
     ;; (when py-debug-p
@@ -10324,25 +10343,34 @@ Returns char found. "
   erg)
 
 (defun py--fetch-comint-result (windows-config py-exception-buffer)
+  "Returns a list: result, beg-position end-position of result.
+
+In case of error make messages indicate the source buffer"
   (save-excursion
     ;; (switch-to-buffer (current-buffer))
-    (let (end erg)
-      (cond ((and
-	      (boundp 'comint-last-prompt)
-	      (sit-for 0.2 t)
-	      (number-or-marker-p (cdr comint-last-prompt))
-	      (number-or-marker-p (car comint-last-prompt))
-	      (< (point) (car comint-last-prompt)))
-	     (setq erg (buffer-substring-no-properties (point) (car comint-last-prompt))))
-	    ((and (re-search-backward py-fast-filter-re nil t 1)
-		  (setq end (point))
-		  (re-search-backward py-fast-filter-re nil t 1)
-		  (goto-char (match-end 0)))
-	     (setq erg (buffer-substring-no-properties (point) end))))
+    (let (beg end erg)
+      (cond
+       ((and
+	 (boundp 'comint-last-prompt)
+	 (sit-for 0.2 t)
+	 (number-or-marker-p (cdr comint-last-prompt))
+	 (number-or-marker-p (car comint-last-prompt))
+	 (goto-char (car comint-last-prompt))
+	 (re-search-backward py-fast-filter-re nil t 1)
+	 (setq beg (goto-char (match-end 0))))
+	(setq end (car comint-last-prompt))
+	(setq erg (buffer-substring-no-properties (point) (car comint-last-prompt))))
+       ((and (re-search-backward py-fast-filter-re nil t 1)
+	     (setq end (point))
+	     (re-search-backward py-fast-filter-re nil t 1)
+	     (goto-char (match-end 0)))
+	(setq beg (point))
+	(setq erg (buffer-substring-no-properties (point) end))))
       (when (and erg
 		 (string-match "\n$" erg))
 	(setq erg (substring erg 0 (1- (length erg)))))
-      erg)))
+      ;; report the region, usefull in case of error
+      (list erg beg end))))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -26328,15 +26356,9 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 	     (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
 	     (looking-at "[ \t]*File")
 	     (replace-match " Buffer")))
-      (add-to-list 'py-error origline)
-      (add-to-list 'py-error (concat "Buffer " (buffer-name py-exception-buffer) ", line " (prin1-to-string origline)))
-      ;; If not file exists, just a buffer, correct message
-      ;; (forward-line 1)
-      ;; (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
-      ;; 	(setq estring (match-string-no-properties 1))
-      ;; 	(setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
-      ;; 	(add-to-list 'py-error ecode t)
-      ;;))
+      ;; (add-to-list 'py-error origline)
+      ;; (add-to-list 'py-error (concat "Buffer " (buffer-name py-exception-buffer) ", line " (prin1-to-string origline)))
+      (setq py-error (buffer-substring-no-properties (point-min) (point-max)))
       py-error)))
 
 ;; python-mode-send.el
