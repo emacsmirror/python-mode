@@ -5732,11 +5732,12 @@ If region is active, restrict uncommenting at region "
     (goto-char beg)
     (skip-chars-forward "\"'")
     (unless (or (eq style 'pep-257-nn)(eq style 'pep-257)(eq (char-after) ?\n))
-      (newline)
+      (newline-and-indent)
       ;; if TQS is at a single line, re-fill remaining line
       (setq beg (point))
       (fill-region beg end))
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)))
+    ;; (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)
+    ))
 
 (defun py--fill-docstring (justify style docstring orig)
   ;; Delete spaces after/before string fence
