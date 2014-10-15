@@ -9971,6 +9971,7 @@ May we get rid of the temporary file? "
 	(setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
     ;; (and (string-match "\n$" py-result)
     ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
+    (sit-for 0.1 t) 
     (if (ignore-errors (car py-result-raw))
 	(with-temp-buffer
 	  (when py-debug-p (message "py-result-raw: %s" py-result-raw))
