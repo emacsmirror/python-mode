@@ -9971,7 +9971,7 @@ May we get rid of the temporary file? "
 	(setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
     ;; (and (string-match "\n$" py-result)
     ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
-    (sit-for 0.1 t) 
+    (sit-for 0.1 t)
     (if (ignore-errors (car py-result-raw))
 	(with-temp-buffer
 	  (when py-debug-p (message "py-result-raw: %s" py-result-raw))
@@ -11732,7 +11732,6 @@ Internal use"
        (eq py-split-windows-on-execute-p 'always)
        (not py-switch-buffers-on-execute-p))
       (if (member (get-buffer-window output-buffer)(window-list))
-	  ;; (delete-window (get-buffer-window output-buffer))
 	  (select-window (get-buffer-window output-buffer))
 	(py--manage-windows-split output-buffer)
 	;; otherwise new window appears above
@@ -11742,18 +11741,18 @@ Internal use"
 	;;)
 	(pop-to-buffer py-exception-buffer)))
      ((and
-       ;; just two windows, `py-split-windows-on-execute-p' is `t'
        py-split-windows-on-execute-p
        (not py-switch-buffers-on-execute-p))
-      (delete-other-windows)
-      ;; (sit-for py-new-shell-delay)
-      (py--manage-windows-split output-buffer)
-      ;; otherwise new window appears above
-      (save-excursion
-	(other-window 1)
-	(display-buffer output-buffer)
-	(previous-window))
-      (pop-to-buffer py-exception-buffer))
+      (set-buffer py-exception-buffer)
+      (unless
+	  (member (get-buffer-window output-buffer)(window-list))
+	(py--manage-windows-split output-buffer)
+	;; Fixme: otherwise new window appears above
+	(save-excursion
+	  (other-window 1)
+	  (pop-to-buffer output-buffer)
+	  (goto-char (point-max))
+	  (other-window 1))))
      ((and
        ;; just two windows, `py-split-windows-on-execute-p' is `t'
        py-split-windows-on-execute-p
@@ -11967,7 +11966,7 @@ Expects being called by `py--run-unfontify-timer' "
 	 (executable (cond (py-shell-name)
 			   (py-buffer-name
 			    (py--report-executable py-buffer-name))))
-	 proc py-smart-indentation)
+	 proc)
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
