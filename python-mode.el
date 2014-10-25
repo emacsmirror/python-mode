@@ -22382,20 +22382,22 @@ and return collected output"
 If cursor is at end of line, try to complete
 Otherwise call `py-indent-line'
 
+If `(region-active-p)' returns `t', indent region.
 Use `C-q TAB' to insert a literally TAB-character
 
 In python-mode `py-complete-function' is called,
 in py-shell-mode `py-shell-complete'"
   (interactive "*")
-  (if (or (member (char-before)(list 9 10 12 13 32))
-	  ;; complete only at end of word resp. symbol
-	  (and (not (eobp)) (not (member (char-after)(list 9 10 12 13 32)))))
-      (py-indent-line)
-    (if (eq major-mode 'python-mode)
-	(if (string-match "ipython" (py-choose-shell))
-	    (py-shell-complete)
-	  (funcall py-complete-function))
-      (py-shell-complete))))
+  (cond ((region-active-p)
+	 (py-indent-region (region-beginning) (region-end)))
+	((or (member (char-before)(list 9 10 12 13 32))
+	     (bobp)) 
+	 (py-indent-line))
+	((eq major-mode 'python-mode)
+	 (if (string-match "ipython" (py-choose-shell))
+	     (py-shell-complete)
+	   (funcall py-complete-function))
+	 (py-shell-complete))))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
