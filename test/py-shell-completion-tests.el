@@ -25,7 +25,7 @@
 (defun python-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     ;; (set-buffer (py-shell nil t "python" nil "/"))
     (set-buffer (py-shell nil t "python"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
@@ -42,7 +42,7 @@
 (defun python2.7-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (set-buffer (py-shell nil t "python2.7"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     (sit-for 0.1)
@@ -57,7 +57,7 @@
 (defun arbeit-python-epdfree-epd_free-7.2-2-rh5-x86-bin-python2.7-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (set-buffer (py-shell nil t "~/arbeit/python/epdfree/epd_free-7.2-2-rh5-x86/bin/python2.7"))
     (sit-for 0.2 t)
     (goto-char (point-max))
@@ -71,7 +71,7 @@
 (defun python3-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (set-buffer (py-shell nil t "python3"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     (goto-char (point-max))
@@ -85,7 +85,7 @@
 (defun ipython-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (and (buffer-live-p (get-buffer "*Ipython*"))
 	 (kill-buffer-unconditional "*Ipython*"))
     (set-buffer (py-shell nil t "ipython"))
@@ -104,7 +104,7 @@
 (defun ipython-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (set-buffer (py-shell nil t "/usr/bin/ipython"))
     (sit-for 0.1)
     (goto-char (point-max))
@@ -119,7 +119,7 @@
 (defun arbeit-python-epd_free-7.1-2-rh5-x86-bin-ipython-shell-complete-test ()
   (interactive)
   (let (py-switch-buffers-on-execute-p
-        py-split-windows-on-execute-p)
+        py-split-window-on-execute-p)
     (set-buffer (py-shell nil t "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython"))
     (sit-for 0.1)
     (switch-to-buffer (current-buffer))
