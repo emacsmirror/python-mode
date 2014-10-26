@@ -26579,6 +26579,20 @@ FILE-NAME."
 		   t
 		   #'py--unfontify-banner buffer)))
 	(cancel-timer py--timer)))))
+
+(defun py-unload-python-el ()
+  "Unloads python-mode delivered by shipped python.el
+
+Removes python-skeleton forms from abbrevs.
+These would interfere when inserting forms heading a block"
+  (interactive)
+  (when (featurep 'python) (unload-feature 'python t))
+  (when (file-readable-p abbrev-file-name)
+    (find-file abbrev-file-name)
+    (goto-char (point-min))
+    (while (re-search-forward "^.+python-skeleton.+$" nil t 1)
+      (delete-region (match-beginning 0) (1+ (match-end 0))))
+    (write-file abbrev-file-name)))
 ;;;
 (defun py-complete-auto ()
   "Auto-complete function using py-complete. "
