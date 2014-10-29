@@ -26746,7 +26746,7 @@ See available customizations listed in files variables-python-mode at directory 
               (^ '(- (1+ (current-indentation)))))))
   ;; (set (make-local-variable 'imenu-create-index-function) 'py--imenu-create-index-function)
   (setq imenu-create-index-function 'py--imenu-create-index-function)
-  (add-hook 'python-mode-hook (lambda ()(setq imenu-create-index-function 'py--imenu-create-index-function)))
+  (add-hook 'python-mode-hook (lambda ()(setq imenu-create-index-function py--imenu-create-index-function)))
   (and py-guess-py-install-directory-p (py-set-load-path))
   ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (buffer-file-name))))
   (and py-autopair-mode
