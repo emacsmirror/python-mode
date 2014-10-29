@@ -10669,8 +10669,8 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
          (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
          (sym (buffer-substring-no-properties beg end))
          (origfile (buffer-file-name))
-         (temp (make-temp-name (buffer-name)))
-         (file (concat (expand-file-name temp py-temp-directory) ".py"))
+         (temp (md5 (buffer-name)))
+         (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
          (cmd (py-find-imports))
          ;; if symbol is defined in current buffer, go to
          (erg (progn (goto-char (point-min))
@@ -10702,13 +10702,11 @@ Optional \\[universal-argument] used for debugging, will prevent deletion of tem
           (progn
             (set-buffer "*Python-Help*")
             (switch-to-buffer (current-buffer))
-            ;; (sit-for 0.1)
             (help-mode)
             (delete-other-windows))
         (message "%s" erg))
-
       (when (file-readable-p file)
-        (unless (eq 4 (prefix-numeric-value debug)) (delete-file file))))))
+        (unless py-debug-p (delete-file file))))))
 
 
 (defun py-describe-mode ()
@@ -12640,6 +12638,14 @@ Should you need more shells to select, extend this command by adding inside the 
           (setq py-output-buffer (format "*%s Output*" py-which-bufname)))
       (error (concat "Could not detect " py-shell-name " on your sys
 tem")))))
+
+(defun py--cleanup-process-name (res)
+  "Make res ready for use by `executable-find'
+
+Returns RES or substring of RES"
+  (if (string-match "<" res)
+      (substring res 0 (match-beginning 0))
+    res))
 
 (defalias 'py-toggle-shells 'py-choose-shell)
 (defalias 'py-which-shell 'py-choose-shell)
@@ -14745,7 +14751,7 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil
                      :help " `py-execute-file-python-no-switch'
 Send file to a Python interpreter.
 Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-		    
+
                     ["Execute file python dedicated" py-execute-file-python-dedicated
                      :help " `py-execute-file-python-dedicated'
 Send file to a Python interpreter.
@@ -15988,7 +15994,7 @@ Customize `py-match-paren-key' which key to use. Use `M-x customize-variable' to
                      :style toggle :selected py-match-paren-mode])
 
                    ("Debug"
-		    
+
 		    ["py-debug-p"
 		     (setq py-debug-p
 			   (not py-debug-p))
@@ -22343,7 +22349,7 @@ and return collected output"
 	    python-shell-module-completion-string-code)))
   (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
 
-(defun py--complete-prepare (shell debug beg end word fast-complete)
+(defun py--complete-prepare (&optional shell debug beg end word fast-complete)
   (let* ((py-exception-buffer (current-buffer))
          (pos (copy-marker (point)))
 	 (pps (syntax-ppss))
@@ -26592,13 +26598,18 @@ FILE-NAME."
 Removes python-skeleton forms from abbrevs.
 These would interfere when inserting forms heading a block"
   (interactive)
-  (when (featurep 'python) (unload-feature 'python t))
-  (when (file-readable-p abbrev-file-name)
-    (find-file abbrev-file-name)
-    (goto-char (point-min))
-    (while (re-search-forward "^.+python-skeleton.+$" nil t 1)
-      (delete-region (match-beginning 0) (1+ (match-end 0))))
-    (write-file abbrev-file-name)))
+  (let (done)
+    (when (featurep 'python) (unload-feature 'python t))
+    (when (file-readable-p abbrev-file-name)
+      (find-file abbrev-file-name)
+      (goto-char (point-min))
+      (while (re-search-forward "^.+python-skeleton.+$" nil t 1)
+	(setq done t)
+	(delete-region (match-beginning 0) (1+ (match-end 0))))
+      (when done (write-file abbrev-file-name)
+	    ;; now reload
+	    (read-abbrev-file abbrev-file-name))
+      (kill-buffer (file-name-nondirectory abbrev-file-name)))))
 ;;;
 (defun py-complete-auto ()
   "Auto-complete function using py-complete. "
