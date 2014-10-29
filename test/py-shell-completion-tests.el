@@ -27,7 +27,8 @@
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute-p)
     ;; (set-buffer (py-shell nil t "python" nil "/"))
-    (set-buffer (py-shell nil t "python"))
+    (with-temp-buffer (py-shell nil t "python")
+    (sit-for 0.1 t) 
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     ;; (goto-char (point-max))
     (sit-for 0.1 t)
@@ -37,7 +38,7 @@
     (insert "pri")
     (py-shell-complete)
     (sit-for 0.2 t)
-    (assert (member (char-before) (list ?\( ?t)) nil "python-shell-complete-test failed")))
+    (assert (member (char-before) (list ?\( ?t)) nil "python-shell-complete-test failed"))))
 
 (defun python2.7-shell-complete-test ()
   (interactive)
