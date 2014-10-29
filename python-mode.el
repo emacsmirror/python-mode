@@ -12660,34 +12660,36 @@ With \\[universal-argument] 4 is called `py-switch-shell' see docu there."
   (interactive "P")
   (if (eq 4 (prefix-numeric-value arg))
       (py-switch-shell '(4))
-    (let* (res
-	   (erg (cond (py-force-py-shell-name-p
-                       (default-value 'py-shell-name))
-                      (py-use-local-default
-                       (if (not (string= "" py-shell-local-path))
-                           (expand-file-name py-shell-local-path)
-                         (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
-                      ((and py-fast-process-p
-			    (comint-check-proc (current-buffer))
-                            (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
-		       (progn
-			 (setq res (process-name (get-buffer-process (current-buffer))))
-			 (if (string-match "<" res)
-			     ;; executable-find can't see a python<1>
-			     (substring res 0 (match-beginning 0))
-			   res)))
-		      ((and (not py-fast-process-p)
-			    (comint-check-proc (current-buffer))
-                            (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
-                       (process-name (get-buffer-process (current-buffer))))
-                      ((py-choose-shell-by-shebang))
-                      ((py--choose-shell-by-import))
-                      ((py-choose-shell-by-path))
-                      (t (or
-                          (default-value 'py-shell-name)
-                          "python"))))
-           (cmd (if py-edit-only-p erg
-                  (executable-find erg))))
+    (let* (res done
+	       (erg (cond (py-force-py-shell-name-p
+			   (default-value 'py-shell-name))
+			  (py-use-local-default
+			   (if (not (string= "" py-shell-local-path))
+			       (expand-file-name py-shell-local-path)
+			     (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
+			  ((and py-fast-process-p
+				(comint-check-proc (current-buffer))
+				(string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+			   (progn
+			     (setq res (process-name (get-buffer-process (current-buffer))))
+			     (py--cleanup-process-name res)))
+			  ((and (not py-fast-process-p)
+				(comint-check-proc (current-buffer))
+				(setq done t)
+				(string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+			   (setq res (process-name (get-buffer-process (current-buffer))))
+			   (py--cleanup-process-name res))
+			  ((py-choose-shell-by-shebang))
+			  ((py--choose-shell-by-import))
+			  ((py-choose-shell-by-path))
+			  (t (or
+			      (default-value 'py-shell-name)
+			      "python"))))
+	       (cmd (if (or
+			 ;; comint-check-proc was succesful
+			 done
+			 py-edit-only-p) erg
+		      (executable-find erg))))
       (if cmd
           (when (interactive-p)
             (message "%s" cmd))
@@ -22328,14 +22330,18 @@ and return collected output"
 ;; started from python.el
 (defun py--complete-base (shell pos beg end word imports debug py-exception-buffer)
   (let* ((shell (or shell (py-choose-shell)))
-         (proc (or (get-process shell)
-		   (prog1
-		       (get-buffer-process (py-shell nil nil shell))
-		     (sit-for py-new-shell-delay))))
-	 (code (if (string-match "[Ii][Pp]ython*" shell)
-		   (py-set-ipython-completion-command-string shell)
-		 python-shell-module-completion-string-code)))
-    (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
+         (proc (or
+		;; completing inside a shell
+		(get-buffer-process py-exception-buffer)
+		   (and (comint-check-proc shell)
+			(get-process shell))
+	       (prog1
+		   (get-buffer-process (py-shell nil nil shell))
+		 (sit-for py-new-shell-delay))))
+    (code (if (string-match "[Ii][Pp]ython*" shell)
+	      (py-set-ipython-completion-command-string shell)
+	    python-shell-module-completion-string-code)))
+  (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
 
 (defun py--complete-prepare (shell debug beg end word fast-complete)
   (let* ((py-exception-buffer (current-buffer))
