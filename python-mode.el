@@ -2270,7 +2270,7 @@ When `this-command' is `eq' to `last-command', use the guess already computed. "
   (concat
    "[ \t]*\\_<\\("
    (regexp-opt py-no-outdent-1-re-raw)
-   "\\)\\_>[( \t]+.*:[( \t]\\_<\\("
+   "\\)\\_>.*:[( \t]\\_<\\("
    (regexp-opt py-no-outdent-2-re-raw)
    "\\)\\_>[)\t]*$")
   "Regular expression matching lines not to augment indent after.
@@ -9818,18 +9818,19 @@ Returns position where output starts. "
       (when py-debug-p (message "%s" py-error))
       erg)))
 
-(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc buffer)
+(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf)
   (let* ((temp (make-temp-name
 		;; FixMe: that should be simpler
                 (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
          (tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
          (tempbuf (get-buffer-create temp)))
     (with-current-buffer tempbuf
+      (when py-debug-p (message "py--execute-buffer-finally: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
       ;; (and py-verbose-p (message "%s" "py--execute-buffer-finally"))
       (insert strg)
       (write-file tempfile))
     (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil buffer py-orig-buffer-or-file execute-directory)))
+	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file execute-directory py-exception-buffer)))
     (sit-for 0.1 t)
     (py--close-execution tempbuf erg)))
   ;; )
@@ -9906,7 +9907,10 @@ May we get rid of the temporary file? "
   "Update variables. "
   ;; (when py-debug-p (message "run: %s" "py--execute-base"))
   (setq py-error nil)
+  (when py-debug-p (message "py--execute-base: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
+
   (let* ((py-exception-buffer (current-buffer))
+	 (py-exception-window (selected-window))
 	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
 	 (end (or end (and (use-region-p) (region-end)) (point-max)))
 	 (strg-raw (if py-if-name-main-permission-p
@@ -9954,6 +9958,7 @@ May we get rid of the temporary file? "
 			    (get-buffer-process (py-shell nil py-dedicated-process-p which-shell buffer)))))))
     (setq py-buffer-name buffer)
     (py--execute-base-intern strg shell filename proc file wholebuf buffer origline)
+    (when py-debug-p (message "py--execute-base: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
     (py--shell-manage-windows buffer windows-config py-exception-buffer)))
 
 (defun py--send-to-fast-process (strg proc output-buffer)
@@ -10353,7 +10358,7 @@ Returns char found. "
   (when py-cleanup-temporary
     (py-kill-buffer-unconditional tempbuf)
     (py-delete-temporary tempfile tempbuf))
-  (py--store-result-maybe erg)
+  ;; (py--store-result-maybe erg)
   erg)
 
 (defun py--fetch-comint-result (windows-config py-exception-buffer)
