@@ -5705,18 +5705,16 @@ If region is active, restrict uncommenting at region "
     (skip-chars-forward "\'\"")
     (when
 	(car delimiters-style)
-      (unless (or (empty-line-p)(eolp)(save-excursion (forward-line -1)(empty-line-p)))
-	(newline (car delimiters-style)))
-      (indent-region beg end py-current-indent))
-    ;; (and multi-line-p first-line-p
-    ;; (forward-line 1)
-    ;; (unless (empty-line-p) (insert "\n")))
-    )
+      (unless (or (empty-line-p)(eolp)(save-excursion (forward-line -1)pty-line-p)))
+      (newline (car delimiters-style)))
+    (indent-region beg end py-current-indent))
   (when multi-line-p
-    (forward-line 2)
+    (goto-char thisbeg)
+    (skip-chars-forward "\'\"")
+    (skip-chars-forward " \t\r\n\f")
+    (forward-line 1)
     (beginning-of-line)
-    (unless (empty-line-p) (newline))) 
-  
+    (unless (empty-line-p) (newline)))
   (py--fill-fix-end thisend orig docstring delimiters-style))
 
 (defun py--fill-docstring-last-line (thisbeg thisend beg end style)
@@ -5757,7 +5755,7 @@ If region is active, restrict uncommenting at region "
 (defun py--fill-docstring (justify style docstring orig)
   ;; Delete spaces after/before string fence
   (py--string-fence-delete-spaces docstring)
-  (let* ((thisbeg docstring)
+  (let* ((thisbeg (copy-marker docstring))
          (thisend (copy-marker
                    (progn
                      (goto-char thisbeg)
@@ -5807,7 +5805,7 @@ Fill according to `py-docstring-style' "
 	(docstring (if (and docstring (not (number-or-marker-p docstring)))
 		       (py--in-or-behind-or-before-a-docstring)
 		     docstring)))
-    (if docstring 
+    (if docstring
 	(py--fill-docstring justify style docstring orig)
       (fill-paragraph justify))))
 
