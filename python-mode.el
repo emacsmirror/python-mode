@@ -26445,15 +26445,15 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 (defun py-send-string (string &optional process)
   "Evaluate STRING in Python process."
   (interactive "sPython command: ")
-  (let ((proc (or process (py-shell))))
-    (comint-send-string proc string)
+  (let* ((proc (or process (get-buffer-process (py-shell))))
+	 (buffer (process-buffer proc)))
+    (process-send-string proc "\n")
+    (process-send-string proc string)
     (unless (string-match "\n\\'" string)
       ;; Make sure the text is properly LF-terminated.
-      (comint-send-string proc "\n"))
-    (when (string-match "\n[ \t].*\n?\\'" string)
-      ;; If the string contains a final indented line, add a second newline so
-      ;; as to make sure we terminate the multiline instruction.
-      (comint-send-string proc "\n"))))
+      (process-send-string proc "\n"))
+    (with-current-buffer buffer
+      (goto-char (point-max)))))
 
 (defun py-send-file (file-name &optional process temp-file-name)
   "Send FILE-NAME to Python PROCESS.
