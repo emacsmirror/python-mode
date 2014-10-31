@@ -883,24 +883,20 @@ Default is `t'."
   :type 'float
   :group 'python-mode)
 
-(defcustom py--send-receive-delay  5
-  "Seconds to wait for output, used by `py--send-receive'. "
+(defcustom py-python-send-delay 5
+  "Seconds to wait for output, used by `py--send-...' functions.
+
+See also py-ipython-send-delay"
 
   :type 'number
   :group 'python-mode)
 
-(defcustom py-ac-length-min 2
-  "Auto-complete takes action only with minimum length of word before point, set here.
+(defcustom py-ipython-send-delay 9
+  "Seconds to wait for output, used by `py--send-...' functions.
 
-Default is 2"
+See also py-python-send-delay"
 
-  :type 'integer
-  :group 'python-mode)
-
-(defcustom py-completion-delay 4
-  "Seconds completion-buffer is shown, if any. "
-
-  :type 'integer
+  :type 'number
   :group 'python-mode)
 
 (defvar py-auto-completion-mode-p nil
@@ -3050,6 +3046,12 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
         (comint-send-string process "\n")))
     (unless py-debug-p (when (file-readable-p temp-file-name)(delete-file temp-file-name)))))
 
+(defun py--delay-process-dependent (process)
+  "Call a `py-ipython-send-delay' or `py-python-send-delay' according to process"
+  (if (string-match "ipython" (prin1-to-string process))
+      (accept-process-output process py-ipython-send-delay)
+    (accept-process-output process py-python-send-delay)))
+
 (defun py--send-string-no-output (string &optional process msg)
   "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
@@ -3063,7 +3065,8 @@ the output."
                       (setq output string)
                       "")))))
     (py-shell-send-string string process msg)
-    (accept-process-output process 5)
+    (sit-for 0.1 t) 
+    ;; (py--delay-process-dependent process)
     (when (and output (not (string= "" output)))
       (setq output
 	    (replace-regexp-in-string
@@ -5705,8 +5708,8 @@ If region is active, restrict uncommenting at region "
     (skip-chars-forward "\'\"")
     (when
 	(car delimiters-style)
-      (unless (or (empty-line-p)(eolp)(save-excursion (forward-line -1)pty-line-p)))
-      (newline (car delimiters-style)))
+      (unless (or (empty-line-p)(eolp))
+	(newline (car delimiters-style))))
     (indent-region beg end py-current-indent))
   (when multi-line-p
     (goto-char thisbeg)
