@@ -3414,10 +3414,11 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
       (save-match-data
 	(if (or (eq major-mode 'comint-mode)
 		(eq major-mode 'py-shell-mode))
-	    (cond
-	     ((re-search-backward py-fast-filter-re nil t 1)
-	      (goto-char (match-end 0)))
-	     (t (error "py-count-lines: Don't see py-fast-filter-re here")))
+	    (if
+		(re-search-backward py-fast-filter-re nil t 1)
+		(goto-char (match-end 0))
+	      (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
+	      (goto-char (point-min)))
 	  (goto-char (point-min))))
       (while (and (< (point) orig)(not (eobp)) (skip-chars-forward "^\n" orig))
         (setq count (1+ count))
@@ -9817,12 +9818,18 @@ Returns position where output starts. "
          (proc (or proc (get-buffer-process buffer)))
          erg orig)
     (with-current-buffer buffer
+      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
       (goto-char (point-max))
       (setq orig (point))
       (comint-send-string proc cmd)
-      (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer))
-      (when py-debug-p (message "%s" py-error))
-      erg)))
+      (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer orig))
+      (if py-error
+	  (progn
+	    ;; py-error is a list
+	    ;; (setq py-error (car py-error))
+	    (setq py-error (prin1-to-string py-error))
+	    (when py-debug-p(message "%s" py-error)))
+	erg))))
 
 (defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf)
   (let* ((temp (make-temp-name
@@ -9970,54 +9977,49 @@ May we get rid of the temporary file? "
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
   (with-current-buffer (setq output-buffer (process-buffer proc))
-    (sit-for 1 t)
+    (sit-for 0.1 t)
     (erase-buffer)
     (py--fast-send-string-intern strg
 				 proc
 				 output-buffer py-store-result-p py-return-result-p)
     (sit-for 0.1)))
 
-(defun py--postprocess-comint (output-buffer origline windows-config py-exception-buffer)
+(defun py--postprocess-comint (output-buffer origline windows-config py-exception-buffer orig)
   "Provide return values, check result for error, manage windows. "
-  (let (beg end)
-    ;; py--fast-send-string doesn't set origline
-    (setq py-result nil
-	  py-result-raw nil
-	  py-error nil)
-    (when py-debug-p (message "py--postprocess-comint: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
-    (with-current-buffer output-buffer
-      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-      (setq py-result-raw (py--fetch-comint-result windows-config py-exception-buffer))
-      (sit-for 0.1 t)
-      (unless (ignore-errors (car py-result-raw))
-	(sit-for 0.1 t)
-	(setq py-result (py--fetch-comint-result windows-config py-exception-buffer))))
-    ;; (and (string-match "\n$" py-result)
-    ;; (setq py-result (substring py-result 0 (match-beginning 0)))))
-    (sit-for 0.1 t)
-    (if (ignore-errors (car py-result-raw))
-	(with-temp-buffer
-	  (when py-debug-p (message "py-result-raw: %s" py-result-raw))
-	  (sit-for 0.1 t)
-	  ;; values needed when updating output-buffer
-	  (setq beg (nth 1 py-result-raw))
-	  (setq end (nth 2 py-result-raw))
-	  (insert (car py-result-raw))
-	  (setq py-error (py--fetch-error (current-buffer) origline))
-	  (if py-error
+  ;; py--fast-send-string doesn't set origline
+  (setq py-result nil
+	py-result-raw nil
+	py-error nil)
+  (when py-debug-p (message "py--postprocess-comint: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
+  (with-current-buffer output-buffer
+    ;; (when py-debug-p (switch-to-buffer (current-buffer)))
+    (setq py-result (py--fetch-comint-result orig)))
+  ;; (sit-for 0.1 t)
+  (when py-debug-p (message "py-result: %s" py-result))
+  (and (string-match "\n$" py-result)
+       (setq py-result (substring py-result 0 (match-beginning 0))))
+  (if py-result
+      (progn
+	(if (string-match "^Traceback" py-result)
+	    (progn
+	      (with-temp-buffer
+		(when py-debug-p (message "py-result: %s" py-result))
+		(insert py-result)
+		(setq py-error (py--fetch-error (current-buffer) origline)))
+	      (sit-for 0.1 t)
 	      (with-current-buffer output-buffer
-		;; (switch-to-buffer (current-buffer))
-		(goto-char beg)
-		(delete-region beg end)
+		(when py-debug-p (switch-to-buffer (current-buffer))
+		      (message "py-error: %s" py-error))
+		(delete-region (point) (car comint-last-prompt))
+		(sit-for 0.1 t)
 		(insert py-error)
 		(newline)
-		(goto-char (point-max)))
-	    ;; position no longer needed, no need to correct
-	    (setq py-result (car py-result-raw))
-	    (when py-store-result-p
-	      (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result)) (kill-new py-result)))))
-      (message "py--postprocess-comint: %s" "Don't see any result"))
-    (or py-error py-result)))
+		(goto-char (point-max))))
+	  ;; position no longer needed, no need to correct
+	  (when py-store-result-p
+	    (when (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result))) (kill-new py-result))))
+	(or py-error py-result))
+    (message "py--postprocess-comint: %s" "Don't see any result")))
 
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline)
   "Select the handler.
@@ -10367,35 +10369,11 @@ Returns char found. "
   ;; (py--store-result-maybe erg)
   erg)
 
-(defun py--fetch-comint-result (windows-config py-exception-buffer)
+(defun py--fetch-comint-result (orig)
   "Returns a list: result, beg-position end-position of result.
 
 In case of error make messages indicate the source buffer"
-  (save-excursion
-    ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-    (let (beg end erg)
-      (cond
-       ((and
-	 (boundp 'comint-last-prompt)
-	 (sit-for 0.2 t)
-	 (number-or-marker-p (cdr comint-last-prompt))
-	 (number-or-marker-p (car comint-last-prompt))
-	 (goto-char (car comint-last-prompt))
-	 (re-search-backward py-fast-filter-re nil t 1)
-	 (setq beg (goto-char (match-end 0))))
-	(setq end (car comint-last-prompt))
-	(setq erg (buffer-substring-no-properties (point) (car comint-last-prompt))))
-       ((and (re-search-backward py-fast-filter-re nil t 1)
-	     (setq end (point))
-	     (re-search-backward py-fast-filter-re nil t 1)
-	     (goto-char (match-end 0)))
-	(setq beg (point))
-	(setq erg (buffer-substring-no-properties (point) end))))
-      (when (and erg
-		 (string-match "\n$" erg))
-	(setq erg (substring erg 0 (1- (length erg)))))
-      ;; report the region, usefull in case of error
-      (list erg beg end))))
+  (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig (point-max))))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -11769,9 +11747,21 @@ Internal use"
 	(pop-to-buffer py-exception-buffer)))
      ((and
        (eq py-split-window-on-execute-p 'just-two)
+       py-switch-buffers-on-execute-p)
+      (set-buffer py-exception-buffer)
+      (switch-to-buffer (current-buffer))
+      (delete-other-windows)
+      ;; (sit-for py-new-shell-delay)
+      (py--manage-windows-split output-buffer)
+      ;; otherwise new window appears above
+      (other-window 1)
+      (set-buffer output-buffer)
+      (switch-to-buffer (current-buffer)))
+     ((and
+       (eq py-split-window-on-execute-p 'just-two)
        (not py-switch-buffers-on-execute-p))
       (set-buffer py-exception-buffer)
-      (switch-to-buffer (current-buffer)) 
+      (switch-to-buffer (current-buffer))
       (unless
 	  (and (member (get-buffer-window output-buffer)(window-list))
 	       (eq 2 (length (window-list))))
@@ -11787,31 +11777,21 @@ Internal use"
        py-split-window-on-execute-p
        (not py-switch-buffers-on-execute-p))
       (set-buffer py-exception-buffer)
+      (switch-to-buffer (current-buffer))
       (unless
 	  (member (get-buffer-window output-buffer)(window-list))
-	(py--manage-windows-split output-buffer)
-	;; Fixme: otherwise new window appears above
-	(save-excursion
-	  (other-window 1)
-	  (pop-to-buffer output-buffer)
-	  (goto-char (point-max))
-	  (other-window 1))))
-     ((and
-       ;; just two windows, `py-split-window-on-execute-p' is `t'
-       py-split-window-on-execute-p
-       py-switch-buffers-on-execute-p)
-      (delete-other-windows)
-      ;; (sit-for py-new-shell-delay)
-      (py--manage-windows-split output-buffer)
-      ;; otherwise new window appears above
-      (other-window 1)
-      (set-buffer output-buffer)
-      (switch-to-buffer (current-buffer)))
-     ((and
-       py-switch-buffers-on-execute-p
-       (not py-split-window-on-execute-p))
-      (set-buffer output-buffer)
-      (switch-to-buffer (current-buffer)))
+	(py--manage-windows-split output-buffer))
+      ;; Fixme: otherwise new window appears above
+      (save-excursion
+	(other-window 1)
+	(pop-to-buffer output-buffer)
+	(goto-char (point-max))
+	(other-window 1)))
+     ;; ((and
+     ;;   py-switch-buffers-on-execute-p
+     ;;   (not py-split-window-on-execute-p))
+     ;;  (set-buffer output-buffer)
+     ;;  (switch-to-buffer (current-buffer)))
      ;; no split, no switch
      ((not py-switch-buffers-on-execute-p)
       (let (pop-up-windows)
@@ -23115,14 +23095,12 @@ See also `py-fast-shell'
 
 Remove trailing newline"
   (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig pos)))
-  (sit-for 1 t) 
+  (sit-for 0.1 t)
   ;; remove trailing newline
   (and (string-match "\n$" py-result)
        (setq py-result (substring py-result 0 (match-beginning 0))))
-  (and store
-       (not (string= "" py-result))
-       (kill-new py-result))
-  (setq py-result (split-string py-result "\n")))
+  (setq py-result (split-string py-result "\n"))
+  py-result)
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -26636,7 +26614,7 @@ These would interfere when inserting forms heading a block"
     (unless (eq modified py-complete-last-modified)
       (if py-auto-completion-mode-p
 	  (if (string= "*PythonCompletions*" (buffer-name (current-buffer)))
-	      (sit-for 1 t)
+	      (sit-for 0.1 t)
 	    (if
 		(eq py-auto-completion-buffer (current-buffer))
 		;; not after whitespace, TAB or newline
