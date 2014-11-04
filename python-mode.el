@@ -9977,7 +9977,7 @@ May we get rid of the temporary file? "
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
   (with-current-buffer (setq output-buffer (process-buffer proc))
-    (sit-for 0.1 t)
+    (sit-for 0.2 t)
     (erase-buffer)
     (py--fast-send-string-intern strg
 				 proc
@@ -9991,17 +9991,21 @@ May we get rid of the temporary file? "
 	py-result-raw nil
 	py-error nil)
   (when py-debug-p (message "py--postprocess-comint: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
+  ;; py-ert-wrong-python-test fails otherwise
+  (sit-for 0.1 t) 
   (with-current-buffer output-buffer
     ;; (when py-debug-p (switch-to-buffer (current-buffer)))
     (setq py-result (py--fetch-comint-result orig)))
-  ;; (sit-for 0.1 t)
+  ;; (sit-for 1 t)
   (when py-debug-p (message "py-result: %s" py-result))
   (and (string-match "\n$" py-result)
        (setq py-result (substring py-result 0 (match-beginning 0))))
+  (sit-for 0.1 t)
   (if py-result
       (progn
 	(if (string-match "^Traceback" py-result)
 	    (progn
+	      (sit-for 1 t) 
 	      (with-temp-buffer
 		(when py-debug-p (message "py-result: %s" py-result))
 		(insert py-result)
@@ -26425,13 +26429,15 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   (interactive "sPython command: ")
   (let* ((proc (or process (get-buffer-process (py-shell))))
 	 (buffer (process-buffer proc)))
-    (process-send-string proc "\n")
-    (process-send-string proc string)
+    (comint-send-string proc "\n")
+    (goto-char (point-max))
+    (comint-send-string proc string)
+    (goto-char (point-max))
     (unless (string-match "\n\\'" string)
       ;; Make sure the text is properly LF-terminated.
-      (process-send-string proc "\n"))
-    (with-current-buffer buffer
-      (goto-char (point-max)))))
+      (comint-send-string proc "\n"))
+    (when py-debug-p (message "%s" (current-buffer)))
+    (goto-char (point-max))))
 
 (defun py-send-file (file-name &optional process temp-file-name)
   "Send FILE-NAME to Python PROCESS.
