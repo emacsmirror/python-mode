@@ -876,7 +876,7 @@ Default is `t'."
 (defcustom py-new-shell-delay
     (if (eq system-type 'windows-nt)
       2.0
-    0.2)
+    1.0)
 
   "If a new comint buffer is connected to Python, commands like completion might need some delay. "
 
@@ -2319,7 +2319,7 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
 
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "....:"))
 					  "\\|")
 			       "\\)")
   "Internally used by `py-fast-filter'. ")
@@ -3093,12 +3093,7 @@ the output."
       (when (and output (not (string= "" output)))
 	(setq output
 	      (replace-regexp-in-string
-	       (if (> (length py-shell-prompt-output-regexp) 0)
-		   (format "\n*%s$\\|^%s\\|\n$"
-			   py-shell-prompt-regexp
-			   (or py-shell-prompt-output-regexp ""))
-		 (format "\n*$\\|^%s\\|\n$"
-			 py-shell-prompt-regexp))
+	       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
 	       "" output)))
       output)))
 
@@ -9992,10 +9987,10 @@ May we get rid of the temporary file? "
 	py-error nil)
   (when py-debug-p (message "py--postprocess-comint: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
   ;; py-ert-wrong-python-test fails otherwise
-  (sit-for 0.1 t) 
+  (sit-for 0.1 t)
   (with-current-buffer output-buffer
     ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-    (setq py-result (py--fetch-comint-result orig)))
+    (setq py-result (py--fetch-result orig)))
   ;; (sit-for 1 t)
   (when py-debug-p (message "py-result: %s" py-result))
   (and (string-match "\n$" py-result)
@@ -10005,7 +10000,7 @@ May we get rid of the temporary file? "
       (progn
 	(if (string-match "^Traceback" py-result)
 	    (progn
-	      (sit-for 1 t) 
+	      (sit-for 1 t)
 	      (with-temp-buffer
 		(when py-debug-p (message "py-result: %s" py-result))
 		(insert py-result)
@@ -10373,11 +10368,9 @@ Returns char found. "
   ;; (py--store-result-maybe erg)
   erg)
 
-(defun py--fetch-comint-result (orig)
-  "Returns a list: result, beg-position end-position of result.
-
-In case of error make messages indicate the source buffer"
-  (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig (point-max))))
+(defun py--fetch-result (orig)
+  "Return buffer-substring from orig to point-max. "
+  (buffer-substring-no-properties orig (point-max)))
 
 ;;; Pdb
 ;; Autoloaded.
@@ -12009,23 +12002,22 @@ Expects being called by `py--run-unfontify-timer' "
 	    (erase-buffer)))
 	(py--shell-make-comint executable py-buffer-name args)
 	;; if called from a program, banner needs some delay
-	(sit-for 0.5 t)
+	;; (sit-for 0.5 t)
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
-	      (py--shell-setup py-buffer-name (get-buffer-process py-buffer-name)))
+	      (setq proc (get-buffer-process py-buffer-name))
+	      (py--delay-process-dependent proc)
+	      (comint-send-string proc "\n")
+	      (py--shell-setup py-buffer-name proc))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
       (when (and (or (interactive-p)
 		     ;; M-x python RET sends from interactive "p"
 		     argprompt)
 		 (or py-switch-buffers-on-execute-p py-split-window-on-execute-p))
-	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer))
-      (sit-for py-new-shell-delay t)
-      ;; (when py-shell-mode-hook (run-hooks 'py-shell-mode-hook))
-      (when (string-match "[BbIi][Pp]ython" py-buffer-name)
-	(sit-for 0.3 t))
-      (sit-for 0.1 t))
+	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer)))
+    (sit-for py-new-shell-delay t)
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
@@ -22415,10 +22407,11 @@ in py-shell-mode `py-shell-complete'"
 	     (py-shell-complete)
 	   (funcall py-complete-function)))
 	((eq major-mode 'py-shell-mode)
-	 (if (string-match "[iI][Pp]ython" (buffer-name (current-buffer)))
+	 (if (string-match "[iI]?[Pp]ython" (buffer-name (current-buffer)))
 	     (py-shell-complete)
 	   (funcall py-complete-function)))
-	(t (py-shell-complete))))
+	(t
+	 (funcall py-complete-function))))
 
 (defun py--after-change-function (beg end len)
   "Restore window-confiuration after completion. "
@@ -23094,17 +23087,13 @@ See also `py-fast-shell'
 	(py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)
       (py--fast-send-string-no-output string proc buffer))))
 
-(defun py--filter-result (orig pos &optional store)
+(defun py--filter-result (string)
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-  (setq py-result (replace-regexp-in-string py-fast-filter-re "" (buffer-substring-no-properties orig pos)))
-  (sit-for 0.1 t)
-  ;; remove trailing newline
-  (and (string-match "\n$" py-result)
-       (setq py-result (substring py-result 0 (match-beginning 0))))
-  (setq py-result (split-string py-result "\n"))
-  py-result)
+  (let* ((erg (ansi-color-filter-apply string)))
+    (setq py-result (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" erg))
+    py-result))
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -23133,7 +23122,7 @@ Remove trailing newline"
       (accept-process-output proc 5)
       (sit-for py-fast-completion-delay t)
       ;; sets py-result
-      (py--filter-result orig (point-max) store)
+      (setq py-result (py--filter-result (py--fetch-result orig)))
       (when return
 	py-result))))
 
@@ -23245,8 +23234,8 @@ Output-buffer is not in comint-mode "
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
-	 (car (py--fast-send-string-intern
-	  (format completion-code input) process py-buffer-name nil t))))
+	 (py--fast-send-string-intern
+	  (format completion-code input) process py-buffer-name nil t)))
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -26180,6 +26169,7 @@ If an exception occurred return error-string, otherwise return nil.  BUF must ex
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer "
   (let* ((pmx (copy-marker (point-max)))
 	 file bol estring ecode limit erg)
+    ;; (switch-to-buffer (current-buffer))
     (goto-char pmx)
     (sit-for 0.1 t)
     (save-excursion
@@ -26429,7 +26419,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   (interactive "sPython command: ")
   (let* ((proc (or process (get-buffer-process (py-shell))))
 	 (buffer (process-buffer proc)))
-    (comint-send-string proc "\n")
+    ;; (comint-send-string proc "\n")
     (goto-char (point-max))
     (comint-send-string proc string)
     (goto-char (point-max))
