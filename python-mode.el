@@ -2319,7 +2319,7 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
 
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "....:"))
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "\\.\\.\\." "\\.\\.\\.\\.:"))
 					  "\\|")
 			       "\\)")
   "Internally used by `py-fast-filter'. ")
@@ -3163,8 +3163,11 @@ completions on the current context."
 
 (defun py--shell--do-completion-at-point (process imports input orig py-exception-buffer code)
   "Do completion at point for PROCESS."
+  (py--send-string-no-output py-shell-completion-setup-code process)
   (when imports
     (py--send-string-no-output imports process))
+  ;; (py--delay-process-dependent process)
+  (sit-for 0.1 t)
   (let* ((completion
 	  (py--shell-completion-get-completions
 	   input process code))
@@ -3172,7 +3175,8 @@ completions on the current context."
 	 ;; (try-completion input completions)))
 	 newlist erg)
     (set-buffer py-exception-buffer)
-    (sit-for 0.1 t)
+    ;; (py--delay-process-dependent process)
+    ;; (sit-for 1 t)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
 	   nil)
@@ -11909,26 +11913,29 @@ This function takes the list of setup code to send from the
 	   (or py-jython-command name))
 	  (t (or py-python-command name)))))
 
-(defun py--unfontify-banner (buffer)
+(defun py--unfontify-banner (&optional buffer)
   "Unfontify the shell banner-text.
 
 Cancels `py--timer'
 Expects being called by `py--run-unfontify-timer' "
   (interactive)
-  (when (ignore-errors (buffer-live-p buffer))
-    (with-current-buffer buffer
-      (goto-char (point-min))
-      (let ((erg  (if
-		      (re-search-forward py-fast-filter-re nil t 1)
-		      (point)
-		    (and (boundp 'comint-last-prompt)(ignore-errors (car comint-last-prompt))))))
-	(sit-for 0.1 t) 
-	(if erg
-	    (progn
-	    (font-lock-unfontify-region (point-min) erg)
-	    (goto-char (point-max)))
-	  (progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))
-      (and (timerp py--timer)(cancel-timer py--timer)))))
+  (save-excursion
+    (let ((buffer (or buffer (current-buffer))))
+      (if (ignore-errors (buffer-live-p (get-buffer buffer)))
+	  (with-current-buffer buffer
+	    (goto-char (point-min))
+	    (let ((erg (or (ignore-errors (car comint-last-prompt))
+			   (and
+			    (re-search-forward py-fast-filter-re nil t 1)
+			    (match-beginning 0)))))
+	      (sit-for 0.1 t)
+	      (if erg
+		  (progn
+		    (font-lock-unfontify-region (point-min) erg)
+		    (goto-char (point-max)))
+		(progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))
+	    (and (timerp py--timer)(cancel-timer py--timer)))
+	(and (timerp py--timer)(cancel-timer py--timer))))))
 
 (defun py--start-fast-process (shell buffer)
   (let ((proc (start-process shell buffer shell)))
@@ -12002,13 +12009,15 @@ Expects being called by `py--run-unfontify-timer' "
 	    (erase-buffer)))
 	(py--shell-make-comint executable py-buffer-name args)
 	;; if called from a program, banner needs some delay
-	;; (sit-for 0.5 t)
+	(sit-for 0.5 t)
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
+	      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
+	      ;; (py--unfontify-banner py-buffer-name)
 	      (setq proc (get-buffer-process py-buffer-name))
+	      ;; (comint-send-string proc "\n")
 	      (py--delay-process-dependent proc)
-	      (comint-send-string proc "\n")
 	      (py--shell-setup py-buffer-name proc))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))

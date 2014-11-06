@@ -699,7 +699,7 @@
 
 (defun py-execute-block-ipython-base ()
   (py-execute-block-ipython)
-  (if (string-match "*I" py-buffer-name) (sit-for 1 t) (sit-for 0.1 t))
+  (if (string-match "*I" py-buffer-name) (sit-for 2 t) (sit-for 0.1 t))
   (set-buffer py-buffer-name)
   (when py-debug-p (switch-to-buffer (current-buffer)))
   (goto-char (point-max))
