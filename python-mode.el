@@ -1110,22 +1110,27 @@ If `py-keep-windows-configuration' is t, this will take precedence over setting 
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-split-window-on-execute-p t
+(defcustom py-split-window-on-execute-p 'just-two
   "When non-nil split windows.
 
 Default is just-two - when code is send to interpreter, split screen into source-code buffer and current py-shell result.
 
 Other buffer will be hidden that way.
 
-When set to `t', python-mode tries to reuse existing windows and will split only if needed. However, this feature is experimental still. Same with 'always.
+When set to `t', python-mode tries to reuse existing windows and will split only if needed.
+
+With 'always, results will displayed in a new window.
+
+Both `t' and `always' is experimental still.
 
 For the moment: If a multitude of python-shells/buffers should be
 visible, open them manually and set `py-keep-windows-configuration' to `t'.
 
 "
       :type '(choice
-          (const :tag "default" t)
-          (const :tag "no split" nil)
+          (const :tag "default" just-two)
+	  (const :tag "Reuse" t)
+          (const :tag "No split" nil)
 	  (const :tag "just-two" just-two)
           (const :tag "always" always))
 
@@ -9984,7 +9989,7 @@ May we get rid of the temporary file? "
     (setq py-buffer-name buffer)
     (py--execute-base-intern strg shell filename proc file wholebuf buffer origline)
     (when py-debug-p (message "py--execute-base: py-split-window-on-execute-p: %s" py-split-window-on-execute-p))
-    (when py-shell-manage-windows-p
+    (when (or py-split-window-on-execute-p py-switch-buffers-on-execute-p)
       (py--shell-manage-windows buffer windows-config py-exception-buffer))))
 
 (defun py--send-to-fast-process (strg proc output-buffer)
@@ -10008,8 +10013,8 @@ May we get rid of the temporary file? "
   (sit-for 0.1 t)
   (with-current-buffer output-buffer
     ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-    (setq py-result (py--fetch-result orig)))
-  ;; (sit-for 1 t)
+    (setq py-result (py--fetch-result orig))
+    (sit-for 1 t))
   (when py-debug-p (message "py-result: %s" py-result))
   (and (string-match "\n$" py-result)
        (setq py-result (substring py-result 0 (match-beginning 0))))
@@ -12010,6 +12015,7 @@ Expects being called by `py--run-unfontify-timer' "
     ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp py-exception-buffer)(string= py-buffer-name (buffer-name py-exception-buffer))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
+    (sit-for 0.1 t)
     (if fast-process
 	;; user rather wants an interactive shell
 	(unless (get-buffer-process (get-buffer py-buffer-name))
@@ -12034,11 +12040,10 @@ Expects being called by `py--run-unfontify-timer' "
 	      (py--shell-setup py-buffer-name proc))
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
-      (when (and py-shell-manage-windows-p
-		 (or (interactive-p)
-		     ;; M-x python RET sends from interactive "p"
-		     argprompt)
-		 (or py-switch-buffers-on-execute-p py-split-window-on-execute-p))
+      (when (or (interactive-p)
+		;; M-x python RET sends from interactive "p"
+		argprompt
+		py-switch-buffers-on-execute-p py-split-window-on-execute-p)
 	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer)))
     (sit-for py-new-shell-delay t)
     py-buffer-name))
