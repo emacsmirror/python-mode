@@ -134,6 +134,11 @@ Default is nil"
 
 Default is t")
 
+(defvar py-new-session-p t
+ "Internally used. See lp:1393882.
+
+Restart py-shell once with new Emacs/python-mode. ")
+
 (defcustom py-fast-process-p nil
   "Use `py-fast-process'.
 
@@ -12028,7 +12033,7 @@ Expects being called by `py--run-unfontify-timer' "
 	    (erase-buffer)))
 	(py--shell-make-comint executable py-buffer-name args)
 	;; if called from a program, banner needs some delay
-	(sit-for 0.5 t)
+	;; (sit-for 0.5 t)
 	(setq py-output-buffer py-buffer-name)
 	(if (comint-check-proc py-buffer-name)
 	    (with-current-buffer py-buffer-name
@@ -12037,7 +12042,12 @@ Expects being called by `py--run-unfontify-timer' "
 	      (setq proc (get-buffer-process py-buffer-name))
 	      ;; (comint-send-string proc "\n")
 	      (py--delay-process-dependent proc)
-	      (py--shell-setup py-buffer-name proc))
+	      (py--shell-setup py-buffer-name proc)
+	      ;; lp:1393882, occasionally input first time not processed
+	      (when py-new-session-p (py-kill-buffer-unconditional py-buffer-name)
+		    (setq py-new-session-p nil)
+		    (py-shell argprompt dedicated shell buffer-name fast-process py-exception-buffer)))
+		    
 	  (error (concat "py-shell: No process in " py-buffer-name))))
       ;; (goto-char (point-max))
       (when (or (interactive-p)
@@ -12045,7 +12055,7 @@ Expects being called by `py--run-unfontify-timer' "
 		argprompt
 		py-switch-buffers-on-execute-p py-split-window-on-execute)
 	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer)))
-    (sit-for py-new-shell-delay t)
+    ;; (sit-for py-new-shell-delay t)
     py-buffer-name))
 
 (defun py-indent-forward-line (&optional arg)
