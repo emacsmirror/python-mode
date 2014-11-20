@@ -9847,9 +9847,9 @@ Returns position where output starts. "
       (setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer orig))
       (if py-error
 	  (progn
-	    ;; py-error is a list
-	    ;; (setq py-error (car py-error))
 	    (setq py-error (prin1-to-string py-error))
+	    ;; keep the temporary file in case of error
+	    (setq py-cleanup-temporary nil)
 	    (when py-debug-p(message "%s" py-error)))
 	erg))))
 
