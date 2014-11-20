@@ -3948,19 +3948,14 @@ Returns column reached. "
 With ARG do that ARG times. "
   (interactive "*p")
   (let ((arg (or arg 1))
-	orig)
+	(orig (point))
+	delchars)
     (dotimes (i arg)
-      (if (and (member (char-after) (list ?\  ?\t))
-	       (setq orig (point))
-	       (< 0 (skip-chars-forward " \t")))
-	  (progn
-	    (goto-char orig)
-	    (delete-region orig (progn (forward-char py-indent-offset) (point))))
-	;;          (let* ((remains (% (+ (current-column) (- (match-end 0)(match-beginning 0))) py-indent-offset)))
-	;;            (if (< 0 remains)
-	;;                (delete-char remains)
-	;;              (delete-char py-indent-offset)))
-	(delete-char 1)))))
+      (setq delchars 1)
+      (when (<= py-indent-offset (skip-chars-forward " \t"))
+	(setq delchars py-indent-offset))
+      (goto-char orig)
+      (delete-char delchars))))
 
 ;; required for pending-del and delsel modes
 (put 'py-electric-colon 'delete-selection t) ;delsel
@@ -9849,8 +9844,8 @@ Returns position where output starts. "
 	  (progn
 	    (setq py-error (prin1-to-string py-error))
 	    ;; keep the temporary file in case of error
-	    (setq py-cleanup-temporary nil)
-	    (when py-debug-p(message "%s" py-error)))
+	    (when py-debug-p
+	      (message "py--execute-file-base, py-error:%s" py-error)))
 	erg))))
 
 (defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf)
@@ -9867,7 +9862,8 @@ Returns position where output starts. "
     (unwind-protect
 	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file execute-directory py-exception-buffer)))
     (sit-for 0.1 t)
-    (py--close-execution tempbuf erg)))
+    (py--close-execution tempbuf)
+    erg))
   ;; )
 
 (defun py-execute-python-mode-v5 (start end &optional py-exception-buffer)
@@ -10053,8 +10049,7 @@ May we get rid of the temporary file? "
 
 When optional FILE is `t', no temporary file is needed. "
   ;; (when py-debug-p (message "run: %s" "py--execute-base-intern"))
-  (when py-debug-p (message "py--execute-base-intern: py-split-window-on-execute: %s" py-split-window-on-execute))
-
+  ;; (when py-debug-p (message "py--execute-base-intern: py-split-window-on-execute: %s" py-split-window-on-execute))
   (let (output-buffer erg)
     (setq py-error nil)
     ;; (when py-debug-p
@@ -10068,9 +10063,7 @@ When optional FILE is `t', no temporary file is needed. "
 	  (py-execute-no-temp-p
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc))
 	  ((and filename wholebuf)
-	   ;; No temporary file needed than
-	   (let (py-cleanup-temporary)
-	     (py--execute-file-base proc filename nil buffer filename execute-directory py-exception-buffer)))
+	   (py--execute-file-base proc filename nil buffer filename execute-directory py-exception-buffer))
 	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer)))))
 
 (defun py-execute-string (&optional string shell)
@@ -10388,13 +10381,11 @@ Returns char found. "
   "If no error occurred and `py-store-result-p' store result for yank. "
   (and (not py-error) erg (or py-debug-p py-store-result-p) (kill-new erg)))
 
-(defun py--close-execution (tempbuf erg)
+(defun py--close-execution (tempbuf)
   "Delete temporary buffer and and run `py--store-result-maybe'"
-  (when py-cleanup-temporary
+  (unless py-debug-p
     (py-kill-buffer-unconditional tempbuf)
-    (py-delete-temporary tempfile tempbuf))
-  ;; (py--store-result-maybe erg)
-  erg)
+    (py-delete-temporary tempfile tempbuf)))
 
 (defun py--fetch-result (orig)
   "Return buffer-substring from orig to point-max. "
@@ -15364,12 +15355,6 @@ Use `M-x customize-variable' to set it permanently"
                            (not py-force-py-shell-name-p))
                      :help "When `t', execution with kind of Python specified in `py-shell-name' is enforced, possibly shebang doesn't take precedence. Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-force-py-shell-name-p]
-
-                    ["Cleanup temporary"
-                     (setq py-cleanup-temporary
-                           (not py-cleanup-temporary))
-                     :help "If temporary buffers and files used by functions executing region should be deleted afterwards. Use `M-x customize-variable' to set it permanently"
-                     :style toggle :selected py-cleanup-temporary]
 
                     ["Execute \"if name == main\" blocks p"
                      (setq py-if-name-main-permission-p
