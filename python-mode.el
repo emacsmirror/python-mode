@@ -233,7 +233,7 @@ Give some hints, if not."
       nil)))
 
 (defcustom py-smart-operator-mode-p nil
-  "If python-mode calls (smart-operator-mode-on)
+  "If python-mode calls `smart-operator-mode-on'
 
 Default is nil. "
 
