@@ -635,7 +635,7 @@ If nil, default, it will not move from at any reasonable level. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-return-key 'py-newline-and-indent
+(defcustom py-return-key 'newline
   "Which command <return> should call. "
   :type '(choice
           (const :tag "default" py-newline-and-indent)
