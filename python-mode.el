@@ -4018,12 +4018,7 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
 		    (py-shift-region-right 1)))
 	      (beginning-of-line)
 	      (delete-horizontal-space)
-	      (indent-to need)
-	      ;; (back-to-indentation)
-	      ;; (if (<= (line-beginning-position) (+ (point) (- col cui)))
-	      ;; (forward-char (- col cui))
-	      ;; (beginning-of-line))
-	      ))
+	      (indent-to need)))
 	   ((< need cui)
 	    (if (and py-tab-shifts-region-p region)
 		(progn
@@ -4092,7 +4087,7 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
       (/ cui indent-offset)
     (- cui indent-offset)))
 
-(defun py-indent-line (&optional arg)
+(defun py-indent-line (&optional arg outmost-only)
   "Indent the current line according to Python rules.
 
 When called interactivly with \\[universal-argument], ignore dedenting rules for block closing statements
@@ -4105,6 +4100,8 @@ This function is normally used by `indent-line-function' resp.
 \\[indent-for-tab-command].
 
 When bound to TAB, C-q TAB inserts a TAB.
+
+OUTMOST-ONLY stops circling possible indent.
 
 When `py-tab-shifts-region-p' is `t', not just the current line,
 but the region is shiftet that way.
@@ -4144,7 +4141,7 @@ C-q TAB inserts a literal TAB-character."
 	  (cond ((bolp)
 		 outmost)
 		((eq cui outmost)
-		 (when (eq this-command last-command)
+		 (when (and (eq this-command last-command) (not outmost-only))
 		   (py--calculate-indent-backwards cui this-indent-offset)))
 		(t (py--calculate-indent-backwards cui this-indent-offset))))
     (when (and (interactive-p) py-verbose-p) (message "py-indent-line, need: %s" need))
@@ -4152,12 +4149,10 @@ C-q TAB inserts a literal TAB-character."
     ;; and not (eq this-command last-command), need remains nil
     (when need
       (py--indent-line-base beg end region cui need arg this-indent-offset col)
-      ;; (if
       (and region (or py-tab-shifts-region-p
 		      py-tab-indents-region-p)
 	   (not (eq (point) orig))
 	   (exchange-point-and-mark))
-      ;; (and (< (current-column) (current-indentation))(back-to-indentation)))
       (when (and (interactive-p) py-verbose-p)(message "%s" (current-indentation)))
       (current-indentation))))
 
@@ -4681,10 +4676,10 @@ Returns and keeps relative position "
                            (or indent-offset py-indent-offset))))
     (goto-char beg)
     (while (< (line-end-position) end)
-      (if (and (bolp)(eolp))
+      (if (empty-line-p)
           (forward-line 1)
         (py-indent-and-forward)))
-    (unless (and (bolp)(eolp)) (py-indent-line))
+    (unless (empty-line-p) (py-indent-line nil t))
     (goto-char orig)))
 
 ;;; Positions
@@ -5708,7 +5703,7 @@ If region is active, restrict uncommenting at region "
 (defun py--fill-fix-end (thisend orig docstring delimiters-style)
   ;; Add the number of newlines indicated by the selected style
   ;; at the end.
-  (widen)
+  ;; (widen)
   (goto-char thisend)
   (skip-chars-backward "\"'\n ")
   (delete-region (point) (progn (skip-chars-forward " \t\r\n\f") (point)))
@@ -5716,12 +5711,13 @@ If region is active, restrict uncommenting at region "
     (and
      (cdr delimiters-style)
      (or (newline (cdr delimiters-style)) t)))
-  (indent-region docstring thisend)
+  (py-indent-region docstring thisend)
   (goto-char orig))
 
 (defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end)
-  (widen)
-  (narrow-to-region thisbeg thisend)
+  ;; (widen)
+  ;; fill-paragraph causes wrong indent, lp:1397936
+  ;; (narrow-to-region thisbeg thisend)
   (setq delimiters-style
         (case style
           ;; delimiters-style is a cons cell with the form
@@ -5756,11 +5752,11 @@ If region is active, restrict uncommenting at region "
 
 (defun py--fill-docstring-last-line (thisbeg thisend beg end style)
   (widen)
-  (narrow-to-region thisbeg thisend)
+  ;; (narrow-to-region thisbeg thisend)
   (goto-char thisend)
   (skip-chars-backward "\"'")
   (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point)))
-  (narrow-to-region beg end)
+  ;; (narrow-to-region beg end)
   (fill-region beg end)
   (setq multi-line-p (string-match "\n" (buffer-substring-no-properties beg end)))
   (when multi-line-p
@@ -5820,7 +5816,7 @@ If region is active, restrict uncommenting at region "
 			   (or (member (char-after) (list ?\" ?\'))
 			       (member (char-before) (list ?\" ?\'))))
            (py--fill-docstring-last-line thisbeg thisend beg end style))
-          (t (narrow-to-region beg end)
+          (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)))
 
@@ -5835,7 +5831,7 @@ Fill according to `py-docstring-style' "
       (barf-if-buffer-read-only)
       (list (if current-prefix-arg 'full) t))
     py-docstring-style
-    (py--in-or-behind-or-before-a-docstring)))
+    (or docstring (py--in-or-behind-or-before-a-docstring))))
   (let ((py-current-indent (save-excursion (or (py--beginning-of-statement-p) (py-beginning-of-statement)) (current-indentation)))
 	;; fill-paragraph sets orig
 	(orig (if (boundp 'orig) (copy-marker orig) (copy-marker (point))))
@@ -21494,7 +21490,7 @@ and return collected output"
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
 
-If cursor is at end of line, try to complete
+If cursor is at end of a symbol, try to complete
 Otherwise call `py-indent-line'
 
 If `(region-active-p)' returns `t', indent region.
@@ -21505,8 +21501,9 @@ in py-shell-mode `py-shell-complete'"
   (interactive "*")
   (cond ((region-active-p)
 	 (py-indent-region (region-beginning) (region-end)))
-	((or (member (char-before)(list 9 10 12 13 32))
-	     (bobp))
+	((or (bolp)
+	     (member (char-before)(list 9 10 12 13 32))
+	     (and (not (eobp)) (not (member (char-after)(list 9 10 12 13 32)))))
 	 (py-indent-line))
 	((eq major-mode 'python-mode)
 	 (if (string-match "ipython" (py-choose-shell))
