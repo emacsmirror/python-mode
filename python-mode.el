@@ -1926,7 +1926,8 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-orig-buffer-or-file nil
   "Internal use. ")
 
-(defvar py-which-bufname "Python")
+(defvar py-which-bufname "Python"
+  "Legacy code for versions 5, don't use")
 ;; (make-variable-buffer-local 'py-which-bufname)
 
 (defvar py-pychecker-history nil)
@@ -2348,10 +2349,13 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
 
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "\\.\\.\\." "\\.\\.\\.\\.:"))
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{1,\\}:? *"))
 					  "\\|")
 			       "\\)")
-  "Internally used by `py-fast-filter'. ")
+  "Internally used by `py-fast-filter'. 
+ansi-color-filter-apply might return
+Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
+")
 
 (defconst py-extended-block-or-clause-re-raw
   (list
