@@ -3055,6 +3055,27 @@ This function takes the list of setup code to send from the
     (when (interactive-p) (message "%S" erg))
     erg))
 
+(defalias 'py-shell-send-file 'py-send-file)
+(defun py-send-file (file-name &optional process temp-file-name)
+  "Send FILE-NAME to Python PROCESS.
+If TEMP-FILE-NAME is passed then that file is used for processing
+instead, while internally the shell will continue to use
+FILE-NAME."
+  (interactive "fFile to send: ")
+  (let* ((process (or process (get-buffer-process (py-shell))))
+         (temp-file-name (when temp-file-name
+                           (expand-file-name temp-file-name)))
+         (file-name (or (expand-file-name file-name) temp-file-name)))
+    (when (not file-name)
+      (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
+    (py-send-string
+     (format
+      (concat "__pyfile = open('''%s''');"
+              "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
+              "__pyfile.close()")
+      file-name file-name)
+     process)))
+
 (defun py-shell-send-string (string &optional process msg filename)
   "Send STRING to Python PROCESS.
 When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
@@ -3082,8 +3103,8 @@ When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
 (defun py--delay-process-dependent (process)
   "Call a `py-ipython-send-delay' or `py-python-send-delay' according to process"
   (if (string-match "ipython" (prin1-to-string process))
-      (accept-process-output process py-ipython-send-delay)
-    (accept-process-output process py-python-send-delay)))
+      (sit-for py-ipython-send-delay t)
+    (sit-for py-python-send-delay t)))
 
 (defun py--send-string-no-output (string &optional process msg)
   "Send STRING to PROCESS and inhibit output display.
@@ -3129,27 +3150,6 @@ the output."
 	       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
 	       "" output)))
       output)))
-
-(defun py-shell-send-file (file-name &optional process temp-file-name)
-  "Send FILE-NAME to inferior Python PROCESS.
-If TEMP-FILE-NAME is passed then that file is used for processing
-instead, while internally the shell will continue to use
-FILE-NAME."
-  (interactive "fFile to send: ")
-  (let* ((process (or process (get-buffer-process (py-shell))))
-         (temp-file-name (when temp-file-name
-                           (expand-file-name temp-file-name)))
-         (file-name (or (expand-file-name file-name) temp-file-name))
-         py-python-command-args)
-    (when (not file-name)
-      (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
-    (py-shell-send-string
-     (format
-      (concat "__pyfile = open('''%s''');"
-              "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
-              "__pyfile.close()")
-      file-name file-name)
-     process)))
 
 (defun py-switch-to-shell ()
   "Switch to Python process buffer."
@@ -25537,26 +25537,6 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
       (comint-send-string proc "\n"))
     (when py-debug-p (message "%s" (current-buffer)))
     (goto-char (point-max))))
-
-(defun py-send-file (file-name &optional process temp-file-name)
-  "Send FILE-NAME to Python PROCESS.
-If TEMP-FILE-NAME is passed then that file is used for processing
-instead, while internally the shell will continue to use
-FILE-NAME."
-  (interactive "fFile to send: ")
-  (let* ((process (or process (get-buffer-process (py-shell))))
-         (temp-file-name (when temp-file-name
-                           (expand-file-name temp-file-name)))
-         (file-name (or (expand-file-name file-name) temp-file-name)))
-    (when (not file-name)
-      (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
-    (py-send-string
-     (format
-      (concat "__pyfile = open('''%s''');"
-              "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
-              "__pyfile.close()")
-      file-name file-name)
-     process)))
 ;;;
 
 (when (or py-load-pymacs-p (featurep 'pymacs))
