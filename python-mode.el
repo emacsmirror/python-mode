@@ -2349,7 +2349,7 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
 
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{1,\\}:? *"))
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
 					  "\\|")
 			       "\\)")
   "Internally used by `py-fast-filter'. 
@@ -11890,14 +11890,16 @@ This function takes the list of setup code to send from the
   (let ((erg (string-match "^i" (process-name process))))
     (dolist (code py-setup-codes)
       ;; (message "%s" code)
-      ;; `py--fast-send-string' doesn't word with IPython for now
+      ;; `py--fast-send-string' doesn't work with IPython for now
       ;; wants magic %paste %cpaste
       (if erg
 	  (progn
 	    (py--send-string-no-output
 	     (py--fix-start (symbol-value code)) process)
-	    (sit-for py-new-shell-delay)
-	    (py--delete-all-but-first-prompt))
+	    ;; (sit-for py-new-shell-delay)
+	    (sit-for 0.1 t)
+	    ;; (py--delete-all-but-first-prompt)
+	    )
 	(py--fast-send-string-no-output (py--fix-start (symbol-value code)) process (buffer-name (process-buffer process)))))))
 
 (defun py--shell-simple-send (proc string)
