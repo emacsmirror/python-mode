@@ -3118,7 +3118,7 @@ the output."
                     (lambda (string)
                       (setq output string)
                       "")))))
-    (py-shell-send-string string process msg)
+    (py-send-string string process)
     (sit-for 0.1 t)
     ;; (py--delay-process-dependent process)
     (when (and output (not (string= "" output)))
@@ -3142,7 +3142,7 @@ the output."
 		      (lambda (string)
 			(setq output (concat output string))
 			"")))))
-      (py-shell-send-string string process msg)
+      (py-send-string string process)
       (accept-process-output process 5)
       (when (and output (not (string= "" output)))
 	(setq output
@@ -11912,8 +11912,11 @@ This function takes the list of setup code to send from the
 
 (defun py--shell-make-comint (executable py-buffer-name args)
   (let ((buffer (apply 'make-comint-in-buffer executable py-buffer-name executable nil args)))
+    ;; (let ((buffer (make-comint-in-buffer executable py-buffer-name executable nil args)))
     (with-current-buffer buffer
-      (py-shell-mode)
+      (if (string-match "^i" executable)
+	  (py-ipython-shell-mode)
+	(py-python-shell-mode))
       (sit-for 0.1 t))
     buffer))
 
@@ -25886,7 +25889,7 @@ See available customizations listed in files variables-python-mode at directory 
 (defalias 'py-goto-beyond-block 'py-end-of-block-bol)
 (defalias 'py-goto-beyond-final-line 'py-end-of-statement-bol)
 
-(define-derived-mode py-shell-mode comint-mode "Py"
+(define-derived-mode py-python-shell-mode comint-mode "Py"
   "Major mode for interacting with a Python process.
 A Python process can be started with \\[py-shell].
 
@@ -25899,6 +25902,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   :group 'python-mode
   ;; (require 'ansi-color) ; for ipython
   (setq mode-line-process '(":%s"))
+  (when py-verbose-p (message "%s" "Initializing Python shell, please wait" ))
   (when py-fontify-shell-buffer-p
     (set (make-local-variable 'font-lock-defaults)
 	 '(python-font-lock-keywords nil nil nil nil
@@ -25908,7 +25912,9 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (setenv "TERM" "dumb")
   (set-syntax-table python-mode-syntax-table)
   (set (make-local-variable 'py--shell-unfontify) 'py-shell-unfontify-p)
-
+  ;; (if py-auto-complete-p
+  ;; (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
+  ;; (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
   (if py-shell-unfontify-p
       (add-hook 'py-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
     (remove-hook 'py-shell-mode-hook 'py--run-unfontify-timer))
@@ -25929,7 +25935,102 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (remove-hook 'comint-output-filter-functions 'font-lock-extend-jit-lock-region-after-change t)
 
   (make-local-variable 'comint-output-filter-functions)
-  (set (make-local-variable 'comint-input-filter) 'py--input-filter)
+  ;; (set (make-local-variable 'comint-input-filter) 'py--input-filter)
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       py-compilation-regexp-alist)
+  (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
+  (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
+  ;; It might be useful having a different setting of `comint-use-prompt-regexp' in py-shell - please report when a use-case shows up
+  ;; (set (make-local-variable 'comint-use-prompt-regexp) nil)
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       py-compilation-regexp-alist)
+  ;; (setq completion-at-point-functions nil)
+
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
+  (set (make-local-variable 'comment-column) 40)
+  (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
+  (set (make-local-variable 'indent-region-function) 'py-indent-region)
+  (set (make-local-variable 'indent-line-function) 'py-indent-line)
+  (set (make-local-variable 'inhibit-point-motion-hooks) t)
+  (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send)
+  ;; (sit-for 0.1)
+  (setq comint-input-ring-file-name
+        (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+               (if py-honor-IPYTHONDIR-p
+                   (if (getenv "IPYTHONDIR")
+                       (concat (getenv "IPYTHONDIR") "/history")
+                     py-ipython-history)
+                 py-ipython-history))
+              (t
+               (if py-honor-PYTHONHISTORY-p
+                   (if (getenv "PYTHONHISTORY")
+                       (concat (getenv "PYTHONHISTORY") "/" (py--report-executable py-buffer-name) "_history")
+                     py-ipython-history)
+                 py-ipython-history))))
+  (comint-read-input-ring t)
+  (compilation-shell-minor-mode 1)
+  ;;
+  (if py-complete-function
+      (progn
+  	(add-hook 'completion-at-point-functions
+  		  py-complete-function nil 'local)
+  	(add-to-list (make-local-variable 'comint-dynamic-complete-functions)
+  		     py-complete-function))
+    (add-hook 'completion-at-point-functions
+              'py-shell-complete nil 'local)
+    (add-to-list (make-local-variable 'comint-dynamic-complete-functions)
+  		 'py-shell-complete))
+  (when py-shell-menu
+    (easy-menu-add py-menu)))
+
+(define-derived-mode py-ipython-shell-mode comint-mode "IPy"
+  "Major mode for interacting with a Python process.
+A Python process can be started with \\[py-shell].
+
+You can send text to the Python process from other buffers
+containing Python source.
+ * \\[py-execute-region] sends the current region to the Python process.
+
+Sets basic comint variables, see also versions-related stuff in `py-shell'.
+\\{py-shell-mode-map}"
+  :group 'python-mode
+  ;; (require 'ansi-color) ; for ipython
+  (setq mode-line-process '(":%s"))
+  (when py-verbose-p (message "%s" "Initializing IPython shell, please wait" ))
+  (when py-fontify-shell-buffer-p
+    (set (make-local-variable 'font-lock-defaults)
+	 '(python-font-lock-keywords nil nil nil nil
+				     (font-lock-syntactic-keywords
+				      . py-font-lock-syntactic-keywords))))
+  (setenv "PAGER" "cat")
+  (setenv "TERM" "dumb")
+  (set-syntax-table python-mode-syntax-table)
+  (set (make-local-variable 'py--shell-unfontify) 'py-shell-unfontify-p)
+  ;; (if py-auto-complete-p
+  ;; (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
+  ;; (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
+  (if py-shell-unfontify-p
+      (add-hook 'py-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
+    (remove-hook 'py-shell-mode-hook 'py--run-unfontify-timer))
+
+  ;; comint settings
+  (set (make-local-variable 'comint-prompt-regexp)
+       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+	      (concat "\\("
+		      (mapconcat 'identity
+				 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+				 "\\|")
+		      "\\)"))
+	     (t (concat "\\("
+			(mapconcat 'identity
+				   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+				   "\\|")
+			"\\)"))))
+  (remove-hook 'comint-output-filter-functions 'font-lock-extend-jit-lock-region-after-change t)
+
+  (make-local-variable 'comint-output-filter-functions)
+  ;; (set (make-local-variable 'comint-input-filter) 'py--input-filter)
   (set (make-local-variable 'compilation-error-regexp-alist)
        py-compilation-regexp-alist)
   (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
