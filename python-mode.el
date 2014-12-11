@@ -1519,7 +1519,7 @@ Default is `t'. See lp:1100892 "
   :type 'float
   :group 'python-mode)
 
-(defvar py-ignore-results nil
+(defvar py-ignore-result-p nil
   "Internally used, for example by setup-functions. ")
 
 (defvar py-ffap-p nil)
@@ -9837,7 +9837,7 @@ Returns position where output starts. "
       (goto-char (point-max))
       (setq orig (point))
       (comint-send-string proc cmd)
-      (unless py-ignore-results
+      (unless py-ignore-result-p
 	(setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer orig))
 	(if py-error
 	    (progn
@@ -11844,31 +11844,17 @@ Receives a buffer-name as argument"
       (setq erg (substring erg 0 (string-match "-" erg))))
     erg))
 
-(defun py--delete-all-but-first-prompt ()
-  "Don't let prompts from setup-codes sent clutter buffer. "
-  (let (last erg)
-    (when (re-search-backward py-fast-filter-re nil t 1)
-      (setq erg (match-end 0))
-      (while (and (re-search-backward py-fast-filter-re nil t 1) (setq erg (match-end 0))))
-      (delete-region erg (point-max))))
-  (goto-char (point-max)))
+(defun py--ipython-import-module-completion ()
+  "Setup IPython v0.11 or greater.
 
-(defun py--python-send-setup-code (process)
-  "Send all setup code for Python shell.
-This function takes the list of setup code to send from the
-`py-setup-codes' list.
-
-For IPython see py--ipython-send-setup-code "
-  (dolist (code py-setup-codes)
-    (py--fast-send-string-no-output (py--fix-start (symbol-value code)) process (buffer-name (process-buffer process)))))
-
-(defun py--ipython-send-setup-code (process)
-  "Send all setup code for Python shell.
-This function takes the list of setup code to send from the
-`py-setup-codes' list.
-
-For Python see py--python-send-setup-code "
-)
+Used by `py-ipython-module-completion-string'"
+  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-ipython-module-completion.py"))
+	(py-ignore-result-p t))
+    (unless (file-readable-p setup-file)
+      (with-temp-buffer
+	(insert py-ipython-module-completion-code)
+	(write-file setup-file)))
+    (py--execute-file-base nil setup-file nil (current-buffer))))
 
 (defun py--shell-simple-send (proc string)
   (let* ((strg (substring-no-properties string))
@@ -22225,7 +22211,8 @@ Remove trailing newline"
       (accept-process-output proc 5)
       (sit-for py-fast-completion-delay t)
       ;; sets py-result
-      (setq py-result (py--filter-result (py--fetch-result orig)))
+      (unless py-ignore-result-p
+	(setq py-result (py--filter-result (py--fetch-result orig))))
       (when return
 	py-result))))
 
