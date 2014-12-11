@@ -20918,7 +20918,7 @@ Try to find source definition of function at point"]))))
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
 ;; avoid errors from ipython.el - which isn't needed anymore
-(defvaralias 'py-shell-map 'py-shell-mode-map)
+(defvar py-shell-map py-python-shell-mode-map)
 
 (defun py-report-comint-variable-setting ()
   "Print values of comint-variables.
@@ -25901,6 +25901,39 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'inhibit-point-motion-hooks) t)
   (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send))
+
+(defun py--python-send-setup-code-intern (name)
+  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
+	(py-ignore-result-p t))
+    (unless (file-readable-p setup-file)
+      (with-temp-buffer
+	(insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
+	(write-file setup-file)))
+    (py--execute-file-base nil setup-file nil (current-buffer))))
+
+(defun py--python-send-completion-setup-code ()
+  "For Python see py--python-send-setup-code "
+  (py--python-send-setup-code-intern "shell-completion"))
+
+(defun py--python-send-ffap-setup-code ()
+  "For Python see py--python-send-setup-code "
+  (py--python-send-setup-code-intern "ffap"))
+
+(defun py--python-send-eldoc-setup-code ()
+  "For Python see py--python-send-setup-code "
+  (py--python-send-setup-code-intern "eldoc"))
+
+(defun py--ipython-import-module-completion ()
+  "Setup IPython v0.11 or greater.
+
+Used by `py-ipython-module-completion-string'"
+  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-ipython-module-completion.py"))
+	(py-ignore-result-p t))
+    (unless (file-readable-p setup-file)
+      (with-temp-buffer
+	(insert py-ipython-module-completion-code)
+	(write-file setup-file)))
+    (py--execute-file-base nil setup-file nil (current-buffer))))
 
 (define-derived-mode py-python-shell-mode comint-mode "Py"
   "Major mode for interacting with a Python process.
