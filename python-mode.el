@@ -3673,19 +3673,19 @@ This function does not modify point or mark."
         (,(rx
 	   (or space line-start (not (any ".")))
 	   symbol-start
-              (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
-                  "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
-                  "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
-                  "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
-                  "execfile" "file" "filter" "float" "format" "frozenset"
-                  "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
-                  "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
-                  "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
-                  "ord" "pow" "print" "property" "range" "raw_input" "reduce"
-                  "reload" "repr" "reversed" "round" "set" "setattr" "slice"
-                  "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
-                  "unichr" "unicode" "vars" "xrange" "zip")
-              symbol-end) . py-builtins-face)
+	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
+		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
+		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
+		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
+		      "execfile" "file" "filter" "float" "format" "frozenset"
+		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
+		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
+		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
+		      "ord" "pow" "print" "property" "range" "raw_input" "reduce"
+		      "reload" "repr" "reversed" "round" "set" "setattr" "slice"
+		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
+		      "unichr" "unicode" "vars" "xrange" "zip"))
+	   symbol-end) (1 py-builtins-face))
         ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
          (1 py-variable-name-face nil nil))
         ;; a, b, c = (1, 2, 3)
@@ -3699,13 +3699,12 @@ This function does not modify point or mark."
                           (goto-char (match-end 1))
                           (nth 1 (syntax-ppss))
                           ;; (python-syntax-context 'paren)
-                          ))
+			  ))
               res))
          (1 py-variable-name-face nil nil))
         ;; Numbers
-;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
-	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)
-	))
+	;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
+	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)))
 
 (defconst py-font-lock-syntactic-keywords
   ;; Make outer chars of matching triple-quote sequences into generic
