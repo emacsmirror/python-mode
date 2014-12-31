@@ -54,6 +54,10 @@
 
 ;;; Code
 
+(if py-install-directory 
+    (add-to-list 'load-path (concat py-install-directory "extensions"))
+  (message "Don't see where py-install-directory is set, see README.org"))
+
 (require 'comint)
 (require 'custom)
 (require 'cl)
