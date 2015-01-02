@@ -27,6 +27,8 @@
 
 ;;; Commentary:
 
+;; See documentation in README.org, README.DEVEL.org
+
 ;; commands-python-mode.org in directory doc reports
 ;; available commands, also a menu is provided
 
@@ -52,7 +54,7 @@
 ;; `py-partial-expression' beginns with a "(", which is
 ;; not taken as proposal.
 
-;;; Code
+;;; Code:
 
 (if py-install-directory 
     (add-to-list 'load-path (concat py-install-directory "extensions"))
