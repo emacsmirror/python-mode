@@ -1,4 +1,9 @@
-;; python-mode.el --- Towards an Python-IDE in Emacs
+;; python-mode.el --- Edit, debug, develop, run Python programs. 
+
+;; Includes a minor mode for handling a Python/IPython shell,
+;; and can take advantage of Pymacs when installed.
+
+;; This file not shipped as part of GNU Emacs.
 
 ;; Maintainer: Andreas Röhler <andreas.roehler@online.de>
 ;; Keywords: languages, processes, python, oop
