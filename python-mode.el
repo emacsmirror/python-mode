@@ -1,4 +1,4 @@
-;; python-mode.el --- Edit, debug, develop, run Python programs. 
+;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
 ;; and can take advantage of Pymacs when installed.
@@ -61,9 +61,14 @@
 
 ;;; Code:
 
-(if py-install-directory 
-    (add-to-list 'load-path (concat py-install-directory "extensions"))
-  (message "Don't see where py-install-directory is set, see README.org"))
+(unless (boundp 'py-install-directory)
+    (message (concat "Don't see where py-install-directory is set, see README.org, taking default-directory: " default-directory))
+    (defvar py-install-directory default-directory))
+
+(if py-install-directory
+    (add-to-list 'load-path
+		 (concat py-install-directory "extensions"))
+  (error "Don't see where py-install-directory is set, see README.org"))
 
 (require 'comint)
 (require 'custom)
