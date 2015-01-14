@@ -11822,11 +11822,11 @@ Internal use"
       (let (pop-up-windows)
 	(py-restore-window-configuration))))))
 
-(defun py-kill-buffer-unconditional (&optional buffer)
+(defun py-kill-buffer-unconditional (buffer)
   "Kill buffer unconditional, kill buffer-process if existing. "
-  (interactive)
-  (let ((buffer (or buffer (current-buffer)))
-        proc kill-buffer-query-functions)
+  (interactive
+   (list (current-buffer)))
+  (let (proc kill-buffer-query-functions)
     (ignore-errors
       (setq proc (get-buffer-process buffer))
       (and proc (kill-process proc))
