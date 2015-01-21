@@ -7770,7 +7770,7 @@ Returns position if succesful "
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-(defun py--base (form &optional py-mark-decorators)
+(defun py--mark-base (form &optional py-mark-decorators)
   "Returns boundaries of FORM, a cons. "
   (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
          (endform (intern-soft (concat "py-end-of-" form)))
@@ -7801,7 +7801,7 @@ Returns position if succesful "
 
 Return code of `py-statement' at point, a string. "
   (interactive)
-  (let ((erg (py--base "statement")))
+  (let ((erg (py--mark-base "statement")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-top-level ()
@@ -7809,7 +7809,7 @@ Return code of `py-statement' at point, a string. "
 
 Return code of `py-top-level' at point, a string. "
   (interactive)
-  (let ((erg (py--base "top-level")))
+  (let ((erg (py--mark-base "top-level")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-block ()
@@ -7817,7 +7817,7 @@ Return code of `py-top-level' at point, a string. "
 
 Return code of `py-block' at point, a string. "
   (interactive)
-  (let ((erg (py--base "block")))
+  (let ((erg (py--mark-base "block")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-clause ()
@@ -7825,7 +7825,7 @@ Return code of `py-block' at point, a string. "
 
 Return code of `py-clause' at point, a string. "
   (interactive)
-  (let ((erg (py--base "clause")))
+  (let ((erg (py--mark-base "clause")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-block-or-clause ()
@@ -7833,7 +7833,7 @@ Return code of `py-clause' at point, a string. "
 
 Return code of `py-block-or-clause' at point, a string. "
   (interactive)
-  (let ((erg (py--base "block-or-clause")))
+  (let ((erg (py--mark-base "block-or-clause")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-def ()
@@ -7841,7 +7841,7 @@ Return code of `py-block-or-clause' at point, a string. "
 
 Return code of `py-def' at point, a string. "
   (interactive)
-  (let ((erg (py--base "def")))
+  (let ((erg (py--mark-base "def")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-class ()
@@ -7849,7 +7849,7 @@ Return code of `py-def' at point, a string. "
 
 Return code of `py-class' at point, a string. "
   (interactive)
-  (let ((erg (py--base "class")))
+  (let ((erg (py--mark-base "class")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-def-or-class ()
@@ -7857,7 +7857,7 @@ Return code of `py-class' at point, a string. "
 
 Return code of `py-def-or-class' at point, a string. "
   (interactive)
-  (let ((erg (py--base "def-or-class")))
+  (let ((erg (py--mark-base "def-or-class")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-expression ()
@@ -7865,7 +7865,7 @@ Return code of `py-def-or-class' at point, a string. "
 
 Return code of `py-expression' at point, a string. "
   (interactive)
-  (let ((erg (py--base "expression")))
+  (let ((erg (py--mark-base "expression")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-partial-expression ()
@@ -7873,7 +7873,7 @@ Return code of `py-expression' at point, a string. "
 
 Return code of `py-partial-expression' at point, a string. "
   (interactive)
-  (let ((erg (py--base "partial-expression")))
+  (let ((erg (py--mark-base "partial-expression")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 (defun py-minor-block ()
@@ -7881,13 +7881,13 @@ Return code of `py-partial-expression' at point, a string. "
 
 Return code of `py-minor-block' at point, a string. "
   (interactive)
-  (let ((erg (py--base "minor-block")))
+  (let ((erg (py--mark-base "minor-block")))
     (buffer-substring-no-properties (car erg) (cdr erg))))
 
 ;;; Mark
 (defun py-mark-base (form &optional py-mark-decorators)
-  "Calls py--base, returns bounds of form, a cons. "
-  (let* ((bounds (py--base form py-mark-decorators))
+  "Calls py--mark-base, returns bounds of form, a cons. "
+  (let* ((bounds (py--mark-base form py-mark-decorators))
          (beg (car bounds)))
     (push-mark beg t t)
     bounds))
