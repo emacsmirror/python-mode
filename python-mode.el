@@ -61,8 +61,6 @@
 
 ;;; Code:
 
-;; python-components-mode
-
 (unless (boundp 'py-install-directory)
     (message (concat "Don't see where py-install-directory is set, see README.org, taking default-directory: " default-directory))
     (defvar py-install-directory default-directory))
@@ -72,16 +70,6 @@
 		 (concat py-install-directory "extensions"))
   (error "Don't see where py-install-directory is set, see README.org"))
 
-(require 'ansi-color)
-(require 'cc-cmds)
-(require 'cl)
-(require 'comint)
-(require 'compile)
-(require 'custom)
-(require 'flymake)
-(require 'hippie-exp)
-(require 'shell)
-(require 'thingatpt)
 
 (defgroup python-mode nil
   "Support for the Python programming language, <http://www.python.org/>"
@@ -2773,54 +2761,15 @@ See original source: http://pymacs.progiciels-bpi.ca"
           (t (error "Please set `py-install-directory', see INSTALL"))
           (when (interactive-p) (message "%s" load-path)))))
 
-
 (unless py-install-directory
   (add-to-list 'load-path default-directory)
   (add-to-list 'load-path (concat default-directory "extensions")))
 
 
-(require 'python-components-switches)
-(require 'python-components-edit)
-(require 'python-components-beginning-forms)
-(require 'python-components-move)
-(require 'python-components-kill-forms)
-(require 'python-components-mark-forms)
-(require 'python-components-copy-forms)
-(require 'python-components-delete-forms)
-(require 'python-components-bounds-forms)
-(require 'python-components-execute)
-(require 'python-components-send)
-(require 'python-components-shell-complete)
-(require 'python-components-pdb)
-(require 'python-components-help)
-(require 'python-components-extensions)
-(require 'python-components-imenu)
-(require 'python-components-named-shells)
-(require 'python-components-electric)
-(require 'python-components-virtualenv)
-(require 'python-components-booleans-beginning-forms)
-(require 'python-components-booleans-end-forms)
-(require 'python-components-beginning-position-forms)
-(require 'python-components-end-position-forms)
-(require 'python-components-end-forms)
-(require 'python-components-up-down)
-(require 'python-components-exec-forms)
-(require 'python-extended-executes)
-(require 'python-abbrev-propose)
-(require 'python-components-paragraph)
-(require 'python-components-shift-forms)
-(require 'python-components-execute-file)
-(require 'python-components-comment)
-(require 'python-components-forms-code)
-(require 'python-components-fast-forms)
-(require 'python-components-auto-fill)
-(require 'python-components-hide-show)
-(require 'python-components-fast-complete)
-(require 'python-components-intern)
-(require 'python-components-foot)
-
 (and py-load-skeletons-p (require 'python-components-skeletons))
 (and py-company-pycomplete-p (require 'company-pycomplete))
+
+
 ;; python-components-switches
 
 ;; Toggle highlight-indentation
@@ -3217,8 +3166,6 @@ Returns value of `py-underscore-word-syntax-p'. "
   py-underscore-word-syntax-p)
 
 ;; python-components-edit
-(require 'python-components-macros)
-
 (defvar py-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>"
   "Contents like py-fond-lock-keyword")
 
@@ -4215,8 +4162,6 @@ http://docs.python.org/reference/compound_stmts.html"
   (py--beginning-of-prepare indent 'py-except-block-re 'py-clause-re (interactive-p) t))
 
 ;; python-components-move
-(require 'python-components-macros)
-
 ;; backward compatibility
 ;; some third party relying on v5 serie might use this
 
@@ -6342,8 +6287,6 @@ Returns a list, whose car is beg, cdr - end."
 
 
 ;; python-components-execute
-(require 'python-components-macros)
-
 (defun py-restore-window-configuration ()
   "Restore py-restore-window-configuration when completion is done resp. abandoned. "
   (let (val)
@@ -8098,8 +8041,6 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
 
 ;; python-components-send
-(require 'python-components-macros)
-
 (defun py-output-buffer-filter (&optional beg end)
   "Clear output buffer from py-shell-input prompt etc. "
   (interactive "*")
@@ -8389,9 +8330,6 @@ named for funcname or define a function funcname."
   (py-execute-string (concat "import pdb;pdb.break('" stm "')")))
 
 ;; python-components-help
-(require 'python-components-macros)
-
-
 (defcustom py-eldoc-string-code
   "__PYDOC_get_help('''%s''')\n"
   "Python code used to get a string with the documentation of an object."
@@ -9558,8 +9496,6 @@ Maybe call M-x describe-variable RET to query its value. "
 
 ;; python-components-extensions
 ;; python-components-imenu
-(require 'python-components-macros)
-
 ;; Imenu definitions
 
 (defvar py-imenu-class-regexp
@@ -10106,8 +10042,6 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 
 ;; python-components-electric
-(require 'python-components-macros)
-
 (defun py-electric-colon (arg)
   "Insert a colon and indent accordingly.
 
@@ -15829,6 +15763,76 @@ Output-buffer is not in comint-mode "
   (py-show-base 'top-level))
 
 ;; python-components-fast-complete
+;; python-components-skeletons
+(define-skeleton py-else
+  "Auxiliary skeleton."
+  nil
+  (unless (eq ?y (read-char "Add `else' clause? (y for yes or RET for no) "))
+    (signal 'quit t))
+  < "else:" \n)
+
+(define-skeleton py-if
+    "If condition "
+  "if " "if " str ":" \n
+  _ \n
+  ("other condition, %s: "
+  < "elif " str ":" \n
+   > _ \n nil)
+  '(py-else) | ^)
+
+(define-skeleton py-while
+    "Condition: "
+  "while " "while " str ":" \n
+  > -1 _ \n
+  '(py-else) | ^)
+
+(define-skeleton py-for
+    "Target, %s: "
+  "for " "for " str " in " (skeleton-read "Expression, %s: ") ":" \n
+  > -1 _ \n
+  '(py-else) | ^)
+
+(define-skeleton py-try/except
+    "Py-try/except skeleton "
+  "try:" "try:" \n
+  > -1 _ \n
+  ("Exception, %s: "
+   < "except " str '(python-target) ":" \n
+   > _ \n nil)
+  < "except:" \n
+  > _ \n
+  '(py-else) | ^)
+
+(define-skeleton py-target
+  "Auxiliary skeleton."
+  "Target, %s: " ", " str | -2)
+
+(define-skeleton py-try/finally
+    "Py-try/finally skeleton "
+  "try:" \n
+  > -1 _ \n
+  < "finally:" \n
+  > _ \n)
+
+(define-skeleton py-def
+    "Name: "
+  "def " str " (" ("Parameter, %s: " (unless (equal ?\( (char-before)) ", ")
+                   str) "):" \n
+                   "\"\"\"" - "\"\"\"" \n     ; Fixme:  extra space inserted -- why?).
+                   > _ \n)
+
+(define-skeleton py-class
+    "Name: "
+  "class " str " (" ("Inheritance, %s: "
+		     (unless (equal ?\( (char-before)) ", ")
+		     str)
+  & ")" | -2				; close list or remove opening
+  ":" \n
+  "\"\"\"" - "\"\"\"" \n
+  > _ \n)
+
+;;;
+
 ;; python-components-intern
 
 ;; Macros
