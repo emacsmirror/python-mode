@@ -2770,6 +2770,17 @@ See original source: http://pymacs.progiciels-bpi.ca"
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
 
+(require 'ansi-color)
+(require 'cc-cmds)
+(require 'cl)
+(require 'comint)
+(require 'compile)
+(require 'custom)
+(require 'flymake)
+(require 'hippie-exp)
+(require 'shell)
+(require 'thingatpt)
+
 ;; python-components-switches
 
 ;; Toggle highlight-indentation
