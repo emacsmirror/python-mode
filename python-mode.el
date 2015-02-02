@@ -2766,7 +2766,6 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (add-to-list 'load-path (concat default-directory "extensions")))
 
 
-(and py-load-skeletons-p (require 'python-components-skeletons))
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
 
