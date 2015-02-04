@@ -2823,21 +2823,59 @@ Returns char found. "
       '(parse-partial-sexp (point-min) (point))
     '(syntax-ppss)))
 
-(defun py-count-lines ()
-  "Count lines in buffer, optional without given boundaries.
+;; (defun py-count-lines ()
+;;   "Count lines in buffer, optional without given boundaries.
 
-See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
-  (save-restriction
-    (widen)
-    (if (featurep 'xemacs)
-        (count-lines (point-min) (point-max))
-      (count-matches "[\n\C-m]" (point-min) (point-max)))))
+;; See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
+;;   (save-restriction
+;;     (widen)
+;;     (if (featurep 'xemacs)
+;;         (count-lines (point-min) (point-max))
+;;       (count-matches "[\n\C-m]" (point-min) (point-max)))))
 
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
   (or (nth 8 (syntax-ppss))
       (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
         (match-beginning 0))))
+
+(defconst python-rx-constituents
+    `((block-start          . ,(rx symbol-start
+                                   (or "def" "class" "if" "elif" "else" "try"
+                                       "except" "finally" "for" "while" "with")
+                                   symbol-end))
+      (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
+                                   (* (any word ?_))))
+      (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
+      (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
+                                   (+ space) "==" (+ space)
+                                   (any ?' ?\") "__main__" (any ?' ?\")
+                                   (* space) ?:))
+      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+      (open-paren           . ,(rx (or "{" "[" "(")))
+      (close-paren          . ,(rx (or "}" "]" ")")))
+      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+      ;; FIXME: rx should support (not simple-operator).
+      (not-simple-operator  . ,(rx
+                                (not
+                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+      ;; FIXME: Use regexp-opt.
+      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
+                                       "==" ">=" "is" "not")))
+      ;; FIXME: Use regexp-opt.
+      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+                                       ">>=" "<<=" "&=" "^=" "|=")))
+      (string-delimiter . ,(rx (and
+                                ;; Match even number of backslashes.
+                                (or (not (any ?\\ ?\' ?\")) point
+                                    ;; Quotes might be preceded by a escaped quote.
+                                    (and (or (not (any ?\\)) point) ?\\
+                                         (* ?\\ ?\\) (any ?\' ?\")))
+                                (* ?\\ ?\\)
+                                ;; Match single or triple quotes of any kind.
+                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
+    "Additional Python specific sexps for `python-rx'")
 
 (defmacro python-rx (&rest regexps)
   "Python mode specialized rx macro which supports common python named REGEXPS."
@@ -3337,6 +3375,20 @@ Returns value of `py-underscore-word-syntax-p'. "
   (toggle-py-underscore-word-syntax-p -1)
   (when (or py-verbose-p (interactive-p)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
   py-underscore-word-syntax-p)
+
+;; toggle-py-underscore-word-syntax-p must be known already
+;; circular: toggle-py-underscore-word-syntax-p sets and calls it
+(defcustom py-underscore-word-syntax-p t
+  "If underscore chars should be of syntax-class `word', not of `symbol'.
+
+Underscores in word-class makes `forward-word' etc. travel the indentifiers. Default is `t'.
+
+See bug report at launchpad, lp:940812 "
+  :type 'boolean
+  :group 'python-mode
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (toggle-py-underscore-word-syntax-p (if value 1 0))))
 
 ;; python-components-edit
 (defvar py-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>"
@@ -8257,6 +8309,197 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
       (goto-char (point-max)))))
 
 ;; python-components-shell-complete
+
+(defalias 'py-script-complete 'py-shell-complete)
+(defalias 'py-python2-shell-complete 'py-shell-complete)
+(defalias 'py-python3-shell-complete 'py-shell-complete)
+
+(defun py--shell-completion-get-completions (input process completion-code)
+  "Retrieve available completions for INPUT using PROCESS.
+Argument COMPLETION-CODE is the python code used to get
+completions on the current context."
+  (let ((completions
+	 (py--send-string-return-output
+	  (format completion-code input) process)))
+    (sit-for 0.2 t)
+    (when (> (length completions) 2)
+      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+
+;; post-command-hook
+;; caused insert-file-contents error lp:1293172
+(defun py--after-change-function (beg end len)
+  "Restore window-confiuration after completion. "
+  (when
+      (and (or
+            (eq this-command 'completion-at-point)
+            (eq this-command 'choose-completion)
+            (eq this-command 'choose-completion)
+            (eq this-command 'py-shell-complete)
+            (and (or
+                  (eq last-command 'completion-at-point)
+                  (eq last-command 'choose-completion)
+                  (eq last-command 'choose-completion)
+                  (eq last-command 'py-shell-complete))
+                 (eq this-command 'self-insert-command))))
+    (set-window-configuration
+     py-completion-last-window-configuration))
+  (goto-char end))
+
+(defalias 'ipython-complete 'py-shell-complete)
+
+(defun py--try-completion-intern (input completion)
+  (let (erg)
+    (when (and (stringp (setq erg (try-completion input completion)))
+	       (looking-back input)
+	       (not (string= input erg)))
+      (delete-region (match-beginning 0) (match-end 0))
+      (insert erg))
+    erg))
+
+(defun py--try-completion (input completion)
+  "Repeat `try-completion' as long as matches are found. "
+  (let (erg newlist)
+    (setq erg (py--try-completion-intern input completion))
+    (when erg
+      (dolist (elt completion)
+	(unless (string= erg elt)
+	  (add-to-list 'newlist elt)))
+      (if (< 1 (length newlist))
+	  (with-output-to-temp-buffer py-python-completions
+	    (display-completion-list
+	     (all-completions input (or newlist completion))))
+	(when newlist (py--try-completion erg newlist)))
+      (skip-chars-forward "^ \t\r\n\f")
+      ;; (move-marker orig (point))
+      nil)))
+
+(defun py--shell--do-completion-at-point (process imports input orig py-exception-buffer code)
+  "Do completion at point for PROCESS."
+  ;; (py--send-string-no-output py-shell-completion-setup-code process)
+  (when imports
+    (py--send-string-no-output imports process))
+  ;; (py--delay-process-dependent process)
+  (sit-for 0.1 t)
+  (let* ((completion
+	  (py--shell-completion-get-completions
+	   input process code))
+	 ;; (completion (when completions
+	 ;; (try-completion input completions)))
+	 newlist erg)
+    (set-buffer py-exception-buffer)
+    ;; (py--delay-process-dependent process)
+    ;; (sit-for 1 t)
+    (cond ((eq completion t)
+	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
+	   nil)
+	  ((null completion)
+	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "Don't see a completion"))
+	   nil)
+	  ((and completion
+		(or (and (listp completion)
+			 (string= input (car completion)))
+		    (and (stringp completion)
+			 (string= input completion))))
+	   nil)
+	  ((and completion (stringp completion)(not (string= input completion)))
+	   (progn (delete-char (- (length input)))
+		  (insert completion)
+		  ;; (move-marker orig (point))
+		  ;; minibuffer.el expects a list, a bug IMO
+		  nil))
+	  (t (py--try-completion input completion)))
+
+    nil))
+
+(defun py--complete-base (shell pos beg end word imports debug py-exception-buffer)
+  (let* ((shell (or shell (py-choose-shell)))
+         (proc (or
+		;; completing inside a shell
+		(get-buffer-process py-exception-buffer)
+		   (and (comint-check-proc shell)
+			(get-process shell))
+	       (prog1
+		   (get-buffer-process (py-shell nil nil shell))
+		 (sit-for py-new-shell-delay))))
+    (code (if (string-match "[Ii][Pp]ython*" shell)
+	      (py-set-ipython-completion-command-string shell)
+	    py-shell-module-completion-code)))
+  (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
+
+(defun py--complete-prepare (&optional shell debug beg end word fast-complete)
+  (let* ((py-exception-buffer (current-buffer))
+         (pos (copy-marker (point)))
+	 (pps (syntax-ppss))
+	 (in-string (when (nth 3 pps) (nth 8 pps)))
+         (beg
+	  (save-excursion
+	    (or beg
+		(and in-string
+		     ;; possible completion of filenames
+		     (progn
+		       (goto-char in-string)
+		       (and
+			(save-excursion
+			  (skip-chars-backward "^ \t\r\n\f")(looking-at "open")))
+
+		       (skip-chars-forward "\"'")(point)))
+		(progn (and (eq (char-before) ?\()(forward-char -1))
+		       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
+         (end (or end (point)))
+	 ;;
+         (word (or word (buffer-substring-no-properties beg end)))
+	 (ausdruck (and (string-match "^/" word)(setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
+	 ;; when in string, assume looking for filename
+	 (filenames (and in-string ausdruck
+			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
+         (imports (py-find-imports))
+         py-fontify-shell-buffer-p completion-buffer erg)
+    (cond (fast-complete (py--fast-complete-base shell pos beg end word imports debug py-exception-buffer))
+	  ((and in-string filenames)
+	   (when (setq erg (try-completion (concat "/" word) filenames))
+	     (delete-region beg end)
+	     (insert erg)))
+	  (t (py--complete-base shell pos beg end word imports debug py-exception-buffer)))
+    nil))
+
+(defun py-shell-complete (&optional shell debug beg end word)
+  "Complete word before point, if any. "
+  (interactive)
+  (save-excursion
+    (and (buffer-live-p (get-buffer "*Python Completions*"))
+	 (py-kill-buffer-unconditional "*Python Completions*")))
+  (setq py-completion-last-window-configuration
+        (current-window-configuration))
+  (when debug (setq py-shell-complete-debug nil))
+  (py--complete-prepare shell debug beg end word nil))
+
+(defun py-indent-or-complete ()
+  "Complete or indent depending on the context.
+
+If cursor is at end of a symbol, try to complete
+Otherwise call `py-indent-line'
+
+If `(region-active-p)' returns `t', indent region.
+Use `C-q TAB' to insert a literally TAB-character
+
+In python-mode `py-complete-function' is called,
+in (I)Python shell-modes `py-shell-complete'"
+  (interactive "*")
+  (cond ((region-active-p)
+	 (py-indent-region (region-beginning) (region-end)))
+	((or (bolp)
+	     (member (char-before)(list 9 10 12 13 32))
+	     (and (not (eobp)) (not (member (char-after)(list 9 10 12 13 32)))))
+	 (py-indent-line))
+	((eq major-mode 'python-mode)
+	 (if (string-match "ipython" (py-choose-shell))
+	     (py-shell-complete)
+	   (funcall py-complete-function)))
+	((comint-check-proc (current-buffer))
+	 (py-shell-complete))
+	(t
+	 (funcall py-complete-function))))
+
 ;; python-components-pdb
 
 ;; pdbtrack constants
@@ -16007,232 +16250,6 @@ Output-buffer is not in comint-mode "
 ;;;
 
 ;; python-components-intern
-
-;; Macros
-(defmacro empty-line-p ()
-  "Returns t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
-  `(save-excursion
-     (progn
-       (beginning-of-line)
-       (looking-at "\\s-*$"))))
-
-(defmacro py-escaped ()
-  "Return t if char is preceded by an odd number of backslashes. "
-  `(save-excursion
-     (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
-
-(defmacro py-current-line-backslashed-p ()
-  "Return t if current line is a backslashed continuation line. "
-  `(save-excursion
-     (end-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
-
-(defmacro py-preceding-line-backslashed-p ()
-  "Return t if preceding line is a backslashed continuation line. "
-  `(save-excursion
-     (beginning-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
-;;
-
-(defun py-separator-char ()
-  "Return the file-path separator char from current machine.
-
-When `py-separator-char' is customized, its taken.
-Returns char found. "
-  (let ((erg (cond ((characterp py-separator-char)
-                    (char-to-string py-separator-char))
-                   ;; epd hack
-                   ((and
-                     (string-match "[Ii][Pp]ython" py-shell-name)
-                     (string-match "epd\\|EPD" py-shell-name))
-                    (replace-regexp-in-string "\n" ""
-                                              (shell-command-to-string (concat py-shell-name " -c \"import os; print(os.sep)\"")))))))
-    (if (and erg (string-match "^$" erg))
-        (setq erg (substring erg (string-match "^$" erg)))
-      (setq erg (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -W ignore" " -c \"import os; print(os.sep)\"")))))
-    erg))
-
-(defun pps-emacs-version ()
-  "Include the appropriate `parse-partial-sexp' "
-  (if (featurep 'xemacs)
-      '(parse-partial-sexp (point-min) (point))
-    '(syntax-ppss)))
-
-(defun py-count-lines ()
-  "Count lines in buffer, optional without given boundaries.
-
-See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
-  (save-restriction
-    (widen)
-    (if (featurep 'xemacs)
-        (count-lines (point-min) (point-max))
-      (count-matches "[\n\C-m]" (point-min) (point-max)))))
-
-(defun py-in-string-or-comment-p ()
-  "Returns beginning position if inside a string or comment, nil otherwise. "
-  (or (nth 8 (syntax-ppss))
-      (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
-        (match-beginning 0))))
-
-;; toggle-py-underscore-word-syntax-p must be known already
-;; circular: toggle-py-underscore-word-syntax-p sets and calls it
-(defcustom py-underscore-word-syntax-p t
-  "If underscore chars should be of syntax-class `word', not of `symbol'.
-
-Underscores in word-class makes `forward-word' etc. travel the indentifiers. Default is `t'.
-
-See bug report at launchpad, lp:940812 "
-  :type 'boolean
-  :group 'python-mode
-  :set (lambda (symbol value)
-         (set-default symbol value)
-         (toggle-py-underscore-word-syntax-p (if value 1 0))))
-
-(eval-when-compile
-  (defconst python-rx-constituents
-    `((block-start          . ,(rx symbol-start
-                                   (or "def" "class" "if" "elif" "else" "try"
-                                       "except" "finally" "for" "while" "with")
-                                   symbol-end))
-      (decorator            . ,(rx line-start (* space) ?@ (any letter ?_)
-                                   (* (any word ?_))))
-      (defun                . ,(rx symbol-start (or "def" "class") symbol-end))
-      (if-name-main         . ,(rx line-start "if" (+ space) "__name__"
-                                   (+ space) "==" (+ space)
-                                   (any ?' ?\") "__main__" (any ?' ?\")
-                                   (* space) ?:))
-      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
-      (open-paren           . ,(rx (or "{" "[" "(")))
-      (close-paren          . ,(rx (or "}" "]" ")")))
-      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator  . ,(rx
-                                (not
-                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
-                                       "==" ">=" "is" "not")))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
-                                       ">>=" "<<=" "&=" "^=" "|=")))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Python specific sexps for `python-rx'")
-
-  (defmacro python-rx (&rest regexps)
-    "Python mode specialized rx macro.
-This variant of `rx' supports common python named REGEXPS."
-    (let ((rx-constituents (append python-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-             (error "No regexp"))
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
-            (t
-             (rx-to-string (car regexps) t))))))
-
-(defmacro python-rx (&rest regexps)
-  "Python mode specialized rx macro which supports common python named REGEXPS."
-  (let ((rx-constituents (append python-rx-constituents rx-constituents)))
-    (cond ((null regexps)
-           (error "No regexp"))
-          ((cdr regexps)
-           (rx-to-string `(and ,@regexps) t))
-          (t
-           (rx-to-string (car regexps) t)))))
-
-;;  Font-lock and syntax
-(setq python-font-lock-keywords
-      ;; Keywords
-      `(,(rx symbol-start
-             (or
-	      "if" "and" "del"  "not" "while" "as" "elif" "global"
-	      "or" "with" "assert" "else"  "pass" "yield" "break"
-	      "exec" "in" "continue" "finally" "is" "except" "raise"
-	      "return"  "for" "lambda")
-             symbol-end)
-        (,(rx symbol-start (or "def" "class") symbol-end) . py-def-class-face)
-        (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
-        (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
-        ;; functions
-        (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-function-name-face))
-        ;; classes
-        (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
-         (1 py-def-class-face) (2 py-class-name-face))
-        (,(rx symbol-start
-              (or "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
-              symbol-end) . py-pseudo-keyword-face)
-        ;; Decorators.
-        (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
-                                                (0+ "." (1+ (or word ?_)))))
-         (1 py-decorators-face))
-	(,(rx symbol-start (or "cls" "self")
-	      symbol-end) . py-object-reference-face)
-
-        ;; Exceptions
-        (,(rx word-start
-              (or "ArithmeticError" "AssertionError" "AttributeError"
-                  "BaseException" "BufferError" "BytesWarning" "DeprecationWarning"
-                  "EOFError" "EnvironmentError" "Exception" "FloatingPointError"
-                  "FutureWarning" "GeneratorExit" "IOError" "ImportError"
-                  "ImportWarning" "IndentationError" "IndexError" "KeyError"
-                  "KeyboardInterrupt" "LookupError" "MemoryError" "NameError" "NoResultFound"
-                  "NotImplementedError" "OSError" "OverflowError"
-                  "PendingDeprecationWarning" "ReferenceError" "RuntimeError"
-                  "RuntimeWarning" "StandardError" "StopIteration" "SyntaxError"
-                  "SyntaxWarning" "SystemError" "SystemExit" "TabError" "TypeError"
-                  "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
-                  "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
-                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError")
-              word-end) . py-exception-name-face)
-        ;; Builtins
-        (,(rx
-	   (or space line-start (not (any ".")))
-	   symbol-start
-	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
-		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
-		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
-		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
-		      "execfile" "file" "filter" "float" "format" "frozenset"
-		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
-		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
-		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
-		      "ord" "pow" "print" "property" "range" "raw_input" "reduce"
-		      "reload" "repr" "reversed" "round" "set" "setattr" "slice"
-		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
-		      "unichr" "unicode" "vars" "xrange" "zip"))
-	   symbol-end) (1 py-builtins-face))
-        ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
-         (1 py-variable-name-face nil nil))
-        ;; a, b, c = (1, 2, 3)
-        (,(lambda (limit)
-            (let ((re (python-rx (group (+ (any word ?. ?_))) (* space)
-                                 (* ?, (* space) (+ (any word ?. ?_)) (* space))
-                                 ?, (* space) (+ (any word ?. ?_)) (* space)
-                                 assignment-operator))
-                  (res nil))
-              (while (and (setq res (re-search-forward re limit t))
-                          (goto-char (match-end 1))
-                          (nth 1 (syntax-ppss))
-                          ;; (python-syntax-context 'paren)
-			  ))
-              res))
-         (1 py-variable-name-face nil nil))
-        ;; Numbers
-	;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
-	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)))
 
 ;;  Keymap
 (defvar python-mode-map)
@@ -25543,7 +25560,7 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
-(defun py-count-lines (&optional start end)
+(defun py-count-lines ()
   "Count lines in accessible part until current line.
 
 See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
