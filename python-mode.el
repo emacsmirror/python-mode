@@ -15811,6 +15811,96 @@ the default"
       (comment-region beg end arg))))
 
 ;; python-components-forms-code
+
+
+(defun py-statement ()
+  "Statement at point.
+
+Return code of `py-statement' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "statement")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-top-level ()
+  "Top-Level at point.
+
+Return code of `py-top-level' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "top-level")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-block ()
+  "Block at point.
+
+Return code of `py-block' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "block")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-clause ()
+  "Clause at point.
+
+Return code of `py-clause' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "clause")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-block-or-clause ()
+  "Block-Or-Clause at point.
+
+Return code of `py-block-or-clause' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "block-or-clause")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-def ()
+  "Def at point.
+
+Return code of `py-def' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "def")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-class ()
+  "Class at point.
+
+Return code of `py-class' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "class")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-def-or-class ()
+  "Def-Or-Class at point.
+
+Return code of `py-def-or-class' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "def-or-class")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-expression ()
+  "Expression at point.
+
+Return code of `py-expression' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "expression")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-partial-expression ()
+  "Partial-Expression at point.
+
+Return code of `py-partial-expression' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "partial-expression")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
+(defun py-minor-block ()
+  "Minor-Block at point.
+
+Return code of `py-minor-block' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "minor-block")))
+    (buffer-substring-no-properties (car erg) (cdr erg))))
+
 ;; python-components-fast-forms
 
 ;;  Process forms fast
