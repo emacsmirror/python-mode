@@ -16179,6 +16179,77 @@ Output-buffer is not in comint-mode "
   (py-show-base 'top-level))
 
 ;; python-components-fast-complete
+
+(defun py--fast-completion-get-completions (input process completion-code)
+  "Retrieve available completions for INPUT using PROCESS.
+Argument COMPLETION-CODE is the python code used to get
+completions on the current context."
+  (let ((completions
+	 (py--fast-send-string-intern
+	  (format completion-code input) process py-buffer-name nil t)))
+    (when (> (length completions) 2)
+      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+
+(defun py--fast--do-completion-at-point (process imports input orig py-exception-buffer code output-buffer)
+  "Do completion at point for PROCESS."
+  ;; send setup-code
+  (let (py-return-result-p)
+    (when imports
+      ;; (message "%s" imports)
+      (py--fast-send-string-no-output imports process output-buffer)))
+  (let* ((completion
+	  (py--fast-completion-get-completions input process code))
+	 ;; (completion (when completions
+	 ;; (try-completion input completions)))
+	 newlist erg)
+    ;; (message "%s" (current-buffer))
+    ;; (sit-for 1 t)
+    (cond ((eq completion t)
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
+	   nil)
+	  ((null completion)
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Don't see a completion"))
+	   nil)
+	  ((and completion
+		(or (and (listp completion)
+			 (string= input (car completion)))
+		    (and (stringp completion)
+			 (string= input completion))))
+	   nil)
+	  ((and completion (stringp completion)(not (string= input completion)))
+	   (progn (delete-char (- (length input)))
+		  (insert completion)
+		  ;; (move-marker orig (point))
+		  ;; minibuffer.el expects a list
+		  nil))
+	  (t (py--try-completion input completion)))
+
+    nil))
+
+(defun py--fast-complete-base (shell pos beg end word imports debug py-exception-buffer)
+  (let* ((shell (or shell (py-choose-shell)))
+	 (py-buffer-name (py-shell nil nil shell nil t))
+	 (proc (get-buffer-process py-buffer-name))
+	 (code (if (string-match "[Ii][Pp]ython*" shell)
+		   (py-set-ipython-completion-command-string shell)
+		 py-shell-module-completion-code)))
+    (with-current-buffer py-buffer-name
+      (erase-buffer))
+    (py--fast--do-completion-at-point proc imports word pos py-exception-buffer code py-buffer-name)))
+
+(defun py-fast-complete (&optional shell debug beg end word)
+  "Complete word before point, if any.
+
+Use `py-fast-process' "
+  (interactive)
+  (setq py-completion-last-window-configuration
+        (current-window-configuration))
+  (let (py-switch-buffers-on-execute-p
+	(py-fast-process-p t)
+	(py-fast-complete-p t)
+	(py-return-result-p t))
+    (py--complete-prepare shell debug beg end word t)))
+
 ;; python-components-skeletons
 (define-skeleton py-else
   "Auxiliary skeleton."
