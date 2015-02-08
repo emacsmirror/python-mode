@@ -4219,6 +4219,26 @@ http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (py--beginning-of-prepare indent 'py-if-block-re 'py-clause-re (interactive-p)))
 
+(defun py-beginning-of-elif-block (&optional indent)
+ "Go to beginning elif-block, skip whitespace at BOL.
+
+Returns beginning of elif-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (py--beginning-of-prepare indent 'py-elif-block-re 'py-clause-re (interactive-p)))
+
+(defun py-beginning-of-else-block (&optional indent)
+ "Go to beginning else-block, skip whitespace at BOL.
+
+Returns beginning of else-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (py--beginning-of-prepare indent 'py-else-block-re 'py-clause-re (interactive-p)))
+
 (defun py-beginning-of-try-block (&optional indent)
  "Go to beginning try-block, skip whitespace at BOL.
 
@@ -4341,6 +4361,28 @@ Referring python program structures see for example:
 http://docs.python.org/reference/compound_stmts.html"
   (interactive)
   (py--beginning-of-prepare indent 'py-if-block-re 'py-clause-re (interactive-p) t))
+
+(defalias 'py-beginning-of-elif-block-lc 'py-beginning-of-elif-block-bol)
+(defun py-beginning-of-elif-block-bol (&optional indent)
+ "Go to beginning elif-block, go to BOL.
+
+Returns beginning of elif-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (py--beginning-of-prepare indent 'py-elif-block-re 'py-clause-re (interactive-p) t))
+
+(defalias 'py-beginning-of-else-block-lc 'py-beginning-of-else-block-bol)
+(defun py-beginning-of-else-block-bol (&optional indent)
+ "Go to beginning else-block, go to BOL.
+
+Returns beginning of else-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive)
+  (py--beginning-of-prepare indent 'py-else-block-re 'py-clause-re (interactive-p) t))
 
 (defalias 'py-beginning-of-try-block-lc 'py-beginning-of-try-block-bol)
 (defun py-beginning-of-try-block-bol (&optional indent)
@@ -11841,6 +11883,58 @@ http://docs.python.org/reference/compound_stmts.html"
 See also `py-down-if-block': down from current definition to next beginning of if-block below. "
   (interactive)
   (let ((erg (py-end-of-if-block)))
+    (setq erg (py--beginning-of-line-form))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-elif-block 'py-end-of-elif-block)
+(defun py-end-of-elif-block (&optional indent)
+  "Go to end of elif-block.
+
+Returns end of elif-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive "P")
+  (let* ((orig (point))
+         (erg (py--end-base 'py-elif-block-re orig)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-elif-block-lc 'py-end-of-elif-block-bol)
+(defun py-end-of-elif-block-bol ()
+  "Goto beginning of line following end of elif-block.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-down-elif-block': down from current definition to next beginning of elif-block below. "
+  (interactive)
+  (let ((erg (py-end-of-elif-block)))
+    (setq erg (py--beginning-of-line-form))
+    (when (interactive-p) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-else-block 'py-end-of-else-block)
+(defun py-end-of-else-block (&optional indent)
+  "Go to end of else-block.
+
+Returns end of else-block if successful, nil otherwise
+
+Referring python program structures see for example:
+http://docs.python.org/reference/compound_stmts.html"
+  (interactive "P")
+  (let* ((orig (point))
+         (erg (py--end-base 'py-else-block-re orig)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
+
+(defalias 'py-down-else-block-lc 'py-end-of-else-block-bol)
+(defun py-end-of-else-block-bol ()
+  "Goto beginning of line following end of else-block.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-down-else-block': down from current definition to next beginning of else-block below. "
+  (interactive)
+  (let ((erg (py-end-of-else-block)))
     (setq erg (py--beginning-of-line-form))
     (when (interactive-p) (message "%s" erg))
     erg))
