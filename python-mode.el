@@ -7462,9 +7462,8 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 	      (sit-for 0.1 t)
 	      (setq py-error (py--fetch-error (current-buffer) origline)))
 	    (with-current-buffer output-buffer
-	      ;; (when py-debug-p (switch-to-buffer (current-buffer))
-	      ;; (message "py-error: %s" py-error))
-	      (delete-region (point) (car comint-last-prompt))
+	      ;; `comint-last-prompt' must not exist
+	      (delete-region (point) (or (ignore-errors (car comint-last-prompt)) (point-max)))
 	      (sit-for 0.1 t)
 	      (insert py-error)
 	      (newline)
@@ -9851,16 +9850,20 @@ i.e. spaces, tabs, carriage returns, newlines and newpages. "
         (list command (list local-file)))
     (message "%s" "flymake needs a `buffer-file-name'. Please save before calling.")))
 
-(defun py-flycheck-mode ()
+(defun py-flycheck-mode (&optional arg) 
   "Toggle `flycheck-mode'.
 
+With negative argument switch off flycheck-mode
 See menu \"Tools/Syntax Checking\""
-  (interactive)
+  (interactive "p")
+  (setq arg (or arg (if flycheck-mode 0 1))) 
   (if (featurep 'flycheck)
-      (if flycheck-mode
+      (if (< arg 0)
 	  ;; switch off
 	  (flycheck-mode 0)
-	(flycheck-mode 1))
+	(when (and py-verbose-p (interactive-p)) (message "flycheck-mode: %s" flycheck-mode))
+	(flycheck-mode 1)
+	(when (and py-verbose-p (interactive-p)) (message "flycheck-mode: %s" flycheck-mode)))
     (error "Can't find flycheck - see README.org")))
 
 (defun pylint-flymake-mode ()
