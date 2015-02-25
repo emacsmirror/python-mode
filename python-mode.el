@@ -6604,7 +6604,6 @@ With prefix arg, position cursor at end of buffer."
   (interactive "P")
   (pop-to-buffer (process-buffer (py-proc)) t) ;Runs python if needed.
   (when eob-p
-    (push-mark)
     (goto-char (point-max))))
 
 (defalias 'py-shell-send-file 'py-send-file)
@@ -8366,12 +8365,13 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
-  (let ((completions
+  (let ((erg
 	 (py--send-string-return-output
 	  (format completion-code input) process)))
     (sit-for 0.2 t)
-    (when (> (length completions) 2)
-      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+    (when (> (length erg) 2)
+      (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t)))
+    erg))
 
 ;; post-command-hook
 ;; caused insert-file-contents error lp:1293172
@@ -8477,7 +8477,7 @@ completions on the current context."
 (defun py--complete-prepare (&optional shell debug beg end word fast-complete)
   (let* ((py-exception-buffer (current-buffer))
          (pos (copy-marker (point)))
-	 (pps (syntax-ppss))
+	 (pps (parse-partial-sexp (or (ignore-errors (overlay-end comint-last-prompt-overlay))(line-beginning-position)) (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
          (beg
 	  (save-excursion
@@ -9796,15 +9796,21 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
 
 ;;  from string-strip.el --- Strip CHARS from STRING
 
+(defvar py-chars-before " \t\n\r\f"
+  "Used by `py--string-strip'")
+
+(defvar py-chars-after " \t\n\r\f"
+    "Used by `py--string-strip'")
+
 ;;  (setq strip-chars-before  "[ \t\r\n]*")
-(defun string-strip (str &optional chars-before chars-after)
+(defun py--string-strip (str &optional chars-before chars-after)
   "Return a copy of STR, CHARS removed.
 `CHARS-BEFORE' and `CHARS-AFTER' default is \"[ \t\r\n]*\",
 i.e. spaces, tabs, carriage returns, newlines and newpages. "
   (let ((s-c-b (or chars-before
-                   strip-chars-before))
+                   py-chars-before))
         (s-c-a (or chars-after
-                   strip-chars-after))
+                   py-chars-after))
         (erg str))
     (setq erg (replace-regexp-in-string  s-c-b "" erg))
     (setq erg (replace-regexp-in-string  s-c-a "" erg))
@@ -10279,7 +10285,7 @@ With arg, do it that many times.
 
 With optional \\[universal-argument] print as string"
   (interactive "*P")
-  (let* ((name (string-strip (or arg (car kill-ring))))
+  (let* ((name (py--string-strip (or arg (car kill-ring))))
          ;; guess if doublequotes or parentheses are needed
          (numbered (not (eq 4 (prefix-numeric-value arg))))
          (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'py-shell-mode))
@@ -25106,7 +25112,7 @@ Try to find source definition of function at point"]))))
 
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
-  (interactive) 
+  (interactive)
   (load (concat py-install-directory "/extensions/python-components-skeletons.el")))
 
 (defun py--kill-emacs-hook ()
@@ -25135,7 +25141,7 @@ If no EXECUTABLE given, `py-shell-name' is used.
 Interactively output of `--version' is displayed. "
   (interactive)
   (let* ((executable (or executable py-shell-name))
-         (erg (string-strip (shell-command-to-string (concat executable " --version")))))
+         (erg (py--string-strip (shell-command-to-string (concat executable " --version")))))
     (when (interactive-p) (message "%s" erg))
     (unless verbose (setq erg (cadr (split-string erg))))
     erg))
@@ -25257,7 +25263,7 @@ Should you need more shells to select, extend this command by adding inside the 
                     ((eq 3 (prefix-numeric-value arg))
                      "python3")
                     ((eq 4 (prefix-numeric-value arg))
-                     (string-strip
+                     (py--string-strip
                       (read-from-minibuffer "Python Shell: " py-shell-name) "\" " "\" "
                       ))
                     ((eq 5 (prefix-numeric-value arg))
@@ -25539,7 +25545,10 @@ Use `defcustom' to keep value across sessions "
   "Kill buffer unconditional, kill buffer-process if existing. "
   (interactive
    (list (current-buffer)))
-  (let (proc kill-buffer-query-functions)
+  (let ((buffer (or (bufferp buffer)
+		    (get-buffer buffer)))
+	proc kill-buffer-query-functions)
+
     (ignore-errors
       (setq proc (get-buffer-process buffer))
       (and proc (kill-process proc))
@@ -26502,11 +26511,8 @@ the output."
     (sit-for 0.1 t)
     ;; (py--delay-process-dependent process)
     (when (and output (not (string= "" output)))
-      (setq output
-	    (replace-regexp-in-string
-	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-	     "" output)))
-    output))
+	    (py--string-strip
+	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)))))
 
 (defun py--send-string-return-output (string &optional process msg)
   "Send STRING to PROCESS and return output.
@@ -26514,22 +26520,24 @@ the output."
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (with-current-buffer (process-buffer process)
-    (let* (output
+    (let* (erg
 	   (process (or process (get-buffer-process (py-shell))))
 	   (comint-preoutput-filter-functions
 	    (append comint-preoutput-filter-functions
 		    '(ansi-color-filter-apply
 		      (lambda (string)
-			(setq output (concat output string))
+			(setq erg (concat erg string))
 			"")))))
       (py-send-string string process)
       (accept-process-output process 5)
-      (when (and output (not (string= "" output)))
-	(setq output
+      (sit-for 0.1 t)
+      (when (and erg (not (string= "" erg)))
+	(setq erg
 	      (replace-regexp-in-string
 	       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-	       "" output)))
-      output)))
+	       "" erg)))
+      ;; (sit-for 0.1 t)
+      erg)))
 
 (defun py-which-def-or-class ()
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
