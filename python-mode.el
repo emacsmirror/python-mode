@@ -2841,16 +2841,6 @@ Returns char found. "
       '(parse-partial-sexp (point-min) (point))
     '(syntax-ppss)))
 
-;; (defun py-count-lines ()
-;;   "Count lines in buffer, optional without given boundaries.
-
-;; See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
-;;   (save-restriction
-;;     (widen)
-;;     (if (featurep 'xemacs)
-;;         (count-lines (point-min) (point-max))
-;;       (count-matches "[\n\C-m]" (point-min) (point-max)))))
-
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
   (or (nth 8 (syntax-ppss))
@@ -3995,7 +3985,7 @@ Indented same level, which don't open blocks. "
       (setq beg last)
       (goto-char orig)
       (setq end (line-end-position))
-      (while (and (setq last (line-end-position))
+      (while (and (setq last (py--end-of-statement-position))
                   (setq end (py-down-statement))
                   (not (py--beginning-of-block-p))
                   ;; (not (looking-at py-keywords))
@@ -4056,12 +4046,8 @@ Store deleted statements in kill-ring "
          (beg (car bounds))
          (end (cdr bounds)))
     (when (and beg end)
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
       (kill-new (buffer-substring-no-properties beg end))
       (delete-region beg end))))
-
 
 (defun py--join-words-wrapping (words separator line-prefix line-length)
   (let ((lines ())
@@ -5321,7 +5307,7 @@ Return position"
   "Delete `block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5329,7 +5315,7 @@ Stores data in kill ring"
   "Delete `clause' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5337,7 +5323,7 @@ Stores data in kill ring"
   "Delete `block-or-clause' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "block-or-clause")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5345,7 +5331,7 @@ Stores data in kill ring"
   "Delete `def' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "def")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5353,7 +5339,7 @@ Stores data in kill ring"
   "Delete `class' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "class")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5361,7 +5347,7 @@ Stores data in kill ring"
   "Delete `def-or-class' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "def-or-class")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5369,7 +5355,7 @@ Stores data in kill ring"
   "Delete `if-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "if-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5377,7 +5363,7 @@ Stores data in kill ring"
   "Delete `try-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "try-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5385,7 +5371,7 @@ Stores data in kill ring"
   "Delete `minor-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "minor-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5393,7 +5379,7 @@ Stores data in kill ring"
   "Delete `for-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "for-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5401,7 +5387,7 @@ Stores data in kill ring"
   "Delete `top-level' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "top-level")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5409,7 +5395,7 @@ Stores data in kill ring"
   "Delete `statement' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "statement")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5417,7 +5403,7 @@ Stores data in kill ring"
   "Delete `expression' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "expression")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5425,7 +5411,7 @@ Stores data in kill ring"
   "Delete `partial-expression' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "partial-expression")))
     (kill-region (car erg) (cdr erg))))
 
@@ -6925,7 +6911,6 @@ SEPCHAR is the file-path separator of your system. "
     (set-buffer exception-buffer)
     (goto-char (point-min))
     (forward-line (1- origline))
-    ;; (push-mark)
     (and (search-forward action (line-end-position) t)
          (and py-verbose-p (message "exception-buffer: %s on line %d" py-exception-buffer origline))
          (and py-highlight-error-source-p
@@ -6933,7 +6918,6 @@ SEPCHAR is the file-path separator of your system. "
               (overlay-put erg
                            'face 'highlight)))))
 
-;;  Result: (nil 5 "print(34ed)" " SyntaxError: invalid token ")
 (defun py--jump-to-exception (py-error origline &optional file)
   "Jump to the Python code in FILE at LINE."
   (let (
@@ -7323,10 +7307,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (origline
 	  (save-restriction
 	    (widen)
-	    (count-lines
-	     (point-min)
-	     ;; count-lines doesn't honor current line when at BOL
-	     end)))
+	    (py-count-lines (point-min) end)))
 	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
 	 (which-shell
 	  (if shell
@@ -7494,7 +7475,7 @@ May we get rid of the temporary file? "
   (let* ((start (copy-marker start))
          (end (copy-marker end))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
-         (line (count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
+         (line (py-count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
          (strg (buffer-substring-no-properties start end))
          (tempfile (or (buffer-file-name) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
@@ -7649,7 +7630,7 @@ Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being sw
 
 (defun py--insert-offset-lines (line)
   "Fix offline amount, make error point at the corect line. "
-  (insert (make-string (- line (count-lines (point-min) (point))) 10)))
+  (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
 
 (defun py--execute-file-base (&optional proc filename cmd procbuf orig file execute-directory py-exception-buffer)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
@@ -25549,7 +25530,7 @@ LIEP stores line-end-position at point-of-interest
       ;; needed by closing
       (unless orig (unless (bobp) (back-to-indentation)))
       (let* ((orig (or orig (point)))
-             (origline (or origline (py-count-lines)))
+             (origline (or origline (py-count-lines (point-min) (point))))
              ;; closing indicates: when started, looked
              ;; at a single closing parenthesis
              ;; line: moved already a line backward
@@ -25672,10 +25653,10 @@ LIEP stores line-end-position at point-of-interest
 				   ((looking-at "\\s([ \t]*$")
 				    (py--empty-arglist-indent nesting py-indent-offset indent-offset))
 				   ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
-				     (goto-char (match-beginning 1))
-				     (if py-indent-paren-spanned-multilines-p
-					 (+ (current-column) py-indent-offset)
-				       (current-column)))
+				    (goto-char (match-beginning 1))
+				    (if py-indent-paren-spanned-multilines-p
+					(+ (current-column) py-indent-offset)
+				      (current-column)))
 				   (t (py--fetch-previous-indent orig))))
 				 ;; already behind a dedented element in list
 				 ((<= 2 (- origline this-line))
@@ -25695,9 +25676,7 @@ LIEP stores line-end-position at point-of-interest
 			    (goto-char (nth 1 (syntax-ppss)))
 			    (setq line
 				  ;; should be faster
-				  (< (line-end-position) liep)
-				  ;; (< (py-count-lines) origline)
-				  )
+				  (< (line-end-position) liep))
 			    (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 			   ((not (py--beginning-of-statement-p))
 			    (py-beginning-of-statement)
@@ -26245,14 +26224,16 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
-(defun py-count-lines ()
+(defun py-count-lines (&optional beg end)
   "Count lines in accessible part until current line.
 
 See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   (interactive)
   (save-excursion
     (let ((count 0)
-          (orig (point)))
+          (orig (point))
+	  (beg (or beg (point-min)))
+	  (end (or end (point))))
       (save-match-data
 	(if (or (eq major-mode 'comint-mode)
 		(eq major-mode 'py-shell-mode))
@@ -26260,14 +26241,14 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 		(re-search-backward py-fast-filter-re nil t 1)
 		(goto-char (match-end 0))
 	      (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
-	      (goto-char (point-min)))
-	  (goto-char (point-min))))
-      (while (and (< (point) orig)(not (eobp)) (skip-chars-forward "^\n" orig))
+	      (goto-char beg))
+	  (goto-char beg)))
+      (while (and (< (point) end)(not (eobp)) (skip-chars-forward "^\n" end))
         (setq count (1+ count))
-        (unless (or (not (< (point) orig)) (eobp)) (forward-char 1)
-                (setq count (+ count (abs (skip-chars-forward "\n" orig))))))
+        (unless (or (not (< (point) end)) (eobp)) (forward-char 1)
+                (setq count (+ count (abs (skip-chars-forward "\n" end))))))
       (when (bolp) (setq count (1+ count)))
-      (when (interactive-p) (message "%s" count))
+      (when (and py-debug-p (interactive-p)) (message "%s" count))
       count)))
 
 (defun py-which-function ()
