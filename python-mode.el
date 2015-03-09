@@ -10658,43 +10658,50 @@ of the first definition found."
   "Start an Python interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python"))
-
-(defun ipython (&optional argprompt)
-  "Start an IPython interpreter.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "ipython"))
 
 (defun python2 (&optional argprompt)
   "Start an Python2 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python2"))
-
-(defun jython (&optional argprompt)
-  "Start an Jython interpreter.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "jython"))
 
 (defun python3 (&optional argprompt)
   "Start an Python3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python3"))
 
-(defun bpython (&optional argprompt)
-  "Start an Bpython interpreter.
+(defun ipython (&optional argprompt)
+  "Start an IPython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "bpython"))
+  (interactive "P")
+  (py-shell argprompt nil "ipython"))
+
+(defun ipython2.7 (&optional argprompt)
+  "Start an IPython2.7 interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "ipython2.7"))
+
+(defun ipython3 (&optional argprompt)
+  "Start an IPython3 interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "ipython3"))
+
+(defun jython (&optional argprompt)
+  "Start an Jython interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "jython"))
 
 ;; dedicated
 (defun python-dedicated (&optional argprompt switch)
@@ -10702,48 +10709,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python")))
-
-(defun ipython-dedicated (&optional argprompt switch)
-  "Start an unique IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "ipython")))
 
 (defun python2-dedicated (&optional argprompt switch)
   "Start an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python2")))
-
-(defun jython-dedicated (&optional argprompt switch)
-  "Start an unique Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "jython")))
 
 (defun python3-dedicated (&optional argprompt switch)
   "Start an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python3")))
 
-(defun bpython-dedicated (&optional argprompt switch)
-  "Start an unique Bpython interpreter in another window.
+(defun ipython-dedicated (&optional argprompt switch)
+  "Start an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "bpython")))
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython")))
+
+(defun ipython2.7-dedicated (&optional argprompt switch)
+  "Start an unique IPython2.7 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython2.7")))
+
+(defun ipython3-dedicated (&optional argprompt switch)
+  "Start an unique IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython3")))
+
+(defun jython-dedicated (&optional argprompt switch)
+  "Start an unique Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "jython")))
 
 ;; switch
 (defun python-switch (&optional argprompt)
@@ -10751,48 +10766,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python")))
-
-(defun ipython-switch (&optional argprompt)
-  "Switch to IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "ipython")))
 
 (defun python2-switch (&optional argprompt)
   "Switch to Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python2")))
-
-(defun jython-switch (&optional argprompt)
-  "Switch to Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "jython")))
 
 (defun python3-switch (&optional argprompt)
   "Switch to Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python3")))
 
-(defun bpython-switch (&optional argprompt)
-  "Switch to Bpython interpreter in another window.
+(defun ipython-switch (&optional argprompt)
+  "Switch to IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "bpython")))
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython")))
+
+(defun ipython2.7-switch (&optional argprompt)
+  "Switch to IPython2.7 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython2.7")))
+
+(defun ipython3-switch (&optional argprompt)
+  "Switch to IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython3")))
+
+(defun jython-switch (&optional argprompt)
+  "Switch to Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "jython")))
 
 ;; no-switch
 (defun python-no-switch (&optional argprompt)
@@ -10800,48 +10823,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python")))
-
-(defun ipython-no-switch (&optional argprompt)
-  "Open an IPython interpreter in another window, but do not switch to it.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "ipython")))
 
 (defun python2-no-switch (&optional argprompt)
   "Open an Python2 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python2")))
-
-(defun jython-no-switch (&optional argprompt)
-  "Open an Jython interpreter in another window, but do not switch to it.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "jython")))
 
 (defun python3-no-switch (&optional argprompt)
   "Open an Python3 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python3")))
 
-(defun bpython-no-switch (&optional argprompt)
-  "Open an Bpython interpreter in another window, but do not switch to it.
+(defun ipython-no-switch (&optional argprompt)
+  "Open an IPython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "bpython")))
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython")))
+
+(defun ipython2.7-no-switch (&optional argprompt)
+  "Open an IPython2.7 interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython2.7")))
+
+(defun ipython3-no-switch (&optional argprompt)
+  "Open an IPython3 interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython3")))
+
+(defun jython-no-switch (&optional argprompt)
+  "Open an Jython interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "jython")))
 
 ;; dedicated switch
 (defalias 'python-dedicated-switch 'python-switch-dedicated)
@@ -10850,19 +10881,9 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python")))
-
-(defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
-(defun ipython-switch-dedicated (&optional argprompt)
-  "Switch to an unique IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "ipython")))
 
 (defalias 'python2-dedicated-switch 'python2-switch-dedicated)
 (defun python2-switch-dedicated (&optional argprompt)
@@ -10870,19 +10891,9 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python2")))
-
-(defalias 'jython-dedicated-switch 'jython-switch-dedicated)
-(defun jython-switch-dedicated (&optional argprompt)
-  "Switch to an unique Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "jython")))
 
 (defalias 'python3-dedicated-switch 'python3-switch-dedicated)
 (defun python3-switch-dedicated (&optional argprompt)
@@ -10890,36 +10901,49 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python3")))
 
-(defalias 'bpython-dedicated-switch 'bpython-switch-dedicated)
-(defun bpython-switch-dedicated (&optional argprompt)
-  "Switch to an unique Bpython interpreter in another window.
+(defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
+(defun ipython-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "bpython")))
+    (py-shell argprompt t "ipython")))
 
+(defalias 'ipython2.7-dedicated-switch 'ipython2.7-switch-dedicated)
+(defun ipython2.7-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython2.7 interpreter in another window.
 
-(defalias 'Python 'python)
-(defalias 'pyhotn 'python)
-(defalias 'pyhton 'python)
-(defalias 'pyton 'python)
-(defalias 'pyt 'python)
-(defalias 'Python2 'python2)
-(defalias 'Python3 'python3)
-(defalias 'IPython 'ipython)
-(defalias 'Ipython 'ipython)
-(defalias 'IPyton 'ipython)
-(defalias 'Ipyton 'ipython)
-(defalias 'ipyton 'ipython)
-(defalias 'ipyhton 'ipython)
-(defalias 'ipy 'ipython)
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "ipython2.7")))
 
+(defalias 'ipython3-dedicated-switch 'ipython3-switch-dedicated)
+(defun ipython3-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "ipython3")))
+
+(defalias 'jython-dedicated-switch 'jython-switch-dedicated)
+(defun jython-switch-dedicated (&optional argprompt)
+  "Switch to an unique Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "jython")))
 
 ;; python-components-electric
 (defun py-electric-colon (arg)
@@ -26975,6 +26999,48 @@ Returns a list, whose car is beg, cdr - end."
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
+;; from gud.el
+;; (defun pdb (command-line)
+;;   "Run pdb on program FILE in buffer `*gud-FILE*'.
+;; The directory containing FILE becomes the initial working directory
+;; and source-file directory for your debugger."
+;;   (interactive
+;;    (list (gud-query-cmdline 'pdb)))
+
+(defun py--pdb-versioned ()
+  "Guess existing pdb version from py-shell-name
+
+Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
+  (interactive)
+  (let ((erg (when (string-match "[23]" py-shell-name)
+	       ;; versions-part
+	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
+    (if erg
+      (cond ((executable-find (concat "pdb" erg))
+	     (concat "pdb" erg))
+	    ((and (string-match "\\." erg)
+		  (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+	     (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+      "pdb")))
+
+(defun py-pdb (command-line)
+  "Run pdb on program FILE in buffer `*gud-FILE*'.
+The directory containing FILE becomes the initial working directory
+and source-file directory for your debugger.
+
+At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
+
+lp:963253"
+  (interactive
+   (list (gud-query-cmdline
+	  (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+	      (car (read-from-string py-python-ms-pdb-command))
+	    ;; sys.version_info[0]
+	    (car (read-from-string (py--pdb-version)))) "asdf")))
+  (pdb command-line (buffer-file-name)))
+
+;; /usr/lib/python2.7/pdb.py eyp.py
+
 (defalias 'py-forward-block 'py-end-of-block)
 (defalias 'py-forward-block-or-clause 'py-end-of-block-or-clause)
 (defalias 'py-forward-class 'py-end-of-class)
@@ -26998,6 +27064,18 @@ Returns a list, whose car is beg, cdr - end."
 (defalias 'py-goto-beyond-block 'py-end-of-block-bol)
 (defalias 'py-goto-beyond-final-line 'py-end-of-statement-bol)
 (defalias 'py-kill-minor-expression 'py-kill-partial-expression)
+
+(defalias 'Python 'python)
+(defalias 'pyhotn 'python)
+(defalias 'pyhton 'python)
+(defalias 'pyt 'python)
+(defalias 'Python2 'python2)
+(defalias 'Python3 'python3)
+(defalias 'IPython 'ipython)
+(defalias 'Ipython 'ipython)
+(defalias 'iyp 'ipython)
+(defalias 'ipy 'ipython)
+
 
 ;; python-components-foot
 
