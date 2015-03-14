@@ -1,4 +1,3 @@
-
 ;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
@@ -269,7 +268,7 @@ Call M-x `customize-face' in order to have a visible effect. "
   :type 'boolean
   :group 'python-mode)
 
-(defcustom empty-comment-line-separates-paragraph-p t
+(defcustom py-empty-comment-line-separates-paragraph-p t
   "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is  non-nil"
@@ -20261,12 +20260,12 @@ Default is nil. Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-verbose-p]
 
                     ["Empty comment line separates paragraph "
-                     (setq empty-comment-line-separates-paragraph-p
-                           (not empty-comment-line-separates-paragraph-p))
+                     (setq py-empty-comment-line-separates-paragraph-p
+                           (not py-empty-comment-line-separates-paragraph-p))
                      :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-                     :style toggle :selected empty-comment-line-separates-paragraph-p]
+                     :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
                     ["Org cycle "
                      (setq py-org-cycle-p
@@ -23614,12 +23613,12 @@ Default is nil. Use `M-x customize-variable' to set it permanently"
 		 :style toggle :selected py-verbose-p]
 
 		["Empty comment line separates paragraph "
-		 (setq empty-comment-line-separates-paragraph-p
-		       (not empty-comment-line-separates-paragraph-p))
+		 (setq py-empty-comment-line-separates-paragraph-p
+		       (not py-empty-comment-line-separates-paragraph-p))
 		 :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-		 :style toggle :selected empty-comment-line-separates-paragraph-p]
+		 :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
 		["Org cycle "
 		 (setq py-org-cycle-p
@@ -27131,7 +27130,7 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start) "#")
-  (if empty-comment-line-separates-paragraph-p
+  (if py-empty-comment-line-separates-paragraph-p
       (progn
         (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
         (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
