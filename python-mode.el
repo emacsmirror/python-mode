@@ -16750,11 +16750,10 @@ Output-buffer is not in comint-mode "
 
 ;; python-components-auto-fill
 
-(defvar auto-fill-mode-orig (auto-fill-mode)
+(defvar py-auto-fill-mode-orig (auto-fill-mode)
   "Store the original state of auto-fill-mode. ")
 
-(defvar fill-column-orig fill-column
-  "Store the original value of fill-column. ")
+;; py-fill-column-orig  already defined
 
 (defun py-comment-auto-fill ()
   "Toggles comment-auto-fill mode"
