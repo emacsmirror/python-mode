@@ -8966,23 +8966,19 @@ Otherwise return resuslt from `executable-find' "
 	 ;; file to debug
          (second (cond ((not (ignore-errors (buffer-file-name)))
 			(error "%s" "Buffer must be saved first."))
-		       ((not (string-match ".+.py$" (buffer-file-name)))
-			(error "command expects a file with suffix \".py\""))
-		     ((string-match ".+.py$" (buffer-file-name))
-                      (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history)))))
-         (erg (concat first " " second)))
-    (push erg gud-pdb-history)))
+		       ((buffer-file-name)
+			(buffer-file-name))
+		       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
+         (erg (and first second (concat first " " second))))
+    (when erg
+      (push erg gud-pdb-history))))
 
-;; (defadvice pdb (before init-pdb-history activate)
-;;   (py-update-gud-pdb-history))
-;;
-;; (ad-activate 'pdb)
-;; (ad-update 'pdb)
+(defadvice pdb (before gud-query-cmdline activate)
+  "Provide a better default command line when called interactively."
+  (interactive
+   (list (gud-query-cmdline py-pdb-path
+                            (file-name-nondirectory buffer-file-name)))))
 
-;; (defun py-pdb (command-line &optional file)
-;;   "Run pdb on program FILE in buffer `*gud-FILE*'.
-;; The directory containing FILE becomes the initial working directory
-;; and source-file directory for your debugger.
 
 ;; `py-pdb-executable', when set, is used
 
@@ -25238,7 +25234,7 @@ Start a new process if necessary. "
       (setq ele (cdr ele)))
     (if erg
         (message "%s" erg)
-      (message "%s" "pdb.py not found, please customize `pdb-path'"))
+      (message "%s" "pdb.py not found, please customize `py-pdb-path'"))
     erg))
 
 ;;  credits to python.el
@@ -25345,12 +25341,6 @@ as it leaves your system default unchanged."
   (setq py-use-local-default (not py-use-local-default))
   (when (interactive-p) (message "py-use-local-default set to %s" py-use-local-default))
   py-use-local-default)
-
-(defadvice pdb (before gud-query-cmdline activate)
-  "Provide a better default command line when called interactively."
-  (interactive
-   (list (gud-query-cmdline pdb-path
-                            (file-name-nondirectory buffer-file-name)))))
 
 (defalias 'py-hungry-delete-forward 'c-hungry-delete-forward)
 (defalias 'py-hungry-delete-backwards 'c-hungry-delete-backwards)
