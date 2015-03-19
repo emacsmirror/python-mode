@@ -1465,28 +1465,6 @@ Default /usr/bin/jython"
   :tag "py-jython-command-args"
   :group 'python-mode)
 
-(defcustom py-bpython-command
-  (if (eq system-type 'windows-nt)
-      ;; not known to work at windows
-      ""
-    "/usr/bin/bpython")
-
-  "A PATH/TO/EXECUTABLE or default value `M-x Bpython RET' may look for, if no Bpython-shell is specified by command.
-
-Not known to work at windows
-Default /usr/bin/bpython"
-
-  :type 'string
-  :tag "py-bpython-command
-"
-  :group 'python-mode)
-
-(defcustom py-bpython-command-args '("")
-  "List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
-  :tag "py-bpython-command-args"
-  :group 'python-mode)
-
 (defcustom py-shell-toggle-1 py-python2-command
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
@@ -2734,8 +2712,6 @@ Returns versioned string, nil if nothing appropriate found "
         ;; if a number if part of python name, assume it's the version
         (setq version (substring-no-properties cmd treffer))
       (setq erg (shell-command-to-string (concat cmd " --version")))
-      ;; Result: "bpython version 0.9.7.1 on top of Python 2.7\n(C) 2008-2010 Bob Farrell, Andreas Stuehrk et al. See AUTHORS for detail.\n"
-
       (setq version (cond ((string-match (concat "\\(on top of Python \\)" "\\([0-9]\\.[0-9]+\\)") erg)
                            (match-string-no-properties 2 erg))
                           ((string-match "\\([0-9]\\.[0-9]+\\)" erg)
@@ -16303,38 +16279,6 @@ Uses a dedicated shell.
 Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-nil\""
   (interactive "fFile: ")
   (py--execute-prepare filename "python3.3" 'dedicated 'switch nil nil t))
-
-(defun py-execute-file-bpython (&optional filename)
-  "Send file to a Bpython interpreter."
-  (interactive "fFile: ")
-  (py--execute-prepare filename "bpython" nil nil nil nil t))
-
-(defun py-execute-file-bpython-switch (&optional filename)
-  "Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-nil\""
-  (interactive "fFile: ")
-  (py--execute-prepare filename "bpython" nil 'switch nil nil t))
-
-(defun py-execute-file-bpython-no-switch (&optional filename)
-  "Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"nil\""
-  (interactive "fFile: ")
-  (py--execute-prepare filename "bpython" nil 'no-switch nil nil t))
-
-(defun py-execute-file-bpython-dedicated (&optional filename)
-  "Send file to a Bpython interpreter.
-
-Uses a dedicated shell."
-  (interactive "fFile: ")
-  (py--execute-prepare filename "bpython" 'dedicated nil nil nil t))
-
-(defun py-execute-file-bpython-dedicated-switch (&optional filename)
-  "Send file to a Bpython interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-nil\""
-  (interactive "fFile: ")
-  (py--execute-prepare filename "bpython" 'dedicated 'switch nil nil t))
 
 ;; python-components-comment
 
