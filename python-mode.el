@@ -18182,9 +18182,6 @@ Send top-level form at point to a Python interpreter. "]
                     :help "Execute statement through a Python3.3 interpreter.
         With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                   ["py-execute-statement-bpython" py-execute-statement-bpython
-                    :help "Execute statement through a Bpython interpreter.
-        With \\[universal-argument] use an unique Bpython interpreter. "]
                    ("Dedicated"
 
 		    ["Execute statement dedicated" py-execute-statement-dedicated
@@ -18220,9 +18217,6 @@ Optional \\[universal-argument] forces switch to output buffer, ignores `py-swit
 		     :help "Execute statement through a unique Python3.3 interpreter.
 Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 
-		    ["py-execute-statement-bpython-dedicated" py-execute-statement-bpython-dedicated
-		     :help "Execute statement through a unique Bpython interpreter.
-Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 		    )
 
 		   ("Ignoring defaults "
@@ -18257,12 +18251,7 @@ With \\[universal-argument] use an unique Jython interpreter. "]
                      :help "Execute statement through a Python3.3 interpreter.
 With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                    ["py-execute-statement-bpython-switch" py-execute-statement-bpython-switch
-                     :help "Execute statement through a Bpython interpreter.
-With \\[universal-argument] use an unique Bpython interpreter. "]
-
                     ;; dedicated-switch
-
                     ["py-execute-statement-python-dedicated-switch" py-execute-statement-python-dedicated-switch
                      :help "Execute statement through a unique Python interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
@@ -18291,9 +18280,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                      :help "Execute statement through a unique Python3.3 interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
 
-                    ["py-execute-statement-bpython-dedicated-switch" py-execute-statement-bpython-dedicated-switch
-                     :help "Execute statement through a unique Bpython interpreter.
-Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     ))
 
                   ;; block
@@ -18328,9 +18314,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     :help "Execute block through a Python3.3 interpreter.
         With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                   ["py-execute-block-bpython" py-execute-block-bpython
-                    :help "Execute block through a Bpython interpreter.
-        With \\[universal-argument] use an unique Bpython interpreter. "]
                    ("Dedicated"
 
 		    ["Execute block dedicated" py-execute-block-dedicated
@@ -18366,9 +18349,6 @@ Optional \\[universal-argument] forces switch to output buffer, ignores `py-swit
 		     :help "Execute block through a unique Python3.3 interpreter.
 Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 
-		    ["py-execute-block-bpython-dedicated" py-execute-block-bpython-dedicated
-		     :help "Execute block through a unique Bpython interpreter.
-Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 		    )
 
                    ("Ignoring defaults "
@@ -18403,11 +18383,7 @@ With \\[universal-argument] use an unique Jython interpreter. "]
                      :help "Execute block through a Python3.3 interpreter.
 With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                    ["py-execute-block-bpython-switch" py-execute-block-bpython-switch
-                     :help "Execute block through a Bpython interpreter.
-With \\[universal-argument] use an unique Bpython interpreter. "]
                     ;; dedicated-switch
-
                     ["py-execute-block-python-dedicated-switch" py-execute-block-python-dedicated-switch
                      :help "Execute block through a unique Python interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
@@ -18436,9 +18412,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                      :help "Execute block through a unique Python3.3 interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
 
-                    ["py-execute-block-bpython-dedicated-switch" py-execute-block-bpython-dedicated-switch
-                     :help "Execute block through a unique Bpython interpreter.
-Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     ))
 
                   ;; def
@@ -18473,9 +18446,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     :help "Execute def through a Python3.3 interpreter.
         With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                   ["py-execute-def-bpython" py-execute-def-bpython
-                    :help "Execute def through a Bpython interpreter.
-        With \\[universal-argument] use an unique Bpython interpreter. "]
                    ("Dedicated"
 
 		    ["Execute def dedicated" py-execute-def-dedicated
@@ -18511,9 +18481,6 @@ Optional \\[universal-argument] forces switch to output buffer, ignores `py-swit
 		     :help "Execute def through a unique Python3.3 interpreter.
 Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 
-		    ["py-execute-def-bpython-dedicated" py-execute-def-bpython-dedicated
-		     :help "Execute def through a unique Bpython interpreter.
-Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 		   )
 
                    ("Ignoring defaults "
@@ -18548,11 +18515,7 @@ With \\[universal-argument] use an unique Jython interpreter. "]
                      :help "Execute def through a Python3.3 interpreter.
 With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                    ["py-execute-def-bpython-switch" py-execute-def-bpython-switch
-                     :help "Execute def through a Bpython interpreter.
-With \\[universal-argument] use an unique Bpython interpreter. "]
                     ;; dedicated-switch
-
                     ["py-execute-def-python-dedicated-switch" py-execute-def-python-dedicated-switch
                      :help "Execute def through a unique Python interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
@@ -18581,9 +18544,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                      :help "Execute def through a unique Python3.3 interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
 
-                    ["py-execute-def-bpython-dedicated-switch" py-execute-def-bpython-dedicated-switch
-                     :help "Execute def through a unique Bpython interpreter.
-Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     ))
 
                   ;; class
@@ -18623,9 +18583,6 @@ Send class at point to a Python interpreter\. "]
                     :help "Execute class through a Python3.3 interpreter.
         With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                   ["py-execute-class-bpython" py-execute-class-bpython
-                    :help "Execute class through a Bpython interpreter.
-        With \\[universal-argument] use an unique Bpython interpreter. "]
                    ("Dedicated"
 
 		    ["py-execute-class-python-dedicated" py-execute-class-python-dedicated
@@ -18656,9 +18613,6 @@ Optional \\[universal-argument] forces switch to output buffer, ignores `py-swit
 		     :help "Execute class through a unique Python3.3 interpreter.
 Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 
-		    ["py-execute-class-bpython-dedicated" py-execute-class-bpython-dedicated
-		     :help "Execute class through a unique Bpython interpreter.
-Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 		    )
 
 		   ("Ignoring defaults "
@@ -18693,9 +18647,6 @@ With \\[universal-argument] use an unique Jython interpreter. "]
                      :help "Execute class through a Python3.3 interpreter.
 With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                    ["py-execute-class-bpython-switch" py-execute-class-bpython-switch
-                     :help "Execute class through a Bpython interpreter.
-With \\[universal-argument] use an unique Bpython interpreter. "]
                     ;; dedicated-switch
 
                     ["py-execute-class-python-dedicated-switch" py-execute-class-python-dedicated-switch
@@ -18726,9 +18677,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                      :help "Execute class through a unique Python3.3 interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
 
-                    ["py-execute-class-bpython-dedicated-switch" py-execute-class-bpython-dedicated-switch
-                     :help "Execute class through a unique Bpython interpreter.
-Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     ))
 
                   ;; region
@@ -18763,9 +18711,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     :help "Execute region through a Python3.3 interpreter.
         With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                   ["py-execute-region-bpython" py-execute-region-bpython
-                    :help "Execute region through a Bpython interpreter.
-        With \\[universal-argument] use an unique Bpython interpreter. "]
                    ("Dedicated"
 
 		    ["Execute region dedicated" py-execute-region-dedicated
@@ -18801,9 +18746,6 @@ Optional \\[universal-argument] forces switch to output buffer, ignores `py-swit
 		     :help "Execute region through a unique Python3.3 interpreter.
 Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 
-		    ["py-execute-region-bpython-dedicated" py-execute-region-bpython-dedicated
-		     :help "Execute region through a unique Bpython interpreter.
-Optional \\[universal-argument] forces switch to output buffer, ignores `py-switch-buffers-on-execute-p'. "]
 		    )
 
 		   ("Ignoring defaults "
@@ -18838,9 +18780,6 @@ With \\[universal-argument] use an unique Jython interpreter. "]
                      :help "Execute region through a Python3.3 interpreter.
 With \\[universal-argument] use an unique Python3.3 interpreter. "]
 
-                    ["py-execute-region-bpython-switch" py-execute-region-bpython-switch
-                     :help "Execute region through a Bpython interpreter.
-With \\[universal-argument] use an unique Bpython interpreter. "]
                     ;; dedicated-switch
 
                     ["py-execute-region-python-dedicated-switch" py-execute-region-python-dedicated-switch
@@ -18871,9 +18810,6 @@ Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                      :help "Execute region through a unique Python3.3 interpreter.
 Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
 
-                    ["py-execute-region-bpython-dedicated-switch" py-execute-region-bpython-dedicated-switch
-                     :help "Execute region through a unique Bpython interpreter.
-Switch to output buffer; ignores `py-switch-buffers-on-execute-p' "]
                     ))
 
                   ;; file
@@ -18911,10 +18847,6 @@ Send file to a Jython interpreter. "]
                    ["Execute file python3.3" py-execute-file-python3.3
                     :help " `py-execute-file-python3.3'
 Send file to a Python3.3 interpreter. "]
-
-                   ["Execute file bpython" py-execute-file-bpython
-                    :help " `py-execute-file-bpython'
-Send file to a Bpython interpreter. "]
 
 		   ("Dedicated"
 		    ["Execute file dedicated" py-execute-file-dedicated
@@ -19087,28 +19019,7 @@ Send file to a Python3.3 interpreter.
 Uses a dedicated shell.
 Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
 
-                    ["Execute file bpython switch" py-execute-file-bpython-switch
-                     :help " `py-execute-file-bpython-switch'
-Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file bpython no-switch" py-execute-file-bpython-no-switch
-                     :help " `py-execute-file-bpython-no-switch'
-Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-
-                    ["Execute file bpython dedicated" py-execute-file-bpython-dedicated
-                     :help " `py-execute-file-bpython-dedicated'
-Send file to a Bpython interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file bpython dedicated switch" py-execute-file-bpython-dedicated-switch
-                     :help " `py-execute-file-bpython-dedicated-switch'
-Send file to a Bpython interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]))
+		    ))
 
                   ["Execute minor block" py-execute-minor-block
                    :help " `py-execute-minor-block'
