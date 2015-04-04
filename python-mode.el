@@ -10198,9 +10198,10 @@ With \\[universal argument] just indent.
   "Dedent line and move one line forward. "
   (interactive "*p")
   (py-dedent arg)
-  (forward-line 1)
-  (end-of-line)
-  (skip-chars-backward " \t\r\n\f"))
+  (if (eobp)
+      (newline)
+    (forward-line 1))
+  (end-of-line))
 
 (defun py-dedent (&optional arg)
   "Dedent line according to `py-indent-offset'.
@@ -10211,6 +10212,7 @@ Return indentation reached, if dedent done, nil otherwise.
 
 Affected by `py-dedent-keep-relative-column'. "
   (interactive "*p")
+  (or arg (setq arg 1))
   (let ((orig (copy-marker (point)))
         erg)
     (dotimes (i arg)
