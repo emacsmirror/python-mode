@@ -7863,7 +7863,7 @@ Returns position where output starts. "
       ;; (when py-debug-p (switch-to-buffer (current-buffer)))
       (goto-char (point-max))
       (setq orig (point))
-      (comint-send-string proc cmd)
+      (py-send-string cmd proc)
       (unless py-ignore-result-p
 	(setq erg (py--postprocess-comint buffer origline windows-config py-exception-buffer orig))
 	(if py-error
