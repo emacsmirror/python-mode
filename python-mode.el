@@ -61,6 +61,7 @@
 
 ;;; Code:
 
+;; (when (featurep 'python) (unload-feature 'python t))
 (unless (boundp 'py-install-directory)
     (message (concat "Don't see where py-install-directory is set, see README.org, taking default-directory: " default-directory))
     (defvar py-install-directory default-directory))
