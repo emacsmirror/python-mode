@@ -1113,9 +1113,9 @@ variable section, e.g.:
   :tag "py-pychecker-command"
   :group 'python-mode)
 
-(defcustom py-pychecker-command-args '("--stdlib")
-  "List of string arguments to be passed to pychecker."
-  :type '(repeat string)
+(defcustom py-pychecker-command-args "--stdlib"
+  "String arguments to be passed to pychecker."
+  :type 'string
   :tag "py-pychecker-command-args"
   :group 'python-mode)
 
@@ -1125,11 +1125,11 @@ variable section, e.g.:
   :tag "py-pyflakes-command"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command-args '("")
-  "List of string arguments to be passed to pyflakes.
+(defcustom py-pyflakes-command-args ""
+  "String arguments to be passed to pyflakes.
 
 Default is \"\""
-  :type '(repeat string)
+  :type 'string
   :tag "py-pyflakes-command-args"
   :group 'python-mode)
 
@@ -1139,11 +1139,11 @@ Default is \"\""
   :tag "py-pep8-command"
   :group 'python-mode)
 
-(defcustom py-pep8-command-args '("")
-  "List of string arguments to be passed to pylint.
+(defcustom py-pep8-command-args ""
+  "String arguments to be passed to pylint.
 
 Default is \"\" "
-  :type '(repeat string)
+  :type 'string
   :tag "py-pep8-command-args"
   :group 'python-mode)
 
@@ -1153,11 +1153,11 @@ Default is \"\" "
   :tag "py-pyflakespep8-command"
   :group 'python-mode)
 
-(defcustom py-pyflakespep8-command-args '("")
-  "List of string arguments to be passed to pyflakespep8.
+(defcustom py-pyflakespep8-command-args ""
+  "string arguments to be passed to pyflakespep8.
 
 Default is \"\" "
-  :type '(repeat string)
+  :type 'string
   :tag "py-pyflakespep8-command-args"
   :group 'python-mode)
 
@@ -1167,8 +1167,8 @@ Default is \"\" "
   :tag "py-pylint-command"
   :group 'python-mode)
 
-(defcustom py-pylint-command-args '("--errors-only")
-  "List of string arguments to be passed to pylint.
+(defcustom py-pylint-command-args "--errors-only"
+  "String arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
   :type '(repeat string)
@@ -1351,9 +1351,9 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python-command-args '("-i")
-  "List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
+(defcustom py-python-command-args "-i"
+  "String arguments to be used when starting a Python shell."
+  :type 'string
   :tag "py-python-command-args"
   :group 'python-mode)
 
@@ -1376,8 +1376,8 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python2-command-args '("-i")
-  "List of string arguments to be used when starting a Python shell."
+(defcustom py-python2-command-args "-i"
+  "String arguments to be used when starting a Python shell."
   :type '(repeat string)
   :tag "py-python2-command-args"
   :group 'python-mode)
@@ -1402,8 +1402,8 @@ At GNU systems see /usr/bin/python3"
 "
   :group 'python-mode)
 
-(defcustom py-python3-command-args '("-i")
-  "List of string arguments to be used when starting a Python3 shell."
+(defcustom py-python3-command-args "-i"
+  "String arguments to be used when starting a Python3 shell."
   :type '(repeat string)
   :tag "py-python3-command-args"
   :group 'python-mode)
@@ -1431,15 +1431,15 @@ Else /usr/bin/ipython"
 
 (defcustom py-ipython-command-args
   (if (eq system-type 'windows-nt)
-      '("-i" "C:\\Python27\\Scripts\\ipython-script.py")
-    '("--pylab" "--automagic"))
-  "List of string arguments to be used when starting a Python shell.
+      "-i C:\\Python27\\Scripts\\ipython-script.py"
+    "--pylab --automagic")
+  "String arguments to be used when starting a Python shell.
 At Windows make sure ipython-script.py is PATH. Also setting PATH/TO/SCRIPT here should work, for example;
 C:\\Python27\\Scripts\\ipython-script.py
 With Anaconda the following is known to work:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\ipython-script-py\"
 "
-  :type '(repeat string)
+  :type 'string
   :tag "py-ipython-command-args
 "
   :group 'python-mode)
@@ -1459,9 +1459,9 @@ Default /usr/bin/jython"
 "
   :group 'python-mode)
 
-(defcustom py-jython-command-args '("")
-  "List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
+(defcustom py-jython-command-args ""
+  "String arguments to be used when starting a Python shell."
+  :type 'string
   :tag "py-jython-command-args"
   :group 'python-mode)
 
@@ -1611,6 +1611,13 @@ without the user's realization (e.g. to perform completion)."
 
   :type 'string
   :tag "py-shell-local-path"
+  :group 'python-mode)
+
+(defcustom py-python-edit-version "python3"
+  "Fontify code in buffer according to Python version. "
+
+  :type 'string
+  :tag "py-python-edit-version"
   :group 'python-mode)
 
 (defcustom py-ipython-execute-delay 0.3
@@ -2972,7 +2979,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 
 (defun py--escape-open-paren-col1 (start end)
   (goto-char start)
-  (switch-to-buffer (current-buffer)) 
+  ;; (switch-to-buffer (current-buffer))
   (while (re-search-forward "^(" end t 1)
     (insert "\\")
     (end-of-line)))
@@ -3142,7 +3149,7 @@ Returns char found. "
 		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
 		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
 		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
-		      "execfile" "file" "filter" "float" "format" "frozenset"
+		      "execfile" "filter" "float" "format" "frozenset"
 		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
 		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
 		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
@@ -7383,7 +7390,7 @@ Receives a buffer-name as argument"
 
 (defun py--create-new-shell ()
   (with-current-buffer
-      (apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote (car args)))
+      (apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
     ;; (py--shell-make-comint executable py-buffer-name args)
     (let ((proc (get-buffer-process (current-buffer))))
       (if (string-match "^i" (process-name proc))
@@ -8864,8 +8871,8 @@ named for funcname or define a function funcname."
 
 (defun py-execute-region-pdb (beg end)
   (interactive "r")
-  (let ((py-python-command-args (list "-i" "-m" "pdb")))
-    (py-execute-region beg end)))
+  (let ((py-python-command-args "-i -m pdb")))
+    (py-execute-region beg end))
 
 (defun py-pdb-execute-statement ()
   (interactive)
@@ -25659,7 +25666,10 @@ See available customizations listed in files variables-python-mode at directory 
 	 (if (string-match "python3" py-buffer-name)
 	     (font-lock-add-keywords 'python-mode
 				     '(("\\<print\\>" . 'py-builtins-face)))
-	   '(("\\<print\\>" . 'font-lock-keyword-face))))
+	   (font-lock-add-keywords 'python-mode
+				   '(("\\<print\\>" . 'font-lock-keyword-face)))
+	   (font-lock-add-keywords 'python-mode
+				   '(("\\<file\\>" . 'py-builtins-face)))))
 	((string-match "python3" (py-choose-shell))
 	 (font-lock-add-keywords 'python-mode
 				 '(("\\<print\\>" . 'py-builtins-face))))
