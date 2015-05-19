@@ -1616,7 +1616,7 @@ without the user's realization (e.g. to perform completion)."
 (defcustom py-python-edit-version ""
   "When not empty, fontify according to Python version specified.
 
-Default is the empty string
+Default is the empty string, a useful value \"python3\" maybe.
 
 When empty, version is guessed via `py-choose-shell'. "
 
@@ -7393,19 +7393,20 @@ Receives a buffer-name as argument"
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
 (defun py--create-new-shell ()
-  (with-current-buffer
-      (apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
-    ;; (py--shell-make-comint executable py-buffer-name args)
-    (let ((proc (get-buffer-process (current-buffer))))
-      (if (string-match "^i" (process-name proc))
-	  (py-ipython-shell-mode)
-	(py-python-shell-mode)))
-    (setq py-output-buffer (current-buffer))
-    (sit-for 0.1 t)
-    (goto-char (point-max))
-    ;; otherwise comint might initialize it with point-min
-    (set-marker comint-last-input-end (point))
-    (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) (current-buffer)))))
+  (let ((buf (current-buffer)))
+    (with-current-buffer
+	(apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
+      ;; (py--shell-make-comint executable py-buffer-name args)
+      (let ((proc (get-buffer-process (current-buffer))))
+	(if (string-match "^i" (process-name proc))
+	    (py-ipython-shell-mode)
+	  (py-python-shell-mode)))
+      (setq py-output-buffer (current-buffer))
+      (sit-for 0.1 t)
+      (goto-char (point-max))
+      ;; otherwise comint might initialize it with point-min
+      (set-marker comint-last-input-end (point))
+      (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) buf)))))
 
 (defun py--determine-local-default ()
   (if (not (string= "" py-shell-local-path))
