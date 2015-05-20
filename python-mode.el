@@ -8045,174 +8045,6 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
         (py-switch-buffers-on-execute-p t))
     (py--execute-buffer-base)))
 
-;;  Specifying shells start
-(defun py-execute-region-python (start end)
-  "Send the region to a common shell calling the python interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python-switch (start end)
-  "Send the region to a common shell calling the python interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base start end "python")))
-
-(defun py-execute-region-python-no-switch (beg end)
-  "Send region at point to Python interpreter.
-
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
-  (interactive "r")
-  (let ((py-shell-name "python")
-        py-switch-buffers-on-execute-p)
-    (py--execute-base beg end)))
-
-(defun py-execute-region-python2 (start end)
-  "Send the region to a common shell calling the python2 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python2"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2-switch (start end)
-  "Send the region to a common shell calling the python2 interpreter.
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python2")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2-no-switch (start end)
-  "Send the region to a common shell calling the python2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let (py-switch-buffers-on-execute-p)
-    (py--execute-base start end "python2")))
-
-(defun py-execute-region-python2.7 (start end)
-  "Send the region to a common shell calling the python2.7 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python2.7"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2.7-switch (start end)
-  "Send the region to a common shell calling the python2.7 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python2.7")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2.7-no-switch (start end)
-  "Send the region to a common shell calling the python2.7 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python2.7")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3 (start end)
-  "Send the region to a common shell calling the python3 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python3"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3-switch (start end)
-  "Send the region to a common shell calling the python3 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python3")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3-no-switch (start end)
-  "Send the region to a common shell calling the python3 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python3")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2 (start end)
-  "Send the region to a common shell calling the python3.2 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python3.2"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2-switch (start end)
-  "Send the region to a common shell calling the python3.2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python3.2")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2-no-switch (start end)
-  "Send the region to a common shell calling the python3.2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python3.2")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython (start end)
-  "Send the region to a common shell calling the ipython interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "ipython"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython-switch (start end)
-  "Send the region to a common shell calling the ipython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "ipython")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython-no-switch (start end)
-  "Send the region to a common shell calling the ipython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "ipython")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython (start end)
-  "Send the region to a common shell calling the jython interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "jython"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython-switch (start end)
-  "Send the region to a common shell calling the jython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "jython")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython-no-switch (start end)
-  "Send the region to a common shell calling the jython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "jython")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-;;  Specifying shells end
-
 ;;  Fixme: Try to define the function or class within the relevant
 ;;  module, not just at top level.
 (defun py-execute-defun ()
@@ -8421,6 +8253,192 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (defalias 'py-shell-command-on-region 'py-execute-region)
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
+
+;; python-components-execute-region
+
+(defun py-execute-region (beg end)
+  "Execute region. " 
+  (interactive "r")
+  (py--execute-base beg end))
+
+(defun py-execute-region-switch (beg end)
+  "Execute region switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-no-switch (beg end)
+  "Execute region no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-dedicated (beg end)
+  "Execute region dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-python (beg end)
+  "Execute region Python. " 
+  (interactive "r")
+  (py--execute-base beg end "python"))
+
+(defun py-execute-region-python-switch (beg end)
+  "Execute region Python switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python-no-switch (beg end)
+  "Execute region Python no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python-dedicated (beg end)
+  "Execute region Python dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python2 (beg end)
+  "Execute region Python2. " 
+  (interactive "r")
+  (py--execute-base beg end "python2"))
+
+(defun py-execute-region-python2-switch (beg end)
+  "Execute region Python2 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python2-no-switch (beg end)
+  "Execute region Python2 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python2-dedicated (beg end)
+  "Execute region Python2 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python3 (beg end)
+  "Execute region Python3. " 
+  (interactive "r")
+  (py--execute-base beg end "python3"))
+
+(defun py-execute-region-python3-switch (beg end)
+  "Execute region Python3 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-python3-no-switch (beg end)
+  "Execute region Python3 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-python3-dedicated (beg end)
+  "Execute region Python3 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-ipython (beg end)
+  "Execute region IPython. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython"))
+
+(defun py-execute-region-ipython-switch (beg end)
+  "Execute region IPython switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython-no-switch (beg end)
+  "Execute region IPython no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython-dedicated (beg end)
+  "Execute region IPython dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython2.7 (beg end)
+  "Execute region IPython2.7. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython2.7"))
+
+(defun py-execute-region-ipython2.7-switch (beg end)
+  "Execute region IPython2.7 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython2.7-no-switch (beg end)
+  "Execute region IPython2.7 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython2.7-dedicated (beg end)
+  "Execute region IPython2.7 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython3 (beg end)
+  "Execute region IPython3. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython3"))
+
+(defun py-execute-region-ipython3-switch (beg end)
+  "Execute region IPython3 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-ipython3-no-switch (beg end)
+  "Execute region IPython3 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-ipython3-dedicated (beg end)
+  "Execute region IPython3 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-jython (beg end)
+  "Execute region Jython. " 
+  (interactive "r")
+  (py--execute-base beg end "jython"))
+
+(defun py-execute-region-jython-switch (beg end)
+  "Execute region Jython switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "jython")))
+
+(defun py-execute-region-jython-no-switch (beg end)
+  "Execute region Jython no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "jython")))
+
+(defun py-execute-region-jython-dedicated (beg end)
+  "Execute region Jython dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "jython")))
 
 ;; python-components-send
 (defun py-output-buffer-filter (&optional beg end)
@@ -13062,192 +13080,6 @@ Return position if def-or-class found, nil otherwise "
   "Send clause at point to Python default interpreter. "
   (interactive)
   (py--execute-prepare "clause"))
-
-;; py-execute-region
-
-(defun py-execute-region (beg end)
-  "Execute region. " 
-  (interactive "r")
-  (py--execute-base beg end))
-
-(defun py-execute-region-switch (beg end)
-  "Execute region switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end)))
-
-(defun py-execute-region-no-switch (beg end)
-  "Execute region no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end)))
-
-(defun py-execute-region-dedicated (beg end)
-  "Execute region dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end)))
-
-(defun py-execute-region-python (beg end)
-  "Execute region Python. " 
-  (interactive "r")
-  (py--execute-base beg end "python"))
-
-(defun py-execute-region-python-switch (beg end)
-  "Execute region Python switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "python")))
-
-(defun py-execute-region-python-no-switch (beg end)
-  "Execute region Python no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "python")))
-
-(defun py-execute-region-python-dedicated (beg end)
-  "Execute region Python dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "python")))
-
-(defun py-execute-region-python2 (beg end)
-  "Execute region Python2. " 
-  (interactive "r")
-  (py--execute-base beg end "python2"))
-
-(defun py-execute-region-python2-switch (beg end)
-  "Execute region Python2 switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "python2")))
-
-(defun py-execute-region-python2-no-switch (beg end)
-  "Execute region Python2 no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "python2")))
-
-(defun py-execute-region-python2-dedicated (beg end)
-  "Execute region Python2 dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "python2")))
-
-(defun py-execute-region-python3 (beg end)
-  "Execute region Python3. " 
-  (interactive "r")
-  (py--execute-base beg end "python3"))
-
-(defun py-execute-region-python3-switch (beg end)
-  "Execute region Python3 switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "python3")))
-
-(defun py-execute-region-python3-no-switch (beg end)
-  "Execute region Python3 no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "python3")))
-
-(defun py-execute-region-python3-dedicated (beg end)
-  "Execute region Python3 dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "python3")))
-
-(defun py-execute-region-ipython (beg end)
-  "Execute region IPython. " 
-  (interactive "r")
-  (py--execute-base beg end "ipython"))
-
-(defun py-execute-region-ipython-switch (beg end)
-  "Execute region IPython switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "ipython")))
-
-(defun py-execute-region-ipython-no-switch (beg end)
-  "Execute region IPython no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "ipython")))
-
-(defun py-execute-region-ipython-dedicated (beg end)
-  "Execute region IPython dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "ipython")))
-
-(defun py-execute-region-ipython2.7 (beg end)
-  "Execute region IPython2.7. " 
-  (interactive "r")
-  (py--execute-base beg end "ipython2.7"))
-
-(defun py-execute-region-ipython2.7-switch (beg end)
-  "Execute region IPython2.7 switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "ipython2.7")))
-
-(defun py-execute-region-ipython2.7-no-switch (beg end)
-  "Execute region IPython2.7 no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "ipython2.7")))
-
-(defun py-execute-region-ipython2.7-dedicated (beg end)
-  "Execute region IPython2.7 dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "ipython2.7")))
-
-(defun py-execute-region-ipython3 (beg end)
-  "Execute region IPython3. " 
-  (interactive "r")
-  (py--execute-base beg end "ipython3"))
-
-(defun py-execute-region-ipython3-switch (beg end)
-  "Execute region IPython3 switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "ipython3")))
-
-(defun py-execute-region-ipython3-no-switch (beg end)
-  "Execute region IPython3 no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "ipython3")))
-
-(defun py-execute-region-ipython3-dedicated (beg end)
-  "Execute region IPython3 dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "ipython3")))
-
-(defun py-execute-region-jython (beg end)
-  "Execute region Jython. " 
-  (interactive "r")
-  (py--execute-base beg end "jython"))
-
-(defun py-execute-region-jython-switch (beg end)
-  "Execute region Jython switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base beg end "jython")))
-
-(defun py-execute-region-jython-no-switch (beg end)
-  "Execute region Jython no-switch. " 
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p nil))
-    (py--execute-base beg end "jython")))
-
-(defun py-execute-region-jython-dedicated (beg end)
-  "Execute region Jython dedicated. " 
-  (interactive "r")
-  (let ((py-dedicated-process-p t))
-    (py--execute-base beg end "jython")))
 
 ;; python-extended-executes
 
