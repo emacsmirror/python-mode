@@ -5170,17 +5170,6 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-goto-statement-below ()
-  "Goto beginning of next statement. "
-  (interactive)
-  (let ((orig (point))
-        (erg (py-end-of-statement)))
-    (py-beginning-of-statement)
-    (when (< (point) orig)
-      (goto-char erg)
-      (py-end-of-statement)
-      (py-beginning-of-statement))))
-
 ;;  Decorator
 (defun py-beginning-of-decorator ()
   "Go to the beginning of a decorator.
@@ -5224,8 +5213,6 @@ Returns position if succesful "
           (setq erg (point))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
-
-
 
 ;;  Helper functions
 
@@ -20280,7 +20267,6 @@ Returns position if successful, nil otherwise "
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-(defalias 'py-end-of-top-level-bol 'py-end-of-top-level)
 (defun py-end-of-top-level ()
   "Go to end of top-level form at point.
 
