@@ -2781,7 +2781,7 @@ Returns RES or substring of RES"
     res))
 
 (defalias 'py-which-shell 'py-choose-shell)
-(defun py-choose-shell (&optional arg pyshell py-dedicated-process-p py-edit-only-p)
+(defun py-choose-shell (&optional arg pyshell)
   "Return an appropriate executable as a string.
 
 Returns nil, if no executable found.
@@ -8545,7 +8545,34 @@ completions on the current context."
       ;; (move-marker orig (point))
       nil)))
 
-(defun py--shell--do-completion-at-point (process imports input orig py-exception-buffer code)
+(defun py--shell-insert-completion-maybe (completion)
+  (cond ((eq completion t)
+	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
+	 nil)
+	((or (null completion)
+	     (and completion (stringp completion)
+		  (or
+		   (string-match "\\`''\\'" completion)
+		   (string= "" completion))))
+	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Don't see a completion"))
+	 nil)
+	((and completion
+	      (or (and (listp completion)
+		       (string= input (car completion)))
+		  (and (stringp completion)
+		       (string= input completion))))
+	 nil)
+	((and completion (stringp completion)(not (string= input completion)))
+	 (progn (delete-char (- (length input)))
+		(insert completion)
+		;; (move-marker orig (point))
+		;; minibuffer.el expects a list, a bug IMO
+		nil))
+	(t (py--try-completion input completion)))
+
+  nil)
+
+(defun py--shell-do-completion-at-point (process imports input orig py-exception-buffer code)
   "Do completion at point for PROCESS."
   ;; (py--send-string-no-output py-shell-completion-setup-code process)
   (when imports
@@ -8561,27 +8588,7 @@ completions on the current context."
     (set-buffer py-exception-buffer)
     ;; (py--delay-process-dependent process)
     ;; (sit-for 1 t)
-    (cond ((eq completion t)
-	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
-	   nil)
-	  ((null completion)
-	   (and py-verbose-p (message "py--shell--do-completion-at-point %s" "Don't see a completion"))
-	   nil)
-	  ((and completion
-		(or (and (listp completion)
-			 (string= input (car completion)))
-		    (and (stringp completion)
-			 (string= input completion))))
-	   nil)
-	  ((and completion (stringp completion)(not (string= input completion)))
-	   (progn (delete-char (- (length input)))
-		  (insert completion)
-		  ;; (move-marker orig (point))
-		  ;; minibuffer.el expects a list, a bug IMO
-		  nil))
-	  (t (py--try-completion input completion)))
-
-    nil))
+    (py--shell-insert-completion-maybe completion)))
 
 (defun py--complete-base (shell pos beg end word imports debug py-exception-buffer)
   (let* ((shell (or shell (py-choose-shell)))
@@ -8596,7 +8603,7 @@ completions on the current context."
     (code (if (string-match "[Ii][Pp]ython*" shell)
 	      (py-set-ipython-completion-command-string shell)
 	    py-shell-module-completion-code)))
-  (py--shell--do-completion-at-point proc imports word pos py-exception-buffer code)))
+  (py--shell-do-completion-at-point proc imports word pos py-exception-buffer code)))
 
 (defun py--complete-prepare (&optional shell debug beg end word fast-complete)
   (let* ((py-exception-buffer (current-buffer))
@@ -8660,15 +8667,16 @@ in (I)Python shell-modes `py-shell-complete'"
   (cond ((region-active-p)
 	 (py-indent-region (region-beginning) (region-end)))
 	((or (bolp)
-	     (member (char-before)(list 9 10 12 13 32))
-	     (not (eolp)))
+	 (member (char-before)(list 9 10 12 13 32))
+	 (not (looking-at "[ \t]*$")))
+	 ;; (not (eolp)))
 	 (py-indent-line))
 	((eq major-mode 'python-mode)
 	 (if (string-match "ipython" (py-choose-shell))
 	     (py-shell-complete)
 	   (funcall py-complete-function)))
 	((comint-check-proc (current-buffer))
-	 (py-shell-complete))
+	 (py-shell-complete (process-name (get-buffer-process (current-buffer)))))
 	(t
 	 (funcall py-complete-function))))
 
