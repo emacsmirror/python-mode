@@ -9854,10 +9854,9 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))
    (let ((default
            (if (buffer-file-name)
                (format "%s %s %s" py-pychecker-command
-                       (mapconcat 'identity py-pychecker-command-args " ")
-                       (buffer-file-name))
-             (format "%s %s" py-pychecker-command
-                     (mapconcat 'identity py-pychecker-command-args " "))))
+		       py-pychecker-command-args
+		       (buffer-file-name))
+             (format "%s %s" py-pychecker-command py-pychecker-command-args)))
          (last (when py-pychecker-history
                  (let* ((lastcmd (car py-pychecker-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
@@ -9927,10 +9926,10 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
           (default
             (if (buffer-file-name)
                 (format "%s %s %s" py-flake8-command
-                        (mapconcat 'identity py-flake8-command-args " ")
+                        py-flake8-command-args
                         (buffer-file-name))
               (format "%s %s" py-flake8-command
-                      (mapconcat 'identity py-flake8-command-args " "))))
+                      py-flake8-command-args)))
           (last
            (when py-flake8-history
              (let* ((lastcmd (car py-flake8-history))
@@ -18550,7 +18549,7 @@ Use `py-fast-process' "
         (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
         (define-key map [(control c)(.)] 'py-expression)
         ;; Miscellaneous
-        (define-key map [(super q)] 'py-copy-statement)
+        ;; (define-key map [(super q)] 'py-copy-statement)
         (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
         (define-key map [(control c)(control f)] 'py-sort-imports)
         (define-key map [(control c)(\#)] 'py-comment-region)
@@ -18620,7 +18619,7 @@ Use `py-fast-process' "
     (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
     (define-key map [(control c)(.)] 'py-expression)
     ;; Miscellaneous
-    (define-key map [(super q)] 'py-copy-statement)
+    ;; (define-key map [(super q)] 'py-copy-statement)
     (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
     (define-key map [(control c)(\#)] 'py-comment-region)
     (define-key map [(control c)(\?)] 'py-describe-mode)
