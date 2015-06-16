@@ -4664,9 +4664,6 @@ http://docs.python.org/reference/compound_stmts.html"
   (py--beginning-of-prepare indent 'py-except-block-re 'py-clause-re (interactive-p) t))
 
 ;; python-components-move
-;; backward compatibility
-;; some third party relying on v5 serie might use this
-
 ;; Expression
 (defun py-beginning-of-expression (&optional arg)
   "Go to the beginning of a compound python expression.
@@ -5186,7 +5183,7 @@ Returns position if succesful "
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-end-of-decorator ()
+(defun py-forward-decorator ()
   "Go to the end of a decorator.
 
 Returns position if succesful "
@@ -5506,10 +5503,13 @@ Return position"
 (defalias 'py-backward-partial-expression 'py-beginning-of-partial-expression)
 (defalias 'py-beginning-of-decorator-bol 'py-backward-decorator-bol)
 (defalias 'py-beginning-of-decorator 'py-backward-decorator)
+
 (defalias 'py-beginning-of-statement 'py-backward-statement)
+(defalias 'py-beginning-of-statement-bol 'py-backward-statement-bol)
 (defalias 'py-beginning-of-statement-lc 'py-backward-statement-bol)
 (defalias 'py-end-of-statement 'py-forward-statement)
 (defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
+(defalias 'py-end-of-decorator 'py-forward-decorator)
 (defalias 'py-forward-expression 'py-end-of-expression)
 (defalias 'py-match-paren 'match-paren)
 (defalias 'py-next-statement 'py-forward-statement)
@@ -11242,11 +11242,11 @@ Returns column reached. "
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
-(defun py-electric-delete ()
+(defun py-electric-delete (&optional arg)
   "Delete following character or levels of whitespace.
 
 When `delete-active-region' and (region-active-p), delete region "
-  (interactive "*")
+  (interactive "*p")
   (let ((orig (point)))
     (cond ((and (region-active-p)
 		;; Emacs23 doesn't know that var
@@ -11255,8 +11255,9 @@ When `delete-active-region' and (region-active-p), delete region "
 	  ((and (< (current-column)(current-indentation)) (<= py-indent-offset (skip-chars-forward " \t")))
 	   (goto-char orig)
 	   (delete-char py-indent-offset))
-	  (t (skip-chars-forward " \t")
-	     (delete-region orig (point))))))
+	  ((< 0 (skip-chars-forward " \t"))
+	   (delete-region orig (point)))
+	  (t (delete-char (or arg 1))))))
 
 (defun py-electric-yank (&optional arg)
   "Perform command `yank' followed by an `indent-according-to-mode' "
