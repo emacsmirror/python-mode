@@ -5439,36 +5439,6 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
   (setq arg (or arg 1))
   (py-forward-into-nomenclature (- arg) arg))
 
-(defun match-paren (&optional arg)
-  "Go to the matching brace, bracket or parenthesis if on its counterpart.
-
-Otherwise insert the character, the key is assigned to, here `%'.
-With universal arg \C-u insert a `%'. "
-  (interactive "P")
-  (let ((parse-sexp-ignore-comments t))
-    (if arg
-        (self-insert-command (if (numberp arg) arg 1))
-      (cond
-       ((and (not py-match-paren-no-use-syntax-pps) (looking-at "\\s("))
-        (forward-list 1)
-        (backward-char 1))
-       ((and (not py-match-paren-no-use-syntax-pps)(looking-at "\\s)"))
-        (forward-char 1) (backward-list 1))
-       ;; if match-paren-no-syntax-pps
-       ((looking-at "(")
-        (ar-parentized-end-atpt))
-       ((looking-at ")")
-        (ar-parentized-beginning-atpt))
-       ((looking-at "\\\[")
-        (ar-bracketed-end-atpt))
-       ((looking-at "]")
-        (ar-bracketed-beginning-atpt))
-       ((looking-at "{")
-        (ar-braced-end-atpt))
-       ((looking-at "}")
-        (ar-braced-beginning-atpt))
-       (t (self-insert-command 1))))))
-
 (defun py--travel-current-indent (indent &optional orig)
   "Moves down until clause is closed, i.e. current indentation is reached.
 
@@ -5511,7 +5481,7 @@ Return position"
 (defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
 (defalias 'py-end-of-decorator 'py-forward-decorator)
 (defalias 'py-forward-expression 'py-end-of-expression)
-(defalias 'py-match-paren 'match-paren)
+(defalias 'py-match-paren 'ar-py-match-paren)
 (defalias 'py-next-statement 'py-forward-statement)
 (defalias 'py-previous-statement 'py-beginning-of-statement)
 
@@ -19705,36 +19675,15 @@ Unclosed-string errors are not handled here, as made visible by fontification al
              ind erg last pps thisindent done err)
         (cond (this
                (setq thisindent (current-indentation))
-               (cond ((and py-close-provides-newline
-                           (or (eq regexp 'py-def-re)(eq regexp 'py-class-re)(eq regexp 'py-def-or-class-re)))
-                      (while
-                          (and
-                           ;; lp:1294478 py-mark-def hangs
-                           (if last
-                               (if (< last (point))
-                                   t
-                                 (when (nth 1 pps)
-                                   (if py-verbose-p
-                                       (throw 'exit (py--message-error (py--record-list-error pps)))
-                                     (throw 'exit nil))))
-
-                             t)
-                           (setq last (point))(re-search-forward "^$" nil t)(skip-chars-forward " \t\r\n\f")(or (nth 8 (setq pps (syntax-ppss))) (nth 1 pps) (< thisindent (current-column)))))
-                      ;; (goto-char last)
-                      (skip-chars-backward " \t\r\n\f")
-                      (setq done t)
-                      (and (nth 8 (setq pps (syntax-ppss)))
-                           (py-beginning-of-statement)
-                           (py-end-of-statement)))
-                     (t (while
-                            (and (py-down-statement)
-                                 (or (< thisindent (current-indentation))
-                                     (and (eq thisindent (current-indentation))
-                                          (or (eq regexp 'py-minor-block-re)
-                                              (eq regexp 'py-block-re))
-                                          (looking-at py-clause-re)))
-                                 (py-end-of-statement)(setq last (point))))
-                        (and last (goto-char last)))))
+	       (while
+		   (and (py-down-statement)
+			(or (< thisindent (current-indentation))
+			    (and (eq thisindent (current-indentation))
+				 (or (eq regexp 'py-minor-block-re)
+				     (eq regexp 'py-block-re))
+				 (looking-at py-clause-re)))
+			(py-end-of-statement)(setq last (point))))
+	       (and last (goto-char last)))
               (t (goto-char orig)))
         (when (and (<= (point) orig)(not (looking-at thisregexp)))
           ;; found the end above
