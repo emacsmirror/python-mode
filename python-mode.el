@@ -666,8 +666,8 @@ Examples from PEP8"
   :group 'python-mode)
 
 (defvar py-imenu-max-items 99)
-(defcustom py-imenu-max-items 99 
- "Python-mode specific `imenu-max-items'" 
+(defcustom py-imenu-max-items 99
+ "Python-mode specific `imenu-max-items'"
 
 :type 'number
 :group 'python-mode)
@@ -1317,7 +1317,6 @@ visible, open them manually and set `py-keep-windows-configuration' to `t'.
   :tag "python-mode-hook"
   :group 'python-mode
   )
-
 
 (defcustom py-shell-name
   (if (eq system-type 'windows-nt)
@@ -2098,6 +2097,18 @@ Temporary files are not deleted. Other functions might implement
 some logging etc. "
   :type 'boolean
   :tag "py-debug-p"
+  :group 'python-mode)
+
+(defcustom py-section-start "# {{"
+  "Delimit arbitrary chunks of code. "
+  :type 'string
+  :tag "py-section-start"
+  :group 'python-mode)
+
+(defcustom py-section-end "# }}"
+  "Delimit arbitrary chunks of code. "
+  :type 'string
+  :tag "py-section-end"
   :group 'python-mode)
 
 (defvar py-completion-last-window-configuration nil
@@ -2949,7 +2960,6 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (add-to-list 'load-path default-directory)
   (add-to-list 'load-path (concat default-directory "extensions")))
 
-
 (defun py-count-lines (&optional beg end)
   "Count lines in accessible part until current line.
 
@@ -2976,7 +2986,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
       (when (bolp) (setq count (1+ count)))
       (when (and py-debug-p (interactive-p)) (message "%s" count))
       count)))
-
 
 (defun py--escape-doublequotes (start end)
   (let ((end (copy-marker end)))
@@ -3026,7 +3035,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
      (and (eq (char-before (point)) ?\\ )
           (py-escaped))))
 ;;
-
 
 
 (defun py-separator-char ()
@@ -4024,6 +4032,16 @@ The defun visible is the one that contains point or follows point. "
                      (point)
                    (py-beginning-of-def-or-class))))
       (py-end-of-def-or-class)
+      (narrow-to-region (point) start))))
+
+(defun py-narrow-to-class ()
+  "Make text outside current class invisible. "
+  (interactive)
+  (save-excursion
+    (let ((start (if (py--statement-opens-class-p)
+                     (point)
+                   (py-beginning-of-class))))
+      (py-end-of-class)
       (narrow-to-region (point) start))))
 
 ;;  make general form below work also in these cases
@@ -17691,6 +17709,49 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
   (interactive "fFile: ")
   (py--execute-prepare filename "python3.3" 'dedicated 'switch nil nil t))
 
+;; python-components-section-forms
+
+(defun py-execute-section ()
+  "Execute section at point."
+  (interactive)
+  (py-execute-section-prepare))
+
+(defun py-execute-section-python ()
+  "Execute section at point using python interpreter."
+  (interactive)
+  (py-execute-section-prepare "python"))
+
+(defun py-execute-section-python2 ()
+  "Execute section at point using python2 interpreter."
+  (interactive)
+  (py-execute-section-prepare "python2"))
+
+(defun py-execute-section-python3 ()
+  "Execute section at point using python3 interpreter."
+  (interactive)
+  (py-execute-section-prepare "python3"))
+
+(defun py-execute-section-ipython ()
+  "Execute section at point using ipython interpreter."
+  (interactive)
+  (py-execute-section-prepare "ipython"))
+
+(defun py-execute-section-ipython2.7 ()
+  "Execute section at point using ipython2.7 interpreter."
+  (interactive)
+  (py-execute-section-prepare "ipython2.7"))
+
+(defun py-execute-section-ipython3 ()
+  "Execute section at point using ipython3 interpreter."
+  (interactive)
+  (py-execute-section-prepare "ipython3"))
+
+(defun py-execute-section-jython ()
+  "Execute section at point using jython interpreter."
+  (interactive)
+  (py-execute-section-prepare "jython"))
+
+
 ;; python-components-comment
 
 (defun py-beginning-of-comment ()
@@ -20553,6 +20614,24 @@ lp:963253"
 	    ;; sys.version_info[0]
 	    (car (read-from-string (py--pdb-version)))) "asdf")))
   (pdb command-line (buffer-file-name)))
+
+;; Section
+(defun py-execute-section-prepare (&optional shell)
+  "Execute section at point. "
+  (save-excursion
+    (let ((start (when (or (looking-at py-section-start)
+			   (search-backward py-section-start))
+		   (forward-line 1)
+		   (beginning-of-line)
+		   (point))))
+      (if (and start (search-forward py-section-end))
+	  (progn
+	    (beginning-of-line)
+	    (skip-chars-backward " \t\r\n\f")
+	    (if shell
+		(funcall (car (read-from-string (concat "py-execute-region-" shell))) start (point))
+	      (py-execute-region start (point))))
+	(error "Can't see `py-section-start' resp. `py-section-end'")))))
 
 ;; /usr/lib/python2.7/pdb.py eyp.py
 
