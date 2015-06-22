@@ -4022,28 +4022,6 @@ downwards from beginning of block followed by a statement. Otherwise default-val
       (skip-chars-backward " \t")
       (max comment-column (+ (current-column) (if (bolp) 0 1))))))
 
-(defun py-narrow-to-defun ()
-  "Make text outside current def or class invisible.
-
-The defun visible is the one that contains point or follows point. "
-  (interactive)
-  (save-excursion
-    (let ((start (if (py--statement-opens-def-or-class-p)
-                     (point)
-                   (py-beginning-of-def-or-class))))
-      (py-end-of-def-or-class)
-      (narrow-to-region (point) start))))
-
-(defun py-narrow-to-class ()
-  "Make text outside current class invisible. "
-  (interactive)
-  (save-excursion
-    (let ((start (if (py--statement-opens-class-p)
-                     (point)
-                   (py-beginning-of-class))))
-      (py-end-of-class)
-      (narrow-to-region (point) start))))
-
 ;;  make general form below work also in these cases
 ;;  (defalias 'py-beginning-of-paragraph 'backward-paragraph)
 (defun py-beginning-of-paragraph ()
@@ -18259,6 +18237,43 @@ Output-buffer is not in comint-mode "
   (let ((py-fast-process-p t))
     (py--execute-prepare "clause")))
 
+;; python-components-narrow
+
+(defun py-narrow-to-block ()
+  "Narrow to block at point."
+  (interactive)
+  (py--narrow-prepare "block"))
+
+(defun py-narrow-to-block-or-clause ()
+  "Narrow to block-or-clause at point."
+  (interactive)
+  (py--narrow-prepare "block-or-clause"))
+
+(defun py-narrow-to-class ()
+  "Narrow to class at point."
+  (interactive)
+  (py--narrow-prepare "class"))
+
+(defun py-narrow-to-clause ()
+  "Narrow to clause at point."
+  (interactive)
+  (py--narrow-prepare "clause"))
+
+(defun py-narrow-to-def ()
+  "Narrow to def at point."
+  (interactive)
+  (py--narrow-prepare "def"))
+
+(defun py-narrow-to-def-or-class ()
+  "Narrow to def-or-class at point."
+  (interactive)
+  (py--narrow-prepare "def-or-class"))
+
+(defun py-narrow-to-statement ()
+  "Narrow to statement at point."
+  (interactive)
+  (py--narrow-prepare "statement"))
+
 ;; python-components-auto-fill
 
 (defvar py-auto-fill-mode-orig (auto-fill-mode)
@@ -20632,6 +20647,18 @@ lp:963253"
 		(funcall (car (read-from-string (concat "py-execute-region-" shell))) start (point))
 	      (py-execute-region start (point))))
 	(error "Can't see `py-section-start' resp. `py-section-end'")))))
+
+(defun py--narrow-prepare (name)
+  "Used internally. "
+  (save-excursion
+    (let ((start (cond ((string= name "statement")
+			(if (py--beginning-of-statement-p)
+			    (point)
+			  (py-beginning-of-statement-bol)))
+		       ((funcall (car (read-from-string (concat "py--statement-opens-" name "-p")))))
+		       (t (funcall (car (read-from-string (concat "py-beginning-of-" name "-bol"))))))))
+      (funcall (car (read-from-string (concat "py-end-of-" name))))
+      (narrow-to-region (point) start))))
 
 ;; /usr/lib/python2.7/pdb.py eyp.py
 
