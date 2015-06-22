@@ -5397,7 +5397,7 @@ Return beginning position, nil if not inside."
       last)))
 
 (defun py-forward-into-nomenclature (&optional arg iact)
-  "Move forward to end of a nomenclature section or word.
+  "Move forward to end of a nomenclature symbol.
 
 With \\[universal-argument] (programmatically, optional argument ARG), do it that many times.
 
@@ -5447,7 +5447,7 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
     erg))
 
 (defun py-backward-into-nomenclature (&optional arg)
-  "Move backward to beginning of a nomenclature section or word.
+  "Move backward to beginning of a nomenclature symbol.
 
 With optional ARG, move that many times.  If ARG is negative, move
 forward.
@@ -19095,7 +19095,7 @@ Use `defcustom' to keep value across sessions "
   "Return `t' if emacs major version is above 23"
   (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
 
-(defun py-beginning-of-commented-section (&optional last)
+(defun py-beginning-of-comments (&optional last)
   "Leave upwards comments and/or empty lines. "
   (interactive)
   (let ((pps (syntax-ppss))
@@ -19104,7 +19104,7 @@ Use `defcustom' to keep value across sessions "
              (looking-back "^[ \t]*")(not (bobp)))
         (progn
           (skip-chars-backward " \t\r\n\f")
-          (py-beginning-of-commented-section last))
+          (py-beginning-of-comments last))
       (goto-char last))))
 
 (defun py--empty-arglist-indent (nesting py-indent-offset indent-offset)
@@ -19258,7 +19258,7 @@ LIEP stores line-end-position at point-of-interest
 			      (current-column)
 			    (if py-indent-comments
 				(progn
-				  (py-beginning-of-commented-section)
+				  (py-beginning-of-comments)
 				  (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 			      0))
 			(forward-char -1)
@@ -19272,7 +19272,7 @@ LIEP stores line-end-position at point-of-interest
 			  ;; as previous comment-line might
 			  ;; be wrongly unindented, travel
 			  ;; whole commented section
-			  (py-beginning-of-commented-section)
+			  (py-beginning-of-comments)
 			  (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 		      0))
 		   ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not
