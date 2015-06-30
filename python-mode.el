@@ -5758,14 +5758,6 @@ Stores data in kill ring"
   (let ((erg (py--mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
-(defun py-kill-comment ()
-  "Delete `comment' at point.
-
-Stores data in kill ring"
-  (interactive "*")
-  (let ((erg (py--mark-base "comment")))
-    (kill-region (car erg) (cdr erg))))
-
 (defun py-kill-def ()
   "Delete `def' at point.
 
@@ -11491,18 +11483,6 @@ When `delete-active-region' and (region-active-p), delete region "
           (setq erg orig)))
       erg)))
 
-(defun py--beginning-of-comment-p ()
-  "Returns position, if cursor is at the beginning of a `comment', nil otherwise. "
-  (let ((orig (point))
-        erg)
-    (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
-        (py-forward-comment)
-        (py-backward-comment)
-        (when (eq orig (point))
-          (setq erg orig)))
-      erg)))
-
 (defun py--beginning-of-def-p ()
   "Returns position, if cursor is at the beginning of a `def', nil otherwise. "
   (let ((orig (point))
@@ -11860,17 +11840,6 @@ When `delete-active-region' and (region-active-p), delete region "
     (save-excursion
       (py-backward-clause)
       (py-forward-clause)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
-
-(defun py--end-of-comment-p ()
-  "Returns position, if cursor is at the end of a comment, nil otherwise. "
-  (let ((orig (point))
-	erg)
-    (save-excursion
-      (py-backward-comment)
-      (py-forward-comment)
       (when (eq orig (point))
 	(setq erg orig))
       erg)))
