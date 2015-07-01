@@ -5,8 +5,11 @@
 
 ;; This file not shipped as part of GNU Emacs.
 
-;; Maintainer: Andreas Röhler <andreas.roehler@online.de>
 ;; Keywords: languages, processes, python, oop
+
+;; Copyright (C) 2015  Andreas Röhler
+
+;; Author: Andreas Röhler <andreas.roehler@easy-emacs.de>
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
@@ -2062,8 +2065,12 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
   "Recognize the pydb-prompt. ")
 
+
+(defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
+  "A regular expression to match the IPython input prompt. ")
+
  ;; prevent ipython.el's setting
-(setq py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
+(setq py-ipython-input-prompt-re   "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
 
 (defvar py-exec-command nil
   "Internally used. ")
@@ -2079,9 +2086,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-pyflakespep8-history nil)
 
 (defvar py-pylint-history nil)
-
-(defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
-  "A regular expression to match the IPython input prompt. ")
 
 (defvar py-ipython-output-prompt-re "^Out\\[[0-9]+\\]: "
   "A regular expression to match the output prompt of IPython.")
@@ -4079,7 +4083,7 @@ downwards from beginning of block followed by a statement. Otherwise default-val
   "Reindent a region of Python code.
 
 In case first line accepts an indent, keep the remaining
-lines relative. 
+lines relative.
 Otherwise lines in region get outmost indent,
 same with optional argument
 
@@ -5653,7 +5657,6 @@ Return position"
     (and (< (point) orig)(setq erg (point)))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
-
 
 (defun py-backward-section ()
   "Go to next section start upward in buffer.
@@ -8298,185 +8301,185 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 ;; python-components-execute-region
 
 (defun py-execute-region (beg end)
-  "Execute region. " 
+  "Execute region. "
   (interactive "r")
   (py--execute-base beg end))
 
 (defun py-execute-region-switch (beg end)
-  "Execute region switch. " 
+  "Execute region switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end)))
 
 (defun py-execute-region-no-switch (beg end)
-  "Execute region no-switch. " 
+  "Execute region no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end)))
 
 (defun py-execute-region-dedicated (beg end)
-  "Execute region dedicated. " 
+  "Execute region dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end)))
 
 (defun py-execute-region-python (beg end)
-  "Execute region Python. " 
+  "Execute region Python. "
   (interactive "r")
   (py--execute-base beg end "python"))
 
 (defun py-execute-region-python-switch (beg end)
-  "Execute region Python switch. " 
+  "Execute region Python switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "python")))
 
 (defun py-execute-region-python-no-switch (beg end)
-  "Execute region Python no-switch. " 
+  "Execute region Python no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "python")))
 
 (defun py-execute-region-python-dedicated (beg end)
-  "Execute region Python dedicated. " 
+  "Execute region Python dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "python")))
 
 (defun py-execute-region-python2 (beg end)
-  "Execute region Python2. " 
+  "Execute region Python2. "
   (interactive "r")
   (py--execute-base beg end "python2"))
 
 (defun py-execute-region-python2-switch (beg end)
-  "Execute region Python2 switch. " 
+  "Execute region Python2 switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "python2")))
 
 (defun py-execute-region-python2-no-switch (beg end)
-  "Execute region Python2 no-switch. " 
+  "Execute region Python2 no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "python2")))
 
 (defun py-execute-region-python2-dedicated (beg end)
-  "Execute region Python2 dedicated. " 
+  "Execute region Python2 dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "python2")))
 
 (defun py-execute-region-python3 (beg end)
-  "Execute region Python3. " 
+  "Execute region Python3. "
   (interactive "r")
   (py--execute-base beg end "python3"))
 
 (defun py-execute-region-python3-switch (beg end)
-  "Execute region Python3 switch. " 
+  "Execute region Python3 switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "python3")))
 
 (defun py-execute-region-python3-no-switch (beg end)
-  "Execute region Python3 no-switch. " 
+  "Execute region Python3 no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "python3")))
 
 (defun py-execute-region-python3-dedicated (beg end)
-  "Execute region Python3 dedicated. " 
+  "Execute region Python3 dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "python3")))
 
 (defun py-execute-region-ipython (beg end)
-  "Execute region IPython. " 
+  "Execute region IPython. "
   (interactive "r")
   (py--execute-base beg end "ipython"))
 
 (defun py-execute-region-ipython-switch (beg end)
-  "Execute region IPython switch. " 
+  "Execute region IPython switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "ipython")))
 
 (defun py-execute-region-ipython-no-switch (beg end)
-  "Execute region IPython no-switch. " 
+  "Execute region IPython no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "ipython")))
 
 (defun py-execute-region-ipython-dedicated (beg end)
-  "Execute region IPython dedicated. " 
+  "Execute region IPython dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "ipython")))
 
 (defun py-execute-region-ipython2.7 (beg end)
-  "Execute region IPython2.7. " 
+  "Execute region IPython2.7. "
   (interactive "r")
   (py--execute-base beg end "ipython2.7"))
 
 (defun py-execute-region-ipython2.7-switch (beg end)
-  "Execute region IPython2.7 switch. " 
+  "Execute region IPython2.7 switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "ipython2.7")))
 
 (defun py-execute-region-ipython2.7-no-switch (beg end)
-  "Execute region IPython2.7 no-switch. " 
+  "Execute region IPython2.7 no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "ipython2.7")))
 
 (defun py-execute-region-ipython2.7-dedicated (beg end)
-  "Execute region IPython2.7 dedicated. " 
+  "Execute region IPython2.7 dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "ipython2.7")))
 
 (defun py-execute-region-ipython3 (beg end)
-  "Execute region IPython3. " 
+  "Execute region IPython3. "
   (interactive "r")
   (py--execute-base beg end "ipython3"))
 
 (defun py-execute-region-ipython3-switch (beg end)
-  "Execute region IPython3 switch. " 
+  "Execute region IPython3 switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "ipython3")))
 
 (defun py-execute-region-ipython3-no-switch (beg end)
-  "Execute region IPython3 no-switch. " 
+  "Execute region IPython3 no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "ipython3")))
 
 (defun py-execute-region-ipython3-dedicated (beg end)
-  "Execute region IPython3 dedicated. " 
+  "Execute region IPython3 dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "ipython3")))
 
 (defun py-execute-region-jython (beg end)
-  "Execute region Jython. " 
+  "Execute region Jython. "
   (interactive "r")
   (py--execute-base beg end "jython"))
 
 (defun py-execute-region-jython-switch (beg end)
-  "Execute region Jython switch. " 
+  "Execute region Jython switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p t))
     (py--execute-base beg end "jython")))
 
 (defun py-execute-region-jython-no-switch (beg end)
-  "Execute region Jython no-switch. " 
+  "Execute region Jython no-switch. "
   (interactive "r")
   (let ((py-switch-buffers-on-execute-p nil))
     (py--execute-base beg end "jython")))
 
 (defun py-execute-region-jython-dedicated (beg end)
-  "Execute region Jython dedicated. " 
+  "Execute region Jython dedicated. "
   (interactive "r")
   (let ((py-dedicated-process-p t))
     (py--execute-base beg end "jython")))
@@ -9746,7 +9749,6 @@ Home-page: http://www.logilab.org/project/pylint "
   (erase-buffer)
   (shell-command command "*Pylint*"))
 
-
 (defalias 'pylint-help 'py-pylint-help)
 (defun py-pylint-help ()
   "Display Pylint command line help messages.
@@ -10422,7 +10424,6 @@ With arg, do it that many times.
 (unless (boundp 'empty-line-p-chars)
   (defvar empty-line-p-chars "^[ \t\f\r]*$"))
 
-
 (unless (functionp 'in-string-p)
   (defun in-string-p (&optional pos)
     (interactive)
@@ -10529,7 +10530,6 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
           ((looking-at "False")
            (replace-match "True"))
           (t (message "%s" "Can't see \"True or False\" here")))))
-
 
 (when (featurep 'thing-at-point-utils)
   (defun py-beginning-of-list (&optional iact orig limit done last)
@@ -11440,7 +11440,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-block)
         (py-backward-block)
         (when (eq orig (point))
@@ -11452,7 +11452,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-block-or-clause)
         (py-backward-block-or-clause)
         (when (eq orig (point))
@@ -11464,7 +11464,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-class)
         (py-backward-class)
         (when (eq orig (point))
@@ -11476,7 +11476,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-clause)
         (py-backward-clause)
         (when (eq orig (point))
@@ -11488,7 +11488,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-def)
         (py-backward-def)
         (when (eq orig (point))
@@ -11500,7 +11500,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-def-or-class)
         (py-backward-def-or-class)
         (when (eq orig (point))
@@ -11512,7 +11512,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-elif-block)
         (py-backward-elif-block)
         (when (eq orig (point))
@@ -11524,7 +11524,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-else-block)
         (py-backward-else-block)
         (when (eq orig (point))
@@ -11536,7 +11536,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-except-block)
         (py-backward-except-block)
         (when (eq orig (point))
@@ -11549,7 +11549,7 @@ When `delete-active-region' and (region-active-p), delete region "
         erg)
     (save-excursion
       (unless (and (eolp) (not (empty-line-p)))
- 
+
         (py-forward-expression)
         (py-backward-expression)
         (when (eq orig (point))
@@ -11561,7 +11561,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-for-block)
         (py-backward-for-block)
         (when (eq orig (point))
@@ -11573,7 +11573,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-if-block)
         (py-backward-if-block)
         (when (eq orig (point))
@@ -11585,7 +11585,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-minor-block)
         (py-backward-minor-block)
         (when (eq orig (point))
@@ -11598,7 +11598,7 @@ When `delete-active-region' and (region-active-p), delete region "
         erg)
     (save-excursion
       (unless (and (eolp) (not (empty-line-p)))
- 
+
         (py-forward-partial-expression)
         (py-backward-partial-expression)
         (when (eq orig (point))
@@ -11610,7 +11610,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-section)
         (py-backward-section)
         (when (eq orig (point))
@@ -11622,7 +11622,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-statement)
         (py-backward-statement)
         (when (eq orig (point))
@@ -11634,7 +11634,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-top-level)
         (py-backward-top-level)
         (when (eq orig (point))
@@ -11646,7 +11646,7 @@ When `delete-active-region' and (region-active-p), delete region "
   (let ((orig (point))
         erg)
     (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p)))) 
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
         (py-forward-try-block)
         (py-backward-try-block)
         (when (eq orig (point))
@@ -13021,7 +13021,7 @@ Return position if top-level found, nil otherwise "
   (interactive)
   (py-down-base-bol py-top-level-re))
 
-;; python-components-up-down ends here
+;; python-components-up-down.el ends here
 ;; python-components-exec-forms
 
 ;;  Execute forms at point
@@ -17757,7 +17757,6 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
   (interactive)
   (py-execute-section-prepare "jython"))
 
-
 ;; python-components-comment
 
 (defun py-backward-comment (&optional last orig)
@@ -18197,7 +18196,6 @@ See also `py-fast-shell'
 	(py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)
       (py--fast-send-string-no-output string proc buffer))))
 
-
 (defun py-execute-string-fast (string)
   "Evaluate STRING in Python process which is not in comint-mode.
 
@@ -18608,8 +18606,6 @@ Use `py-fast-process' "
 
 ;;  Keymap
 
-
-
 (defvar python-mode-map nil)
 (setq python-mode-map
       (let ((map (make-sparse-keymap)))
@@ -18779,7 +18775,6 @@ Use `py-fast-process' "
                 (py--execute-file-base nil filename nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) filename))
               (message "%s not readable. %s" file "Do you have write permissions?")))
         (py--execute-base beg end shell)))))
-
 
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
@@ -21235,7 +21230,7 @@ Don't store data in kill ring."]
 	    :help " `py-delete-class'
 Delete CLASS at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete clause" py-delete-clause
@@ -21251,14 +21246,14 @@ Don't store data in kill ring."]
 	    :help " `py-delete-def'
 Delete DEF at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete def or class" py-delete-def-or-class
 	    :help " `py-delete-def-or-class'
 Delete DEF-OR-CLASS at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete expression" py-delete-expression
@@ -23908,7 +23903,7 @@ Don't store data in kill ring."]
 	    :help " `py-delete-class'
 Delete CLASS at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete clause" py-delete-clause
@@ -23924,14 +23919,14 @@ Don't store data in kill ring."]
 	    :help " `py-delete-def'
 Delete DEF at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete def or class" py-delete-def-or-class
 	    :help " `py-delete-def-or-class'
 Delete DEF-OR-CLASS at point.
 
-Don't store data in kill ring. 
+Don't store data in kill ring.
 With C-u or `py-mark-decorators' set to `t', `decorators' are included."]
 
 	   ["Delete expression" py-delete-expression
@@ -25499,7 +25494,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 
 ;; after-change-major-mode-hook
 
-
 ;;;
 (define-derived-mode python-mode fundamental-mode python-mode-modeline-display
   "Major mode for editing Python files.
@@ -25824,7 +25818,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   ;; Running py-ipython-shell-mode-hook seems to need some delay
   (sit-for 0.5 t)
   (force-mode-line-update))
-
 
 ;;;
 (provide 'python-mode)
