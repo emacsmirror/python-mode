@@ -5426,26 +5426,30 @@ From a programm use macro `py-backward-comment' instead "
   "Returns a list, whose car is indentation, cdr position. "
   (let ((orig (point))
         (maxindent
-         (if (empty-line-p)
-             (progn
-               (py-backward-statement)
-               (current-indentation))
-           (or maxindent (and (< 0 (current-indentation))(current-indentation))
-               ;; make maxindent large enough if not set
-               (* 99 py-indent-offset))))
-        (first t)
+	 (or maxindent
+	     (if (empty-line-p)
+		 (progn
+		   (py-backward-statement)
+		   (current-indentation))
+	       (or maxindent (and (< 0 (current-indentation))(current-indentation))
+		   ;; make maxindent large enough if not set
+		   (* 99 py-indent-offset)))))
         done erg cui)
     (while (and (not done) (not (bobp)))
-      (while (and (re-search-backward regexp nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point)))))
+      ;; (while (and (re-search-backward regexp nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point)))))
       ;; (or (< (point) orig) (py-backward-statement))
-      (if (and (looking-at regexp)(if maxindent
-                                      (<= (current-indentation) maxindent) t))
-          (progn
-            (setq erg (point))
-            (setq done t))
-        (when (and first (not maxindent))
-          (setq maxindent (current-indentation))
-          (setq first nil))))
+      (py-backward-statement)
+
+      (when
+	  (and (<= (current-indentation) maxindent)
+	       (setq maxindent (current-indentation))
+	       (looking-at regexp))
+	(setq erg (point))
+	(setq done t)
+        ;; (when (and first (not maxindent))
+	;; (setq maxindent (current-indentation))
+	;; (setq first nil))
+	))
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
 
@@ -20282,17 +20286,19 @@ Returns beginning of FORM if successful, nil otherwise"
   (let ((orig (point))
         (indent
          (or indent
-             (progn (back-to-indentation)
-                    (or (py--beginning-of-statement-p)
-                        (py-backward-statement))
-                    (cond ((eq 0 (current-indentation))
-                           (current-indentation))
-                          ((looking-at (symbol-value inter-re))
-                           (current-indentation))
-                          (t
-                           (if (<= py-indent-offset (current-indentation))
-                               (- (current-indentation) (if py-smart-indentation (py-guess-indent-offset) py-indent-offset))
-                             py-indent-offset))))))
+	     (cond ((looking-back "^[ \t]*")
+		    (current-indentation))
+		   (t (progn (back-to-indentation)
+			     (or (py--beginning-of-statement-p)
+				 (py-backward-statement))
+			     (cond ((eq 0 (current-indentation))
+				    (current-indentation))
+				   ((looking-at (symbol-value inter-re))
+				    (current-indentation))
+				   (t
+				    (if (<= py-indent-offset (current-indentation))
+					(- (current-indentation) (if py-smart-indentation (py-guess-indent-offset) py-indent-offset))
+				      py-indent-offset))))))))
         erg)
     (if (and (< (point) orig) (looking-at (symbol-value final-re)))
         (progn
