@@ -5340,7 +5340,7 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
       (unless
 	  (or
 	   (eq (point) orig)
-	   (member (char-before) (list 10 32 9)))
+	   (member (char-before) (list 10 32 9 ?#)))
 	(setq erg (point)))
       (if (and py-verbose-p err)
 	  (py--message-error err)
@@ -10409,35 +10409,49 @@ With interactive call, send it to the message buffer too. "
         ;; 	(define-key python-mode-map (kbd (concat "<" py-match-paren-key ">")) 'py-match-paren))
         (setq py-match-paren-mode nil))))
 
+(defun py--match-end-finish ()
+  (let (skipped remain)
+    (unless (eq (current-column) cui)
+      ;; (unless (empty-line-p)
+      ;; (split-line))
+      (when (< (current-column) cui)
+	(setq skipped (skip-chars-forward " \t\r\n\f"))
+	(setq cui (- cui skipped))
+	;; may current-column greater as needed indent?
+	(if (< 0 cui)
+	    (indent-to cui)
+	  (forward-char (- (abs cui))))
+	(unless (eq (char-after) 32)(insert 32)(forward-char -1))))))
+
 (defun py--match-paren-beginning ()
   (let ((cui (current-indentation)))
     (cond
      ((py--beginning-of-top-level-p)
       (py-forward-top-level-bol)
-      (indent-to cui))
+      (py--match-end-finish))
      ((py--beginning-of-block-p)
       (py-forward-block-bol)
-      (indent-to cui))
+      (py--match-end-finish))
      ((py--beginning-of-clause-p)
       (py-forward-clause-bol)
-      (indent-to cui))
+      (py--match-end-finish))
      ((py--beginning-of-statement-p)
       (py-forward-statement-bol)
-      (indent-to cui))
+      (py--match-end-finish))
      (t (py-forward-statement)
-	(indent-to cui)))))
+	(py--match-end-finish)))))
 
 (defun py--match-paren-end ()
-  (cond
-   ((py--end-of-clause-p)
-    (py-backward-clause))
-   ((py--end-of-block-p)
-    (py-backward-block))
-   ((py--end-of-top-level-p)
-    (py-backward-top-level))
-   ((py--end-of-statement-p)
-    (py-backward-statement))
-   (t (py-backward-statement))))
+  (let* ((cui (current-indentation))
+	 (cuc (current-column))
+	 (cui (min cuc cui)))
+    (if (eq 0 cui)
+	(py-backward-top-level)
+      (py-backward-statement) 
+      (unless (< (current-column) cuc)
+      (while (and (not (bobp))
+		  (< cui (current-column))
+		  (py-backward-statement)))))))
 
 (defun py--match-paren-indented-empty ()
   "Jump from intend of an empty line below block. "
@@ -10457,7 +10471,10 @@ With interactive call, send it to the message buffer too. "
 	;; (unless (bobp)
 	;; (py-match-paren)))
     )
-   ((looking-back "^[ \t]*")
+   ((and (looking-back "^[ \t]*")
+	 ;; (looking-at py-extended-block-or-clause-re)
+	 (looking-at "[[:alpha:]_]")
+	 )
     ;; from beginning of top-level, block, clause, statement
     (py--match-paren-beginning))
    (t
@@ -11704,18 +11721,6 @@ When `delete-active-region' and (region-active-p), delete region "
           (setq erg orig)))
       erg)))
 
-(defun py--beginning-of-top-level-p ()
-  "Returns position, if cursor is at the beginning of a `top-level', nil otherwise. "
-  (let ((orig (point))
-        erg)
-    (save-excursion
-      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
-        (py-forward-top-level)
-        (py-backward-top-level)
-        (when (eq orig (point))
-          (setq erg orig)))
-      erg)))
-
 (defun py--beginning-of-try-block-p ()
   "Returns position, if cursor is at the beginning of a `try-block', nil otherwise. "
   (let ((orig (point))
@@ -12882,13 +12887,6 @@ Return position if section found, nil otherwise. "
   (interactive)
   (py-up-base py-section-re))
 
-(defun py-up-top-level ()
-  "Go to the beginning of next top-level upwards in buffer.
-
-Return position if top-level found, nil otherwise. "
-  (interactive)
-  (py-up-base py-top-level-re))
-
 (defun py-down-block ()
   "Go to the beginning of next block below in buffer.
 
@@ -12944,13 +12942,6 @@ Return position if minor-block found, nil otherwise. "
 Return position if section found, nil otherwise. "
   (interactive)
   (py-down-base py-section-re))
-
-(defun py-down-top-level ()
-  "Go to the beginning of next top-level below in buffer.
-
-Return position if top-level found, nil otherwise. "
-  (interactive)
-  (py-down-base py-top-level-re))
 
 (defun py-up-block-bol ()
   "Go to the beginning of next block upwards in buffer.
@@ -13016,14 +13007,6 @@ Return position if section found, nil otherwise. "
   (interactive)
   (py-up-base-bol py-section-re))
 
-(defun py-up-top-level-bol ()
-  "Go to the beginning of next top-level upwards in buffer.
-
-Go to beginning of line.
-Return position if top-level found, nil otherwise. "
-  (interactive)
-  (py-up-base-bol py-top-level-re))
-
 (defun py-down-block-bol ()
   "Go to the beginning of next block below in buffer.
 
@@ -13087,14 +13070,6 @@ Go to beginning of line
 Return position if section found, nil otherwise "
   (interactive)
   (py-down-base-bol py-section-re))
-
-(defun py-down-top-level-bol ()
-  "Go to the beginning of next top-level below in buffer.
-
-Go to beginning of line
-Return position if top-level found, nil otherwise "
-  (interactive)
-  (py-down-base-bol py-top-level-re))
 
 ;; python-components-up-down.el ends here
 ;; python-components-exec-forms
@@ -20427,6 +20402,12 @@ Returns position reached if point was moved. "
     (and (< orig (point))(setq done t)
 	 done)))
 
+(defun py--beginning-of-top-level-p ()
+  "Returns position, if cursor is at the beginning of a `top-level', nil otherwise. "
+  (interactive)
+  (let ((erg (and (bolp)(not (or (py-in-string-or-comment-p)(empty-line-p))))))
+    (when erg (point))))
+
 (defun py-backward-top-level ()
   "Go up to beginning of statments until level of indentation is null.
 
@@ -20445,26 +20426,43 @@ Returns position if successful, nil otherwise "
 Returns position if successful, nil otherwise"
   (interactive)
   (let ((orig (point))
-        erg)
+	erg)
     (unless (eobp)
       (unless (py--beginning-of-statement-p)
-        (py-backward-statement))
+	(py-backward-statement))
       (unless (eq 0 (current-column))
-        (py-backward-top-level))
+	(py-backward-top-level))
       (cond ((looking-at py-def-re)
-             (setq erg (py-forward-def)))
-            ((looking-at py-class-re)
-             (setq erg (py-forward-class)))
-            ((looking-at py-block-re)
-             (setq erg (py-forward-block)))
-             (t (setq erg (py-forward-statement))))
+	     (setq erg (py-forward-def)))
+	    ((looking-at py-class-re)
+	     (setq erg (py-forward-class)))
+	    ((looking-at py-block-re)
+	     (setq erg (py-forward-block)))
+	    (t (setq erg (py-forward-statement))))
       (unless (< orig (point))
-        (while (and (not (eobp)) (py-down-statement)(< 0 (current-indentation))))
-        (if (looking-at py-block-re)
-            (setq erg (py-forward-block))
-          (setq erg (py-forward-statement))))
+	(while (and (not (eobp)) (py-down-statement)(< 0 (current-indentation))))
+	(if (looking-at py-block-re)
+	    (setq erg (py-forward-block))
+	  (setq erg (py-forward-statement))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
+
+(defun py-down-top-level ()
+  "Go to beginning of next top-level form downward.
+
+Returns position if successful, nil otherwise"
+  (interactive)
+  (let ((orig (point))
+        erg)
+    (while (and (not (eobp))
+		(progn (end-of-line)
+		       (re-search-forward "^[[:alpha:]_]" nil 'move 1))
+		(nth 8 (parse-partial-sexp (point-min) (point)))))
+    (when (and (not (eobp)) (< orig (point)))
+      (goto-char (match-beginning 0)) 
+	(setq erg (point)))
+    (when (and py-verbose-p (interactive-p)) (message "%s" erg))
+    erg))
 
 (defun py-forward-top-level-bol ()
   "Go to end of top-level form at point, stop at next beginning-of-line.
