@@ -6647,7 +6647,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "block") nil t))
+  (let ((erg (py--mark-base "block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-block-or-clause-bol ()
@@ -6655,7 +6655,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "block-or-clause") nil t))
+  (let ((erg (py--mark-base "block-or-clause")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-class-bol (&optional arg)
@@ -6673,7 +6673,7 @@ With \\[universal-argument] or `py-mark-decorators' set to `t', `decorators' are
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "clause") nil t))
+  (let ((erg (py--mark-base "clause")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-def-bol (&optional arg)
@@ -6701,7 +6701,7 @@ With \\[universal-argument] or `py-mark-decorators' set to `t', `decorators' are
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "elif-block") nil t))
+  (let ((erg (py--mark-base "elif-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-else-block-bol ()
@@ -6709,7 +6709,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "else-block") nil t))
+  (let ((erg (py--mark-base "else-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-except-block-bol ()
@@ -6717,7 +6717,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "except-block") nil t))
+  (let ((erg (py--mark-base "except-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-for-block-bol ()
@@ -6725,7 +6725,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "for-block") nil t))
+  (let ((erg (py--mark-base "for-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-if-block-bol ()
@@ -6733,7 +6733,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "if-block") nil t))
+  (let ((erg (py--mark-base "if-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-minor-block-bol ()
@@ -6741,7 +6741,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "minor-block") nil t))
+  (let ((erg (py--mark-base "minor-block")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-paragraph-bol ()
@@ -6749,7 +6749,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "paragraph") nil t))
+  (let ((erg (py--mark-base "paragraph")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-statement-bol ()
@@ -6757,7 +6757,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "statement") nil t))
+  (let ((erg (py--mark-base "statement")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-try-block-bol ()
@@ -6765,7 +6765,7 @@ Don't store data in kill ring. "
 
 Don't store data in kill ring. "
   (interactive)
-  (let ((erg (py--mark-base "try-block") nil t))
+  (let ((erg (py--mark-base "try-block")))
     (delete-region (car erg) (cdr erg))))
 
 ;; python-components-execute
