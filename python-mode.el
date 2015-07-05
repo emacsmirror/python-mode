@@ -2903,7 +2903,7 @@ Used only, if `py-install-directory' is empty. "
                     (file-name-directory (buffer-file-name)))
                    ((string-match "python-mode" (buffer-name))
                     default-directory))))
-    (cond ((and py-install-directory (not string= "" py-install-directory) py-install-directory)
+    (cond ((and py-install-directory (not (string= "" py-install-directory)) py-install-directory)
 	   (erg
 	    (setq py-install-directory erg))
 	   (t (setq py-install-directory (expand-file-name "~/")))))
@@ -3242,9 +3242,6 @@ Returns char found. "
 
 ;; Toggle highlight-indentation
 
-(defalias 'py-highlight-indentation-on 'highlight-indentation-on)
-(defalias 'py-highlight-indentation-off 'highlight-indentation-off)
-(defalias 'toggle-highlight-indentation 'py-toggle-highlight-indentation)
 (defun py-toggle-highlight-indentation (&optional indent)
   "If `highlight-indentation-p' should be on or off. "
   (interactive "P")
