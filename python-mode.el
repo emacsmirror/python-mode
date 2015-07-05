@@ -4624,16 +4624,6 @@ Returns beginning of except-block if successful, nil otherwise
   (interactive)
   (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) t))
 
-(defun py-backward-except-block-bol (&optional indent)
- "Go to beginning of except-block, go to BOL.
-
-If already at beginning, go one except-block backward.
-Returns beginning of except-block if successful, nil otherwise
-
-"
-  (interactive)
-  (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) t))
-
 (defun py-backward-for-block-bol (&optional indent)
  "Go to beginning of for-block, go to BOL.
 
@@ -12366,12 +12356,6 @@ When `delete-active-region' and (region-active-p), delete region "
   "Returns beginning of else-block position. "
   (save-excursion
     (let ((erg (py-backward-else-block-bol)))
-      erg)))
-
-(defun py--beginning-of-except-block-position-bol ()
-  "Returns beginning of except-block position. "
-  (save-excursion
-    (let ((erg (py-backward-except-block-bol)))
       erg)))
 
 (defun py--beginning-of-except-block-position-bol ()
