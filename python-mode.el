@@ -9,7 +9,7 @@
 
 ;; Copyright (C) 2015  Andreas Röhler
 
-;; Author: Andreas Röhler <andreas.roehler@easy-emacs.de>
+;; Author: Andreas Röhler <andreas.roehler@online.de>
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
@@ -2903,12 +2903,11 @@ Used only, if `py-install-directory' is empty. "
                     (file-name-directory (buffer-file-name)))
                    ((string-match "python-mode" (buffer-name))
                     default-directory))))
-    (cond ((and py-install-directory (not (string= "" py-install-directory)) py-install-directory)
-	   (erg
-	    (setq py-install-directory erg))
+    (cond ((and (or (not py-install-directory (string= "" py-install-directory))) erg)
+	   (setq py-install-directory erg))
 	   (t (setq py-install-directory (expand-file-name "~/")))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "Setting py-install-directory to: %s" py-install-directory))
-    py-install-directory))
+    py-install-directory)
 
 (defun py-load-pymacs ()
   "Load Pymacs as delivered with python-mode.el.
@@ -4514,16 +4513,6 @@ Returns beginning of try-block if successful, nil otherwise
   (interactive)
   (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any)))
 
-(defun py-backward-line (&optional indent)
- "Go to beginning of line.
-
-If already at beginning, go one line backward.
-Returns beginning of line if successful, nil otherwise
-
-"
-  (interactive)
-  (py--backward-prepare indent 'py-line-re 'py-clause-re (called-interactively-p 'any)))
-
 (defun py-backward-minor-block (&optional indent)
  "Go to beginning of minor-block.
 
@@ -4653,6 +4642,16 @@ Returns beginning of minor-block if successful, nil otherwise
 "
   (interactive)
   (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any) t))
+
+(defun py-backward-statement-bol (&optional indent)
+ "Go to beginning of statement, go to BOL.
+
+If already at beginning, go one statement backward.
+Returns beginning of statement if successful, nil otherwise
+
+"
+  (interactive)
+  (py--backward-prepare indent 'py-statement-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-try-block-bol (&optional indent)
  "Go to beginning of try-block, go to BOL.
@@ -13025,56 +13024,194 @@ Return position if section found, nil otherwise "
 ;; python-components-up-down.el ends here
 ;; python-components-exec-forms
 
-;;  Execute forms at point
-(defun py-execute-statement ()
-  "Send statement at point to Python default interpreter. "
-  (interactive)
-  (py--execute-prepare "statement"))
+;; Execute forms at point
 
 (defun py-execute-block ()
   "Send block at point to Python default interpreter. "
   (interactive)
-  (py--execute-prepare "block"))
+  (let ((beg (prog1
+                 (or (py--beginning-of-block-p)
+                     (save-excursion
+                       (py-backward-block)))))
+        (end (save-excursion
+               (py-forward-block))))
+    (py-execute-region beg end)))
 
 (defun py-execute-block-or-clause ()
   "Send block-or-clause at point to Python default interpreter. "
   (interactive)
-  (py--execute-prepare "block-or-clause"))
+  (let ((beg (prog1
+                 (or (py--beginning-of-block-or-clause-p)
+                     (save-excursion
+                       (py-backward-block-or-clause)))))
+        (end (save-excursion
+               (py-forward-block-or-clause))))
+    (py-execute-region beg end)))
 
-(defun py-execute-def ()
-  "Send def at point to Python default interpreter. "
+(defun py-execute-buffer ()
+  "Send buffer at point to Python default interpreter. "
   (interactive)
-  (py--execute-prepare "def"))
+  (let ((beg (prog1
+                 (or (py--beginning-of-buffer-p)
+                     (save-excursion
+                       (py-backward-buffer)))))
+        (end (save-excursion
+               (py-forward-buffer))))
+    (py-execute-region beg end)))
 
 (defun py-execute-class ()
   "Send class at point to Python default interpreter. "
   (interactive)
-  (py--execute-prepare "class"))
-
-(defun py-execute-def-or-class ()
-  "Send def-or-class at point to Python default interpreter. "
-  (interactive)
-  (py--execute-prepare "def-or-class"))
-
-(defun py-execute-expression ()
-  "Send expression at point to Python default interpreter. "
-  (interactive)
-  (py--execute-prepare "expression"))
-
-(defun py-execute-partial-expression ()
-  "Send partial-expression at point to Python default interpreter. "
-  (interactive)
-  (py--execute-prepare "partial-expression"))
-
-(defun py-execute-top-level ()
-  "Send top-level at point to Python default interpreter. "
-  (interactive)
-  (py--execute-prepare "top-level"))
+  (let ((beg (prog1
+                 (or (py--beginning-of-class-p)
+                     (save-excursion
+                       (py-backward-class)))))
+        (end (save-excursion
+               (py-forward-class))))
+    (py-execute-region beg end)))
 
 (defun py-execute-clause ()
   "Send clause at point to Python default interpreter. "
   (interactive)
-  (py--execute-prepare "clause"))
+  (let ((beg (prog1
+                 (or (py--beginning-of-clause-p)
+                     (save-excursion
+                       (py-backward-clause)))))
+        (end (save-excursion
+               (py-forward-clause))))
+    (py-execute-region beg end)))
+
+(defun py-execute-def ()
+  "Send def at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-def-p)
+                     (save-excursion
+                       (py-backward-def)))))
+        (end (save-excursion
+               (py-forward-def))))
+    (py-execute-region beg end)))
+
+(defun py-execute-def-or-class ()
+  "Send def-or-class at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-def-or-class-p)
+                     (save-excursion
+                       (py-backward-def-or-class)))))
+        (end (save-excursion
+               (py-forward-def-or-class))))
+    (py-execute-region beg end)))
+
+(defun py-execute-else-block ()
+  "Send else-block at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-else-block-p)
+                     (save-excursion
+                       (py-backward-else-block)))))
+        (end (save-excursion
+               (py-forward-else-block))))
+    (py-execute-region beg end)))
+
+(defun py-execute-except-block ()
+  "Send except-block at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-except-block-p)
+                     (save-excursion
+                       (py-backward-except-block)))))
+        (end (save-excursion
+               (py-forward-except-block))))
+    (py-execute-region beg end)))
+
+(defun py-execute-expression ()
+  "Send expression at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-expression-p)
+                     (save-excursion
+                       (py-backward-expression)))))
+        (end (save-excursion
+               (py-forward-expression))))
+    (py-execute-region beg end)))
+
+(defun py-execute-if-block ()
+  "Send if-block at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-if-block-p)
+                     (save-excursion
+                       (py-backward-if-block)))))
+        (end (save-excursion
+               (py-forward-if-block))))
+    (py-execute-region beg end)))
+
+(defun py-execute-minor-block ()
+  "Send minor-block at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-minor-block-p)
+                     (save-excursion
+                       (py-backward-minor-block)))))
+        (end (save-excursion
+               (py-forward-minor-block))))
+    (py-execute-region beg end)))
+
+(defun py-execute-partial-expression ()
+  "Send partial-expression at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-partial-expression-p)
+                     (save-excursion
+                       (py-backward-partial-expression)))))
+        (end (save-excursion
+               (py-forward-partial-expression))))
+    (py-execute-region beg end)))
+
+(defun py-execute-section ()
+  "Send section at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-section-p)
+                     (save-excursion
+                       (py-backward-section)))))
+        (end (save-excursion
+               (py-forward-section))))
+    (py-execute-region beg end)))
+
+(defun py-execute-statement ()
+  "Send statement at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-statement-p)
+                     (save-excursion
+                       (py-backward-statement)))))
+        (end (save-excursion
+               (py-forward-statement))))
+    (py-execute-region beg end)))
+
+(defun py-execute-top-level ()
+  "Send top-level at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-top-level-p)
+                     (save-excursion
+                       (py-backward-top-level)))))
+        (end (save-excursion
+               (py-forward-top-level))))
+    (py-execute-region beg end)))
+
+(defun py-execute-try-block ()
+  "Send try-block at point to Python default interpreter. "
+  (interactive)
+  (let ((beg (prog1
+                 (or (py--beginning-of-try-block-p)
+                     (save-excursion
+                       (py-backward-try-block)))))
+        (end (save-excursion
+               (py-forward-try-block))))
+    (py-execute-region beg end)))
 
 ;; python-extended-executes
 
