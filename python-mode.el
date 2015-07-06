@@ -7373,7 +7373,7 @@ Receives a buffer-name as argument"
 (defun py--reuse-existing-shell ()
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
-(defun py--create-new-shell ()
+(defun py--create-new-shell (executable)
   (let ((buf (current-buffer)))
     (with-current-buffer
 	(apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
@@ -7448,7 +7448,7 @@ Receives a buffer-name as argument"
 	(when (buffer-live-p py-buffer-name)
 	  (with-current-buffer py-buffer-name
 	    (erase-buffer)))
-	(py--create-new-shell))
+	(py--create-new-shell executable))
       (when (or (called-interactively-p 'any)
 		;; M-x python RET sends from interactive "p"
 		argprompt
