@@ -64,15 +64,6 @@
 
 ;;; Code:
 
-(unless (boundp 'py-install-directory)
-    (message (concat "Don't see where py-install-directory is set, see README.org, taking default-directory: " default-directory))
-    (defvar py-install-directory default-directory))
-
-(if py-install-directory
-    (add-to-list 'load-path
-		 (concat py-install-directory "extensions"))
-  (error "Don't see where py-install-directory is set, see README.org"))
-
 
 (defgroup python-mode nil
   "Support for the Python programming language, <http://www.python.org/>"
@@ -87,6 +78,9 @@
   :type 'string
   :tag "py-install-directory"
   :group 'python-mode)
+
+(when (string= "" py-install-directory)
+  (setq py-install-directory default-directory))
 
 (defcustom python-mode-modeline-display "Py"
   "String to display in Emacs modeline "
@@ -2128,6 +2122,8 @@ some logging etc. "
   :type 'string
   :tag "py-section-end"
   :group 'python-mode)
+
+(defvar py-section-re py-section-start)
 
 (defvar py-completion-last-window-configuration nil
   "Internal use: restore py-restore-window-configuration when completion is done resp. abandoned. ")
@@ -5089,12 +5085,11 @@ If already at beginning-of-line and not at BOB, go to beginning of previous line
 If already at end-of-line and not at EOB, go to end of next line. "
   (interactive)
   (unless (eobp)
-    (let ((erg
-           (if (eolp)
-               (progn
-                 (forward-line 1)
-                 (progn (end-of-line)(point)))
-             (progn (end-of-line)(point)))))
+    (let ((orig (point))
+	  erg)
+      (when (eolp) (forward-line 1))
+      (end-of-line)
+      (when (< orig (point))(setq erg (point)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
@@ -5337,19 +5332,6 @@ Returns position if succesful "
       erg)))
 
 ;;  Helper functions
-
-(defun py-forward-line (&optional arg)
-  "Goes to end of line after forward move.
-
-Travels right-margin comments. "
-  (interactive "p")
-  (let ((arg (or arg 1)))
-    (forward-line arg)
-    (end-of-line)
-    (skip-chars-backward " \t")
-    (py-backward-comment)
-    (skip-chars-backward " \t")))
-
 (defun py-go-to-beginning-of-comment ()
   "Go to the beginning of current line's comment, if any.
 
@@ -7998,13 +7980,13 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given. "
     (when (called-interactively-p 'any) (switch-to-buffer output-buffer))))
 
 ;; ;
-(defun py-execute-line ()
-  "Send current line from beginning of indent to Python interpreter. "
-  (interactive)
-  (save-excursion
-    (let ((beg (progn (back-to-indentation)
-                      (point))))
-      (py-execute-region beg (line-end-position)))))
+;; (defun py-execute-line ()
+;;   "Send current line from beginning of indent to Python interpreter. "
+;;   (interactive)
+;;   (save-excursion
+;;     (let ((beg (progn (back-to-indentation)
+;;                       (point))))
+;;       (py-execute-region beg (line-end-position)))))
 
 ;;  Subprocess utilities and filters
 (defvar py-last-exeption-buffer nil
@@ -20169,6 +20151,8 @@ Unclosed-string errors are not handled here, as made visible by fontification al
                      py-def-or-class-re)
                     ((eq regexp 'py-def-re)
                      py-def-re)
+		    ((eq regexp 'py-section-re)
+                     py-section-re)
 		    ((eq regexp 'py-expression-re)
 		     py-expression-re)
 		    ((eq regexp 'py-class-re)
