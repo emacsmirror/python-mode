@@ -11237,11 +11237,6 @@ When `delete-active-region' and (region-active-p), delete region "
   (interactive)
   (message virtualenv-name))
 
-(defun virtualenv-deactivate (dir)
-  "Activate the virtualenv located in DIR"
-  (interactive "DVirtualenv Directory: ")
-  (shell-command "deactivate"))
-
 (defun virtualenv-activate (dir)
   "Activate the virtualenv located in DIR"
   (interactive "DVirtualenv Directory: ")
@@ -11250,29 +11245,23 @@ When `delete-active-region' and (region-active-p), delete region "
     (virtualenv-deactivate))
   (let ((cmd (concat "source " dir "/bin/activate\n")))
     (comint-send-string (get-process (get-buffer-process "*shell*")) cmd)
-  ;; Storing old variables
-  (setq virtualenv-old-path (getenv "PATH"))
-  (setq virtualenv-old-exec-path exec-path)
+    ;; Storing old variables
+    (setq virtualenv-old-path (getenv "PATH"))
+    (setq virtualenv-old-exec-path exec-path)
 
-  (setenv "VIRTUAL_ENV" dir)
-  (virtualenv-add-to-path (concat (py--normalize-directory dir) "bin"))
-  (add-to-list 'exec-path (concat (py--normalize-directory dir) "bin"))
+    (setenv "VIRTUAL_ENV" dir)
+    (virtualenv-add-to-path (concat (py--normalize-directory dir) "bin"))
+    (add-to-list 'exec-path (concat (py--normalize-directory dir) "bin"))
 
-  (setq virtualenv-name dir)
-)
-  )
-  ;; (message (concat "Virtualenv '" virtualenv-name "' activated.")))
+    (setq virtualenv-name dir)))
 
 (defun virtualenv-deactivate ()
   "Deactivate the current virtual enviroment"
   (interactive)
-
   ;; Restoring old variables
   (setenv "PATH" virtualenv-old-path)
   (setq exec-path virtualenv-old-exec-path)
-
   (message (concat "Virtualenv '" virtualenv-name "' deactivated."))
-
   (setq virtualenv-name nil))
 
 (defun virtualenv-p (dir)
@@ -20333,11 +20322,6 @@ Use current region unless optional args BEG END are delivered."
       (goto-char end)
       (unless (empty-line-p) (newline))
       (insert py-section-end))))
-
-(defun py--beginning-of-section-p (&optional pps)
-  "Return `t' if at a section start. "
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (looking-at py-section-start)(not (nth 8 pps)))))
 
 (defun py-execute-section-prepare (&optional shell)
   "Execute section at point. "
