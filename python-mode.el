@@ -12191,16 +12191,6 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-block-or-clause))))
       erg)))
 
-(defun py--end-of-buffer-position ()
-  "Returns end of buffer position. "
-  (save-excursion
-    (let ((erg (progn
-                 (when (looking-at "[ \\t\\r\\n\\f]*$")
-                   (skip-chars-backward " \t\r\n\f")
-                   (forward-char -1))
-                 (py-forward-buffer))))
-      erg)))
-
 (defun py--end-of-class-position ()
   "Returns end of class position. "
   (save-excursion
@@ -12221,6 +12211,16 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-clause))))
       erg)))
 
+(defun py--end-of-comment-position ()
+  "Returns end of comment position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-comment))))
+      erg)))
+
 (defun py--end-of-def-position ()
   "Returns end of def position. "
   (save-excursion
@@ -12239,16 +12239,6 @@ When `delete-active-region' and (region-active-p), delete region "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-forward-def-or-class))))
-      erg)))
-
-(defun py--end-of-else-block-position ()
-  "Returns end of else-block position. "
-  (save-excursion
-    (let ((erg (progn
-                 (when (looking-at "[ \\t\\r\\n\\f]*$")
-                   (skip-chars-backward " \t\r\n\f")
-                   (forward-char -1))
-                 (py-forward-else-block))))
       erg)))
 
 (defun py--end-of-except-block-position ()
@@ -12281,6 +12271,16 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-if-block))))
       erg)))
 
+(defun py--end-of-line-position ()
+  "Returns end of line position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-line))))
+      erg)))
+
 (defun py--end-of-minor-block-position ()
   "Returns end of minor-block position. "
   (save-excursion
@@ -12289,6 +12289,16 @@ When `delete-active-region' and (region-active-p), delete region "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-forward-minor-block))))
+      erg)))
+
+(defun py--end-of-paragraph-position ()
+  "Returns end of paragraph position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-paragraph))))
       erg)))
 
 (defun py--end-of-partial-expression-position ()
@@ -20244,10 +20254,6 @@ If no further element at same level, go one level up."
           ((py--beginning-of-statement-p) (py--beginning-of-form-intern 'py-extended-block-or-clause-re (called-interactively-p 'any)))
           (t (py-backward-statement)))))
 
-(defun py--end-of-line-p ()
-  "Returns position, if cursor is at the end of a line, nil otherwise. "
-  (when (eolp)(point)))
-
 (defun py--end-of-buffer-p ()
   "Returns position, if cursor is at the end of buffer, nil otherwise. "
   (when (eobp)(point)))
@@ -20264,16 +20270,6 @@ Returns a list, whose car is beg, cdr - end."
         (if (and beg end)
             (when (called-interactively-p 'any) (message "%s" (list beg end)))
           (list beg end))))))
-
-(defun py--beginning-of-paragraph-position ()
-  "Returns beginning of paragraph position. "
-  (interactive)
-  (save-excursion
-    (let ((erg (progn
-		 (py-backward-paragraph)
-		 (point))))
-      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-      erg)))
 
 (defun py--end-of-paragraph-position ()
   "Returns end of paragraph position. "
