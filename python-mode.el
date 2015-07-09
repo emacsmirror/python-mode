@@ -7555,11 +7555,11 @@ When optional FILE is `t', no temporary file is needed. "
     (cond (py-fast-process-p (py--send-to-fast-process strg proc output-buffer))
 	  ;; enforce proceeding as python-mode.el v5
 	  (python-mode-v5-behavior-p
-	   (py-execute-python-mode-v5 start end py-exception-buffer))
+	   (py-execute-python-mode-v5 start end py-exception-buffer origline))
 	  (py-execute-no-temp-p
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc file origline))
 	  ((and filename wholebuf)
-	   (py--execute-file-base proc filename nil buffer nil filename execute-directory py-exception-buffer))
+	   (py--execute-file-base proc filename nil buffer nil filename execute-directory py-exception-buffer origline))
 	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer)))))
 
 (defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf)
@@ -7575,7 +7575,7 @@ When optional FILE is `t', no temporary file is needed. "
       (insert strg)
       (write-file tempfile))
     (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer)))
+	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer origline)))
     (sit-for 0.1 t)
     (py--close-execution tempbuf tempfile)
     erg))
@@ -7710,7 +7710,7 @@ May we get rid of the temporary file? "
     (set-buffer-modified-p 'nil)
     (kill-buffer filebuf)))
 
-(defun py-execute-python-mode-v5 (start end &optional py-exception-buffer)
+(defun py-execute-python-mode-v5 (start end &optional py-exception-buffer origline)
   (interactive "r")
   (let ((py-exception-buffer (or py-exception-buffer (current-buffer)))
         (pcmd (concat py-shell-name (if (string-equal py-which-bufname
@@ -7736,7 +7736,7 @@ May we get rid of the temporary file? "
   "Fix offline amount, make error point at the corect line. "
   (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
 
-(defun py--execute-file-base (&optional proc filename cmd procbuf orig file execute-directory py-exception-buffer)
+(defun py--execute-file-base (&optional proc filename cmd procbuf orig file execute-directory py-exception-buffer origline)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
 
 Make that process's buffer visible and force display.  Also make
@@ -7776,7 +7776,7 @@ Returns position where output starts. "
         erg)
     (if (file-readable-p filename)
         (if py-store-result-p
-            (setq erg (py--execute-file-base nil (expand-file-name filename)))
+            (setq erg (py--execute-file-base nil (expand-file-name filename origline)))
           (py--execute-file-base nil (expand-file-name filename)))
       (message "%s not readable. %s" filename "Do you have write permissions?"))
     erg))
@@ -18846,7 +18846,7 @@ Use `py-fast-process' "
           (progn
             (setq filename (expand-file-name form))
             (if (file-readable-p filename)
-                (py--execute-file-base nil filename nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) filename))
+                (py--execute-file-base nil filename nil nil (or (and (boundp 'py-orig-buffer-or-file) py-orig-buffer-or-file) filename origline))
               (message "%s not readable. %s" file "Do you have write permissions?")))
         (py--execute-base beg end shell)))))
 
