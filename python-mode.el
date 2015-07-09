@@ -5610,6 +5610,7 @@ Return position if successful"
 
 (defalias 'beginning-of-class 'py-beginning-of-class)
 (defalias 'end-of-def-or-class 'py-end-of-def-or-class)
+(defalias 'py-backward-decorator-bol 'py-backward-decorator)
 (defalias 'py-beginning-of-block 'py-backward-block)
 (defalias 'py-beginning-of-block-bol 'py-backward-block-bol)
 (defalias 'py-beginning-of-block-or-clause 'py-backward-block-or-clause)
@@ -5620,18 +5621,21 @@ Return position if successful"
 (defalias 'py-beginning-of-comment 'py-backward-comment)
 (defalias 'py-beginning-of-declarations 'py-backward-declarations)
 (defalias 'py-beginning-of-decorator 'py-backward-decorator)
-(defalias 'py-beginning-of-decorator-bol 'py-backward-decorator-bol)
+(defalias 'py-beginning-of-decorator-bol 'py-backward-decorator)
 (defalias 'py-beginning-of-def-or-class 'py-backward-def-or-class)
 (defalias 'py-beginning-of-expression 'py-backward-expression)
+(defalias 'py-beginning-of-line 'py-backward-line)
 (defalias 'py-beginning-of-minor-block 'py-backward-minor-block)
 (defalias 'py-beginning-of-partial-expression 'py-backward-partial-expression)
 (defalias 'py-beginning-of-section 'py-backward-section)
 (defalias 'py-beginning-of-statement 'py-backward-statement)
 (defalias 'py-beginning-of-statement-bol 'py-backward-statement-bol)
 (defalias 'py-beginning-of-top-level 'py-backward-top-level)
+(defalias 'py-end-of-comment 'py-forward-comment)
 (defalias 'py-end-of-decorator 'py-forward-decorator)
 (defalias 'py-end-of-def-or-class 'py-forward-def-or-class)
 (defalias 'py-end-of-expression 'py-forward-expression)
+(defalias 'py-end-of-line 'py-forward-line)
 (defalias 'py-end-of-partial-expression 'py-forward-partial-expression)
 (defalias 'py-end-of-section 'py-forward-section)
 (defalias 'py-end-of-statement 'py-forward-statement)
@@ -5648,8 +5652,6 @@ Return position if successful"
 (defalias 'py-previous-clause 'py-backward-clause)
 (defalias 'py-previous-def-or-class 'py-backward-def-or-class)
 (defalias 'py-previous-statement 'py-backward-statement)
-(defalias 'py-beginning-of-line 'py-backward-line)
-(defalias 'py-end-of-line 'py-forward-line)
 
 ;; python-components-kill-forms
 
@@ -17919,7 +17921,7 @@ If region is active, restrict uncommenting at region "
              (beg (or beg (save-excursion
                             (while (and (py-beginning-of-comment) (setq last (point))(prog1 (forward-line -1)(end-of-line))))
                             last))))
-        (and (py-end-of-comment))
+        (and (py-forward-comment))
         (py--uncomment-intern beg (point))))))
 
 (defun py-comment-region (beg end &optional arg)
@@ -20593,7 +20595,7 @@ If BOL is t, mark from beginning-of-line"
                 (funcall begform)))
     (when py-mark-decorators
       (save-excursion
-        (when (setq erg (py-backward-decorator-bol))
+        (when (setq erg (py-backward-decorator))
           (setq beg erg))))
     (setq end (funcall endform))
     (push-mark beg t t)
