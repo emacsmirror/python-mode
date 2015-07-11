@@ -19849,7 +19849,7 @@ Unclosed-string errors are not handled here, as made visible by fontification al
 		  (when (py--statement-opens-block-p py-extended-block-or-clause-re)
 		    (point)))))))
 
-(defun py--go-down-when-found-upward (thisindent)
+(defun py--go-down-when-found-upward (thisindent regexp)
   (setq thisindent (current-indentation))
   (while
       (and (py-down-statement)
@@ -19889,7 +19889,7 @@ Unclosed-string errors are not handled here, as made visible by fontification al
              ind erg last pps thisindent done err)
         (cond ((eq regexp 'py-paragraph-re)
 	       (while (and (not (eobp)) (re-search-forward py-paragraph-re nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point))))))
-	      (this (py--go-down-when-found-upward thisindent))
+	      (this (py--go-down-when-found-upward thisindent regexp))
               (t (goto-char orig)))
         (when (and (<= (point) orig)(not (looking-at thisregexp)))
           ;; found the end above
