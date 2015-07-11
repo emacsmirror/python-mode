@@ -12425,7 +12425,7 @@ Return position if statement found, nil otherwise. "
   (let* ((orig (point))
 	 (erg
 	  (cond ((py--end-of-statement-p)
-		 (setq erg (and (py-forward-statement) (py-backward-statement))))
+		 (and (py-forward-statement) (py-backward-statement)))
 		((ignore-errors (< orig (progn (py-forward-statement) (py-backward-statement))))
 		 (point))
 		(t (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))))
