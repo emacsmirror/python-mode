@@ -17058,7 +17058,7 @@ See lp:1066489 "
   (py-indent-region docstring thisend)
   (goto-char orig))
 
-(defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end)
+(defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end py-current-indent)
   ;; (widen)
   ;; fill-paragraph causes wrong indent, lp:1397936
   ;; (narrow-to-region thisbeg thisend)
@@ -17106,7 +17106,7 @@ See lp:1066489 "
   (when multi-line-p
     ;; adjust the region to fill according to style
     (goto-char end)
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent))
   (goto-char orig))
 
 (defun py--fill-docstring-first-line ()
@@ -17129,7 +17129,7 @@ See lp:1066489 "
 	(setq beg (point))
 	(fill-region beg end)))))
 
-(defun py--fill-docstring (justify style docstring orig)
+(defun py--fill-docstring (justify style docstring orig py-current-indent)
   ;; Delete spaces after/before string fence
   (py--string-fence-delete-spaces docstring)
   (let* ((thisbeg (copy-marker docstring))
@@ -17162,7 +17162,7 @@ See lp:1066489 "
            (py--fill-docstring-last-line thisbeg thisend beg end style))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end)))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent)))
 
 (defun py-fill-string (&optional justify style docstring)
   "String fill function for `py-fill-paragraph'.
@@ -17183,7 +17183,7 @@ Fill according to `py-docstring-style' "
 		       (py--in-or-behind-or-before-a-docstring)
 		     docstring)))
     (if docstring
-	(py--fill-docstring justify style docstring orig)
+	(py--fill-docstring justify style docstring orig py-current-indent)
       (fill-paragraph justify))))
 
 (defun py-fill-paragraph (&optional justify)
