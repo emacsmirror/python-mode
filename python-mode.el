@@ -17058,7 +17058,7 @@ See lp:1066489 "
   (py-indent-region docstring thisend)
   (goto-char orig))
 
-(defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end py-current-indent)
+(defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig)
   ;; (widen)
   ;; fill-paragraph causes wrong indent, lp:1397936
   ;; (narrow-to-region thisbeg thisend)
@@ -17106,7 +17106,7 @@ See lp:1066489 "
   (when multi-line-p
     ;; adjust the region to fill according to style
     (goto-char end)
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig))
   (goto-char orig))
 
 (defun py--fill-docstring-first-line ()
@@ -17162,7 +17162,7 @@ See lp:1066489 "
            (py--fill-docstring-last-line thisbeg thisend beg end style))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent)))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig)))
 
 (defun py-fill-string (&optional justify style docstring)
   "String fill function for `py-fill-paragraph'.
