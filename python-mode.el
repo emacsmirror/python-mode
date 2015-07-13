@@ -119,22 +119,30 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defcustom py-comment-auto-fill-p nil
+  "When non-nil, fill comments.
+
+Defaut is nil" 
+
+  :type 'boolean
+  :group 'python-mode)
+
 (defcustom py-sexp-use-expression-p nil
- "If non-nil, C-M-s call py-forward-expression.
+  "If non-nil, C-M-s call py-forward-expression.
 
 Respective C-M-b will call py-backward-expression
 Default is t"
-:type 'boolean
-:group 'python-mode)
+  :type 'boolean
+  :group 'python-mode)
 
 (defcustom py-shell-unfontify-p t
- "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
+  "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
 
 Default is nil "
 
-:type 'boolean
+  :type 'boolean
   :tag "py-shell-unfontify-p"
-:group 'python-mode)
+  :group 'python-mode)
 
 (defcustom py-session-p t
   "If commands would use an existing process.
@@ -149,25 +157,25 @@ See also `py-dedicated-process-p'
   :group 'python-mode)
 
 (defcustom py-max-help-buffer-p nil
- "If \"\*Python-Help\*\"-buffer should appear as the only visible.
+  "If \"\*Python-Help\*\"-buffer should appear as the only visible.
 
 Default is nil. In help-buffer, \"q\" will close it.  "
 
-:type 'boolean
+  :type 'boolean
   :tag "py-max-help-buffer-p"
-:group 'python-mode)
+  :group 'python-mode)
 
 (defcustom py-highlight-error-source-p nil
- "When py-execute-... commands raise an error, respective code in source-buffer will be highlighted. Default is nil.
+  "When py-execute-... commands raise an error, respective code in source-buffer will be highlighted. Default is nil.
 
 M-x `py-remove-overlays-at-point' removes that highlighting.
  "
-:type 'boolean
+  :type 'boolean
   :tag "py-highlight-error-source-p"
-:group 'python-mode)
+  :group 'python-mode)
 
 (defcustom py-set-pager-cat-p nil
- "If the shell environment variable $PAGER should set to `cat'.
+  "If the shell environment variable $PAGER should set to `cat'.
 
 If `t', use `C-c C-r' to jump to beginning of output. Then scroll normally.
 
@@ -175,12 +183,12 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 
 When non-nil, imports module `os' "
 
-:type 'boolean
+  :type 'boolean
   :tag "py-set-pager-cat-p"
-:group 'python-mode)
+  :group 'python-mode)
 
 (defcustom py-empty-line-closes-p nil
- "When non-nil, dedent after empty line following block
+  "When non-nil, dedent after empty line following block
 
 if True:
     print(\"Part of the if-statement\")
@@ -191,18 +199,18 @@ Default is nil
 
 If non-nil, a C-j from empty line dedents."
 
-:type 'boolean
+  :type 'boolean
   :tag "py-empty-line-closes-p"
-:group 'python-mode)
+  :group 'python-mode)
 
 (defcustom py-prompt-on-changed-p t
- "When called interactively, ask for save before a changed buffer is sent to interpreter.
+  "When called interactively, ask for save before a changed buffer is sent to interpreter.
 
 Default is `t'"
 
- :type 'boolean
- :tag "py-prompt-on-changed-p"
- :group 'python-mode)
+  :type 'boolean
+  :tag "py-prompt-on-changed-p"
+  :group 'python-mode)
 
 (defcustom py-dedicated-process-p nil
   "If commands executing code use a dedicated shell.
@@ -225,7 +233,7 @@ Default is nil"
   :group 'python-mode)
 
 (defvar py-return-result-p t
- "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
+  "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
 
 Default is t")
 
@@ -237,7 +245,7 @@ Default is t")
   "Internally used by `py-match-paren'. ")
 
 (defvar py-new-session-p t
- "Internally used. See lp:1393882.
+  "Internally used. See lp:1393882.
 
 Restart py-shell once with new Emacs/python-mode. ")
 
@@ -246,8 +254,8 @@ Restart py-shell once with new Emacs/python-mode. ")
 
 Works around a bug in `choose-completion'.
 Default is `nil'"
-:type 'boolean
-:group 'python-mode)
+  :type 'boolean
+  :group 'python-mode)
 
 (defcustom py-update-gud-pdb-history-p t
   "If pdb should provide suggestions WRT file to check and py-pdb-path.
@@ -18412,21 +18420,21 @@ Output-buffer is not in comint-mode "
   (interactive "P")
   (if (or (and arg (< 0 (prefix-numeric-value arg))) (and (boundp 'py-comment-auto-fill)(not py-comment-auto-fill)))
       (progn
-        (set (make-local-variable 'py-comment-auto-fill) t)
+        (set (make-local-variable 'py-comment-auto-fill-p) t)
         (setq fill-column comment-fill-column)
         (auto-fill-mode 1))
-    (set (make-local-variable 'py-comment-auto-fill) nil)
+    (set (make-local-variable 'py-comment-auto-fill-p) nil)
 ;;    (set (make-local-variable 'py-comment-auto-fill-only-comments) nil)
     ;; (setq fill-column fill-column-orig)
     (auto-fill-mode -1)))
 
 (defun py-comment-auto-fill-on ()
   (interactive)
-  (py-comment-auto-fill 1))
+  (py-comment-auto-fill-p 1))
 
 (defun py-comment-auto-fill-off ()
   (interactive)
-  (py-comment-auto-fill -1))
+  (py-comment-auto-fill-p -1))
 
 ;; python-components-hide-show
 
