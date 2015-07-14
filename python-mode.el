@@ -18430,11 +18430,11 @@ Output-buffer is not in comint-mode "
 
 (defun py-comment-auto-fill-on ()
   (interactive)
-  (py-comment-auto-fill-p 1))
+  (py-comment-auto-fill 1))
 
 (defun py-comment-auto-fill-off ()
   (interactive)
-  (py-comment-auto-fill-p -1))
+  (py-comment-auto-fill -1))
 
 ;; python-components-hide-show
 
