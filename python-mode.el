@@ -1294,11 +1294,20 @@ visible, open them manually and set `py-keep-windows-configuration' to `t'.
   :type '(choice
 
           (const :tag "default" just-two)
-	  (const :tag "Reuse" t)
-          (const :tag "No split" nil)
+	  (const :tag "reuse" t)
+          (const :tag "no split" nil)
 	  (const :tag "just-two" just-two)
           (const :tag "always" always))
   :tag "py-split-window-on-execute"
+  :group 'python-mode)
+
+(defcustom py-split-window-on-execute-threshold 3
+  "Maximal number of displayed windows.
+
+Honored, when `py-split-window-on-execute' is `t', i.e. \"reuse\".
+Don't split when max number of displayed windows is reached. "
+  :type 'number
+  :tag "py-split-window-on-execute-threshold"
   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-function 'split-window-vertically
@@ -7293,7 +7302,8 @@ Internal use"
 (defun py--shell-manage-windows (output-buffer windows-config &optional exception-buffer)
   "Adapt or restore window configuration. Return nil "
   (let ((py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer)))
-	(output-buffer (or output-buffer py-buffer-name)))
+	(output-buffer (or output-buffer py-buffer-name))
+	(number-of-windows (length (window-list))))
     (cond
      (py-keep-windows-configuration
       (py-restore-window-configuration)
@@ -7354,21 +7364,16 @@ Internal use"
        py-split-window-on-execute
        (not py-switch-buffers-on-execute-p))
       (switch-to-buffer (current-buffer))
-      (unless
-	  (member (get-buffer-window output-buffer)(window-list))
-	(py--manage-windows-split py-exception-buffer output-buffer))
+      (when (< number-of-windows py-split-window-on-execute-threshold)
+	(unless
+	    (member (get-buffer-window output-buffer)(window-list))
+	  (py--manage-windows-split py-exception-buffer output-buffer)))
       ;; Fixme: otherwise new window appears above
       (save-excursion
 	(other-window 1)
 	(pop-to-buffer output-buffer)
 	(goto-char (point-max))
 	(other-window 1)))
-     ;; ((and
-     ;;   py-switch-buffers-on-execute-p
-     ;;   (not py-split-window-on-execute))
-     ;;  (set-buffer output-buffer)
-     ;;  (switch-to-buffer (current-buffer)))
-     ;; no split, no switch
      ((not py-switch-buffers-on-execute-p)
       (let (pop-up-windows)
 	(py-restore-window-configuration))))))
