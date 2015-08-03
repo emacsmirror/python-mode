@@ -2326,8 +2326,10 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
   ".*:?[ \t]*\\_<\\(return\\)\\_>[ \n\t]*"
   "Regular expression matching keyword which typically closes a function. ")
 
-(defconst py-no-outdent-1-re-raw
+(defconst py-outdent-re-raw
   (list
+   "class"
+   "def"
    "elif"
    "else"
    "except"
@@ -2337,10 +2339,20 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
    "while"
    ))
 
+(defconst py-outdent-re
+  (concat
+   "[ \t]*\\_<"
+   (regexp-opt py-outdent-re-raw)
+   "\\_>[)\t]*")
+  "Regular expression matching lines not to augment indent after.
+
+See py-no-outdent-re-raw for better readable content ")
+
 (defconst py-no-outdent-re-raw
   (list
    "break"
    "continue"
+   "import"
    "pass"
    "raise"
    "return"
@@ -2348,12 +2360,12 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
 
 (defconst py-no-outdent-re
   (concat
-   "[ \t]*\\_<\\("
+   "[ \t]*\\_<"
    (regexp-opt py-no-outdent-re-raw)
-   "\\)\\_>[)\t]*$")
+   "\\_>[)\t]*$")
   "Regular expression matching lines not to augment indent after.
 
-See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content ")
+See py-no-outdent-re-raw for better readable content ")
 
 (defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)"
   "If looking at the beginning of an assignment. ")
@@ -19350,7 +19362,7 @@ LIEP stores line-end-position at point-of-interest
 		  (cond ((bobp)
 			 (cond ((eq liep (line-end-position))
 				0)
-			       ((and (looking-at py-extended-block-or-clause-re)(py--statement-opens-block-p (match-string-no-properties 0))) 
+			       ((looking-at py-outdent-re)
 				(+ (if py-smart-indentation (py-guess-indent-offset) indent-offset) (current-indentation)))
 			       (t
 				(current-indentation))))
