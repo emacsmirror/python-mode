@@ -3,7 +3,8 @@ Please note that this is different than the python.el that comes by default in F
 Contact us at python-mode@python.org.  You can also subscribe the mailing list at <http://mail.python.org/mailman/listinfo/python-mode>.
 
 
-* In case `Pymacs' was installed via `make' on your system, don't
+* Pymacs
+  In case `Pymacs' was installed via `make' on your system, don't
   activate inlined one.  Keep `py-load-pymacs-p' nil.
 
   Otherwise setting `py-load-pymacs-p' to `t' should enable a
