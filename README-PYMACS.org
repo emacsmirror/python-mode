@@ -1,4 +1,4 @@
-Please note that this is different than the python.el that comes by default in FSF Emacs. The origins of python-mode.el predates python.el by many years.  Any known command should be available - with prefix `py-' here. 
+Please note that this is different than the python.el that comes by default in FSF Emacs. Prefix is `py-'. 
 
 Contact us at python-mode@python.org.  You can also subscribe the mailing list at <http://mail.python.org/mailman/listinfo/python-mode>.
 
