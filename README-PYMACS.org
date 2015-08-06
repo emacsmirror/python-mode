@@ -1,3 +1,8 @@
+Please note that this is different than the python.el that comes by default in FSF Emacs. The origins of python-mode.el predates python.el by many years.  Any known command should be available - with prefix `py-' here. 
+
+Contact us at python-mode@python.org.  You can also subscribe the mailing list at <http://mail.python.org/mailman/listinfo/python-mode>.
+
+
 * In case `Pymacs' was installed via `make' on your system, don't
   activate inlined one.  Keep `py-load-pymacs-p' nil.
 
