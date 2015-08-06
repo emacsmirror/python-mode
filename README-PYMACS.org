@@ -13,7 +13,7 @@
   Newer Pymacs should not need this.
   
 * Bug reports
-  Should python-mode fail or a feature is missed, if possible, give a description starting from `emacs -Q'.
+  Should python-mode fail or a feature is missed, please open a ticket in Issues. If possible, give a description starting from `emacs -Q'.
   Also output of M-x report-emacs-bug RET might be useful. Add the version of python-mode - M-x py-version RET.
 
   If you can, please check against current trunk or development branch.
