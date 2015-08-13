@@ -4468,6 +4468,7 @@ Returns the string inserted. "
       (insert erg))
     erg))
 
+;; Comments
 (defun py-delete-comments-in-def-or-class ()
   "Delete all commented lines in def-or-class at point"
   (interactive "*")
@@ -20653,6 +20654,7 @@ Use current region unless optional args BEG END are delivered."
     (save-excursion
       (goto-char beg)
       (unless (empty-line-p) (split-line))
+      (beginning-of-line) 
       (insert py-section-start)
       (goto-char end)
       (unless (empty-line-p) (newline))
@@ -25401,6 +25403,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 (defalias 'py-previous-clause 'py-backward-clause)
 (defalias 'py-previous-def-or-class 'py-backward-def-or-class)
 (defalias 'py-previous-statement 'py-backward-statement)
+(defalias 'py-markup-region-as-section 'py-sectionize-region)
 
 ;;;
 (provide 'python-mode)
