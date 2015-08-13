@@ -1,10 +1,4 @@
-Please note that this is different than the python.el that comes by default in FSF Emacs. Prefix is `py-'. 
-
-Contact us at python-mode@python.org.  You can also subscribe the mailing list at <http://mail.python.org/mailman/listinfo/python-mode>.
-
-
-* Pymacs
-  In case `Pymacs' was installed via `make' on your system, don't
+* In case `Pymacs' was installed via `make' on your system, don't
   activate inlined one.  Keep `py-load-pymacs-p' nil.
 
   Otherwise setting `py-load-pymacs-p' to `t' should enable a
@@ -17,9 +11,4 @@ Contact us at python-mode@python.org.  You can also subscribe the mailing list a
   export PYMACS_PYTHON=python2
   was reported being useful.
   Newer Pymacs should not need this.
-  
-* Bug reports
-  Should python-mode fail or a feature is missed, please open a ticket in Issues. If possible, give a description starting from `emacs -Q'.
-  Also output of M-x report-emacs-bug RET might be useful. Add the version of python-mode - M-x py-version RET.
 
-  If you can, please check against current trunk or development branch.
