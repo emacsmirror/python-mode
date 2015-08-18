@@ -1931,6 +1931,9 @@ It should not contain a caret (^) at the beginning."
 "
   "Python code to get a module path.")
 
+(defvar py-eldoc-window-configuration nil
+  "Keeps window-configuration when eldoc-mode is called. ")
+
 (defvar py-eldoc-setup-code
   "def __PYDOC_get_help(obj):
     try:
@@ -2155,7 +2158,7 @@ some logging etc. "
 
 (defvar py-section-re py-section-start)
 
-(defvar py-completion-last-window-configuration nil
+(defvar py-last-window-configuration nil
   "Internal use: restore py-restore-window-configuration when completion is done resp. abandoned. ")
 
 (defvar py-exception-buffer nil
@@ -8314,7 +8317,7 @@ completions on the current context."
                   (eq last-command 'py-shell-complete))
                  (eq this-command 'self-insert-command))))
     (set-window-configuration
-     py-completion-last-window-configuration))
+     py-last-window-configuration))
   (goto-char end))
 
 (defalias 'ipython-complete 'py-shell-complete)
@@ -8447,7 +8450,7 @@ completions on the current context."
   (save-excursion
     (and (buffer-live-p (get-buffer "*Python Completions*"))
 	 (py-kill-buffer-unconditional "*Python Completions*")))
-  (setq py-completion-last-window-configuration
+  (setq py-last-window-configuration
         (current-window-configuration))
   (when debug (setq py-shell-complete-debug nil))
   (py--complete-prepare shell debug beg end word nil))
@@ -8950,58 +8953,59 @@ not inside a defun."
 
 (defalias 'py-describe-symbol 'py-help-at-point)
 (defalias 'py-eldoc-function 'py-help-at-point)
-(defun py-help-at-point (&optional debug)
+(defun py--help-at-point-intern ()
+  (let* ((beg (point))
+	 (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
+	 (sym (buffer-substring-no-properties beg end))
+	 (origfile (buffer-file-name))
+	 (temp (md5 (buffer-name)))
+	 (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
+	 (cmd (py-find-imports))
+	 ;; if symbol is defined in current buffer, go to
+	 (erg (progn (goto-char (point-min))
+		     (when
+			 (re-search-forward (concat "^[ \t]*def " sym "(") nil t 1)
+		       (forward-char -2)
+		       (point)))))
+    (if erg
+	(progn (push-mark orig)(push-mark (point))
+	       (when (and (called-interactively-p 'any) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
+      (goto-char orig)
+      (when cmd
+	(setq cmd (mapconcat
+		   (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
+		   (split-string cmd ";" t)
+		   "")))
+      (setq cmd (concat "import pydoc\n"
+			cmd))
+      (when (not py-remove-cwd-from-path)
+	(setq cmd (concat cmd "import sys\n"
+			  "sys.path.insert(0, '"
+			  (file-name-directory origfile) "')\n")))
+      (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
+      (with-temp-buffer
+	(insert cmd)
+	(write-file file))
+      (py-process-file file "*Python-Help*")
+      (when (file-readable-p file)
+	(unless py-debug-p (delete-file file))))))
+
+(defun py-help-at-point ()
   "Print help on symbol at point.
 
-If symbol is defined in current buffer, jump to it's definition
-Optional \\[universal-argument] used for debugging, will prevent deletion of temp file. "
-  (interactive "P")
+If symbol is defined in current buffer, jump to it's definition"
+  (interactive)
   (let ((orig (point)))
-    (when (and (looking-back "(")(not (looking-at "\\sw"))) (forward-char -1))
-    (unless (or (not (face-at-point)) (eq (face-at-point) 'default))
-      (when (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
-	(let* ((beg (point))
-	       (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
-	       (sym (buffer-substring-no-properties beg end))
-	       (origfile (buffer-file-name))
-	       (temp (md5 (buffer-name)))
-	       (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
-	       (cmd (py-find-imports))
-	       ;; if symbol is defined in current buffer, go to
-	       (erg (progn (goto-char (point-min))
-			   (when
-			       (re-search-forward (concat "^[ \t]*def " sym "(") nil t 1)
-			     (forward-char -2)
-			     (point)))))
-	  (if erg
-	      (progn (push-mark orig)(push-mark (point))
-		     (when (and (called-interactively-p 'any) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
-	    (goto-char orig)
-	    (when cmd
-	      (setq cmd (mapconcat
-			 (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
-			 (split-string cmd ";" t)
-			 "")))
-	    (setq cmd (concat "import pydoc\n"
-			      cmd))
-	    (when (not py-remove-cwd-from-path)
-	      (setq cmd (concat cmd "import sys\n"
-				"sys.path.insert(0, '"
-				(file-name-directory origfile) "')\n")))
-	    (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-	    (with-temp-buffer
-	      (insert cmd)
-	      (write-file file))
-	    (setq erg (py-process-file file "*Python-Help*"))
-	    (if py-max-help-buffer-p
-		(progn
-		  (set-buffer "*Python-Help*")
-		  (switch-to-buffer (current-buffer))
-		  (help-mode)
-		  (delete-other-windows))
-	      (message "%s" erg))
-	    (when (file-readable-p file)
-	      (unless py-debug-p (delete-file file)))))))))
+    (unless (eq orig (ignore-errors py-last-position))
+      (setq py-last-position orig)
+      (unless (member (get-buffer-window "*Python-Help*")(window-list))
+	(window-configuration-to-register py-windows-config-register))
+      (and (looking-back "(")(not (looking-at "\\sw")) (forward-char -1))
+      (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
+	  (py-restore-window-configuration)
+	(if (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
+	    (py--help-at-point-intern)
+	  (py-restore-window-configuration))))))
 
 ;;  Documentation functions
 
@@ -18724,7 +18728,7 @@ completions on the current context."
 
 Use `py-fast-process' "
   (interactive)
-  (setq py-completion-last-window-configuration
+  (setq py-last-window-configuration
         (current-window-configuration))
   (let (py-switch-buffers-on-execute-p
 	(py-fast-process-p t)
@@ -25065,6 +25069,8 @@ See available customizations listed in files variables-python-mode at directory 
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
                                   py-outline-mode-keywords)
                           "\\|")))
+  (when (eq 0 (string-match "25" emacs-version))
+    (global-eldoc-mode -1))
   (if py-use-font-lock-doc-face-p
       (set (make-local-variable 'font-lock-defaults)
            '(python-font-lock-keywords nil nil nil nil
