@@ -1378,6 +1378,8 @@ Else python"
 
 (defvar py-default-interpreter py-shell-name)
 
+(defvar py-named-shells (list 'ipython 'ipython-dedicated 'ipython-no-switch 'ipython-switch 'ipython-switch-dedicated 'ipython2.7 'ipython2.7-dedicated 'ipython2.7-no-switch 'ipython2.7-switch 'ipython2.7-switch-dedicated 'ipython3 'ipython3-dedicated 'ipython3-no-switch 'ipython3-switch 'ipython3-switch-dedicated 'jython 'jython-dedicated 'jython-no-switch 'jython-switch 'jython-switch-dedicated 'python 'python-dedicated 'python-no-switch 'python-switch 'python-switch-dedicated 'python2 'python2-dedicated 'python2-no-switch 'python2-switch 'python2-switch-dedicated 'python3 'python3-dedicated 'python3-no-switch 'python3-switch 'python3-switch-dedicated))
+
 (defcustom py-python-command
   (if (eq system-type 'windows-nt)
       ;; "C:\\Python27\\python.exe"
@@ -7544,7 +7546,10 @@ Receives a buffer-name as argument"
 	  (with-current-buffer py-buffer-name
 	    (erase-buffer)))
 	(py--create-new-shell executable args exception-buffer))
-      (when (called-interactively-p 'any)
+      (when (or (called-interactively-p 'any) 
+		(eq 1 argprompt)
+		;; (member this-command py-named-shells)
+		)
 	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer)))
     ;; (sit-for py-new-shell-delay t)
     py-buffer-name))
@@ -10759,49 +10764,49 @@ of the first definition found."
   "Start an IPython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "ipython"))
 
 (defun ipython2.7 (&optional argprompt)
   "Start an IPython2.7 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "ipython2.7"))
 
 (defun ipython3 (&optional argprompt)
   "Start an IPython3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "ipython3"))
 
 (defun jython (&optional argprompt)
   "Start an Jython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "jython"))
 
 (defun python (&optional argprompt)
   "Start an Python interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python"))
 
 (defun python2 (&optional argprompt)
   "Start an Python2 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python2"))
 
 (defun python3 (&optional argprompt)
   "Start an Python3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "P")
+  (interactive "p")
   (py-shell argprompt nil "python3"))
 
 ;; dedicated
