@@ -4200,7 +4200,7 @@ downwards from beginning of block followed by a statement. Otherwise default-val
 
 Starts from second line of region specified"
   (goto-char beg)
-  (forward-line 1) 
+  (forward-line 1)
   (while (< (point) end)
     (if (empty-line-p)
 	(forward-line 1)
@@ -4511,6 +4511,33 @@ Returns the string inserted. "
       (if (looking-at (concat "[ \t]*" comment-start))
           (delete-region (point) (1+ (line-end-position)))
         (forward-line 1)))))
+
+;; Edit docstring
+(defun py-edit-docstring ()
+  "Edit docstring or active region in python-mode. "
+  (interactive "*")
+  (let ((orig (point))
+	(beg (when (use-region-p) (region-beginning)))
+	(end (when (use-region-p) (region-end)))
+	(pps (parse-partial-sexp (point-min) (point))))
+    (when (nth 3 pps)
+      (let* (;; relative position in string
+	     (beg (or beg (progn (goto-char (nth 8 pps))
+				 (skip-chars-forward (char-to-string (char-after)))(push-mark)(point))))
+	     (end (or end
+		      (progn (goto-char (nth 8 pps))
+			     (forward-sexp)
+			     (skip-chars-backward (char-to-string (char-before)))
+			     (point))))
+	     (relpos (1+ (- orig beg)))
+	     (docstring (buffer-substring beg end)))
+	(kill-region beg end)
+	(set-buffer (get-buffer-create "Edit docstring"))
+	(erase-buffer)
+	(switch-to-buffer (current-buffer))
+	(insert docstring)
+	(python-mode)
+	(goto-char relpos)))))
 
 ;; python-components-backward-forms
 
@@ -5216,11 +5243,14 @@ If already at end-of-line and not at EOB, go to end of next line. "
       erg)))
 
 ;;  Statement
-(defun py-backward-statement (&optional orig done limit)
+(defun py-backward-statement (&optional orig done limit ignore-in-string-p)
   "Go to the initial line of a simple statement.
 
 For beginning of compound statement use py-backward-block.
-For beginning of clause py-backward-clause."
+For beginning of clause py-backward-clause.
+
+`ignore-in-string-p' allows moves inside a docstring, used when
+computing indents"
   (interactive)
   (save-restriction
     (unless (bobp)
@@ -5237,56 +5267,60 @@ For beginning of clause py-backward-clause."
         (cond
          ((and (bolp)(eolp))
           (skip-chars-backward " \t\r\n\f")
-          (py-backward-statement orig done limit))
-         ((nth 8 pps)
+          (py-backward-statement orig done limit ignore-in-string-p))
 	  ;; inside string
-          (and (nth 3 pps) (setq done t))
-          (goto-char (nth 8 pps))
-          (py-backward-statement orig done limit))
+         ((and (nth 3 pps)(not ignore-in-string-p))
+	  (setq done t)
+	  (goto-char (nth 8 pps))
+	  (py-backward-statement orig done limit ignore-in-string-p))
+	 ((nth 4 pps)
+	  (goto-char (nth 8 pps))
+	  (skip-chars-backward " \t\r\n\f") 
+	  (py-backward-statement orig done limit ignore-in-string-p))
          ((nth 1 pps)
           (goto-char (1- (nth 1 pps)))
 	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point)))
 	    (setq done t))
-          (py-backward-statement orig done limit))
+          (py-backward-statement orig done limit ignore-in-string-p))
          ((py-preceding-line-backslashed-p)
           (forward-line -1)
           (back-to-indentation)
           (setq done t)
-          (py-backward-statement orig done limit))
+          (py-backward-statement orig done limit ignore-in-string-p))
 	 ;; BOL or at space before comment
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
           (forward-comment -1)
           (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
             (forward-comment -1))
           (unless (bobp)
-            (py-backward-statement orig done limit)))
+            (py-backward-statement orig done limit ignore-in-string-p)))
 	 ;; at inline comment
          ((looking-at "[ \t]*#")
 	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point)))
 	    (setq done t))
-	  (py-backward-statement orig done limit))
-	;; at beginning of string
-	((and (not done) (looking-at py-string-delim-re))
-	 (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-	   (setq done t))
-	 (back-to-indentation)
-	 (py-backward-statement orig done limit))
-	;; after end of statement
-	((and (not done) (eq (char-before) ?\;))
-	 (skip-chars-backward ";")
-	 (py-backward-statement orig done limit))
-	;; travel until indentation or semicolon
-	((and (not done) (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))))
-	 (setq done t) 
-	 (py-backward-statement orig done limit))
-	;; at current indent
-	((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
-	 (py-backward-statement orig done limit)))
-      ;; return nil when before comment
-      (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
-	(when (< (point) orig)(setq erg (point))))
-      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-      erg))))
+	  (py-backward-statement orig done limit ignore-in-string-p))
+	 ;; at beginning of string
+	 ((and (not done) (looking-at py-string-delim-re))
+	  (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+	    (setq done t))
+	  (back-to-indentation)
+	  (py-backward-statement orig done limit ignore-in-string-p))
+	 ;; after end of statement
+	 ((and (not done) (eq (char-before) ?\;))
+	  (skip-chars-backward ";")
+	  (py-backward-statement orig done limit ignore-in-string-p))
+	 ;; travel until indentation or semicolon
+	 ((and (not done) (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))))
+	  (setq done t)
+	  (py-backward-statement orig done limit ignore-in-string-p))
+	 ;; at current indent
+	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
+	  (py-backward-statement orig done limit ignore-in-string-p)))
+	;; return nil when before comment
+	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+	  (when (< (point) orig)(setq erg (point))))
+	(when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+	erg))))
 
 (defun py-backward-statement-bol (&optional indent)
   "Goto beginning of line where statement starts.
@@ -19300,6 +19334,26 @@ Use `defcustom' to keep value across sessions "
     (beginning-of-line)
     (looking-at "\\s-*$")))
 
+(defun py--compute-indentation-in-string (pps)
+  (cond
+   ((py--docstring-p)
+    (save-excursion
+      (py-backward-statement (point) nil (nth 8 pps) t)
+      (current-indentation)))
+   ;; still at original line
+   ((eq origline (line-end-position))
+    (forward-line -1)
+    (end-of-line)
+    (skip-chars-backward " \t\r\n\f")
+    (if (ignore-errors (< (nth 8 (parse-partial-sexp (point-min) (point))) (line-beginning-position)))
+	(current-indentation)
+      (ignore-errors (goto-char (nth 8 pps)))
+      (when (py--line-backward-maybe) (setq line t))
+      (back-to-indentation)
+      (py-compute-indentation orig origline closing line nesting repeat indent-offset liep)))
+   (t (goto-char (nth 8 pps))
+      (current-indentation))))
+
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line nesting repeat indent-offset liep)
   "Compute Python indentation.
@@ -19368,21 +19422,7 @@ LIEP stores line-end-position at point-of-interest
 				(current-indentation))))
 			;; in string
 			((and (nth 3 pps)(nth 8 pps))
-			 (if
-			     ;; still at original line
-			     (eq origline (line-end-position))
-			     (progn
-			       (forward-line -1)
-			       (end-of-line)
-			       (skip-chars-backward " \t\r\n\f")
-			       (if (ignore-errors (< (nth 8 (parse-partial-sexp (point-min) (point))) (line-beginning-position)))
-				   (current-indentation)
-				 (ignore-errors (goto-char (nth 8 pps)))
-				 (when (py--line-backward-maybe) (setq line t))
-				 (back-to-indentation)
-				 (py-compute-indentation orig origline closing line nesting repeat indent-offset liep)))
-			   (goto-char (nth 8 pps))
-			   (current-indentation)))
+			 (py--compute-indentation-in-string pps))
 			((and (looking-at "\"\"\"\\|'''")(not (bobp)))
 			 (py-backward-statement)
 			 (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
@@ -20653,7 +20693,7 @@ Use current region unless optional args BEG END are delivered."
     (save-excursion
       (goto-char beg)
       (unless (empty-line-p) (split-line))
-      (beginning-of-line) 
+      (beginning-of-line)
       (insert py-section-start)
       (goto-char end)
       (unless (empty-line-p) (newline))
