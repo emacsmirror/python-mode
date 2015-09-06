@@ -2367,7 +2367,7 @@ See py-no-outdent-re-raw for better readable content ")
   (concat
    "[ \t]*\\_<"
    (regexp-opt py-no-outdent-re-raw)
-   "\\_>[)\t]*")
+   "\\_>[)\t]*$")
   "Regular expression matching lines not to augment indent after.
 
 See py-no-outdent-re-raw for better readable content ")
@@ -2465,7 +2465,6 @@ See py-no-outdent-re-raw for better readable content ")
    "finally"
    "for"
    "if"
-   "import"
    "try"
    "while"
    "with"
@@ -3105,16 +3104,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
           (py-escaped))))
 ;;
 
-
-(defvar py-edit-docstring-mode-map nil
-  "Keymap for edit-docstring minor mode.")
-
-(setq py-edit-docstring-mode-map
-      (let ((map (make-sparse-keymap)))
-        ;; electric keys
-        (define-key map [(:)] 'py-electric-colon)
-        (define-key map [(\#)] 'py-electric-comment)
-	map))
 
 (defvar python-mode-map nil)
 (setq python-mode-map
@@ -3978,12 +3967,14 @@ C-q TAB inserts a literal TAB-character."
     (setq outmost (py-compute-indentation nil nil nil nil nil nil this-indent-offset))
     ;; now choose the indent
     (setq need
-	  (cond ((bolp)
-		 outmost)
-		((eq cui outmost)
-		 (when (and (eq this-command last-command) (not outmost-only))
-		   (py--calculate-indent-backwards cui this-indent-offset)))
-		(t (py--calculate-indent-backwards cui this-indent-offset))))
+	  (cond ((eq this-command last-command)
+		 (if (eq cui outmost)
+		     (when (not outmost-only)
+		       (py--calculate-indent-backwards cui this-indent-offset)))
+		 (if (bolp)
+		     (py-compute-indentation orig)
+		 (py--calculate-indent-backwards cui this-indent-offset)))
+		(t (py-compute-indentation orig))))
     (when (and (called-interactively-p 'any) py-verbose-p) (message "py-indent-line, need: %s" need))
     ;; if at outmost
     ;; and not (eq this-command last-command), need remains nil
@@ -19159,28 +19150,28 @@ Don't save anything for STR matching `py-input-filter-re' "
 (add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
 
 ;; Python Macro File
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pym\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pym\'")  'python-mode))
 
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pyc\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pyc\'")  'python-mode))
 
 
 ;; Pyrex Source
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pyx\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pyx\'")  'python-mode))
 
 ;; Python Optimized Code
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pyo\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pyo\'")  'python-mode))
 
 ;; Pyrex Definition File
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pxd\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pxd\'")  'python-mode))
 
 ;; Python Repository
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pyr\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pyr\'")  'python-mode))
 
 ;; Python Path Configuration
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.pth\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.pth\'")  'python-mode))
 
 ;; Python Wheels
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.whl\\'")  'python-mode))
+(add-to-list 'auto-mode-alist (cons (purecopy "\.whl\'")  'python-mode))
 
 ;;  (add-to-list 'interpreter-mode-alist
 ;;  (cons (purecopy "[bi]*python[0-9.]*") 'python-mode))
@@ -19618,7 +19609,6 @@ LIEP stores line-end-position at point-of-interest
 			 (cond ((and (not line)
 				     (eq liep (line-end-position)))
 				(when (py--line-backward-maybe) (setq line t))
-				(setq line t)
 				(py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 			       (t (+
 				   (cond (indent-offset)
