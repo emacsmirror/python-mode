@@ -3973,8 +3973,11 @@ C-q TAB inserts a literal TAB-character."
 		       (py--calculate-indent-backwards cui this-indent-offset)))
 		 (if (bolp)
 		     (py-compute-indentation orig)
-		 (py--calculate-indent-backwards cui this-indent-offset)))
-		(t (py-compute-indentation orig))))
+		   (py--calculate-indent-backwards cui this-indent-offset)))
+		(t
+		 outmost
+		 ;; (py-compute-indentation orig)
+		 )))
     (when (and (called-interactively-p 'any) py-verbose-p) (message "py-indent-line, need: %s" need))
     ;; if at outmost
     ;; and not (eq this-command last-command), need remains nil
@@ -7961,6 +7964,16 @@ See `py-if-name-main-permission-p'"
 		 ;; space after __main__, i.e. will not be executed
 		 "if __name__ == '__main__ ':" string))))
     strg))
+
+;; `py-execute-line' calls void function, lp:1492054
+(or (functionp 'indent-rigidly-left)
+    (defun indent-rigidly-left (beg end)
+      "Indent all lines between BEG and END leftward by one space."
+      (interactive "r")
+      (indent-rigidly--pop-undo)
+      (indent-rigidly
+       beg end
+       (if (eq (current-bidi-paragraph-direction) 'right-to-left) 1 -1))))
 
 (defun py--fix-start (string)
   "Internal use by py-execute... functions.
