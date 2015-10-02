@@ -70,7 +70,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.2.0+")
+(defconst py-version "6.2.1+")
 
 (defcustom py-install-directory ""
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
@@ -499,6 +499,11 @@ Default is `nil'"
   :type 'boolean
   :tag "py-company-pycomplete-p"
   :group 'python-mode)
+
+(defvar py-last-position nil
+    "Used by py-help-at-point.
+
+Avoid repeated call at identic pos. ")
 
 (defvar py-auto-completion-mode-p nil
   "Internally used by `py-auto-completion-mode'")
@@ -7597,7 +7602,7 @@ Receives a buffer-name as argument"
 	  (with-current-buffer py-buffer-name
 	    (erase-buffer)))
 	(py--create-new-shell executable args exception-buffer))
-      (when (or (called-interactively-p 'any) 
+      (when (or (called-interactively-p 'any)
 		(eq 1 argprompt)
 		;; (member this-command py-named-shells)
 		)
@@ -8200,11 +8205,11 @@ to search.  ERRWHERE is used in an error message if the limit (top or
 bottom) of the trackback stack is encountered."
   (let (file line)
     (save-excursion
-      (set-buffer buffer)
-      (goto-char (py--point start))
-      (if (funcall searchdir py-traceback-line-re nil t)
-          (setq file (match-string 1)
-                line (string-to-number (match-string 2)))))
+      (with-current-buffer buffer
+	(goto-char (py--point start))
+	(if (funcall searchdir py-traceback-line-re nil t)
+	    (setq file (match-string 1)
+		  line (string-to-number (match-string 2))))))
     (if (and file line)
         (py-goto-exception file line)
       (error "%s of traceback" errwhere))))
@@ -8689,7 +8694,7 @@ problem as best as we can determine."
   (if (and (not (string-match py-pdbtrack-stack-entry-regexp block))
            ;; pydb integration still to be done
            ;; (not (string-match py-pydbtrack-stack-entry-regexp block))
-           )
+	   )
       "Traceback cue not found"
     (let* ((filename (match-string
                       py-pdbtrack-marker-regexp-file-group block))
@@ -8712,13 +8717,13 @@ problem as best as we can determine."
                  (setq lineno
                        (+ lineno
                           (save-excursion
-                            (set-buffer funcbuffer)
-                            (count-lines
-                             (point-min)
-                             (max (point-min)
-                                  (string-match "^\\([^#]\\|#[^#]\\|#$\\)"
-                                                (buffer-substring (point-min)
-                                                                  (point-max)))))))))
+                            (with-current-buffer funcbuffer
+			      (count-lines
+			       (point-min)
+			       (max (point-min)
+				    (string-match "^\\([^#]\\|#[^#]\\|#$\\)"
+						  (buffer-substring (point-min)
+								    (point-max))))))))))
              (list lineno funcbuffer))
 
             ((= (elt filename 0) ?\<)
@@ -8737,15 +8742,16 @@ named for funcname or define a function funcname."
     (while (and buffers (not got))
       (setq buf (car buffers)
             buffers (cdr buffers))
-      (if (and (save-excursion (set-buffer buf)
-                               (string= major-mode "python-mode"))
+      (if (and (save-excursion
+		 (with-current-buffer buf
+		   (string= major-mode "python-mode")))
                (or (string-match funcname (buffer-name buf))
                    (string-match (concat "^\\s-*\\(def\\|class\\)\\s-+"
                                          funcname "\\s-*(")
                                  (save-excursion
-                                   (set-buffer buf)
+                                   (with-current-buffer  buf
                                    (buffer-substring (point-min)
-                                                     (point-max))))))
+                                                     (point-max)))))))
           (setq got buf)))
     got))
 
@@ -9086,13 +9092,16 @@ not inside a defun."
 If symbol is defined in current buffer, jump to it's definition"
   (interactive)
   (let ((orig (point)))
+    ;; avoid repeated call at identic pos
     (unless (eq orig (ignore-errors py-last-position))
       (setq py-last-position orig)
       (unless (member (get-buffer-window "*Python-Help*")(window-list))
 	(window-configuration-to-register py-windows-config-register))
       (and (looking-back "(")(not (looking-at "\\sw")) (forward-char -1))
       (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
-	  (py-restore-window-configuration)
+	  (progn
+	    (py-restore-window-configuration)
+	    (goto-char orig))
 	(if (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
 	    (py--help-at-point-intern)
 	  (py-restore-window-configuration))))))
@@ -17334,7 +17343,7 @@ See lp:1066489 "
           ((save-excursion (goto-char end)
 			   (or (member (char-after) (list ?\" ?\'))
 			       (member (char-before) (list ?\" ?\'))))
-           (py--fill-docstring-last-line thisbeg thisend beg end style orig first-line-p py-current-indent docstring))
+           (py--fill-docstring-last-line thisbeg thisend beg end style orig first-line-p py-current-indent))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring)))
