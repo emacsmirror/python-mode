@@ -7716,7 +7716,9 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (cond (proc)
 		     ;; will deal with py-dedicated-process-p also
-		     (py-fast-process-p (get-buffer-process (py-fast-process buffer)))
+		     (py-fast-process-p
+		      (or (get-buffer-process buffer)
+			  (py-fast-process buffer)))
 		     (py-dedicated-process-p
 		      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell buffer)))
 		     (t (or (get-buffer-process buffer)
@@ -7729,13 +7731,15 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
-  (with-current-buffer (setq output-buffer (process-buffer proc))
+  (let ((output-buffer (or output-buffer (process-buffer proc))))
+  (with-current-buffer output-buffer
     (sit-for 0.2 t)
     (erase-buffer)
+    (switch-to-buffer (current-buffer))
     (py--fast-send-string-intern strg
 				 proc
 				 output-buffer py-store-result-p py-return-result-p)
-    (sit-for 0.1)))
+    (sit-for 0.1))))
 
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline execute-directory start end which-shell)
   "Select the handler.
@@ -18399,31 +18403,23 @@ Return code of `py-top-level' at point, a string. "
 ;; python-components-forms-code.el ends here
 ;; python-components-fast-forms
 
-;;  Process forms fast
+;; Process forms fast
 
-(defun py-fast-process (&optional argprompt dedicated shell buffer-name)
+
+
+(defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
 
-Output buffer displays \"Fast\" in name by default
-It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907
-
-Return the process"
-  (interactive "P")
-  (py-shell argprompt dedicated shell buffer-name t))
-
-(defun py--filter-result (string)
-  "Set `py-result' according to `py-fast-filter-re'.
-
-Remove trailing newline"
-    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
-
-;; (defun py--filter-result (string)
-;;   "Set `py-result' according to `py-fast-filter-re'.
-
-;; Remove trailing newline"
-;;   (let* ((erg (ansi-color-filter-apply string)))
-;;     (setq py-result (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" erg))
-;;     py-result))
+Output buffer displays \"Fast\"  by default
+It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907"
+  (interactive)
+  (let ((this-buffer
+         (set-buffer (or (and buffer (get-buffer-create buffer))
+                         (get-buffer-create py-buffer-name)))))
+    (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
+      (with-current-buffer this-buffer
+        (erase-buffer))
+      proc)))
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -18445,6 +18441,12 @@ Remove trailing newline"
       ;;)
       )))
 
+(defun py--filter-result (string)
+  "Set `py-result' according to `py-fast-filter-re'.
+
+Remove trailing newline"
+    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
+
 (defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
     (process-send-string proc "\n")
@@ -18456,124 +18458,132 @@ Remove trailing newline"
       ;; sets py-result
       (unless py-ignore-result-p
 	(setq py-result (py--filter-result (py--fetch-result orig))))
-
       (when return
 	py-result))))
 
-(defun py--fast-send-string (string &optional proc windows-config)
+(defun py--fast-send-string (string)
   "Process Python strings, being prepared for large output.
 
-Output buffer displays \"Fast\" in name by default
+Output buffer displays \"Fast\"  by default
 See also `py-fast-shell'
 
 "
-  (let* ((proc (or proc (get-buffer-process (py-fast-process))))
-	 (buffer (process-buffer proc)))
-    (if (or py-store-result-p py-return-result-p)
-	(py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)
-      (py--fast-send-string-no-output string proc buffer))))
-
-(defun py-execute-string-fast (string)
-  "Evaluate STRING in Python process which is not in comint-mode.
-
-From a programm use `py--fast-send-string'"
-  (interactive "sPython command: ")
-  (py--fast-send-string string))
+  (let ((proc (or (get-buffer-process (get-buffer py-fast-output-buffer))
+                  (py-fast-process))))
+    ;;    (with-current-buffer py-fast-output-buffer
+    ;;      (erase-buffer))
+    (process-send-string proc string)
+    (or (string-match "\n$" string)
+        (process-send-string proc "\n"))
+    (accept-process-output proc 1)
+    (switch-to-buffer py-fast-output-buffer)
+    (beginning-of-line)
+    (skip-chars-backward "\r\n")
+    (delete-region (point) (point-max))))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
   (let ((py-fast-process-p t))
     (py-execute-region beg end)))
 
-(defun py-execute-statement-fast ()
-  "Process statement at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "statement")))
-
 (defun py-execute-block-fast ()
   "Process block at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "block")))
+    (py--execute-prepare 'block)))
 
 (defun py-execute-block-or-clause-fast ()
   "Process block-or-clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "block-or-clause")))
-
-(defun py-execute-def-fast ()
-  "Process def at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "def")))
+    (py--execute-prepare 'block-or-clause)))
 
 (defun py-execute-class-fast ()
   "Process class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "class")))
-
-(defun py-execute-def-or-class-fast ()
-  "Process def-or-class at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "def-or-class")))
-
-(defun py-execute-expression-fast ()
-  "Process expression at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "expression")))
-
-(defun py-execute-partial-expression-fast ()
-  "Process partial-expression at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "partial-expression")))
-
-(defun py-execute-top-level-fast ()
-  "Process top-level at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "top-level")))
+    (py--execute-prepare 'class)))
 
 (defun py-execute-clause-fast ()
   "Process clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "clause")))
+    (py--execute-prepare 'clause)))
+
+(defun py-execute-def-fast ()
+  "Process def at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'def)))
+
+(defun py-execute-def-or-class-fast ()
+  "Process def-or-class at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'def-or-class)))
+
+(defun py-execute-expression-fast ()
+  "Process expression at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'expression)))
+
+(defun py-execute-partial-expression-fast ()
+  "Process partial-expression at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'partial-expression)))
+
+(defun py-execute-section-fast ()
+  "Process section at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'section)))
+
+(defun py-execute-statement-fast ()
+  "Process statement at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'statement)))
+
+(defun py-execute-top-level-fast ()
+  "Process top-level at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'top-level)))
 
 ;; python-components-narrow
 
