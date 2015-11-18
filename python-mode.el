@@ -5769,7 +5769,7 @@ With BOL, return line-beginning-position"
 	       (setq erg (line-beginning-position))))
     (or erg (goto-char orig))))
 
-(defun py--backward-def-or-class-intern (regexp &optional indent bol)
+(defun py--backward-def-or-class-intern (regexp &optional bol)
   (let (erg)
     (while (and (re-search-backward regexp nil 'move 1)
 		(setq erg (match-beginning 0))
@@ -5783,7 +5783,7 @@ With BOL, return line-beginning-position"
     (and erg py-mark-decorators (setq erg (py--backward-def-or-class-decorator-maybe bol)))
     erg))
 
-(defun py-backward-class (&optional indent)
+(defun py-backward-class ()
   "Go to beginning of class.
 
 If already at beginning, go one class backward.
@@ -5791,12 +5791,12 @@ Returns beginning of class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-class-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-class-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def (&optional indent)
+(defun py-backward-def ()
   "Go to beginning of def.
 
 If already at beginning, go one def backward.
@@ -5804,12 +5804,12 @@ Returns beginning of def if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-def-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-or-class (&optional indent)
+(defun py-backward-def-or-class ()
   "Go to beginning of def-or-class.
 
 If already at beginning, go one def-or-class backward.
@@ -5817,12 +5817,12 @@ Returns beginning of def-or-class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-class-bol (&optional indent)
+(defun py-backward-class-bol ()
   "Go to beginning of class, go to BOL.
 
 If already at beginning, go one class backward.
@@ -5830,12 +5830,12 @@ Returns beginning of class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-class-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-class-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-bol (&optional indent)
+(defun py-backward-def-bol ()
   "Go to beginning of def, go to BOL.
 
 If already at beginning, go one def backward.
@@ -5843,12 +5843,12 @@ Returns beginning of def if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-def-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-or-class-bol (&optional indent)
+(defun py-backward-def-or-class-bol ()
   "Go to beginning of def-or-class, go to BOL.
 
 If already at beginning, go one def-or-class backward.
@@ -5856,7 +5856,7 @@ Returns beginning of def-or-class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
