@@ -124,6 +124,19 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defcustom py-which-def-or-class-function 'py-which-def-or-class
+  "If which-function-mode should use `py-which-def-or-class'.
+
+Alternatively use built-in `which-function', which queries the index
+or `python-info-current-defun' from python.el"
+  :type '(choice
+
+          (const :tag "default" py-which-def-or-class)
+	  (const :tag "built-in which-function" nil)
+          (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
+          (const :tag "python-info-current-defun" python-info-current-defun))
+  :group 'python-mode)
+
 (defcustom py-comment-auto-fill-p nil
   "When non-nil, fill comments.
 
@@ -2414,8 +2427,10 @@ See py-no-outdent-re-raw for better readable content ")
 (defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
   "Matches the beginning of a class definition. ")
 
-(defconst py-def-or-class-re "[ \t]*\\_<\\(def\\|class\\|async def\\)\\_>[ \n\t]"
+(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]"
   "Matches the beginning of a class- or functions definition. ")
+
+;; (setq py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]")
 
 ;; (defconst py-def-re "[ \t]*\\_<\\(async def\\|def\\)\\_>[ \n\t]"
 (defconst py-def-re "[ \t]*\\_<\\(def\\|async def\\)\\_>[ \n\t]"
@@ -2512,7 +2527,7 @@ See py-no-outdent-re-raw for better readable content ")
    "\\_<\\("
    (regexp-opt py-block-or-clause-re-raw)
    "\\)\\_>")
-  "Matches known keywords opening a block. 
+  "Matches known keywords opening a block.
 
 Customizing `py-block-or-clause-re-raw'  will change values here")
 
@@ -5755,14 +5770,16 @@ With BOL, return line-beginning-position"
     (or erg (goto-char orig))))
 
 (defun py--backward-def-or-class-intern (regexp &optional indent bol)
-  (while (and (re-search-backward regexp nil 'move 1)
-	      (nth 8 (parse-partial-sexp (point-min) (point)))))
-  (when (looking-back "async ")
-		       (goto-char (match-beginning 0))) 
-  (let ((erg (when (looking-at regexp)
-	       (if bol (line-beginning-position) (point)))))
+  (let (erg)
+    (while (and (re-search-backward regexp nil 'move 1)
+		(setq erg (match-beginning 0))
+		(nth 8 (parse-partial-sexp (point-min) (point))))
+      (setq erg nil))
+    (and erg (looking-back "async ")
+	 (goto-char (match-beginning 0))
+	 (setq erg (point)))
     ;; bol-forms at not at bol yet
-    (and bol erg (goto-char erg))
+    (and bol erg (beginning-of-line) (setq erg (point)))
     (and erg py-mark-decorators (setq erg (py--backward-def-or-class-decorator-maybe bol)))
     erg))
 
@@ -20444,30 +20461,34 @@ Used by variable `which-func-functions' "
          (first t)
          def-or-class
          done last erg name)
-    (and first (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")(not (nth 8 (parse-partial-sexp (point-min) (point))))
-         (add-to-list 'def-or-class (match-string-no-properties 2)))
-    (while
-        (and (not (bobp)) (not done) (or (< 0 (current-indentation)) first))
-      (py-backward-def-or-class)
-      (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
-      (setq last (point))
-      (setq name (match-string-no-properties 2))
-      (if first
-          (progn
-            (setq first nil)
-            (py-forward-def-or-class)
-            (if
-                (<= orig (point))
-                (goto-char last)
-              (setq done t)
-              (goto-char orig)))
-        t)
-      (unless done (add-to-list 'def-or-class name)))
-    (unless done (setq def-or-class (mapconcat 'identity def-or-class ".")))
-    (goto-char orig)
-    (or def-or-class (setq def-or-class "???"))
-    (when (called-interactively-p 'any) (message "%s" def-or-class))
-    def-or-class))
+    (if
+	(and first (bolp)
+	     	     (not (nth 8 (parse-partial-sexp (point-min) (point))))
+	     (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)"))
+	(add-to-list 'def-or-class (match-string-no-properties 2))
+      (while
+	  (and (not (bobp)) (not done) (or first (< 0 (current-indentation)))
+	       (forward-word 1) 
+	       (setq last (py-backward-def-or-class))
+	       ;; (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
+	       ;; (setq last (point))
+	       (setq name (match-string-no-properties 2))
+	       (if first
+		   (progn
+		     (setq first nil)
+		     (py-forward-def-or-class)
+		     (if
+			 (<= orig (point))
+			 (goto-char last)
+		       (setq done t)
+		       (goto-char orig)))
+		 t)
+	       (unless done (add-to-list 'def-or-class name)))
+	(unless done (setq def-or-class (mapconcat 'identity def-or-class ".")))
+	(goto-char orig)
+	(or def-or-class (setq def-or-class "???"))
+	(when (called-interactively-p 'any) (message "%s" def-or-class))
+	def-or-class))))
 
 (defun py--beginning-of-form-intern (regexp &optional iact indent orig lc)
   "Go to beginning of FORM.
@@ -25278,7 +25299,7 @@ See available customizations listed in files variables-python-mode at directory 
 	(t (font-lock-add-keywords 'python-mode
 				   '(("\\<print\\>" . 'font-lock-keyword-face)
 				     ("\\<file\\>" . 'py-builtins-face)))))
-  (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
+  (set (make-local-variable 'which-func-functions) py-which-def-or-class-function)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
