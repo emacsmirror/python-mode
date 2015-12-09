@@ -1,4 +1,4 @@
-;; python-components-mode.el --- Edit, debug, develop, run Python programs.
+;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
 ;; and can take advantage of Pymacs when installed.
@@ -13,7 +13,8 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2013 https://launchpad.net/python-mode
+;; Author: 2015-     https://gitlab.com/groups/python-mode-devs
+;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -124,18 +125,29 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
-(defcustom py-which-def-or-class-function 'py-which-def-or-class
-  "If which-function-mode should use `py-which-def-or-class'.
+;; (defcustom py-which-def-or-class-function py-which-def-or-class
+;;   "If which-function-mode should use `py-which-def-or-class'.
 
-Alternatively use built-in `which-function', which queries the index
-or `python-info-current-defun' from python.el"
-  :type '(choice
+;; Alternatively use built-in `which-function', which queries the index
+;; or `python-info-current-defun' from python.el"
+;;   :type '(choice
 
-          (const :tag "default" py-which-def-or-class)
-	  (const :tag "built-in which-function" nil)
-          (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
-          (const :tag "python-info-current-defun" python-info-current-defun))
-  :group 'python-mode)
+;;           (const :tag "default" py-which-def-or-class)
+;; 	  (const :tag "built-in which-function" nil)
+;;           (const :tag "python-info-current-defun" python-info-current-defun))
+;;   :group 'python-mode)
+
+;; (defcustom py-which-def-or-class-function py-which-def-or-class
+;;   "If which-function-mode should use `py-which-def-or-class'.
+
+;; Alternatively use built-in `which-function', which queries the index
+;; or `python-info-current-defun' from python.el"
+;;   :type '(choice
+
+;;           (const :tag "default" py-which-def-or-class)
+;; 	  (const :tag "built-in which-function" nil)
+;;           (const :tag "python-info-current-defun" python-info-current-defun))
+;;   :group 'python-mode)
 
 (defcustom py-comment-auto-fill-p nil
   "When non-nil, fill comments.
@@ -3395,6 +3407,7 @@ Returns char found. "
 
 ;; (require 'python-components-bounds-forms)
 ;; (require 'python-components-execute-region)
+;; (require 'python-components-versioned)
 
 
 (require 'ansi-color)
@@ -20228,25 +20241,6 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
-(defun py-which-function ()
-  "Return the name of the function or class, if curser is in, return nil otherwise. "
-  (interactive)
-  (save-excursion
-    (save-restriction
-      (widen)
-      (let ((orig (point))
-            (erg (if (and (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+")) (not (py-in-string-or-comment-p)))
-                     (match-string-no-properties 2)
-                   (progn
-                     (py-backward-def-or-class)
-                     (when (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+"))
-                       (match-string-no-properties 2))))))
-        (if (and erg (< orig (py-forward-def-or-class)))
-            (when (called-interactively-p 'any) (message "%s" erg))
-          (setq erg nil)
-          (when (called-interactively-p 'any) (message "%s" "Not inside a function or class"))
-          erg)))))
-
 (defconst py-help-address "python-mode@python.org"
   "List dealing with usage and developing python-mode.
 
@@ -20451,44 +20445,72 @@ the output."
 	;; (sit-for 0.1 t)
 	erg))))
 
-(defun py-which-def-or-class ()
+(defun py-which-def-or-class (&optional orig)
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
 
 Returns \"???\" otherwise
 Used by variable `which-func-functions' "
   (interactive)
   (let* ((orig (point))
-         (first t)
-         def-or-class
-         done last erg name)
+	 (backindent 99999)
+         erg forward indent backward limit)
     (if
-	(and first (bolp)
-	     	     (not (nth 8 (parse-partial-sexp (point-min) (point))))
+	(and (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
+	     (not (nth 8 (parse-partial-sexp (point-min) (point)))))
+	(progn
+	  (setq erg (list (match-string-no-properties 2)))
+	  (setq backindent (current-indentation)))
+      ;; maybe inside a definition's symbol
+      (or (eolp) (and (looking-at "[[:alnum:]]")(forward-word 1))))
+    (if
+	(and (not (and erg (eq 0 (current-indentation))))
+	     (setq limit (py-backward-top-level))
 	     (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)"))
-	(add-to-list 'def-or-class (match-string-no-properties 2))
-      (while
-	  (and (not (bobp)) (not done) (or first (< 0 (current-indentation)))
-	       (forward-word 1) 
-	       (setq last (py-backward-def-or-class))
-	       ;; (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
-	       ;; (setq last (point))
-	       (setq name (match-string-no-properties 2))
-	       (if first
-		   (progn
-		     (setq first nil)
-		     (py-forward-def-or-class)
-		     (if
-			 (<= orig (point))
-			 (goto-char last)
-		       (setq done t)
-		       (goto-char orig)))
-		 t)
-	       (unless done (add-to-list 'def-or-class name)))
-	(unless done (setq def-or-class (mapconcat 'identity def-or-class ".")))
-	(goto-char orig)
-	(or def-or-class (setq def-or-class "???"))
-	(when (called-interactively-p 'any) (message "%s" def-or-class))
-	def-or-class))))
+	(progn
+	  (add-to-list 'erg (match-string-no-properties 2))
+	  (setq indent (current-indentation)))
+      (goto-char orig)
+      (while (and
+	      (re-search-backward py-def-or-class-re limit t 1)
+	      (< (current-indentation) backindent)
+	      (setq backindent (current-indentation))
+	      (setq backward (point))
+	      (or (< 0 (current-indentation))
+		  (nth 8 (parse-partial-sexp (point-min) (point))))))
+      (when (and backward
+		 (goto-char backward)
+		 (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)"))
+	(add-to-list 'erg (match-string-no-properties 2))
+	(setq indent (current-indentation))))
+    ;; (goto-char orig))
+    (if erg
+	(progn
+	  (end-of-line)
+	  (while (and (re-search-forward py-def-or-class-re nil t 1)
+		      (<= (point) orig)
+		      (< indent (current-indentation))
+		      (or
+		       (nth 8 (parse-partial-sexp (point-min) (point)))
+		       (setq forward (point)))))
+	  (if forward
+	      (progn
+		(goto-char forward)
+		(save-excursion
+		  (back-to-indentation)
+		  (and (looking-at "[ \t]*\\_<\\(async def\\|def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
+		       (setq erg (list (car erg) (match-string-no-properties 2)))
+		       (< (py-forward-def-or-class) orig)
+		       ;; if match was beyond definition, nil
+		       (setq erg nil))))
+	    (goto-char orig))))
+    (if erg
+	(if (< 1 (length erg))
+	    (setq erg (mapconcat 'identity erg "."))
+	  (setq erg (car erg)))
+      (setq erg "???"))
+    (goto-char orig)
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
 
 (defun py--beginning-of-form-intern (regexp &optional iact indent orig lc)
   "Go to beginning of FORM.
@@ -20632,8 +20654,10 @@ Returns position if successful, nil otherwise "
   (interactive)
   (let (erg)
     (unless (bobp)
-      (while (and (not (bobp)) (setq erg (py-backward-statement))
-                  (< 0 (current-indentation))))
+      (while (and (not (bobp))
+		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1))
+		  (nth 8 (parse-partial-sexp (point-min) (point)))
+		  (setq erg nil)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
@@ -20673,7 +20697,7 @@ Returns position if successful, nil otherwise"
         erg)
     (while (and (not (eobp))
 		(progn (end-of-line)
-		       (re-search-forward "^[[:alpha:]_]" nil 'move 1))
+		       (re-search-forward "^[[:alpha:]_'\"]" nil 'move 1))
 		(nth 8 (parse-partial-sexp (point-min) (point)))))
     (when (and (not (eobp)) (< orig (point)))
       (goto-char (match-beginning 0))
@@ -25299,7 +25323,7 @@ See available customizations listed in files variables-python-mode at directory 
 	(t (font-lock-add-keywords 'python-mode
 				   '(("\\<print\\>" . 'font-lock-keyword-face)
 				     ("\\<file\\>" . 'py-builtins-face)))))
-  (set (make-local-variable 'which-func-functions) py-which-def-or-class-function)
+  (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
