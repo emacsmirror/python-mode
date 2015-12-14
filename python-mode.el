@@ -5359,7 +5359,6 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
           (orig (or orig (point)))
           erg pos last
           ;; use by scan-lists
-          ;; parse-sexp-ignore-comments
           forward-sexp-function
           stringchar stm pps err)
       (unless done (py--skip-to-comment-or-semicolon done))
@@ -5376,18 +5375,17 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
 	      (setq orig (point))
 	      ;; do not go back at a possible unclosed list
 	      (goto-char (nth 1 pps))
-	      (let ((parse-sexp-ignore-comments t))
-		(if
-		    (ignore-errors (forward-list))
-		    (progn
-		      (when (looking-at ":[ \t]*$")
-			(forward-char 1))
-		      (setq done t)
-		      (skip-chars-forward "^#" (line-end-position))
-		      (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		      (py-forward-statement orig done repeat))
-		  (setq err (py--record-list-error pps))
-		  (goto-char orig))))))
+	      (if
+		  (ignore-errors (forward-list))
+		  (progn
+		    (when (looking-at ":[ \t]*$")
+		      (forward-char 1))
+		    (setq done t)
+		    (skip-chars-forward "^#" (line-end-position))
+		    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+		    (py-forward-statement orig done repeat))
+		(setq err (py--record-list-error pps))
+		(goto-char orig)))))
        ;; string
        ((nth 3 pps)
 	(when (py-end-of-string)
@@ -25265,7 +25263,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 ;; after-change-major-mode-hook
 
 ;;;
-(define-derived-mode python-mode fundamental-mode python-mode-modeline-display
+(define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
 To submit a problem report, enter `\\[py-submit-bug-report]' from a
@@ -25327,7 +25325,6 @@ See available customizations listed in files variables-python-mode at directory 
 				     ("\\<file\\>" . 'py-builtins-face)))))
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start) "#")
   (if py-empty-comment-line-separates-paragraph-p
