@@ -2803,6 +2803,10 @@ Used by `py-ipython-module-completion-string'"
 	(write-file setup-file)))
     (py--execute-file-base nil setup-file nil (current-buffer))))
 
+(defun py--at-raw-string ()
+  "If at beginning of a raw-string. "
+  (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+
 (defun py--docstring-p (&optional beginning-of-string-position)
   "Check to see if there is a docstring at POS."
   (let* (pps
@@ -2812,6 +2816,9 @@ Used by `py-ipython-module-completion-string'"
       (widen)
       (save-excursion
 	(goto-char pos)
+	(when (py--at-raw-string)
+	  (forward-char -1)
+	  (setq pos (point)))
 	(when (py-backward-statement)
 	  (when (looking-at py-def-or-class-re)
 	    pos))))))
@@ -4278,12 +4285,14 @@ downwards from beginning of block followed by a statement. Otherwise default-val
     erg))
 
 ;; ;
-(defun py-indent-and-forward ()
-  "Indent current line according to mode, move one line forward. "
+(defun py-indent-and-forward (&optional indent)
+  "Indent current line according to mode, move one line forward.
+
+If optional INDENT is given, use it"
   (interactive "*")
   (beginning-of-line)
   (fixup-whitespace)
-  (indent-to (py-compute-indentation))
+  (indent-to (or indent (py-compute-indentation)))
   (if (eobp)
       (newline-and-indent)
     (forward-line 1))
@@ -4294,7 +4303,7 @@ downwards from beginning of block followed by a statement. Otherwise default-val
 
 Starts from second line of region specified"
   (goto-char beg)
-  (forward-line 1)
+  ;; (forward-line 1)
   (while (< (point) end)
     (if (empty-line-p)
 	(forward-line 1)
@@ -4314,20 +4323,21 @@ In order to shift a chunk of code, where the first line is okay, start with seco
   (let ((orig (copy-marker (point)))
         (beg start)
         (end (copy-marker end))
-	indent need)
+	need)
     (goto-char beg)
     (beginning-of-line)
     (setq beg (point))
     (skip-chars-forward " \t\r\n\f")
-    (if (eq 4 (prefix-numeric-value line-by-line))
-	(py--indent-line-by-line beg end)
-      ;; (unless (empty-line-p) (py-indent-line nil t))
-      (setq indent (py-compute-indentation))
-      (setq need (- indent (current-indentation)))
-      (if (< 0 (abs need))
-	  (indent-rigidly beg end need)
-	(py--indent-line-by-line beg end))
-      (goto-char orig))))
+    (py--indent-line-by-line beg end)
+    ;; (if (eq 4 (prefix-numeric-value line-by-line))
+    ;; 	(py--indent-line-by-line beg end)
+    ;;   (setq need (py-compute-indentation))
+    ;;   (if (< 0 (abs need))
+    ;; 	  (indent-region beg end need)
+    ;; 	(py--indent-line-by-line beg end))
+    ;;   (goto-char orig))
+    )
+  )
 
 (defun py--beginning-of-buffer-position ()
   (point-min))
@@ -5302,7 +5312,7 @@ computing indents"
          ((and (bolp)(eolp))
           (skip-chars-backward " \t\r\n\f")
           (py-backward-statement orig done limit ignore-in-string-p))
-	  ;; inside string
+	 ;; inside string
          ((and (nth 3 pps)(not ignore-in-string-p))
 	  (setq done t)
 	  (goto-char (nth 8 pps))
@@ -5321,6 +5331,11 @@ computing indents"
           (back-to-indentation)
           (setq done t)
           (py-backward-statement orig done limit ignore-in-string-p))
+	 ;; at raw-string
+	 ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+	 ((py--at-raw-string)
+	  (forward-char -1)
+	  (py-backward-statement orig done limit ignore-in-string-p))
 	 ;; BOL or at space before comment
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
           (forward-comment -1)
@@ -9154,25 +9169,25 @@ not inside a defun."
     (if erg
 	(progn (push-mark orig)(push-mark (point))
 	       (when (and (called-interactively-p 'any) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
-      (goto-char orig)
-      (when cmd
-	(setq cmd (mapconcat
-		   (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
-		   (split-string cmd ";" t)
-		   "")))
-      (setq cmd (concat "import pydoc\n"
-			cmd))
-      (when (not py-remove-cwd-from-path)
-	(setq cmd (concat cmd "import sys\n"
-			  "sys.path.insert(0, '"
-			  (file-name-directory origfile) "')\n")))
-      (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-      (with-temp-buffer
-	(insert cmd)
-	(write-file file))
-      (py-process-file file "*Python-Help*")
-      (when (file-readable-p file)
-	(unless py-debug-p (delete-file file))))))
+      (goto-char orig))
+    ;; (when cmd
+    ;;   (setq cmd (mapconcat
+    ;; 		 (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
+    ;; 		 (split-string cmd ";" t)
+    ;; 		 "")))
+    (setq cmd (concat cmd "\nimport pydoc\n"
+		      ))
+    (when (not py-remove-cwd-from-path)
+      (setq cmd (concat cmd "import sys\n"
+			"sys.path.insert(0, '"
+			(file-name-directory origfile) "')\n")))
+    (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
+    (with-temp-buffer
+      (insert cmd)
+      (write-file file))
+    (py-process-file file "*Python-Help*")
+    (when (file-readable-p file)
+      (unless py-debug-p (delete-file file)))))
 
 (defun py-help-at-point ()
   "Print help on symbol at point.
@@ -9182,17 +9197,17 @@ If symbol is defined in current buffer, jump to it's definition"
   (let ((orig (point)))
     ;; avoid repeated call at identic pos
     (unless (eq orig (ignore-errors py-last-position))
-      (setq py-last-position orig)
-      (unless (member (get-buffer-window "*Python-Help*")(window-list))
-	(window-configuration-to-register py-windows-config-register))
-      (and (looking-back "(")(not (looking-at "\\sw")) (forward-char -1))
-      (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
-	  (progn
-	    (py-restore-window-configuration)
-	    (goto-char orig))
-	(if (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
-	    (py--help-at-point-intern)
-	  (py-restore-window-configuration))))))
+      (setq py-last-position orig))
+    (unless (member (get-buffer-window "*Python-Help*")(window-list))
+      (window-configuration-to-register py-windows-config-register))
+    (and (looking-back "(")(not (looking-at "\\sw")) (forward-char -1))
+    (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
+	(progn
+	  (py-restore-window-configuration)
+	  (goto-char orig))
+      (if (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
+	  (py--help-at-point-intern)
+	(py-restore-window-configuration)))))
 
 ;;  Documentation functions
 
@@ -17287,6 +17302,7 @@ See lp:1066489 "
                 (goto-char (match-end 0)))))))))
 
 (defun py--in-or-behind-or-before-a-docstring ()
+  (interactive "*")
   (save-excursion
     (let* ((raw-pps (nth 8 (parse-partial-sexp (point-min) (point))))
 	   ;; ;; maybe just behind a string
@@ -17309,13 +17325,20 @@ See lp:1066489 "
   (let ((beg (or start (nth 8 (parse-partial-sexp (point-min) (point))))))
     (save-excursion
       (goto-char beg)
-      (skip-chars-forward "\"'")
+      (skip-chars-forward "\"'rRuU")
       (delete-region (point) (progn (skip-chars-forward " \t\r\n\f")(point)))
       (goto-char beg)
       (forward-char 1)
       (skip-syntax-forward "^\|")
-      (skip-chars-backward "\"'")
-      (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point))))))
+      (skip-chars-backward "\"'rRuU")
+      ;; (delete-region (point) (progn (skip-chars-backward " \t\r\n\f")(point)))
+)))
+
+(defun py--skip-raw-string-front-fence ()
+  "Skip forward chars u, U, r, R followed by string-delimiters. "
+  (when (member (char-after) (list ?u ?U ?r ?R))
+    (forward-char 1))
+  (skip-chars-forward "\'\""))
 
 (defun py--fill-fix-end (thisend orig docstring delimiters-style)
   ;; Add the number of newlines indicated by the selected style
@@ -17352,6 +17375,7 @@ See lp:1066489 "
       ;; Add the number of newlines indicated by the selected style
       ;; at the start.
       (goto-char thisbeg)
+      (py--skip-raw-string-front-fence)
       (skip-chars-forward "\'\"")
       (when
 	  (car delimiters-style)
@@ -17360,7 +17384,7 @@ See lp:1066489 "
       (indent-region beg end py-current-indent))
     (when multi-line-p
       (goto-char thisbeg)
-      (skip-chars-forward "\'\"")
+      (py--skip-raw-string-front-fence) 
       (skip-chars-forward " \t\r\n\f")
       (forward-line 1)
       (beginning-of-line)
@@ -17408,10 +17432,8 @@ See lp:1066489 "
          (thisend (copy-marker
                    (progn
                      (goto-char thisbeg)
-		     ;; (py-end-of-string)
-		     (forward-char 1)
+		     (py--skip-raw-string-front-fence)
 		     (skip-syntax-forward "^\|")
-		     (skip-chars-forward "\"'")
                      (point))))
          (parabeg (progn (goto-char orig) (py--beginning-of-paragraph-position)))
          (paraend (progn (goto-char orig) (py--end-of-paragraph-position)))
@@ -17423,7 +17445,7 @@ See lp:1066489 "
          first-line-p)
     ;;    (narrow-to-region beg end)
     (goto-char beg)
-    (setq first-line-p (member (char-after) (list ?\" ?\')))
+    (setq first-line-p (member (char-after) (list ?\" ?\' ?u ?U ?r ?R)))
     (cond ((string-match (concat "^" py-labelled-re) (buffer-substring-no-properties beg end))
            (py-fill-labelled-string beg end))
           (first-line-p
@@ -19538,24 +19560,28 @@ Use `defcustom' to keep value across sessions "
     (looking-at "\\s-*$")))
 
 (defun py--compute-indentation-in-string (pps)
-  (cond
-   ((py--docstring-p)
-    (save-excursion
-      (py-backward-statement (point) nil (nth 8 pps) t)
-      (current-indentation)))
-   ;; still at original line
-   ((eq origline (line-end-position))
-    (forward-line -1)
-    (end-of-line)
-    (skip-chars-backward " \t\r\n\f")
-    (if (ignore-errors (< (nth 8 (parse-partial-sexp (point-min) (point))) (line-beginning-position)))
-	(current-indentation)
-      (ignore-errors (goto-char (nth 8 pps)))
-      (when (py--line-backward-maybe) (setq line t))
-      (back-to-indentation)
-      (py-compute-indentation orig origline closing line nesting repeat indent-offset liep)))
-   (t (goto-char (nth 8 pps))
-      (current-indentation))))
+  (save-restriction
+    ;; (narrow-to-region (nth 8 pps) (point))
+    (cond
+     ((py--docstring-p)
+      (save-excursion
+	(back-to-indentation)
+	(skip-chars-backward " \t\r\n\f")
+	(back-to-indentation) 
+	(current-indentation)))
+     ;; still at original line
+     ((eq origline (line-end-position))
+      (forward-line -1)
+      (end-of-line)
+      (skip-chars-backward " \t\r\n\f")
+      (if (ignore-errors (< (nth 8 (parse-partial-sexp (point-min) (point))) (line-beginning-position)))
+	  (current-indentation)
+	(ignore-errors (goto-char (nth 8 pps)))
+	(when (py--line-backward-maybe) (setq line t))
+	(back-to-indentation)
+	(py-compute-indentation orig origline closing line nesting repeat indent-offset liep)))
+     (t (goto-char (nth 8 pps))
+	(current-indentation)))))
 
 (defalias 'py-count-indentation 'py-compute-indentation)
 (defun py-compute-indentation (&optional orig origline closing line nesting repeat indent-offset liep)
