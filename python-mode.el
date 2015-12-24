@@ -5146,6 +5146,30 @@ Returns final position when called from inside section, nil otherwise"
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
+(defun py--travel-this-indent-backward-bol ()
+  (while (and (py-backward-statement-bol)
+	      (or indent (setq indent (current-indentation)))
+	      (eq indent (current-indentation))(setq erg (point)) (not (bobp))))
+  (when erg (goto-char erg)))
+
+(defun py-backward-indent-bol ()
+  "Go to the beginning of line of a section of equal indent.
+
+If already at the beginning or before an indent, go to next indent in buffer upwards
+Returns final position when called from inside section, nil otherwise"
+  (interactive)
+  (unless (bobp)
+    (let ((orig (point))
+	  (indent (when (eq (current-indentation) (current-column)) (current-column)))
+
+	  erg)
+      (py--travel-this-indent-backward-bol)
+      (when erg (goto-char erg)
+	    (beginning-of-line)
+	    (setq erg (point)))
+      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+      erg)))
+
 (defun py--travel-this-indent-forward ()
   (while (and (py-down-statement)
 	      (or indent (eq indent (current-indentation)))
@@ -5166,7 +5190,30 @@ Returns final position when called from inside section, nil otherwise"
 	  (setq indent (and (py-backward-statement)(current-indentation)))))
       (py--travel-this-indent-forward)
       (when erg (goto-char erg))
+      (unless (eolp) (setq erg (py-forward-statement)))
       (when (eq (current-column) (current-indentation)) (py-end-of-statement))
+      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+      erg)))
+
+(defun py-forward-indent-bol ()
+  "Go to beginning of line following of a section of equal indentation.
+
+If already at the end, go down to next indent in buffer
+Returns final position when called from inside section, nil otherwise"
+  (interactive)
+  (unless (eobp)
+    (let ((orig (point))
+	  erg indent)
+      (when (py-forward-statement)
+	(save-excursion
+	  (setq erg (point))
+	  (setq indent (and (py-backward-statement)(current-indentation)))))
+      (py--travel-this-indent-forward)
+      (when erg (goto-char erg)
+	    (unless (eolp) (setq erg (py-forward-statement))))
+      (when erg
+	(when (eq (current-column) (current-indentation)) (py-end-of-statement))
+	(unless (eobp) (forward-line 1) (beginning-of-line)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
@@ -5422,17 +5469,20 @@ computing indents"
 
 See also `py-up-statement': up from current definition to next beginning of statement above. "
   (interactive)
-  (let* ((indent (or indent (when (eq 'py-forward-statement-bol (car
-  py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
-	 (orig (point))
+  (let* ((orig (point))
          erg)
-    (if indent
-        (while (and (setq erg (py-backward-statement)) (< indent (current-indentation))(not (bobp))))
-      (setq erg (py-backward-statement)))
-    ;; reset
-    (setq py-bol-forms-last-indent nil)
-    (beginning-of-line)
-    (and (< (point) orig) (setq erg (point)))
+    (unless (bobp)
+      (cond ((bolp)
+	     (and (py-backward-statement orig)
+		  (progn (beginning-of-line)
+			 (setq erg (point)))))
+	    ((py--beginning-of-statement-p)
+	     (beginning-of-line)
+	     (setq erg (point)))
+	    (t (setq erg
+		     (and
+		      (py-backward-statement)
+		      (progn (beginning-of-line) (point)))))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -6610,7 +6660,7 @@ Returns beginning and end positions of region, a cons. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "block")))
+  (let ((erg (py--mark-base-bol "block")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-block-or-clause ()
@@ -6618,7 +6668,15 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "block-or-clause")))
+  (let ((erg (py--mark-base-bol "block-or-clause")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-copy-buffer ()
+  "Copy buffer at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "buffer")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-class ()
@@ -6626,7 +6684,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "class")))
+  (let ((erg (py--mark-base-bol "class")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-clause ()
@@ -6634,7 +6692,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "clause")))
+  (let ((erg (py--mark-base-bol "clause")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-def ()
@@ -6642,7 +6700,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "def")))
+  (let ((erg (py--mark-base-bol "def")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-def-or-class ()
@@ -6650,7 +6708,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "def-or-class")))
+  (let ((erg (py--mark-base-bol "def-or-class")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-expression ()
@@ -6658,7 +6716,15 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "expression")))
+  (let ((erg (py--mark-base-bol "expression")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-copy-indent ()
+  "Copy indent at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "indent")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-line ()
@@ -6666,7 +6732,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "line")))
+  (let ((erg (py--mark-base-bol "line")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-minor-block ()
@@ -6674,7 +6740,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "minor-block")))
+  (let ((erg (py--mark-base-bol "minor-block")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-paragraph ()
@@ -6682,7 +6748,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "paragraph")))
+  (let ((erg (py--mark-base-bol "paragraph")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-partial-expression ()
@@ -6690,7 +6756,15 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "partial-expression")))
+  (let ((erg (py--mark-base-bol "partial-expression")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-copy-region ()
+  "Copy region at point.
+
+Store data in kill ring, so it might yanked back. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "region")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-statement ()
@@ -6698,7 +6772,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "statement")))
+  (let ((erg (py--mark-base-bol "statement")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-top-level ()
@@ -6706,7 +6780,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (let ((erg (py--mark-base "top-level")))
+  (let ((erg (py--mark-base-bol "top-level")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-block-bol ()
@@ -6723,6 +6797,14 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
   (let ((erg (py--mark-base-bol "block-or-clause")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-copy-buffer-bol ()
+  "Delete buffer bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "buffer")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-class-bol ()
@@ -6765,6 +6847,14 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
   (let ((erg (py--mark-base-bol "expression")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
+(defun py-copy-indent-bol ()
+  "Delete indent bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "indent")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
 (defun py-copy-line-bol ()
   "Delete line bol at point.
 
@@ -6795,6 +6885,14 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
   (let ((erg (py--mark-base-bol "partial-expression")))
+    (copy-region-as-kill (car erg) (cdr erg))))
+
+(defun py-copy-region-bol ()
+  "Delete region bol at point.
+
+Stores data in kill ring. Might be yanked back using `C-y'. "
+  (interactive "*")
+  (let ((erg (py--mark-base-bol "region")))
     (copy-region-as-kill (car erg) (cdr erg))))
 
 (defun py-copy-statement-bol ()
@@ -11855,6 +11953,18 @@ When `delete-active-region' and (region-active-p), delete region "
       (unless (and (eolp) (not (empty-line-p)))
         (py-forward-if-block-bol))
       (py-backward-if-block-bol)
+      (when (eq orig (point))
+        (setq erg orig))
+      erg)))
+
+(defun py--beginning-of-indent-bol-p ()
+  "Returns position, if cursor is at beginning-of-line and the beginning of a `indent', nil otherwise. "
+  (let ((orig (point))
+        erg)
+    (save-excursion
+      (unless (and (eolp) (not (empty-line-p)))
+        (py-forward-indent-bol))
+      (py-backward-indent-bol)
       (when (eq orig (point))
         (setq erg orig))
       erg)))
@@ -19624,7 +19734,7 @@ Use `defcustom' to keep value across sessions "
       (save-excursion
 	(back-to-indentation)
 	(skip-chars-backward " \t\r\n\f")
-	(back-to-indentation) 
+	(back-to-indentation)
 	(current-indentation)))
      ;; still at original line
      ((eq origline (line-end-position))
