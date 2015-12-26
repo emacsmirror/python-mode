@@ -4666,6 +4666,16 @@ Returns beginning of block-or-clause if successful, nil otherwise
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
+(defun py-backward-class (&optional indent)
+ "Go to beginning of class.
+
+If already at beginning, go one class backward.
+Returns beginning of class if successful, nil otherwise
+
+When `py-mark-decorators' is non-nil, decorators are considered too. "
+  (interactive)
+  (py--backward-prepare indent 'py-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
+
 (defun py-backward-clause (&optional indent)
  "Go to beginning of clause.
 
@@ -4675,6 +4685,26 @@ Returns beginning of clause if successful, nil otherwise
 "
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
+
+(defun py-backward-def-or-class (&optional indent)
+ "Go to beginning of def-or-class.
+
+If already at beginning, go one def-or-class backward.
+Returns beginning of def-or-class if successful, nil otherwise
+
+When `py-mark-decorators' is non-nil, decorators are considered too. "
+  (interactive)
+  (py--backward-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
+
+(defun py-backward-def (&optional indent)
+ "Go to beginning of def.
+
+If already at beginning, go one def backward.
+Returns beginning of def if successful, nil otherwise
+
+When `py-mark-decorators' is non-nil, decorators are considered too. "
+  (interactive)
+  (py--backward-prepare indent 'py-def-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
 (defun py-backward-if-block (&optional indent)
  "Go to beginning of if-block.
@@ -4933,27 +4963,6 @@ See also `py-down-clause': down from current definition to next beginning of cla
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-def (&optional indent)
-  "Go to end of def.
-
-Returns end of def if successful, nil otherwise"
-  (interactive "P")
-  (let* ((orig (point))
-         (erg (py--end-base 'py-def-re orig)))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-forward-def-bol (&optional indent)
-  "Goto beginning of line following end of def.
-  Returns position reached, if successful, nil otherwise.
-
-See also `py-down-def': down from current definition to next beginning of def below. "
-  (interactive)
-  (let ((erg (py-forward-def indent)))
-    (setq erg (py--beginning-of-line-form erg))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
 (defun py-forward-def-or-class (&optional indent)
   "Go to end of def-or-class.
 
@@ -4971,6 +4980,27 @@ Returns end of def-or-class if successful, nil otherwise"
 See also `py-down-def-or-class': down from current definition to next beginning of def-or-class below. "
   (interactive)
   (let ((erg (py-forward-def-or-class indent)))
+    (setq erg (py--beginning-of-line-form erg))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-forward-def (&optional indent)
+  "Go to end of def.
+
+Returns end of def if successful, nil otherwise"
+  (interactive "P")
+  (let* ((orig (point))
+         (erg (py--end-base 'py-def-re orig)))
+    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
+
+(defun py-forward-def-bol (&optional indent)
+  "Goto beginning of line following end of def.
+  Returns position reached, if successful, nil otherwise.
+
+See also `py-down-def': down from current definition to next beginning of def below. "
+  (interactive)
+  (let ((erg (py-forward-def indent)))
     (setq erg (py--beginning-of-line-form erg))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
@@ -5172,7 +5202,7 @@ Returns final position when called from inside section, nil otherwise"
 (defun py--travel-this-indent-forward ()
   (while (and (py-down-statement)
 	      (or indent (eq indent (current-indentation)))
-	      (eq indent (current-indentation))(setq erg (point)) (not (bobp)))))
+	      (eq indent (current-indentation))(setq done (point)) (not (bobp)))))
 
 (defun py-forward-indent ()
   "Go to the end of a section of equal indentation.
@@ -5182,18 +5212,18 @@ Returns final position when called from inside section, nil otherwise"
   (interactive)
   (unless (eobp)
     (let ((orig (point))
-	  erg indent)
+	  done indent)
       (when (py-forward-statement)
 	(save-excursion
-	  (setq erg (point))
+	  (setq done (point))
 	  (setq indent (and (py-backward-statement)(current-indentation)))))
       (py--travel-this-indent-forward)
-      (when erg (goto-char erg))
+      (when done (goto-char done))
       ;; navigation doesn't reach BOL
-      (unless (eolp) (setq erg (py-forward-statement)))
+      (unless (eolp) (setq done (py-forward-statement)))
       (when (eq (current-column) (current-indentation)) (py-end-of-statement))
-      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-      erg)))
+      (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" done))
+      done)))
 
 (defun py-forward-indent-bol ()
   "Go to beginning of line following of a section of equal indentation.
@@ -6009,6 +6039,14 @@ When `py-mark-decorators' is non-nil, decorators are considered too. "
 ;; python-components-kill-forms
 
 
+(defun py-kill-comment ()
+  "Delete `comment' at point.
+
+Stores data in kill ring"
+  (interactive "*")
+  (let ((erg (py--mark-base "comment")))
+    (kill-region (car erg) (cdr erg))))
+
 (defun py-kill-line ()
   "Delete `line' at point.
 
@@ -6039,6 +6077,14 @@ Stores data in kill ring"
 Stores data in kill ring"
   (interactive "*")
   (let ((erg (py--mark-base "partial-expression")))
+    (kill-region (car erg) (cdr erg))))
+
+(defun py-kill-section ()
+  "Delete `section' at point.
+
+Stores data in kill ring"
+  (interactive "*")
+  (let ((erg (py--mark-base "section")))
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-top-level ()
@@ -6121,14 +6167,6 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
   (let ((erg (py--mark-base-bol "except-block")))
     (kill-region (car erg) (cdr erg))))
 
-(defun py-kill-expression ()
-  "Delete expression at point.
-
-Stores data in kill ring. Might be yanked back using `C-y'. "
-  (interactive "*")
-  (let ((erg (py--mark-base-bol "expression")))
-    (kill-region (car erg) (cdr erg))))
-
 (defun py-kill-for-block ()
   "Delete for-block at point.
 
@@ -6188,52 +6226,6 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 ;; python-components-mark-forms
 
 
-(defun py-mark-block ()
-  "Mark block at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "block"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-block-or-clause ()
-  "Mark block-or-clause at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "block-or-clause"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-class (&optional arg)
-  "Mark class at point.
-
-With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of marked area, a cons. "
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        erg)
-    (py--mark-base "class" py-mark-decorators)
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-clause ()
-  "Mark clause at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "clause"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
 (defun py-mark-comment ()
   "Mark comment at point.
 
@@ -6241,65 +6233,6 @@ Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "comment"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-def (&optional arg)
-  "Mark def at point.
-
-With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of marked area, a cons. "
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        erg)
-    (py--mark-base "def" py-mark-decorators)
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class at point.
-
-With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of marked area, a cons. "
-  (interactive "P")
-  (let ((py-mark-decorators (or arg py-mark-decorators))
-        erg)
-    (py--mark-base "def-or-class" py-mark-decorators)
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-except-block ()
-  "Mark except-block at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "except-block"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-expression ()
-  "Mark expression at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "expression"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-if-block ()
-  "Mark if-block at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "if-block"))
     (exchange-point-and-mark)
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
@@ -6315,17 +6248,6 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-minor-block ()
-  "Mark minor-block at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "minor-block"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
 
@@ -6333,6 +6255,17 @@ Returns beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "paragraph"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
+
+(defun py-mark-expression ()
+  "Mark expression at point.
+
+Returns beginning and end positions of marked area, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py--mark-base "expression"))
     (exchange-point-and-mark)
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
@@ -6359,17 +6292,6 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-statement ()
-  "Mark statement at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "statement"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
 (defun py-mark-top-level ()
   "Mark top-level at point.
 
@@ -6381,18 +6303,7 @@ Returns beginning and end positions of marked area, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-try-block ()
-  "Mark try-block at point.
-
-Returns beginning and end positions of marked area, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base "try-block"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-block-bol ()
+(defun py-mark-block ()
   "Mark block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6403,7 +6314,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-block-or-clause-bol ()
+(defun py-mark-block-or-clause ()
   "Mark block-or-clause, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6414,7 +6325,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-class-bol (&optional arg)
+(defun py-mark-class (&optional arg)
   "Mark class, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
@@ -6427,7 +6338,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-clause-bol ()
+(defun py-mark-clause ()
   "Mark clause, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6438,18 +6349,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-comment-bol ()
-  "Mark comment, take beginning of line positions. 
-
-Returns beginning and end positions of region, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base-bol "comment"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-def-bol (&optional arg)
+(defun py-mark-def (&optional arg)
   "Mark def, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
@@ -6462,7 +6362,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-def-or-class-bol (&optional arg)
+(defun py-mark-def-or-class (&optional arg)
   "Mark def-or-class, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
@@ -6475,7 +6375,29 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-except-block-bol ()
+(defun py-mark-elif-block ()
+  "Mark elif-block, take beginning of line positions. 
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py--mark-base-bol "elif-block"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
+
+(defun py-mark-else-block ()
+  "Mark else-block, take beginning of line positions. 
+
+Returns beginning and end positions of region, a cons. "
+  (interactive)
+  (let (erg)
+    (setq erg (py--mark-base-bol "else-block"))
+    (exchange-point-and-mark)
+    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
+
+(defun py-mark-except-block ()
   "Mark except-block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6486,18 +6408,18 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-expression-bol ()
-  "Mark expression, take beginning of line positions. 
+(defun py-mark-for-block ()
+  "Mark for-block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
-    (setq erg (py--mark-base-bol "expression"))
+    (setq erg (py--mark-base-bol "for-block"))
     (exchange-point-and-mark)
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-if-block-bol ()
+(defun py-mark-if-block ()
   "Mark if-block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6508,18 +6430,18 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-line-bol ()
-  "Mark line, take beginning of line positions. 
+(defun py-mark-indent ()
+  "Mark indent, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
-    (setq erg (py--mark-base-bol "line"))
+    (setq erg (py--mark-base-bol "indent"))
     (exchange-point-and-mark)
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-minor-block-bol ()
+(defun py-mark-minor-block ()
   "Mark minor-block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6530,29 +6452,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-paragraph-bol ()
-  "Mark paragraph, take beginning of line positions. 
-
-Returns beginning and end positions of region, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base-bol "paragraph"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-partial-expression-bol ()
-  "Mark partial-expression, take beginning of line positions. 
-
-Returns beginning and end positions of region, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base-bol "partial-expression"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
-(defun py-mark-statement-bol ()
+(defun py-mark-statement ()
   "Mark statement, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6563,7 +6463,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-top-level-bol ()
+(defun py-mark-top-level ()
   "Mark top-level, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6574,7 +6474,7 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-try-block-bol ()
+(defun py-mark-try-block ()
   "Mark try-block, take beginning of line positions. 
 
 Returns beginning and end positions of region, a cons. "
@@ -6593,7 +6493,7 @@ Returns beginning and end positions of region, a cons. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6602,7 +6502,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "block-or-clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6611,7 +6511,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "buffer")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6620,7 +6520,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6629,7 +6529,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6638,7 +6538,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "def")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6647,7 +6547,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "def-or-class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6656,7 +6556,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6665,7 +6565,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "indent")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6674,7 +6574,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "line")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6683,7 +6583,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "minor-block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6692,7 +6592,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "paragraph")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6701,7 +6601,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "partial-expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6710,7 +6610,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "region")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6719,7 +6619,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "statement")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6728,7 +6628,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "top-level")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6737,7 +6637,7 @@ Store data in kill ring, so it might yanked back. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6746,7 +6646,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "block-or-clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6755,7 +6655,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "buffer")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6764,7 +6664,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6773,7 +6673,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6782,7 +6682,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "def")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6791,7 +6691,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "def-or-class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6800,7 +6700,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6809,7 +6709,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "indent")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6818,7 +6718,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "line")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6827,7 +6727,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "minor-block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6836,7 +6736,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "paragraph")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6845,7 +6745,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "partial-expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6854,7 +6754,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "region")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6863,7 +6763,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "statement")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6872,7 +6772,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion
+  (save-excursion 
     (let ((erg (py--mark-base-bol "top-level")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6957,14 +6857,6 @@ Don't store data in kill ring. "
   (let ((erg (py--mark-base-bol "except-block")))
     (delete-region (car erg) (cdr erg))))
 
-(defun py-delete-expression ()
-  "Delete EXPRESSION at point until beginning-of-line.
-
-Don't store data in kill ring. "
-  (interactive)
-  (let ((erg (py--mark-base-bol "expression")))
-    (delete-region (car erg) (cdr erg))))
-
 (defun py-delete-for-block ()
   "Delete FOR-BLOCK at point until beginning-of-line.
 
@@ -7021,6 +6913,14 @@ Don't store data in kill ring. "
   (let ((erg (py--mark-base-bol "try-block")))
     (delete-region (car erg) (cdr erg))))
 
+(defun py-delete-comment ()
+  "Delete COMMENT at point.
+
+Don't store data in kill ring. "
+  (interactive)
+  (let ((erg (py--mark-base "comment")))
+    (delete-region (car erg) (cdr erg))))
+
 (defun py-delete-line ()
   "Delete LINE at point.
 
@@ -7051,6 +6951,14 @@ Don't store data in kill ring. "
 Don't store data in kill ring. "
   (interactive)
   (let ((erg (py--mark-base "partial-expression")))
+    (delete-region (car erg) (cdr erg))))
+
+(defun py-delete-section ()
+  "Delete SECTION at point.
+
+Don't store data in kill ring. "
+  (interactive)
+  (let ((erg (py--mark-base "section")))
     (delete-region (car erg) (cdr erg))))
 
 (defun py-delete-top-level ()
@@ -11554,6 +11462,18 @@ When `delete-active-region' and (region-active-p), delete region "
 ;; python-components-booleans-beginning-forms
 
 
+(defun py--beginning-of-comment-p ()
+  "Returns position, if cursor is at the beginning of a `comment', nil otherwise. "
+  (let ((orig (point))
+        erg)
+    (save-excursion
+      (unless (or (py-in-string-or-comment-p) (and (eolp) (not (empty-line-p))))
+        (py-forward-comment)
+        (py-backward-comment)
+        (when (eq orig (point))
+          (setq erg orig)))
+      erg)))
+
 (defun py--beginning-of-line-p ()
   "Returns position, if cursor is at the beginning of a `line', nil otherwise. "
   (let ((orig (point))
@@ -11732,18 +11652,6 @@ When `delete-active-region' and (region-active-p), delete region "
       (unless (and (eolp) (not (empty-line-p)))
 	(py-forward-except-block-bol))
       (py-backward-except-block-bol)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
-
-(defun py--beginning-of-expression-bol-p ()
-  "Returns position, if cursor is at beginning-of-line and the beginning of a `expression', nil otherwise. "
-  (save-excursion
-    (let ((orig (point))
-	  erg)
-      (unless (and (eolp) (not (empty-line-p)))
-	(py-forward-expression-bol))
-      (py-backward-expression-bol)
       (when (eq orig (point))
 	(setq erg orig))
       erg)))
@@ -11940,18 +11848,6 @@ When `delete-active-region' and (region-active-p), delete region "
 	(setq erg orig))
       erg)))
 
-(defun py--beginning-of-expression-p ()
-  "Returns position, if cursor is at the beginning of a `expression', nil otherwise. "
-  (save-excursion 
-    (let ((orig (point))
-	  erg)
-      (unless (and (eolp) (not (empty-line-p)))
-	(py-forward-expression))
-      (py-backward-expression)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
-
 (defun py--beginning-of-for-block-p ()
   "Returns position, if cursor is at the beginning of a `for-block', nil otherwise. "
   (save-excursion 
@@ -12038,6 +11934,17 @@ When `delete-active-region' and (region-active-p), delete region "
 
 ;; python-components-booleans-end-forms
 
+
+(defun py--end-of-comment-p ()
+  "Returns position, if cursor is at the end of a comment, nil otherwise. "
+  (let ((orig (point))
+	erg)
+    (save-excursion
+      (py-backward-comment)
+      (py-forward-comment)
+      (when (eq orig (point))
+	(setq erg orig))
+      erg)))
 
 (defun py--end-of-line-p ()
   "Returns position, if cursor is at the end of a line, nil otherwise. "
@@ -12200,17 +12107,6 @@ When `delete-active-region' and (region-active-p), delete region "
     (save-excursion
       (py-backward-except-block-bol)
       (py-forward-except-block-bol)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
-
-(defun py--end-of-expression-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a expression, nil otherwise. "
-  (let ((orig (point))
-	erg)
-    (save-excursion
-      (py-backward-expression-bol)
-      (py-forward-expression-bol)
       (when (eq orig (point))
 	(setq erg orig))
       erg)))
@@ -12387,17 +12283,6 @@ When `delete-active-region' and (region-active-p), delete region "
     (save-excursion
       (py-backward-except-block)
       (py-forward-except-block)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
-
-(defun py--end-of-expression-p ()
-  "Returns position, if cursor is at the end of a expression, nil otherwise. "
-  (let ((orig (point))
-	erg)
-    (save-excursion
-      (py-backward-expression)
-      (py-forward-expression)
       (when (eq orig (point))
 	(setq erg orig))
       erg)))
@@ -13019,14 +12904,14 @@ Return position if statement found, nil otherwise. "
 Return position if statement found, nil otherwise. "
   (interactive)
   (let* ((orig (point))
-	 (erg
-	  (cond ((py--end-of-statement-p)
-		 (and (py-forward-statement) (py-backward-statement)))
-		((ignore-errors (< orig (progn (py-forward-statement) (py-backward-statement))))
-		 (point))
-		(t (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
+	  (erg
+	   (cond ((py--end-of-statement-p)
+		  (setq erg (and (py-forward-statement) (py-backward-statement))))
+		 ((< orig (progn (py-forward-statement) (py-backward-statement)))
+		  (point))
+		 (t (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))))
+	   (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+	   erg))
 
 (defun py-up-base (regexp)
   "Go to the beginning of next form upwards in buffer.
@@ -15630,6 +15515,248 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   "Send expression at point to Python3 unique interpreter and switch to result. "
   (interactive)
   (py--execute-prepare 'expression 'python3 t 'switch))
+
+(defun py-execute-indent ()
+  "Send indent at point to  interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent nil  nil nil))
+
+(defun py-execute-indent-switch ()
+  "Send indent at point to  interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent nil  nil 'switch))
+
+(defun py-execute-indent-no-switch ()
+  "Send indent at point to  interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent nil  nil 'no-switch))
+
+(defun py-execute-indent-dedicated ()
+  "Send indent at point to  unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent nil  t nil))
+
+(defun py-execute-indent-dedicated-switch ()
+  "Send indent at point to  unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent nil  t 'switch))
+
+(defun py-execute-indent-ipython ()
+  "Send indent at point to IPython interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython nil nil))
+
+(defun py-execute-indent-ipython-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython nil 'switch))
+
+(defun py-execute-indent-ipython-no-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython nil 'no-switch))
+
+(defun py-execute-indent-ipython-dedicated ()
+  "Send indent at point to IPython unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython t nil))
+
+(defun py-execute-indent-ipython-dedicated-switch ()
+  "Send indent at point to IPython unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython t 'switch))
+
+(defun py-execute-indent-ipython2.7 ()
+  "Send indent at point to IPython interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython2.7 nil nil))
+
+(defun py-execute-indent-ipython2.7-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython2.7 nil 'switch))
+
+(defun py-execute-indent-ipython2.7-no-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython2.7 nil 'no-switch))
+
+(defun py-execute-indent-ipython2.7-dedicated ()
+  "Send indent at point to IPython unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython2.7 t nil))
+
+(defun py-execute-indent-ipython2.7-dedicated-switch ()
+  "Send indent at point to IPython unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython2.7 t 'switch))
+
+(defun py-execute-indent-ipython3 ()
+  "Send indent at point to IPython interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython3 nil nil))
+
+(defun py-execute-indent-ipython3-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython3 nil 'switch))
+
+(defun py-execute-indent-ipython3-no-switch ()
+  "Send indent at point to IPython interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython3 nil 'no-switch))
+
+(defun py-execute-indent-ipython3-dedicated ()
+  "Send indent at point to IPython unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython3 t nil))
+
+(defun py-execute-indent-ipython3-dedicated-switch ()
+  "Send indent at point to IPython unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'ipython3 t 'switch))
+
+(defun py-execute-indent-jython ()
+  "Send indent at point to Jython interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'jython nil nil))
+
+(defun py-execute-indent-jython-switch ()
+  "Send indent at point to Jython interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'jython nil 'switch))
+
+(defun py-execute-indent-jython-no-switch ()
+  "Send indent at point to Jython interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'jython nil 'no-switch))
+
+(defun py-execute-indent-jython-dedicated ()
+  "Send indent at point to Jython unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'jython t nil))
+
+(defun py-execute-indent-jython-dedicated-switch ()
+  "Send indent at point to Jython unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'jython t 'switch))
+
+(defun py-execute-indent-python ()
+  "Send indent at point to default interpreter. 
+
+For `default' see value of `py-shell-name'"
+  (interactive)
+  (py--execute-prepare 'indent 'python nil nil))
+
+(defun py-execute-indent-python-switch ()
+  "Send indent at point to default interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+
+For `default' see value of `py-shell-name'"
+  (interactive)
+  (py--execute-prepare 'indent 'python nil 'switch))
+
+(defun py-execute-indent-python-no-switch ()
+  "Send indent at point to default interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+
+For `default' see value of `py-shell-name'"
+  (interactive)
+  (py--execute-prepare 'indent 'python nil 'no-switch))
+
+(defun py-execute-indent-python-dedicated ()
+  "Send indent at point to default unique interpreter. 
+
+For `default' see value of `py-shell-name'"
+  (interactive)
+  (py--execute-prepare 'indent 'python t nil))
+
+(defun py-execute-indent-python-dedicated-switch ()
+  "Send indent at point to default unique interpreter and switch to result. 
+
+For `default' see value of `py-shell-name'"
+  (interactive)
+  (py--execute-prepare 'indent 'python t 'switch))
+
+(defun py-execute-indent-python2 ()
+  "Send indent at point to Python2 interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'python2 nil nil))
+
+(defun py-execute-indent-python2-switch ()
+  "Send indent at point to Python2 interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'python2 nil 'switch))
+
+(defun py-execute-indent-python2-no-switch ()
+  "Send indent at point to Python2 interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'python2 nil 'no-switch))
+
+(defun py-execute-indent-python2-dedicated ()
+  "Send indent at point to Python2 unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'python2 t nil))
+
+(defun py-execute-indent-python2-dedicated-switch ()
+  "Send indent at point to Python2 unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'python2 t 'switch))
+
+(defun py-execute-indent-python3 ()
+  "Send indent at point to Python3 interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'python3 nil nil))
+
+(defun py-execute-indent-python3-switch ()
+  "Send indent at point to Python3 interpreter. 
+
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
+  (interactive)
+  (py--execute-prepare 'indent 'python3 nil 'switch))
+
+(defun py-execute-indent-python3-no-switch ()
+  "Send indent at point to Python3 interpreter. 
+
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
+  (interactive)
+  (py--execute-prepare 'indent 'python3 nil 'no-switch))
+
+(defun py-execute-indent-python3-dedicated ()
+  "Send indent at point to Python3 unique interpreter. "
+  (interactive)
+  (py--execute-prepare 'indent 'python3 t nil))
+
+(defun py-execute-indent-python3-dedicated-switch ()
+  "Send indent at point to Python3 unique interpreter and switch to result. "
+  (interactive)
+  (py--execute-prepare 'indent 'python3 t 'switch))
 
 (defun py-execute-line ()
   "Send line at point to  interpreter. "
@@ -18702,6 +18829,14 @@ Return code of `py-block-or-clause' at point, a string. "
   (let ((erg (py--mark-base "block-or-clause")))
     (py--forms-report-result erg)))
 
+(defun py-buffer ()
+  "Buffer at point.
+
+Return code of `py-buffer' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "buffer")))
+    (py--forms-report-result erg)))
+
 (defun py-class ()
   "Class at point.
 
@@ -18742,6 +18877,14 @@ Return code of `py-expression' at point, a string. "
   (let ((erg (py--mark-base "expression")))
     (py--forms-report-result erg)))
 
+(defun py-indent ()
+  "Indent at point.
+
+Return code of `py-indent' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "indent")))
+    (py--forms-report-result erg)))
+
 (defun py-line ()
   "Line at point.
 
@@ -18772,6 +18915,14 @@ Return code of `py-paragraph' at point, a string. "
 Return code of `py-partial-expression' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "partial-expression")))
+    (py--forms-report-result erg)))
+
+(defun py-region ()
+  "Region at point.
+
+Return code of `py-region' at point, a string. "
+  (interactive)
+  (let ((erg (py--mark-base "region")))
     (py--forms-report-result erg)))
 
 (defun py-statement ()
