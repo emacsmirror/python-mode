@@ -4647,232 +4647,162 @@ Returns the string inserted. "
 
 
 (defun py-backward-block (&optional indent)
- "Go to beginning of block.
+  "Go to beginning of `block'.
 
-If already at beginning, go one block backward.
-Returns beginning of block if successful, nil otherwise
-
-"
+If already at beginning, go one `block' backward.
+Returns beginning of `block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-block-re 'py-clause-re (called-interactively-p 'any)))
 
 (defun py-backward-block-or-clause (&optional indent)
- "Go to beginning of block-or-clause.
+  "Go to beginning of `block-or-clause'.
 
-If already at beginning, go one block-or-clause backward.
-Returns beginning of block-or-clause if successful, nil otherwise
-
-"
+If already at beginning, go one `block-or-clause' backward.
+Returns beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
-
-(defun py-backward-class (&optional indent)
- "Go to beginning of class.
-
-If already at beginning, go one class backward.
-Returns beginning of class if successful, nil otherwise
-
-When `py-mark-decorators' is non-nil, decorators are considered too. "
-  (interactive)
-  (py--backward-prepare indent 'py-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
 (defun py-backward-clause (&optional indent)
- "Go to beginning of clause.
+  "Go to beginning of `clause'.
 
-If already at beginning, go one clause backward.
-Returns beginning of clause if successful, nil otherwise
-
-"
+If already at beginning, go one `clause' backward.
+Returns beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
-(defun py-backward-def-or-class (&optional indent)
- "Go to beginning of def-or-class.
-
-If already at beginning, go one def-or-class backward.
-Returns beginning of def-or-class if successful, nil otherwise
-
-When `py-mark-decorators' is non-nil, decorators are considered too. "
-  (interactive)
-  (py--backward-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
-
-(defun py-backward-def (&optional indent)
- "Go to beginning of def.
-
-If already at beginning, go one def backward.
-Returns beginning of def if successful, nil otherwise
-
-When `py-mark-decorators' is non-nil, decorators are considered too. "
-  (interactive)
-  (py--backward-prepare indent 'py-def-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
-
-(defun py-backward-if-block (&optional indent)
- "Go to beginning of if-block.
-
-If already at beginning, go one if-block backward.
-Returns beginning of if-block if successful, nil otherwise
-
-"
-  (interactive)
-  (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any)))
-
 (defun py-backward-elif-block (&optional indent)
- "Go to beginning of elif-block.
+  "Go to beginning of `elif-block'.
 
-If already at beginning, go one elif-block backward.
-Returns beginning of elif-block if successful, nil otherwise
-
-"
+If already at beginning, go one `elif-block' backward.
+Returns beginning of `elif-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-elif-block-re 'py-clause-re (called-interactively-p 'any)))
 
 (defun py-backward-else-block (&optional indent)
- "Go to beginning of else-block.
+  "Go to beginning of `else-block'.
 
-If already at beginning, go one else-block backward.
-Returns beginning of else-block if successful, nil otherwise
-
-"
+If already at beginning, go one `else-block' backward.
+Returns beginning of `else-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-else-block-re 'py-clause-re (called-interactively-p 'any)))
 
-(defun py-backward-for-block (&optional indent)
- "Go to beginning of for-block.
-
-If already at beginning, go one for-block backward.
-Returns beginning of for-block if successful, nil otherwise
-
-"
-  (interactive)
-  (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any)))
-
 (defun py-backward-except-block (&optional indent)
- "Go to beginning of except-block.
+  "Go to beginning of `except-block'.
 
-If already at beginning, go one except-block backward.
-Returns beginning of except-block if successful, nil otherwise
-
-"
+If already at beginning, go one `except-block' backward.
+Returns beginning of `except-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any)))
 
-(defun py-backward-try-block (&optional indent)
- "Go to beginning of try-block.
+(defun py-backward-for-block (&optional indent)
+  "Go to beginning of `for-block'.
 
-If already at beginning, go one try-block backward.
-Returns beginning of try-block if successful, nil otherwise
-
-"
+If already at beginning, go one `for-block' backward.
+Returns beginning of `for-block' if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any)))
+
+(defun py-backward-if-block (&optional indent)
+  "Go to beginning of `if-block'.
+
+If already at beginning, go one `if-block' backward.
+Returns beginning of `if-block' if successful, nil otherwise"
+  (interactive)
+  (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any)))
 
 (defun py-backward-minor-block (&optional indent)
- "Go to beginning of minor-block.
+  "Go to beginning of `minor-block'.
 
-If already at beginning, go one minor-block backward.
-Returns beginning of minor-block if successful, nil otherwise
-
-"
+If already at beginning, go one `minor-block' backward.
+Returns beginning of `minor-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any)))
 
+(defun py-backward-try-block (&optional indent)
+  "Go to beginning of `try-block'.
+
+If already at beginning, go one `try-block' backward.
+Returns beginning of `try-block' if successful, nil otherwise"
+  (interactive)
+  (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any)))
+
 (defun py-backward-block-bol (&optional indent)
- "Go to beginning of block, go to BOL.
+  "Go to beginning of `block', go to BOL.
 
-If already at beginning, go one block backward.
-Returns beginning of block if successful, nil otherwise
-
-"
+If already at beginning, go one `block' backward.
+Returns beginning of `block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-block-or-clause-bol (&optional indent)
- "Go to beginning of block-or-clause, go to BOL.
+  "Go to beginning of `block-or-clause', go to BOL.
 
-If already at beginning, go one block-or-clause backward.
-Returns beginning of block-or-clause if successful, nil otherwise
-
-"
+If already at beginning, go one `block-or-clause' backward.
+Returns beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-clause-bol (&optional indent)
- "Go to beginning of clause, go to BOL.
+  "Go to beginning of `clause', go to BOL.
 
-If already at beginning, go one clause backward.
-Returns beginning of clause if successful, nil otherwise
-
-"
+If already at beginning, go one `clause' backward.
+Returns beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-elif-block-bol (&optional indent)
- "Go to beginning of elif-block, go to BOL.
+  "Go to beginning of `elif-block', go to BOL.
 
-If already at beginning, go one elif-block backward.
-Returns beginning of elif-block if successful, nil otherwise
-
-"
+If already at beginning, go one `elif-block' backward.
+Returns beginning of `elif-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-elif-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-else-block-bol (&optional indent)
- "Go to beginning of else-block, go to BOL.
+  "Go to beginning of `else-block', go to BOL.
 
-If already at beginning, go one else-block backward.
-Returns beginning of else-block if successful, nil otherwise
-
-"
+If already at beginning, go one `else-block' backward.
+Returns beginning of `else-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-else-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-except-block-bol (&optional indent)
- "Go to beginning of except-block, go to BOL.
+  "Go to beginning of `except-block', go to BOL.
 
-If already at beginning, go one except-block backward.
-Returns beginning of except-block if successful, nil otherwise
-
-"
+If already at beginning, go one `except-block' backward.
+Returns beginning of `except-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-for-block-bol (&optional indent)
- "Go to beginning of for-block, go to BOL.
+  "Go to beginning of `for-block', go to BOL.
 
-If already at beginning, go one for-block backward.
-Returns beginning of for-block if successful, nil otherwise
-
-"
+If already at beginning, go one `for-block' backward.
+Returns beginning of `for-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-if-block-bol (&optional indent)
- "Go to beginning of if-block, go to BOL.
+  "Go to beginning of `if-block', go to BOL.
 
-If already at beginning, go one if-block backward.
-Returns beginning of if-block if successful, nil otherwise
-
-"
+If already at beginning, go one `if-block' backward.
+Returns beginning of `if-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-minor-block-bol (&optional indent)
- "Go to beginning of minor-block, go to BOL.
+  "Go to beginning of `minor-block', go to BOL.
 
-If already at beginning, go one minor-block backward.
-Returns beginning of minor-block if successful, nil otherwise
-
-"
+If already at beginning, go one `minor-block' backward.
+Returns beginning of `minor-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any) t))
 
 (defun py-backward-try-block-bol (&optional indent)
- "Go to beginning of try-block, go to BOL.
+  "Go to beginning of `try-block', go to BOL.
 
-If already at beginning, go one try-block backward.
-Returns beginning of try-block if successful, nil otherwise
-
-"
+If already at beginning, go one `try-block' backward.
+Returns beginning of `try-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any) t))
 
@@ -5653,6 +5583,47 @@ Returns position if succesful "
           (setq erg (point))))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
+
+(defun py-backward-comment (&optional pos)
+  "Got to beginning of a commented section. "
+  (interactive)
+  (let ((erg pos)
+	last)
+    (when erg (goto-char erg))
+    (while (and (not (bobp)) (setq erg (py-in-comment-p)))
+      (when (< erg (point))
+	(goto-char erg)
+	(setq last (point)))
+      (skip-chars-backward " \t\r\n\f"))
+    (when last (goto-char last))
+    last))
+
+(defun py-forward-comment (&optional pos char)
+  "Go to end of commented section.
+
+Optional args position and comment-start character
+Travel empty lines "
+  (interactive)
+  (let ((orig (or pos (point)))
+	(char (or char (string-to-char comment-start)))
+	py-forward-comment-last)
+    (while (and (not (eobp))
+		(or
+		 (forward-comment 99999)
+		 (when (py--in-comment-p)
+		   (progn
+		     (end-of-line)
+		     (skip-chars-backward " \t\r\n\f")
+		     (setq py-forward-comment-last (point))))
+		 (prog1 (forward-line 1)
+		   (end-of-line)))))
+    (when py-forward-comment-last (goto-char py-forward-comment-last))
+    ;; forward-comment fails sometimes
+    (and (eq orig (point)) (prog1 (forward-line 1) (back-to-indentation))
+	 (while (member (char-after) (list char 10))(forward-line 1)(back-to-indentation)))
+    (when (< orig (point)) (setq erg (point)))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
 
 ;;  Helper functions
 (defun py-go-to-beginning-of-comment ()
@@ -12541,6 +12512,12 @@ When `delete-active-region' and (region-active-p), delete region "
     (let ((erg (py-backward-if-block-bol)))
       erg)))
 
+(defun py--beginning-of-indent-position-bol ()
+  "Returns beginning of indent position. "
+  (save-excursion
+    (let ((erg (py-backward-indent-bol)))
+      erg)))
+
 (defun py--beginning-of-minor-block-position-bol ()
   "Returns beginning of minor-block position. "
   (save-excursion
@@ -12632,16 +12609,6 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-def-or-class))))
       erg)))
 
-(defun py--end-of-except-block-position ()
-  "Returns end of except-block position. "
-  (save-excursion
-    (let ((erg (progn
-                 (when (looking-at "[ \\t\\r\\n\\f]*$")
-                   (skip-chars-backward " \t\r\n\f")
-                   (forward-char -1))
-                 (py-forward-except-block))))
-      erg)))
-
 (defun py--end-of-expression-position ()
   "Returns end of expression position. "
   (save-excursion
@@ -12652,6 +12619,16 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-expression))))
       erg)))
 
+(defun py--end-of-except-block-position ()
+  "Returns end of except-block position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-except-block))))
+      erg)))
+
 (defun py--end-of-if-block-position ()
   "Returns end of if-block position. "
   (save-excursion
@@ -12660,6 +12637,16 @@ When `delete-active-region' and (region-active-p), delete region "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-forward-if-block))))
+      erg)))
+
+(defun py--end-of-indent-position ()
+  "Returns end of indent position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-indent))))
       erg)))
 
 (defun py--end-of-line-position ()
@@ -12682,16 +12669,6 @@ When `delete-active-region' and (region-active-p), delete region "
                  (py-forward-minor-block))))
       erg)))
 
-(defun py--end-of-paragraph-position ()
-  "Returns end of paragraph position. "
-  (save-excursion
-    (let ((erg (progn
-                 (when (looking-at "[ \\t\\r\\n\\f]*$")
-                   (skip-chars-backward " \t\r\n\f")
-                   (forward-char -1))
-                 (py-forward-paragraph))))
-      erg)))
-
 (defun py--end-of-partial-expression-position ()
   "Returns end of partial-expression position. "
   (save-excursion
@@ -12700,6 +12677,16 @@ When `delete-active-region' and (region-active-p), delete region "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-forward-partial-expression))))
+      erg)))
+
+(defun py--end-of-paragraph-position ()
+  "Returns end of paragraph position. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-paragraph))))
       erg)))
 
 (defun py--end-of-section-position ()
@@ -12850,6 +12837,16 @@ When `delete-active-region' and (region-active-p), delete region "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-forward-if-block-bol))))
+      erg)))
+
+(defun py--end-of-indent-position-bol ()
+  "Returns end of indent position at beginning-of-line. "
+  (save-excursion
+    (let ((erg (progn
+                 (when (looking-at "[ \\t\\r\\n\\f]*$")
+                   (skip-chars-backward " \t\r\n\f")
+                   (forward-char -1))
+                 (py-forward-indent-bol))))
       erg)))
 
 (defun py--end-of-minor-block-position-bol ()
@@ -18557,97 +18554,6 @@ Ignores default of `py-switch-buffers-on-execute-p', uses it with value \"non-ni
 
 ;; python-components-comment
 
-(defun py-backward-comment (&optional last orig)
-  "Leave commented section upwards,  include empty lines.
-
-Return position reached, if successful"
-  (interactive)
-  (unless (bobp)
-    (let ((pps (parse-partial-sexp (point-min) (point)))
-	  (last (or last (point)))
-	  (orig (or orig (point))))
-      (if (nth 4 pps)
-	  (progn
-	    (goto-char (nth 8 pps))
-	    (setq last (point))
-	    (skip-chars-backward " \t\r\n\f")
-	    (py-backward-comment last orig))
-	(when last (goto-char last)))
-      (when (< (point) orig) (point)))))
-
-(defun py-beginning-of-comment ()
-  "Go to the beginning of current line's comment, if any.
-
-Returns position if succesful. "
-  (interactive)
-  (save-restriction
-    (widen)
-    (let ((pps (parse-partial-sexp (point-min) (point))))
-      (when (nth 4 pps)
-        (goto-char
-         (nth 8 pps))))))
-
-;; (defun py-beginning-of-comment ()
-;;   "Go to beginning of comment at point.
-;;
-;; Returns position, nil if not in comment."
-;;   (interactive)
-;;   (let ((orig (point))
-;;         last erg done)
-;;     (while (and (not done)(not (bobp)) (or (looking-at (concat "[ \t]*" comment-start))(nth 4 (parse-partial-sexp (point-min) (point)))(empty-line-p)))
-;;       (when (nth 4 (parse-partial-sexp (point-min) (point)))
-;;         (goto-char (nth 8 (parse-partial-sexp (point-min) (point))))
-;;         (setq last (point)))
-;;       (when (and last (< (point) last))
-;;         (unless (empty-line-p)
-;;           (setq last (point))))
-;;       (if (looking-back "^[ \t]*")
-;;           (forward-line -1)
-;;         ;; inline comment
-;;         (when (and (looking-at (concat "[ \t]*" comment-start)) (< (point) orig))(setq last (point)))
-;;         (setq done t)))
-;;     last))
-
-(defun py-forward-comment ()
-    "Go to the end of comment at point.
-
-Returns position, nil if not in comment."
-
-  (interactive)
-  (let ((orig (point))
-        last)
-    (while (and (not (eobp)) (or (looking-at (concat "[ \t]*" comment-start))(nth 4 (parse-partial-sexp (point-min) (point)))(empty-line-p)))
-      (unless (empty-line-p)
-        (setq last (point)))
-      (forward-line 1))
-    (if last
-        (progn
-          (goto-char last)
-          (end-of-line)
-          (skip-chars-backward " \t\r\n\f")
-          (point))
-      last)))
-
-(defun py--uncomment-intern (beg end)
-  (uncomment-region beg end)
-  (when py-uncomment-indents-p
-    (py-indent-region beg end)))
-
-(defun py-uncomment (&optional beg end)
-  "Uncomment commented lines at point.
-
-If region is active, restrict uncommenting at region "
-  (interactive "*")
-  (save-excursion
-    (save-restriction
-      (when (use-region-p)
-        (narrow-to-region (region-beginning) (region-end)))
-      (let* (last
-             (beg (or beg (save-excursion
-                            (while (and (py-beginning-of-comment) (setq last (point))(prog1 (forward-line -1)(end-of-line))))
-                            last))))
-        (and (py-forward-comment))
-        (py--uncomment-intern beg (point))))))
 
 (defun py-comment-region (beg end &optional arg)
   "Like `comment-region' but uses double hash (`#') comment starter."
@@ -18667,59 +18573,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py--beginning-of-block-position)))
-          (end (or end (py--end-of-block-position))))
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
-      (comment-region beg end arg))))
-
-(defun py-comment-minor-block (&optional beg end arg)
-  "Comments a block started by a `for', `if', `try' or `with'.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default"
-  (interactive "*")
-  (save-excursion
-    (let ((comment-start (if py-block-comment-prefix-p
-                             py-block-comment-prefix
-                           comment-start))
-          (beg (or beg (py--beginning-of-minor-block-position)))
-          (end (or end (py--end-of-minor-block-position))))
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
-      (comment-region beg end arg))))
-
-(defun py-comment-top-level (&optional beg end arg)
-  "Comments top-level form at point.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default"
-  (interactive "*")
-  (save-excursion
-    (let ((comment-start (if py-block-comment-prefix-p
-                             py-block-comment-prefix
-                           comment-start))
-          (beg (or beg (py--beginning-of-top-level-position)))
-          (end (or end (py--end-of-top-level-position))))
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
-      (comment-region beg end arg))))
-
-(defun py-comment-clause (&optional beg end arg)
-  "Comments clause at point.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default"
-  (interactive "*")
-  (save-excursion
-    (let ((comment-start (if py-block-comment-prefix-p
-                             py-block-comment-prefix
-                           comment-start))
-          (beg (or beg (py--beginning-of-clause-position)))
-          (end (or end (py--end-of-clause-position))))
+          (beg (or beg (py-beginning-of-block-position)))
+          (end (or end (py-forward-block-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -18735,25 +18590,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py--beginning-of-block-or-clause-position)))
-          (end (or end (py--end-of-block-or-clause-position))))
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
-      (comment-region beg end arg))))
-
-(defun py-comment-def (&optional beg end arg)
-  "Comments def at point.
-
-Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
-the default"
-  (interactive "*")
-  (save-excursion
-    (let ((comment-start (if py-block-comment-prefix-p
-                             py-block-comment-prefix
-                           comment-start))
-          (beg (or beg (py--beginning-of-def-position)))
-          (end (or end (py--end-of-def-position))))
+          (beg (or beg (py-beginning-of-block-or-clause-position)))
+          (end (or end (py-forward-block-or-clause-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -18769,8 +18607,42 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py--beginning-of-class-position)))
-          (end (or end (py--end-of-class-position))))
+          (beg (or beg (py-beginning-of-class-position)))
+          (end (or end (py-forward-class-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-clause (&optional beg end arg)
+  "Comments clause at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-clause-position)))
+          (end (or end (py-forward-clause-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-def (&optional beg end arg)
+  "Comments def at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-def-position)))
+          (end (or end (py-forward-def-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -18786,8 +18658,59 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py--beginning-of-def-or-class-position)))
-          (end (or end (py--end-of-def-or-class-position))))
+          (beg (or beg (py-beginning-of-def-or-class-position)))
+          (end (or end (py-forward-def-or-class-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-indent (&optional beg end arg)
+  "Comments indent at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-indent-position)))
+          (end (or end (py-forward-indent-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-minor-block (&optional beg end arg)
+  "Comments minor-block at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-minor-block-position)))
+          (end (or end (py-forward-minor-block-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+(defun py-comment-section (&optional beg end arg)
+  "Comments section at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-section-position)))
+          (end (or end (py-forward-section-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -18803,13 +18726,32 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py--beginning-of-statement-position)))
-          (end (or end (py--end-of-statement-position))))
+          (beg (or beg (py-beginning-of-statement-position)))
+          (end (or end (py-forward-statement-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
       (comment-region beg end arg))))
 
+(defun py-comment-top-level (&optional beg end arg)
+  "Comments top-level at point.
+
+Uses double hash (`#') comment starter when `py-block-comment-prefix-p' is  `t',
+the default"
+  (interactive "*")
+  (save-excursion
+    (let ((comment-start (if py-block-comment-prefix-p
+                             py-block-comment-prefix
+                           comment-start))
+          (beg (or beg (py-beginning-of-top-level-position)))
+          (end (or end (py-forward-top-level-position))))
+      (goto-char beg)
+      (push-mark)
+      (goto-char end)
+      (comment-region beg end arg))))
+
+
+;; python-components-comment ends here
 ;; python-components-forms-code
 
 
@@ -19837,6 +19779,27 @@ Don't save anything for STR matching `py-input-filter-re' "
 	     '("!#[ \t]*/.*[jp]ython[0-9.]*" . python-mode))
 
 ;;  lp:1355458, what about using `magic-mode-alist'?
+
+(defun py--uncomment-intern (beg end)
+  (uncomment-region beg end)
+  (when py-uncomment-indents-p
+    (py-indent-region beg end)))
+
+(defun py-uncomment (&optional beg end)
+  "Uncomment commented lines at point.
+
+If region is active, restrict uncommenting at region "
+  (interactive "*")
+  (save-excursion
+    (save-restriction
+      (when (use-region-p)
+        (narrow-to-region (region-beginning) (region-end)))
+      (let* (last
+             (beg (or beg (save-excursion
+                            (while (and (py-beginning-of-comment) (setq last (point))(prog1 (forward-line -1)(end-of-line))))
+                            last))))
+        (and (py-forward-comment))
+        (py--uncomment-intern beg (point))))))
 
 (defun py--set-auto-fill-values ()
   "Internal use by `py--run-auto-fill-timer'"
@@ -21044,7 +21007,7 @@ Returns beginning of FORM if successful, nil otherwise"
     (when (and py-verbose-p iact) (message "%s" erg))
     erg))
 
-(defun py--backward-prepare (indent final-re &optional inter-re iact lc)
+(defun py--backward-prepare (&optional indent final-re inter-re iact lc)
   (let ((orig (point))
         (indent
          (or indent
