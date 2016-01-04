@@ -6464,7 +6464,7 @@ Returns beginning and end positions of region, a cons. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6473,7 +6473,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "block-or-clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6482,7 +6482,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "buffer")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6491,7 +6491,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6500,7 +6500,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6509,7 +6509,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "def")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6518,7 +6518,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "def-or-class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6527,7 +6527,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6536,7 +6536,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "indent")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6545,7 +6545,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "line")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6554,7 +6554,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "minor-block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6563,7 +6563,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "paragraph")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6572,7 +6572,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "partial-expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6581,7 +6581,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "region")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6590,7 +6590,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "statement")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6599,7 +6599,7 @@ Store data in kill ring, so it might yanked back. "
 
 Store data in kill ring, so it might yanked back. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "top-level")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6608,7 +6608,7 @@ Store data in kill ring, so it might yanked back. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6617,7 +6617,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "block-or-clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6626,7 +6626,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "buffer")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6635,7 +6635,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6644,7 +6644,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "clause")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6653,7 +6653,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "def")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6662,7 +6662,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "def-or-class")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6671,7 +6671,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6680,7 +6680,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "indent")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6689,7 +6689,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "line")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6698,7 +6698,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "minor-block")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6707,7 +6707,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "paragraph")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6716,7 +6716,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "partial-expression")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6725,7 +6725,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "region")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6734,7 +6734,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "statement")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -6743,7 +6743,7 @@ Stores data in kill ring. Might be yanked back using `C-y'. "
 
 Stores data in kill ring. Might be yanked back using `C-y'. "
   (interactive "*")
-  (save-excursion 
+  (save-excursion
     (let ((erg (py--mark-base-bol "top-level")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
@@ -11713,7 +11713,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-block-p ()
   "Returns position, if cursor is at the beginning of a `block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11725,7 +11725,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-block-or-clause-p ()
   "Returns position, if cursor is at the beginning of a `block-or-clause', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11737,7 +11737,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-class-p ()
   "Returns position, if cursor is at the beginning of a `class', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11749,7 +11749,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-clause-p ()
   "Returns position, if cursor is at the beginning of a `clause', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11761,7 +11761,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-def-p ()
   "Returns position, if cursor is at the beginning of a `def', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11773,7 +11773,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-def-or-class-p ()
   "Returns position, if cursor is at the beginning of a `def-or-class', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11785,7 +11785,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-elif-block-p ()
   "Returns position, if cursor is at the beginning of a `elif-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11797,7 +11797,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-else-block-p ()
   "Returns position, if cursor is at the beginning of a `else-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11809,7 +11809,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-except-block-p ()
   "Returns position, if cursor is at the beginning of a `except-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11821,7 +11821,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-for-block-p ()
   "Returns position, if cursor is at the beginning of a `for-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11833,7 +11833,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-if-block-p ()
   "Returns position, if cursor is at the beginning of a `if-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11845,7 +11845,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-indent-p ()
   "Returns position, if cursor is at the beginning of a `indent', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11857,7 +11857,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-minor-block-p ()
   "Returns position, if cursor is at the beginning of a `minor-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11869,7 +11869,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-statement-p ()
   "Returns position, if cursor is at the beginning of a `statement', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11881,7 +11881,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-top-level-p ()
   "Returns position, if cursor is at the beginning of a `top-level', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -11893,7 +11893,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
 (defun py--beginning-of-try-block-p ()
   "Returns position, if cursor is at the beginning of a `try-block', nil otherwise. "
-  (save-excursion 
+  (save-excursion
     (let ((orig (point))
 	  erg)
       (unless (and (eolp) (not (empty-line-p)))
@@ -12380,22 +12380,28 @@ When `delete-active-region' and (region-active-p), delete region "
     (let ((erg (py-backward-def-or-class)))
       erg)))
 
-(defun py--beginning-of-except-block-position ()
-  "Returns beginning of except-block position at beginning-of-line. "
-  (save-excursion
-    (let ((erg (py-backward-except-block)))
-      erg)))
-
 (defun py--beginning-of-expression-position ()
   "Returns beginning of expression position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-backward-expression)))
       erg)))
 
+(defun py--beginning-of-except-block-position ()
+  "Returns beginning of except-block position at beginning-of-line. "
+  (save-excursion
+    (let ((erg (py-backward-except-block)))
+      erg)))
+
 (defun py--beginning-of-if-block-position ()
   "Returns beginning of if-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-backward-if-block)))
+      erg)))
+
+(defun py--beginning-of-indent-position ()
+  "Returns beginning of indent position at beginning-of-line. "
+  (save-excursion
+    (let ((erg (py-backward-indent)))
       erg)))
 
 (defun py--beginning-of-line-position ()
@@ -12410,16 +12416,16 @@ When `delete-active-region' and (region-active-p), delete region "
     (let ((erg (py-backward-minor-block)))
       erg)))
 
-(defun py--beginning-of-paragraph-position ()
-  "Returns beginning of paragraph position at beginning-of-line. "
-  (save-excursion
-    (let ((erg (py-backward-paragraph)))
-      erg)))
-
 (defun py--beginning-of-partial-expression-position ()
   "Returns beginning of partial-expression position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-backward-partial-expression)))
+      erg)))
+
+(defun py--beginning-of-paragraph-position ()
+  "Returns beginning of paragraph position at beginning-of-line. "
+  (save-excursion
+    (let ((erg (py-backward-paragraph)))
       erg)))
 
 (defun py--beginning-of-section-position ()
@@ -17937,6 +17943,7 @@ Fill according to `py-docstring-style' "
 
 ;; python-components-shift-forms
 
+
 (defalias 'py-shift-region-left 'py-shift-left)
 (defun py-shift-left (&optional count start end)
   "Dedent region according to `py-indent-offset' by COUNT times.
@@ -17944,7 +17951,6 @@ Fill according to `py-docstring-style' "
 If no region is active, current line is dedented.
 Returns indentation reached. "
   (interactive "p")
-  (setq count (or count 1))
   (let ((erg (py--shift-intern (- count) start end)))
     (when (and (called-interactively-p 'any) py-verbose-p) (message "%s" erg))
     erg))
@@ -17956,7 +17962,6 @@ Returns indentation reached. "
 If no region is active, current line is indented.
 Returns indentation reached. "
   (interactive "p")
-  (setq count (or count 1))
   (let ((erg (py--shift-intern count beg end)))
     (when (and (called-interactively-p 'any) py-verbose-p) (message "%s" erg))
     erg))
@@ -17989,8 +17994,8 @@ Returns indentation reached. "
     (py-indentation-of-statement)))
 
 (defun py--shift-forms-base (form arg &optional beg end)
-  (let* ((begform (intern-soft (concat "py-beginning-of-" form)))
-         (endform (intern-soft (concat "py-end-of-" form)))
+  (let* ((begform (intern-soft (concat "py-backward-" form)))
+         (endform (intern-soft (concat "py-forward-" form)))
          (orig (copy-marker (point)))
          (beg (cond (beg)
                     ((region-active-p)
@@ -18008,30 +18013,6 @@ Returns indentation reached. "
     (goto-char orig)
     erg))
 
-(defun py-shift-paragraph-right (&optional arg)
-  "Indent paragraph by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "paragraph" (or arg py-indent-offset))))
-        (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-paragraph-left (&optional arg)
-  "Dedent paragraph by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "paragraph" (- (or arg py-indent-offset)))))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
 (defun py-shift-block-right (&optional arg)
   "Indent block by COUNT spaces.
 
@@ -18041,7 +18022,7 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py--shift-forms-base "block" (or arg py-indent-offset))))
-    (when (called-interactively-p 'any) (message "%s" erg))
+        (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
 (defun py-shift-block-left (&optional arg)
@@ -18053,56 +18034,6 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py--shift-forms-base "block" (- (or arg py-indent-offset)))))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-minor-block-left (&optional arg)
-  "Dedent minor-block by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached.
-A minor block is started by a `for', `if', `try' or `with'. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "minor-block" (- (or arg py-indent-offset)))))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-minor-block-right (&optional arg)
-  "Indent minor-block by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached.
-A minor block is started by a `for', `if', `try' or `with'. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "minor-block" (or arg py-indent-offset))))
-        (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-clause-right (&optional arg)
-  "Indent clause by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "clause" (or arg py-indent-offset))))
-        (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-clause-left (&optional arg)
-  "Dedent clause by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "clause" (- (or arg py-indent-offset)))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -18130,30 +18061,6 @@ Returns outmost indentation reached. "
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-shift-def-right (&optional arg)
-  "Indent def by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "def" (or arg py-indent-offset))))
-        (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
-(defun py-shift-def-left (&optional arg)
-  "Dedent def by COUNT spaces.
-
-COUNT defaults to `py-indent-offset',
-use \[universal-argument] to specify a different value.
-
-Returns outmost indentation reached. "
-  (interactive "*P")
-  (let ((erg (py--shift-forms-base "def" (- (or arg py-indent-offset)))))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
-
 (defun py-shift-class-right (&optional arg)
   "Indent class by COUNT spaces.
 
@@ -18175,6 +18082,78 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py--shift-forms-base "class" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-clause-right (&optional arg)
+  "Indent clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "clause" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-clause-left (&optional arg)
+  "Dedent clause by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "clause" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-comment-right (&optional arg)
+  "Indent comment by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "comment" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-comment-left (&optional arg)
+  "Dedent comment by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "comment" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-right (&optional arg)
+  "Indent def by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "def" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-def-left (&optional arg)
+  "Dedent def by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "def" (- (or arg py-indent-offset)))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -18202,27 +18181,99 @@ Returns outmost indentation reached. "
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-shift-line-right (&optional arg)
-  "Indent line by COUNT spaces.
+(defun py-shift-indent-right (&optional arg)
+  "Indent indent by COUNT spaces.
 
 COUNT defaults to `py-indent-offset',
 use \[universal-argument] to specify a different value.
 
 Returns outmost indentation reached. "
   (interactive "*P")
-  (let ((erg (py--shift-forms-base "line" (or arg py-indent-offset))))
+  (let ((erg (py--shift-forms-base "indent" (or arg py-indent-offset))))
         (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-shift-line-left (&optional arg)
-  "Dedent line by COUNT spaces.
+(defun py-shift-indent-left (&optional arg)
+  "Dedent indent by COUNT spaces.
 
 COUNT defaults to `py-indent-offset',
 use \[universal-argument] to specify a different value.
 
 Returns outmost indentation reached. "
   (interactive "*P")
-  (let ((erg (py--shift-forms-base "line" (- (or arg py-indent-offset)))))
+  (let ((erg (py--shift-forms-base "indent" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-minor-block-right (&optional arg)
+  "Indent minor-block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "minor-block" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-minor-block-left (&optional arg)
+  "Dedent minor-block by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "minor-block" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-paragraph-right (&optional arg)
+  "Indent paragraph by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "paragraph" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-paragraph-left (&optional arg)
+  "Dedent paragraph by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "paragraph" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-region-right (&optional arg)
+  "Indent region by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "region" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-region-left (&optional arg)
+  "Dedent region by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "region" (- (or arg py-indent-offset)))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -18247,6 +18298,30 @@ use \[universal-argument] to specify a different value.
 Returns outmost indentation reached. "
   (interactive "*P")
   (let ((erg (py--shift-forms-base "statement" (- (or arg py-indent-offset)))))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-top-level-right (&optional arg)
+  "Indent top-level by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "top-level" (or arg py-indent-offset))))
+        (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
+
+(defun py-shift-top-level-left (&optional arg)
+  "Dedent top-level by COUNT spaces.
+
+COUNT defaults to `py-indent-offset',
+use \[universal-argument] to specify a different value.
+
+Returns outmost indentation reached. "
+  (interactive "*P")
+  (let ((erg (py--shift-forms-base "top-level" (- (or arg py-indent-offset)))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -19135,55 +19210,56 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
 
 ;; python-components-hide-show
 
+
 ;; (setq hs-block-start-regexp 'py-extended-block-or-clause-re)
-;; (setq hs-forward-sexp-func 'py-end-of-block)
+;; (setq hs-forward-sexp-func 'py-forward-block)
 
 (defun py-hide-base (form &optional beg end)
   "Hide visibility of existing form at point. "
   (hs-minor-mode 1)
   (save-excursion
     (let* ((form (prin1-to-string form))
-	   (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-			    (funcall (intern-soft (concat "py-backward-" form))))))
-	   (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
-	   (modified (buffer-modified-p))
-	   (inhibit-read-only t))
+           (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
+                            (funcall (intern-soft (concat "py-backward-" form))))))
+           (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
+           (modified (buffer-modified-p))
+           (inhibit-read-only t))
       (if (and beg end)
-	  (progn
-	    (hs-make-overlay beg end 'code)
-	    (set-buffer-modified-p modified))
-	(error (concat "No " (format "%s" form) " at point!"))))))
+          (progn
+            (hs-make-overlay beg end 'code)
+            (set-buffer-modified-p modified))
+        (error (concat "No " (format "%s" form) " at point!"))))))
 
 (defun py-show-base (form &optional beg end)
   "Remove invisibility of existing form at point. "
   (save-excursion
     (let* ((form (prin1-to-string form))
-	   (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-			    (funcall (intern-soft (concat "py-backward-" form))))))
-	   (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
-	   (modified (buffer-modified-p))
-	   (inhibit-read-only t))
+           (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
+                            (funcall (intern-soft (concat "py-backward-" form))))))
+           (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
+           (modified (buffer-modified-p))
+           (inhibit-read-only t))
       (if (and beg end)
-	  (progn
-	    (hs-discard-overlays beg end)
-	    (set-buffer-modified-p modified))
-	(error (concat "No " (format "%s" form) " at point!"))))))
+          (progn
+            (hs-discard-overlays beg end)
+            (set-buffer-modified-p modified))
+        (error (concat "No " (format "%s" form) " at point!"))))))
 
 (defun py-hide-show (&optional form beg end)
   "Toggle visibility of existing forms at point. "
   (interactive)
   (save-excursion
     (let* ((form (prin1-to-string form))
-	   (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-			    (funcall (intern-soft (concat "py-backward-" form))))))
-	   (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
-	   (modified (buffer-modified-p))
-	   (inhibit-read-only t))
+           (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
+                            (funcall (intern-soft (concat "py-backward-" form))))))
+           (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
+           (modified (buffer-modified-p))
+           (inhibit-read-only t))
       (if (and beg end)
-	  (if (overlays-in beg end)
-	      (hs-discard-overlays beg end)
-	    (hs-make-overlay beg end 'code))
-	(error (concat "No " (format "%s" form) " at point!")))
+          (if (overlays-in beg end)
+              (hs-discard-overlays beg end)
+            (hs-make-overlay beg end 'code))
+        (error (concat "No " (format "%s" form) " at point!")))
       (set-buffer-modified-p modified))))
 
 (defun py-hide-region (beg end)
@@ -19200,16 +19276,6 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
     (and (use-region-p) (region-beginning))(and (use-region-p) (region-end))))
   (py-show-base 'region beg end))
 
-(defun py-hide-statement ()
-  "Hide statement at point. "
-  (interactive)
-  (py-hide-base 'statement))
-
-(defun py-show-statement ()
-  "Show statement at point. "
-  (interactive)
-  (py-show-base 'statement))
-
 (defun py-hide-block ()
   "Hide block at point. "
   (interactive)
@@ -19219,16 +19285,6 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   "Show block at point. "
   (interactive)
   (py-show-base 'block))
-
-(defun py-hide-clause ()
-  "Hide clause at point. "
-  (interactive)
-  (py-hide-base 'clause))
-
-(defun py-show-clause ()
-  "Show clause at point. "
-  (interactive)
-  (py-show-base 'clause))
 
 (defun py-hide-block-or-clause ()
   "Hide block-or-clause at point. "
@@ -19240,6 +19296,36 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'block-or-clause))
 
+(defun py-hide-class ()
+  "Hide class at point. "
+  (interactive)
+  (py-hide-base 'class))
+
+(defun py-show-class ()
+  "Show class at point. "
+  (interactive)
+  (py-show-base 'class))
+
+(defun py-hide-clause ()
+  "Hide clause at point. "
+  (interactive)
+  (py-hide-base 'clause))
+
+(defun py-show-clause ()
+  "Show clause at point. "
+  (interactive)
+  (py-show-base 'clause))
+
+(defun py-hide-comment ()
+  "Hide comment at point. "
+  (interactive)
+  (py-hide-base 'comment))
+
+(defun py-show-comment ()
+  "Show comment at point. "
+  (interactive)
+  (py-show-base 'comment))
+
 (defun py-hide-def ()
   "Hide def at point. "
   (interactive)
@@ -19250,15 +19336,45 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'def))
 
-(defun py-hide-class ()
-  "Hide class at point. "
+(defun py-hide-def-or-class ()
+  "Hide def-or-class at point. "
   (interactive)
-  (py-hide-base 'class))
+  (py-hide-base 'def-or-class))
 
-(defun py-show-class ()
-  "Show class at point. "
+(defun py-show-def-or-class ()
+  "Show def-or-class at point. "
   (interactive)
-  (py-show-base 'class))
+  (py-show-base 'def-or-class))
+
+(defun py-hide-elif-block ()
+  "Hide elif-block at point. "
+  (interactive)
+  (py-hide-base 'elif-block))
+
+(defun py-show-elif-block ()
+  "Show elif-block at point. "
+  (interactive)
+  (py-show-base 'elif-block))
+
+(defun py-hide-else-block ()
+  "Hide else-block at point. "
+  (interactive)
+  (py-hide-base 'else-block))
+
+(defun py-show-else-block ()
+  "Show else-block at point. "
+  (interactive)
+  (py-show-base 'else-block))
+
+(defun py-hide-except-block ()
+  "Hide except-block at point. "
+  (interactive)
+  (py-hide-base 'except-block))
+
+(defun py-show-except-block ()
+  "Show except-block at point. "
+  (interactive)
+  (py-show-base 'except-block))
 
 (defun py-hide-expression ()
   "Hide expression at point. "
@@ -19270,15 +19386,35 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'expression))
 
-(defun py-hide-partial-expression ()
-  "Hide partial-expression at point. "
+(defun py-hide-for-block ()
+  "Hide for-block at point. "
   (interactive)
-  (py-hide-base 'partial-expression))
+  (py-hide-base 'for-block))
 
-(defun py-show-partial-expression ()
-  "Show partial-expression at point. "
+(defun py-show-for-block ()
+  "Show for-block at point. "
   (interactive)
-  (py-show-base 'partial-expression))
+  (py-show-base 'for-block))
+
+(defun py-hide-if-block ()
+  "Hide if-block at point. "
+  (interactive)
+  (py-hide-base 'if-block))
+
+(defun py-show-if-block ()
+  "Show if-block at point. "
+  (interactive)
+  (py-show-base 'if-block))
+
+(defun py-hide-indent ()
+  "Hide indent at point. "
+  (interactive)
+  (py-hide-base 'indent))
+
+(defun py-show-indent ()
+  "Show indent at point. "
+  (interactive)
+  (py-show-base 'indent))
 
 (defun py-hide-line ()
   "Hide line at point. "
@@ -19290,6 +19426,66 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'line))
 
+(defun py-hide-minor-block ()
+  "Hide minor-block at point. "
+  (interactive)
+  (py-hide-base 'minor-block))
+
+(defun py-show-minor-block ()
+  "Show minor-block at point. "
+  (interactive)
+  (py-show-base 'minor-block))
+
+(defun py-hide-minor-block ()
+  "Hide minor-block at point. "
+  (interactive)
+  (py-hide-base 'minor-block))
+
+(defun py-show-minor-block ()
+  "Show minor-block at point. "
+  (interactive)
+  (py-show-base 'minor-block))
+
+(defun py-hide-paragraph ()
+  "Hide paragraph at point. "
+  (interactive)
+  (py-hide-base 'paragraph))
+
+(defun py-show-paragraph ()
+  "Show paragraph at point. "
+  (interactive)
+  (py-show-base 'paragraph))
+
+(defun py-hide-partial-expression ()
+  "Hide partial-expression at point. "
+  (interactive)
+  (py-hide-base 'partial-expression))
+
+(defun py-show-partial-expression ()
+  "Show partial-expression at point. "
+  (interactive)
+  (py-show-base 'partial-expression))
+
+(defun py-hide-section ()
+  "Hide section at point. "
+  (interactive)
+  (py-hide-base 'section))
+
+(defun py-show-section ()
+  "Show section at point. "
+  (interactive)
+  (py-show-base 'section))
+
+(defun py-hide-statement ()
+  "Hide statement at point. "
+  (interactive)
+  (py-hide-base 'statement))
+
+(defun py-show-statement ()
+  "Show statement at point. "
+  (interactive)
+  (py-show-base 'statement))
+
 (defun py-hide-top-level ()
   "Hide top-level at point. "
   (interactive)
@@ -19300,6 +19496,7 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'top-level))
 
+;; python-components-hide-show.el ends here
 ;; python-components-fast-complete
 
 (defun py--fast-completion-get-completions (input process completion-code)
