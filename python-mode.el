@@ -6011,7 +6011,7 @@ When `py-mark-decorators' is non-nil, decorators are considered too. "
 
 
 (defun py-kill-comment ()
-  "Delete `comment' at point.
+  "Delete comment at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6019,7 +6019,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-line ()
-  "Delete `line' at point.
+  "Delete line at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6027,7 +6027,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-paragraph ()
-  "Delete `paragraph' at point.
+  "Delete paragraph at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6035,7 +6035,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-expression ()
-  "Delete `expression' at point.
+  "Delete expression at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6043,7 +6043,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-partial-expression ()
-  "Delete `partial-expression' at point.
+  "Delete partial-expression at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6051,7 +6051,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-section ()
-  "Delete `section' at point.
+  "Delete section at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -6059,7 +6059,7 @@ Stores data in kill ring"
     (kill-region (car erg) (cdr erg))))
 
 (defun py-kill-top-level ()
-  "Delete `top-level' at point.
+  "Delete top-level at point.
 
 Stores data in kill ring"
   (interactive "*")
@@ -21913,7 +21913,7 @@ Delete clause at point."]
 
 	   ["Kill comment" py-kill-comment
 	    :help " `py-kill-comment'
-Delete ‘comment’ at point."]
+Delete comment at point."]
 
 	   ["Kill def" py-kill-def
 	    :help " `py-kill-def'
@@ -21925,7 +21925,7 @@ Delete def-or-class at point."]
 
 	   ["Kill expression" py-kill-expression
 	    :help " `py-kill-expression'
-Delete ‘expression’ at point."]
+Delete expression at point."]
 
 	   ["Kill except block" py-kill-except-block
 	    :help " `py-kill-except-block'
@@ -21941,7 +21941,7 @@ Delete indent at point."]
 
 	   ["Kill line" py-kill-line
 	    :help " `py-kill-line'
-Delete ‘line’ at point."]
+Delete line at point."]
 
 	   ["Kill minor block" py-kill-minor-block
 	    :help " `py-kill-minor-block'
@@ -21949,15 +21949,15 @@ Delete minor-block at point."]
 
 	   ["Kill partial expression" py-kill-partial-expression
 	    :help " `py-kill-partial-expression'
-Delete ‘partial-expression’ at point."]
+Delete partial-expression at point."]
 
 	   ["Kill paragraph" py-kill-paragraph
 	    :help " `py-kill-paragraph'
-Delete ‘paragraph’ at point."]
+Delete paragraph at point."]
 
 	   ["Kill section" py-kill-section
 	    :help " `py-kill-section'
-Delete ‘section’ at point."]
+Delete section at point."]
 
 	   ["Kill statement" py-kill-statement
 	    :help " `py-kill-statement'
