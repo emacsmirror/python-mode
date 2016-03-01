@@ -174,14 +174,14 @@ Default is t"
   :type 'boolean
   :group 'python-mode)
 
-(defcustom py-shell-unfontify-p t
-  "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
+;; (defcustom py-shell-unfontify-p t
+;;   "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
 
-Default is nil "
+;; Default is nil "
 
-  :type 'boolean
-  :tag "py-shell-unfontify-p"
-  :group 'python-mode)
+;;   :type 'boolean
+;;   :tag "py-shell-unfontify-p"
+;;   :group 'python-mode)
 
 (defcustom py-session-p t
   "If commands would use an existing process.
@@ -271,14 +271,13 @@ Default is nil"
   :tag "py-dedicated-process-p"
   :group 'python-mode)
 
+(defvar py-shell--font-lock-buffer " *PSFLB*"
+  "May contain the `py-buffer-name' currently fontified. " )
+
 (defvar py-return-result-p t
   "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
 
 Default is t")
-
-(defvar py--shell-unfontify nil
-  "Internally set. ")
-(make-variable-buffer-local 'py--shell-unfontify)
 
 (defvar py--match-paren-forward-p nil
   "Internally used by `py-match-paren'. ")
@@ -20049,63 +20048,6 @@ If region is active, restrict uncommenting at region "
              py-autofill-timer-delay t
              'py--set-auto-fill-values)))))
 
-(defvar py--timer nil
-  "Used by `py--run-unfontify-timer'")
-(make-variable-buffer-local 'py--timer)
-
-(defvar py--timer-delay nil
-  "Used by `py--run-unfontify-timer'")
-(make-variable-buffer-local 'py--timer-delay)
-
-(defun py--unfontify-banner-intern (buffer)
-  (save-excursion
-    (goto-char (point-min))
-    (let ((erg (or (ignore-errors (car comint-last-prompt))
-		   (and
-		    (re-search-forward py-fast-filter-re nil t 1)
-		    (match-beginning 0))
-		   (progn
-		     (forward-paragraph)
-		     (point)))))
-      ;; (sit-for 1 t)
-      (if erg
-	  (progn
-	    (font-lock-unfontify-region (point-min) erg)
-	    (goto-char (point-max)))
-	(progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))))
-
-(defun py--unfontify-banner (&optional buffer)
-  "Unfontify the shell banner-text.
-
-Cancels `py--timer'
-Expects being called by `py--run-unfontify-timer' "
-  (interactive)
-    (let ((buffer (or buffer (current-buffer))))
-      (if (ignore-errors (buffer-live-p (get-buffer buffer)))
-	  (with-current-buffer buffer
-	    (py--unfontify-banner-intern buffer)
-	    (and (timerp py--timer)(cancel-timer py--timer)))
-	(and (timerp py--timer)(cancel-timer py--timer)))))
-
-(defun py--run-unfontify-timer (&optional buffer)
-  "Unfontify the shell banner-text "
-  (when py--shell-unfontify
-    (let ((buffer (or buffer (current-buffer)))
-	  done)
-      (if (and
-	   (buffer-live-p buffer)
-	   (or
-	    (eq major-mode 'py-python-shell-mode)
-	    (eq major-mode 'py-ipython-shell-mode)))
-	  (unless py--timer
-	    (setq py--timer
-		  (run-with-idle-timer
-		   (if py--timer-delay (setq py--timer-delay 3)
-		     (setq py--timer-delay 0.1))
-		   nil
-		   #'py--unfontify-banner buffer)))
-	(cancel-timer py--timer)))))
-
 ;;  unconditional Hooks
 ;;  (orgstruct-mode 1)
 (add-hook 'python-mode-hook
@@ -20114,7 +20056,6 @@ Expects being called by `py--run-unfontify-timer' "
 	    (setq indent-tabs-mode py-indent-tabs-mode)))
 
 (remove-hook 'python-mode-hook 'python-setup-brm)
-;; ;
 
 (defun py-complete-auto ()
   "Auto-complete function using py-complete. "
@@ -26237,6 +26178,42 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 
 ;; python-components-foot
 
+(defun py-shell-font-lock-post-command-hook ()
+  "Fontifies current line in shell buffer."
+  (let (start)
+    (when (setq start (ignore-errors (cdr comint-last-prompt)))
+      (let* ((input (buffer-substring-no-properties
+		     start (point-max)))
+	     (buffer-undo-list t)
+	     (replacement
+	      (save-current-buffer
+		(set-buffer py-shell--font-lock-buffer)
+		(erase-buffer) 
+		(insert input)
+		;; Ensure buffer is fontified, keeping it
+		;; compatible with Emacs < 24.4.
+		(if (fboundp 'font-lock-ensure)
+		    (funcall 'font-lock-ensure)
+		  (font-lock-default-fontify-buffer))
+		(buffer-substring (point-min) (point-max))))
+	     (replacement-length (length replacement))
+	     (i 0))
+	;; Inject text properties to get input fontified.
+	(while (not (= i replacement-length))
+	  (let* ((plist (text-properties-at i replacement))
+		 (next-change (or (next-property-change i replacement)
+				  replacement-length))
+		 (plist (let ((face (plist-get plist 'face)))
+			  (if (not face)
+			      plist
+			    ;; Replace FACE text properties with
+			    ;; FONT-LOCK-FACE so input is fontified.
+			    (plist-put plist 'face nil)
+			    (plist-put plist 'font-lock-face face)))))
+	    (set-text-properties
+	     (+ start i) (+ start next-change) plist)
+	    (setq i next-change)))))))
+
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
   "Run auto-completion"
   ;; disable company
@@ -26255,10 +26232,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 	   t
 	   #'py-complete-auto)))
   (force-mode-line-update))
-
-;; (add-hook 'after-change-major-mode-hook #'py-protect-other-buffers-ac)
-
-;; after-change-major-mode-hook
 
 ;;;
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
@@ -26421,18 +26394,21 @@ See available customizations listed in files variables-python-mode at directory 
 
 (defun py--all-shell-mode-setting ()
   (when py-fontify-shell-buffer-p
-    (set (make-local-variable 'font-lock-defaults)
-	 '(python-font-lock-keywords nil nil nil nil
-				     (font-lock-syntactic-keywords
-				      . py-font-lock-syntactic-keywords))))
+    (save-current-buffer
+      ;; Prepare the buffer where the input is fontified
+      (set-buffer (get-buffer-create py-shell--font-lock-buffer))
+      (font-lock-mode 1)
+      (set (make-local-variable 'delay-mode-hooks) t)
+      (python-mode))
+    (add-hook 'post-command-hook
+	      #'py-shell-font-lock-post-command-hook nil 'local)
+)
   (setenv "PAGER" "cat")
   (setenv "TERM" "dumb")
   (set-syntax-table python-mode-syntax-table)
-  (set (make-local-variable 'py--shell-unfontify) 'py-shell-unfontify-p)
-  ;; (if py-auto-complete-p
-  ;; (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
-  ;; (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
-
+  (if py-auto-complete-p
+      (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
+    (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
   ;; comint settings
   (set (make-local-variable 'comint-prompt-regexp)
        (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
@@ -26452,12 +26428,9 @@ See available customizations listed in files variables-python-mode at directory 
   ;; (set (make-local-variable 'comint-input-filter) 'py--input-filter)
   (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
   (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
-  ;; It might be useful having a different setting of `comint-use-prompt-regexp' in py-shell - please report when a use-case shows up
   ;; (set (make-local-variable 'comint-use-prompt-regexp) nil)
   (set (make-local-variable 'compilation-error-regexp-alist)
        py-compilation-regexp-alist)
-  ;; (setq completion-at-point-functions nil)
-
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
   (set (make-local-variable 'comment-column) 40)
@@ -26486,9 +26459,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (py--python-send-completion-setup-code)
   (py--python-send-ffap-setup-code)
   (py--python-send-eldoc-setup-code)
-  ;; (if py-shell-unfontify-p
-  ;; (add-hook 'py-python-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
-  ;; (remove-hook 'py-python-shell-mode-hook 'py--run-unfontify-timer))
   (set-process-sentinel (get-buffer-process (current-buffer))  #'shell-write-history-on-exit)
 
   ;; (setq comint-input-ring-file-name
@@ -26523,9 +26493,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
     (define-key py-python-shell-mode-map [(control meta b)] 'py-backward-expression))
   (when py-shell-menu
     (easy-menu-add py-menu))
-  (if py-shell-unfontify-p
-      (add-hook 'py-python-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
-    (remove-hook 'py-python-shell-mode-hook 'py--run-unfontify-timer))
   (force-mode-line-update))
 
 (define-derived-mode py-ipython-shell-mode comint-mode "IPy"
@@ -26549,27 +26516,8 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (py--ipython-import-module-completion)
   (py-set-ipython-completion-command-string (process-name (get-buffer-process (current-buffer))))
   (sit-for 0.1 t)
-  ;; (py--unfontify-banner-intern)
-  (if py-shell-unfontify-p
-      (add-hook 'py-ipython-shell-mode-hook #'py--run-unfontify-timer (current-buffer))
-    (remove-hook 'py-ipython-shell-mode-hook 'py--run-unfontify-timer))
-
-  ;; (setq comint-input-ring-file-name
-  ;;       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
-  ;;              (if py-honor-IPYTHONDIR-p
-  ;;                  (if (getenv "IPYTHONDIR")
-  ;;                      (concat (getenv "IPYTHONDIR") "/history")
-  ;;                    py-ipython-history)
-  ;;                py-ipython-history))
-  ;;             (t
-  ;;              (if py-honor-PYTHONHISTORY-p
-  ;;                  (if (getenv "PYTHONHISTORY")
-  ;;                      (concat (getenv "PYTHONHISTORY") "/" (py--report-executable py-buffer-name) "_history")
-  ;;                    py-ipython-history)
-  ;;                py-ipython-history))))
   (comint-read-input-ring t)
   (compilation-shell-minor-mode 1)
-  ;;
   (if py-complete-function
       (progn
   	(add-hook 'completion-at-point-functions
