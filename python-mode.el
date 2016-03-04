@@ -20090,18 +20090,6 @@ Use `defcustom' to keep value across sessions "
   "Return `t' if emacs major version is above 23"
   (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
 
-;; (defun py-backward-comment (&optional last)
-;;   "Leave upwards comment,  include empty lines. "
-;;   (interactive)
-;;   (let ((pps (parse-partial-sexp (point-min) (point)))
-;;         (last (or last (point))))
-;;     (if (and (or (and (nth 4 pps)(goto-char (nth 8 pps)))(looking-at comment-start))
-;;              (looking-back "^[ \t]*")(not (bobp)))
-;;         (progn
-;;           (skip-chars-backward " \t\r\n\f")
-;;           (py-beginning-of-comments last))
-;;       (goto-char last))))
-
 (defun py--empty-arglist-indent (nesting py-indent-offset indent-offset)
   "Internally used by `py-compute-indentation'"
   (if
@@ -26305,14 +26293,15 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'comment-use-syntax) t)
-  (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-start) "#[^*]")
+  (set (make-local-variable 'comment-start-skip) "^[ \t]*#+[^*] *")
+
   (if py-empty-comment-line-separates-paragraph-p
       (progn
         (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
         (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
     (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
     (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
-  (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
   (set (make-local-variable 'indent-region-function) 'py-indent-region)
