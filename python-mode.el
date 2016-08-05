@@ -1157,6 +1157,13 @@ Default is `t'."
   :tag "py-current-defun-delay"
   :group 'python-mode)
 
+(defcustom py--delete-temp-file-delay 1
+  "Used by `py--delete-temp-file'"
+
+  :type 'number
+  :tag "py--delete-temp-file-delay"
+  :group 'python-mode)
+
 (defcustom py-python-send-delay 5
   "Seconds to wait for output, used by `py--send-...' functions.
 
@@ -1254,7 +1261,7 @@ Default is \"\" "
   :tag "py-pylint-command"
   :group 'python-mode)
 
-(defcustom py-pylint-command-args "--errors-only"
+(defcustom py-pylint-command-args '("--errors-only")
   "String arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
@@ -1442,6 +1449,9 @@ Else python"
 
 (defvar py-default-interpreter py-shell-name)
 
+(defvar py-tempfile nil
+  "Internally used")
+
 (defvar py-named-shells (list 'ipython 'ipython-dedicated 'ipython-no-switch 'ipython-switch 'ipython-switch-dedicated 'ipython2.7 'ipython2.7-dedicated 'ipython2.7-no-switch 'ipython2.7-switch 'ipython2.7-switch-dedicated 'ipython3 'ipython3-dedicated 'ipython3-no-switch 'ipython3-switch 'ipython3-switch-dedicated 'jython 'jython-dedicated 'jython-no-switch 'jython-switch 'jython-switch-dedicated 'python 'python-dedicated 'python-no-switch 'python-switch 'python-switch-dedicated 'python2 'python2-dedicated 'python2-no-switch 'python2-switch 'python2-switch-dedicated 'python3 'python3-dedicated 'python3-no-switch 'python3-switch 'python3-switch-dedicated))
 
 (defcustom py-python-command
@@ -1464,7 +1474,7 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python-command-args "-i"
+(defcustom py-python-command-args '("-i")
   "String arguments to be used when starting a Python shell."
   :type 'string
   :tag "py-python-command-args"
@@ -1489,7 +1499,7 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python2-command-args "-i"
+(defcustom py-python2-command-args '("-i")
   "String arguments to be used when starting a Python shell."
   :type '(repeat string)
   :tag "py-python2-command-args"
@@ -1514,7 +1524,7 @@ At GNU systems see /usr/bin/python3"
 "
   :group 'python-mode)
 
-(defcustom py-python3-command-args "-i"
+(defcustom py-python3-command-args '("-i")
   "String arguments to be used when starting a Python3 shell."
   :type '(repeat string)
   :tag "py-python3-command-args"
@@ -2167,7 +2177,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
   "Recognize the pydb-prompt. ")
 
-
 (defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
   "A regular expression to match the IPython input prompt. ")
 
@@ -2273,7 +2282,6 @@ some logging etc. "
 See also `py-assignment-re' ")
 
 ;; (setq py-operator-re "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*")
-
 
 (defvar py-assignment-re "[ \t]*=[^=]"
   "Matches assignment operator inclusive whitespaces around.
@@ -3285,7 +3293,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
      (and (eq (char-before (point)) ?\\ )
           (py-escaped))))
 ;;
-
 
 (defvar python-mode-map nil)
 (setq python-mode-map
@@ -7763,13 +7770,12 @@ Receives a buffer-name as argument"
 (defun py--provide-command-args (fast-process argprompt)
   (cond (fast-process nil)
 	((eq 2 (prefix-numeric-value argprompt))
-	 (read-string "Py-Shell arguments: "
-		      py-python-command-args))
+	 (mapconcat 'identity py-python2-command-args " "))
 	((string-match "^[Ii]" py-shell-name)
 	 py-ipython-command-args)
 	((string-match "^[^-]+3" py-shell-name)
-	 py-python3-command-args)
-	(t py-python-command-args)))
+	 (mapconcat 'identity py-python3-command-args " "))
+	(t (mapconcat 'identity py-python-command-args " "))))
 
 (defun py-shell (&optional argprompt dedicated shell buffer-name fast-process exception-buffer)
   "Start an interactive Python interpreter in another window.
@@ -7858,8 +7864,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 (defun py--close-execution (tempbuf tempfile)
   "Delete temporary buffer and and run `py--store-result-maybe'"
   (unless py-debug-p
-    (py-kill-buffer-unconditional tempbuf)
-    (py-delete-temporary tempfile tempbuf)))
+    (when tempfile (py-delete-temporary tempfile tempbuf))))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
@@ -7930,6 +7935,26 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 				 output-buffer py-store-result-p py-return-result-p)
     (sit-for 0.1))))
 
+(defun py--delete-temp-file (tempfile &optional tempbuf)
+  "The called, after `py--execute-buffer-finally' returned. "
+  (sit-for py--delete-temp-file-delay t)
+  (py--close-execution tempbuf tempfile))
+
+(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf origline)
+  (let* ((temp (make-temp-name
+		;; FixMe: that should be simpler
+                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
+         (tempbuf (get-buffer-create temp))
+	 erg)
+    (setq py-tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
+    (with-current-buffer tempbuf
+      ;; (when py-debug-p (message "py--execute-buffer-finally: py-split-window-on-execute: %s" py-split-window-on-execute))
+      (insert strg)
+      (write-file py-tempfile))
+    (unwind-protect
+	(setq erg (py--execute-file-base proc py-tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer origline)))
+    erg))
+
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline execute-directory start end which-shell)
   "Select the handler.
 
@@ -7945,24 +7970,12 @@ When optional FILE is `t', no temporary file is needed. "
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc file origline))
 	  ((and filename wholebuf)
 	   (py--execute-file-base proc filename nil buffer nil filename execute-directory py-exception-buffer origline))
-	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer origline)))))
+	  (t
+	   (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer origline)
+	   (py--delete-temp-file py-tempfile)
+	   ;;
 
-(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf origline)
-  (let* ((temp (make-temp-name
-		;; FixMe: that should be simpler
-                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
-         (tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
-         (tempbuf (get-buffer-create temp))
-	 erg)
-    (with-current-buffer tempbuf
-      ;; (when py-debug-p (message "py--execute-buffer-finally: py-split-window-on-execute: %s" py-split-window-on-execute))
-      (insert strg)
-      (write-file tempfile))
-    (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer origline)))
-    (sit-for 0.1 t)
-    (py--close-execution tempbuf tempfile)
-    erg))
+	   ))))
 
 (defun py--fetch-error (buf &optional origline)
   "Highlight exceptions found in BUF.
@@ -9837,36 +9850,34 @@ Imports done are displayed in message buffer. "
 ;;  Pylint
 (defalias 'pylint 'py-pylint-run)
 (defun py-pylint-run (command)
-  "*Run pylint (default on the file currently visited).
+  "Run pylint (default on the file currently visited).
 
 For help see M-x pylint-help resp. M-x pylint-long-help.
 Home-page: http://www.logilab.org/project/pylint "
   (interactive
-   (let ((default
-           (if (buffer-file-name)
-               (format "%s %s %s" py-pylint-command
-                       (mapconcat 'identity py-pylint-command-args " ")
-                       (buffer-file-name))
-             (format "%s %s %s" py-pylint-command
-                     (mapconcat 'identity py-pylint-command-args " ")
-                     (buffer-name (current-buffer)))))
+   (let ((default (format "%s %s %s" py-pylint-command
+			  (mapconcat 'identity py-pylint-command-args " ")
+			  ((lambda (file-name)
+			     (if (and (featurep 'tramp) (tramp-tramp-file-p file-name))
+				 (tramp-file-name-localname
+				  (tramp-dissect-file-name file-name))
+			       file-name))
+			   (or (buffer-file-name) (buffer-name (current-buffer))))))
          (last (and py-pylint-history (car py-pylint-history)))
          erg)
 
-     (list
-      (if (fboundp 'read-shell-command)
-          (read-shell-command "Run pylint like this: "
-			      (or last default)
-                              'py-pylint-history)
-        (read-string "Run pylint like this: "
-		     (or default last)
-                     'py-pylint-history)))))
+     (list (funcall (if (fboundp 'read-shell-command)
+			'read-shell-command 'read-string)
+		    "Run pylint like this: "
+		    (or default last)
+		    'py-pylint-history))))
+  ;; (if py-pylint-offer-current-p (or default last) (or last default))
+  ;; 'py-pylint-history))))
   (save-some-buffers (not py-ask-about-save))
-  (if (or (not buffer-file-name)
-	  (not (file-readable-p buffer-file-name)))
-      (message "Warning: %s" "pylint needs a file"))
   (set-buffer (get-buffer-create "*Pylint*"))
   (erase-buffer)
+  (unless (file-readable-p (car (cddr (split-string command))))
+    (message "Warning: %s" "pylint needs a file"))
   (shell-command command "*Pylint*"))
 
 (defalias 'pylint-help 'py-pylint-help)
