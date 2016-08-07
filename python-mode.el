@@ -2059,7 +2059,7 @@ See also command `toggle-py-underscore-word-syntax-p' ")
 
 (defvar python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
-	  (ignore-errors (string-match "python-mode.el" (buffer-file-name))))
+	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
     "python-components-mode.el")
   "Internally used. Reports the python-mode branch")
@@ -2980,7 +2980,7 @@ return `jython', otherwise return nil."
 
 Returns versioned string, nil if nothing appropriate found "
   (interactive)
-  (let ((path (buffer-file-name))
+  (let ((path (py--buffer-filename-remote-maybe))
                 (py-separator-char (or py-separator-char py-separator-char))
                 erg)
     (when (and path py-separator-char
@@ -3125,10 +3125,11 @@ if `(locate-library \"python-mode\")' is not succesful.
 
 Used only, if `py-install-directory' is empty. "
   (interactive)
-  (let ((erg (cond ((locate-library "python-mode")
+  (let (name
+	(erg (cond ((locate-library "python-mode")
                     (file-name-directory (locate-library "python-mode")))
-                   ((and (buffer-file-name)(string-match "python-mode" (buffer-file-name)))
-                    (file-name-directory (buffer-file-name)))
+                   ((and (setq name (py--buffer-filename-remote-maybe)) (string-match "python-mode" name))
+                    (file-name-directory name))
                    ((string-match "python-mode" (buffer-name))
                     default-directory))))
     (cond ((and (or (not py-install-directory) (string= "" py-install-directory)) erg)
@@ -7906,7 +7907,9 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 		((getenv "VIRTUAL_ENV"))
 		(t (getenv "HOME"))))
 	 (buffer (py--choose-buffer-name which-shell))
-	 (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
+	 (filename (or (and filename (expand-file-name filename))
+		       ;; (and (not (buffer-modified-p)) (buffer-file-name))
+		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (cond (proc)
 		     ;; will deal with py-dedicated-process-p also
@@ -8001,7 +8004,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
     (when erg
       (goto-char erg)
       (save-match-data
-	(and (not (buffer-file-name
+	(and (not (py--buffer-filename-remote-maybe
 		   (or
 		    (get-buffer py-exception-buffer)
 		    (get-buffer (file-name-nondirectory py-exception-buffer)))))
@@ -8057,14 +8060,14 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   "An alternative way to do it.
 
 May we get rid of the temporary file? "
-  (and (buffer-file-name) buffer-offer-save (buffer-modified-p) (y-or-n-p "Save buffer before executing? ")
-       (write-file (buffer-file-name)))
+  (and (py--buffer-filename-remote-maybe) buffer-offer-save (buffer-modified-p (py--buffer-filename-remote-maybe)) (y-or-n-p "Save buffer before executing? ")
+       (write-file (py--buffer-filename-remote-maybe)))
   (let* ((start (copy-marker start))
          (end (copy-marker end))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
          (line (py-count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
          (strg (buffer-substring-no-properties start end))
-         (tempfile (or (buffer-file-name) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
+         (tempfile (or (py--buffer-filename-remote-maybe) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
          (proc (or proc (if py-dedicated-process-p
                             (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))
@@ -8343,7 +8346,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
                        (find-file-noselect filename))))
       (set-buffer buffer)))
   (let ((py-shell-name (or shell (py-choose-shell nil shell)))
-        (file (buffer-file-name (current-buffer))))
+        (file (py--buffer-filename-remote-maybe (current-buffer))))
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
@@ -8524,7 +8527,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
             ;; (skip-chars-backward "^\t\r\n\f")
             ;; (skip-chars-forward " \t")
             (save-match-data
-              (and (not (buffer-file-name
+              (and (not (py--buffer-filename-remote-maybe
                          (or
                           (get-buffer py-exception-buffer)
                           (get-buffer (file-name-nondirectory py-exception-buffer)))))
@@ -9126,7 +9129,9 @@ Otherwise return resuslt from `executable-find' "
   "Provide a better default command line when called interactively."
   (interactive
    (list (gud-query-cmdline py-pdb-path
-                            (file-name-nondirectory buffer-file-name)))))
+                            ;; (file-name-nondirectory buffer-file-name)
+			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) 
+			    ))))
 
 ;; python-components-help
 (defvar py-eldoc-string-code
@@ -9300,7 +9305,7 @@ not inside a defun."
   (let* ((beg (point))
 	 (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
 	 (sym (buffer-substring-no-properties beg end))
-	 (origfile (buffer-file-name))
+	 (origfile (py--buffer-filename-remote-maybe))
 	 (temp (md5 (buffer-name)))
 	 (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
 	 (cmd (py-find-imports))
@@ -9813,16 +9818,16 @@ Imports done are displayed in message buffer. "
   "*Run pep8, check formatting - default on the file currently visited."
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pep8-command
                        (mapconcat 'identity py-pep8-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pep8-command
                      (mapconcat 'identity py-pep8-command-args " "))))
          (last (when py-pep8-history
                  (let* ((lastcmd (car py-pep8-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -9862,12 +9867,7 @@ Home-page: http://www.logilab.org/project/pylint "
   (interactive
    (let ((default (format "%s %s %s" py-pylint-command
 			  (mapconcat 'identity py-pylint-command-args " ")
-			  ((lambda (file-name)
-			     (if (and (featurep 'tramp) (tramp-tramp-file-p file-name))
-				 (tramp-file-name-localname
-				  (tramp-dissect-file-name file-name))
-			       file-name))
-			   (or (buffer-file-name) (buffer-name (current-buffer))))))
+			  (py--buffer-filename-remote-maybe)))
          (last (and py-pylint-history (car py-pylint-history)))
          erg)
 
@@ -9914,16 +9914,16 @@ For help see M-x pyflakes-help resp. M-x pyflakes-long-help.
 Home-page: http://www.logilab.org/project/pyflakes "
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pyflakes-command
                        (mapconcat 'identity py-pyflakes-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pyflakes-command
                      (mapconcat 'identity py-pyflakes-command-args " "))))
          (last (when py-pyflakes-history
                  (let* ((lastcmd (car py-pyflakes-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -9989,16 +9989,16 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))
 "
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pyflakespep8-command
                        (mapconcat 'identity py-pyflakespep8-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pyflakespep8-command
                      (mapconcat 'identity py-pyflakespep8-command-args " "))))
          (last (when py-pyflakespep8-history
                  (let* ((lastcmd (car py-pyflakespep8-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -10037,15 +10037,15 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))
   "*Run pychecker (default on the file currently visited)."
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pychecker-command
 		       py-pychecker-command-args
-		       (buffer-file-name))
+		       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pychecker-command py-pychecker-command-args)))
          (last (when py-pychecker-history
                  (let* ((lastcmd (car py-pychecker-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -10076,7 +10076,7 @@ See `py-check-command' for the default."
   (interactive
    (list (read-string "Checker command: "
                       (concat py-check-command " "
-                              (let ((name (buffer-file-name)))
+                              (let ((name (py--buffer-filename-remote-maybe)))
                                 (if name
                                     (file-name-nondirectory name)))))))
   (require 'compile)                    ;To define compilation-* variables.
@@ -10109,17 +10109,17 @@ See `py-check-command' for the default."
 Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
              py-flake8-command))
           (default
-            (if (buffer-file-name)
+            (if (py--buffer-filename-remote-maybe)
                 (format "%s %s %s" py-flake8-command
                         py-flake8-command-args
-                        (buffer-file-name))
+                        (py--buffer-filename-remote-maybe))
               (format "%s %s" py-flake8-command
                       py-flake8-command-args)))
           (last
            (when py-flake8-history
              (let* ((lastcmd (car py-flake8-history))
                     (cmd (cdr (reverse (split-string lastcmd))))
-                    (newcmd (reverse (cons (buffer-file-name) cmd))))
+                    (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                (mapconcat 'identity newcmd " ")))))
      (list
       (if (fboundp 'read-shell-command)
@@ -10207,15 +10207,15 @@ i.e. spaces, tabs, carriage returns, newlines and newpages. "
   (unless (string-match "pyflakespep8" name)
     (unless (executable-find name)
       (when py-verbose-p (message "Don't see %s. Use `easy_install' %s? " name name))))
-  (if (buffer-file-name)
+  (if (py--buffer-filename-remote-maybe)
       (let* ((temp-file (flymake-init-create-temp-buffer-copy
                          'flymake-create-temp-inplace))
              (local-file (file-relative-name
                           temp-file
-                          (file-name-directory buffer-file-name))))
+                          (file-name-directory (py--buffer-filename-remote-maybe)))))
         (add-to-list 'flymake-allowed-file-name-masks (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))))
         (list command (list local-file)))
-    (message "%s" "flymake needs a `buffer-file-name'. Please save before calling.")))
+    (message "%s" "flymake needs a `file-name'. Please save before calling.")))
 
 (defun py-flycheck-mode (&optional arg)
   "Toggle `flycheck-mode'.
@@ -10297,7 +10297,7 @@ Maybe call M-x describe-variable RET to query its value. "
 
 (defun variables-base-state (py-exception-buffer orgname reSTname directory-in directory-out)
   (save-restriction
-    (let ((suffix (file-name-nondirectory (buffer-file-name)))
+    (let ((suffix (file-name-nondirectory (py--buffer-filename-remote-maybe)))
           variableslist)
       ;; (widen)
       (goto-char (point-min))
@@ -19856,7 +19856,7 @@ Use `py-fast-process' "
 	 (tramp-file-name-localname
 	  (tramp-dissect-file-name file-name))
        file-name))
-   (or (buffer-file-name buffer) (buffer-name (current-buffer)))))
+   (buffer-file-name buffer)))
 
 (defun py-forward-buffer ()
   "A complementary form used by auto-generated commands.
@@ -21177,30 +21177,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
             (setq element (car element))
           (setq element (cdr element))))
       element)))
-
-;;  (defun py-shell-send-string (string &optional process msg filename)
-;;    "Send STRING to Python PROCESS.
-;;  When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
-;;    (interactive "sPython command: ")
-;;    (let* ((process (or process (get-buffer-process (py-shell))))
-;;           (lines (split-string string "\n"))
-;;           (temp-file-name (concat (with-current-buffer (process-buffer process)
-;;                                     (file-remote-p default-directory))
-;;                                   (py--normalize-directory py-temp-directory)
-;;  				 ;; (md5 (user-login-name))
-;;                                   (md5 (concat (user-login-name)(prin1-to-string (current-time))))
-;;  				 "-psss-temp.py"))
-;;           (file-name (or filename (buffer-file-name) temp-file-name)))
-;;      (if (> (length lines) 1)
-;;  	(with-temp-file temp-file-name
-;;  	  (insert string)
-;;  	  (delete-trailing-whitespace)
-;;  	  (py-send-file temp-file-name process temp-file-name))
-;;        (comint-send-string process string)
-;;        (when (or (not (string-match "\n$" string))
-;;                  (string-match "\n[ \t].*\n?$" string))
-;;          (comint-send-string process "\n")))
-;;      (unless py-debug-p (when (file-readable-p temp-file-name)(delete-file temp-file-name)))))
 
 (defun py--delay-process-dependent (process)
   "Call a `py-ipython-send-delay' or `py-python-send-delay' according to process"
@@ -26525,7 +26501,7 @@ See available customizations listed in files variables-python-mode at directory 
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
   (and py-guess-py-install-directory-p (py-set-load-path))
-  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (buffer-file-name))))
+  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (py--buffer-filename-remote-maybe)))) 
   (and py-autopair-mode
        (load-library "autopair")
        (add-hook 'python-mode-hook
