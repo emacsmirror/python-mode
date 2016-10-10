@@ -5366,7 +5366,7 @@ If already at the beginning or before a expression, go to next expression in buf
 	 ((nth 3 pps)
 	  (goto-char (nth 8 pps)))
 	 ;; after operator
-	 ((and (not done) (looking-back py-operator-re) (line-beginning-position))
+	 ((and (not done) (looking-back py-operator-re (line-beginning-position)))
 	  (skip-chars-backward "^ \t\r\n\f")
 	  (skip-chars-backward " \t\r\n\f")
 	  (py-backward-expression orig done repeat))
@@ -5398,7 +5398,7 @@ Operators are ignored. "
 	  (or (< (point) (progn (forward-comment 1)(point)))(forward-line 1))
 	  (py-forward-expression orig done repeat))
 	 ;; empty before comment
-	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
+	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
 	  (while (and (looking-at "[ \t]*#") (not (eobp)))
 	    (forward-line 1))
 	  (py-forward-expression orig done repeat))
@@ -5552,9 +5552,9 @@ computing indents"
 	  (forward-char -1)
 	  (py-backward-statement orig done limit ignore-in-string-p))
 	 ;; BOL or at space before comment
-         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
           (forward-comment -1)
-          (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
+          (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
             (forward-comment -1))
           (unless (bobp)
             (py-backward-statement orig done limit ignore-in-string-p)))
@@ -5581,7 +5581,7 @@ computing indents"
 	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
 	  (py-backward-statement orig done limit ignore-in-string-p)))
 	;; return nil when before comment
-	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*") (line-beginning-position))
+	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
 	  (when (< (point) orig)(setq erg (point))))
 	(when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
 	erg))))
