@@ -12956,34 +12956,17 @@ Return position if statement found, nil otherwise. "
 	   (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
 	   erg))
 
-(defun py--up-base-intern (regexp indent)
-  (while (and (not (bobp))(re-search-backward regexp nil t 1)
-	      (or (nth 8 (parse-partial-sexp (point-min) (point))))
-	      (<= indent (current-indentation)))))
-
-(defun py-up-base (regexp &optional indent)
-  "Go to the beginning of lower indented form upwards.
+(defun py-up-base (regexp)
+  "Go to the beginning of next form upwards in buffer.
 
 Return position if form found, nil otherwise. "
-  (unless (bobp)
-    (let* ((orig (point))
-	   (pps (parse-partial-sexp (point-min) (point)))
-	   (indent indent))
-      (if indent
-	  (py--up-base-intern regexp indent)
-	(setq indent (cond ((and (looking-at regexp)
-				 (not (nth 8 pps))
-				 (eq (current-column) (current-indentation)))
-			    (current-indentation))
-			   (t (setq indent (current-indentation))
-			      (py--up-base-intern regexp indent)
-			      (when (and (looking-at regexp)
-					 (not (nth 8 pps))
-					 (eq (current-column) (current-indentation)))
-				(current-column)))))
-	(if indent
-	    (py-up-base regexp indent)
-	  (error "py-up-base: no indent found")))
+  (let* ((orig (point))
+         erg)
+    (if (bobp)
+        (setq erg nil)
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (parse-partial-sexp (point-min) (point)))))
+      (back-to-indentation)
       (when (looking-at regexp) (setq erg (point)))
       (when py-verbose-p (message "%s" erg))
       erg)))
@@ -13039,6 +13022,7 @@ Return position if form found, nil otherwise. "
         (when py-verbose-p (message "%s" erg))
         erg))))
 
+(defalias 'py-up-block 'py-block-up)
 (defun py-up-block ()
   "Go to the beginning of next block upwards in buffer.
 
@@ -13046,6 +13030,7 @@ Return position if block found, nil otherwise. "
   (interactive)
   (py-up-base py-block-re))
 
+(defalias 'py-up-block-or-clause 'py-block-or-clause-up)
 (defun py-up-block-or-clause ()
   "Go to the beginning of next block-or-clause upwards in buffer.
 
@@ -13053,6 +13038,7 @@ Return position if block-or-clause found, nil otherwise. "
   (interactive)
   (py-up-base py-block-or-clause-re))
 
+(defalias 'py-up-class 'py-class-up)
 (defun py-up-class ()
   "Go to the beginning of next class upwards in buffer.
 
@@ -13060,6 +13046,7 @@ Return position if class found, nil otherwise. "
   (interactive)
   (py-up-base py-class-re))
 
+(defalias 'py-up-clause 'py-clause-up)
 (defun py-up-clause ()
   "Go to the beginning of next clause upwards in buffer.
 
@@ -13067,6 +13054,7 @@ Return position if clause found, nil otherwise. "
   (interactive)
   (py-up-base py-clause-re))
 
+(defalias 'py-up-def 'py-def-up)
 (defun py-up-def ()
   "Go to the beginning of next def upwards in buffer.
 
@@ -13074,6 +13062,7 @@ Return position if def found, nil otherwise. "
   (interactive)
   (py-up-base py-def-re))
 
+(defalias 'py-up-def-or-class 'py-def-or-class-up)
 (defun py-up-def-or-class ()
   "Go to the beginning of next def-or-class upwards in buffer.
 
@@ -13081,6 +13070,7 @@ Return position if def-or-class found, nil otherwise. "
   (interactive)
   (py-up-base py-def-or-class-re))
 
+(defalias 'py-up-minor-block 'py-minor-block-up)
 (defun py-up-minor-block ()
   "Go to the beginning of next minor-block upwards in buffer.
 
@@ -13088,6 +13078,7 @@ Return position if minor-block found, nil otherwise. "
   (interactive)
   (py-up-base py-minor-block-re))
 
+(defalias 'py-up-section 'py-section-up)
 (defun py-up-section ()
   "Go to the beginning of next section upwards in buffer.
 
@@ -13095,6 +13086,7 @@ Return position if section found, nil otherwise. "
   (interactive)
   (py-up-base py-section-re))
 
+(defalias 'py-down-block 'py-block-down)
 (defun py-down-block ()
   "Go to the beginning of next block below in buffer.
 
@@ -13102,6 +13094,7 @@ Return position if block found, nil otherwise. "
   (interactive)
   (py-down-base py-block-re))
 
+(defalias 'py-down-block-or-clause 'py-block-or-clause-down)
 (defun py-down-block-or-clause ()
   "Go to the beginning of next block-or-clause below in buffer.
 
@@ -13109,6 +13102,7 @@ Return position if block-or-clause found, nil otherwise. "
   (interactive)
   (py-down-base py-block-or-clause-re))
 
+(defalias 'py-down-class 'py-class-down)
 (defun py-down-class ()
   "Go to the beginning of next class below in buffer.
 
@@ -13116,6 +13110,7 @@ Return position if class found, nil otherwise. "
   (interactive)
   (py-down-base py-class-re))
 
+(defalias 'py-down-clause 'py-clause-down)
 (defun py-down-clause ()
   "Go to the beginning of next clause below in buffer.
 
@@ -13123,6 +13118,7 @@ Return position if clause found, nil otherwise. "
   (interactive)
   (py-down-base py-clause-re))
 
+(defalias 'py-down-def 'py-def-down)
 (defun py-down-def ()
   "Go to the beginning of next def below in buffer.
 
@@ -13130,6 +13126,7 @@ Return position if def found, nil otherwise. "
   (interactive)
   (py-down-base py-def-re))
 
+(defalias 'py-down-def-or-class 'py-def-or-class-down)
 (defun py-down-def-or-class ()
   "Go to the beginning of next def-or-class below in buffer.
 
@@ -13137,6 +13134,7 @@ Return position if def-or-class found, nil otherwise. "
   (interactive)
   (py-down-base py-def-or-class-re))
 
+(defalias 'py-down-minor-block 'py-minor-block-down)
 (defun py-down-minor-block ()
   "Go to the beginning of next minor-block below in buffer.
 
@@ -13144,6 +13142,7 @@ Return position if minor-block found, nil otherwise. "
   (interactive)
   (py-down-base py-minor-block-re))
 
+(defalias 'py-down-section 'py-section-down)
 (defun py-down-section ()
   "Go to the beginning of next section below in buffer.
 
@@ -21415,11 +21414,7 @@ Returns position successful, nil otherwise"
     erg))
 
 (defun py-up (&optional indent)
-  "Go up or to beginning of form if inside.
-
-If inside a delimited form --string or list-- go to its beginning.
-If not at beginning of a statement or block, go to its beginning.
-If at beginning of a statement or block, go to beginning one level above of compound statement or definition at point."
+  "Go to beginning of form indented one level less. "
   (interactive "P")
   (let ((pps (parse-partial-sexp (point-min) (point))))
     (cond ((nth 8 pps) (goto-char (nth 8 pps)))
@@ -26647,13 +26642,9 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 (defalias 'py-beginning-of-block 'py-backward-block)
 (defalias 'py-beginning-of-block-bol 'py-backward-block-bol)
 (defalias 'py-beginning-of-block-or-clause 'py-backward-block-or-clause)
-(defalias 'py-beginning-of-block-or-clause 'py-goto-block-or-clause-up)
-(defalias 'py-beginning-of-block-or-clause 'py-previous-block-or-clause)
 (defalias 'py-beginning-of-class 'py-backward-class)
 (defalias 'py-beginning-of-class-bol 'py-backward-class-bol)
 (defalias 'py-beginning-of-clause 'py-backward-clause)
-(defalias 'py-beginning-of-clause 'py-goto-clause-up)
-(defalias 'py-beginning-of-clause 'py-previous-clause)
 (defalias 'py-beginning-of-clause-bol 'py-backward-clause-bol)
 (defalias 'py-beginning-of-comment 'py-backward-comment)
 (defalias 'py-beginning-of-declarations 'py-backward-declarations)
@@ -26682,15 +26673,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 (defalias 'py-end-of-statement 'py-forward-statement)
 (defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
 (defalias 'py-end-of-top-level 'py-forward-top-level)
-(defalias 'py-goto-block-or-clause-up 'py-backward-block-or-clause)
-(defalias 'py-goto-block-up 'py-backward-block)
-(defalias 'py-goto-clause-up 'py-backward-clause)
 (defalias 'py-next-statement 'py-forward-statement)
-(defalias 'py-previous-block-or-clause 'py-backward-block-or-clause)
-(defalias 'py-previous-class 'py-backward-class)
-(defalias 'py-previous-clause 'py-backward-clause)
-(defalias 'py-previous-def-or-class 'py-backward-def-or-class)
-(defalias 'py-previous-statement 'py-backward-statement)
 (defalias 'py-markup-region-as-section 'py-sectionize-region)
 
 ;;;
