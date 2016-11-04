@@ -5256,10 +5256,12 @@ See also `py-down-minor-block': down from current definition to next beginning o
 
 ;; Indentation
 ;; Travel current level of indentation
-(defun py--travel-this-indent-backward ()
-  (while (and (py-backward-statement)
-	      (or indent (setq indent (current-indentation)))
-	      (eq indent (current-indentation))(setq erg (point)) (not (bobp)))))
+(defun py--travel-this-indent-backward (&optional indent)
+  (let (erg)
+    (while (and (py-backward-statement)
+		(or indent (setq indent (current-indentation)))
+		(eq indent (current-indentation))(setq erg (point)) (not (bobp))))
+    erg))
 
 (defun py-backward-indent ()
   "Go to the beginning of a section of equal indent.
@@ -5269,17 +5271,18 @@ Returns final position when called from inside section, nil otherwise"
   (interactive)
   (unless (bobp)
     (let ((orig (point))
-	 erg indent)
-      (py--travel-this-indent-backward)
+	  erg)
+      (setq erg (py--travel-this-indent-backward))
       (when erg (goto-char erg))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
-(defun py--travel-this-indent-backward-bol ()
-  (while (and (py-backward-statement-bol)
-	      (or indent (setq indent (current-indentation)))
-	      (eq indent (current-indentation))(setq erg (point)) (not (bobp))))
-  (when erg (goto-char erg)))
+(defun py--travel-this-indent-backward-bol (indent)
+  (let (erg)
+    (while (and (py-backward-statement-bol)
+		(or indent (setq indent (current-indentation)))
+		(eq indent (current-indentation))(setq erg (point)) (not (bobp))))
+    (when erg (goto-char erg))))
 
 (defun py-backward-indent-bol ()
   "Go to the beginning of line of a section of equal indent.
@@ -5291,7 +5294,7 @@ Returns final position when called from inside section, nil otherwise"
     (let ((orig (point))
 	  (indent (when (eq (current-indentation) (current-column)) (current-column)))
 	  erg)
-      (py--travel-this-indent-backward-bol)
+      (setq erg (py--travel-this-indent-backward-bol indent))
       ;; (when erg (goto-char erg)
       ;; (beginning-of-line)
       ;; (setq erg (point)))
@@ -7470,7 +7473,7 @@ Internal use"
 ;;       (display-buffer output-buffer)
 ;;       (select-window py-exception-window))
 
-(defun py--split-t-not-switch-wm ()
+(defun py--split-t-not-switch-wm (output-buffer py-exception-buffer number-of-windows)
   (unless (window-live-p output-buffer)
     (with-current-buffer (get-buffer output-buffer)
       (when (< number-of-windows py-split-window-on-execute-threshold)
@@ -7541,7 +7544,7 @@ Internal use"
       ;; https://bugs.launchpad.net/python-mode/+bug/1478122
       ;; > If the shell is visible in any of the windows it  should re-use that window
       ;; > I did double check and py-keep-window-configuration is nil and py-split-window-on-execute is t.
-      (py--split-t-not-switch-wm))
+      (py--split-t-not-switch-wm output-buffer py-exception-buffer number-of-windows))
      ((and
        py-split-window-on-execute
        py-switch-buffers-on-execute-p)
@@ -8521,7 +8524,7 @@ completions on the current context."
 	 (py--send-string-return-output
 	  (format completion-code input) process)))
     (sit-for 0.2 t)
-    (when (> (length erg) 2)
+    (when (and erg (> (length erg) 2))
       (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t)))
     erg))
 
@@ -9557,7 +9560,7 @@ local bindings to py-newline-and-indent."))
                ("(python-lib)Function-Method-Variable Index")
                ("(python-lib)Miscellaneous Index"))))
 
-(defun py--find-definition-in-source (sourcefile)
+(defun py--find-definition-in-source (sourcefile symbol)
   (called-interactively-p 'any) (message "sourcefile: %s" sourcefile)
   (when (find-file sourcefile)
     ;; (if (stringp py-separator-char)
@@ -9577,7 +9580,7 @@ local bindings to py-newline-and-indent."))
 
 ;;  Find function stuff, lifted from python.el
 (defalias 'py-find-function 'py-find-definition)
-(defun py--find-definition-question-type ()
+(defun py--find-definition-question-type (symbol)
   (cond ((setq erg (py--send-string-return-output (concat "import inspect;inspect.isbuiltin(\"" symbol "\")"))))
 	(t (setq erg (py--send-string-return-output (concat imports "import inspect;inspect.getmodule(\"" symbol "\")"))))))
 
@@ -9618,7 +9621,7 @@ Interactively, prompt for SYMBOL."
               (goto-char (match-beginning 0))
               (exchange-point-and-mark))
           (error "%s" "local not a number"))
-      (py--find-definition-question-type)
+      (setq erg (py--find-definition-question-type symbol))
       (cond ((string-match "SyntaxError" erg)
              (setq erg (substring-no-properties erg (match-beginning 0)))
              (set-window-configuration last-window-configuration)
@@ -9631,7 +9634,8 @@ Interactively, prompt for SYMBOL."
 	       (message "%s" erg)))
             ((and erg (setq path (replace-regexp-in-string "'" "" (py--send-string-return-output "import os;os.getcwd()")))
                   (setq sourcefile (replace-regexp-in-string "'" "" (py--send-string-return-output (concat "inspect.getsourcefile(" symbol ")")))))
-	     (py--find-definition-in-source sourcefile)
+	     (message "%s" sourcefile)
+	     (py--find-definition-in-source sourcefile symbol)
              (display-buffer py-exception-buffer))))
     erg))
 
@@ -19621,7 +19625,7 @@ Returns char found. "
   (let* ((pps (parse-partial-sexp (point-min) (point)))
 	 (erg (and (nth 4 pps) (nth 8 pps))))
     erg))
-;; 
+;;
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
   (or (nth 8 (parse-partial-sexp (point-min) (point)))
@@ -20986,15 +20990,15 @@ the output."
 
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
-  (let ((process (or process (get-buffer-process (py-shell))))
-	erg)
+  (let ((process (or process (get-buffer-process (py-shell)))))
     (with-current-buffer (process-buffer process)
-      (let ((comint-preoutput-filter-functions
-	     (append comint-preoutput-filter-functions
-		     '(ansi-color-filter-apply
-		       (lambda (string)
-			 (setq erg (concat erg string))
-			 "")))))
+      (let* (erg
+	     (comint-preoutput-filter-functions
+	      (append comint-preoutput-filter-functions
+		      '(ansi-color-filter-apply
+			(lambda (string)
+			  (setq erg (concat erg string))
+			  "")))))
 	(py-send-string string process)
 	(accept-process-output process 5)
 	(sit-for 0.1 t)
