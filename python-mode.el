@@ -2579,6 +2579,9 @@ See py-no-outdent-re-raw for better readable content ")
   :group 'python-mode
   )
 
+(defvar py-comment-re comment-start
+  "Needed for normalized processing")
+
 (defconst py-block-keywords
   (concat
    "\\_<\\("
@@ -2869,15 +2872,6 @@ See also `py-object-reference-face'"
   :tag "py-exception-name-face"
   :group 'python-mode)
 
-(defun py--delete-all-but-first-prompt ()
-  "Don't let prompts from setup-codes sent clutter buffer. "
-  (let (last erg)
-    (when (re-search-backward py-fast-filter-re nil t 1)
-      (setq erg (match-end 0))
-      (while (and (re-search-backward py-fast-filter-re nil t 1) (setq erg (match-end 0))))
-      (delete-region erg (point-max))))
-  (goto-char (point-max)))
-
 (defun py--python-send-setup-code-intern (name &optional msg)
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
 	(py-ignore-result-p t)
@@ -2998,9 +2992,9 @@ Returns versioned string, nil if nothing appropriate found "
 (defun py-which-python ()
   "Returns version of Python of current environment, a number. "
   (interactive)
-  (let* (treffer (cmd (py-choose-shell))
+  (let* ((cmd (py-choose-shell))
+	 (treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
          version erg)
-    (setq treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
     (if treffer
         ;; if a number if part of python name, assume it's the version
         (setq version (substring-no-properties cmd treffer))
@@ -7646,10 +7640,10 @@ Receives a buffer-name as argument"
 (defun py--reuse-existing-shell (exception-buffer)
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
-(defun py--create-new-shell (executable args exception-buffer)
+(defun py--create-new-shell (executable args buffer-name exception-buffer)
   (let ((buf (current-buffer)))
     (with-current-buffer
-	(apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
+	(apply #'make-comint-in-buffer executable buffer-name executable nil (split-string-and-unquote args))
       ;; (py--shell-make-comint executable py-buffer-name args)
       (let ((proc (get-buffer-process (current-buffer))))
 	(if (string-match "^i" (process-name proc))
@@ -7716,21 +7710,18 @@ Receives a buffer-name as argument"
     (sit-for 0.1 t)
     (if fast-process
 	;; user rather wants an interactive shell
-	(py--shell-fast-proceeding proc py-buffer-name py-shell-name  py-shell-completion-setup-code)
+	(py--shell-fast-proceeding proc py-buffer-name py-shell-name py-shell-completion-setup-code)
       (if (comint-check-proc py-buffer-name)
 	  (py--reuse-existing-shell exception-buffer)
 	;; buffer might exist but not being empty
 	(when (buffer-live-p py-buffer-name)
 	  (with-current-buffer py-buffer-name
 	    (erase-buffer)))
-	(py--create-new-shell executable args exception-buffer))
+	(py--create-new-shell executable args py-buffer-name exception-buffer))
       (when (or (called-interactively-p 'any)
 		(eq 1 argprompt)
-		py-switch-buffers-on-execute-p
-		;; (member this-command py-named-shells)
-		)
+		py-switch-buffers-on-execute-p)
 	(py--shell-manage-windows py-buffer-name windows-config py-exception-buffer)))
-    ;; (sit-for py-new-shell-delay t)
     py-buffer-name))
 
 (defun py-shell-get-process (&optional argprompt py-dedicated-process-p shell switch py-buffer-name)
@@ -8513,7 +8504,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
       (unless (string-match "\n\\'" string)
 	;; Make sure the text is properly LF-terminated.
 	(comint-send-string proc "\n"))
-      (when py-debug-p (message "%s" (current-buffer)))
+      ;; (when py-debug-p (message "%s" (current-buffer)))
       (goto-char (point-max)))))
 
 ;; python-components-shell-complete
@@ -12240,208 +12231,241 @@ When `delete-active-region' and (region-active-p), delete region "
 
 
 (defun py--beginning-of-block-position ()
-  (interactive) 
-  "Returns beginning of block position at beginning-of-line. "
+  "Returns beginning of block position. "
   (save-excursion
-    (let ((erg (py-backward-block)))
+    (let ((erg (or (py--beginning-of-block-p)
+                   (py-backward-block))))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position ()
-  "Returns beginning of block-or-clause position at beginning-of-line. "
+  "Returns beginning of block-or-clause position. "
   (save-excursion
-    (let ((erg (py-backward-block-or-clause)))
+    (let ((erg (or (py--beginning-of-block-or-clause-p)
+                   (py-backward-block-or-clause))))
       erg)))
 
 (defun py--beginning-of-class-position ()
-  "Returns beginning of class position at beginning-of-line. "
+  "Returns beginning of class position. "
   (save-excursion
-    (let ((erg (py-backward-class)))
+    (let ((erg (or (py--beginning-of-class-p)
+                   (py-backward-class))))
       erg)))
 
 (defun py--beginning-of-clause-position ()
-  "Returns beginning of clause position at beginning-of-line. "
+  "Returns beginning of clause position. "
   (save-excursion
-    (let ((erg (py-backward-clause)))
+    (let ((erg (or (py--beginning-of-clause-p)
+                   (py-backward-clause))))
       erg)))
 
 (defun py--beginning-of-comment-position ()
-  "Returns beginning of comment position at beginning-of-line. "
+  "Returns beginning of comment position. "
   (save-excursion
-    (let ((erg (py-backward-comment)))
+    (let ((erg (or (py--beginning-of-comment-p)
+                   (py-backward-comment))))
       erg)))
 
 (defun py--beginning-of-def-position ()
-  "Returns beginning of def position at beginning-of-line. "
+  "Returns beginning of def position. "
   (save-excursion
-    (let ((erg (py-backward-def)))
+    (let ((erg (or (py--beginning-of-def-p)
+                   (py-backward-def))))
       erg)))
 
 (defun py--beginning-of-def-or-class-position ()
-  "Returns beginning of def-or-class position at beginning-of-line. "
+  "Returns beginning of def-or-class position. "
   (save-excursion
-    (let ((erg (py-backward-def-or-class)))
+    (let ((erg (or (py--beginning-of-def-or-class-p)
+                   (py-backward-def-or-class))))
       erg)))
 
 (defun py--beginning-of-expression-position ()
-  "Returns beginning of expression position at beginning-of-line. "
+  "Returns beginning of expression position. "
   (save-excursion
-    (let ((erg (py-backward-expression)))
+    (let ((erg (or (py--beginning-of-expression-p)
+                   (py-backward-expression))))
       erg)))
 
 (defun py--beginning-of-except-block-position ()
-  "Returns beginning of except-block position at beginning-of-line. "
+  "Returns beginning of except-block position. "
   (save-excursion
-    (let ((erg (py-backward-except-block)))
+    (let ((erg (or (py--beginning-of-except-block-p)
+                   (py-backward-except-block))))
       erg)))
 
 (defun py--beginning-of-if-block-position ()
-  "Returns beginning of if-block position at beginning-of-line. "
+  "Returns beginning of if-block position. "
   (save-excursion
-    (let ((erg (py-backward-if-block)))
+    (let ((erg (or (py--beginning-of-if-block-p)
+                   (py-backward-if-block))))
       erg)))
 
 (defun py--beginning-of-indent-position ()
-  "Returns beginning of indent position at beginning-of-line. "
+  "Returns beginning of indent position. "
   (save-excursion
-    (let ((erg (py-backward-indent)))
+    (let ((erg (or (py--beginning-of-indent-p)
+                   (py-backward-indent))))
       erg)))
 
 (defun py--beginning-of-line-position ()
-  "Returns beginning of line position at beginning-of-line. "
+  "Returns beginning of line position. "
   (save-excursion
-    (let ((erg (py-backward-line)))
+    (let ((erg (or (py--beginning-of-line-p)
+                   (py-backward-line))))
       erg)))
 
 (defun py--beginning-of-minor-block-position ()
-  "Returns beginning of minor-block position at beginning-of-line. "
+  "Returns beginning of minor-block position. "
   (save-excursion
-    (let ((erg (py-backward-minor-block)))
+    (let ((erg (or (py--beginning-of-minor-block-p)
+                   (py-backward-minor-block))))
       erg)))
 
 (defun py--beginning-of-partial-expression-position ()
-  "Returns beginning of partial-expression position at beginning-of-line. "
+  "Returns beginning of partial-expression position. "
   (save-excursion
-    (let ((erg (py-backward-partial-expression)))
+    (let ((erg (or (py--beginning-of-partial-expression-p)
+                   (py-backward-partial-expression))))
       erg)))
 
 (defun py--beginning-of-paragraph-position ()
-  "Returns beginning of paragraph position at beginning-of-line. "
+  "Returns beginning of paragraph position. "
   (save-excursion
-    (let ((erg (py-backward-paragraph)))
+    (let ((erg (or (py--beginning-of-paragraph-p)
+                   (py-backward-paragraph))))
       erg)))
 
 (defun py--beginning-of-section-position ()
-  "Returns beginning of section position at beginning-of-line. "
+  "Returns beginning of section position. "
   (save-excursion
-    (let ((erg (py-backward-section)))
+    (let ((erg (or (py--beginning-of-section-p)
+                   (py-backward-section))))
       erg)))
 
 (defun py--beginning-of-statement-position ()
-  "Returns beginning of statement position at beginning-of-line. "
+  "Returns beginning of statement position. "
   (save-excursion
-    (let ((erg (py-backward-statement)))
+    (let ((erg (or (py--beginning-of-statement-p)
+                   (py-backward-statement))))
       erg)))
 
 (defun py--beginning-of-top-level-position ()
-  "Returns beginning of top-level position at beginning-of-line. "
+  "Returns beginning of top-level position. "
   (save-excursion
-    (let ((erg (py-backward-top-level)))
+    (let ((erg (or (py--beginning-of-top-level-p)
+                   (py-backward-top-level))))
       erg)))
 
 (defun py--beginning-of-try-block-position ()
-  "Returns beginning of try-block position at beginning-of-line. "
+  "Returns beginning of try-block position. "
   (save-excursion
-    (let ((erg (py-backward-try-block)))
+    (let ((erg (or (py--beginning-of-try-block-p)
+                   (py-backward-try-block))))
       erg)))
 
 (defun py--beginning-of-block-position-bol ()
-  "Returns beginning of block position. "
+  "Returns beginning of block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-block-bol)))
+    (let ((erg (or (py--beginning-of-block-bol-p)
+                   (py-backward-block-bol))))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position-bol ()
-  "Returns beginning of block-or-clause position. "
+  "Returns beginning of block-or-clause position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-block-or-clause-bol)))
+    (let ((erg (or (py--beginning-of-block-or-clause-bol-p)
+                   (py-backward-block-or-clause-bol))))
       erg)))
 
 (defun py--beginning-of-class-position-bol ()
-  "Returns beginning of class position. "
+  "Returns beginning of class position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-class-bol)))
+    (let ((erg (or (py--beginning-of-class-bol-p)
+                   (py-backward-class-bol))))
       erg)))
 
 (defun py--beginning-of-clause-position-bol ()
-  "Returns beginning of clause position. "
+  "Returns beginning of clause position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-clause-bol)))
+    (let ((erg (or (py--beginning-of-clause-bol-p)
+                   (py-backward-clause-bol))))
       erg)))
 
 (defun py--beginning-of-def-position-bol ()
-  "Returns beginning of def position. "
+  "Returns beginning of def position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-def-bol)))
+    (let ((erg (or (py--beginning-of-def-bol-p)
+                   (py-backward-def-bol))))
       erg)))
 
 (defun py--beginning-of-def-or-class-position-bol ()
-  "Returns beginning of def-or-class position. "
+  "Returns beginning of def-or-class position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-def-or-class-bol)))
+    (let ((erg (or (py--beginning-of-def-or-class-bol-p)
+                   (py-backward-def-or-class-bol))))
       erg)))
 
 (defun py--beginning-of-elif-block-position-bol ()
-  "Returns beginning of elif-block position. "
+  "Returns beginning of elif-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-elif-block-bol)))
+    (let ((erg (or (py--beginning-of-elif-block-bol-p)
+                   (py-backward-elif-block-bol))))
       erg)))
 
 (defun py--beginning-of-else-block-position-bol ()
-  "Returns beginning of else-block position. "
+  "Returns beginning of else-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-else-block-bol)))
+    (let ((erg (or (py--beginning-of-else-block-bol-p)
+                   (py-backward-else-block-bol))))
       erg)))
 
 (defun py--beginning-of-except-block-position-bol ()
-  "Returns beginning of except-block position. "
+  "Returns beginning of except-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-except-block-bol)))
+    (let ((erg (or (py--beginning-of-except-block-bol-p)
+                   (py-backward-except-block-bol))))
       erg)))
 
 (defun py--beginning-of-for-block-position-bol ()
-  "Returns beginning of for-block position. "
+  "Returns beginning of for-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-for-block-bol)))
+    (let ((erg (or (py--beginning-of-for-block-bol-p)
+                   (py-backward-for-block-bol))))
       erg)))
 
 (defun py--beginning-of-if-block-position-bol ()
-  "Returns beginning of if-block position. "
+  "Returns beginning of if-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-if-block-bol)))
+    (let ((erg (or (py--beginning-of-if-block-bol-p)
+                   (py-backward-if-block-bol))))
       erg)))
 
 (defun py--beginning-of-indent-position-bol ()
-  "Returns beginning of indent position. "
+  "Returns beginning of indent position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-indent-bol)))
+    (let ((erg (or (py--beginning-of-indent-bol-p)
+                   (py-backward-indent-bol))))
       erg)))
 
 (defun py--beginning-of-minor-block-position-bol ()
-  "Returns beginning of minor-block position. "
+  "Returns beginning of minor-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-minor-block-bol)))
+    (let ((erg (or (py--beginning-of-minor-block-bol-p)
+                   (py-backward-minor-block-bol))))
       erg)))
 
 (defun py--beginning-of-statement-position-bol ()
-  "Returns beginning of statement position. "
+  "Returns beginning of statement position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-statement-bol)))
+    (let ((erg (or (py--beginning-of-statement-bol-p)
+                   (py-backward-statement-bol))))
       erg)))
 
 (defun py--beginning-of-try-block-position-bol ()
-  "Returns beginning of try-block position. "
+  "Returns beginning of try-block position at beginning-of-line. "
   (save-excursion
-    (let ((erg (py-backward-try-block-bol)))
+    (let ((erg (or (py--beginning-of-try-block-bol-p)
+                   (py-backward-try-block-bol))))
       erg)))
 
 ;; python-components-end-position-forms
@@ -17566,8 +17590,6 @@ See available styles at `py-fill-paragraph' or var `py-docstring-style'
         (let ((paragraph-start (concat paragraph-start "\\|[ \t#]*$"))
               (paragraph-separate (concat paragraph-separate "\\|[ \t#]*$"))
               (fill-prefix comment-fill-prefix))
-          ;;(message "paragraph-start %S paragraph-separate %S"
-          ;;paragraph-start paragraph-separate)
           (fill-paragraph justify))))
     t))
 
@@ -18844,11 +18866,6 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
-    ;; in comint-mode, prompt might be read-only
-    ;; delete-region would fail
-    ;; (let ((comint-prompt-read-only-old comint-prompt-read-only)
-    ;; comint-prompt-read-only)
-    ;; (switch-to-buffer (current-buffer))
     (process-send-string proc "\n")
     (let ((orig (point-max)))
       (sit-for 1 t)
@@ -18856,11 +18873,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
       (process-send-string proc "\n")
       (accept-process-output proc 5)
       (sit-for 1 t)
-      ;; (when py-verbose-p (message "py--fast-send-string-intern comint-prompt-read-only: %s" comint-prompt-read-only))
-      (delete-region orig (point-max))
-      ;; (setq comint-prompt-read-only comint-prompt-read-only-old)
-      ;;)
-      )))
+      (delete-region orig (point-max)))))
 
 (defun py--filter-result (string)
   "Set `py-result' according to `py-fast-filter-re'.
@@ -19384,8 +19397,6 @@ completions on the current context."
 	 ;; (completion (when completions
 	 ;; (try-completion input completions)))
 	 newlist erg)
-    ;; (message "%s" (current-buffer))
-    ;; (sit-for 1 t)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
 	   nil)
@@ -19465,7 +19476,7 @@ Returns beginning of FORM if successful, nil otherwise"
                              (cdr (ar--go-to-keyword (symbol-value regexp)
                                                     (- (progn (if (ar--beginning-of-statement-p) (current-indentation) (save-excursion (ar-backward-statement) (current-indentation)))) ar-indent-offset)))))))
         (when lc (beginning-of-line) (setq erg (point)))))
-    (when (and ar-verbose-p iact) (message "%s" erg))
+    ;; (when (and ar-verbose-p iact) (message "%s" erg))
     erg))
 
 (defun ar--beginning-of-prepare (indent final-re &optional inter-re iact lc)
@@ -19488,7 +19499,7 @@ Returns beginning of FORM if successful, nil otherwise"
         (progn
           (and lc (beginning-of-line))
           (setq erg (point))
-          (when (and ar-verbose-p iact) (message "%s" erg))
+          ;; (when (and ar-verbose-p iact) (message "%s" erg))
           erg)
       (ar--beginning-of-form-intern final-re iact indent orig lc))))
 
@@ -19743,7 +19754,7 @@ Start a new process if necessary. "
          (cond ((comint-check-proc (current-buffer))
 		(get-buffer-process (buffer-name (current-buffer))))
 	       (t (py-shell argprompt)))))
-    (when (called-interactively-p 'any) (message "%S" erg))
+    ;; (when (called-interactively-p 'any) (message "%S" erg))
     erg))
 
 ;;  Miscellany.
@@ -20061,7 +20072,7 @@ Use `defcustom' to keep value across sessions "
   (let ((erg (with-syntax-table
                  py-dotted-expression-syntax-table
                (current-word))))
-    (when (called-interactively-p 'any) (message "%s" erg))
+    ;; (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
 (defun py-kill-buffer-unconditional (buffer)
@@ -20169,7 +20180,6 @@ LIEP stores line-end-position at point-of-interest
                       (re-search-backward (concat py-shell-prompt-regexp "\\|" py-ipython-output-prompt-re "\\|" py-ipython-input-prompt-re) nil t 1)))
             ;; common recursion not suitable because of prompt
             (with-temp-buffer
-	      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
               (insert-buffer-substring cubuf (match-end 0) orig)
               (setq indent (py-compute-indentation)))
 	  (if (< py-max-specpdl-size repeat)
@@ -20505,7 +20515,7 @@ If non-nil, return a list composed of
 	    (setq erg (py-in-string-p-intern pps)))))
 
     ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+      ;; (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg)))
 
 (defun py-in-statement-p ()
@@ -20910,8 +20920,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
 (defun py-end-of-string (&optional beginning-of-string-position)
   "Go to end of string at point if any, if successful return position. "
   (interactive)
-  ;; (when py-debug-p (message "(current-buffer): %s" (current-buffer)))
-  ;; (when py-debug-p (message "major-mode): %s" major-mode))
   (let ((orig (point))
 	(beginning-of-string-position (or beginning-of-string-position (and (nth 3 (parse-partial-sexp 1 (point)))(nth 8 (parse-partial-sexp 1 (point))))
                                           (and (looking-at "\"\"\"\\|'''\\|\"\\|\'")(match-beginning 0))))
