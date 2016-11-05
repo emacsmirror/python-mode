@@ -1,4 +1,4 @@
-;; python-mode.el --- Edit, debug, develop, run Python programs.
+;; python-mode.el --- Edit, debug, develop, run Python programs. -*- lexical-binding: t; -*- 
 
 ;; Includes a minor mode for handling a Python/IPython shell,
 ;; and can take advantage of Pymacs when installed.
@@ -20997,8 +20997,10 @@ the output."
 	      (append comint-preoutput-filter-functions
 		      '(ansi-color-filter-apply
 			(lambda (string)
-			  (setq erg (concat erg string))
-			  "")))))
+			  string
+			;; (setq erg (concat erg string))
+			;; "")
+			)))))
 	(py-send-string string process)
 	(accept-process-output process 5)
 	(sit-for 0.1 t)
