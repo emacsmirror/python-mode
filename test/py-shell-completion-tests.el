@@ -1,6 +1,6 @@
 ;;; py-shell-completion-tests.el --- Test completion for available Python shell
 
-;; Author: Andreas Roehler <andreas.roehler@online.de>
+;; Author: Andreas Röhler <andreas.roehler@online.de>
 ;; Keywords: languages, convenience
 
 ;; This program is free software; you can redistribute it and/or modify
