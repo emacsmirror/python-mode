@@ -2772,8 +2772,7 @@ Expects being called by `py--run-unfontify-timer' "
 (defun py--run-unfontify-timer (&optional buffer)
   "Unfontify the shell banner-text "
   (when py--shell-unfontify
-    (let ((buffer (or buffer (current-buffer)))
-	  done)
+    (let ((buffer (or buffer (current-buffer))))
       (if (and
 	   (buffer-live-p buffer)
 	   (or
@@ -19562,7 +19561,32 @@ Returns beginning of FORM if successful, nil otherwise"
     ;; (when (and ar-verbose-p iact) (message "%s" erg))
     erg))
 
+(defun py--indent-prepare ()
+  (progn (back-to-indentation)
+	 (or (ar--beginning-of-statement-p)
+	     (ar-backward-statement))
+	 (cond ((eq 0 (current-indentation))
+		(current-indentation))
+	       ((looking-at (symbol-value inter-re))
+		(current-indentation))
+	       (t
+		(if (<= ar-indent-offset (current-indentation))
+		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) ar-indent-offset))
+		  ar-indent-offset)))))
+
 (defun ar--beginning-of-prepare (indent final-re &optional inter-re iact lc)
+  (let ((orig (point))
+        (indent (or indent (py--indent-prepare)))
+        erg)
+    (if (and (< (point) orig) (looking-at (symbol-value final-re)))
+        (progn
+          (and lc (beginning-of-line))
+          (setq erg (point))
+          ;; (when (and ar-verbose-p iact) (message "%s" erg))
+          erg)
+      (ar--beginning-of-form-intern final-re iact indent orig lc))))
+
+(defun ar--end-of-prepare (indent final-re &optional inter-re iact lc)
   (let ((orig (point))
         (indent
          (or indent
@@ -19578,7 +19602,7 @@ Returns beginning of FORM if successful, nil otherwise"
                                (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) ar-indent-offset))
                              ar-indent-offset))))))
         erg)
-    (if (and (< (point) orig) (looking-at (symbol-value final-re)))
+    (if (and (< orig (point)) (looking-at (symbol-value final-re)))
         (progn
           (and lc (beginning-of-line))
           (setq erg (point))
