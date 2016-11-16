@@ -2978,18 +2978,18 @@ return `jython', otherwise return nil."
                         'jython))))
     mode))
 
-(defun py-choose-shell-by-path (&optional py-separator-char)
+(defun py-choose-shell-by-path (&optional separator-char)
   "Select Python executable according to version desplayed in path, current buffer-file is selected from.
 
 Returns versioned string, nil if nothing appropriate found "
   (interactive)
   (let ((path (py--buffer-filename-remote-maybe))
-                (py-separator-char (or py-separator-char py-separator-char))
+	(separator-char (or separator-char py-separator-char))
                 erg)
-    (when (and path py-separator-char
-               (string-match (concat py-separator-char "[iI]?[pP]ython[0-9.]+" py-separator-char) path))
+    (when (and path separator-char
+               (string-match (concat separator-char "[iI]?[pP]ython[0-9.]+" separator-char) path))
       (setq erg (substring path
-                           (1+ (string-match (concat py-separator-char "[iI]?[pP]ython[0-9.]+" py-separator-char) path)) (1- (match-end 0)))))
+                           (1+ (string-match (concat separator-char "[iI]?[pP]ython[0-9.]+" separator-char) path)) (1- (match-end 0)))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
@@ -3128,18 +3128,17 @@ if `(locate-library \"python-mode\")' is not succesful.
 
 Used only, if `py-install-directory' is empty. "
   (interactive)
-  (let (name
-	(erg (cond ((locate-library "python-mode")
-                    (file-name-directory (locate-library "python-mode")))
-                   ((and (setq name (py--buffer-filename-remote-maybe)) (string-match "python-mode" name))
-                    (file-name-directory name))
-                   ((string-match "python-mode" (buffer-name))
-                    default-directory))))
+  (let ((erg (cond ((locate-library "python-mode")
+		    (file-name-directory (locate-library "python-mode")))
+		   ((ignore-errors (string-match "python-mode" (py--buffer-filename-remote-maybe)))
+		    (file-name-directory (py--buffer-filename-remote-maybe)))
+		   ((string-match "python-mode" (buffer-name))
+		    default-directory))))
     (cond ((and (or (not py-install-directory) (string= "" py-install-directory)) erg)
 	   (setq py-install-directory erg))
-	   (t (setq py-install-directory (expand-file-name "~/")))))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "Setting py-install-directory to: %s" py-install-directory))
-    py-install-directory)
+	  (t (setq py-install-directory (expand-file-name "~/")))))
+  (when (and py-verbose-p (called-interactively-p 'any)) (message "Setting py-install-directory to: %s" py-install-directory))
+  py-install-directory)
 
 (defun py--fetch-pythonpath ()
   "Consider settings of py-pythonpath. "
@@ -3248,6 +3247,27 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
       (when (and py-debug-p (called-interactively-p 'any)) (message "%s" count))
       count)))
 
+(defmacro py-escaped ()
+  "Return t if char is preceded by an odd number of backslashes. "
+  `(save-excursion
+     (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
+(defmacro py-current-line-backslashed-p ()
+  "Return t if current line is a backslashed continuation line. "
+  `(save-excursion
+     (end-of-line)
+     (skip-chars-backward " \t\r\n\f")
+     (and (eq (char-before (point)) ?\\ )
+          (py-escaped))))
+
+(defmacro py-preceding-line-backslashed-p ()
+  "Return t if preceding line is a backslashed continuation line. "
+  `(save-excursion
+     (beginning-of-line)
+     (skip-chars-backward " \t\r\n\f")
+     (and (eq (char-before (point)) ?\\ )
+          (py-escaped))))
+
 (defun py--escape-doublequotes (start end)
   (let ((end (copy-marker end)))
     (save-excursion
@@ -3275,26 +3295,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
        (beginning-of-line)
        (looking-at "\\s-*$"))))
 
-(defmacro py-escaped ()
-  "Return t if char is preceded by an odd number of backslashes. "
-  `(save-excursion
-     (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
-
-(defmacro py-current-line-backslashed-p ()
-  "Return t if current line is a backslashed continuation line. "
-  `(save-excursion
-     (end-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
-
-(defmacro py-preceding-line-backslashed-p ()
-  "Return t if preceding line is a backslashed continuation line. "
-  `(save-excursion
-     (beginning-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped))))
 ;;
 
 (defvar python-mode-map nil)
@@ -3614,7 +3614,7 @@ Returns value of `py-smart-indentation'. "
 ;; Autopair mode
 ;; py-autopair-mode forms
 (defalias 'toggle-py-autopair-mode 'py-toggle-autopair-mode)
-(defun py-toggle-autopair-mode (&optional arg)
+(defun py-toggle-autopair-mode ()
   "If `py-autopair-mode' should be on or off.
 
   Returns value of `py-autopair-mode' switched to. "
@@ -3639,7 +3639,7 @@ Returns value of `py-autopair-mode'. "
 
 ;; Smart operator
 ;; py-smart-operator-mode-p forms
-(defun toggle-py-smart-operator-mode-p (&optional arg)
+(defun toggle-py-smart-operator-mode-p ()
   "If `py-smart-operator-mode-p' should be on or off.
 
   Returns value of `py-smart-operator-mode-p' switched to. "
@@ -3991,7 +3991,7 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
 
 (defun py--indent-fix-region-intern (beg end)
   "Used when `py-tab-indents-region-p' is non-nil. "
-  (let (indent)
+  (let ()
     (save-excursion
       (save-restriction
         (beginning-of-line)
@@ -4008,7 +4008,7 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
           (delete-region (point) (progn (skip-chars-forward " \t\r\n\f") (point)))
           (indent-to (py-compute-indentation)))))))
 
-(defun py--indent-line-intern (need cui py-indent-offset col &optional beg end region)
+(defun py--indent-line-intern (need cui indent col &optional beg end region)
   (let (erg)
     (if py-tab-indent
 	(progn
@@ -4051,8 +4051,8 @@ With optional \\[universal-argument] an indent with length `py-indent-offset' is
 	      (progn
 		(beginning-of-line)
 		(delete-horizontal-space)
-		;; indent one py-indent-offset only if goal < need
-		(setq erg (+ (* (/ cui py-indent-offset) py-indent-offset) py-indent-offset))
+		;; indent one indent only if goal < need
+		(setq erg (+ (* (/ cui indent) indent) indent))
 		(if (< need erg)
 		    (indent-to need)
 		  (indent-to erg))
@@ -4126,7 +4126,6 @@ C-q TAB inserts a literal TAB-character."
 	beg
 	end
 	need
-	done
 	this-indent-offset)
     (and region
 	 (setq beg (region-beginning))
@@ -4190,12 +4189,11 @@ C-q TAB inserts a literal TAB-character."
 When indent is set back manually, this is honoured in following lines. "
   (interactive "*")
   (let* ((orig (point))
-	 (lkmd (prin1-to-string last-command))
 	 ;; lp:1280982, deliberatly dedented by user
 	 (this-dedent
-	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*") (line-beginning-position))
+	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*" (line-beginning-position)))
 	    (current-column)))
-	 erg pos)
+	 erg)
     (newline)
     (py--delete-trailing-whitespace orig)
     (setq erg
@@ -4262,13 +4260,12 @@ Returns value of `indent-tabs-mode' switched to. "
 (defun py-guessed-sanity-check (guessed)
   (and (>= guessed 2)(<= guessed 8)(eq 0 (% guessed 2))))
 
-(defun py--guess-indent-final (indents orig)
+(defun py--guess-indent-final (indents)
   "Calculate and do sanity-check. "
   (let* ((first (car indents))
          (second (cadr indents))
          (erg (if (and first second)
                   (if (< second first)
-                      ;; (< (point) orig)
                       (- first second)
                     (- second first))
                 (default-value 'py-indent-offset))))
@@ -4318,8 +4315,7 @@ Might change local value of `py-indent-offset' only when called
 downwards from beginning of block followed by a statement. Otherwise default-value is returned."
   (interactive)
   (save-excursion
-    (let* ((orig (point))
-           (indents
+    (let* ((indents
             (cond (direction
                    (if (eq 'forward direction)
                        (py--guess-indent-forward)
@@ -4328,7 +4324,7 @@ downwards from beginning of block followed by a statement. Otherwise default-val
                   ((eq 0 (current-indentation))
                    (py--guess-indent-forward))
                   (t (py--guess-indent-backward))))
-           (erg (py--guess-indent-final indents orig)))
+           (erg (py--guess-indent-final indents)))
       (if erg (setq py-indent-offset erg)
         (setq py-indent-offset
               (default-value 'py-indent-offset)))
@@ -4392,7 +4388,7 @@ Starts from second line of region specified"
       (py-indent-and-forward)))
   (unless (empty-line-p) (py-indent-and-forward)))
 
-(defun py-indent-region (start end &optional line-by-line)
+(defun py-indent-region (start end)
   "Reindent a region of Python code.
 
 In case first line accepts an indent, keep the remaining
@@ -4402,25 +4398,15 @@ same with optional argument
 
 In order to shift a chunk of code, where the first line is okay, start with second line.
 "
-  (interactive "*r\nP")
+  (interactive "*")
   (let ((orig (copy-marker (point)))
         (beg start)
-        (end (copy-marker end))
-	need)
+        (end (copy-marker end)))
     (goto-char beg)
     (beginning-of-line)
     (setq beg (point))
     (skip-chars-forward " \t\r\n\f")
-    (py--indent-line-by-line beg end)
-    ;; (if (eq 4 (prefix-numeric-value line-by-line))
-    ;; 	(py--indent-line-by-line beg end)
-    ;;   (setq need (py-compute-indentation))
-    ;;   (if (< 0 (abs need))
-    ;; 	  (indent-region beg end need)
-    ;; 	(py--indent-line-by-line beg end))
-    ;;   (goto-char orig))
-    )
-  )
+    (py--indent-line-by-line beg end)))
 
 (defun py--beginning-of-buffer-position ()
   (point-min))
