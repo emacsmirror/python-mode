@@ -5763,7 +5763,7 @@ Travel empty lines "
   (interactive)
   (let ((orig (or pos (point)))
 	(char (or char (string-to-char comment-start)))
-	py-forward-comment-last)
+	py-forward-comment-last erg)
     (while (and (not (eobp))
 		(or
 		 (forward-comment 99999)
@@ -6557,17 +6557,6 @@ Returns beginning and end positions of region, a cons. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-(defun py-mark-top-level ()
-  "Mark top-level, take beginning of line positions. 
-
-Returns beginning and end positions of region, a cons. "
-  (interactive)
-  (let (erg)
-    (setq erg (py--mark-base-bol "top-level"))
-    (exchange-point-and-mark)
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
 (defun py-mark-try-block ()
   "Mark try-block, take beginning of line positions. 
 
@@ -6991,14 +6980,6 @@ Don't store data in kill ring. "
   (let ((erg (py--mark-base-bol "statement")))
     (delete-region (car erg) (cdr erg))))
 
-(defun py-delete-top-level ()
-  "Delete TOP-LEVEL at point until beginning-of-line.
-
-Don't store data in kill ring. "
-  (interactive)
-  (let ((erg (py--mark-base-bol "top-level")))
-    (delete-region (car erg) (cdr erg))))
-
 (defun py-delete-try-block ()
   "Delete TRY-BLOCK at point until beginning-of-line.
 
@@ -7070,14 +7051,14 @@ Don't store data in kill ring. "
     (and (setq val (get-register py-windows-config-register))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
 	 (jump-to-register py-windows-config-register))))
 
-(defun py-shell-execute-string-now (string &optional shell buffer proc output-buffer)
+(defun py-shell-execute-string-now (strg &optional shell buffer proc)
   "Send to Python interpreter process PROC \"exec STRING in {}\".
 and return collected output"
   (let* (wait
          (procbuf (or buffer (process-buffer proc) (progn (setq wait py-new-shell-delay) (py-shell nil nil shell))))
          (proc (or proc (get-buffer-process procbuf)))
 	 (cmd (format "exec '''%s''' in {}"
-		      (mapconcat 'identity (split-string string "\n") "\\n")))
+		      (mapconcat 'identity (split-string strg "\n") "\\n")))
 	 ;; TBD remove redundant outbuf
          (outbuf procbuf))
     ;; wait is used only when a new py-shell buffer was connected
@@ -7171,10 +7152,9 @@ Kind of an option 'follow', local shell sets `py-shell-name', enforces its use a
 (defun py-force-local-shell-off ()
   "Restore `py-shell-name' default value and `behaviour'. "
   (interactive "p")
-  (let* ((erg (toggle-force-local-shell 1)))
-    (when (or py-verbose-p (called-interactively-p 'any))
-      (message "py-shell-name default restored to: %s" py-shell-name)
-      (message "Enforce %s" py-shell-name))))
+  (toggle-force-local-shell 1)
+  (when (or py-verbose-p (called-interactively-p 'any))
+    (message "py-shell-name default restored to: %s" py-shell-name)))
 
 (defun toggle-force-py-shell-name-p (&optional arg)
   "If customized default `py-shell-name' should be enforced upon execution.
@@ -10446,14 +10426,11 @@ With interactive call, send it to the message buffer too. "
   (if (or arg (not py-match-paren-mode))
       (progn
 	(setq py-match-paren-mode t)
-        ;; 	(define-key python-mode-map (kbd (concat "<" py-match-paren-key ">")) 'py-match-paren))
         (setq py-match-paren-mode nil))))
 
 (defun py--match-end-finish (cui)
   (let (skipped remain)
     (unless (eq (current-column) cui)
-      ;; (unless (empty-line-p)
-      ;; (split-line))
       (when (< (current-column) cui)
 	(setq skipped (skip-chars-forward " \t" (line-end-position)))
 	(setq cui (- cui skipped))
@@ -10462,10 +10439,7 @@ With interactive call, send it to the message buffer too. "
 	    (progn
 	      (unless (empty-line-p) (split-line))
 	      (indent-to cui))
-	  (forward-char cui)
-
-	  ;; (forward-char (- (abs cui)))
-	  )
+	  (forward-char cui))
 	(unless (eq (char-before) 32)(insert 32)(forward-char -1))))))
 
 (defun py--match-paren-forward ()
@@ -10476,19 +10450,19 @@ With interactive call, send it to the message buffer too. "
       (py-forward-top-level-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-class-p)
-      (py-forward-class-bol cui)
+      (py-forward-class-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-def-p)
-      (py-forward-def-bol cui)
+      (py-forward-def-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-if-block-p)
-      (py-forward-if-block-bol cui)
+      (py-forward-if-block-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-try-block-p)
-      (py-forward-try-block-bol cui)
+      (py-forward-try-block-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-for-block-p)
-      (py-forward-for-block-bol cui)
+      (py-forward-for-block-bol)
       (py--match-end-finish cui))
      ((py--beginning-of-block-p)
       (py-forward-block-bol)
