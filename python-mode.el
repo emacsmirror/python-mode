@@ -7660,7 +7660,7 @@ Receives a buffer-name as argument"
 
 (defun py--grab-prompt-ps1 (proc buffer)
   (py--send-string-no-output "import sys")
-  (py--fast-send-string-intern "sys.ps1" proc buffer nil t))
+  (py--fast-send-string-intern "sys.ps1" proc buffer t))
 
 (defun py--start-fast-process (shell buffer)
   (let ((proc (start-process shell buffer shell)))
@@ -7859,7 +7859,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
     (switch-to-buffer (current-buffer))
     (py--fast-send-string-intern strg
 				 proc
-				 output-buffer py-store-result-p py-return-result-p)
+				 output-buffer py-return-result-p)
     (sit-for 0.1))))
 
 (defun py--delete-temp-file (tempfile &optional tempbuf)
@@ -9605,7 +9605,6 @@ Interactively, prompt for SYMBOL."
                              "Find location of: ")
                            nil nil symbol)
             symbol))
-         (orig (point))
          (local (or
                  (py--until-found (concat "class " symbol) imenu--index-alist)
                  (py--until-found symbol imenu--index-alist)))
@@ -17207,7 +17206,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."
 (defun py-fill-paren (&optional justify)
   "Paren fill function for `py-fill-paragraph'.
 JUSTIFY should be used (if applicable) as in `fill-paragraph'."
-  (interactive "*")
+  (interactive "*P")
   (save-restriction
     (save-excursion
       (let ((pps (parse-partial-sexp (point-min) (point))))
@@ -17218,7 +17217,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
 		   (paragraph-start "\f\\|[ \t]*$")
 		   (paragraph-separate ","))
 	      (when end (narrow-to-region beg end)
-		    (fill-region beg end)
+		    (fill-region beg end justify)
 		    (while (not (eobp))
 		      (forward-line 1)
 		      (py-indent-line)
@@ -17419,7 +17418,7 @@ See lp:1066489 "
   (interactive "r*")
   (let ((end (copy-marker end))
         (last (copy-marker (point)))
-        this-beg this-end)
+        this-beg)
     (save-excursion
       (save-restriction
         ;; (narrow-to-region beg end)
@@ -17524,7 +17523,7 @@ See lp:1066489 "
       (unless (empty-line-p) (newline)))
     (py--fill-fix-end thisend orig docstring delimiters-style)))
 
-(defun py--fill-docstring-last-line (thisbeg thisend beg end style orig first-line-p py-current-indent)
+(defun py--fill-docstring-last-line (thisend beg end)
   (widen)
   ;; (narrow-to-region thisbeg thisend)
   (goto-char thisend)
@@ -17587,7 +17586,7 @@ See lp:1066489 "
           ((save-excursion (goto-char end)
 			   (or (member (char-after) (list ?\" ?\'))
 			       (member (char-before) (list ?\" ?\'))))
-           (py--fill-docstring-last-line thisbeg thisend beg end style orig first-line-p py-current-indent))
+           (py--fill-docstring-last-line thisend beg end))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring)))
@@ -17649,7 +17648,6 @@ Fill according to `py-docstring-style' "
 ;; python-components-shift-forms
 
 
-(defalias 'py-shift-region-left 'py-shift-left)
 (defun py-shift-left (&optional count start end)
   "Dedent region according to `py-indent-offset' by COUNT times.
 
@@ -17660,7 +17658,6 @@ Returns indentation reached. "
     (when (and (called-interactively-p 'any) py-verbose-p) (message "%s" erg))
     erg))
 
-(defalias 'py-shift-region-right 'py-shift-right)
 (defun py-shift-right (&optional count beg end)
   "Indent region according to `py-indent-offset' by COUNT times.
 
@@ -18695,17 +18692,17 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
       (sit-for 1 t)
       (delete-region orig (point-max)))))
 
-(defun py--filter-result (string)
+(defun py--filter-result (strg)
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
+    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply strg)))
 
-(defun py--fast-send-string-intern (string proc output-buffer store return)
+(defun py--fast-send-string-intern (strg proc output-buffer return)
   (with-current-buffer output-buffer
     (process-send-string proc "\n")
     (let ((orig (point)))
-      (process-send-string proc string)
+      (process-send-string proc strg)
       (process-send-string proc "\n")
       (accept-process-output proc 5)
       (sit-for py-fast-completion-delay t)
@@ -18715,7 +18712,7 @@ Remove trailing newline"
       (when return
 	py-result))))
 
-(defun py--fast-send-string (string)
+(defun py--fast-send-string (strg)
   "Process Python strings, being prepared for large output.
 
 Output buffer displays \"Fast\"  by default
@@ -18726,8 +18723,8 @@ See also `py-fast-shell'
                   (py-fast-process))))
     ;;    (with-current-buffer py-fast-output-buffer
     ;;      (erase-buffer))
-    (process-send-string proc string)
-    (or (string-match "\n$" string)
+    (process-send-string proc strg)
+    (or (string-match "\n$" strg)
         (process-send-string proc "\n"))
     (accept-process-output proc 1)
     (switch-to-buffer py-fast-output-buffer)
@@ -18905,7 +18902,6 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (py-comment-auto-fill -1))
 
 ;; python-components-hide-show
-
 
 ;; (setq hs-block-start-regexp 'py-extended-block-or-clause-re)
 ;; (setq hs-forward-sexp-func 'py-forward-block)
@@ -19132,16 +19128,6 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-show-base 'minor-block))
 
-(defun py-hide-minor-block ()
-  "Hide minor-block at point. "
-  (interactive)
-  (py-hide-base 'minor-block))
-
-(defun py-show-minor-block ()
-  "Show minor-block at point. "
-  (interactive)
-  (py-show-base 'minor-block))
-
 (defun py-hide-paragraph ()
   "Hide paragraph at point. "
   (interactive)
@@ -19205,7 +19191,7 @@ completions on the current context."
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--fast--do-completion-at-point (process imports input orig py-exception-buffer code output-buffer)
+(defun py--fast--do-completion-at-point (process imports input orig code output-buffer)
   "Do completion at point for PROCESS."
   ;; send setup-code
   (let (py-return-result-p)
@@ -19213,10 +19199,7 @@ completions on the current context."
       ;; (message "%s" imports)
       (py--fast-send-string-no-output imports process output-buffer)))
   (let* ((completion
-	  (py--fast-completion-get-completions input process code))
-	 ;; (completion (when completions
-	 ;; (try-completion input completions)))
-	 newlist erg)
+	  (py--fast-completion-get-completions input process code)))
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
 	   nil)
@@ -19248,7 +19231,7 @@ completions on the current context."
 		 py-shell-module-completion-code)))
     (with-current-buffer py-buffer-name
       (erase-buffer))
-    (py--fast--do-completion-at-point proc imports word pos py-exception-buffer code py-buffer-name)))
+    (py--fast--do-completion-at-point proc imports word pos code py-buffer-name)))
 
 (defun py-fast-complete (&optional shell debug beg end word)
   "Complete word before point, if any.
@@ -19256,12 +19239,7 @@ completions on the current context."
 Use `py-fast-process' "
   (interactive)
   (setq py-last-window-configuration
-        (current-window-configuration))
-  (let (py-switch-buffers-on-execute-p
-	(py-fast-process-p t)
-	(py-fast-complete-p t)
-	(py-return-result-p t))
-    (py--complete-prepare shell debug beg end word t)))
+        (current-window-configuration)))
 
 ;; python-components-intern
 
