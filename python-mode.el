@@ -3194,7 +3194,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
             (setenv "PYTHONPATH" (concat
                                   pycomplete-directory
                                   (if path (concat path-separator path))))
-            (add-to-list 'load-path pycomplete-directory)
+            (push pycomplete-directory load-path)
             (require 'pycomplete)
             (add-hook 'python-mode-hook 'py-complete-initialize))
         (error "`py-install-directory' not set, see INSTALL")))))
@@ -3207,22 +3207,22 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (interactive)
   (let ((py-install-directory (py--normalize-directory py-install-directory)))
     (cond ((and (not (string= "" py-install-directory))(stringp py-install-directory))
-           (add-to-list 'load-path (expand-file-name py-install-directory))
-           (add-to-list 'load-path (concat (expand-file-name py-install-directory) "completion"))
-           (add-to-list 'load-path (concat (expand-file-name py-install-directory) "extensions"))
-           (add-to-list 'load-path (concat (expand-file-name py-install-directory) "test"))
-           (add-to-list 'load-path (concat (expand-file-name py-install-directory) "tools"))
-           (add-to-list 'load-path (concat (expand-file-name py-install-directory) "autopair")))
+           (push (expand-file-name py-install-directory) load-path)
+           (push (concat (expand-file-name py-install-directory) "completion")  load-path)
+           (push (concat (expand-file-name py-install-directory) "extensions")  load-path)
+           (push (concat (expand-file-name py-install-directory) "test") load-path)
+           (push (concat (expand-file-name py-install-directory) "tools")  load-path)
+           (push (concat (expand-file-name py-install-directory) "autopair")  load-path))
           (py-guess-py-install-directory-p
 	   (let ((guessed-py-install-directory (py-guess-py-install-directory)))
 	     (when guessed-py-install-directory
-	       (add-to-list 'load-path guessed-py-install-directory))))
+	       (push guessed-py-install-directory  load-path))))
           (t (error "Please set `py-install-directory', see INSTALL"))
           (when (called-interactively-p 'any) (message "%s" load-path)))))
 
 (unless py-install-directory
-  (add-to-list 'load-path default-directory)
-  (add-to-list 'load-path (concat default-directory "extensions")))
+  (push default-directory  load-path)
+  (push (concat default-directory "extensions")  load-path))
 
 (defun py-count-lines (&optional beg end)
   "Count lines in accessible part until current line.
@@ -8437,13 +8437,13 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 		   (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
 		   (looking-at "[ \t]*File")
 		   (replace-match " Buffer")))
-            (add-to-list 'py-error origline)
-            (add-to-list 'py-error (buffer-name exception-buffer))
+            (push origline py-error)
+            (push (buffer-name exception-buffer) py-error)
             (forward-line 1)
             (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
               (setq estring (match-string-no-properties 1))
               (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
-              (add-to-list 'py-error ecode t))))))
+              (push 'py-error ecode))))))
     py-error))
 
 (defun py--find-next-exception-prepare (direction start)
@@ -8570,7 +8570,7 @@ completions on the current context."
     (when erg
       (dolist (elt completion)
 	(unless (string= erg elt)
-	  (add-to-list 'newlist elt)))
+	  (push elt newlist)))
       (if (< 1 (length newlist))
 	  (with-output-to-temp-buffer py-python-completions
 	    (display-completion-list
@@ -10099,7 +10099,7 @@ i.e. spaces, tabs, carriage returns, newlines and newpages. "
              (local-file (file-relative-name
                           temp-file
                           (file-name-directory (py--buffer-filename-remote-maybe)))))
-        (add-to-list 'flymake-allowed-file-name-masks (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))))
+        (push (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))) flymake-allowed-file-name-masks)
         (list command (list local-file)))
     (message "%s" "flymake needs a `file-name'. Please save before calling.")))
 
@@ -10198,7 +10198,7 @@ Maybe call M-x describe-variable RET to query its value. "
 
                   (prin1-to-string (symbol-value name)))))
           (if state
-              (add-to-list 'variableslist (cons (prin1-to-string name) state))
+              (push (cons (prin1-to-string name) state) variableslist)
             (message "don't see a state for %s" (prin1-to-string name))))
         (forward-line 1))
       (setq variableslist (nreverse variableslist))
@@ -11402,7 +11402,7 @@ When `delete-active-region' and (region-active-p), delete region "
 
     (setenv "VIRTUAL_ENV" dir)
     (virtualenv-add-to-path (concat (py--normalize-directory dir) "bin"))
-    (add-to-list 'exec-path (concat (py--normalize-directory dir) "bin"))
+    (push (concat (py--normalize-directory dir) "bin")  exec-path)
 
     (setq virtualenv-name dir)))
 
@@ -19749,8 +19749,7 @@ as it leaves your system default unchanged."
   (message "Warning: %s" "no abbrev-file found, customize `abbrev-file-name' in order to make mode-specific abbrevs work. "))
 
 ;; ;
-(add-to-list 'hs-special-modes-alist
-             (list
+(push (list
               'python-mode
               ;; start regex
               (concat (if py-hide-show-hide-docstrings
@@ -19766,7 +19765,7 @@ as it leaves your system default unchanged."
               ;; forward-sexp function
               (lambda (arg)
                 (py-forward-block-or-clause))
-              nil))
+              nil) hs-special-modes-alist)
 
 ;; ;
 
@@ -19778,42 +19777,36 @@ Don't save anything for STR matching `py-input-filter-re' "
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
 
-(add-to-list 'same-window-buffer-names (purecopy "*Python*"))
-(add-to-list 'same-window-buffer-names (purecopy "*IPython*"))
+(push (purecopy "*Python*")  same-window-buffer-names)
+(push (purecopy "*IPython*")  same-window-buffer-names)
 
-(add-to-list 'auto-mode-alist (cons (purecopy "\\.py\\'")  'python-mode))
+(push (cons (purecopy "\\.py\\'")  'python-mode)  auto-mode-alist)
 
 ;; Python Macro File
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pym\'")  'python-mode))
+(push (cons (purecopy "\.pym\'")  'python-mode)  auto-mode-alist)
 
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pyc\'")  'python-mode))
+(push (cons (purecopy "\.pyc\'")  'python-mode)  auto-mode-alist)
 
 ;; Pyrex Source
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pyx\'")  'python-mode))
+(push (cons (purecopy "\.pyx\'")  'python-mode) auto-mode-alist)
 
 ;; Python Optimized Code
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pyo\'")  'python-mode))
+(push (cons (purecopy "\.pyo\'")  'python-mode) auto-mode-alist)
 
 ;; Pyrex Definition File
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pxd\'")  'python-mode))
+(push (cons (purecopy "\.pxd\'")  'python-mode) auto-mode-alist)
 
 ;; Python Repository
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pyr\'")  'python-mode))
+(push (cons (purecopy "\.pyr\'")  'python-mode)  auto-mode-alist)
 
 ;; Python Path Configuration
-(add-to-list 'auto-mode-alist (cons (purecopy "\.pth\'")  'python-mode))
+(push (cons (purecopy "\.pth\'")  'python-mode)  auto-mode-alist)
 
 ;; Python Wheels
-(add-to-list 'auto-mode-alist (cons (purecopy "\.whl\'")  'python-mode))
+(push (cons (purecopy "\.whl\'")  'python-mode)  auto-mode-alist)
 
-;;  (add-to-list 'interpreter-mode-alist
-;;  (cons (purecopy "[bi]*python[0-9.]*") 'python-mode))
-;;
-;;  (add-to-list 'interpreter-mode-alist
-;;  (cons (purecopy "jython[0-9.]*") 'jython-mode))
-
-(add-to-list 'magic-mode-alist
-	     '("!#[ \t]*/.*[jp]ython[0-9.]*" . python-mode))
+(push '("!#[ \t]*/.*[jp]ython[0-9.]*" . python-mode) magic-mode-alist
+	     )
 
 ;;  lp:1355458, what about using `magic-mode-alist'?
 
@@ -20875,7 +20868,7 @@ Used by variable `which-func-functions' "
 	     (setq limit (py-backward-top-level))
 	     (looking-at re))
 	(progn
-	  (add-to-list 'erg (match-string-no-properties 2))
+	  (push (match-string-no-properties 2)  erg)
 	  (setq indent (current-indentation)))
       (goto-char orig)
       (while (and
@@ -20888,7 +20881,7 @@ Used by variable `which-func-functions' "
       (when (and backward
 		 (goto-char backward)
 		 (looking-at re))
-	(add-to-list 'erg (match-string-no-properties 2))
+	(push (match-string-no-properties 2)  erg)
 	(setq indent (current-indentation))))
     ;; (goto-char orig))
     (if erg
@@ -26214,8 +26207,7 @@ See available customizations listed in files variables-python-mode at directory 
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
   (and py-guess-py-install-directory-p (py-set-load-path))
-  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (py--buffer-filename-remote-maybe))))
-  (and py-autopair-mode
+    (and py-autopair-mode
        (load-library "autopair")
        (add-hook 'python-mode-hook
                  #'(lambda ()
@@ -26372,7 +26364,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (py--python-send-completion-setup-code)
   (py--python-send-ffap-setup-code)
   (py--python-send-eldoc-setup-code)
-  (set-process-sentinel (get-buffer-process (current-buffer))  #'shell-write-history-on-exit)
+  (set-process-sentinel (get-buffer-process (current-buffer)) #'shell-write-history-on-exit)
 
   ;; (setq comint-input-ring-file-name
   ;;       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
@@ -26395,12 +26387,10 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
       (progn
   	(add-hook 'completion-at-point-functions
   		  py-complete-function nil 'local)
-  	(add-to-list (make-local-variable 'comint-dynamic-complete-functions)
-  		     py-complete-function))
+  	(push py-complete-function comint-dynamic-complete-functions))
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)
-    (add-to-list (make-local-variable 'comint-dynamic-complete-functions)
-  		 'py-shell-complete))
+    (push 'py-shell-complete  comint-dynamic-complete-functions))
   (when py-sexp-use-expression-p
     (define-key py-python-shell-mode-map [(control meta f)] 'py-forward-expression)
     (define-key py-python-shell-mode-map [(control meta b)] 'py-backward-expression))
@@ -26435,12 +26425,10 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
       (progn
   	(add-hook 'completion-at-point-functions
   		  py-complete-function nil 'local)
-  	(add-to-list (make-local-variable 'comint-dynamic-complete-functions)
-  		     py-complete-function))
+  	(push py-complete-function  comint-dynamic-complete-functions))
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)
-    (add-to-list (make-local-variable 'comint-dynamic-complete-functions)
-  		 'py-shell-complete))
+    (push 'py-shell-complete  comint-dynamic-complete-functions))
   (when py-shell-menu
     (easy-menu-add py-menu))
   ;; Running py-ipython-shell-mode-hook seems to need some delay
