@@ -3,8 +3,10 @@
  Code is also provided via melpa.org:
 
  (require 'package)
+ 
  (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/") t)
+             
  (package-initialize)
 
   M-x list-packages RET and select python-mode.el
