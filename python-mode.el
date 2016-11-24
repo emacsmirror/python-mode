@@ -8178,7 +8178,7 @@ Avoid empty lines at the beginning. "
       (insert strg)
       (goto-char 1)
       (when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
-	(dotimes (i erg)
+	(dotimes (_ erg)
 	  (indent-rigidly-left (point-min) (point-max))))
       (unless (py--beginning-of-statement-p)
 	(py-forward-statement))
@@ -10253,7 +10253,7 @@ Affected by `py-dedent-keep-relative-column'. "
   (or arg (setq arg 1))
   (let ((orig (copy-marker (point)))
         erg)
-    (dotimes (i arg)
+    (dotimes (_ arg)
       (let* ((cui (current-indentation))
              (remain (% cui py-indent-offset))
              (indent (* py-indent-offset (/ cui py-indent-offset))))
@@ -10813,9 +10813,7 @@ of the first definition found."
                   sublist '())
             (while (and (re-search-forward "^[ \t]*\\(def\\|class\\)[ \t]+\\(\\sw+\\)" (or thisend end) t 1)(not (nth 8 (parse-partial-sexp (point-min) (point)))))
               (let* ((pos (match-beginning 0))
-                     (name (match-string-no-properties 2))
-                     (classname (concat "class " name))
-                     (thisend (or thisend (save-match-data (py--end-of-def-or-class-position)))))
+                     (name (match-string-no-properties 2)))
 		(push (cons (concat " " name) pos) sublist)))
             (if classname
                 (progn
