@@ -3175,7 +3175,7 @@ Used only, if `py-install-directory' is empty. "
     (concat (py--normalize-pythonpath (getenv "PYTHONPATH")) py-pythonpath)))
 
 (defun py-load-pymacs ()
-  "Load Pymacs as delivered with python-mode.el.
+  "Load Pymacs as delivered.
 
 Pymacs has been written by François Pinard and many others.
 See original source: http://pymacs.progiciels-bpi.ca"
@@ -19183,7 +19183,7 @@ Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
 	 (py--fast-send-string-intern
-	  (format completion-code input) process py-buffer-name nil t)))
+	  (format completion-code input) process py-buffer-name t)))
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -19218,7 +19218,7 @@ completions on the current context."
 
     nil))
 
-(defun py--fast-complete-base (shell pos beg end word imports exception-buffer)
+(defun py--fast-complete-base (shell pos word imports exception-buffer)
   (let* ((shell (or shell (py-choose-shell nil t)))
 	 (py-buffer-name (py-shell nil nil shell nil t))
 	 (proc (get-buffer-process py-buffer-name))
@@ -19235,7 +19235,8 @@ completions on the current context."
 Use `py-fast-process' "
   (interactive)
   (setq py-last-window-configuration
-        (current-window-configuration)))
+        (current-window-configuration))
+  (py--complete-prepare shell beg end word t))
 
 ;; python-components-intern
 
