@@ -21183,6 +21183,9 @@ Use current region unless optional args BEG END are delivered."
 
 ;; python-components-menu
 
+(defvar py-menu nil
+  "Make a dynamically bound variable py-menu")
+
 (and (ignore-errors (require 'easymenu) t)
      ;; (easy-menu-define py-menu map "Python Tools"
      ;;           `("PyTools"
