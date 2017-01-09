@@ -1721,9 +1721,6 @@ without the user's realization (e.g. to perform completion)."
   :tag "py-remove-cwd-from-path"
   :group 'python-mode)
 
-(defvar py-ignore-result-p nil
-  "Internally used, for example by setup-functions. ")
-
 (defcustom py-shell-local-path ""
   "If `py-use-local-default' is non-nil, `py-shell' will use EXECUTABLE indicated here incl. path. "
 
@@ -2909,7 +2906,6 @@ See also `py-object-reference-face'"
 
 (defun py--python-send-setup-code-intern (name &optional msg)
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
-	(py-ignore-result-p t)
 	(buf (current-buffer)))
     (unless (file-readable-p setup-file)
       (with-temp-buffer
@@ -2934,8 +2930,7 @@ See also `py-object-reference-face'"
   "Setup IPython v0.11 or greater.
 
 Used by `py-ipython-module-completion-string'"
-  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-ipython-module-completion.py"))
-	(py-ignore-result-p t))
+  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-ipython-module-completion.py")))
     (unless (file-readable-p setup-file)
       (with-temp-buffer
 	(insert py-ipython-module-completion-code)
@@ -10284,7 +10279,7 @@ Receives a buffer-name as argument"
 	 (mapconcat 'identity py-python3-command-args " "))
 	(t (mapconcat 'identity py-python-command-args " "))))
 
-;;;###autoload 
+;;;###autoload
 (defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch)
   "Start an interactive Python interpreter in another window.
   Interactively, \\[universal-argument] prompts for a new buffer-name.
@@ -10372,7 +10367,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   (unless py-debug-p
     (when tempfile (py-delete-temporary tempfile tempbuf))))
 
-(defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch)
+(defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch return)
   "Update variables. "
   (setq py-error nil)
   (let* ((exception-buffer (current-buffer))
@@ -10390,12 +10385,12 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	    (py-count-lines (point-min) end)))
 	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
 	 (shell (or
-		  (and shell
-		       ;; shell might be specified in different ways
-		       (or (and (stringp shell) shell)
-			   (ignore-errors (eval shell))
-			   (and (symbolp shell) (format "%s" shell))))
-		  (py-choose-shell nil fast)))
+		 (and shell
+		      ;; shell might be specified in different ways
+		      (or (and (stringp shell) shell)
+			  (ignore-errors (eval shell))
+			  (and (symbolp shell) (format "%s" shell))))
+		 (py-choose-shell nil fast)))
 	 (execute-directory
 	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
 		((and py-use-current-dir-when-execute-p (buffer-file-name))
@@ -10412,13 +10407,15 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (or proc (get-buffer-process buffer)
-		   (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch)))))
+		   (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch))))
+	 (fast (or fast py-fast-process-p))
+	 (return (or return py-return-result-p)))
     (setq py-buffer-name buffer)
-    (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end shell fast)
+    (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end shell fast return)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
       (py--shell-manage-windows buffer exception-buffer split switch))))
 
-(defun py--send-to-fast-process (strg proc output-buffer)
+(defun py--send-to-fast-process (strg proc output-buffer return)
   "Called inside of `py--execute-base-intern' "
   (let ((output-buffer (or output-buffer (process-buffer proc))))
   (with-current-buffer output-buffer
@@ -10446,14 +10443,14 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	(setq erg (py--execute-file-base proc py-tempfile nil procbuf origline)))
     erg))
 
-(defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end which-shell fast)
+(defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end which-shell &optional fast return)
   "Select the handler.
 
 When optional FILE is `t', no temporary file is needed. "
   (let ()
     (setq py-error nil)
     (py--update-execute-directory proc buffer execute-directory)
-    (cond (fast (py--send-to-fast-process strg proc buffer))
+    (cond (fast (py--send-to-fast-process strg proc buffer return))
 	  ;; enforce proceeding as python-mode.el v5
 	  (python-mode-v5-behavior-p
 	   (py-execute-python-mode-v5 start end py-exception-buffer origline))
@@ -10638,7 +10635,7 @@ Returns position where output starts. "
       (goto-char (point-max))
       (setq orig (copy-marker (point)))
       (py-send-string cmd proc)
-      (unless py-ignore-result-p
+      (when py-return-result-p
 	(setq erg (py--postprocess-comint buffer origline orig))
 	(if py-error
 	    (setq py-error (prin1-to-string py-error))
@@ -21246,11 +21243,9 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
       (process-send-string proc "\n")
       (accept-process-output proc 5)
       (sit-for py-fast-completion-delay t)
-      ;; sets py-result
-      (unless py-ignore-result-p
-	(setq py-result (py--filter-result (py--fetch-result orig))))
       (when return
-	py-result))))
+	(setq py-result (py--filter-result (py--fetch-result orig))))
+	py-result)))
 
 (defun py--fast-send-string (strg)
   "Process Python strings, being prepared for large output.
