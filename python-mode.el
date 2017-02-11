@@ -133,6 +133,14 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defcustom py-shift-require-transient-mark-mode-p t
+ "If py-shift commands on active regions should require transient-mark-mode.
+
+Default is t " 
+
+:type 'boolean
+:group 'python-mode)
+
 (defvar py-fast-output-buffer "*Py-Fast-Output-Buffer*"
   "Default buffer-name for fast-processes")
 
@@ -20205,8 +20213,10 @@ Returns indentation reached. "
 	   (inhibit-point-motion-hooks t)
            deactivate-mark
            (beg (cond (start)
-		      ;; (use-region-p)
-                      ((and (mark) (not (eq (mark) (point))))
+		      ((and py-shift-require-transient-mark-mode-p
+			    (use-region-p))
+		       (region-beginning)) 
+                      ((and (not py-shift-require-transient-mark-mode-p)(mark) (not (eq (mark) (point))))
                        (save-excursion
                          (goto-char
                           (region-beginning))))
