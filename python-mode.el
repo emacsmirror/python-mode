@@ -2945,7 +2945,7 @@ Used by `py-ipython-module-completion-string'"
 
 (defun py--at-raw-string ()
   "If at beginning of a raw-string. "
-  (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+  (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R))))
 
 (defun py--docstring-p (pos)
   "Check to see if there is a docstring at POS."
@@ -8132,7 +8132,7 @@ computing indents"
           (py-backward-statement orig done limit ignore-in-string-p repeat))
 	 ;; at raw-string
 	 ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
-	 ((py--at-raw-string)
+	 ((and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
 	  (forward-char -1)
 	  (py-backward-statement orig done limit ignore-in-string-p repeat))
 	 ;; BOL or at space before comment
