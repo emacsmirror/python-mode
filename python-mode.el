@@ -2511,8 +2511,10 @@ See py-no-outdent-re-raw for better readable content ")
 (defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
   "Matches the beginning of a class definition. ")
 
-(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]"
-  "Matches the beginning of a class- or functions definition. ")
+(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]+\\([[:alnum:]_]*\\):?"
+  "Matches the beginning of a class- or functions definition.
+
+Second group grabs the name")
 
 ;; (setq py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]")
 
@@ -22923,7 +22925,13 @@ Must find start first "
 				    (symbol-value 'py-extended-block-or-clause-re))
 				   (t (symbol-value regexp)))
 			   regexp))
-	     (indent (or indent (if (py--beginning-of-statement-p)
+	     (indent (or indent
+			 ;; avoid costly moves by statement
+			 (when (and (not (nth 8 pps))
+				  (or (looking-back py-decorator-re)
+				      (looking-back (concat (symbol-value regexp) ".+"))))
+			     (current-indentation)) 
+			 (if (py--beginning-of-statement-p)
 				    (current-indentation)
 				  (save-excursion (py-backward-statement) (current-indentation)))))
 
@@ -22931,9 +22939,13 @@ Must find start first "
 	     (this
 	      (cond ((and (looking-at thisregexp) (not (or (nth 1 pps) (nth 8 pps))))
 		     (point))
-		    ((looking-back py-decorator-re)
+		    ((and (not (nth 8 pps))(looking-back py-decorator-re))
 		     (and (re-search-forward thisregexp nil t 1)
 			  (match-beginning 0)))
+		    ;; when building the index, avoid costly moves by
+		    ;; statement
+		    ((and (not (nth 8 pps))(looking-back (symbol-value regexp)))
+		     (match-beginning 0)) 
 		    (t (py--go-to-keyword thisregexp indent))))
 	     erg)
 	(cond
@@ -23239,7 +23251,9 @@ Used by variable `which-func-functions' "
   (interactive)
   (let* ((orig (or orig (point)))
 	 (backindent 99999)
-	 (re (concat py-def-or-class-re "\\([[:alnum:]_]+\\)"))
+	 (re py-def-or-class-re
+	  ;; (concat py-def-or-class-re "\\([[:alnum:]_]+\\)")
+	  )
          erg forward indent backward limit)
     (if
 	(and (looking-at re)
