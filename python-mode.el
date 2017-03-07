@@ -2511,7 +2511,7 @@ See py-no-outdent-re-raw for better readable content ")
 (defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
   "Matches the beginning of a class definition. ")
 
-(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]+\\([[:alnum:]_]*\\):?"
+(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]+\\([[:alnum:]_]*\\)"
   "Matches the beginning of a class- or functions definition.
 
 Second group grabs the name")
@@ -2526,6 +2526,10 @@ Second group grabs the name")
   (list
    "async for"
    "async with"
+   "async def"
+   "async class"
+   "class"
+   "def"
    "elif"
    "else"
    "except"
@@ -2547,6 +2551,13 @@ Second group grabs the name")
    (regexp-opt  py-block-or-clause-re-raw)
    "\\)\\_>[( \t]*.*:?")
   "See py-block-or-clause-re-raw, which it reads. ")
+
+;; (setq py-block-or-clause-re
+;;   (concat
+;;    "[ \t]*\\_<\\("
+;;    (regexp-opt  py-block-or-clause-re-raw)
+;;    "\\)\\_>[( \t]*.*:?"))
+
 
 (defcustom py-block-re-raw
   (list
@@ -8421,6 +8432,11 @@ From a programm use macro `py-backward-comment' instead "
       (cond ((eq 0 (current-indentation))
 	     (when (looking-at regexp) (setq erg (point)))
 	     (setq done t))
+	    ;; ((and (< (current-indentation) maxindent)
+	    ;; 	  (setq maxindent (current-indentation))
+	    ;; 	  (looking-at regexp))
+	    ;;  (setq erg (point))
+	    ;;  (setq done t))
 	    ((and (<= (current-indentation) maxindent)
 		  (setq maxindent (current-indentation))
 		  (looking-at regexp))
@@ -21833,7 +21849,6 @@ Returns beginning of FORM if successful, nil otherwise"
                              (cdr (ar--go-to-keyword (symbol-value regexp)
                                                     (- (progn (if (ar--beginning-of-statement-p) (current-indentation) (save-excursion (ar-backward-statement) (current-indentation)))) py-indent-offset)))))))
         (when lc (beginning-of-line) (setq erg (point)))))
-    ;; (when (and ar-verbose-p iact) (message "%s" erg))
     erg))
 
 (defun py--indent-prepare (inter-re)
@@ -22928,12 +22943,12 @@ Must find start first "
 	     (indent (or indent
 			 ;; avoid costly moves by statement
 			 (when (and (not (nth 8 pps))
-				  (or (looking-back py-decorator-re)
-				      (looking-back (concat (symbol-value regexp) ".+"))))
-			     (current-indentation)) 
+				    (or (looking-back py-decorator-re)
+					(looking-back (concat (symbol-value regexp) ".+"))))
+			   (current-indentation))
 			 (if (py--beginning-of-statement-p)
-				    (current-indentation)
-				  (save-excursion (py-backward-statement) (current-indentation)))))
+			     (current-indentation)
+			   (save-excursion (py-backward-statement) (current-indentation)))))
 
 	     ;; start of form maybe inside
 	     (this
@@ -22945,8 +22960,9 @@ Must find start first "
 		    ;; when building the index, avoid costly moves by
 		    ;; statement
 		    ((and (not (nth 8 pps))(looking-back (symbol-value regexp)))
-		     (match-beginning 0)) 
+		     (match-beginning 0))
 		    (t (py--go-to-keyword thisregexp indent))))
+	     ;; (done done)
 	     erg)
 	(cond
 	 (this (setq erg (py--go-down-when-found-upward regexp)))
@@ -22954,10 +22970,17 @@ Must find start first "
 	(if (< orig (point))
 	    (and erg bol (setq erg (py--beginning-of-line-form erg)))
 	  (setq erg nil)
-	  (unless (eq done orig)
+	  ;; Prevent eternal loop
+	  (unless done
 	    (when
 		(py-forward-statement)
-	      (py--end-base regexp (point) decorator bol indent (point)))))
+	      (py--end-base regexp (point) decorator bol
+			    ;; update required indent
+			    (if (py--beginning-of-statement-p)
+				(- (current-indentation) py-indent-offset)
+			      (save-excursion (py-backward-statement) (- (current-indentation) py-indent-offset))) t
+			    ;; indent
+			    ))))
 	erg))))
 
 (defun py--look-downward-for-beginning (regexp)
