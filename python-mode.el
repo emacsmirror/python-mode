@@ -1375,7 +1375,7 @@ Don't split when max number of displayed windows is reached. "
   :tag "py-split-windows-on-execute-function"
   :group 'python-mode)
 
-(defcustom py-shell-fontify-style 'all
+(defcustom py-shell-fontify-style nil
   "Fontify current input resp. output in Python shell. Default is nil.
 
 INPUT will leave output unfontified.
