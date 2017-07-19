@@ -19,10 +19,17 @@
   company-based auto-completion - alongside with
   `py-company-pycomplete-p'.
 
-* Troubleshooting
   On systems which run Python3 as default
   setting
   export PYMACS_PYTHON=python2
   was reported being useful.
   Newer Pymacs should not need this.
 
+* Troubleshooting
+  When encountering a bug, maybe
+  
+  cd path/to/python-mode.el
+  emacs -Q python-mode.el
+  M-x eval-buffer RET
+  
+  and try again
