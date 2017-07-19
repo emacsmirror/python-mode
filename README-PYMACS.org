@@ -29,7 +29,9 @@
   When encountering a bug, maybe
   
   cd path/to/python-mode.el
+  
   emacs -Q python-mode.el
+  
   M-x eval-buffer RET
   
   and try again
