@@ -1,4 +1,4 @@
 Please reporte bugs
 
-Before reporting a bug please update via M-x list-packages RET.
-Should the bug still occur, download from here. 
+Always report a bug from latest version. Maybe update via M-x list-packages RET.
+Or download from here. 
