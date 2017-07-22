@@ -755,7 +755,7 @@ Examples from PEP8"
   :tag "py-closing-list-space"
   :group 'python-mode)
 
-(defcustom py-max-specpdl-size max-specpdl-size
+(defcustom py-max-specpdl-size 99
   "Heuristic exit. Limiting number of recursive calls by py-forward-statement and related functions. Default is max-specpdl-size.
 
 This threshold is just an approximation. It might set far higher maybe.
@@ -8062,7 +8062,7 @@ computing indents"
   (interactive)
   (save-restriction
     (unless (bobp)
-      (let* ((repeat (or (and repeat (1+ repeat)) 999))
+      (let* ((repeat (or (and repeat (1+ repeat)) 0))
 	     (orig (or orig (point)))
              (pps (parse-partial-sexp (or limit (point-min))(point)))
              (done done)
@@ -8083,8 +8083,10 @@ computing indents"
 	  (goto-char (nth 8 pps))
 	  (py-backward-statement orig done limit ignore-in-string-p repeat))
 	 ((nth 4 pps)
-	  (goto-char (nth 8 pps))
-	  (skip-chars-backward " \t\r\n\f")
+	  (while (ignore-errors (goto-char (nth 8 pps)))
+	    (skip-chars-backward " \t\r\n\f")
+	    (setq pps (parse-partial-sexp (line-beginning-position) (point)))
+	    )
 	  (py-backward-statement orig done limit ignore-in-string-p repeat))
          ((nth 1 pps)
           (goto-char (1- (nth 1 pps)))
@@ -8124,7 +8126,7 @@ computing indents"
 	  (skip-chars-backward ";")
 	  (py-backward-statement orig done limit ignore-in-string-p repeat))
 	 ;; travel until indentation or semicolon
-	 ((and (not done) (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))))
+	 ((and (not done) (py--skip-to-semicolon-backward))
 	  (setq done t)
 	  (py-backward-statement orig done limit ignore-in-string-p repeat))
 	 ;; at current indent
@@ -15269,7 +15271,7 @@ Return position if form found, nil otherwise.
 REGEXP is a quoted symbol "
   (unless (bobp)
     (let* ((orig (or orig (point)))
-	   (repeat (or (and repeat (1+ repeat)) 999))
+	   (repeat (or (and repeat (1+ repeat)) 0))
 	   erg name command)
       (if (< py-max-specpdl-size repeat)
 	  (error "`py-up-base' reached loops max.")
@@ -23415,7 +23417,7 @@ These would interfere when inserting forms heading a block"
 (defun py--skip-to-semicolon-backward (&optional limit)
   "Fetch the beginning of statement after a semicolon.
 
-Returns position reached if point was moved. "
+Returns `t' if point was moved"
   (prog1
       (< 0 (abs (skip-chars-backward "^;" (or limit (line-beginning-position)))))
     (skip-chars-forward " \t" (line-end-position))))
