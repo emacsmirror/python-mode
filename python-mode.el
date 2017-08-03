@@ -23374,16 +23374,18 @@ Returns beginning of FORM if successful, nil otherwise"
 		(or (py--beginning-of-statement-p)
 		    (py-backward-statement))
 		;; maybe after last statement?
-		(when (save-excursion
-			(< (py-forward-statement) orig))
-		  (goto-char orig))
-		(cond ((looking-back "^[ \t]*" (line-beginning-position))
-		       (current-indentation))
-		      (t (progn (back-to-indentation)
-				(cond ((eq 0 (current-indentation))
-				       (current-indentation))
-				      ((and inter-re (looking-at (symbol-value inter-re)))
-				       (current-indentation)))))))))
+		(if (save-excursion
+		      (< (py-forward-statement) orig))
+		    (progn (goto-char orig)
+			   (back-to-indentation) 
+			   (current-indentation))
+		  (cond ((looking-back "^[ \t]*" (line-beginning-position))
+			 (current-indentation))
+			(t (progn (back-to-indentation)
+				  (cond ((eq 0 (current-indentation))
+					 (current-indentation))
+					((and inter-re (looking-at (symbol-value inter-re)))
+					 (current-indentation))))))))))
 	 erg)
     ;; def and class need lesser value
     (when (and
@@ -23474,12 +23476,14 @@ Returns `t' if point was moved"
 
 Returns position if successful, nil otherwise "
   (interactive)
-  (let (erg)
+  (let (erg done)
     (unless (bobp)
-      (while (and (not (bobp))
-		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1))
-		  (nth 8 (parse-partial-sexp (point-min) (point)))
-		  (setq erg nil)))
+      (while (and (not done)(not (bobp))
+		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1)))
+	(if
+	    (nth 8 (parse-partial-sexp (point-min) (point)))
+	    (setq erg nil)
+	  (setq done t)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
