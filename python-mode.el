@@ -11385,6 +11385,7 @@ problem as best as we can determine."
 
       (cond ((string= filename "")
              (format "(Skipping empty filename)"))
+
             ((file-exists-p filename)
              (list lineno (find-file-noselect filename)))
 
