@@ -11383,7 +11383,10 @@ problem as best as we can determine."
                                    block))
            funcbuffer)
 
-      (cond ((file-exists-p filename)
+      (cond ((string= filename "")
+             (format "(Skipping empty filename)"))
+
+            ((file-exists-p filename)
              (list lineno (find-file-noselect filename)))
 
             ((file-exists-p (py--pdbtrack-map-filename filename))
