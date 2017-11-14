@@ -7352,13 +7352,13 @@ Returns the string inserted."
 ;; python-components-backward-forms
 
 (defun py-backward-region ()
-  "Go to the beginning of current region"
+  "Go to the beginning of current region."
   (interactive)
   (let ((beg (region-beginning)))
     (when beg (goto-char beg))))
 
 (defun py-backward-block (&optional indent)
-  "Go to beginning of `block'.
+  "Go to beginning of `block' according to INDENT.
 
 If already at beginning, go one `block' backward.
 Returns beginning of `block' if successful, nil otherwise"
@@ -7366,7 +7366,7 @@ Returns beginning of `block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-block-re 'py-block-re (called-interactively-p 'any)))
 
 (defun py-backward-block-or-clause (&optional indent)
-  "Go to beginning of `block-or-clause'.
+  "Go to beginning of `block-or-clause' according to INDENT.
 
 If already at beginning, go one `block-or-clause' backward.
 Returns beginning of `block-or-clause' if successful, nil otherwise"
@@ -7375,7 +7375,7 @@ Returns beginning of `block-or-clause' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-class (&optional indent decorator bol)
-  "Go to beginning of `class'.
+  "Go to beginning of `class' according to INDENT.
 
 If already at beginning, go one `class' backward.
 Returns beginning of `class' if successful, nil otherwise"
@@ -7383,7 +7383,7 @@ Returns beginning of `class' if successful, nil otherwise"
   (py--backward-prepare indent 'py-class-re 'py-class-re (called-interactively-p 'any) decorator bol))
 
 (defun py-backward-clause (&optional indent)
-  "Go to beginning of `clause'.
+  "Go to beginning of `clause' according to INDENT.
 
 If already at beginning, go one `clause' backward.
 Returns beginning of `clause' if successful, nil otherwise"
@@ -7392,7 +7392,7 @@ Returns beginning of `clause' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-def (&optional indent decorator bol)
-  "Go to beginning of `def'.
+  "Go to beginning of `def' according to INDENT.
 
 If already at beginning, go one `def' backward.
 Returns beginning of `def' if successful, nil otherwise"
@@ -7401,7 +7401,7 @@ Returns beginning of `def' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-def-or-class (&optional indent decorator bol)
-  "Go to beginning of `def-or-class'.
+  "Go to beginning of `def-or-class' according to INDENT.
 
 If already at beginning, go one `def-or-class' backward.
 Returns beginning of `def-or-class' if successful, nil otherwise"
@@ -7409,7 +7409,7 @@ Returns beginning of `def-or-class' if successful, nil otherwise"
   (py--backward-prepare indent 'py-def-or-class-re 'py-def-or-class-re (called-interactively-p 'any) decorator bol))
 
 (defun py-backward-elif-block (&optional indent)
-  "Go to beginning of `elif-block'.
+  "Go to beginning of `elif-block' according to INDENT.
 
 If already at beginning, go one `elif-block' backward.
 Returns beginning of `elif-block' if successful, nil otherwise"
@@ -7417,7 +7417,7 @@ Returns beginning of `elif-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-elif-block-re 'py-elif-block-re (called-interactively-p 'any)))
 
 (defun py-backward-else-block (&optional indent)
-  "Go to beginning of `else-block'.
+  "Go to beginning of `else-block' according to INDENT.
 
 If already at beginning, go one `else-block' backward.
 Returns beginning of `else-block' if successful, nil otherwise"
@@ -7425,7 +7425,7 @@ Returns beginning of `else-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-else-block-re 'py-else-block-re (called-interactively-p 'any)))
 
 (defun py-backward-except-block (&optional indent)
-  "Go to beginning of `except-block'.
+  "Go to beginning of `except-block' according to INDENT.
 
 If already at beginning, go one `except-block' backward.
 Returns beginning of `except-block' if successful, nil otherwise"
@@ -7433,7 +7433,7 @@ Returns beginning of `except-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-except-block-re 'py-except-block-re (called-interactively-p 'any)))
 
 (defun py-backward-for-block (&optional indent)
-  "Go to beginning of `for-block'.
+  "Go to beginning of `for-block' according to INDENT.
 
 If already at beginning, go one `for-block' backward.
 Returns beginning of `for-block' if successful, nil otherwise"
@@ -7441,7 +7441,7 @@ Returns beginning of `for-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-for-block-re 'py-for-block-re (called-interactively-p 'any)))
 
 (defun py-backward-if-block (&optional indent)
-  "Go to beginning of `if-block'.
+  "Go to beginning of `if-block' according to INDENT.
 
 If already at beginning, go one `if-block' backward.
 Returns beginning of `if-block' if successful, nil otherwise"
@@ -7449,7 +7449,7 @@ Returns beginning of `if-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-if-block-re 'py-if-block-re (called-interactively-p 'any)))
 
 (defun py-backward-minor-block (&optional indent)
-  "Go to beginning of `minor-block'.
+  "Go to beginning of `minor-block' according to INDENT.
 
 If already at beginning, go one `minor-block' backward.
 Returns beginning of `minor-block' if successful, nil otherwise"
@@ -7457,7 +7457,7 @@ Returns beginning of `minor-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-minor-block-re 'py-minor-block-re (called-interactively-p 'any)))
 
 (defun py-backward-try-block (&optional indent)
-  "Go to beginning of `try-block'.
+  "Go to beginning of `try-block' according to INDENT.
 
 If already at beginning, go one `try-block' backward.
 Returns beginning of `try-block' if successful, nil otherwise"
@@ -7465,7 +7465,7 @@ Returns beginning of `try-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-try-block-re 'py-try-block-re (called-interactively-p 'any)))
 
 (defun py-backward-block-bol (&optional indent)
-  "Go to beginning of `block', go to BOL.
+  "Go to beginning of `block' according to INDENT, go to BOL.
 
 If already at beginning, go one `block' backward.
 Returns beginning of `block' if successful, nil otherwise"
@@ -7473,7 +7473,7 @@ Returns beginning of `block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-block-or-clause-bol (&optional indent)
-  "Go to beginning of `block-or-clause', go to BOL.
+  "Go to beginning of `block-or-clause' according to INDENT, go to BOL.
 
 If already at beginning, go one `block-or-clause' backward.
 Returns beginning of `block-or-clause' if successful, nil otherwise"
@@ -7482,7 +7482,7 @@ Returns beginning of `block-or-clause' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-class-bol (&optional indent decorator)
-  "Go to beginning of `class', go to BOL.
+  "Go to beginning of `class' according to INDENT, go to BOL.
 
 If already at beginning, go one `class' backward.
 Returns beginning of `class' if successful, nil otherwise"
@@ -7490,7 +7490,7 @@ Returns beginning of `class' if successful, nil otherwise"
   (py--backward-prepare indent 'py-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-clause-bol (&optional indent)
-  "Go to beginning of `clause', go to BOL.
+  "Go to beginning of `clause' according to INDENT, go to BOL.
 
 If already at beginning, go one `clause' backward.
 Returns beginning of `clause' if successful, nil otherwise"
@@ -7499,7 +7499,7 @@ Returns beginning of `clause' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-def-bol (&optional indent decorator)
-  "Go to beginning of `def', go to BOL.
+  "Go to beginning of `def' according to INDENT, go to BOL.
 
 If already at beginning, go one `def' backward.
 Returns beginning of `def' if successful, nil otherwise"
@@ -7508,7 +7508,7 @@ Returns beginning of `def' if successful, nil otherwise"
 
 ;;;###autoload
 (defun py-backward-def-or-class-bol (&optional indent decorator)
-  "Go to beginning of `def-or-class', go to BOL.
+  "Go to beginning of `def-or-class' according to INDENT, go to BOL.
 
 If already at beginning, go one `def-or-class' backward.
 Returns beginning of `def-or-class' if successful, nil otherwise"
@@ -7516,7 +7516,7 @@ Returns beginning of `def-or-class' if successful, nil otherwise"
   (py--backward-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-elif-block-bol (&optional indent)
-  "Go to beginning of `elif-block', go to BOL.
+  "Go to beginning of `elif-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `elif-block' backward.
 Returns beginning of `elif-block' if successful, nil otherwise"
@@ -7524,7 +7524,7 @@ Returns beginning of `elif-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-elif-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-else-block-bol (&optional indent)
-  "Go to beginning of `else-block', go to BOL.
+  "Go to beginning of `else-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `else-block' backward.
 Returns beginning of `else-block' if successful, nil otherwise"
@@ -7532,7 +7532,7 @@ Returns beginning of `else-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-else-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-except-block-bol (&optional indent)
-  "Go to beginning of `except-block', go to BOL.
+  "Go to beginning of `except-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `except-block' backward.
 Returns beginning of `except-block' if successful, nil otherwise"
@@ -7540,7 +7540,7 @@ Returns beginning of `except-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-for-block-bol (&optional indent)
-  "Go to beginning of `for-block', go to BOL.
+  "Go to beginning of `for-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `for-block' backward.
 Returns beginning of `for-block' if successful, nil otherwise"
@@ -7548,7 +7548,7 @@ Returns beginning of `for-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-if-block-bol (&optional indent)
-  "Go to beginning of `if-block', go to BOL.
+  "Go to beginning of `if-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `if-block' backward.
 Returns beginning of `if-block' if successful, nil otherwise"
@@ -7556,7 +7556,7 @@ Returns beginning of `if-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-minor-block-bol (&optional indent)
-  "Go to beginning of `minor-block', go to BOL.
+  "Go to beginning of `minor-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `minor-block' backward.
 Returns beginning of `minor-block' if successful, nil otherwise"
@@ -7564,7 +7564,7 @@ Returns beginning of `minor-block' if successful, nil otherwise"
   (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-try-block-bol (&optional indent)
-  "Go to beginning of `try-block', go to BOL.
+  "Go to beginning of `try-block' according to INDENT, go to BOL.
 
 If already at beginning, go one `try-block' backward.
 Returns beginning of `try-block' if successful, nil otherwise"
@@ -15397,7 +15397,7 @@ When `delete-active-region' and (use-region-p), delete region "
 
 
 (defun py-up-statement ()
-  "Go to the beginning of next statement upwards in buffer.
+  "go to the beginning of next statement upwards in buffer.
 
 Return position if statement found, nil otherwise. "
   (interactive)
@@ -15409,31 +15409,13 @@ Return position if statement found, nil otherwise. "
     erg))
 
 
-(defun py-down-statement ()
-  "Go to the beginning of next statement downwards in buffer.
-
-Return position if statement found, nil otherwise. "
-  (interactive)
-  (let* ((orig (point))
-	 erg)
-    (cond ((py--end-of-statement-p)
-	   (setq erg
-		 (and
-		  (py-forward-statement)
-		  (py-backward-statement)
-		  (< orig (point))
-		  (point))))
-	  ((< orig (and (py-forward-statement) (py-backward-statement)))
-	   (setq erg (point)))
-	  (t (setq erg (ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement)))))))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg))
-
 (defun py-up-base (regexp &optional indent orig decorator bol repeat)
-  "Go to the beginning of next form upwards in buffer.
+  "REGEXP is a quoted symbol
 
-Return position if form found, nil otherwise.
-REGEXP is a quoted symbol "
+Go to the beginning of next form upwards in buffer according to INDENT.
+
+Optional ORIG DECORATOR BOL REPEAT
+Return position if form found, nil otherwise."
   (unless (bobp)
     (let* ((orig (or orig (point)))
 	   (repeat (or (and repeat (1+ repeat)) 0))
@@ -15458,12 +15440,32 @@ REGEXP is a quoted symbol "
 	(when py-verbose-p (message "%s" erg))
 	erg))))
 
+(defun py-down-statement ()
+  "Go to the beginning of next statement downwards in buffer.
+
+Return position if statement found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+	 erg)
+    (cond ((py--end-of-statement-p)
+	   (setq erg
+		 (and
+		  (py-forward-statement)
+		  (py-backward-statement)
+		  (< orig (point))
+		  (point))))
+	  ((< orig (and (py-forward-statement) (py-backward-statement)))
+	   (setq erg (point)))
+	  (t (setq erg (ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement)))))))
+    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
 
 (defun py-down-base (regexp &optional orig indent decorator bol)
   "Go to the beginning of next form below in buffer.
 
 Return position if form found, nil otherwise.
-Expects a quoted symbol 'REGEXP"
+Expects a quoted symbol 'REGEXP
+Optional ORIG INDENT DECORATOR BOL"
   (unless (eobp)
     (let* ((name (substring (symbol-name regexp) 3 -3))
 	   (p-command (car (read-from-string (concat "py--beginning-of-" name "-p"))))
@@ -15526,159 +15528,174 @@ Expects a quoted symbol 'REGEXP"
 
 (defalias 'py-block-up 'py-up-block)
 (defun py-up-block (&optional indent decorator bol)
-  "Go to the beginning of next block upwards in buffer.
-
+  "Go to the beginning of next block upwards in buffer according to INDENT.
+Optional DECORATOR BOL
 Return position if block found, nil otherwise. "
   (interactive)
   (py-up-base 'py-extended-block-or-clause-re indent (point) decorator bol))
 
 (defalias 'py-class-up 'py-up-class)
 (defun py-up-class (&optional indent decorator bol)
-  "Go to the beginning of next class upwards in buffer.
-
+  "Go to the beginning of next class upwards in buffer according to INDENT.
+Optional DECORATOR BOL
 Return position if class found, nil otherwise. "
   (interactive)
   (py-up-base 'py-class-re indent (point) decorator bol))
 
 (defalias 'py-def-up 'py-up-def)
 (defun py-up-def (&optional indent decorator bol)
-  "Go to the beginning of next def upwards in buffer.
-
+  "Go to the beginning of next def upwards in buffer according to INDENT.
+Optional DECORATOR BOL
 Return position if def found, nil otherwise. "
   (interactive)
   (py-up-base 'py-def-re indent (point) decorator bol))
 
 (defalias 'py-def-or-class-up 'py-up-def-or-class)
 (defun py-up-def-or-class (&optional indent decorator bol)
-  "Go to the beginning of next def-or-class upwards in buffer.
-
+  "Go to the beginning of next def-or-class upwards in buffer according to INDENT.
+Optional DECORATOR BOL
 Return position if def-or-class found, nil otherwise. "
   (interactive)
   (py-up-base 'py-def-or-class-re indent (point) decorator bol))
 
 (defalias 'py-minor-block-up 'py-up-minor-block)
 (defun py-up-minor-block (&optional indent decorator bol)
-  "Go to the beginning of next minor-block upwards in buffer.
-
+  "Go to the beginning of next minor-block upwards in buffer according to INDENT.
+Optional DECORATOR BOL
 Return position if minor-block found, nil otherwise. "
   (interactive)
   (py-up-base 'py-extended-block-or-clause-re indent (point) decorator bol))
 
 (defalias 'py-block-down 'py-down-block)
 (defun py-down-block (&optional orig indent decorator bol)
-  "Go to the beginning of next block below in buffer.
+  "Go to the beginning of next block below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL
 Return position if block found, nil otherwise. "
   (interactive)
   (py-down-base 'py-block-re (or orig (point)) indent decorator bol))
 
 (defalias 'py-class-down 'py-down-class)
 (defun py-down-class (&optional orig indent decorator bol)
-  "Go to the beginning of next class below in buffer.
+  "Go to the beginning of next class below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL
 Return position if class found, nil otherwise. "
   (interactive)
   (py-down-base 'py-class-re (or orig (point)) indent decorator bol))
 
 (defalias 'py-def-down 'py-down-def)
 (defun py-down-def (&optional orig indent decorator bol)
-  "Go to the beginning of next def below in buffer.
+  "Go to the beginning of next def below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL
 Return position if def found, nil otherwise. "
   (interactive)
   (py-down-base 'py-def-re (or orig (point)) indent decorator bol))
 
 (defalias 'py-def-or-class-down 'py-down-def-or-class)
 (defun py-down-def-or-class (&optional orig indent decorator bol)
-  "Go to the beginning of next def-or-class below in buffer.
+  "Go to the beginning of next def-or-class below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL
 Return position if def-or-class found, nil otherwise. "
   (interactive)
   (py-down-base 'py-def-or-class-re (or orig (point)) indent decorator bol))
 
 (defalias 'py-minor-block-down 'py-down-minor-block)
 (defun py-down-minor-block (&optional orig indent decorator bol)
-  "Go to the beginning of next minor-block below in buffer.
+  "Go to the beginning of next minor-block below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL
 Return position if minor-block found, nil otherwise. "
   (interactive)
   (py-down-base 'py-minor-block-re (or orig (point)) indent decorator bol))
 
 (defun py-up-block-bol (&optional indent decorator)
-  "Go to the beginning of next block upwards in buffer.
+  "Go to the beginning of next block upwards in buffer according to INDENT.
 
 Go to beginning of line.
+Optional DECORATOR.
 Return position if block found, nil otherwise. "
   (interactive)
   (py-up-base 'py-block-re indent (point) decorator t))
 
 (defun py-up-class-bol (&optional indent decorator)
-  "Go to the beginning of next class upwards in buffer.
+  "Go to the beginning of next class upwards in buffer according to INDENT.
 
 Go to beginning of line.
+Optional DECORATOR.
 Return position if class found, nil otherwise. "
   (interactive)
   (py-up-base 'py-class-re indent (point) decorator t))
 
 (defun py-up-def-bol (&optional indent decorator)
-  "Go to the beginning of next def upwards in buffer.
+  "Go to the beginning of next def upwards in buffer according to INDENT.
 
 Go to beginning of line.
+Optional DECORATOR.
 Return position if def found, nil otherwise. "
   (interactive)
   (py-up-base 'py-def-re indent (point) decorator t))
 
 (defun py-up-def-or-class-bol (&optional indent decorator)
-  "Go to the beginning of next def-or-class upwards in buffer.
+  "Go to the beginning of next def-or-class upwards in buffer according to INDENT.
 
 Go to beginning of line.
+Optional DECORATOR.
 Return position if def-or-class found, nil otherwise. "
   (interactive)
   (py-up-base 'py-def-or-class-re indent (point) decorator t))
 
 (defun py-up-minor-block-bol (&optional indent decorator)
-  "Go to the beginning of next minor-block upwards in buffer.
+  "Go to the beginning of next minor-block upwards in buffer according to INDENT.
 
 Go to beginning of line.
+Optional DECORATOR.
 Return position if minor-block found, nil otherwise. "
   (interactive)
   (py-up-base 'py-minor-block-re indent (point) decorator t))
 
 (defun py-down-block-bol (&optional orig indent decorator bol)
-  "Go to the beginning of next block below in buffer.
+  "Go to the beginning of next block below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL.
 Go to beginning of line
 Return position if block found, nil otherwise "
   (interactive)
   (py-down-base 'py-block-re (or orig (point)) indent decorator (or bol t)))
 
 (defun py-down-class-bol (&optional orig indent decorator bol)
-  "Go to the beginning of next class below in buffer.
+  "Go to the beginning of next class below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL.
 Go to beginning of line
 Return position if class found, nil otherwise "
   (interactive)
   (py-down-base 'py-class-re (or orig (point)) indent decorator (or bol t)))
 
 (defun py-down-def-bol (&optional orig indent decorator bol)
-  "Go to the beginning of next def below in buffer.
+  "Go to the beginning of next def below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL.
 Go to beginning of line
 Return position if def found, nil otherwise "
   (interactive)
   (py-down-base 'py-def-re (or orig (point)) indent decorator (or bol t)))
 
 (defun py-down-def-or-class-bol (&optional orig indent decorator bol)
-  "Go to the beginning of next def-or-class below in buffer.
+  "Go to the beginning of next def-or-class below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL.
 Go to beginning of line
 Return position if def-or-class found, nil otherwise "
   (interactive)
   (py-down-base 'py-def-or-class-re (or orig (point)) indent decorator (or bol t)))
 
 (defun py-down-minor-block-bol (&optional orig indent decorator bol)
-  "Go to the beginning of next minor-block below in buffer.
+  "Go to the beginning of next minor-block below in buffer according to INDENT.
 
+Optional INDENT DECORATOR BOL.
 Go to beginning of line
 Return position if minor-block found, nil otherwise "
   (interactive)
@@ -21059,8 +21076,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-block-position)))
-          (end (or end (py-forward-block-position))))
+          (beg (or beg (py--beginning-of-block-position)))
+          (end (or end (py-end-of-block-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21076,8 +21093,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-block-or-clause-position)))
-          (end (or end (py-forward-block-or-clause-position))))
+          (beg (or beg (py--beginning-of-block-or-clause-position)))
+          (end (or end (py-end-of-block-or-clause-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21093,8 +21110,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-class-position)))
-          (end (or end (py-forward-class-position))))
+          (beg (or beg (py--beginning-of-class-position)))
+          (end (or end (py-end-of-class-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21110,8 +21127,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-clause-position)))
-          (end (or end (py-forward-clause-position))))
+          (beg (or beg (py--beginning-of-clause-position)))
+          (end (or end (py-end-of-clause-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21127,8 +21144,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-def-position)))
-          (end (or end (py-forward-def-position))))
+          (beg (or beg (py--beginning-of-def-position)))
+          (end (or end (py-end-of-def-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21144,8 +21161,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-def-or-class-position)))
-          (end (or end (py-forward-def-or-class-position))))
+          (beg (or beg (py--beginning-of-def-or-class-position)))
+          (end (or end (py-end-of-def-or-class-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21161,8 +21178,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-indent-position)))
-          (end (or end (py-forward-indent-position))))
+          (beg (or beg (py--beginning-of-indent-position)))
+          (end (or end (py-end-of-indent-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21178,8 +21195,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-minor-block-position)))
-          (end (or end (py-forward-minor-block-position))))
+          (beg (or beg (py--beginning-of-minor-block-position)))
+          (end (or end (py-end-of-minor-block-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21195,8 +21212,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-section-position)))
-          (end (or end (py-forward-section-position))))
+          (beg (or beg (py--beginning-of-section-position)))
+          (end (or end (py-end-of-section-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21212,8 +21229,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-statement-position)))
-          (end (or end (py-forward-statement-position))))
+          (beg (or beg (py--beginning-of-statement-position)))
+          (end (or end (py-end-of-statement-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21229,8 +21246,8 @@ the default"
     (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
                            comment-start))
-          (beg (or beg (py-beginning-of-top-level-position)))
-          (end (or end (py-forward-top-level-position))))
+          (beg (or beg (py--beginning-of-top-level-position)))
+          (end (or end (py-end-of-top-level-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
