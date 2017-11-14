@@ -5919,10 +5919,10 @@ Find source of definition of SYMBOL."])))
 (defvar py-use-menu-p t
   "If the menu should be loaded.
 
-Default is `t'")
+Default is t")
 
 (defvar py-menu nil
-  "Make a dynamically bound variable py-menu")
+  "Make a dynamically bound variable ‘py-menu’.")
 
 (defvar python-mode-map nil)
 (setq python-mode-map
@@ -6059,10 +6059,10 @@ Default is `t'")
     (substitute-key-definition 'down-list 'py-down
 			       map global-map)
     map)
-  "Used inside a Python-shell")
+  "Used inside a Python-shell.")
 
 (defvar py-ipython-shell-mode-map py-python-shell-mode-map
-  "Unless setting of ipython-shell-mode needs to be different, let's save some lines of code and copy py-python-shell-mode-map here.")
+  "Unless setting of ipython-shell-mode needs to be different, let's save some lines of code and copy ‘py-python-shell-mode-map’ here.")
 
 (defvar py-shell-map py-python-shell-mode-map)
 
@@ -6154,9 +6154,9 @@ Default is `t'")
 ;;  Smart indentation
 (defalias 'toggle-py-smart-indentation 'py-toggle-smart-indentation)
 (defun py-toggle-smart-indentation (&optional arg)
-  "If `py-smart-indentation' should be on or off.
+  "Toggle `py-smart-indentation' - on with positiv ARG.
 
-Returns value of `py-smart-indentation' switched to. "
+Returns value of `py-smart-indentation' switched to."
   (interactive)
   (let ((arg (or arg (if py-smart-indentation -1 1))))
     (if (< 0 arg)
@@ -6169,9 +6169,9 @@ Returns value of `py-smart-indentation' switched to. "
     py-smart-indentation))
 
 (defun py-smart-indentation-on (&optional arg)
-  "Make sure, `py-smart-indentation' is on.
+  "Toggle`py-smart-indentation' - on with positive ARG.
 
-Returns value of `py-smart-indentation'. "
+Returns value of `py-smart-indentation'."
   (interactive "p")
   (let ((arg (or arg 1)))
     (toggle-py-smart-indentation arg))
@@ -6179,9 +6179,9 @@ Returns value of `py-smart-indentation'. "
   py-smart-indentation)
 
 (defun py-smart-indentation-off (&optional arg)
-  "Make sure, `py-smart-indentation' is off.
+  "Toggle `py-smart-indentation' according to ARG.
 
-Returns value of `py-smart-indentation'. "
+Returns value of `py-smart-indentation'."
   (interactive "p")
   (let ((arg (if arg (- arg) -1)))
     (toggle-py-smart-indentation arg))
@@ -6189,7 +6189,7 @@ Returns value of `py-smart-indentation'. "
   py-smart-indentation)
 
 (defun py-toggle-sexp-function ()
-  "Opens customization "
+  "Opens customization."
   (interactive)
   (customize-variable 'py-sexp-function))
 
@@ -6199,7 +6199,7 @@ Returns value of `py-smart-indentation'. "
 (defun py-toggle-autopair-mode ()
   "If `py-autopair-mode' should be on or off.
 
-  Returns value of `py-autopair-mode' switched to. "
+  Returns value of `py-autopair-mode' switched to."
   (interactive)
   (and (py-autopair-check)
        (setq py-autopair-mode (autopair-mode (if autopair-mode 0 1)))))
@@ -6207,7 +6207,7 @@ Returns value of `py-smart-indentation'. "
 (defun py-autopair-mode-on ()
   "Make sure, py-autopair-mode' is on.
 
-Returns value of `py-autopair-mode'. "
+Returns value of `py-autopair-mode'."
   (interactive)
   (and (py-autopair-check)
        (setq py-autopair-mode (autopair-mode 1))))
@@ -6215,7 +6215,7 @@ Returns value of `py-autopair-mode'. "
 (defun py-autopair-mode-off ()
   "Make sure, py-autopair-mode' is off.
 
-Returns value of `py-autopair-mode'. "
+Returns value of `py-autopair-mode'."
   (interactive)
   (setq py-autopair-mode (autopair-mode 0)))
 
@@ -6224,7 +6224,7 @@ Returns value of `py-autopair-mode'. "
 (defun toggle-py-smart-operator-mode-p ()
   "If `py-smart-operator-mode-p' should be on or off.
 
-  Returns value of `py-smart-operator-mode-p' switched to. "
+  Returns value of `py-smart-operator-mode-p' switched to."
   (interactive)
   (and (py-smart-operator-check)
        (setq py-smart-operator-mode-p (smart-operator-mode (if smart-operator-mode 0 1)))))
@@ -6232,7 +6232,7 @@ Returns value of `py-autopair-mode'. "
 (defun py-smart-operator-mode-p-on ()
   "Make sure, py-smart-operator-mode-p' is on.
 
-Returns value of `py-smart-operator-mode-p'. "
+Returns value of `py-smart-operator-mode-p'."
   (interactive)
   (and (py-smart-operator-check)
        (setq py-smart-operator-mode-p (smart-operator-mode 1))))
@@ -6240,15 +6240,15 @@ Returns value of `py-smart-operator-mode-p'. "
 (defun py-smart-operator-mode-p-off ()
   "Make sure, py-smart-operator-mode-p' is off.
 
-Returns value of `py-smart-operator-mode-p'. "
+Returns value of `py-smart-operator-mode-p'."
   (interactive)
   (setq py-smart-operator-mode-p (smart-operator-mode 0)))
 
 ;;  py-switch-buffers-on-execute-p forms
 (defun toggle-py-switch-buffers-on-execute-p (&optional arg)
-  "If `py-switch-buffers-on-execute-p' should be on or off.
+  "Toggle `py-switch-buffers-on-execute-p' according to ARG.
 
-  Returns value of `py-switch-buffers-on-execute-p' switched to. "
+  Returns value of `py-switch-buffers-on-execute-p' switched to."
   (interactive)
   (let ((arg (or arg (if py-switch-buffers-on-execute-p -1 1))))
     (if (< 0 arg)
@@ -6258,9 +6258,9 @@ Returns value of `py-smart-operator-mode-p'. "
     py-switch-buffers-on-execute-p))
 
 (defun py-switch-buffers-on-execute-p-on (&optional arg)
-  "Make sure, `py-py-switch-buffers-on-execute-p' is on.
+  "Toggle `py-py-switch-buffers-on-execute-p' according to ARG.
 
-Returns value of `py-switch-buffers-on-execute-p'. "
+Returns value of `py-switch-buffers-on-execute-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-switch-buffers-on-execute-p arg))
@@ -6270,7 +6270,7 @@ Returns value of `py-switch-buffers-on-execute-p'. "
 (defun py-switch-buffers-on-execute-p-off ()
   "Make sure, `py-switch-buffers-on-execute-p' is off.
 
-Returns value of `py-switch-buffers-on-execute-p'. "
+Returns value of `py-switch-buffers-on-execute-p'."
   (interactive)
   (toggle-py-switch-buffers-on-execute-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-switch-buffers-on-execute-p: %s" py-switch-buffers-on-execute-p))
@@ -6278,9 +6278,9 @@ Returns value of `py-switch-buffers-on-execute-p'. "
 
 ;;  py-split-window-on-execute forms
 (defun toggle-py-split-window-on-execute (&optional arg)
-  "If `py-split-window-on-execute' should be on or off.
+  "Toggle `py-split-window-on-execute' according to ARG.
 
-  Returns value of `py-split-window-on-execute' switched to. "
+  Returns value of `py-split-window-on-execute' switched to."
   (interactive)
   (let ((arg (or arg (if py-split-window-on-execute -1 1))))
     (if (< 0 arg)
@@ -6290,9 +6290,9 @@ Returns value of `py-switch-buffers-on-execute-p'. "
     py-split-window-on-execute))
 
 (defun py-split-window-on-execute-on (&optional arg)
-  "Make sure, `py-py-split-window-on-execute' is on.
+  "Toggle `py-py-split-window-on-execute' according to ARG.
 
-Returns value of `py-split-window-on-execute'. "
+Returns value of `py-split-window-on-execute'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-split-window-on-execute arg))
@@ -6302,7 +6302,7 @@ Returns value of `py-split-window-on-execute'. "
 (defun py-split-window-on-execute-off ()
   "Make sure, `py-split-window-on-execute' is off.
 
-Returns value of `py-split-window-on-execute'. "
+Returns value of `py-split-window-on-execute'."
   (interactive)
   (toggle-py-split-window-on-execute -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-split-window-on-execute: %s" py-split-window-on-execute))
@@ -6310,9 +6310,9 @@ Returns value of `py-split-window-on-execute'. "
 
 ;;  py-fontify-shell-buffer-p forms
 (defun toggle-py-fontify-shell-buffer-p (&optional arg)
-  "If `py-fontify-shell-buffer-p' should be on or off.
+  "Toggle `py-fontify-shell-buffer-p' according to ARG.
 
-  Returns value of `py-fontify-shell-buffer-p' switched to. "
+  Returns value of `py-fontify-shell-buffer-p' switched to."
   (interactive)
   (let ((arg (or arg (if py-fontify-shell-buffer-p -1 1))))
     (if (< 0 arg)
@@ -6330,9 +6330,9 @@ Returns value of `py-split-window-on-execute'. "
     py-fontify-shell-buffer-p))
 
 (defun py-fontify-shell-buffer-p-on (&optional arg)
-  "Make sure, `py-py-fontify-shell-buffer-p' is on.
+  "Toggle `py-py-fontify-shell-buffer-p' according to ARG.
 
-Returns value of `py-fontify-shell-buffer-p'. "
+Returns value of `py-fontify-shell-buffer-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-fontify-shell-buffer-p arg))
@@ -6342,7 +6342,7 @@ Returns value of `py-fontify-shell-buffer-p'. "
 (defun py-fontify-shell-buffer-p-off ()
   "Make sure, `py-fontify-shell-buffer-p' is off.
 
-Returns value of `py-fontify-shell-buffer-p'. "
+Returns value of `py-fontify-shell-buffer-p'."
   (interactive)
   (toggle-py-fontify-shell-buffer-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-fontify-shell-buffer-p: %s" py-fontify-shell-buffer-p))
@@ -6350,9 +6350,9 @@ Returns value of `py-fontify-shell-buffer-p'. "
 
 ;;  python-mode-v5-behavior-p forms
 (defun toggle-python-mode-v5-behavior-p (&optional arg)
-  "If `python-mode-v5-behavior-p' should be on or off.
+  "Toggle `python-mode-v5-behavior-p' according to ARG.
 
-  Returns value of `python-mode-v5-behavior-p' switched to. "
+  Returns value of `python-mode-v5-behavior-p' switched to."
   (interactive)
   (let ((arg (or arg (if python-mode-v5-behavior-p -1 1))))
     (if (< 0 arg)
@@ -6362,9 +6362,9 @@ Returns value of `py-fontify-shell-buffer-p'. "
     python-mode-v5-behavior-p))
 
 (defun python-mode-v5-behavior-p-on (&optional arg)
-  "Make sure, `python-mode-v5-behavior-p' is on.
+  "To `python-mode-v5-behavior-p' according to ARG.
 
-Returns value of `python-mode-v5-behavior-p'. "
+Returns value of `python-mode-v5-behavior-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-python-mode-v5-behavior-p arg))
@@ -6374,7 +6374,7 @@ Returns value of `python-mode-v5-behavior-p'. "
 (defun python-mode-v5-behavior-p-off ()
   "Make sure, `python-mode-v5-behavior-p' is off.
 
-Returns value of `python-mode-v5-behavior-p'. "
+Returns value of `python-mode-v5-behavior-p'."
   (interactive)
   (toggle-python-mode-v5-behavior-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p))
@@ -6382,9 +6382,9 @@ Returns value of `python-mode-v5-behavior-p'. "
 
 ;;  py-jump-on-exception forms
 (defun toggle-py-jump-on-exception (&optional arg)
-  "If `py-jump-on-exception' should be on or off.
+  "Toggle `py-jump-on-exception' according to ARG.
 
-  Returns value of `py-jump-on-exception' switched to. "
+  Returns value of `py-jump-on-exception' switched to."
   (interactive)
   (let ((arg (or arg (if py-jump-on-exception -1 1))))
     (if (< 0 arg)
@@ -6394,9 +6394,9 @@ Returns value of `python-mode-v5-behavior-p'. "
     py-jump-on-exception))
 
 (defun py-jump-on-exception-on (&optional arg)
-  "Make sure, py-jump-on-exception' is on.
+  "Toggle py-jump-on-exception' according to ARG.
 
-Returns value of `py-jump-on-exception'. "
+Returns value of `py-jump-on-exception'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-jump-on-exception arg))
@@ -6406,7 +6406,7 @@ Returns value of `py-jump-on-exception'. "
 (defun py-jump-on-exception-off ()
   "Make sure, `py-jump-on-exception' is off.
 
-Returns value of `py-jump-on-exception'. "
+Returns value of `py-jump-on-exception'."
   (interactive)
   (toggle-py-jump-on-exception -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-jump-on-exception: %s" py-jump-on-exception))
@@ -6414,9 +6414,9 @@ Returns value of `py-jump-on-exception'. "
 
 ;;  py-use-current-dir-when-execute-p forms
 (defun toggle-py-use-current-dir-when-execute-p (&optional arg)
-  "If `py-use-current-dir-when-execute-p' should be on or off.
+  "Toggle `py-use-current-dir-when-execute-p' according to ARG.
 
-  Returns value of `py-use-current-dir-when-execute-p' switched to. "
+  Returns value of `py-use-current-dir-when-execute-p' switched to."
   (interactive)
   (let ((arg (or arg (if py-use-current-dir-when-execute-p -1 1))))
     (if (< 0 arg)
@@ -6426,9 +6426,9 @@ Returns value of `py-jump-on-exception'. "
     py-use-current-dir-when-execute-p))
 
 (defun py-use-current-dir-when-execute-p-on (&optional arg)
-  "Make sure, py-use-current-dir-when-execute-p' is on.
+  "Toggle py-use-current-dir-when-execute-p' according to ARG.
 
-Returns value of `py-use-current-dir-when-execute-p'. "
+Returns value of `py-use-current-dir-when-execute-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-use-current-dir-when-execute-p arg))
@@ -6438,7 +6438,7 @@ Returns value of `py-use-current-dir-when-execute-p'. "
 (defun py-use-current-dir-when-execute-p-off ()
   "Make sure, `py-use-current-dir-when-execute-p' is off.
 
-Returns value of `py-use-current-dir-when-execute-p'. "
+Returns value of `py-use-current-dir-when-execute-p'."
   (interactive)
   (toggle-py-use-current-dir-when-execute-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-use-current-dir-when-execute-p: %s" py-use-current-dir-when-execute-p))
@@ -6446,9 +6446,9 @@ Returns value of `py-use-current-dir-when-execute-p'. "
 
 ;;  py-electric-comment-p forms
 (defun toggle-py-electric-comment-p (&optional arg)
-  "If `py-electric-comment-p' should be on or off.
+  "Toggle `py-electric-comment-p' according to ARG.
 
-  Returns value of `py-electric-comment-p' switched to. "
+  Returns value of `py-electric-comment-p' switched to."
   (interactive)
   (let ((arg (or arg (if py-electric-comment-p -1 1))))
     (if (< 0 arg)
@@ -6458,9 +6458,9 @@ Returns value of `py-use-current-dir-when-execute-p'. "
     py-electric-comment-p))
 
 (defun py-electric-comment-p-on (&optional arg)
-  "Make sure, py-electric-comment-p' is on.
+  "Toggle py-electric-comment-p' according to ARG.
 
-Returns value of `py-electric-comment-p'. "
+Returns value of `py-electric-comment-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-electric-comment-p arg))
@@ -6470,7 +6470,7 @@ Returns value of `py-electric-comment-p'. "
 (defun py-electric-comment-p-off ()
   "Make sure, `py-electric-comment-p' is off.
 
-Returns value of `py-electric-comment-p'. "
+Returns value of `py-electric-comment-p'."
   (interactive)
   (toggle-py-electric-comment-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-electric-comment-p: %s" py-electric-comment-p))
@@ -6478,9 +6478,9 @@ Returns value of `py-electric-comment-p'. "
 
 ;;  py-underscore-word-syntax-p forms
 (defun toggle-py-underscore-word-syntax-p (&optional arg)
-  "If `py-underscore-word-syntax-p' should be on or off.
+  "Toggle `py-underscore-word-syntax-p' according to ARG.
 
-  Returns value of `py-underscore-word-syntax-p' switched to. "
+  Returns value of `py-underscore-word-syntax-p' switched to."
   (interactive)
   (let ((arg (or arg (if py-underscore-word-syntax-p -1 1))))
     (if (< 0 arg)
@@ -6493,9 +6493,9 @@ Returns value of `py-electric-comment-p'. "
     py-underscore-word-syntax-p))
 
 (defun py-underscore-word-syntax-p-on (&optional arg)
-  "Make sure, py-underscore-word-syntax-p' is on.
+  "Toggle py-underscore-word-syntax-p' according to ARG.
 
-Returns value of `py-underscore-word-syntax-p'. "
+Returns value of `py-underscore-word-syntax-p'."
   (interactive)
   (let ((arg (or arg 1)))
     (toggle-py-underscore-word-syntax-p arg))
@@ -6505,7 +6505,7 @@ Returns value of `py-underscore-word-syntax-p'. "
 (defun py-underscore-word-syntax-p-off ()
   "Make sure, `py-underscore-word-syntax-p' is off.
 
-Returns value of `py-underscore-word-syntax-p'. "
+Returns value of `py-underscore-word-syntax-p'."
   (interactive)
   (toggle-py-underscore-word-syntax-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
@@ -6514,11 +6514,14 @@ Returns value of `py-underscore-word-syntax-p'. "
 ;; toggle-py-underscore-word-syntax-p must be known already
 ;; circular: toggle-py-underscore-word-syntax-p sets and calls it
 (defcustom py-underscore-word-syntax-p t
-  "If underscore chars should be of syntax-class `word', not of `symbol'.
+  "If underscore chars should be of ‘syntax-class’ word.
 
-Underscores in word-class makes `forward-word' etc. travel the indentifiers. Default is `t'.
+I.e. not of `symbol'.
 
-See bug report at launchpad, lp:940812 "
+Underscores in word-class like `forward-word' travel the indentifiers.
+Default is t.
+
+See bug report at launchpad, lp:940812"
   :type 'boolean
   :tag "py-underscore-word-syntax-p"
   :group 'python-mode
