@@ -10907,7 +10907,7 @@ Avoid empty lines at the beginning."
 (defun py-fetch-py-master-file ()
   "Lookup if a ‘py-master-file’ is specified.
 
-See also doku of variable ‘py-master-file’ "
+See also doku of variable ‘py-master-file’"
   (interactive)
   (save-excursion
     (save-restriction
@@ -11245,7 +11245,9 @@ completions on the current context."
 ;; post-command-hook
 ;; caused insert-file-contents error lp:1293172
 (defun py--after-change-function (end)
-  "Restore window-confiuration after completion. "
+  "Restore window-confiuration after completion.
+
+Takes END"
   (when
       (and (or
             (eq this-command 'completion-at-point)
@@ -11274,7 +11276,9 @@ completions on the current context."
     erg))
 
 (defun py--try-completion (input completion)
-  "Repeat `try-completion' as long as matches are found. "
+  "Repeat `try-completion' as long as match are found.
+
+Interal used. Takes INPUT COMPLETION"
   (let (erg newlist)
     (setq erg (py--try-completion-intern input completion))
     (when erg
@@ -11318,7 +11322,9 @@ completions on the current context."
   nil)
 
 (defun py--shell-do-completion-at-point (process imports input exception-buffer code)
-  "Do completion at point for PROCESS."
+  "Do completion at point for PROCESS.
+
+Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
   ;; (py--send-string-no-output py-shell-completion-setup-code process)
   (when imports
     (py--send-string-no-output imports process))
@@ -11384,7 +11390,9 @@ completions on the current context."
     nil))
 
 (defun py-shell-complete (&optional shell beg end word)
-  "Complete word before point, if any. "
+  "Complete word before point, if any.
+
+Optional SHELL BEG END WORD"
   (interactive)
   (save-excursion
     (and (buffer-live-p (get-buffer "*Python Completions*"))
@@ -11399,10 +11407,10 @@ completions on the current context."
 If cursor is at end of a symbol, try to complete
 Otherwise call `py-indent-line'
 
-If `(use-region-p)' returns `t', indent region.
+If `(use-region-p)' returns t, indent region.
 Use `C-q TAB' to insert a literally TAB-character
 
-In python-mode `py-complete-function' is called,
+In ‘python-mode’ `py-complete-function' is called,
 in (I)Python shell-modes `py-shell-complete'"
   (interactive "*")
   (cond ((use-region-p)
@@ -11423,23 +11431,25 @@ in (I)Python shell-modes `py-shell-complete'"
 ;; python-components-pdb
 
 (defun py-execute-statement-pdb ()
-  "Execute statement running pdb. "
+  "Execute statement running pdb."
   (interactive)
   (let ((py-python-command-args "-i -m pdb"))
     (py-execute-statement)))
 
 (defun py-execute-region-pdb (beg end)
+  "Takes region between BEG END."
   (interactive "r")
   (let ((py-python-command-args "-i -m pdb")))
     (py-execute-region beg end))
 
 (defun py-pdb-execute-statement ()
+  "Execute statement running pdb."
   (interactive)
   (let ((stm (progn (py-statement) (car kill-ring))))
     (py-execute-string (concat "import pdb;pdb.run('" stm "')"))))
 
 (defun py-pdb-help ()
-  "Print generic pdb.help() message "
+  "Print generic pdb.help() message."
   (interactive)
   (py-execute-string "import pdb;pdb.help()"))
 
@@ -11449,6 +11459,9 @@ in (I)Python shell-modes `py-shell-complete'"
 ;; python -m pdb -c "b 3" -c c your_script.py
 
 (defun py-pdb-break-at-current-line (&optional line file condition)
+  "Set breakpoint at current line.
+
+Optional LINE FILE CONDITION"
   (interactive)
   (py-execute-string (concat "import pdb;pdb.break('" (py-count-lines)  "')")))
 
