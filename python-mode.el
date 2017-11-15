@@ -7361,7 +7361,7 @@ Returns the string inserted."
   "Go to beginning of `block' according to INDENT.
 
 If already at beginning, go one `block' backward.
-Returns beginning of `block' if successful, nil otherwise"
+Return beginning of `block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-block-re 'py-block-re (called-interactively-p 'any)))
 
@@ -7369,7 +7369,7 @@ Returns beginning of `block' if successful, nil otherwise"
   "Go to beginning of `block-or-clause' according to INDENT.
 
 If already at beginning, go one `block-or-clause' backward.
-Returns beginning of `block-or-clause' if successful, nil otherwise"
+Return beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
@@ -7378,7 +7378,9 @@ Returns beginning of `block-or-clause' if successful, nil otherwise"
   "Go to beginning of `class' according to INDENT.
 
 If already at beginning, go one `class' backward.
-Returns beginning of `class' if successful, nil otherwise"
+Optional DECORATOR BOL
+
+Return beginning of `class' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-class-re 'py-class-re (called-interactively-p 'any) decorator bol))
 
@@ -7386,7 +7388,7 @@ Returns beginning of `class' if successful, nil otherwise"
   "Go to beginning of `clause' according to INDENT.
 
 If already at beginning, go one `clause' backward.
-Returns beginning of `clause' if successful, nil otherwise"
+Return beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
@@ -7395,7 +7397,9 @@ Returns beginning of `clause' if successful, nil otherwise"
   "Go to beginning of `def' according to INDENT.
 
 If already at beginning, go one `def' backward.
-Returns beginning of `def' if successful, nil otherwise"
+Optional DECORATOR BOL
+
+Return beginning of `def' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-re 'py-def-re (called-interactively-p 'any) decorator bol))
 
@@ -7404,7 +7408,9 @@ Returns beginning of `def' if successful, nil otherwise"
   "Go to beginning of `def-or-class' according to INDENT.
 
 If already at beginning, go one `def-or-class' backward.
-Returns beginning of `def-or-class' if successful, nil otherwise"
+Optional DECORATOR BOL
+
+Return beginning of `def-or-class' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-or-class-re 'py-def-or-class-re (called-interactively-p 'any) decorator bol))
 
@@ -7412,7 +7418,7 @@ Returns beginning of `def-or-class' if successful, nil otherwise"
   "Go to beginning of `elif-block' according to INDENT.
 
 If already at beginning, go one `elif-block' backward.
-Returns beginning of `elif-block' if successful, nil otherwise"
+Return beginning of `elif-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-elif-block-re 'py-elif-block-re (called-interactively-p 'any)))
 
@@ -7420,7 +7426,7 @@ Returns beginning of `elif-block' if successful, nil otherwise"
   "Go to beginning of `else-block' according to INDENT.
 
 If already at beginning, go one `else-block' backward.
-Returns beginning of `else-block' if successful, nil otherwise"
+Return beginning of `else-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-else-block-re 'py-else-block-re (called-interactively-p 'any)))
 
@@ -7428,7 +7434,7 @@ Returns beginning of `else-block' if successful, nil otherwise"
   "Go to beginning of `except-block' according to INDENT.
 
 If already at beginning, go one `except-block' backward.
-Returns beginning of `except-block' if successful, nil otherwise"
+Return beginning of `except-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-except-block-re 'py-except-block-re (called-interactively-p 'any)))
 
@@ -7436,7 +7442,7 @@ Returns beginning of `except-block' if successful, nil otherwise"
   "Go to beginning of `for-block' according to INDENT.
 
 If already at beginning, go one `for-block' backward.
-Returns beginning of `for-block' if successful, nil otherwise"
+Return beginning of `for-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-for-block-re 'py-for-block-re (called-interactively-p 'any)))
 
@@ -7444,7 +7450,7 @@ Returns beginning of `for-block' if successful, nil otherwise"
   "Go to beginning of `if-block' according to INDENT.
 
 If already at beginning, go one `if-block' backward.
-Returns beginning of `if-block' if successful, nil otherwise"
+Return beginning of `if-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-if-block-re 'py-if-block-re (called-interactively-p 'any)))
 
@@ -7452,7 +7458,7 @@ Returns beginning of `if-block' if successful, nil otherwise"
   "Go to beginning of `minor-block' according to INDENT.
 
 If already at beginning, go one `minor-block' backward.
-Returns beginning of `minor-block' if successful, nil otherwise"
+Return beginning of `minor-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-minor-block-re 'py-minor-block-re (called-interactively-p 'any)))
 
@@ -7460,121 +7466,114 @@ Returns beginning of `minor-block' if successful, nil otherwise"
   "Go to beginning of `try-block' according to INDENT.
 
 If already at beginning, go one `try-block' backward.
-Returns beginning of `try-block' if successful, nil otherwise"
+Return beginning of `try-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-try-block-re 'py-try-block-re (called-interactively-p 'any)))
 
 (defun py-backward-block-bol (&optional indent)
   "Go to beginning of `block' according to INDENT, go to BOL.
-
 If already at beginning, go one `block' backward.
-Returns beginning of `block' if successful, nil otherwise"
+Return beginning of `block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-block-or-clause-bol (&optional indent)
   "Go to beginning of `block-or-clause' according to INDENT, go to BOL.
-
 If already at beginning, go one `block-or-clause' backward.
-Returns beginning of `block-or-clause' if successful, nil otherwise"
+Return beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
 
 ;;;###autoload
 (defun py-backward-class-bol (&optional indent decorator)
   "Go to beginning of `class' according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
 If already at beginning, go one `class' backward.
-Returns beginning of `class' if successful, nil otherwise"
+Return beginning of `class' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-clause-bol (&optional indent)
   "Go to beginning of `clause' according to INDENT, go to BOL.
-
 If already at beginning, go one `clause' backward.
-Returns beginning of `clause' if successful, nil otherwise"
+Return beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
 
 ;;;###autoload
 (defun py-backward-def-bol (&optional indent decorator)
   "Go to beginning of `def' according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
 If already at beginning, go one `def' backward.
-Returns beginning of `def' if successful, nil otherwise"
+Return beginning of `def' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
 ;;;###autoload
 (defun py-backward-def-or-class-bol (&optional indent decorator)
   "Go to beginning of `def-or-class' according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
 If already at beginning, go one `def-or-class' backward.
-Returns beginning of `def-or-class' if successful, nil otherwise"
+Return beginning of `def-or-class' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-elif-block-bol (&optional indent)
   "Go to beginning of `elif-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `elif-block' backward.
-Returns beginning of `elif-block' if successful, nil otherwise"
+Return beginning of `elif-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-elif-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-else-block-bol (&optional indent)
   "Go to beginning of `else-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `else-block' backward.
-Returns beginning of `else-block' if successful, nil otherwise"
+Return beginning of `else-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-else-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-except-block-bol (&optional indent)
   "Go to beginning of `except-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `except-block' backward.
-Returns beginning of `except-block' if successful, nil otherwise"
+Return beginning of `except-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-for-block-bol (&optional indent)
   "Go to beginning of `for-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `for-block' backward.
-Returns beginning of `for-block' if successful, nil otherwise"
+Return beginning of `for-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-if-block-bol (&optional indent)
   "Go to beginning of `if-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `if-block' backward.
-Returns beginning of `if-block' if successful, nil otherwise"
+Return beginning of `if-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-minor-block-bol (&optional indent)
   "Go to beginning of `minor-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `minor-block' backward.
-Returns beginning of `minor-block' if successful, nil otherwise"
+Return beginning of `minor-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-try-block-bol (&optional indent)
   "Go to beginning of `try-block' according to INDENT, go to BOL.
-
 If already at beginning, go one `try-block' backward.
-Returns beginning of `try-block' if successful, nil otherwise"
+Return beginning of `try-block' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any) nil t))
 
 ;; python-components-forward-forms
 
 (defun py-forward-region ()
-  "Go to the end of current region"
+  "Go to the end of current region."
   (interactive)
   (let ((end (region-end)))
     (when end (goto-char end))))
@@ -7582,7 +7581,7 @@ Returns beginning of `try-block' if successful, nil otherwise"
 (defun py-forward-block (&optional decorator bol)
   "Go to end of block.
 
-Returns end of block if successful, nil otherwise
+Return end of block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7593,7 +7592,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-block-bol ()
   "Goto beginning of line following end of block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-block': down from current definition to next beginning of block below. "
   (interactive)
@@ -7605,7 +7604,7 @@ See also `py-down-block': down from current definition to next beginning of bloc
 (defun py-forward-block-or-clause (&optional decorator bol)
   "Go to end of block-or-clause.
 
-Returns end of block-or-clause if successful, nil otherwise
+Return end of block-or-clause if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7616,7 +7615,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-block-or-clause-bol ()
   "Goto beginning of line following end of block-or-clause.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-block-or-clause': down from current definition to next beginning of block-or-clause below. "
   (interactive)
@@ -7629,7 +7628,7 @@ See also `py-down-block-or-clause': down from current definition to next beginni
 (defun py-forward-class (&optional decorator bol)
   "Go to end of class.
 
-Returns end of class if successful, nil otherwise
+Return end of class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7640,7 +7639,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-class-bol ()
   "Goto beginning of line following end of class.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-class': down from current definition to next beginning of class below. "
   (interactive)
@@ -7652,7 +7651,7 @@ See also `py-down-class': down from current definition to next beginning of clas
 (defun py-forward-clause (&optional decorator bol)
   "Go to end of clause.
 
-Returns end of clause if successful, nil otherwise
+Return end of clause if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7663,7 +7662,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-clause-bol ()
   "Goto beginning of line following end of clause.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-clause': down from current definition to next beginning of clause below. "
   (interactive)
@@ -7676,7 +7675,7 @@ See also `py-down-clause': down from current definition to next beginning of cla
 (defun py-forward-def-or-class (&optional decorator bol)
   "Go to end of def-or-class.
 
-Returns end of def-or-class if successful, nil otherwise
+Return end of def-or-class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7687,7 +7686,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-def-or-class-bol ()
   "Goto beginning of line following end of def-or-class.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-def-or-class': down from current definition to next beginning of def-or-class below. "
   (interactive)
@@ -7700,7 +7699,7 @@ See also `py-down-def-or-class': down from current definition to next beginning 
 (defun py-forward-def (&optional decorator bol)
   "Go to end of def.
 
-Returns end of def if successful, nil otherwise
+Return end of def if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7711,7 +7710,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-def-bol ()
   "Goto beginning of line following end of def.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-def': down from current definition to next beginning of def below. "
   (interactive)
@@ -7723,7 +7722,7 @@ See also `py-down-def': down from current definition to next beginning of def be
 (defun py-forward-if-block (&optional decorator bol)
   "Go to end of if-block.
 
-Returns end of if-block if successful, nil otherwise
+Return end of if-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7734,7 +7733,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-if-block-bol ()
   "Goto beginning of line following end of if-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-if-block': down from current definition to next beginning of if-block below. "
   (interactive)
@@ -7746,7 +7745,7 @@ See also `py-down-if-block': down from current definition to next beginning of i
 (defun py-forward-elif-block (&optional decorator bol)
   "Go to end of elif-block.
 
-Returns end of elif-block if successful, nil otherwise
+Return end of elif-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7757,7 +7756,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-elif-block-bol ()
   "Goto beginning of line following end of elif-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-elif-block': down from current definition to next beginning of elif-block below. "
   (interactive)
@@ -7769,7 +7768,7 @@ See also `py-down-elif-block': down from current definition to next beginning of
 (defun py-forward-else-block (&optional decorator bol)
   "Go to end of else-block.
 
-Returns end of else-block if successful, nil otherwise
+Return end of else-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7780,7 +7779,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-else-block-bol ()
   "Goto beginning of line following end of else-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-else-block': down from current definition to next beginning of else-block below. "
   (interactive)
@@ -7792,7 +7791,7 @@ See also `py-down-else-block': down from current definition to next beginning of
 (defun py-forward-for-block (&optional decorator bol)
   "Go to end of for-block.
 
-Returns end of for-block if successful, nil otherwise
+Return end of for-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7803,7 +7802,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-for-block-bol ()
   "Goto beginning of line following end of for-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-for-block': down from current definition to next beginning of for-block below. "
   (interactive)
@@ -7815,7 +7814,7 @@ See also `py-down-for-block': down from current definition to next beginning of 
 (defun py-forward-except-block (&optional decorator bol)
   "Go to end of except-block.
 
-Returns end of except-block if successful, nil otherwise
+Return end of except-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7826,7 +7825,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-except-block-bol ()
   "Goto beginning of line following end of except-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-except-block': down from current definition to next beginning of except-block below. "
   (interactive)
@@ -7838,7 +7837,7 @@ See also `py-down-except-block': down from current definition to next beginning 
 (defun py-forward-try-block (&optional decorator bol)
   "Go to end of try-block.
 
-Returns end of try-block if successful, nil otherwise
+Return end of try-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7849,7 +7848,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-try-block-bol ()
   "Goto beginning of line following end of try-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-try-block': down from current definition to next beginning of try-block below. "
   (interactive)
@@ -7861,7 +7860,7 @@ See also `py-down-try-block': down from current definition to next beginning of 
 (defun py-forward-minor-block (&optional decorator bol)
   "Go to end of minor-block.
 
-Returns end of minor-block if successful, nil otherwise
+Return end of minor-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
   (interactive)
@@ -7872,7 +7871,7 @@ With optional BOL, go to beginning of line following match."
 
 (defun py-forward-minor-block-bol ()
   "Goto beginning of line following end of minor-block.
-  Returns position reached, if successful, nil otherwise.
+Return position reached, if successful, nil otherwise.
 
 See also `py-down-minor-block': down from current definition to next beginning of minor-block below. "
   (interactive)
@@ -9034,7 +9033,7 @@ If final line isn't empty and `py-close-block-provides-newline' non-nil, insert 
 (defun py-mark-comment ()
   "Mark comment at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "comment"))
@@ -9045,7 +9044,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-line ()
   "Mark line at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "line"))
@@ -9056,7 +9055,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "paragraph"))
@@ -9067,7 +9066,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-expression ()
   "Mark expression at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "expression"))
@@ -9078,7 +9077,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-partial-expression ()
   "Mark partial-expression at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "partial-expression"))
@@ -9089,7 +9088,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-section ()
   "Mark section at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "section"))
@@ -9100,7 +9099,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-top-level ()
   "Mark top-level at point.
 
-Returns beginning and end positions of marked area, a cons. "
+Return beginning and end positions of marked area, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base "top-level"))
@@ -9111,7 +9110,7 @@ Returns beginning and end positions of marked area, a cons. "
 (defun py-mark-block ()
   "Mark block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "block"))
@@ -9122,7 +9121,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-block-or-clause ()
   "Mark block-or-clause, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "block-or-clause"))
@@ -9134,7 +9133,7 @@ Returns beginning and end positions of region, a cons. "
   "Mark class, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators))
         erg)
@@ -9146,7 +9145,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-clause ()
   "Mark clause, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "clause"))
@@ -9158,7 +9157,7 @@ Returns beginning and end positions of region, a cons. "
   "Mark def, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators))
         erg)
@@ -9171,7 +9170,7 @@ Returns beginning and end positions of region, a cons. "
   "Mark def-or-class, take beginning of line positions. 
 
 With \\[universal-argument] or `py-mark-decorators' set to `t', decorators are marked too.
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators))
         erg)
@@ -9183,7 +9182,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-elif-block ()
   "Mark elif-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "elif-block"))
@@ -9194,7 +9193,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-else-block ()
   "Mark else-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "else-block"))
@@ -9205,7 +9204,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-except-block ()
   "Mark except-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "except-block"))
@@ -9216,7 +9215,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-for-block ()
   "Mark for-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "for-block"))
@@ -9227,7 +9226,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-if-block ()
   "Mark if-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "if-block"))
@@ -9238,7 +9237,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-indent ()
   "Mark indent, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "indent"))
@@ -9249,7 +9248,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-minor-block ()
   "Mark minor-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "minor-block"))
@@ -9260,7 +9259,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-statement ()
   "Mark statement, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "statement"))
@@ -9271,7 +9270,7 @@ Returns beginning and end positions of region, a cons. "
 (defun py-mark-try-block ()
   "Mark try-block, take beginning of line positions. 
 
-Returns beginning and end positions of region, a cons. "
+Return beginning and end positions of region, a cons. "
   (interactive)
   (let (erg)
     (setq erg (py--mark-base-bol "try-block"))
@@ -14081,56 +14080,56 @@ When `delete-active-region' and (use-region-p), delete region "
 ;; python-components-booleans-beginning-forms
 
 (defun py--beginning-of-comment-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `comment', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `comment', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-comment-re)
          (point))))
 
 (defun py--beginning-of-line-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `line', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `line', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-line-re)
          (point))))
 
 (defun py--beginning-of-paragraph-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `paragraph', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `paragraph', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-paragraph-re)
          (point))))
 
 (defun py--beginning-of-expression-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `expression', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `expression', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-expression-re)
          (point))))
 
 (defun py--beginning-of-partial-expression-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `partial-expression', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `partial-expression', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-partial-expression-re)
          (point))))
 
 (defun py--beginning-of-section-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `section', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `section', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-section-re)
          (point))))
 
 (defun py--beginning-of-top-level-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `top-level', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `top-level', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-top-level-re)
          (point))))
 
 (defun py--beginning-of-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-block-re)
@@ -14139,7 +14138,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-block-or-clause-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `block-or-clause', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `block-or-clause', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-block-or-clause-re)
@@ -14148,7 +14147,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-class-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `class', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `class', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-class-re)
@@ -14157,7 +14156,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-clause-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `clause', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `clause', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-clause-re)
@@ -14166,7 +14165,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-def-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `def', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `def', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-def-re)
@@ -14175,7 +14174,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-def-or-class-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `def-or-class', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `def-or-class', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-def-or-class-re)
@@ -14184,7 +14183,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-elif-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `elif-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `elif-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-elif-block-re)
@@ -14193,7 +14192,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-else-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `else-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `else-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-else-block-re)
@@ -14202,7 +14201,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-except-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `except-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `except-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-except-block-re)
@@ -14211,7 +14210,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-for-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `for-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `for-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-for-block-re)
@@ -14220,7 +14219,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-if-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `if-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `if-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-if-block-re)
@@ -14229,7 +14228,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-indent-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `indent', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `indent', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-indent-re)
@@ -14238,7 +14237,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-minor-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `minor-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `minor-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-minor-block-re)
@@ -14247,7 +14246,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-statement-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `statement', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `statement', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-statement-re)
@@ -14256,7 +14255,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-try-block-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `try-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `try-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-try-block-re)
@@ -14265,7 +14264,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14274,7 +14273,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-block-or-clause-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `block-or-clause', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `block-or-clause', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14283,7 +14282,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-class-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `class', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `class', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14292,7 +14291,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-clause-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `clause', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `clause', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14301,7 +14300,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-def-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `def', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `def', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14310,7 +14309,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-def-or-class-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `def-or-class', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `def-or-class', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14319,7 +14318,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-elif-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `elif-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `elif-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14328,7 +14327,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-else-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `else-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `else-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14337,7 +14336,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-except-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `except-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `except-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14346,7 +14345,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-for-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `for-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `for-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14355,7 +14354,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-if-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `if-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `if-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14364,7 +14363,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-indent-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `indent', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `indent', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14373,7 +14372,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-minor-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `minor-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `minor-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14382,7 +14381,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-statement-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `statement', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `statement', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14391,7 +14390,7 @@ When `delete-active-region' and (use-region-p), delete region "
          (point))))
 
 (defun py--beginning-of-try-block-bol-p (&optional pps)
-  "Returns position, if cursor is at the beginning of a `try-block', nil otherwise. "
+  "Return position, if cursor is at the beginning of a `try-block', nil otherwise. "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (bolp)
          (not (or (nth 8 pps)(nth 1 pps)))
@@ -14403,7 +14402,7 @@ When `delete-active-region' and (use-region-p), delete region "
 
 
 (defun py--end-of-comment-p ()
-  "Returns position, if cursor is at the end of a comment, nil otherwise. "
+  "Return position, if cursor is at the end of a comment, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14414,7 +14413,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-line-p ()
-  "Returns position, if cursor is at the end of a line, nil otherwise. "
+  "Return position, if cursor is at the end of a line, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14425,7 +14424,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-paragraph-p ()
-  "Returns position, if cursor is at the end of a paragraph, nil otherwise. "
+  "Return position, if cursor is at the end of a paragraph, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14436,7 +14435,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-expression-p ()
-  "Returns position, if cursor is at the end of a expression, nil otherwise. "
+  "Return position, if cursor is at the end of a expression, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14447,7 +14446,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-partial-expression-p ()
-  "Returns position, if cursor is at the end of a partial-expression, nil otherwise. "
+  "Return position, if cursor is at the end of a partial-expression, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14458,7 +14457,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-section-p ()
-  "Returns position, if cursor is at the end of a section, nil otherwise. "
+  "Return position, if cursor is at the end of a section, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14469,7 +14468,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-top-level-p ()
-  "Returns position, if cursor is at the end of a top-level, nil otherwise. "
+  "Return position, if cursor is at the end of a top-level, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14480,7 +14479,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14491,7 +14490,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-or-clause-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a block-or-clause, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a block-or-clause, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14502,7 +14501,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-class-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a class, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a class, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14513,7 +14512,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-clause-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a clause, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a clause, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14524,7 +14523,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a def, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a def, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14535,7 +14534,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-or-class-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a def-or-class, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a def-or-class, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14546,7 +14545,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-elif-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a elif-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a elif-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14557,7 +14556,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-else-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a else-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a else-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14568,7 +14567,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-except-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a except-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a except-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14579,7 +14578,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-for-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a for-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a for-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14590,7 +14589,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-if-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a if-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a if-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14601,7 +14600,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-indent-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a indent, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a indent, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14612,7 +14611,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-minor-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a minor-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a minor-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14623,7 +14622,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-statement-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a statement, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a statement, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14634,7 +14633,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-try-block-bol-p ()
-  "Returns position, if cursor is at beginning-of-line at the end of a try-block, nil otherwise. "
+  "Return position, if cursor is at beginning-of-line at the end of a try-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14645,7 +14644,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-p ()
-  "Returns position, if cursor is at the end of a block, nil otherwise. "
+  "Return position, if cursor is at the end of a block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14656,7 +14655,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-or-clause-p ()
-  "Returns position, if cursor is at the end of a block-or-clause, nil otherwise. "
+  "Return position, if cursor is at the end of a block-or-clause, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14667,7 +14666,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-class-p ()
-  "Returns position, if cursor is at the end of a class, nil otherwise. "
+  "Return position, if cursor is at the end of a class, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14678,7 +14677,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-clause-p ()
-  "Returns position, if cursor is at the end of a clause, nil otherwise. "
+  "Return position, if cursor is at the end of a clause, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14689,7 +14688,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-p ()
-  "Returns position, if cursor is at the end of a def, nil otherwise. "
+  "Return position, if cursor is at the end of a def, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14700,7 +14699,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-or-class-p ()
-  "Returns position, if cursor is at the end of a def-or-class, nil otherwise. "
+  "Return position, if cursor is at the end of a def-or-class, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14711,7 +14710,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-elif-block-p ()
-  "Returns position, if cursor is at the end of a elif-block, nil otherwise. "
+  "Return position, if cursor is at the end of a elif-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14722,7 +14721,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-else-block-p ()
-  "Returns position, if cursor is at the end of a else-block, nil otherwise. "
+  "Return position, if cursor is at the end of a else-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14733,7 +14732,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-except-block-p ()
-  "Returns position, if cursor is at the end of a except-block, nil otherwise. "
+  "Return position, if cursor is at the end of a except-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14744,7 +14743,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-for-block-p ()
-  "Returns position, if cursor is at the end of a for-block, nil otherwise. "
+  "Return position, if cursor is at the end of a for-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14755,7 +14754,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-if-block-p ()
-  "Returns position, if cursor is at the end of a if-block, nil otherwise. "
+  "Return position, if cursor is at the end of a if-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14766,7 +14765,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-indent-p ()
-  "Returns position, if cursor is at the end of a indent, nil otherwise. "
+  "Return position, if cursor is at the end of a indent, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14777,7 +14776,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-minor-block-p ()
-  "Returns position, if cursor is at the end of a minor-block, nil otherwise. "
+  "Return position, if cursor is at the end of a minor-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14788,7 +14787,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-statement-p ()
-  "Returns position, if cursor is at the end of a statement, nil otherwise. "
+  "Return position, if cursor is at the end of a statement, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14799,7 +14798,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-try-block-p ()
-  "Returns position, if cursor is at the end of a try-block, nil otherwise. "
+  "Return position, if cursor is at the end of a try-block, nil otherwise. "
   (let ((orig (point))
 	erg)
     (save-excursion
@@ -14813,238 +14812,238 @@ When `delete-active-region' and (use-region-p), delete region "
 
 
 (defun py--beginning-of-block-position ()
-  "Returns beginning of block position. "
+  "Return beginning of block position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-block-p)
                    (py-backward-block))))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position ()
-  "Returns beginning of block-or-clause position. "
+  "Return beginning of block-or-clause position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-block-or-clause-p)
                    (py-backward-block-or-clause))))
       erg)))
 
 (defun py--beginning-of-class-position ()
-  "Returns beginning of class position. "
+  "Return beginning of class position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-class-p)
                    (py-backward-class))))
       erg)))
 
 (defun py--beginning-of-clause-position ()
-  "Returns beginning of clause position. "
+  "Return beginning of clause position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-clause-p)
                    (py-backward-clause))))
       erg)))
 
 (defun py--beginning-of-comment-position ()
-  "Returns beginning of comment position. "
+  "Return beginning of comment position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-comment-p)
                    (py-backward-comment))))
       erg)))
 
 (defun py--beginning-of-def-position ()
-  "Returns beginning of def position. "
+  "Return beginning of def position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-def-p)
                    (py-backward-def))))
       erg)))
 
 (defun py--beginning-of-def-or-class-position ()
-  "Returns beginning of def-or-class position. "
+  "Return beginning of def-or-class position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-def-or-class-p)
                    (py-backward-def-or-class))))
       erg)))
 
 (defun py--beginning-of-expression-position ()
-  "Returns beginning of expression position. "
+  "Return beginning of expression position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-expression-p)
                    (py-backward-expression))))
       erg)))
 
 (defun py--beginning-of-except-block-position ()
-  "Returns beginning of except-block position. "
+  "Return beginning of except-block position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-except-block-p)
                    (py-backward-except-block))))
       erg)))
 
 (defun py--beginning-of-if-block-position ()
-  "Returns beginning of if-block position. "
+  "Return beginning of if-block position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-if-block-p)
                    (py-backward-if-block))))
       erg)))
 
 (defun py--beginning-of-indent-position ()
-  "Returns beginning of indent position. "
+  "Return beginning of indent position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-indent-p)
                    (py-backward-indent))))
       erg)))
 
 (defun py--beginning-of-line-position ()
-  "Returns beginning of line position. "
+  "Return beginning of line position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-line-p)
                    (py-backward-line))))
       erg)))
 
 (defun py--beginning-of-minor-block-position ()
-  "Returns beginning of minor-block position. "
+  "Return beginning of minor-block position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-minor-block-p)
                    (py-backward-minor-block))))
       erg)))
 
 (defun py--beginning-of-partial-expression-position ()
-  "Returns beginning of partial-expression position. "
+  "Return beginning of partial-expression position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-partial-expression-p)
                    (py-backward-partial-expression))))
       erg)))
 
 (defun py--beginning-of-paragraph-position ()
-  "Returns beginning of paragraph position. "
+  "Return beginning of paragraph position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-paragraph-p)
                    (py-backward-paragraph))))
       erg)))
 
 (defun py--beginning-of-section-position ()
-  "Returns beginning of section position. "
+  "Return beginning of section position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-section-p)
                    (py-backward-section))))
       erg)))
 
 (defun py--beginning-of-statement-position ()
-  "Returns beginning of statement position. "
+  "Return beginning of statement position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-statement-p)
                    (py-backward-statement))))
       erg)))
 
 (defun py--beginning-of-top-level-position ()
-  "Returns beginning of top-level position. "
+  "Return beginning of top-level position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-top-level-p)
                    (py-backward-top-level))))
       erg)))
 
 (defun py--beginning-of-try-block-position ()
-  "Returns beginning of try-block position. "
+  "Return beginning of try-block position. "
   (save-excursion
     (let ((erg (or (py--beginning-of-try-block-p)
                    (py-backward-try-block))))
       erg)))
 
 (defun py--beginning-of-block-position-bol ()
-  "Returns beginning of block position at beginning-of-line. "
+  "Return beginning of block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-block-bol-p)
                    (py-backward-block-bol))))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position-bol ()
-  "Returns beginning of block-or-clause position at beginning-of-line. "
+  "Return beginning of block-or-clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-block-or-clause-bol-p)
                    (py-backward-block-or-clause-bol))))
       erg)))
 
 (defun py--beginning-of-class-position-bol ()
-  "Returns beginning of class position at beginning-of-line. "
+  "Return beginning of class position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-class-bol-p)
                    (py-backward-class-bol))))
       erg)))
 
 (defun py--beginning-of-clause-position-bol ()
-  "Returns beginning of clause position at beginning-of-line. "
+  "Return beginning of clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-clause-bol-p)
                    (py-backward-clause-bol))))
       erg)))
 
 (defun py--beginning-of-def-position-bol ()
-  "Returns beginning of def position at beginning-of-line. "
+  "Return beginning of def position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-def-bol-p)
                    (py-backward-def-bol))))
       erg)))
 
 (defun py--beginning-of-def-or-class-position-bol ()
-  "Returns beginning of def-or-class position at beginning-of-line. "
+  "Return beginning of def-or-class position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-def-or-class-bol-p)
                    (py-backward-def-or-class-bol))))
       erg)))
 
 (defun py--beginning-of-elif-block-position-bol ()
-  "Returns beginning of elif-block position at beginning-of-line. "
+  "Return beginning of elif-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-elif-block-bol-p)
                    (py-backward-elif-block-bol))))
       erg)))
 
 (defun py--beginning-of-else-block-position-bol ()
-  "Returns beginning of else-block position at beginning-of-line. "
+  "Return beginning of else-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-else-block-bol-p)
                    (py-backward-else-block-bol))))
       erg)))
 
 (defun py--beginning-of-except-block-position-bol ()
-  "Returns beginning of except-block position at beginning-of-line. "
+  "Return beginning of except-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-except-block-bol-p)
                    (py-backward-except-block-bol))))
       erg)))
 
 (defun py--beginning-of-for-block-position-bol ()
-  "Returns beginning of for-block position at beginning-of-line. "
+  "Return beginning of for-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-for-block-bol-p)
                    (py-backward-for-block-bol))))
       erg)))
 
 (defun py--beginning-of-if-block-position-bol ()
-  "Returns beginning of if-block position at beginning-of-line. "
+  "Return beginning of if-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-if-block-bol-p)
                    (py-backward-if-block-bol))))
       erg)))
 
 (defun py--beginning-of-indent-position-bol ()
-  "Returns beginning of indent position at beginning-of-line. "
+  "Return beginning of indent position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-indent-bol-p)
                    (py-backward-indent-bol))))
       erg)))
 
 (defun py--beginning-of-minor-block-position-bol ()
-  "Returns beginning of minor-block position at beginning-of-line. "
+  "Return beginning of minor-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-minor-block-bol-p)
                    (py-backward-minor-block-bol))))
       erg)))
 
 (defun py--beginning-of-statement-position-bol ()
-  "Returns beginning of statement position at beginning-of-line. "
+  "Return beginning of statement position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-statement-bol-p)
                    (py-backward-statement-bol))))
       erg)))
 
 (defun py--beginning-of-try-block-position-bol ()
-  "Returns beginning of try-block position at beginning-of-line. "
+  "Return beginning of try-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (or (py--beginning-of-try-block-bol-p)
                    (py-backward-try-block-bol))))
@@ -15054,7 +15053,7 @@ When `delete-active-region' and (use-region-p), delete region "
 
 
 (defun py--end-of-block-position ()
-  "Returns end of block position. "
+  "Return end of block position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15064,7 +15063,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-or-clause-position ()
-  "Returns end of block-or-clause position. "
+  "Return end of block-or-clause position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15074,7 +15073,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-class-position ()
-  "Returns end of class position. "
+  "Return end of class position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15084,7 +15083,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-clause-position ()
-  "Returns end of clause position. "
+  "Return end of clause position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15094,7 +15093,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-comment-position ()
-  "Returns end of comment position. "
+  "Return end of comment position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15104,7 +15103,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-position ()
-  "Returns end of def position. "
+  "Return end of def position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15114,7 +15113,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-or-class-position ()
-  "Returns end of def-or-class position. "
+  "Return end of def-or-class position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15124,7 +15123,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-expression-position ()
-  "Returns end of expression position. "
+  "Return end of expression position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15134,7 +15133,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-except-block-position ()
-  "Returns end of except-block position. "
+  "Return end of except-block position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15144,7 +15143,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-if-block-position ()
-  "Returns end of if-block position. "
+  "Return end of if-block position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15154,7 +15153,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-indent-position ()
-  "Returns end of indent position. "
+  "Return end of indent position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15164,7 +15163,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-line-position ()
-  "Returns end of line position. "
+  "Return end of line position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15174,7 +15173,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-minor-block-position ()
-  "Returns end of minor-block position. "
+  "Return end of minor-block position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15184,7 +15183,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-partial-expression-position ()
-  "Returns end of partial-expression position. "
+  "Return end of partial-expression position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15194,7 +15193,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-paragraph-position ()
-  "Returns end of paragraph position. "
+  "Return end of paragraph position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15204,7 +15203,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-section-position ()
-  "Returns end of section position. "
+  "Return end of section position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15214,7 +15213,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-statement-position ()
-  "Returns end of statement position. "
+  "Return end of statement position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15224,7 +15223,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-top-level-position ()
-  "Returns end of top-level position. "
+  "Return end of top-level position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15234,7 +15233,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-try-block-position ()
-  "Returns end of try-block position. "
+  "Return end of try-block position. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15244,7 +15243,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-position-bol ()
-  "Returns end of block position at beginning-of-line. "
+  "Return end of block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15254,7 +15253,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-block-or-clause-position-bol ()
-  "Returns end of block-or-clause position at beginning-of-line. "
+  "Return end of block-or-clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15264,7 +15263,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-class-position-bol ()
-  "Returns end of class position at beginning-of-line. "
+  "Return end of class position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15274,7 +15273,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-clause-position-bol ()
-  "Returns end of clause position at beginning-of-line. "
+  "Return end of clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15284,7 +15283,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-position-bol ()
-  "Returns end of def position at beginning-of-line. "
+  "Return end of def position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15294,7 +15293,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-def-or-class-position-bol ()
-  "Returns end of def-or-class position at beginning-of-line. "
+  "Return end of def-or-class position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15304,7 +15303,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-elif-block-position-bol ()
-  "Returns end of elif-block position at beginning-of-line. "
+  "Return end of elif-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15314,7 +15313,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-else-block-position-bol ()
-  "Returns end of else-block position at beginning-of-line. "
+  "Return end of else-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15324,7 +15323,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-except-block-position-bol ()
-  "Returns end of except-block position at beginning-of-line. "
+  "Return end of except-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15334,7 +15333,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-for-block-position-bol ()
-  "Returns end of for-block position at beginning-of-line. "
+  "Return end of for-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15344,7 +15343,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-if-block-position-bol ()
-  "Returns end of if-block position at beginning-of-line. "
+  "Return end of if-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15354,7 +15353,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-indent-position-bol ()
-  "Returns end of indent position at beginning-of-line. "
+  "Return end of indent position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15364,7 +15363,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-minor-block-position-bol ()
-  "Returns end of minor-block position at beginning-of-line. "
+  "Return end of minor-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15374,7 +15373,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-statement-position-bol ()
-  "Returns end of statement position at beginning-of-line. "
+  "Return end of statement position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
@@ -15384,7 +15383,7 @@ When `delete-active-region' and (use-region-p), delete region "
       erg)))
 
 (defun py--end-of-try-block-position-bol ()
-  "Returns end of try-block position at beginning-of-line. "
+  "Return end of try-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (progn
                  (when (looking-at "[ \\t\\r\\n\\f]*$")
