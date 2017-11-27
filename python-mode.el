@@ -11676,8 +11676,10 @@ problem as best as we can determine."
            ;; (not (string-match py-pydbtrack-stack-entry-regexp block))
 	   )
       "Traceback cue not found"
-    (let* ((filename (match-string
-                      py-pdbtrack-marker-regexp-file-group block))
+    (let* ((remote-prefix (or (file-remote-p default-directory) ""))
+           (filename (concat remote-prefix
+                             (match-string
+                              py-pdbtrack-marker-regexp-file-group block)))
            (lineno (string-to-number (match-string
                                       py-pdbtrack-marker-regexp-line-group
                                       block)))
