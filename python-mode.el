@@ -3053,9 +3053,9 @@ return `jython', otherwise return nil."
     mode))
 
 (defun py-choose-shell-by-path (&optional separator-char)
-  "SEPARATOR-CHAR according to system ‘path-separator’."
-  "Select Python executable according to version desplayed in path.
+  "SEPARATOR-CHAR according to system ‘path-separator’.
 
+Select Python executable according to version desplayed in path.
 Returns versioned string, nil if nothing appropriate found"
   (interactive)
   (let ((path (py--buffer-filename-remote-maybe))
@@ -11180,6 +11180,7 @@ Depends from kind of Python shell."
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (defalias 'py-shell-command-on-region 'py-execute-region)
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
+(defalias 'py-send-region 'py-execute-region)
 
 ;; python-components-send
 (defun py-output-buffer-filter (&optional beg end)
