@@ -11465,7 +11465,7 @@ in (I)Python shell-modes `py-shell-complete'"
 
 ;; python -m pdb -c "b 3" -c c your_script.py
 
-(defun py-pdb-break-at-current-line (&optional line file condition)
+(defun py-pdb-break-at-current-line ()
   "Set breakpoint at current line.
 
 Optional LINE FILE CONDITION"
