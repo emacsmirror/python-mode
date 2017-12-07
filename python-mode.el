@@ -10389,7 +10389,8 @@ Receives a ‘buffer-name’ as argument"
 	(if (string-match "^i" (process-name proc))
 	    (py-ipython-shell-mode)
 	  (py-python-shell-mode)))
-      (setq py-output-buffer (current-buffer))
+      (unless  py-force-default-output-buffer-p
+	  (setq py-output-buffer (current-buffer)))
       (sit-for 0.1 t)
       (goto-char (point-max))
       ;; otherwise comint might initialize it with point-min
@@ -12933,7 +12934,7 @@ Keegan Carruthers-Smith"
     (flymake-mode)))
 
 ;; ;
-(defun variables-prepare (kind)
+(defun variables-prepare (kind &optional buffer directory-out)
   "Used by variable-finds, variable-states. "
   (let* ((oldbuf (buffer-name (or buffer (current-buffer))))
          ;; (file (buffer-file-name))
