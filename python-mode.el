@@ -11371,7 +11371,7 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
-         (pos (copy-marker (point)))
+         ;; (pos (copy-marker (point)))
 	 (pps (parse-partial-sexp (or
 				   (ignore-errors comint-last-prompt)
 				   (line-beginning-position)) (point)))
@@ -11399,7 +11399,7 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p erg)
-    (cond (fast-complete (py--fast-complete-base shell pos word imports exception-buffer))
+    (cond (fast-complete (py--fast-complete-base shell word imports))
 	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
@@ -22690,7 +22690,7 @@ completions on the current context."
 
     nil))
 
-(defun py--fast-complete-base (shell pos word imports exception-buffer)
+(defun py--fast-complete-base (shell word imports)
   (let* ((shell (or shell (py-choose-shell nil t)))
 	 (py-buffer-name (py-shell nil nil shell nil t))
 	 (proc (get-buffer-process py-buffer-name))
