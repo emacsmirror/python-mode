@@ -11341,7 +11341,6 @@ Interal used. Takes INPUT COMPLETION"
   "Do completion at point for PROCESS.
 
 Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
-  ;; (py--send-string-no-output py-shell-completion-setup-code process)
   (when imports
     (py--send-string-no-output imports process))
   ;; (py--delay-process-dependent process)
@@ -22727,42 +22726,6 @@ Use `py-fast-process' "
 		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
 		  py-indent-offset)))))
 
-;; (defun py--beginning-of-prepare (indent final-re &optional inter-re iact lc)
-;;   (let ((orig (point))
-;;         (indent (or indent (py--indent-prepare inter-re)))
-;;         erg)
-;;     (if (and (< (point) orig) (looking-at (symbol-value final-re)))
-;;         (progn
-;;           (and lc (beginning-of-line))
-;;           (setq erg (point))
-;;           ;; (when (and ar-verbose-p iact) (message "%s" erg))
-;;           erg)
-;;       (py--beginning-of-form-intern final-re indent orig lc))))
-
-;; (defun py--end-of-prepare (indent final-re &optional inter-re iact lc)
-;;   (let ((orig (point))
-;;         (indent
-;;          (or indent
-;;              (progn (back-to-indentation)
-;;                     (or (py--beginning-of-statement-p)
-;;                         (ar-backward-statement))
-;;                     (cond ((eq 0 (current-indentation))
-;;                            (current-indentation))
-;;                           ((looking-at (symbol-value inter-re))
-;;                            (current-indentation))
-;;                           (t
-;;                            (if (<= py-indent-offset (current-indentation))
-;;                                (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
-;;                              py-indent-offset))))))
-;;         erg)
-;;     (if (and (< orig (point)) (looking-at (symbol-value final-re)))
-;;         (progn
-;;           (and lc (beginning-of-line))
-;;           (setq erg (point))
-;;           ;; (when (and ar-verbose-p iact) (message "%s" erg))
-;;           erg)
-;;       (py--beginning-of-form-intern final-re indent orig lc))))
-
 (defun py-separator-char ()
   "Return the file-path separator char from current machine.
 
@@ -24002,10 +23965,6 @@ This function does not modify point or mark."
                (t (error "Unknown buffer position requested: %s" position))) (point))))
     erg))
 
-;; (defun py-install-search-local ()
-;;   (interactive)
-;;   (let ((erg (split-string (shell-command-to-string (concat "find " default-directory " -maxdepth 9 -type f -name \"*python\"")))))))
-
 (defun py-install-local-shells (&optional local)
   "Builds Python-shell commands from executable found in LOCAL.
 
@@ -24070,9 +24029,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-;;  (goto-char (match-end 0))
-;;  (search-forward (match-string-no-properties 0))))
-
 (defun py--until-found (search-string liste)
   "Search liste for search-string until found. "
   (let ((liste liste) element)
@@ -24093,7 +24049,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
       (sit-for py-ipython-send-delay t)
     (sit-for py-python-send-delay t)))
 
-(defun py--send-string-no-output (strg &optional process msg)
+(defun py--send-string-no-output (strg &optional process)
   "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
