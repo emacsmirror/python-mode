@@ -24002,9 +24002,9 @@ This function does not modify point or mark."
                (t (error "Unknown buffer position requested: %s" position))) (point))))
     erg))
 
-(defun py-install-search-local ()
-  (interactive)
-  (let ((erg (split-string (shell-command-to-string (concat "find " default-directory " -maxdepth 9 -type f -name \"*python\"")))))))
+;; (defun py-install-search-local ()
+;;   (interactive)
+;;   (let ((erg (split-string (shell-command-to-string (concat "find " default-directory " -maxdepth 9 -type f -name \"*python\"")))))))
 
 (defun py-install-local-shells (&optional local)
   "Builds Python-shell commands from executable found in LOCAL.
