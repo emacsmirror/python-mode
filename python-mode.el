@@ -2013,7 +2013,7 @@ Output buffer is created dynamically according to Python version and kind of pro
 (make-variable-buffer-local 'py-output-buffer)
 
 (defcustom py-force-default-output-buffer-p nil
-  "Enforce sending output to the default output buffer-name.
+  "Enforce sending output to the default output ‘buffer-name’.
 
 Set by defvar ‘py-output-buffer’
 Bug #31 - wrong fontification caused by string-delimiters in output"
@@ -11471,7 +11471,7 @@ in (I)Python shell-modes `py-shell-complete'"
   (py-execute-string "import pdb;pdb.help()"))
 
 ;; https://stackoverflow.com/questions/6980749/simpler-way-to-put-pdb-breakpoints-in-python-code
-;; breakpoint at line 3 
+;; breakpoint at line 3
 
 ;; python -m pdb -c "b 3" -c c your_script.py
 
@@ -11483,7 +11483,7 @@ Optional LINE FILE CONDITION"
   (py-execute-string (concat "import pdb;pdb.break('" (py-count-lines)  "')")))
 
 (defun py--pdb-versioned ()
-  "Guess existing pdb version from py-shell-name
+  "Guess existing pdb version from ‘py-shell-name’.
 
 Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
   (interactive)
@@ -11503,9 +11503,11 @@ Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
 The directory containing FILE becomes the initial working directory
 and source-file directory for your debugger.
 
-At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
+At GNU Linux required pdb version should be detected by `py--pdb-version'
+at Windows configure `py-python-ms-pdb-command'
 
-lp:963253"
+lp:963253
+Argument COMMAND-LINE TBD."
   (interactive
    (progn
      (require 'gud)
@@ -11519,14 +11521,14 @@ lp:963253"
   (pdb command-line))
 
 (defun py--pdb-current-executable ()
-  "When py-pdb-executable is set, return it.
+  "When ‘py-pdb-executable’ is set, return it.
 
-Otherwise return resuslt from `executable-find' "
+Otherwise return resuslt from `executable-find'"
   (or py-pdb-executable
       (executable-find "pdb")))
 
 (defun py-update-gud-pdb-history ()
-  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
+  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'."
   (interactive)
   (let* (;; PATH/TO/pdb
 	 (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
@@ -11562,6 +11564,7 @@ Otherwise return resuslt from `executable-find' "
 ;; python -m pdb -c "b 3" -c c your_script.py
 
 (defun py-pdb-tbreak ()
+  "Insert a temporary break."
   (interactive)
   (let (
 	(py-python-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
