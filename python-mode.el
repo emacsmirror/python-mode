@@ -446,17 +446,6 @@ Default is nil"
   :tag "py-modeline-acronym-display-home-p"
   :group 'python-mode)
 
-(defun py-smart-operator-check ()
-  "Check, if ‘smart-operator-mode’ is loaded resp. available.
-
-Give some hints, if not."
-  (interactive)
-  (if (featurep 'smart-operator)
-      't
-    (progn
-      (and (boundp 'py-smart-operator-mode-p) py-smart-operator-mode-p (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
-           nil))))
-
 (defun py-autopair-check ()
   "Check, if ‘autopair-mode’ is available.
 
@@ -468,7 +457,6 @@ Give some hints, if not."
       (message "py-autopair-check: %s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
       nil)))
 
-(defvar smart-operator-mode nil)
 (defvar highlight-indent-active nil)
 (defvar autopair-mode nil)
 
@@ -506,15 +494,6 @@ Give some hints, if not."
 
   :type 'boolean
   :tag "py-timer-close-completions-p"
-  :group 'python-mode)
-
-(defcustom py-smart-operator-mode-p nil
-  "If ‘python-mode’ calls smart-operator-mode-on.
-
-Default is nil."
-
-  :type 'boolean
-  :tag "py-smart-operator-mode-p"
   :group 'python-mode)
 
 (defcustom py-autopair-mode nil
@@ -6231,31 +6210,6 @@ Returns value of `py-autopair-mode'."
 Returns value of `py-autopair-mode'."
   (interactive)
   (setq py-autopair-mode (autopair-mode 0)))
-
-;; Smart operator
-;; py-smart-operator-mode-p forms
-(defun toggle-py-smart-operator-mode-p ()
-  "If `py-smart-operator-mode-p' should be on or off.
-
-  Returns value of `py-smart-operator-mode-p' switched to."
-  (interactive)
-  (and (py-smart-operator-check)
-       (setq py-smart-operator-mode-p (smart-operator-mode (if smart-operator-mode 0 1)))))
-
-(defun py-smart-operator-mode-p-on ()
-  "Make sure, py-smart-operator-mode-p' is on.
-
-Returns value of `py-smart-operator-mode-p'."
-  (interactive)
-  (and (py-smart-operator-check)
-       (setq py-smart-operator-mode-p (smart-operator-mode 1))))
-
-(defun py-smart-operator-mode-p-off ()
-  "Make sure, py-smart-operator-mode-p' is off.
-
-Returns value of `py-smart-operator-mode-p'."
-  (interactive)
-  (setq py-smart-operator-mode-p (smart-operator-mode 0)))
 
 ;;  py-switch-buffers-on-execute-p forms
 (defun toggle-py-switch-buffers-on-execute-p (&optional arg)
