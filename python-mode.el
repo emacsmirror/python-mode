@@ -13346,6 +13346,22 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
   "Regexp for Python classes for use with the Imenu package."
   )
 
+;; (defvar py-imenu-method-regexp
+;;   (concat                               ; <<methods and functions>>
+;;    "\\("                                ;
+;;    "^[ \t]*"                            ; new line and maybe whitespace
+;;    "\\(def[ \t]+"                       ; function definitions start with def
+;;    "\\([a-zA-Z0-9_]+\\)"                ;   name is here
+;;                                         ;   function arguments...
+;;    ;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
+;;    "[ \t]*(\\([^:#]*\\))"
+;;    "\\)"                                ; end of def
+;;    "[ \t]*:"                            ; and then the :
+;;    "\\)"                                ; >>methods and functions<<
+;;    )
+;;   "Regexp for Python methods/functions for use with the Imenu package."
+;;   )
+
 (defvar py-imenu-method-regexp
   (concat                               ; <<methods and functions>>
    "\\("                                ;
@@ -13354,27 +13370,16 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
    "\\([a-zA-Z0-9_]+\\)"                ;   name is here
                                         ;   function arguments...
    ;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
-   "[ \t]*(\\([^:#]*\\))"
+   "[ \t]*(\\(.*\\))"
    "\\)"                                ; end of def
    "[ \t]*:"                            ; and then the :
    "\\)"                                ; >>methods and functions<<
    )
-  "Regexp for Python methods/functions for use with the Imenu package."
-  )
+  "Regexp for Python methods/functions for use with the Imenu package.")
 
-(setq py-imenu-method-regexp
-      (concat                               ; <<classes>>
-       "\\("                                ;
-       "^[ \t]*"                            ; newline and maybe whitespace
-       "\\(def[ \t]+[a-zA-Z0-9_]+\\)"     ; class name
-                                        ; possibly multiple superclasses
-       "\\([ \t]*\\((\\([a-zA-Z0-9_,. \t\n]\\)*)\\)?\\)"
-       "[ \t]*-?>?[ \t]*"                   ; maybe arrow in whitespace
-       ".*"                              ; maybe return value annotation
-       ;; "[ \t]*"
-       ":"                            ; and the final :
-       "\\)"                                ; >>classes<<
-       ))
+
+
+
 
 (defvar py-imenu-method-no-arg-parens '(2 8)
   "Indices into groups of the Python regexp for use with Imenu.
@@ -13490,6 +13495,7 @@ of the first definition found."
         cur-indent def-pos
         (class-paren (first py-imenu-generic-parens))
         (def-paren (second py-imenu-generic-parens)))
+    (switch-to-buffer (current-buffer))
     (setq looking-p
           (re-search-forward py-imenu-generic-regexp (point-max) t))
     (while looking-p
