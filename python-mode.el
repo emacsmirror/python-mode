@@ -13418,32 +13418,10 @@ Used by setting the variable `imenu-generic-expression' to this value.
 Also, see the function \\[py--imenu-create-index] for a better
 alternative for finding the index.")
 
-;; (setq py-imenu-generic-expression
-;;   (cons
-;;    (concat
-;;     py-imenu-class-regexp
-;;     "\\|"                               ; or...
-;;     py-imenu-method-regexp
-;;     )
-;;    py-imenu-method-no-arg-parens))
-
-
-;; These next two variables are used when searching for the Python
-;; class/definitions. Just saving some time in accessing the
-;; generic-python-expression, really.
-;; (set (make-local-variable 'imenu-generic-expression) 'py-imenu-generic-regexp)
 
 (defvar py-imenu-generic-regexp nil)
 (defvar py-imenu-generic-parens nil)
 
-;; (defun py-switch-imenu-index-function ()
-;;   "Switch between series 5. index machine `py--imenu-create-index' and `py--imenu-create-index-new', which also lists modules variables "
-;;   (interactive)
-;;   (if (eq py--imenu-create-index-function 'py--imenu-create-index-new)
-;;       (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index)
-;;     (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index-new))
-;;   (when py-verbose-p (message "imenu-create-index-function: %s" (prin1-to-string py--imenu-create-index-function)))
-;;   (funcall imenu-create-index-function))
 
 (defun py--imenu-create-index ()
   "Python interface function for the Imenu package.
@@ -13648,10 +13626,14 @@ It must be a function with two arguments: TYPE and NAME.")
 
 (defun py-imenu--put-parent (type name pos tree)
   "Add the parent with TYPE, NAME and POS to TREE."
-  (let ((label
+  (let* ((label
          (funcall py-imenu-format-item-label-function type name))
-        (jump-label
-         (funcall py-imenu-format-parent-item-jump-label-function type name)))
+        ;; (jump-label
+	;; (funcall py-imenu-format-parent-item-jump-label-function type name))
+	(jump-label label
+         ;; (funcall py-imenu-format-parent-item-jump-label-function type name)
+	 )
+	)
     (if (not tree)
         (cons label pos)
       (cons label (cons (cons jump-label pos) tree)))))
@@ -13693,15 +13675,7 @@ not be passed explicitly unless you know what you are doing."
 	      min-indent
 	      indent
 	      (if (<= indent children-indent-limit)
-		  ;; This lies within the children indent offset range,
-		  ;; so it's a normal child of its parent (i.e., not
-		  ;; a child of a child).
 		  (cons (cons label pos) tree)
-		;; Oh no, a child of a child?!  Fear not, we
-		;; know how to roll.  We recursively parse these by
-		;; swapping prev-indent and min-indent plus adding this
-		;; newly found item to a fresh subtree.  This works, I
-		;; promise.
 		(cons
 		 (py-imenu--build-tree
 		  prev-indent indent (list (cons label pos)))
@@ -13721,56 +13695,6 @@ customize how labels are formatted."
       (while (setq tree (py-imenu--build-tree))
 	(setq index (cons tree index)))
       index)))
-
-(defun py-imenu-create-flat-index (&optional alist prefix)
-  "Return flat outline of the current Python buffer for Imenu.
-Optional argument ALIST is the tree to be flattened; when nil
-`py-imenu-build-index' is used with
-`py-imenu-format-parent-item-jump-label-function'
-`py-imenu-format-parent-item-label-function'
-`py-imenu-format-item-label-function' set to
-  (lambda (type name) name)
-Optional argument PREFIX is used in recursive calls and should
-not be passed explicitly.
-
-Converts this:
-
-    ((\"Foo\" . 103)
-     (\"Bar\" . 138)
-     (\"decorator\"
-      (\"decorator\" . 173)
-      (\"wrap\"
-       (\"wrap\" . 353)
-       (\"wrapped_f\" . 393))))
-
-To this:
-
-    ((\"Foo\" . 103)
-     (\"Bar\" . 138)
-     (\"decorator\" . 173)
-     (\"decorator.wrap\" . 353)
-     (\"decorator.wrapped_f\" . 393))"
-  ;; Inspired by imenu--flatten-index-alist removed in revno 21853.
-  (apply
-   'nconc
-   (mapcar
-    (lambda (item)
-      (let ((name (if prefix
-                      (concat prefix "." (car item))
-                    (car item)))
-            (pos (cdr item)))
-        (cond ((or (numberp pos) (markerp pos))
-               (list (cons name pos)))
-              ((listp pos)
-               (cons
-                (cons name (cdar pos))
-                (py-imenu-create-flat-index (cddr item) name))))))
-    (or alist
-        (let* ((fn (lambda (_type name) name))
-               (py-imenu-format-item-label-function fn)
-              (py-imenu-format-parent-item-label-function fn)
-              (py-imenu-format-parent-item-jump-label-function fn))
-          (py--imenu-index))))))
 
 ;; python-components-named-shells
 
