@@ -6103,7 +6103,14 @@ Default is t")
                   "SyntaxWarning" "SystemError" "SystemExit" "TabError" "TypeError"
                   "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
                   "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
-                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError")
+                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError"
+                  ;; OSError subclasses
+                  "BlockIOError" "ChildProcessError" "ConnectionError"
+                  "BrokenPipError" "ConnectionAbortedError"
+                  "ConnectionRefusedError" "ConnectionResetError"
+                  "FileExistsError" "FileNotFoundError" "InterruptedError"
+                  "IsADirectoryError" "NotADirectoryError" "PermissionError"
+                  "ProcessLookupError" "TimeoutError")
               word-end) . py-exception-name-face)
         ;; Builtins
         (,(rx
