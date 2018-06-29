@@ -1829,8 +1829,6 @@ Use the following as the value of this variable:
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
-(defvaralias 'inferior-python-filter-regexp 'py-input-filter-re)
-
 (defvar strip-chars-before  "\\`[ \t\r\n]*"
   "Regexp indicating which chars shall be stripped before STRING - which is defined by `string-chars-preserve'.")
 
@@ -10501,7 +10499,6 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
     (when (or (called-interactively-p 'any)
     	      (eq 1 argprompt)
     	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-      ;; (pop-to-buffer py-buffer-name t)
       (py--shell-manage-windows buffer exception-buffer split switch))
     py-buffer-name))
 
