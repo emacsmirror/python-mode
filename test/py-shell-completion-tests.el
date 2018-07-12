@@ -27,7 +27,7 @@
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
     ;; (set-buffer (py-shell nil t "python" nil "/"))
-    (with-temp-buffer (py-shell nil t "python")
+    (py-test-with-temp-buffer (py-shell nil t "python")
     (sit-for 0.1 t) 
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     ;; (goto-char (point-max))
