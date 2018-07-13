@@ -11488,11 +11488,12 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 
 Optional SHELL BEG END WORD"
   (interactive)
-  (save-excursion
-    (and (buffer-live-p (get-buffer "*Python Completions*"))
-	 (py-kill-buffer-unconditional "*Python Completions*")))
+  ;; (save-excursion
+  ;;   (and (buffer-live-p (get-buffer "*Python Completions*"))
+  ;; 	 (py-kill-buffer-unconditional "*Python Completions*")))
   (setq py-last-window-configuration
         (current-window-configuration))
+  ;; fast-complete is called
   (py--complete-prepare shell beg end word t))
 
 (defun py-indent-or-complete ()
@@ -11512,7 +11513,6 @@ in (I)Python shell-modes `py-shell-complete'"
 	((or (bolp)
 	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
 	     (not (looking-at "[ \t]*$")))
-	 ;; (not (eolp)))
 	 (py-indent-line))
 	((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	 (if (string-match "ipython" (py-choose-shell))
 	     (py-shell-complete)
@@ -24736,7 +24736,6 @@ Use current region unless optional args BEG END are delivered."
     (indent-to-column cui)
     cui))
 
-;; /usr/lib/python2.7/pdb.py eyp.py
 (defalias 'IPython 'ipython)
 (defalias 'Ipython 'ipython)
 (defalias 'Python 'python)
@@ -27143,9 +27142,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (set-syntax-table python-mode-syntax-table)
   (set (make-local-variable 'comint-output-filter-functions)
        '(ansi-color-process-output
-         ;; python-shell-comint-watch-for-first-prompt-output-filter
          py-pdbtrack-comint-output-filter-function
-         ;; python-comint-postoutput-scroll-to-bottom
          comint-watch-for-password-prompt))
   (if py-auto-complete-p
       (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
