@@ -11301,21 +11301,9 @@ Optional BEG END"
 		       (get-buffer-process (py-shell))
 		     (comint-send-string (get-buffer-process (py-shell)) "\n"))))
 	 (buffer (process-buffer proc)))
-    ;; (with-current-buffer buffer
-    ;; (goto-char (point-max))
-    ;; (switch-to-buffer (current-buffer))
-    (unless (string-match "\\`" strg)
+    (unless (string-match "\n$" strg)
       (setq strg (concat strg "\n")))
-    (process-send-string proc strg)
-     ;; (comint-send-string proc strg)
-    ;; (goto-char (point-max))
-    ;; (unless (string-match "\n\\'" strg)
-    ;; Make sure the text is properly LF-terminated.
-    ;; (comint-send-string proc "\n"))
-    ;; (when py-debug-p (message "%s" (current-buffer)))
-    ;; (goto-char (point-max))
-    ;; (switch-to-buffer (current-buffer))
-    ))
+    (process-send-string proc strg)))
 
 ;; python-components-shell-complete
 
@@ -11432,15 +11420,16 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
          (proc (or
 		;; completing inside a shell
 		(get-buffer-process exception-buffer)
-		   (and (comint-check-proc shell)
-			(get-process shell))
-	       (prog1
-		   (get-buffer-process (py-shell nil nil shell))
-		 (sit-for py-new-shell-delay))))
-    (code (if (string-match "[Ii][Pp]ython*" shell)
-	      (py-set-ipython-completion-command-string shell)
-	    py-shell-module-completion-code)))
-  (py--shell-do-completion-at-point proc imports word exception-buffer code)))
+		(and (comint-check-proc shell)
+		     (get-process shell))
+		(prog1
+		    (get-buffer-process (py-shell nil nil shell))
+		  (sit-for py-new-shell-delay))))
+	 (code (if (string-match "[Ii][Pp]ython*" shell)
+		   (py-set-ipython-completion-command-string shell)
+		 py-shell-module-completion-code)))
+    (py--python-send-completion-setup-code)
+    (py--shell-do-completion-at-point proc imports word exception-buffer code)))
 
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
@@ -11494,7 +11483,7 @@ Optional SHELL BEG END WORD"
   (setq py-last-window-configuration
         (current-window-configuration))
   ;; fast-complete is called
-  (py--complete-prepare shell beg end word t))
+  (py--complete-prepare shell beg end word))
 
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
@@ -11514,9 +11503,9 @@ in (I)Python shell-modes `py-shell-complete'"
 	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
 	     (not (looking-at "[ \t]*$")))
 	 (py-indent-line))
-	((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	 (if (string-match "ipython" (py-choose-shell))
-	     (py-shell-complete)
-	   (funcall py-complete-function)))
+	;; ((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	 (if (string-match "ipython" (py-choose-shell))
+	;;      (py-shell-complete)
+	;;    (funcall py-complete-function)))
 	((comint-check-proc (current-buffer))
 	 (py-shell-complete (substring (process-name (get-buffer-process (current-buffer))) 0 (string-match "<" (process-name (get-buffer-process (current-buffer)))))))
 	(t
@@ -22388,14 +22377,18 @@ See also `py-fast-shell'
 
 (defun py--fast-send-string-no-output (strg proc output-buffer)
   (with-current-buffer output-buffer
-    (process-send-string proc "\n")
-    (let ((orig (point-max)))
-      (sit-for 1 t)
+    (switch-to-buffer (current-buffer)) 
+    (erase-buffer) 
+    ;; (process-send-string proc "\n")
+    ;; (let ((orig (point-max)))
+      ;; (sit-for 1 t)
       (process-send-string proc strg)
       (process-send-string proc "\n")
-      (accept-process-output proc 5)
-      (sit-for 1 t)
-      (delete-region orig (point-max)))))
+      ;; (accept-process-output proc 5)
+      ;; (sit-for 1 t)
+      ;; (erase-buffer)
+      ))
+;; )
 
 (defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
@@ -22890,6 +22883,7 @@ completions on the current context."
 		 py-shell-module-completion-code)))
     ;; (with-current-buffer py-buffer-name
     ;;   (erase-buffer))
+    (py--python-send-completion-setup-code)
     (py--fast--do-completion-at-point proc imports word code py-buffer-name)))
 
 (defun py-fast-complete (&optional shell beg end word)
@@ -27170,7 +27164,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'inhibit-point-motion-hooks) t)
   (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send)
-  (py--python-send-completion-setup-code)
   (py--python-send-ffap-setup-code)
   (py--python-send-eldoc-setup-code)
   (force-mode-line-update))
