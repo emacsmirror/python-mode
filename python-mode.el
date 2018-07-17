@@ -2973,28 +2973,27 @@ See also `py-object-reference-face'"
   :tag "py-exception-name-face"
   :group 'python-mode)
 
-(defun py--python-send-setup-code-intern (name &optional msg)
+(defun py--python-send-setup-code-intern (name buffer &optional msg)
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
-	(buf (current-buffer))
 	py-return-result-p py-store-result-p)
     (unless (file-readable-p setup-file)
       (with-temp-buffer
 	(insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
 	(write-file setup-file)))
-    (py--execute-file-base nil setup-file nil buf)
-    (when msg (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buf)))))))
+    (py--execute-file-base nil setup-file nil buffer)
+    (when msg (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))))
 
-(defun py--python-send-completion-setup-code ()
+(defun py--python-send-completion-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "shell-completion" py-verbose-p))
+  (py--python-send-setup-code-intern "shell-completion" buffer py-verbose-p))
 
-(defun py--python-send-ffap-setup-code ()
+(defun py--python-send-ffap-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "ffap" py-verbose-p))
+  (py--python-send-setup-code-intern "ffap" buffer py-verbose-p))
 
-(defun py--python-send-eldoc-setup-code ()
+(defun py--python-send-eldoc-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "eldoc" py-verbose-p))
+  (py--python-send-setup-code-intern "eldoc" buffer py-verbose-p))
 
 (defun py--ipython-import-module-completion ()
   "Setup IPython v0.11 or greater.
@@ -11318,9 +11317,10 @@ completions on the current context."
   (let ((erg
 	 (py--send-string-return-output
 	  (format completion-code input) process)))
-    (sit-for 0.2 t)
-    (when (and erg (> (length erg) 2))
-      (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t)))
+    ;; (sit-for 0.2 t)
+    (if (and erg (> (length erg) 2))
+      (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
+      (and py-verbose-p (message "py--shell-completion-get-completions: %s" "Don't see a completion")))
     erg))
 
 ;; post-command-hook
@@ -11374,30 +11374,19 @@ Interal used. Takes INPUT COMPLETION"
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
-	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
-	 nil)
-	((or (null completion)
-	     (and completion (stringp completion)
-		  (or
-		   (string-match "\\`''\\'" completion)
-		   (string= "" completion))))
-	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Don't see a completion"))
-	 nil)
+	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "`t' is returned, not completion. Might be a bug.")))
+	((null completion)
+	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Don't see a completion")))
 	((and completion
 	      (or (and (listp completion)
 		       (string= input (car completion)))
 		  (and (stringp completion)
-		       (string= input completion))))
-	 nil)
+		       (string= input completion)))))
 	((and completion (stringp completion)(not (string= input completion)))
 	 (progn (delete-char (- (length input)))
-		(insert completion)
-		;; (move-marker orig (point))
-		;; minibuffer.el expects a list, a bug IMO
-		nil))
+		(insert completion)))
 	(t (py--try-completion input completion)))
-
-  nil)
+  )
 
 (defun py--shell-do-completion-at-point (process imports input exception-buffer code)
   "Do completion at point for PROCESS.
@@ -11413,7 +11402,8 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
     (set-buffer exception-buffer)
     ;; (py--delay-process-dependent process)
     ;; (sit-for 1 t)
-    (py--shell-insert-completion-maybe completion input)))
+    (when completion
+      (py--shell-insert-completion-maybe completion input))))
 
 (defun py--complete-base (shell word imports exception-buffer)
   (let* ((shell (or shell (py-choose-shell)))
@@ -11425,10 +11415,11 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 		(prog1
 		    (get-buffer-process (py-shell nil nil shell))
 		  (sit-for py-new-shell-delay))))
+	 (buffer (process-buffer proc))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
-    (py--python-send-completion-setup-code)
+    (py--python-send-completion-setup-code buffer)
     (py--shell-do-completion-at-point proc imports word exception-buffer code)))
 
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
@@ -11480,8 +11471,6 @@ Optional SHELL BEG END WORD"
   ;; (save-excursion
   ;;   (and (buffer-live-p (get-buffer "*Python Completions*"))
   ;; 	 (py-kill-buffer-unconditional "*Python Completions*")))
-  (setq py-last-window-configuration
-        (current-window-configuration))
   ;; fast-complete is called
   (py--complete-prepare shell beg end word))
 
@@ -11497,13 +11486,15 @@ Use `C-q TAB' to insert a literally TAB-character
 In ‘python-mode’ `py-complete-function' is called,
 in (I)Python shell-modes `py-shell-complete'"
   (interactive "*")
+  (setq py-last-window-configuration
+        (current-window-configuration))
   (cond ((use-region-p)
 	 (py-indent-region (region-beginning) (region-end)))
 	((or (bolp)
 	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
 	     (not (looking-at "[ \t]*$")))
 	 (py-indent-line))
-	;; ((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	 (if (string-match "ipython" (py-choose-shell))
+	;; ((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	(if (string-match "ipython" (py-choose-shell))
 	;;      (py-shell-complete)
 	;;    (funcall py-complete-function)))
 	((comint-check-proc (current-buffer))
@@ -22831,13 +22822,13 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
 ;; python-components-hide-show.el ends here
 ;; python-components-fast-complete
 
-(defun py--fast-completion-get-completions (input process completion-code)
+(defun py--fast-completion-get-completions (input process completion-code buffer)
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
 	 (py--fast-send-string-intern
-	  (format completion-code input) process py-buffer-name t)))
+	  (format completion-code input) process buffer t)))
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -22849,42 +22840,39 @@ completions on the current context."
       ;; (message "%s" imports)
       (py--fast-send-string-no-output imports process output-buffer)))
   (let* ((completion
-	  (py--fast-completion-get-completions input process code)))
+	  (py--fast-completion-get-completions input process code output-buffer)))
     (cond ((eq completion t)
-	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug."))
-	   nil)
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug.")))
 	  ((null completion)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Don't see a completion"))
-	   (set-window-configuration py-last-window-configuration)
-	   nil)
+	   (set-window-configuration py-last-window-configuration))
 	  ((and completion
 		(or (and (listp completion)
 			 (string= input (car completion)))
 		    (and (stringp completion)
 			 (string= input completion))))
-	   (set-window-configuration py-last-window-configuration)
-	   nil)
+	   (set-window-configuration py-last-window-configuration))
 	  ((and completion (stringp completion)(not (string= input completion)))
 	   (progn (delete-char (- (length input)))
 		  (insert completion)
 		  ;; (move-marker orig (point))
 		  ;; minibuffer.el expects a list
-		  nil))
+		  ))
 	  (t (py--try-completion input completion)))
 
-    nil))
+    ))
 
 (defun py--fast-complete-base (shell word imports)
   (let* ((shell (or shell (py-choose-shell nil t)))
-	 (py-buffer-name (py-shell nil nil shell nil t))
-	 (proc (get-buffer-process py-buffer-name))
+	 (buffer (py-shell nil nil shell nil t))
+	 (proc (get-buffer-process buffer))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
-    ;; (with-current-buffer py-buffer-name
+    ;; (with-current-buffer buffer
     ;;   (erase-buffer))
-    (py--python-send-completion-setup-code)
-    (py--fast--do-completion-at-point proc imports word code py-buffer-name)))
+    (py--python-send-completion-setup-code buffer)
+    (py--fast--do-completion-at-point proc imports word code buffer)))
 
 (defun py-fast-complete (&optional shell beg end word)
   "Complete word before point, if any.
@@ -24194,16 +24182,14 @@ the output."
 	(py-send-string strg process)
 	(accept-process-output process)
 	(setq erg
-
 	      (buffer-substring-no-properties orig (or (and comint-last-prompt (1- (car comint-last-prompt))) (point))))
-	(when (and erg (not (string= "" erg)))
-	  (setq erg
+	(if (and erg (not (or (string= "" erg) (string= "''" erg))))
 		(replace-regexp-in-string
 		 (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-		 "" erg)))
-	;; (sit-for 0.1 t)
-))
-    erg))
+		 "" erg)
+	  ;; don't insert empty completion string
+	  (delete-region orig (or (and comint-last-prompt (1- (car comint-last-prompt))) (point))))
+	  ))))
 
 (defun py-which-def-or-class (&optional orig)
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
@@ -27099,12 +27085,9 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (setq mode-line-process '(":%s"))
   ;; (sit-for 0.1)
   (when py-verbose-p (message "%s" "Initializing Python shell, please wait"))
-  (py--all-shell-mode-setting)
-  ;; (py--python-send-completion-setup-code)
-  ;; (py--python-send-ffap-setup-code)
-  ;; (py--python-send-eldoc-setup-code)
+  (py--all-shell-mode-setting (current-buffer))
   (set-process-sentinel (get-buffer-process (current-buffer)) #'shell-write-history-on-exit)
-    (comint-read-input-ring t)
+  (comint-read-input-ring t)
   (if py-complete-function
       (progn
   	(add-hook 'completion-at-point-functions
@@ -27112,15 +27095,15 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   	(push py-complete-function comint-dynamic-complete-functions))
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)
-    (push 'py-shell-complete  comint-dynamic-complete-functions))
+    (push 'py-shell-complete comint-dynamic-complete-functions))
   (when py-sexp-use-expression-p
     (define-key py-python-shell-mode-map [(control meta f)] 'py-forward-expression)
     (define-key py-python-shell-mode-map [(control meta b)] 'py-backward-expression))
   (force-mode-line-update))
 
-(defun py--all-shell-mode-setting ()
+(defun py--all-shell-mode-setting (buffer)
   (py--shell-setup-fontification)
-  (setenv "PAGER" "cat")
+  (setenv "PAGER" "cat")   
   (setenv "TERM" "dumb")
   ;; provide next-error etc.
   (compilation-shell-minor-mode 1)
@@ -27163,8 +27146,8 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   (set (make-local-variable 'inhibit-point-motion-hooks) t)
   (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send)
-  (py--python-send-ffap-setup-code)
-  (py--python-send-eldoc-setup-code)
+  (py--python-send-ffap-setup-code buffer)
+  (py--python-send-eldoc-setup-code buffer)
   (force-mode-line-update))
 
 ;;;###autoload
@@ -27178,7 +27161,7 @@ containing Python source.
 
 Sets basic comint variables, see also versions-related stuff in `py-shell'.
 \\{py-ipython-shell-mode-map}"
-  (py--all-shell-mode-setting)
+  (py--all-shell-mode-setting (current-buffer))
   (py--ipython-import-module-completion)
   (py-set-ipython-completion-command-string (process-name (get-buffer-process (current-buffer))))
   ;; (sit-for 0.1 t)
