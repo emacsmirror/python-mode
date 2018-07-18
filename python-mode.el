@@ -10426,7 +10426,7 @@ Receives a ‘buffer-name’ as argument"
 	(t (mapconcat 'identity py-python-command-args " "))))
 
 ;;;###autoload
-(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch input-prompt internal)
+(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch internal)
   "Start a Python interpreter.
 
 Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
@@ -10470,7 +10470,8 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
 		      (py-shell-name)
 		      (buffer
 		       (py--report-executable buffer))))
-	 (cmd (format "%s %s" executable args)))
+	 ;; (cmd (format "%s %s" executable args))
+)
     (set (make-local-variable 'py-last-exeption-buffer) exception-buffer)
     (if fast
 	;; user rather wants an interactive shell
@@ -13770,7 +13771,7 @@ not be passed explicitly unless you know what you are doing."
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "P")
-  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch py-ipython-input-prompt-re))
+  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch))
 
 ;;;###autoload
 (defun ipython2.7 (&optional argprompt buffer fast exception-buffer split switch)
