@@ -392,7 +392,7 @@ Default is  nil"
   :group 'python-mode)
 
 (defcustom py-fast-completion-delay 0.1
-  "Used by ‘py--fast-send-string-intern’."
+  "Used by ‘py-fast-send-string’."
 
   :type 'float
   :tag "py-fast-completion-delay"
@@ -2973,7 +2973,7 @@ See also `py-object-reference-face'"
   :tag "py-exception-name-face"
   :group 'python-mode)
 
-(defun py--python-send-setup-code-intern (name buffer &optional msg)
+(defun py--python-send-setup-code-intern (name buffer)
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
 	py-return-result-p py-store-result-p)
     (unless (file-readable-p setup-file)
@@ -2981,19 +2981,19 @@ See also `py-object-reference-face'"
 	(insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
 	(write-file setup-file)))
     (py--execute-file-base nil setup-file nil buffer)
-    (when msg (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))))
+    (when py-verbose-p (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))))
 
 (defun py--python-send-completion-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "shell-completion" buffer py-verbose-p))
+  (py--python-send-setup-code-intern "shell-completion" buffer))
 
 (defun py--python-send-ffap-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "ffap" buffer py-verbose-p))
+  (py--python-send-setup-code-intern "ffap" buffer))
 
 (defun py--python-send-eldoc-setup-code (buffer)
   "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "eldoc" buffer py-verbose-p))
+  (py--python-send-setup-code-intern "eldoc" buffer))
 
 (defun py--ipython-import-module-completion ()
   "Setup IPython v0.11 or greater.
@@ -10389,7 +10389,7 @@ Receives a ‘buffer-name’ as argument"
 
 (defun py--grab-prompt-ps1 (proc buffer)
   (py--send-string-no-output "import sys")
-  (py--fast-send-string-intern "sys.ps1" proc buffer t))
+  (py-fast-send-string "sys.ps1" proc buffer t))
 
 ;; (defun py--start-fast-process (shell buffer)
 ;;   (let ((proc))
@@ -10399,24 +10399,13 @@ Receives a ‘buffer-name’ as argument"
 ;;     proc))
 
 (defun py--start-fast-process (shell buffer)
-  (let ((proc (start-process shell buffer shell)))
-    (with-current-buffer buffer
-      (erase-buffer))
-    proc))
-
-;; (defun py--shell-fast-proceeding (proc buffer shell setup-code)
-;;   (let ((proc proc))
-;;     (unless proc
-;;       (or (setq proc (get-buffer-process (get-buffer buffer)))
-;; 	  (setq proc (start-process shell buffer shell)))
-;;       (py--fast-send-string-no-output setup-code proc buffer))
-;;     proc))
+  (start-process shell buffer shell))
 
 (defun py--shell-fast-proceeding (proc buffer shell setup-code)
   (unless (get-buffer-process (get-buffer buffer))
     (setq proc (py--start-fast-process shell buffer))
     (setq py-output-buffer buffer)
-    (py--fast-send-string-no-output setup-code proc buffer)))
+    (py-fast-send-string-intern setup-code proc)))
 
 (defun py--reuse-existing-shell (exception-buffer)
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
@@ -10606,7 +10595,7 @@ Optional STRG PROC OUTPUT-BUFFER RETURN"
   (let ((output-buffer (or output-buffer (process-buffer proc))))
     (with-current-buffer output-buffer
       (erase-buffer)
-      (py--fast-send-string-intern strg
+      (py-fast-send-string strg
 				   proc
 				   output-buffer return)
       (sit-for 0.1))))
@@ -11369,8 +11358,10 @@ Interal used. Takes INPUT COMPLETION"
       (if (< 1 (length newlist))
 	  (with-output-to-temp-buffer py-python-completions
 	    (display-completion-list
-	     (all-completions input (or newlist completion)))))
-      (skip-chars-forward "^ \t\r\n\f"))))
+	     (all-completions input (or newlist completion))))
+	(set-window-configuration py-last-window-configuration))
+      ;; (skip-chars-forward "^ \t\r\n\f")
+)))
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
@@ -11500,7 +11491,7 @@ in (I)Python shell-modes `py-shell-complete'"
 	((comint-check-proc (current-buffer))
 	 (py-shell-complete (substring (process-name (get-buffer-process (current-buffer))) 0 (string-match "<" (process-name (get-buffer-process (current-buffer)))))))
 	(t
-	 (funcall py-complete-function))))
+	 (py-fast-complete))))
 
 ;; python-components-pdb
 
@@ -22333,53 +22324,20 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
         (erase-buffer))
       proc)))
 
-(defun py--fast-send-string-intern (strg proc output-buffer return)
+(defun py-fast-send-string (strg proc output-buffer return)
+  ;; (process-send-string proc "\n")
   (with-current-buffer output-buffer
-    (process-send-string proc "\n")
     (let ((orig (point)))
-      (process-send-string proc strg)
-      (process-send-string proc "\n")
-      (accept-process-output proc 5)
-      (sit-for py-fast-completion-delay t)
+      (py-fast-send-string-intern strg proc)
+      (accept-process-output proc 1)
       (when return
 	(setq py-result (py--filter-result (py--fetch-result orig))))
-	py-result)))
+      py-result)))
 
-(defun py--fast-send-string (strg)
-  "Process Python strings, being prepared for large output.
-
-Output buffer displays \"Fast\"  by default
-See also `py-fast-shell'
-
-"
-  (let ((proc (or (get-buffer-process (get-buffer py-fast-output-buffer))
-                  (py-fast-process))))
-    ;;    (with-current-buffer py-fast-output-buffer
-    ;;      (erase-buffer))
-    (process-send-string proc strg)
-    (or (string-match "\n$" strg)
-        (process-send-string proc "\n"))
-    (accept-process-output proc 1)
-    (set-buffer py-fast-output-buffer)
-    (beginning-of-line)
-    (skip-chars-backward "\r\n")
-    (delete-region (point) (point-max))))
-
-
-(defun py--fast-send-string-no-output (strg proc output-buffer)
-  (with-current-buffer output-buffer
-    (switch-to-buffer (current-buffer)) 
-    (erase-buffer) 
-    ;; (process-send-string proc "\n")
-    ;; (let ((orig (point-max)))
-      ;; (sit-for 1 t)
-      (process-send-string proc strg)
-      (process-send-string proc "\n")
-      ;; (accept-process-output proc 5)
-      ;; (sit-for 1 t)
-      ;; (erase-buffer)
-      ))
-;; )
+(defun py-fast-send-string-intern (strg proc)
+  (process-send-string proc strg)
+  (or (string-match "\n$" strg)
+      (process-send-string proc "\n")))
 
 (defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
@@ -22826,11 +22784,13 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
-  (let ((completions
-	 (py--fast-send-string-intern
-	  (format completion-code input) process buffer t)))
-    (when (> (length completions) 2)
-      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+  (with-current-buffer buffer
+    (erase-buffer)
+    (let ((completions
+	   (py-fast-send-string
+	    (format completion-code input) process buffer t)))
+      (when (> (length completions) 2)
+	(split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
 
 (defun py--fast--do-completion-at-point (process imports input code output-buffer)
   "Do completion at point for PROCESS."
@@ -22838,9 +22798,10 @@ completions on the current context."
   (let (py-store-result-p)
     (when imports
       ;; (message "%s" imports)
-      (py--fast-send-string-no-output imports process output-buffer)))
+      (py-fast-send-string-intern imports process)))
   (let* ((completion
 	  (py--fast-completion-get-completions input process code output-buffer)))
+    (sit-for 0.1)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug.")))
 	  ((null completion)
@@ -22857,15 +22818,13 @@ completions on the current context."
 		  (insert completion)
 		  ;; (move-marker orig (point))
 		  ;; minibuffer.el expects a list
-		  ))
-	  (t (py--try-completion input completion)))
-
-    ))
+))
+	  (t (py--try-completion input completion)))))
 
 (defun py--fast-complete-base (shell word imports)
-  (let* ((shell (or shell (py-choose-shell nil t)))
-	 (buffer (py-shell nil nil shell nil t))
-	 (proc (get-buffer-process buffer))
+  (let* ((shell (or shell "python"))
+	 (buffer (get-buffer-create "*Python Fast*"))
+	 (proc (or (prog1 (get-buffer-process buffer)(setq done t)) (py--start-fast-process shell buffer)))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
@@ -22880,7 +22839,7 @@ completions on the current context."
 Use `py-fast-process' "
   (interactive)
   (setq py-last-window-configuration
-        (current-window-configuration))
+  (current-window-configuration))
   (py--complete-prepare shell beg end word t))
 
 ;; python-components-intern
@@ -24724,7 +24683,6 @@ Use current region unless optional args BEG END are delivered."
 (defalias 'iyp 'ipython)
 (defalias 'py-execute-region-default 'py-execute-region)
 (defalias 'py-execute-region-default-dedicated 'py-execute-region-dedicated)
-(defalias 'py-fast-send-string 'py-execute-string-fast)
 (defalias 'py-kill-minor-expression 'py-kill-partial-expression)
 (defalias 'pyhotn 'python)
 (defalias 'pyhton 'python)
