@@ -11262,17 +11262,6 @@ Optional BEG END"
       (sit-for 0.1 t))
     erg))
 
-(defun py-send-string (strg &optional process)
-  "Evaluate STRG in Python PROCESS."
-  (interactive "sPython command: ")
-  (let* ((proc (or process
-		   (prog1
-		       (get-buffer-process (py-shell))
-		     (comint-send-string (get-buffer-process (py-shell)) "\n"))))
-	 (buffer (process-buffer proc)))
-    (unless (string-match "\n$" strg)
-      (setq strg (concat strg "\n")))
-    (process-send-string proc strg)))
 
 ;; python-components-shell-complete
 
@@ -22305,7 +22294,12 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
         (erase-buffer))
       proc)))
 
-(defun py-fast-send-string (strg proc output-buffer return)
+(defun py-fast-send-string-intern (strg proc)
+  (process-send-string proc strg)
+  (or (string-match "\n$" strg)
+      (process-send-string proc "\n")))
+
+(defun py-fast-send-string (strg proc output-buffer &optional return)
   ;; (process-send-string proc "\n")
   (with-current-buffer output-buffer
     (let ((orig (point)))
@@ -22314,11 +22308,6 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
       (when return
 	(setq py-result (py--filter-result (py--fetch-result orig))))
       py-result)))
-
-(defun py-fast-send-string-intern (strg proc)
-  (process-send-string proc strg)
-  (or (string-match "\n$" strg)
-      (process-send-string proc "\n")))
 
 (defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
@@ -23799,7 +23788,6 @@ Unclosed-string errors are not handled here, as made visible by fontification al
 		       regexp)))
     (while (and (not (eobp)) (re-search-forward regexp nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point)))))))
 
-
 (defun py--end-base (regexp &optional orig decorator bol indent done)
   "Used internal by functions going to the end forms.
 
@@ -24091,6 +24079,13 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
       (sit-for py-ipython-send-delay t)
     (sit-for py-python-send-delay t)))
 
+(defun py-send-string (strg &optional process)
+  "Evaluate STRG in Python PROCESS."
+  (interactive "sPython command: ")
+  (let* ((buffer (if process (process-buffer process) (py-shell)))
+	 (proc (or process (get-buffer-process buffer))))
+    (py-fast-send-string strg proc buffer)))
+
 (defun py--send-string-no-output (strg &optional process)
   "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
@@ -24201,7 +24196,6 @@ Used by variable `which-func-functions' "
     (goto-char orig)
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
-
 
 (defun py--trim-regexp-empty-spaces-left (regexp)
     (let ((erg (symbol-value regexp)))
