@@ -10697,15 +10697,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
 		(with-temp-buffer
 		  (insert py-result)
 		  (sit-for 0.1 t)
-		  (setq py-error (py--fetch-error origline)))
-		;; (with-current-buffer output-buffer
-		;; 	;; ‘comint-last-prompt’ must not exist
-		;; 	(delete-region (point) (or (ignore-errors (car comint-last-prompt)) (point-max)))
-		;; 	(sit-for 0.1 t)
-		;; 	(insert py-error)
-		;; 	(newline)
-		;; 	(goto-char (point-max)))
-		)
+		  (setq py-error (py--fetch-error origline))))
 	    ;; position no longer needed, no need to correct
 	    (when py-store-result-p
 	      (when (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result))) (kill-new py-result)))
@@ -24113,17 +24105,17 @@ the output."
   (let ((process (or process (get-buffer-process (py-shell))))
 	erg)
     (with-current-buffer (process-buffer process)
-      (let ((orig (or (and comint-last-prompt (cdr comint-last-prompt)) (point))))
+      (let ((orig (or (ignore-errors (and comint-last-prompt (cdr comint-last-prompt))) (point))))
 	(py-send-string strg process)
 	(accept-process-output process)
 	(setq erg
-	      (buffer-substring-no-properties orig (or (and comint-last-prompt (1- (car comint-last-prompt))) (point))))
+	      (buffer-substring-no-properties orig (or (ignore-errors (and comint-last-prompt (1- (car comint-last-prompt)))) (point))))
 	(if (and erg (not (or (string= "" erg) (string= "''" erg))))
 		(replace-regexp-in-string
 		 (format "[ \n]*%s[ \n]*" py-fast-filter-re)
 		 "" erg)
 	  ;; don't insert empty completion string
-	  (delete-region orig (or (and comint-last-prompt (1- (car comint-last-prompt))) (point))))
+	  (delete-region orig (or (ignore-errors (and comint-last-prompt (1- (car comint-last-prompt)))) (point))))
 	  ))))
 
 (defun py-which-def-or-class (&optional orig)
