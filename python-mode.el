@@ -7348,7 +7348,7 @@ Returns the string inserted."
 If already at beginning, go one ‘block’ backward.
 Return beginning of ‘block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-block-re 'py-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-block-re (called-interactively-p 'any)))
 
 (defun py-backward-block-or-clause (&optional indent)
   "Go to beginning of ‘block-or-clause’ according to INDENT.
@@ -7356,7 +7356,7 @@ Return beginning of ‘block’ if successful, nil otherwise"
 If already at beginning, go one ‘block-or-clause’ backward.
 Return beginning of ‘block-or-clause’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
 ;;;###autoload
 (defun py-backward-class (&optional indent decorator bol)
@@ -7367,7 +7367,7 @@ Optional DECORATOR BOL
 
 Return beginning of ‘class’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-class-re 'py-class-re (called-interactively-p 'any) decorator bol))
+  (py--backward-prepare indent 'py-class-re (called-interactively-p 'any) decorator bol))
 
 (defun py-backward-clause (&optional indent)
   "Go to beginning of ‘clause’ according to INDENT.
@@ -7375,7 +7375,7 @@ Return beginning of ‘class’ if successful, nil otherwise"
 If already at beginning, go one ‘clause’ backward.
 Return beginning of ‘clause’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
 ;;;###autoload
 (defun py-backward-def (&optional indent decorator bol)
@@ -7386,7 +7386,7 @@ Optional DECORATOR BOL
 
 Return beginning of ‘def’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-def-re 'py-def-re (called-interactively-p 'any) decorator bol))
+  (py--backward-prepare indent 'py-def-re (called-interactively-p 'any) decorator bol))
 
 ;;;###autoload
 (defun py-backward-def-or-class (&optional indent decorator bol)
@@ -7397,7 +7397,7 @@ Optional DECORATOR BOL
 
 Return beginning of ‘def-or-class’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-def-or-class-re 'py-def-or-class-re (called-interactively-p 'any) decorator bol))
+  (py--backward-prepare indent 'py-def-or-class-re (called-interactively-p 'any) decorator bol))
 
 (defun py-backward-elif-block (&optional indent)
   "Go to beginning of ‘elif-block’ according to INDENT.
@@ -7405,7 +7405,7 @@ Return beginning of ‘def-or-class’ if successful, nil otherwise"
 If already at beginning, go one ‘elif-block’ backward.
 Return beginning of ‘elif-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-elif-block-re 'py-elif-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-elif-block-re (called-interactively-p 'any)))
 
 (defun py-backward-else-block (&optional indent)
   "Go to beginning of ‘else-block’ according to INDENT.
@@ -7413,7 +7413,7 @@ Return beginning of ‘elif-block’ if successful, nil otherwise"
 If already at beginning, go one ‘else-block’ backward.
 Return beginning of ‘else-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-else-block-re 'py-else-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-else-block-re (called-interactively-p 'any)))
 
 (defun py-backward-except-block (&optional indent)
   "Go to beginning of ‘except-block’ according to INDENT.
@@ -7421,7 +7421,7 @@ Return beginning of ‘else-block’ if successful, nil otherwise"
 If already at beginning, go one ‘except-block’ backward.
 Return beginning of ‘except-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-except-block-re 'py-except-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-except-block-re (called-interactively-p 'any)))
 
 (defun py-backward-for-block (&optional indent)
   "Go to beginning of ‘for-block’ according to INDENT.
@@ -7429,7 +7429,7 @@ Return beginning of ‘except-block’ if successful, nil otherwise"
 If already at beginning, go one ‘for-block’ backward.
 Return beginning of ‘for-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-for-block-re 'py-for-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-for-block-re (called-interactively-p 'any)))
 
 (defun py-backward-if-block (&optional indent)
   "Go to beginning of ‘if-block’ according to INDENT.
@@ -7437,7 +7437,7 @@ Return beginning of ‘for-block’ if successful, nil otherwise"
 If already at beginning, go one ‘if-block’ backward.
 Return beginning of ‘if-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-if-block-re 'py-if-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-if-block-re (called-interactively-p 'any)))
 
 (defun py-backward-minor-block (&optional indent)
   "Go to beginning of ‘minor-block’ according to INDENT.
@@ -7445,7 +7445,7 @@ Return beginning of ‘if-block’ if successful, nil otherwise"
 If already at beginning, go one ‘minor-block’ backward.
 Return beginning of ‘minor-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-minor-block-re 'py-minor-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-minor-block-re (called-interactively-p 'any)))
 
 (defun py-backward-try-block (&optional indent)
   "Go to beginning of ‘try-block’ according to INDENT.
@@ -7453,21 +7453,21 @@ Return beginning of ‘minor-block’ if successful, nil otherwise"
 If already at beginning, go one ‘try-block’ backward.
 Return beginning of ‘try-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-try-block-re 'py-try-block-re (called-interactively-p 'any)))
+  (py--backward-prepare indent 'py-try-block-re (called-interactively-p 'any)))
 
 (defun py-backward-block-bol (&optional indent)
   "Go to beginning of ‘block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘block’ backward.
 Return beginning of ‘block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-block-or-clause-bol (&optional indent)
   "Go to beginning of ‘block-or-clause’ according to INDENT, go to BOL.
 If already at beginning, go one ‘block-or-clause’ backward.
 Return beginning of ‘block-or-clause’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-extended-block-or-clause-re  (called-interactively-p 'any) nil t))
 
 ;;;###autoload
 (defun py-backward-class-bol (&optional indent decorator)
@@ -7477,14 +7477,14 @@ Optional DECORATOR BOL
 If already at beginning, go one ‘class’ backward.
 Return beginning of ‘class’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
+  (py--backward-prepare indent 'py-class-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-clause-bol (&optional indent)
   "Go to beginning of ‘clause’ according to INDENT, go to BOL.
 If already at beginning, go one ‘clause’ backward.
 Return beginning of ‘clause’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-extended-block-or-clause-re  (called-interactively-p 'any) nil t))
 
 ;;;###autoload
 (defun py-backward-def-bol (&optional indent decorator)
@@ -7494,7 +7494,7 @@ Optional DECORATOR BOL
 If already at beginning, go one ‘def’ backward.
 Return beginning of ‘def’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-def-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
+  (py--backward-prepare indent 'py-def-re (called-interactively-p 'any) decorator t))
 
 ;;;###autoload
 (defun py-backward-def-or-class-bol (&optional indent decorator)
@@ -7504,56 +7504,56 @@ Optional DECORATOR BOL
 If already at beginning, go one ‘def-or-class’ backward.
 Return beginning of ‘def-or-class’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-def-or-class-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
+  (py--backward-prepare indent 'py-def-or-class-re (called-interactively-p 'any) decorator t))
 
 (defun py-backward-elif-block-bol (&optional indent)
   "Go to beginning of ‘elif-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘elif-block’ backward.
 Return beginning of ‘elif-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-elif-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-elif-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-else-block-bol (&optional indent)
   "Go to beginning of ‘else-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘else-block’ backward.
 Return beginning of ‘else-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-else-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-else-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-except-block-bol (&optional indent)
   "Go to beginning of ‘except-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘except-block’ backward.
 Return beginning of ‘except-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-except-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-except-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-for-block-bol (&optional indent)
   "Go to beginning of ‘for-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘for-block’ backward.
 Return beginning of ‘for-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-for-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-for-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-if-block-bol (&optional indent)
   "Go to beginning of ‘if-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘if-block’ backward.
 Return beginning of ‘if-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-if-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-if-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-minor-block-bol (&optional indent)
   "Go to beginning of ‘minor-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘minor-block’ backward.
 Return beginning of ‘minor-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-minor-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-minor-block-re (called-interactively-p 'any) nil t))
 
 (defun py-backward-try-block-bol (&optional indent)
   "Go to beginning of ‘try-block’ according to INDENT, go to BOL.
 If already at beginning, go one ‘try-block’ backward.
 Return beginning of ‘try-block’ if successful, nil otherwise"
   (interactive)
-  (py--backward-prepare indent 'py-try-block-re 'py-clause-re (called-interactively-p 'any) nil t))
+  (py--backward-prepare indent 'py-try-block-re (called-interactively-p 'any) nil t))
 
 ;; python-components-forward-forms
 
@@ -22808,18 +22808,18 @@ Use `py-fast-process' "
 
 ;;  Keymap
 
-(defun py--indent-prepare (inter-re)
-  (progn (back-to-indentation)
-	 (or (py--beginning-of-statement-p)
-	     (ar-backward-statement))
-	 (cond ((eq 0 (current-indentation))
-		(current-indentation))
-	       ((looking-at (symbol-value inter-re))
-		(current-indentation))
-	       (t
-		(if (<= py-indent-offset (current-indentation))
-		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
-		  py-indent-offset)))))
+;; (defun py--indent-prepare (inter-re)
+;;   (progn (back-to-indentation)
+;; 	 (or (py--beginning-of-statement-p)
+;; 	     (ar-backward-statement))
+;; 	 (cond ((eq 0 (current-indentation))
+;; 		(current-indentation))
+;; 	       ((looking-at (symbol-value inter-re))
+;; 		(current-indentation))
+;; 	       (t
+;; 		(if (<= py-indent-offset (current-indentation))
+;; 		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
+;; 		  py-indent-offset)))))
 
 (defun py-separator-char ()
   "Return the file-path separator char from current machine.
@@ -24193,7 +24193,7 @@ Used by variable `which-func-functions' "
     (let ((erg (symbol-value regexp)))
       (substring erg (1+ (string-match "\*" erg)))))
 
-(defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc)
+(defun py--beginning-of-form-intern (final-re &optional iact indent orig lc)
   "Go to beginning of FORM.
 
 With INDENT, go to beginning one level above.
@@ -24202,12 +24202,9 @@ Whit IACT, print result in message buffer.
 Returns beginning of FORM if successful, nil otherwise"
   (interactive "P")
   (let ((regexp
-	 ;; (if inter-re
-	 ;; (concat (symbol-value inter-re) "\\|" (symbol-value final-re))
 	 (if (eq 0 indent)
 	     (py--trim-regexp-empty-spaces-left final-re)
-		  (symbol-value final-re)))
-		  ;; ))
+	   (symbol-value final-re)))
 	erg)
     (unless (bobp)
       (let* ((orig (or orig (point)))
@@ -24235,7 +24232,7 @@ Returns beginning of FORM if successful, nil otherwise"
     (when (and py-verbose-p iact) (message "%s" erg))
     erg))
 
-(defun py--backward-prepare (&optional indent final-re inter-re iact decorator lc)
+(defun py--backward-prepare (&optional indent final-re iact decorator lc)
   (unless (bobp)
     (let* ((orig (point))
 	   (indent
@@ -24253,8 +24250,6 @@ Returns beginning of FORM if successful, nil otherwise"
 			   (current-indentation))
 			  (t (progn (back-to-indentation)
 				    (cond ((eq 0 (current-indentation))
-					   (current-indentation))
-					  ((and inter-re (looking-at (symbol-value inter-re)))
 					   (current-indentation))))))))))
 	   erg)
       ;; def and class need lesser value
@@ -24268,7 +24263,7 @@ Returns beginning of FORM if successful, nil otherwise"
 	    (setq erg (point))
 	    (when (and py-verbose-p iact) (message "%s" erg))
 	    erg)
-	(py--beginning-of-form-intern final-re inter-re iact indent orig lc)))))
+	(py--beginning-of-form-intern final-re iact indent orig lc)))))
 
 (defun py--fetch-first-python-buffer ()
   "Returns first (I)Python-buffer found in `buffer-list'"
