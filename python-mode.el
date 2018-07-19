@@ -8514,7 +8514,7 @@ From a programm use macro `py-backward-comment' instead"
        (setq done (point))))
     (when (< (point) orig) (point))))
 
-(defun py--go-to-keyword (regexp &optional maxindent)
+(defun py--go-to-keyword (regexp &optional maxindent decorator)
   "Return a list, whose car is indentation, cdr position.
 
 Keyword detected from REGEXP
@@ -8547,7 +8547,7 @@ Honor MAXINDENT if provided"
 		    (looking-at regexp))
 	       (setq erg (point))
 	       (setq done t)))))
-    (when (and py-mark-decorators (looking-at py-def-or-class-re))
+    (when (and (or decorator py-mark-decorators) (looking-at py-def-or-class-re))
       (setq done (py--up-decorators-maybe (current-indentation)))
       (when done (setq erg done)))
     (when erg (setq erg (cons (current-indentation) erg)))
@@ -24193,7 +24193,7 @@ Used by variable `which-func-functions' "
     (let ((erg (symbol-value regexp)))
       (substring erg (1+ (string-match "\*" erg)))))
 
-(defun py--beginning-of-form-intern (final-re &optional iact indent orig lc)
+(defun py--beginning-of-form-intern (final-re &optional iact indent orig lc decorator)
   "Go to beginning of FORM.
 
 With INDENT, go to beginning one level above.
@@ -24219,12 +24219,12 @@ Returns beginning of FORM if successful, nil otherwise"
                          (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
                            (py-backward-statement)
                            (unless (looking-at regexp)
-                             (cdr (py--go-to-keyword regexp (current-indentation))))))
+                             (cdr (py--go-to-keyword regexp (current-indentation) decorator)))))
                         ((numberp indent)
-			 (or (cdr (py--go-to-keyword regexp indent))
+			 (or (cdr (py--go-to-keyword regexp indent decorator))
 			     (progn
 			       (goto-char orig)
-			       (cdr (py--go-to-keyword regexp indent)))))
+			       (cdr (py--go-to-keyword regexp indent decorator)))))
                         (t (ignore-errors
                              (cdr (py--go-to-keyword regexp
 						     (- (progn (if (py--beginning-of-statement-p) (current-indentation) (save-excursion (py-backward-statement) (current-indentation)))) py-indent-offset)))))))
@@ -24263,7 +24263,7 @@ Returns beginning of FORM if successful, nil otherwise"
 	    (setq erg (point))
 	    (when (and py-verbose-p iact) (message "%s" erg))
 	    erg)
-	(py--beginning-of-form-intern final-re iact indent orig lc)))))
+	(py--beginning-of-form-intern final-re iact indent orig lc decorator)))))
 
 (defun py--fetch-first-python-buffer ()
   "Returns first (I)Python-buffer found in `buffer-list'"
