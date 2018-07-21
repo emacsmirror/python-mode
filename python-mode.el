@@ -3670,9 +3670,7 @@ Copy statement at point."]
 	["Copy top level" py-copy-top-level
 	 :help " `py-copy-top-level'
 Copy top-level at point."]
-
-	["Copy try block" py-copy-try-block
-	 :help " `py-copy-try-block'"])
+	)
        ("Kill"
 	["Kill block" py-kill-block
 	 :help " `py-kill-block'
