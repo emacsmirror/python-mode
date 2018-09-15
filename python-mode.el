@@ -2532,9 +2532,9 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
 
 (defconst py-outdent-re
   (concat
-   "[ \t]*\\_<"
-   (regexp-opt py-outdent-re-raw)
-   "\\_>[)\t]*")
+   "[ \t]*"
+   (regexp-opt py-outdent-re-raw 'symbols)
+   "[)\t]*")
   "Regular expression matching lines not to augment indent after.
 
 See ‘py-no-outdent-re-raw’ for better readable content")
@@ -2547,17 +2547,17 @@ See ‘py-no-outdent-re-raw’ for better readable content")
    "pass"
    "raise"
    "return")
-  "Uused by o‘py-no-outdent-re’."
+  "Uused by ‘py-no-outdent-re’."
   :type '(repeat string)
   :tag "py-no-outdent-re-raw"
   :group 'python-mode)
 
 (defconst py-no-outdent-re
   (concat
-   "[ \t]*\\_<"
-   (regexp-opt py-no-outdent-re-raw)
-   "\\_>[)\t]*$")
-  "Regular expression matching lines not to augment indent after.
+   "[ \t]*"
+   (regexp-opt py-no-outdent-re-raw 'symbols)
+   "[)\t]*$")
+"Regular expression matching lines not to augment indent after.
 
 See ‘py-no-outdent-re-raw’ for better readable content")
 
@@ -2630,16 +2630,10 @@ Second group grabs the name")
 
 (defvar py-block-or-clause-re
   (concat
-   "[ \t]*\\_<\\("
-   (regexp-opt  py-block-or-clause-re-raw)
-   "\\)\\_>[( \t]*.*:?")
+   "[ \t]*"
+   (regexp-opt  py-block-or-clause-re-raw 'symbols)
+   "[( \t]*.*:?")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
-
-;; (setq py-block-or-clause-re
-;;   (concat
-;;    "[ \t]*\\_<\\("
-;;    (regexp-opt  py-block-or-clause-re-raw)
-;;    "\\)\\_>[( \t]*.*:?"))
 
 (defcustom py-block-re-raw
   (list
@@ -2656,9 +2650,9 @@ Second group grabs the name")
 
 (defvar py-block-re
   (concat
-   "[ \t]*\\_<\\("
-   (regexp-opt  py-block-re-raw)
-   "\\)\\_>[( \t]*.*:?")
+   "[ \t]*"
+   (regexp-opt  py-block-re-raw 'symbols)
+   "[( \t]*.*:?")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
 
 (defconst py-clause-re
@@ -2697,16 +2691,16 @@ Second group grabs the name")
 
 (defconst py-extended-block-or-clause-re
   (concat
-   "[ \t]*\\_<\\("
-   (regexp-opt  py-extended-block-or-clause-re-raw)
-   "\\)\\_>[( \t]*.*:?")
+   "[ \t]*"
+   (regexp-opt  py-extended-block-or-clause-re-raw 'symbols)
+   "[( \t]*.*:?")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
 
 (defcustom py-top-level-re
   (concat
-   "^\\_<[a-zA-Z_]\\|^\\_<\\("
+   "^[a-zA-Z_]"
    (regexp-opt  py-extended-block-or-clause-re-raw)
-   "\\)\\_>[( \t]*.*:?")
+   "[( \t]*.*:?")
   "A form which starts at zero indent level, but is not a comment."
   :type '(regexp)
   :tag "py-top-level-re"
@@ -2717,10 +2711,7 @@ Second group grabs the name")
   "Needed for normalized processing.")
 
 (defconst py-block-keywords
-  (concat
-   "\\_<\\("
-   (regexp-opt py-block-or-clause-re-raw)
-   "\\)\\_>")
+   (regexp-opt py-block-or-clause-re-raw 'symbols)
   "Matches known keywords opening a block.
 
 Customizing `py-block-or-clause-re-raw'  will change values here")
@@ -2739,9 +2730,9 @@ Customizing `py-block-or-clause-re-raw'  will change values here")
 
 (defconst py-clause-re
   (concat
-   "[ \t]*\\_<\\("
-   (regexp-opt  py-clause-re-raw)
-   "\\)\\_>[( \t]*.*:?")
+   "[ \t]*"
+   (regexp-opt  py-clause-re-raw 'symbols)
+   "[( \t]*.*:?")
   "See ‘py-clause-re-raw’, which it reads.")
 
 (defconst py-elif-re "[ \t]*\\_<\\elif\\_>[:( \n\t]*"
@@ -21205,19 +21196,38 @@ Fill according to `py-docstring-style' "
 	 (orig (copy-marker (point)))
 	 (docstring (if (and docstring (not (number-or-marker-p docstring)))
 			(py--in-or-behind-or-before-a-docstring)
-		      docstring)))
+		      docstring))
+	 (beg (and (nth 3 pps) (nth 8 pps)))
+	 end tqs)
     (if docstring
 	(py--fill-docstring justify style docstring orig indent)
-      (py-fill-paragraph justify))))
+      (save-excursion
+	(setq end
+	      (progn (goto-char beg)
+		     (setq tqs (looking-at "\"\"\"\|'''"))
+		     (forward-sexp) (point))))
+      (save-restriction
+	(narrow-to-region beg end)
+	(py-fill-paragraph justify pps beg end)))))
 
-(defun py-fill-paragraph (&optional justify)
+(defun py--continue-lines-region (beg end)
+  (save-excursion
+    (goto-char beg)
+    (while (< (line-end-position) end)
+      (end-of-line)
+      (unless (py-escaped-p) (insert-and-inherit 32)(insert-and-inherit 92))
+      (ignore-errors (forward-line 1)))))
+
+(defun py-fill-paragraph (&optional justify pps beg end tqs)
   (interactive "*")
   (save-excursion
     (save-restriction
       (window-configuration-to-register py-windows-config-register)
-      (let* ((pps (parse-partial-sexp (point-min) (point)))
+      (let* ((tqs tqs)
+	     (pps (or pps (parse-partial-sexp (point-min) (point))))
 	     (docstring (unless (not py-docstring-style)(py--in-or-behind-or-before-a-docstring)))
-	     (fill-column py-comment-fill-column))
+	     (fill-column py-comment-fill-column)
+	     (in-string (nth 3 pps)))
 	(cond ((or (nth 4 pps)
 		   (and (bolp) (looking-at "[ \t]*#[# \t]*")))
 	       (py-fill-comment))
@@ -21225,19 +21235,30 @@ Fill according to `py-docstring-style' "
 	       (setq fill-column py-docstring-fill-column)
 	       (py-fill-string justify py-docstring-style docstring))
 	      (t
-	       (let* ((beg (save-excursion
-			       (if (looking-at paragraph-start)
-				   (point)
-				 (backward-paragraph)
-				 (when (looking-at paragraph-start)
-				   (point)))))
-		      (end
-		       (when beg
-			 (save-excursion
-			   (forward-paragraph)
-			   (when (looking-at paragraph-separate)
-			     (point))))))
-		 (and beg end (fill-region beg end))))))
+	       (let* ((beg (or beg (save-excursion
+				     (if (looking-at paragraph-start)
+					 (point)
+				       (backward-paragraph)
+				       (when (looking-at paragraph-start)
+					 (point))))
+			       (and (nth 3 pps) (nth 8 pps))))
+		      (end (or end
+			       (when beg
+				 (save-excursion
+				   (or
+				    (and in-string
+					 (progn
+					   (goto-char beg)
+					   (setq tqs (looking-at "\"\"\"\\|'''"))
+					   (forward-sexp) (point)))
+				    (progn
+				      (forward-paragraph)
+				      (when (looking-at paragraph-separate)
+					(point)))
+				    ))))))
+		 (and beg end (fill-region beg end))
+		 (when (and in-string (not tqs))
+		   (py--continue-lines-region beg end))))))
       (jump-to-register py-windows-config-register))))
 
 ;; python-components-shift-forms
@@ -22909,7 +22930,7 @@ Returns position reached if successful"
                           (funcall (intern-soft (concat "py-backward-" form)))
                           (push-mark)))))
            (end (unless file
-                  (or end (funcall (intern-soft (concat "py-forward-" form))))))
+                  (or end (save-excursion (funcall (intern-soft (concat "py-forward-" form)))))))
            filename)
       ;; (setq py-buffer-name nil)
       (if file
@@ -23451,7 +23472,7 @@ LIEP stores line-end-position at point-of-interest
                       (re-search-backward (concat py-shell-prompt-regexp "\\|" py-ipython-output-prompt-re "\\|" py-ipython-input-prompt-re) nil t 1)))
             ;; common recursion not suitable because of prompt
             (with-temp-buffer
-	      (switch-to-buffer (current-buffer))
+	      ;; (switch-to-buffer (current-buffer))
               (insert-buffer-substring cubuf (match-end 0) orig)
 	      (python-mode)
               (setq indent (py-compute-indentation)))
@@ -24713,6 +24734,12 @@ Use current region unless optional args BEG END are delivered."
       (fixup-whitespace))
     (indent-to-column cui)
     cui))
+
+(defun py-escaped-p (&optional pos)
+  "Return t if char at POS is preceded by an odd number of backslashes. "
+  (save-excursion
+    (when pos (goto-char pos))
+    (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
 
 (defalias 'IPython 'ipython)
 (defalias 'Ipython 'ipython)
