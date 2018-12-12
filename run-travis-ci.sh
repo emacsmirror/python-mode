@@ -19,8 +19,6 @@
 # Code:
 
 emacs27=~$HOME/emacs-20180529/src/emacs-27.0.50.1
-ARSUBR=~/werkstatt/thingatpt-utils-core/ar-subr.el
-PYTHON=~/emacs-20180529/lisp/progmodes/python.el
 PDIR=$PWD
 echo "\$PWD: $PWD"
 # WERKSTATT set in .bashrc, thus unset remotly

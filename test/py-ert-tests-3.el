@@ -674,6 +674,19 @@ import os"
     (search-backward "elif")
     (py-backward-clause)
     (should (looking-at "if True"))))
+
+(ert-deftest py-indentation-after-an-explicit-dedent-61-test-lpYaIp ()
+  (py-test-with-temp-buffer
+      "mport sys
+
+def main():
+    if len(sys.argv) == 2:
+        print('hey')
+
+    x = 7
+"
+    (goto-char (point-max)) 
+    (should (eq 4  (py-compute-indentation)))))
     
 (provide 'py-ert-tests-3)
 ;;; py-ert-tests-3.el ends here
