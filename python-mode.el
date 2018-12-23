@@ -6473,9 +6473,10 @@ Returns value of `py-underscore-word-syntax-p'."
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
   py-underscore-word-syntax-p)
 
-(defcustom pdb-track-stack-from-shell-p nil
+(defcustom pdb-track-stack-from-shell-p t
   "If t, track source from shell-buffer.
 
+Default is t.
 Add hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file"
 
   :type 'boolean
