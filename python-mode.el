@@ -11174,23 +11174,24 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 		(line-beginning-position))
 	       (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
-         (beg
-	  (save-excursion
-	    (or beg
-		(and in-string
-		     ;; possible completion of filenames
-		     (progn
-		       (goto-char in-string)
-		       (and
-			(save-excursion
-			  (skip-chars-backward "^ \t\r\n\f")(looking-at "open")))
+         ;; (beg
+	 ;;  (save-excursion
+	 ;;    (or beg
+	 ;; 	(and in-string
+	 ;; 	     ;; possible completion of filenames
+	 ;; 	     (progn
+	 ;; 	       (goto-char in-string)
+	 ;; 	       (and
+	 ;; 		(save-excursion
+	 ;; 		  (skip-chars-backward "^ \t\r\n\f")(looking-at "open")))
 
-		       (skip-chars-forward "\"'")(point)))
-		(progn (and (eq (char-before) ?\()(forward-char -1))
-		       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
-         (end (or end (point)))
-	 ;;
-         (word (or word (buffer-substring-no-properties beg end)))
+	 ;; 	       (skip-chars-forward "\"'")(point)))
+	 ;; 	(progn (and (eq (char-before) ?\()(forward-char -1))
+	 ;; 	       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
+         ;; (end (or end (point)))
+	 ;; ;;
+         ;; (word (or word (buffer-substring-no-properties beg end)))
+	 (word (save-excursion (skip-chars-backward " \t\r\n\f") (unless (bolp) (forward-char -1) (thing-at-point 'word t))))  
 	 (ausdruck (and (string-match "^/" word)(setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
 	 ;; when in string, assume looking for filename
 	 (filenames (and in-string ausdruck
@@ -11758,11 +11759,8 @@ not inside a defun."
 
 (defalias 'py-describe-symbol 'py-help-at-point)
 (defalias 'py-eldoc-function 'py-help-at-point)
-(defun py--help-at-point-intern (orig)
-  (let* ((beg (point))
-	 (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
-	 (sym (buffer-substring-no-properties beg end))
-	 (origfile (py--buffer-filename-remote-maybe))
+(defun py--help-at-point-intern (sym orig)
+  (let* ((origfile (py--buffer-filename-remote-maybe))
 	 (temp (md5 (buffer-name)))
 	 (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
 	 (cmd (py-find-imports))
@@ -11773,14 +11771,9 @@ not inside a defun."
 		       (forward-char -2)
 		       (point)))))
     (if erg
-	(progn (push-mark orig)(push-mark (point))
+	(progn (push-mark orig) (push-mark (point))
 	       (when (and (called-interactively-p 'any) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
       (goto-char orig))
-    ;; (when cmd
-    ;;   (setq cmd (mapconcat
-    ;; 		 (lambda (arg) (concat "try: " arg "\nexcept: pass\n"))
-    ;; 		 (split-string cmd ";" t)
-    ;; 		 "")))
     (setq cmd (concat cmd "\nimport pydoc\n"
 		      ))
     (when (not py-remove-cwd-from-path)
@@ -11800,7 +11793,8 @@ not inside a defun."
 
 If symbol is defined in current buffer, jump to it's definition"
   (interactive)
-  (let ((orig (point)))
+  (let ((orig (point))
+	(symbol (thing-at-point 'symbol t)))
     ;; avoid repeated call at identic pos
     (unless (eq orig (ignore-errors py-last-position))
       (setq py-last-position orig))
@@ -11811,8 +11805,10 @@ If symbol is defined in current buffer, jump to it's definition"
 	(progn
 	  (py-restore-window-configuration)
 	  (goto-char orig))
-      (if (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
-	  (py--help-at-point-intern orig)
+      (if 
+	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
+	  (not (string= "" symbol))
+	  (py--help-at-point-intern symbol orig)
 	(py-restore-window-configuration)))))
 
 ;;  Documentation functions
@@ -12184,7 +12180,6 @@ Interactively, prompt for SYMBOL."
 	  (goto-char local)
 	  (beginning-of-line)
           (push-mark)
-	  (setq end (py-end-of-def-or-class))
 	  (message "%s" (current-buffer))
 	  (exchange-point-and-mark))
       (with-help-window (help-buffer)
