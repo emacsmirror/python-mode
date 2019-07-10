@@ -88,12 +88,22 @@ Needed for completion and other environment stuff only."
   :group 'python-mode)
 
 (defcustom py-font-lock-defaults-p t
- "If fontification is not required, 
+ "If fontification is not required,
 
-avoiding it might speed up things." 
+avoiding it might speed up things."
 
-:type 'boolean
-:group 'python-mode)
+  :type 'boolean
+  :group 'python-mode
+  :safe 'booleanp)
+
+(defcustom py-eldoc-mode-p nil
+  "If eldoc-mode is loaded by python-mode.
+
+Default is nil"
+
+  :type 'boolean
+  :group 'python-mode
+  :safe 'booleanp)
 
 (defcustom py-pythonpath ""
   "Define $PYTHONPATH here, if needed.
@@ -112,6 +122,34 @@ Emacs doesn't read .bashrc"
 
   :type 'string
   :tag "python-mode-modeline-display"
+  :group 'python-mode)
+
+(defcustom py-python2-modeline-display "Py2"
+  "String to display in Emacs modeline."
+
+  :type 'string
+  :tag "python2-mode-modeline-display"
+  :group 'python-mode)
+
+(defcustom py-python3-modeline-display "Py3"
+  "String to display in Emacs modeline."
+
+  :type 'string
+  :tag "python3-mode-modeline-display"
+  :group 'python-mode)
+
+(defcustom py-ipython-modeline-display "IPy"
+  "String to display in Emacs modeline."
+
+  :type 'string
+  :tag "ipython-modeline-display"
+  :group 'python-mode)
+
+(defcustom py-jython-modeline-display "Jy"
+  "String to display in Emacs modeline."
+
+  :type 'string
+  :tag "jython-modeline-display"
   :group 'python-mode)
 
 (defcustom py-extensions "py-extensions.el"
@@ -144,7 +182,8 @@ Results arrive in output buffer, which is not in comint-mode"
 
   :type 'boolean
   :tag "py-fast-process-p"
-  :group 'python-mode)
+  :group 'python-mode
+  :safe 'booleanp)
 
 ;; credits to python.el
 (defcustom py-shell-compilation-regexp-alist
@@ -163,12 +202,16 @@ Results arrive in output buffer, which is not in comint-mode"
   :group 'python-mode)
 
 (defcustom py-shift-require-transient-mark-mode-p t
- "If py-shift commands on regions should require variable ‘transient-mark-mode’.
+  "If py-shift commands on regions should require variable ‘transient-mark-mode’.
 
 Default is t"
 
-:type 'boolean
-:group 'python-mode)
+  :type 'boolean
+  :group 'python-mode
+  :safe 'booleanp)
+
+(defvar py-shell-after-banner nil
+  "Position where banner-text in head of shell end.")
 
 (defvar py-fast-output-buffer "*Py-Fast-Output-Buffer*"
   "Default ‘buffer-name’ for fast-processes.")
@@ -176,13 +219,29 @@ Default is t"
 (defvar py-this-result nil
   "Internally used, store return-value.")
 
+(defvar py-coding-re
+  "\\(# *coding[ \t]*=\\|#[ \t]*\-*\-[ \t]*coding:\\|#[ \t]*encoding:\\)[ \t]*\\([[:graph:]+]\\)"
+  "")
+
+(setq py-coding-re
+  "\\(# *coding[ \t]*=\\|#[ \t]*\-*\-[ \t]*coding:\\|#[ \t]*encoding:\\)[ \t]*\\([[:graph:]+]\\)")
+
+;; and
+
+;; #[ \t]*-*-[ \t]*coding:[ \t]* utf-8 -*-
+
+;; What about
+
+;; #[ \t]*encoding:[ \t]* utf-8"
+
 (defcustom py-comment-auto-fill-p nil
   "When non-nil, fill comments.
 
 Defaut is nil"
 
   :type 'boolean
-  :group 'python-mode)
+  :group 'python-mode
+  :safe 'booleanp)
 
 (defcustom py-sexp-use-expression-p nil
   "If non-nil, ‘forward-sexp’ will call ‘py-forward-expression’.
@@ -190,7 +249,8 @@ Defaut is nil"
 Respective ‘backward-sexp’ will call ‘py-backward-expression’
 Default is t"
   :type 'boolean
-  :group 'python-mode)
+  :group 'python-mode
+  :safe 'booleanp)
 
 (defcustom py-session-p t
   "If commands would use an existing process.
@@ -199,7 +259,18 @@ See also `py-dedicated-process-p'"
 
   :type 'boolean
   :tag "py-session-p"
-  :group 'python-mode)
+  :group 'python-mode
+  :safe 'booleanp)
+
+(defcustom py-fast-session-p nil
+  "If commands would use an existing fast process.
+
+Default is nil"
+
+  :type 'boolean
+  :tag "py-fast-session-p"
+  :group 'python-mode
+  :safe 'booleanp)
 
 (defcustom py-max-help-buffer-p nil
   "If \"\*Python-Help\*\"-buffer should appear as the only visible.
@@ -208,7 +279,8 @@ Default is nil.  In ‘help-buffer’, \"q\" will close it."
 
   :type 'boolean
   :tag "py-max-help-buffer-p"
-  :group 'python-mode)
+  :group 'python-mode
+  :safe 'booleanp)
 
 (defcustom py-highlight-error-source-p nil
   "Respective code in source-buffer will be highlighted.
@@ -274,8 +346,10 @@ Default is nil"
   :tag "py-dedicated-process-p"
   :group 'python-mode)
 
-(defvar py-shell--font-lock-buffer " *PSFLB*"
+(defvar py-shell--font-lock-buffer "*PSFLB*"
   "May contain the `py-buffer-name' currently fontified." )
+
+(setq py-shell--font-lock-buffer "*PSFLB*")
 
 (defvar py-return-result-p nil
   "Internally used.
@@ -307,26 +381,6 @@ Works around a bug in `choose-completion'.
 Default is nil"
   :type 'boolean
   :group 'python-mode)
-
-(defcustom py-update-gud-pdb-history-p t
-  "If pdb should provide suggestions WRT file to check and ‘py-pdb-path’.
-
-Default is t
-See lp:963253"
-  :type 'boolean
-  :tag "py-update-gud-pdb-history-p"
-  :group 'python-mode
-  :tag "py-update-gud-pdb-history-p")
-
-(defcustom py-pdb-executable nil
-  "Indicate PATH/TO/pdb.
-
-Default is nil
-See lp:963253"
-  :type 'string
-  :tag "py-pdb-executable"
-  :group 'python-mode
-  :tag "py-pdb-executable")
 
 (defcustom py-hide-show-minor-mode-p nil
   "If hide-show minor-mode should be on, default is nil."
@@ -716,42 +770,6 @@ def foo():
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-list-style)
 
-;; (defcustom py-indent-honors-multiline-listing nil
-;;   "If t, indents to 1+ column of opening delimiter.
-
-;; def foo (a,
-;;          b):
-
-;; If nil, indent adds one level to the beginning of statement.
-
-;; def foo (a,
-;;     b):
-
-;; Default is nil."
-;;   :type 'boolean
-;;   :tag "py-indent-honors-multiline-listing"
-;;   :group 'python-mode)
-
-;; (defcustom py-indent-paren-spanned-multilines-p t
-;;   "If non-nil, indents elements of list to first element.
-
-;; def foo():
-;;     if (foo &&
-;;             baz):
-;;         bar()
-
-;; If nil line up with first element:
-
-;; def foo():
-;;     if (foo &&
-;;         baz):
-;;         bar()
-
-;; Default is t"
-;;   :type 'boolean
-;;   :tag "py-indent-paren-spanned-multilines-p"
-;;   :group 'python-mode)
-
 (defcustom py-closing-list-dedents-bos nil
   "When non-nil, indent list's closing delimiter like start-column.
 
@@ -1054,20 +1072,50 @@ No semantic indent,  which diff to `py-indent-offset' indicates"
   :tag "py-backslashed-lines-indent-offset"
   :group 'python-mode)
 
-(defcustom py-pdb-path
-  (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-      (quote c:/python27/python\ -i\ c:/python27/Lib/pdb.py)
-    '/usr/lib/python2.7/pdb.py)
-  "Where to find pdb.py.  Edit this according to your system.
-  For example \"/usr/lib/python3.4\" might be an option too.
+(defcustom py-shell-completion-native-output-timeout 5.0
+  "Time in seconds to wait for completion output before giving up."
+  :version "25.1"
+  :type 'float)
 
-If you ignore the location `M-x py-guess-pdb-path' might display it."
-  :type 'variable
-  :tag "py-pdb-path"
+(defcustom py-shell-completion-native-try-output-timeout 1.0
+  "Time in seconds to wait for *trying* native completion output."
+  :version "25.1"
+  :type 'float)
+
+(defcustom py-shell-compilation-regexp-alist
+  `((,(rx line-start (1+ (any " \t")) "File \""
+          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
+          "\", line " (group (1+ digit)))
+     1 2)
+    (,(rx " in file " (group (1+ not-newline)) " on line "
+          (group (1+ digit)))
+     1 2)
+    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
+          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
+     1 2))
+  "`compilation-error-regexp-alist' for inferior Python."
+  :type '(alist string)
   :group 'python-mode)
 
-(defvar py-python-ms-pdb-command ""
-  "MS-systems might use that.")
+(defvar py-shell--first-prompt-received-output-buffer nil)
+(defvar py-shell--first-prompt-received nil)
+
+(defcustom py-shell-first-prompt-hook nil
+  "Hook run upon first (non-pdb) shell prompt detection.
+This is the place for shell setup functions that need to wait for
+output.  Since the first prompt is ensured, this helps the
+current process to not hang while waiting.  This is useful to
+safely attach setup code for long-running processes that
+eventually provide a shell."
+  :version "25.1"
+  :type 'hook
+  :group 'python-mode)
+
+(defvar py-shell--parent-buffer nil)
+
+(defvar py-shell--font-lock-buffer nil)
+
+(defvar py-shell--package-depth 10)
 
 (defcustom py-indent-comments t
   "When t, comment lines are indented."
@@ -1137,32 +1185,6 @@ Otherwise, all modified buffers are saved without asking."
   :tag "py-delete-function"
   :group 'python-mode)
 
-(defcustom py-pdbtrack-do-tracking-p t
-  "Controls whether the pdbtrack feature is enabled or not.
-When non-nil, pdbtrack is enabled in all comint-based buffers,
-e.g. shell buffers and the *Python* buffer.  When using pdb to debug a
-Python program, pdbtrack notices the pdb prompt and displays the
-source file and line that the program is stopped at, much the same way
-as ‘gud-mode’ does for debugging C programs with gdb."
-  :type 'boolean
-  :tag "py-pdbtrack-do-tracking-p"
-  :group 'python-mode)
-(make-variable-buffer-local 'py-pdbtrack-do-tracking-p)
-
-(defcustom py-pdbtrack-filename-mapping nil
-  "Supports mapping file paths when opening file buffers in pdbtrack.
-When non-nil this is an alist mapping paths in the Python interpreter
-to paths in Emacs."
-  :type 'alist
-  :tag "py-pdbtrack-filename-mapping"
-  :group 'python-mode)
-
-(defcustom py-pdbtrack-minor-mode-string " PDB"
-  "String to use in the minor mode list when pdbtrack is enabled."
-  :type 'string
-  :tag "py-pdbtrack-minor-mode-string"
-  :group 'python-mode)
-
 (defcustom py-import-check-point-max
   20000
   "Max number of characters to search Java-ish import statement.
@@ -1211,7 +1233,7 @@ Default is t."
   :tag "py--delete-temp-file-delay"
   :group 'python-mode)
 
-(defcustom py-python-send-delay 5
+(defcustom py-python-send-delay 1
   "Seconds to wait for output, used by `py--send-...' functions.
 
 See also ‘py-ipython-send-delay’"
@@ -1220,7 +1242,16 @@ See also ‘py-ipython-send-delay’"
   :tag "py-python-send-delay"
   :group 'python-mode)
 
-(defcustom py-ipython-send-delay 9
+(defcustom py-python3-send-delay 1
+  "Seconds to wait for output, used by `py--send-...' functions.
+
+See also ‘py-ipython-send-delay’"
+
+  :type 'number
+  :tag "py-python3-send-delay"
+  :group 'python-mode)
+
+(defcustom py-ipython-send-delay 1
   "Seconds to wait for output, used by `py--send-...' functions.
 
 See also ‘py-python-send-delay’"
@@ -1314,13 +1345,16 @@ Default is \"--errors-only\""
   :tag "py-pylint-command-args"
   :group 'python-mode)
 
+(defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *"
+  "Recognize the prompt.")
+
 (defcustom py-shell-input-prompt-1-regexp ">>> "
   "A regular expression to match the input prompt of the shell."
   :type 'regexp
   :tag "py-shell-input-prompt-1-regexp"
   :group 'python-mode)
 
-(defcustom py-shell-input-prompt-2-regexp "[.][.][.] "
+(defcustom py-shell-input-prompt-2-regexp "[.][.][.]:? "
   "A regular expression to match the input prompt.
 
 Applies to the shell after the first line of input."
@@ -1424,18 +1458,17 @@ Don't split when max number of displayed windows is reached."
   :tag "py-split-windows-on-execute-function"
   :group 'python-mode)
 
-(defcustom py-shell-fontify-style nil
-  "Fontify current input resp. output in Python shell. Default is nil.
+(defcustom py-shell-fontify-p 'input
+  "Fontify current input in Python shell. Default is input.
 
 INPUT will leave output unfontified.
-ALL keeps output fontified.
 
 At any case only current input gets fontified."
   :type '(choice (const :tag "Default" all)
                  (const :tag "Input" input)
 		 (const :tag "Nil" nil)
                  )
-  :tag "py-shell-fontify-style"
+  :tag "py-shell-fontify-p"
   :group 'python-mode)
 
 (defcustom py-hide-show-keywords
@@ -1527,7 +1560,7 @@ Else /usr/bin/python"
 
 (defcustom py-python-command-args '("-i")
   "String arguments to be used when starting a Python shell."
-  :type 'string
+  :type '(repeat string)
   :tag "py-python-command-args"
   :group 'python-mode)
 
@@ -1611,24 +1644,26 @@ Else /usr/bin/ipython"
 
 (defcustom py-ipython-command-args
   (if (eq system-type 'windows-nt)
-      "-i C:\\Python27\\Scripts\\ipython-script.py"
-    "--pylab --automagic")
-  "String arguments to be used when starting a Python shell.
+      '("-i" "C:\\Python27\\Scripts\\ipython-script.py")
+    ;; --simple-prompt seems to exist from IPython 5.
+    (if (string-match "^[0-4]" (shell-command-to-string (concat "ipython" " -V")))
+	'("--pylab" "--automagic")
+      '("--pylab" "--automagic" "--simple-prompt")))
+  "String arguments to be used when starting a IPython shell.
 
 At Windows make sure ipython-script.py is PATH.
 Also setting PATH/TO/SCRIPT here should work, for example;
 C:\\Python27\\Scripts\\ipython-script.py
 With Anaconda the following is known to work:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\ipython-script-py\""
-  :type 'string
-  :tag "py-ipython-command-args
-"
+  :type '(repeat string)
+  :tag "py-ipython-command-args"
   :group 'python-mode)
 
 (defcustom py-jython-command
   (if (eq system-type 'windows-nt)
-      "jython"
-    "/usr/bin/jython")
+      '("jython")
+    '("/usr/bin/jython"))
 
   "A PATH/TO/EXECUTABLE or default value.
 `M-x Jython RET' may look for, if no Jython-shell is specified by command.
@@ -1636,14 +1671,14 @@ With Anaconda the following is known to work:
 Not known to work at windows
 Default /usr/bin/jython"
 
-  :type 'string
+  :type '(repeat string)
   :tag "py-jython-command
 "
   :group 'python-mode)
 
-(defcustom py-jython-command-args ""
-  "String arguments to be used when starting a Python shell."
-  :type 'string
+(defcustom py-jython-command-args '("-i")
+  "String arguments to be used when starting a Jython shell."
+  :type '(repeat string)
   :tag "py-jython-command-args"
   :group 'python-mode)
 
@@ -2034,11 +2069,93 @@ Bug #31 - wrong fontification caused by string-delimiters in output"
   :tag "py-force-default-output-buffer-p"
   :group 'python-mode)
 
-(defcustom py-shell-prompt-regexp ">>> "
-  "Regular Expression matching top\-level input prompt of python shell.
+(defcustom py-shell-prompt-regexp ">>> *"
+  "Regular Expression matching top-level input prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
   :tag "py-shell-prompt-regexp"
+  :group 'python-mode)
+
+(defcustom py-shell-prompt-input-regexp
+  '(">>> " "\\.\\.\\. "                 ; Python
+    "In \\[[0-9]+\\]: "                 ; IPython
+    "   \\.\\.\\.: "                    ; IPython
+    ;; Using ipdb outside IPython may fail to cleanup and leave static
+    ;; IPython prompts activated, this adds some safeguard for that.
+    "In : " "\\.\\.\\.: ")
+  "List of regular expressions matching input prompts."
+  :type '(repeat string)
+  :version "24.4")
+
+(defcustom py-shell-prompt-output-regexps
+  '(""                                  ; Python
+    "Out\\[[0-9]+\\]: "                 ; IPython
+    "Out :")                            ; ipdb safeguard
+  "List of regular expressions matching output prompts."
+  :type '(repeat string)
+  :version "24.4")
+
+(defcustom py-shell-prompt-detect-p nil
+  "Non-nil enables autodetection of interpreter prompts."
+  :type 'boolean
+  :safe 'booleanp
+  :version "24.4")
+
+(defcustom py-shell-unbuffered t
+  "Should shell output be unbuffered?.
+When non-nil, this may prevent delayed and missing output in the
+Python shell.  See commentary for details."
+  :type 'boolean
+  :group 'python-mode
+  :safe 'booleanp)
+
+(defcustom py-shell-process-environment nil
+  "List of overridden environment variables for subprocesses to inherit.
+Each element should be a string of the form ENVVARNAME=VALUE.
+When this variable is non-nil, values are exported into the
+process environment before starting it.  Any variables already
+present in the current environment are superseded by variables
+set here."
+  :type '(repeat string)
+  :group 'python-mode)
+
+(defcustom py-shell-extra-pythonpaths nil
+  "List of extra pythonpaths for Python shell.
+When this variable is non-nil, values added at the beginning of
+the PYTHONPATH before starting processes.  Any values present
+here that already exists in PYTHONPATH are moved to the beginning
+of the list so that they are prioritized when looking for
+modules."
+  :type '(repeat string)
+  :group 'python-mode)
+
+(defcustom py-shell-exec-path nil
+  "List of paths for searching executables.
+When this variable is non-nil, values added at the beginning of
+the PATH before starting processes.  Any values present here that
+already exists in PATH are moved to the beginning of the list so
+that they are prioritized when looking for executables."
+  :type '(repeat string)
+  :group 'python-mode)
+
+(defcustom py-shell-remote-exec-path nil
+  "List of paths to be ensured remotely for searching executables.
+When this variable is non-nil, values are exported into remote
+hosts PATH before starting processes.  Values defined in
+`py-shell-exec-path' will take precedence to paths defined
+here.  Normally you wont use this variable directly unless you
+plan to ensure a particular set of paths to all Python shell
+executed through tramp connections."
+  :version "25.1"
+  :type '(repeat string)
+  :group 'python-mode)
+
+(defcustom py-shell-virtualenv-root nil
+  "Path to virtualenv root.
+This variable, when set to a string, makes the environment to be
+modified such that shells are started within the specified
+virtualenv."
+  :type '(choice (const nil) string)
   :group 'python-mode)
 
 (defvar py-eldoc-window-configuration nil
@@ -2074,6 +2191,185 @@ It should not contain a caret (^) at the beginning."
     except SyntaxError:
         print(doc)"
   "Python code to setup documentation retrieval.")
+
+(defcustom py-python-eldoc-setup-code
+  "def __PYDOC_get_help(obj):
+    try:
+        import inspect
+        try:
+            str_type = basestring
+            argspec_function = inspect.getargspec
+        except NameError:
+            str_type = str
+            argspec_function = inspect.getfullargspec
+        if isinstance(obj, str_type):
+            obj = eval(obj, globals())
+        doc = inspect.getdoc(obj)
+        if not doc and callable(obj):
+            target = None
+            if inspect.isclass(obj) and hasattr(obj, '__init__'):
+                target = obj.__init__
+                objtype = 'class'
+            else:
+                target = obj
+                objtype = 'def'
+            if target:
+                args = inspect.formatargspec(*argspec_function(target))
+                name = obj.__name__
+                doc = '{objtype} {name}{args}'.format(
+                    objtype=objtype, name=name, args=args
+                )
+        else:
+            doc = doc.splitlines()[0]
+    except:
+        doc = ''
+    return doc"
+  "Python code to setup documentation retrieval."
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-python-eldoc-string-code
+  "__PYDOC_get_help('''%s''')"
+  "Python code used to get a string with the documentation of an object."
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-python-ffap-setup-code
+  "
+def __FFAP_get_module_path(objstr):
+    try:
+        import inspect
+        import os.path
+        # NameError exceptions are delayed until this point.
+        obj = eval(objstr)
+        module = inspect.getmodule(obj)
+        filename = module.__file__
+        ext = os.path.splitext(filename)[1]
+        if ext in ('.pyc', '.pyo'):
+            # Point to the source file.
+            filename = filename[:-1]
+        if os.path.exists(filename):
+            return filename
+        return ''
+    except:
+        return ''"
+  "Python code to get a module path."
+  :type 'string
+  :group 'python-mode)
+
+(defcustom py-python-ffap-string-code
+  "__FFAP_get_module_path('''%s''')"
+  "Python code used to get a string with the path of a module."
+  :type 'string
+  :group 'python-mode)
+
+(defvar py-shell-completion-native-redirect-buffer
+  " *Py completions redirect*"
+  "Buffer to be used to redirect output of readline commands.")
+
+(defvar py-shell--block-prompt nil
+  "Input block prompt for inferior python shell.
+Do not set this variable directly, instead use
+`py-shell-prompt-set-calculated-regexps'.")
+
+(defvar py-shell-output-filter-in-progress nil)
+(defvar py-shell-output-filter-buffer nil)
+
+(defvar py-shell--prompt-calculated-input-regexp nil
+  "Calculated input prompt regexp for inferior python shell.
+Do not set this variable directly.
+
+Iff ‘py-shell--prompt-calculated-input-regexp’
+or ‘py-shell--prompt-calculated-output-regexp’ are set
+‘py-shell-prompt-set-calculated-regexps’ isn't run.")
+
+(defvar py-shell--prompt-calculated-output-regexp nil
+  "Calculated output prompt regexp for inferior python shell.
+
+py-shell-prompt-set-calculated-regexps
+Do not set this variable directly.
+
+Iff ‘py-shell--prompt-calculated-input-regexp’
+or ‘py-shell--prompt-calculated-output-regexp’ are set
+‘py-shell-prompt-set-calculated-regexps’ isn't run.
+")
+
+;; make sure it exists here
+(unless (boundp 'py-rx-constituents)
+  (eval-and-compile
+    (defconst py-rx-constituents
+      `((block-start . ,(rx symbol-start
+                            (or "def" "class" "if" "elif" "else" "try"
+                                "except" "finally" "for" "while" "with"
+                                ;; Python 3.5+ PEP492
+                                (and "async" (+ space)
+                                     (or "def" "for" "with")))
+                            symbol-end))
+	(dedenter . ,(rx symbol-start
+                         (or "elif" "else" "except" "finally")
+                         symbol-end))
+	(block-ender . ,(rx symbol-start
+                            (or
+                             "break" "continue" "pass" "raise" "return")
+                            symbol-end))
+	(decorator . ,(rx line-start (* space) ?@ (any letter ?_)
+                          (* (any word ?_))))
+	(defun . ,(rx symbol-start
+                      (or "def" "class"
+                          ;; Python 3.5+ PEP492
+                          (and "async" (+ space) "def"))
+                      symbol-end))
+	(if-name-main . ,(rx line-start "if" (+ space) "__name__"
+                             (+ space) "==" (+ space)
+                             (any ?' ?\") "__main__" (any ?' ?\")
+                             (* space) ?:))
+	(symbol-name . ,(rx (any letter ?_) (* (any word ?_))))
+	(open-paren . ,(rx (or "{" "[" "(")))
+	(close-paren . ,(rx (or "}" "]" ")")))
+	(simple-operator . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+	;; FIXME: rx should support (not simple-operator).
+	(not-simple-operator . ,(rx
+                                 (not
+                                  (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+	;; FIXME: Use regexp-opt.
+	(operator . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+                             "=" "%" "**" "//" "<<" ">>" "<=" "!="
+                             "==" ">=" "is" "not")))
+	;; FIXME: Use regexp-opt.
+	(assignment-operator . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+					">>=" "<<=" "&=" "^=" "|=")))
+	(string-delimiter . ,(rx (and
+                                  ;; Match even number of backslashes.
+                                  (or (not (any ?\\ ?\' ?\")) point
+                                      ;; Quotes might be preceded by an escaped quote.
+                                      (and (or (not (any ?\\)) point) ?\\
+                                           (* ?\\ ?\\) (any ?\' ?\")))
+                                  (* ?\\ ?\\)
+                                  ;; Match single or triple quotes of any kind.
+                                  (group (or "\"\"\"" "\"" "'''" "'")))))
+	(coding-cookie . ,(rx line-start ?# (* space)
+                              (or
+                               ;; # coding=<encoding name>
+                               (: "coding" (or ?: ?=) (* space) (group-n 1 (+ (or word ?-))))
+                               ;; # -*- coding: <encoding name> -*-
+                               (: "-*-" (* space) "coding:" (* space)
+                                  (group-n 1 (+ (or word ?-))) (* space) "-*-")
+                               ;; # vim: set fileencoding=<encoding name> :
+                               (: "vim:" (* space) "set" (+ space)
+                                  "fileencoding" (* space) ?= (* space)
+                                  (group-n 1 (+ (or word ?-))) (* space) ":")))))
+      "Additional Python specific sexps for `py-rx'")
+
+    (defmacro py-rx (&rest regexps)
+      "Python mode specialized rx macro.
+This variant of `rx' supports common Python named REGEXPS."
+      (let ((rx-constituents (append py-rx-constituents rx-constituents)))
+	(cond ((null regexps)
+               (error "No regexp"))
+              ((cdr regexps)
+               (rx-to-string `(and ,@regexps) t))
+              (t
+               (rx-to-string (car regexps) t)))))))
 
 (defcustom py-shell-prompt-output-regexp ""
   "Regular Expression matching output prompt of python shell.
@@ -2219,27 +2515,13 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
                           `py-custom-temp-directory' will take precedence when setq")
 
-(defcustom py-pdbtrack-stacktrace-info-regexp
-  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression matching stacktrace information.
-Used to extract the current line and module being inspected."
-  :type 'string
-  :group 'python-mode
-  :safe 'stringp)
-
-(defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *"
-  "Recognize the prompt.")
-
-(setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
-
-(defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
-  "Recognize the pydb-prompt.")
-
-(defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
+(defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]: *\\|^[ ]\\{3\\}[.]\\{3,\\}: *"
   "A regular expression to match the IPython input prompt.")
 
+;; (setq py-ipython-input-prompt-re "In .[0-9]+]: *")
+
 ;; prevent ipython.el's setting
-(setq py-ipython-input-prompt-re   "[IO][un]t? \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
+(setq py-ipython-input-prompt-re   "[IO][un]t? \\[[0-9]+\\]: *\\|^[ ]\\{3\\}[.]\\{3,\\}: *" )
 
 (defvar py-exec-command nil
   "Internally used.")
@@ -2279,6 +2561,15 @@ some logging etc."
   :type 'boolean
   :tag "py-debug-p"
   :group 'python-mode)
+
+(defcustom py-shell-complete-p nil
+  "Enable native completion.
+
+Set TAB accordingly. "
+
+  :type 'boolean
+  :group 'python-mode)
+(make-variable-buffer-local 'py-shell-complete-p)
 
 (defcustom py-section-start "# {{"
   "Delimit arbitrary chunks of code."
@@ -2435,6 +2726,10 @@ for options to pass to the DOCNAME interpreter. \"
           (goto-char (point-max)))))
 ")
 
+(defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
+  "Recognize the pydb-prompt.")
+;; (setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
+
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
 					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
@@ -2519,7 +2814,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 ;; 'name':
 (defconst py-dict-re "'\\_<\\w+\\_>':")
 
-(setq py-block-re-raw (list 
+(defvar py-block-re-raw (list
 		       "async def"
 		       "async for"
 		       "async with"
@@ -2530,7 +2825,8 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 		       "try"
 		       "while"
 		       "with"
-		       ))
+		       )
+  "Used by ‘py-block-re’")
 
 (defconst py-block-re (concat
 		       ;; "[ \t]*"
@@ -2539,7 +2835,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 		       )
   "Matches the beginning of a compound statement.")
 
-(defconst py-minor-block-re-raw (list 
+(defconst py-minor-block-re-raw (list
 				      "async for"
 				      "async with"
 				      "except"
@@ -2686,7 +2982,7 @@ Second group grabs the name")
     :tag "py-minor-clause-re-raw"
     :group 'python-mode)
 
-(defconst py-minor-clause-re 
+(defconst py-minor-clause-re
   (concat
    "[ \t]*"
    (regexp-opt  py-minor-clause-re-raw 'symbols)
@@ -2807,18 +3103,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   (list "python" "python3" "ipython")
   "Serialize tests employing dolist.")
 
-(defvar py--shell-unfontify nil
-  "Internally used by `py--run-unfontify-timer'.")
-(make-variable-buffer-local 'py--shell-unfontify)
-
-(defvar py--timer nil
-  "Used by `py--run-unfontify-timer'.")
-(make-variable-buffer-local 'py--timer)
-
-(defvar py--timer-delay nil
-  "Used by `py--run-unfontify-timer'.")
-(make-variable-buffer-local 'py--timer-delay)
-
 (defcustom py-shell-unfontify-p t
   "Run `py--run-unfontify-timer' unfontifying the shell banner-text.
 
@@ -2828,6 +3112,7 @@ Default is nil"
   :tag "py-shell-unfontify-p"
   :group 'python-mode)
 
+;; Pdb
 ;; #62, pdb-track in a shell buffer
 (defcustom pdb-track-stack-from-shell-p t
   "If t, track source from shell-buffer.
@@ -2838,60 +3123,261 @@ Add hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file"
   :type 'boolean
   :group 'python-mode)
 
-(if pdb-track-stack-from-shell-p
-    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
-  (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t))
+(defcustom py-update-gud-pdb-history-p t
+  "If pdb should provide suggestions WRT file to check and ‘py-pdb-path’.
 
-(defun py--unfontify-banner-intern (buffer)
-  "Internal use, unfontify BUFFER."
-  (save-excursion
-    (goto-char (point-min))
-    (let ((erg (or (ignore-errors (car-safe comint-last-prompt))
-		   (and
-		    (re-search-forward py-fast-filter-re nil t 1)
-		    (match-beginning 0))
-		   (progn
-		     (forward-paragraph)
-		     (point)))))
-      ;; (sit-for 1 t)
-      (if erg
-	  (progn
-	    (font-lock-unfontify-region (point-min) erg)
-	    (goto-char (point-max)))
-	(progn (and py-debug-p (message "%s" (concat "py--unfontify-banner: Don't see a prompt in buffer " (buffer-name buffer)))))))))
+Default is t
+See lp:963253"
+  :type 'boolean
+  :tag "py-update-gud-pdb-history-p"
+  :group 'python-mode)
 
-(defun py--unfontify-banner (&optional buffer)
-  "Unfontify the shell banner-text.
+(defcustom py-pdb-executable nil
+  "Indicate PATH/TO/pdb.
 
-Cancels `py--timer'
-Expects being called by `py--run-unfontify-timer'
-Optional argument BUFFER which select."
-  (interactive)
-    (let ((buffer (or buffer (current-buffer))))
-      (if (ignore-errors (buffer-live-p (get-buffer buffer)))
-	  (with-current-buffer buffer
-	    (py--unfontify-banner-intern buffer)
-	    (and (timerp py--timer)(cancel-timer py--timer)))
-	(and (timerp py--timer)(cancel-timer py--timer)))))
+Default is nil
+See lp:963253"
+  :type 'string
+  :tag "py-pdb-executable"
+  :group 'python-mode)
 
-(defun py--run-unfontify-timer (&optional buffer)
-  "Unfontify the shell banner-text.
-Optional argument BUFFER select buffer."
-  (when py--shell-unfontify
-    (let ((buffer (or buffer (current-buffer))))
-      (if (and
-	   (buffer-live-p buffer)
-	   (or
-	    (eq major-mode 'py-python-shell-mode)
-	    (eq major-mode 'py-ipython-shell-mode)))
-	  (unless py--timer
-	    (setq py--timer
-		  (run-with-idle-timer
-		   (if py--timer-delay (setq py--timer-delay 3)
-		     (setq py--timer-delay 0.1))
-		   nil
-		   #'py--unfontify-banner buffer)))
-	(cancel-timer py--timer)))))
+(defcustom py-pdb-path
+  (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+      (quote c:/python27/python\ -i\ c:/python27/Lib/pdb.py)
+    '/usr/lib/python2.7/pdb.py)
+  "Where to find pdb.py.  Edit this according to your system.
+  For example \"/usr/lib/python3.4\" might be an option too.
+
+If you ignore the location `M-x py-guess-pdb-path' might display it."
+  :type 'variable
+  :tag "py-pdb-path"
+  :group 'python-mode)
+
+(defvar py-python-ms-pdb-command ""
+  "MS-systems might use that.")
+
+(defcustom py-shell-prompt-pdb-regexp "[(<]*[Ii]?[Pp]db[>)]+ "
+  "Regular expression matching pdb input prompt of Python shell.
+It should not contain a caret (^) at the beginning."
+  :type 'string)
+
+(defcustom py-pdbtrack-stacktrace-info-regexp
+  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+  "Regular expression matching stacktrace information.
+Used to extract the current line and module being inspected."
+  :type 'string
+  :group 'python-mode
+  :safe 'stringp)
+
+(defvar py-pdbtrack-tracked-buffer nil
+  "Variable containing the value of the current tracked buffer.
+Never set this variable directly, use
+`py-pdbtrack-set-tracked-buffer' instead.")
+
+(defvar py-pdbtrack-buffers-to-kill nil
+  "List of buffers to be deleted after tracking finishes.")
+
+(defcustom py-pdbtrack-do-tracking-p t
+  "Controls whether the pdbtrack feature is enabled or not.
+When non-nil, pdbtrack is enabled in all comint-based buffers,
+e.g. shell buffers and the *Python* buffer.  When using pdb to debug a
+Python program, pdbtrack notices the pdb prompt and displays the
+source file and line that the program is stopped at, much the same way
+as ‘gud-mode’ does for debugging C programs with gdb."
+  :type 'boolean
+  :tag "py-pdbtrack-do-tracking-p"
+  :group 'python-mode)
+(make-variable-buffer-local 'py-pdbtrack-do-tracking-p)
+
+(defcustom py-pdbtrack-filename-mapping nil
+  "Supports mapping file paths when opening file buffers in pdbtrack.
+When non-nil this is an alist mapping paths in the Python interpreter
+to paths in Emacs."
+  :type 'alist
+  :tag "py-pdbtrack-filename-mapping"
+  :group 'python-mode)
+
+(defcustom py-pdbtrack-minor-mode-string " PDB"
+  "String to use in the minor mode list when pdbtrack is enabled."
+  :type 'string
+  :tag "py-pdbtrack-minor-mode-string"
+  :group 'python-mode)
+
+(defcustom py-pdbtrack-stacktrace-info-regexp
+  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+  "Regular expression matching stacktrace information.
+Used to extract the current line and module being inspected."
+  :type 'string
+  :group 'python-mode
+  :safe 'stringp)
+
+(defcustom py-pdbtrack-stacktrace-info-regexp
+  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+  "Regular expression matching stacktrace information.
+Used to extract the current line and module being inspected."
+  :type 'string
+  :group 'python-mode
+  :safe 'stringp)
+
+(defvar py-pdbtrack-tracked-buffer nil
+  "Variable containing the value of the current tracked buffer.
+Never set this variable directly, use
+`py-pdbtrack-set-tracked-buffer' instead.")
+
+(defvar py-pdbtrack-buffers-to-kill nil
+  "List of buffers to be deleted after tracking finishes.")
+
+(defconst py-pdbtrack-stack-entry-regexp
+   (concat ".*\\("py-shell-input-prompt-1-regexp">\\|"py-ipython-input-prompt-re">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
+  "Regular expression pdbtrack uses to find a stack trace entry.")
+
+(defconst py-pdbtrack-marker-regexp-file-group 2
+  "Group position in gud-pydb-marker-regexp that matches the file name.")
+
+(defconst py-pdbtrack-marker-regexp-line-group 3
+  "Group position in gud-pydb-marker-regexp that matches the line number.")
+
+(defconst py-pdbtrack-marker-regexp-funcname-group 4
+  "Group position in gud-pydb-marker-regexp that matches the function name.")
+
+(defconst py-pdbtrack-track-range 10000
+  "Max number of characters from end of buffer to search for stack entry.")
+
+(defvar py-pdbtrack-is-tracking-p nil)
+
+(defcustom py-shell-completion-native-output-timeout 5.0
+  "Time in seconds to wait for completion output before giving up."
+  :version "25.1"
+  :type 'float)
+
+(defcustom py-shell-completion-native-try-output-timeout 1.0
+  "Time in seconds to wait for *trying* native completion output."
+  :version "25.1"
+  :type 'float)
+
+(defcustom py-shell-compilation-regexp-alist
+  `((,(rx line-start (1+ (any " \t")) "File \""
+          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
+          "\", line " (group (1+ digit)))
+     1 2)
+    (,(rx " in file " (group (1+ not-newline)) " on line "
+          (group (1+ digit)))
+     1 2)
+    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
+          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
+     1 2))
+  "`compilation-error-regexp-alist' for inferior Python."
+  :type '(alist string)
+  :group 'python-mode)
+
+(defcustom py-pdbtrack-stacktrace-info-regexp
+  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+  "Regular expression matching stacktrace information.
+Used to extract the current line and module being inspected."
+  :type 'string
+  :group 'python-mode
+  :safe 'stringp)
+
+(defvar py-pdbtrack-tracked-buffer nil
+  "Variable containing the value of the current tracked buffer.
+Never set this variable directly, use
+`py-pdbtrack-set-tracked-buffer' instead.")
+
+(defvar py-pdbtrack-buffers-to-kill nil
+  "List of buffers to be deleted after tracking finishes.")
+
+(defvar py-shell--first-prompt-received-output-buffer nil)
+(defvar py-shell--first-prompt-received nil)
+
+(defcustom py-shell-first-prompt-hook nil
+  "Hook run upon first (non-pdb) shell prompt detection.
+This is the place for shell setup functions that need to wait for
+output.  Since the first prompt is ensured, this helps the
+current process to not hang while waiting.  This is useful to
+safely attach setup code for long-running processes that
+eventually provide a shell."
+  :version "25.1"
+  :type 'hook
+  :group 'python-mode)
+
+(defvar py-shell--parent-buffer nil)
+
+(defvar py-shell--font-lock-buffer nil)
+
+(defvar py-shell--package-depth 10)
+
+;; (defcustom py-shell-completion-native-enable t
+;;   "Enable readline based native completion."
+;;   :version "25.1"
+;;   :type 'boolean)
+
+(defcustom py-shell-completion-native-output-timeout 5.0
+  "Time in seconds to wait for completion output before giving up."
+  :version "25.1"
+  :type 'float)
+
+(defcustom py-completion-setup-code
+  "
+def __PYTHON_EL_get_completions(text):
+    completions = []
+    completer = None
+
+    try:
+        import readline
+
+        try:
+            import __builtin__
+        except ImportError:
+            # Python 3
+            import builtins as __builtin__
+        builtins = dir(__builtin__)
+
+        is_ipython = ('__IPYTHON__' in builtins or
+                      '__IPYTHON__active' in builtins)
+        splits = text.split()
+        is_module = splits and splits[0] in ('from', 'import')
+
+        if is_ipython and is_module:
+            from IPython.core.completerlib import module_completion
+            completions = module_completion(text.strip())
+        elif is_ipython and '__IP' in builtins:
+            completions = __IP.complete(text)
+        elif is_ipython and 'get_ipython' in builtins:
+            completions = get_ipython().Completer.all_completions(text)
+        else:
+            # Try to reuse current completer.
+            completer = readline.get_completer()
+            if not completer:
+                # importing rlcompleter sets the completer, use it as a
+                # last resort to avoid breaking customizations.
+                import rlcompleter
+                completer = readline.get_completer()
+            if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+                completer.print_mode = False
+            i = 0
+            while True:
+                completion = completer(text, i)
+                if not completion:
+                    break
+                i += 1
+                completions.append(completion)
+    except:
+        pass
+    finally:
+        if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+            completer.print_mode = True
+    return completions"
+  "Code used to setup completion in inferior Python processes."
+  :type 'string
+  :group 'python)
+
+(defcustom py-shell-completion-string-code
+  "';'.join(__PYTHON_EL_get_completions('''%s'''))"
+  "Python code used to get a string of completions separated by semicolons.
+The string passed to the function is the current python name or
+the full statement in the case of imports."
+  :type 'string
+  :group 'python)
 
 (defsubst py-keep-region-active ()
   "Keep the region active in XEmacs."
@@ -2984,19 +3470,27 @@ See also `py-object-reference-face'"
 
 (defun py-toggle-imenu-create-index ()
   "Toggle value of ‘py--imenu-create-index-p’"
-  (interactive) 
+  (interactive)
   (setq py--imenu-create-index-p (not py--imenu-create-index-p))
   (when (interactive-p) (message "py--imenu-create-index-p: %s" py--imenu-create-index-p)))
 
+(defun py-toggle-shell-completion ()
+  "Switches value of buffer-local var ‘py-shell-complete-p’"
+  (interactive)
+    (setq py-shell-complete-p (not py-shell-complete-p))
+    (when (interactive-p) (message "py-shell-complete-p: %s" py-shell-complete-p)))
+
 (defun py--python-send-setup-code-intern (name buffer)
-  (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
-	py-return-result-p py-store-result-p)
-    (unless (file-readable-p setup-file)
-      (with-temp-buffer
-	(insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
-	(write-file setup-file)))
-    (py--execute-file-base nil setup-file nil buffer)
-    (when py-verbose-p (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))))
+  (save-excursion
+    (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
+	  py-return-result-p py-store-result-p)
+      (unless (file-readable-p setup-file)
+	(with-temp-buffer
+	  (insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
+	  (write-file setup-file)))
+      (py--execute-file-base (get-buffer-process buffer) setup-file nil buffer nil t)
+      ;; (when py-verbose-p (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))
+      )))
 
 (defun py--python-send-completion-setup-code (buffer)
   "For Python see py--python-send-setup-code."
@@ -3015,7 +3509,7 @@ Used by `py-ipython-module-completion-string'"
       (with-temp-buffer
 	(insert py-ipython-module-completion-code)
 	(write-file setup-file)))
-    (py--execute-file-base nil setup-file nil (current-buffer))))
+    (py--execute-file-base nil setup-file nil (current-buffer) nil t)))
 
 (defun py--at-raw-string ()
   "If at beginning of a raw-string."
@@ -3401,9 +3895,19 @@ With optional ARG message state switched to"
   (setq py-closing-list-dedents-bos (not py-closing-list-dedents-bos))
   (when arg (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
 
+(defun py-toggle-fast-session-p (&optional arg)
+  "Switches boolean variable ‘py-fast-session-p’.
+
+With optional ARG message state switched to"
+  (interactive "p")
+  (setq py-fast-session-p (not py-fast-session-p))
+  (when arg (message "py-fast-session-p: %s" py-fast-session-p)))
+
+
 
 
 (require 'ansi-color)
+(require 'subr-x)
 (require 'cc-cmds)
 (require 'cl)
 (require 'comint)
@@ -3414,6 +3918,8 @@ With optional ARG message state switched to"
 (require 'shell)
 (require 'thingatpt)
 (require 'which-func)
+(require 'tramp)
+(require 'tramp-sh)
 
 (defun py-define-menu (map)
   (easy-menu-define py-menu map "Py"
@@ -5913,6 +6419,723 @@ Defines python-mode specific abbrev for last expressions before point."]
 Find source of definition of SYMBOL."])))
   map)
 
+;; python-components-extra
+
+(defun py-info-encoding ()
+  "Return encoding for file.
+Try `py-info-encoding-from-cookie', if none is found then
+default to utf-8."
+  (or (py-info-encoding-from-cookie)
+      'utf-8))
+
+(defun py-util-comint-last-prompt ()
+  "Return comint last prompt overlay start and end.
+This is for compatibility with Emacs < 24.4."
+  (cond ((bound-and-true-p comint-last-prompt-overlay)
+         (cons (overlay-start comint-last-prompt-overlay)
+               (overlay-end comint-last-prompt-overlay)))
+        ((bound-and-true-p comint-last-prompt)
+         comint-last-prompt)
+        (t nil)))
+
+(defun py-shell-accept-process-output (process &optional timeout regexp)
+  "Accept PROCESS output with TIMEOUT until REGEXP is found.
+Optional argument TIMEOUT is the timeout argument to
+`accept-process-output' calls.  Optional argument REGEXP
+overrides the regexp to match the end of output, defaults to
+`comint-prompt-regexp'.  Returns non-nil when output was
+properly captured.
+
+This utility is useful in situations where the output may be
+received in chunks, since `accept-process-output' gives no
+guarantees they will be grabbed in a single call.  An example use
+case for this would be the CPython shell start-up, where the
+banner and the initial prompt are received separately."
+  (let ((regexp (or regexp comint-prompt-regexp)))
+    (catch 'found
+      (while t
+        (when (not (accept-process-output process timeout))
+          (throw 'found nil))
+        (when (looking-back
+               regexp (car (py-util-comint-last-prompt)))
+          (throw 'found t))))))
+
+(defun py-shell-completion-native-get-completions (process import input)
+  "Get completions using native readline for PROCESS.
+When IMPORT is non-nil takes precedence over INPUT for
+completion."
+  (with-current-buffer (process-buffer process)
+    (let* ((input (or import input))
+           (original-filter-fn (process-filter process))
+           (redirect-buffer (get-buffer-create
+                             py-shell-completion-native-redirect-buffer))
+           (trigger "\t")
+           (new-input (concat input trigger))
+           (input-length
+            (save-excursion
+              (+ (- (point-max) (comint-bol)) (length new-input))))
+           (delete-line-command (make-string input-length ?\b))
+           (input-to-send (concat new-input delete-line-command)))
+      ;; Ensure restoring the process filter, even if the user quits
+      ;; or there's some other error.
+      (unwind-protect
+          (with-current-buffer redirect-buffer
+            ;; Cleanup the redirect buffer
+            (erase-buffer)
+            ;; Mimic `comint-redirect-send-command', unfortunately it
+            ;; can't be used here because it expects a newline in the
+            ;; command and that's exactly what we are trying to avoid.
+            (let ((comint-redirect-echo-input nil)
+                  (comint-redirect-completed nil)
+                  (comint-redirect-perform-sanity-check nil)
+                  (comint-redirect-insert-matching-regexp t)
+                  (comint-redirect-finished-regexp
+                   "1__dummy_completion__[[:space:]]*\n")
+                  (comint-redirect-output-buffer redirect-buffer))
+              ;; Compatibility with Emacs 24.x.  Comint changed and
+              ;; now `comint-redirect-filter' gets 3 args.  This
+              ;; checks which version of `comint-redirect-filter' is
+              ;; in use based on its args and uses `apply-partially'
+              ;; to make it up for the 3 args case.
+              (if (= (length
+                      (help-function-arglist 'comint-redirect-filter)) 3)
+                  (set-process-filter
+                   process (apply-partially
+                            #'comint-redirect-filter original-filter-fn))
+                (set-process-filter process #'comint-redirect-filter))
+              (process-send-string process input-to-send)
+              ;; Grab output until our dummy completion used as
+              ;; output end marker is found.
+              (when (py-shell-accept-process-output
+                     process py-shell-completion-native-output-timeout
+                     comint-redirect-finished-regexp)
+                (re-search-backward "0__dummy_completion__" nil t)
+                (cl-remove-duplicates
+                 (split-string
+                  (buffer-substring-no-properties
+                   (line-beginning-position) (point-min))
+                  "[ \f\t\n\r\v()]+" t)
+                 :test #'string=))))
+        (set-process-filter process original-filter-fn)))))
+
+(defmacro py-shell--add-to-path-with-priority (pathvar paths)
+  "Modify PATHVAR and ensure PATHS are added only once at beginning."
+  `(dolist (path (reverse ,paths))
+     (cl-delete path ,pathvar :test #'string=)
+     (cl-pushnew path ,pathvar :test #'string=)))
+
+(defun py-shell-calculate-pythonpath ()
+  "Calculate the PYTHONPATH using `py-shell-extra-pythonpaths'."
+  (let ((pythonpath
+         (split-string
+          (or (getenv "PYTHONPATH") "") path-separator 'omit)))
+    (py-shell--add-to-path-with-priority
+     pythonpath py-shell-extra-pythonpaths)
+    (mapconcat 'identity pythonpath path-separator)))
+
+(defun py-shell-calculate-process-environment ()
+  "Calculate `process-environment' or `tramp-remote-process-environment'.
+Prepends `py-shell-process-environment', sets extra
+pythonpaths from `py-shell-extra-pythonpaths' and sets a few
+virtualenv related vars.  If `default-directory' points to a
+remote host, the returned value is intended for
+`tramp-remote-process-environment'."
+  (let* ((remote-p (file-remote-p default-directory))
+         (process-environment (if remote-p
+                                  tramp-remote-process-environment
+                                process-environment))
+         (virtualenv (when py-shell-virtualenv-root
+                       (directory-file-name py-shell-virtualenv-root))))
+    (dolist (env py-shell-process-environment)
+      (pcase-let ((`(,key ,value) (split-string env "=")))
+        (setenv key value)))
+    (when py-shell-unbuffered
+      (setenv "PYTHONUNBUFFERED" "1"))
+    (when py-shell-extra-pythonpaths
+      (setenv "PYTHONPATH" (py-shell-calculate-pythonpath)))
+    (if (not virtualenv)
+        process-environment
+      (setenv "PYTHONHOME" nil)
+      (setenv "VIRTUAL_ENV" virtualenv))
+    process-environment))
+
+(defun py-shell-calculate-exec-path ()
+  "Calculate `exec-path'.
+Prepends `py-shell-exec-path' and adds the binary directory
+for virtualenv if `py-shell-virtualenv-root' is set - this
+will use the python interpreter from inside the virtualenv when
+starting the shell.  If `default-directory' points to a remote host,
+the returned value appends `py-shell-remote-exec-path' instead
+of `exec-path'."
+  (let ((new-path (copy-sequence
+                   (if (file-remote-p default-directory)
+                       py-shell-remote-exec-path
+                     exec-path)))
+
+        ;; Windows and POSIX systems use different venv directory structures
+        (virtualenv-bin-dir (if (eq system-type 'windows-nt) "Scripts" "bin")))
+    (py-shell--add-to-path-with-priority
+     new-path py-shell-exec-path)
+    (if (not py-shell-virtualenv-root)
+        new-path
+      (py-shell--add-to-path-with-priority
+       new-path
+       (list (expand-file-name virtualenv-bin-dir py-shell-virtualenv-root)))
+      new-path)))
+
+(defun py-shell-tramp-refresh-remote-path (vec paths)
+  "Update VEC's remote-path giving PATHS priority."
+  (let ((remote-path (tramp-get-connection-property vec "remote-path" nil)))
+    (when remote-path
+      (py-shell--add-to-path-with-priority remote-path paths)
+      (tramp-set-connection-property vec "remote-path" remote-path)
+      (tramp-set-remote-path vec))))
+
+(defun py-shell-tramp-refresh-process-environment (vec env)
+  "Update VEC's process environment with ENV."
+  ;; Stolen from `tramp-open-connection-setup-interactive-shell'.
+  (let ((env (append (when (fboundp 'tramp-get-remote-locale)
+                       ;; Emacs<24.4 compat.
+                       (list (tramp-get-remote-locale vec)))
+		     (copy-sequence env)))
+        (tramp-end-of-heredoc
+         (if (boundp 'tramp-end-of-heredoc)
+             tramp-end-of-heredoc
+           (md5 tramp-end-of-output)))
+	unset vars item)
+    (while env
+      (setq item (split-string (car env) "=" 'omit))
+      (setcdr item (mapconcat 'identity (cdr item) "="))
+      (if (and (stringp (cdr item)) (not (string-equal (cdr item) "")))
+	  (push (format "%s %s" (car item) (cdr item)) vars)
+	(push (car item) unset))
+      (setq env (cdr env)))
+    (when vars
+      (tramp-send-command
+       vec
+       (format "while read var val; do export $var=$val; done <<'%s'\n%s\n%s"
+	       tramp-end-of-heredoc
+	       (mapconcat 'identity vars "\n")
+	       tramp-end-of-heredoc)
+       t))
+    (when unset
+      (tramp-send-command
+       vec (format "unset %s" (mapconcat 'identity unset " ")) t))))
+
+(defmacro py-shell-with-environment (&rest body)
+  "Modify shell environment during execution of BODY.
+Temporarily sets `process-environment' and `exec-path' during
+execution of body.  If `default-directory' points to a remote
+machine then modifies `tramp-remote-process-environment' and
+`py-shell-remote-exec-path' instead."
+  (declare (indent 0) (debug (body)))
+  (let ((vec (make-symbol "vec")))
+    `(progn
+       (let* ((,vec
+               (when (file-remote-p default-directory)
+                 (ignore-errors
+                   (tramp-dissect-file-name default-directory 'noexpand))))
+              (process-environment
+               (if ,vec
+                   process-environment
+                 (py-shell-calculate-process-environment)))
+              (exec-path
+               (if ,vec
+                   exec-path
+                 (py-shell-calculate-exec-path)))
+              (tramp-remote-process-environment
+               (if ,vec
+                   (py-shell-calculate-process-environment)
+                 tramp-remote-process-environment)))
+         (when (tramp-get-connection-process ,vec)
+           ;; For already existing connections, the new exec path must
+           ;; be re-set, otherwise it won't take effect.  One example
+           ;; of such case is when remote dir-locals are read and
+           ;; *then* subprocesses are triggered within the same
+           ;; connection.
+           (py-shell-tramp-refresh-remote-path
+            ,vec (py-shell-calculate-exec-path))
+           ;; The `tramp-remote-process-environment' variable is only
+           ;; effective when the started process is an interactive
+           ;; shell, otherwise (like in the case of processes started
+           ;; with `process-file') the environment is not changed.
+           ;; This makes environment modifications effective
+           ;; unconditionally.
+           (py-shell-tramp-refresh-process-environment
+            ,vec tramp-remote-process-environment))
+         ,(macroexp-progn body)))))
+
+(defun py-shell-prompt-detect ()
+  "Detect prompts for the current interpreter.
+When prompts can be retrieved successfully from the
+interpreter run with
+`py-python-command-args', returns a list of
+three elements, where the first two are input prompts and the
+last one is an output prompt.  When no prompts can be detected
+shows a warning with instructions to avoid hangs and returns nil.
+When `py-shell-prompt-detect-p' is nil avoids any
+detection and just returns nil."
+  (when py-shell-prompt-detect-p
+    (py-shell-with-environment
+      (let* ((code (concat
+                    "import sys\n"
+                    "ps = [getattr(sys, 'ps%s' % i, '') for i in range(1,4)]\n"
+                    ;; JSON is built manually for compatibility
+                    "ps_json = '\\n[\"%s\", \"%s\", \"%s\"]\\n' % tuple(ps)\n"
+                    "print (ps_json)\n"
+                    "sys.exit(0)\n"))
+             ;; (interpreter py-shell-name)
+             ;; (interpreter-arg py-python-command-args)
+             (output
+              (with-temp-buffer
+                ;; TODO: improve error handling by using
+                ;; `condition-case' and displaying the error message to
+                ;; the user in the no-prompts warning.
+                (ignore-errors
+                  (let ((code-file
+                         ;; Python 2.x on Windows does not handle
+                         ;; carriage returns in unbuffered mode.
+                         (let ((inhibit-eol-conversion (getenv "PYTHONUNBUFFERED")))
+                           (py-shell--save-temp-file code))))
+                    (unwind-protect
+                        ;; Use `process-file' as it is remote-host friendly.
+                        (process-file
+                         py-shell-name
+                         code-file
+                         '(t nil)
+                         nil
+                         py-python-command-args)
+                      ;; Try to cleanup
+                      (delete-file code-file))))
+                (buffer-string)))
+             (prompts
+              (catch 'prompts
+                (dolist (line (split-string output "\n" t))
+                  (let ((res
+                         ;; Check if current line is a valid JSON array
+                         (and (string= (substring line 0 2) "[\"")
+                              (ignore-errors
+                                ;; Return prompts as a list, not vector
+                                (append (json-read-from-string line) nil)))))
+                    ;; The list must contain 3 strings, where the first
+                    ;; is the input prompt, the second is the block
+                    ;; prompt and the last one is the output prompt.  The
+                    ;; input prompt is the only one that can't be empty.
+                    (when (and (= (length res) 3)
+                               (cl-every #'stringp res)
+                               (not (string= (car res) "")))
+                      (throw 'prompts res))))
+                nil)))
+        (if (not prompts)
+            (lwarn
+             '(python py-shell-prompt-regexp)
+             :warning
+             (concat
+              "Python shell prompts cannot be detected.\n"
+              "If your emacs session hangs when starting python shells\n"
+              "recover with `keyboard-quit' and then try fixing the\n"
+              "interactive flag for your interpreter by adjusting the\n"
+              "`py-python-command-args' or add regexps\n"
+              "matching shell prompts in the directory-local friendly vars:\n"
+              "  + `py-shell-prompt-regexp'\n"
+              "  + `py-shell-input-prompt-2-regexp'\n"
+              "  + `py-shell-prompt-output-regexp'\n"
+              "Or alternatively in:\n"
+              "  + `py-shell-prompt-input-regexp'\n"
+              "  + `py-shell-prompt-output-regexps'"))
+          prompts)))))
+
+(defun python-util-valid-regexp-p (regexp)
+  "Return non-nil if REGEXP is valid."
+  (ignore-errors (string-match regexp "") t))
+
+(defun py-shell-prompt-validate-regexps ()
+  "Validate all user provided regexps for prompts.
+Signals `user-error' if any of these vars contain invalid
+regexps: `py-shell-prompt-regexp',
+`py-shell-input-prompt-2-regexp',
+`py-shell-prompt-pdb-regexp',
+`py-shell-prompt-output-regexp',
+`py-shell-prompt-input-regexp',
+`py-shell-prompt-output-regexps'."
+  (dolist (symbol (list 'py-shell-prompt-input-regexp
+                        'py-shell-prompt-output-regexps
+                        'py-shell-prompt-regexp
+                        'py-shell-input-prompt-2-regexp
+                        'py-shell-prompt-pdb-regexp
+                        'py-shell-prompt-output-regexp))
+    (dolist (regexp (let ((regexps (symbol-value symbol)))
+                      (if (listp regexps)
+                          regexps
+                        (list regexps))))
+      (when (not (python-util-valid-regexp-p regexp))
+        (user-error "Invalid regexp %s in `%s'"
+                    regexp symbol)))))
+
+(defun py-shell-prompt-set-calculated-regexps ()
+  "Detect and set input and output prompt regexps.
+
+Build and set the values for input- and output-prompt regexp
+using the values from `py-shell-prompt-regexp',
+`py-shell-input-prompt-2-regexp', `py-shell-prompt-pdb-regexp',
+`py-shell-prompt-output-regexp', `py-shell-prompt-input-regexp',
+`py-shell-prompt-output-regexps' and detected prompts from
+`py-shell-prompt-detect'."
+  (when (not (and py-shell--prompt-calculated-input-regexp
+                  py-shell--prompt-calculated-output-regexp))
+    (let* ((detected-prompts (py-shell-prompt-detect))
+           (input-prompts nil)
+           (output-prompts nil)
+           (build-regexp
+            (lambda (prompts)
+              (concat "^\\("
+                      (mapconcat #'identity
+                                 (sort prompts
+                                       (lambda (a b)
+                                         (let ((length-a (length a))
+                                               (length-b (length b)))
+                                           (if (= length-a length-b)
+                                               (string< a b)
+                                             (> (length a) (length b))))))
+                                 "\\|")
+                      "\\)"))))
+      ;; Validate ALL regexps
+      (py-shell-prompt-validate-regexps)
+      ;; Collect all user defined input prompts
+      (dolist (prompt (append py-shell-prompt-input-regexp
+                              (list py-shell-prompt-regexp
+                                    py-shell-input-prompt-2-regexp
+                                    py-shell-prompt-pdb-regexp)))
+        (cl-pushnew prompt input-prompts :test #'string=))
+      ;; Collect all user defined output prompts
+      (dolist (prompt (cons py-shell-prompt-output-regexp
+                            py-shell-prompt-output-regexps))
+        (cl-pushnew prompt output-prompts :test #'string=))
+      ;; Collect detected prompts if any
+      (when detected-prompts
+        (dolist (prompt (butlast detected-prompts))
+          (setq prompt (regexp-quote prompt))
+          (cl-pushnew prompt input-prompts :test #'string=))
+        (setq py-shell--block-prompt (nth 1 detected-prompts))
+        (cl-pushnew (regexp-quote
+                     (car (last detected-prompts)))
+                    output-prompts :test #'string=))
+      ;; Set input and output prompt regexps from collected prompts
+      (setq py-shell--prompt-calculated-input-regexp
+            (funcall build-regexp input-prompts)
+            py-shell--prompt-calculated-output-regexp
+            (funcall build-regexp output-prompts)))))
+
+(defun py-shell-comint-end-of-output-p (output)
+  "Return non-nil if OUTPUT ends with input prompt."
+  (ignore-errors (string-match
+		  ;; XXX: It seems on macOS an extra carriage return is attached
+		  ;; at the end of output, this handles that too.
+		  (concat
+		   "\r?\n?"
+		   ;; Remove initial caret from calculated regexp
+		   (ignore-errors (replace-regexp-in-string
+				   (rx string-start ?^) ""
+				   py-shell--prompt-calculated-input-regexp))
+		   (rx eos))
+		  output)))
+
+(defun py-shell-completion-get-completions (process import input)
+  "Do completion at point using PROCESS for IMPORT or INPUT.
+When IMPORT is non-nil takes precedence over INPUT for
+completion."
+  (setq input (or import input))
+  (with-current-buffer (process-buffer process)
+    (let ((completions
+           (ignore-errors
+	     (string-trim
+	      (py-send-string-no-output
+	       (format
+		(concat py-completion-setup-code
+			"\nprint (" py-shell-completion-string-code ")")
+		input) process (buffer-name (current-buffer)))))))
+      (when (> (length completions) 2)
+        (split-string completions
+                      "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
+
+(defun py-shell-completion-at-point (&optional process)
+  "Function for `completion-at-point-functions' in `py-shell-mode'.
+Optional argument PROCESS forces completions to be retrieved
+using that one instead of current buffer's process."
+  ;; (setq process (or process (get-buffer-process (current-buffer))))
+  (let*
+      ((process (or process (get-buffer-process (current-buffer))))
+       (line-start (if (derived-mode-p 'py-shell-mode)
+		       ;; Working on a shell buffer: use prompt end.
+		       (or (cdr (py-util-comint-last-prompt))
+			   (line-beginning-position))
+		     (line-beginning-position)))
+       (import-statement
+	(when (string-match-p
+	       (rx (* space) word-start (or "from" "import") word-end space)
+	       (buffer-substring-no-properties line-start (point)))
+	  (buffer-substring-no-properties line-start (point))))
+       (start
+	(save-excursion
+	  (if (not (re-search-backward
+		    (py-rx
+		     (or whitespace open-paren close-paren string-delimiter))
+		    line-start
+		    t 1))
+	      line-start
+	    (forward-char (length (match-string-no-properties 0)))
+	    (point))))
+       (end (point))
+              (completion-fn
+	(with-current-buffer (process-buffer process)
+	  #'py-shell-completion-get-completions)))
+    (list start end
+          (completion-table-dynamic
+           (apply-partially
+            completion-fn
+            process import-statement)))))
+
+(defun py-comint-watch-for-first-prompt-output-filter (output)
+  "Run `py-shell-first-prompt-hook' when first prompt is found in OUTPUT."
+  (when (not py-shell--first-prompt-received)
+    (set (make-local-variable 'py-shell--first-prompt-received-output-buffer)
+         (concat py-shell--first-prompt-received-output-buffer
+                 (ansi-color-filter-apply output)))
+    (when (py-shell-comint-end-of-output-p
+           py-shell--first-prompt-received-output-buffer)
+      (if (string-match-p
+           (concat py-shell-prompt-pdb-regexp (rx eos))
+           (or py-shell--first-prompt-received-output-buffer ""))
+          ;; Skip pdb prompts and reset the buffer.
+          (setq py-shell--first-prompt-received-output-buffer nil)
+        (set (make-local-variable 'py-shell--first-prompt-received) t)
+        (setq py-shell--first-prompt-received-output-buffer nil)
+        (with-current-buffer (current-buffer)
+          (let ((inhibit-quit nil))
+            (run-hooks 'py-shell-first-prompt-hook))))))
+  output)
+
+(defun python-shell-package-enable (directory package)
+  "Add DIRECTORY parent to $PYTHONPATH and enable PACKAGE."
+  (interactive
+   (let* ((dir (expand-file-name
+                (read-directory-name
+                 "Package root: "
+                 (file-name-directory
+                  (or (buffer-file-name) default-directory)))))
+          (name (completing-read
+                 "Package: "
+                 (python-util-list-packages
+                  dir py-shell--package-depth))))
+     (list dir name)))
+  (py-shell-send-string
+   (format
+    (concat
+     "import os.path;import sys;"
+     "sys.path.append(os.path.dirname(os.path.dirname('''%s''')));"
+     "__package__ = '''%s''';"
+     "import %s")
+    directory package package)
+   (or (get-buffer-process (current-buffer)) (get-buffer-process (py-shell)))))
+
+(defun py-comint-postoutput-scroll-to-bottom (output)
+  "Faster version of `comint-postoutput-scroll-to-bottom'.
+Avoids `recenter' calls until OUTPUT is completely sent."
+  (when (and (not (string= "" output))
+             (py-shell-comint-end-of-output-p
+              (ansi-color-filter-apply output)))
+    (comint-postoutput-scroll-to-bottom output))
+  output)
+
+(defun py-shell-font-lock-get-or-create-buffer ()
+  "Get or create a font-lock buffer for current inferior process."
+  (with-current-buffer (current-buffer)
+    (if py-shell--font-lock-buffer
+        py-shell--font-lock-buffer
+      (let ((process-name
+             (process-name (get-buffer-process (current-buffer)))))
+        (generate-new-buffer
+         (format " *%s-font-lock*" process-name))))))
+
+(defun py-font-lock-kill-buffer ()
+  "Kill the font-lock buffer safely."
+  (when (and py-shell--font-lock-buffer
+             (buffer-live-p py-shell--font-lock-buffer))
+    (kill-buffer py-shell--font-lock-buffer)
+    (when (derived-mode-p 'py-shell-mode)
+      (setq py-shell--font-lock-buffer nil))))
+
+(defmacro py-shell-font-lock-with-font-lock-buffer (&rest body)
+  "Execute the forms in BODY in the font-lock buffer.
+The value returned is the value of the last form in BODY.  See
+also `with-current-buffer'."
+  (declare (indent 0) (debug t))
+  `(save-current-buffer
+     (when (not (and py-shell--font-lock-buffer
+		     (get-buffer py-shell--font-lock-buffer)))
+       (setq py-shell--font-lock-buffer
+	     (py-shell-font-lock-get-or-create-buffer)))
+     (set-buffer py-shell--font-lock-buffer)
+     (when (not font-lock-mode)
+       (font-lock-mode 1))
+     (set (make-local-variable 'delay-mode-hooks) t)
+     (let (py-smart-indentation)
+       (when (not (derived-mode-p 'python-mode))
+	 (python-mode))
+       ,@body)))
+
+(defun py-shell-font-lock-cleanup-buffer ()
+  "Cleanup the font-lock buffer.
+Provided as a command because this might be handy if something
+goes wrong and syntax highlighting in the shell gets messed up."
+  (interactive)
+  (with-current-buffer (current-buffer)
+    (py-shell-font-lock-with-font-lock-buffer
+      (erase-buffer))))
+
+(defun py-shell-font-lock-comint-output-filter-function (output)
+  "Clean up the font-lock buffer after any OUTPUT."
+  (if (and (not (string= "" output))
+           ;; Is end of output and is not just a prompt.
+           (not (member
+                 (py-shell-comint-end-of-output-p
+                  (ansi-color-filter-apply output))
+                 '(nil 0))))
+      ;; If output is other than an input prompt then "real" output has
+      ;; been received and the font-lock buffer must be cleaned up.
+      (py-shell-font-lock-cleanup-buffer)
+    ;; Otherwise just add a newline.
+    (py-shell-font-lock-with-font-lock-buffer
+      (goto-char (point-max))
+      (newline)))
+  output)
+
+(defun py-font-lock-post-command-hook ()
+  "Fontifies current line in shell buffer."
+  (let ((prompt-end
+	 (or (cdr (python-util-comint-last-prompt))
+	     (progn (sit-for 0.1)
+		    (cdr (python-util-comint-last-prompt))))))
+    (when (and prompt-end (> (point) prompt-end)
+               (process-live-p (get-buffer-process (current-buffer))))
+      (let* ((input (buffer-substring-no-properties
+                     prompt-end (point-max)))
+             (deactivate-mark nil)
+             (start-pos prompt-end)
+             (buffer-undo-list t)
+             (font-lock-buffer-pos nil)
+             (replacement
+              (py-shell-font-lock-with-font-lock-buffer
+                (delete-region (line-beginning-position)
+                               (point-max))
+                (setq font-lock-buffer-pos (point))
+                (insert input)
+                ;; Ensure buffer is fontified, keeping it
+                ;; compatible with Emacs < 24.4.
+		(when py-shell-fontify-p
+		    (if (fboundp 'font-lock-ensure)
+			(funcall 'font-lock-ensure)
+		      (font-lock-default-fontify-buffer)))
+                (buffer-substring font-lock-buffer-pos
+                                  (point-max))))
+             (replacement-length (length replacement))
+             (i 0))
+        ;; Inject text properties to get input fontified.
+        (while (not (= i replacement-length))
+          (let* ((plist (text-properties-at i replacement))
+                 (next-change (or (next-property-change i replacement)
+                                  replacement-length))
+                 (plist (let ((face (plist-get plist 'face)))
+                          (if (not face)
+                              plist
+                            ;; Replace FACE text properties with
+                            ;; FONT-LOCK-FACE so input is fontified.
+                            (plist-put plist 'face nil)
+                            (plist-put plist 'font-lock-face face)))))
+            (set-text-properties
+             (+ start-pos i) (+ start-pos next-change) plist)
+            (setq i next-change)))))))
+
+(defun py-shell-font-lock-turn-on (&optional msg)
+  "Turn on shell font-lock.
+With argument MSG show activation message."
+  (interactive "p")
+  (save-current-buffer
+    (py-font-lock-kill-buffer)
+    (set (make-local-variable 'py-shell--font-lock-buffer) nil)
+    (add-hook 'post-command-hook
+	      #'py-font-lock-post-command-hook nil 'local)
+    (add-hook 'kill-buffer-hook
+              #'py-font-lock-kill-buffer nil 'local)
+    (add-hook 'comint-output-filter-functions
+              #'py-shell-font-lock-comint-output-filter-function
+              'append 'local)
+    (when msg
+      (message "Shell font-lock is enabled"))))
+
+(defun py-shell-font-lock-turn-off (&optional msg)
+  "Turn off shell font-lock.
+With argument MSG show deactivation message."
+  (interactive "p")
+  (with-current-buffer (current-buffer)
+    (py-font-lock-kill-buffer)
+    (when (py-util-comint-last-prompt)
+      ;; Cleanup current fontification
+      (remove-text-properties
+       (cdr (py-util-comint-last-prompt))
+       (line-end-position)
+       '(face nil font-lock-face nil)))
+    (set (make-local-variable 'py-shell--font-lock-buffer) nil)
+    (remove-hook 'post-command-hook
+                 #'py-font-lock-post-command-hook 'local)
+    (remove-hook 'kill-buffer-hook
+                 #'py-font-lock-kill-buffer 'local)
+    (remove-hook 'comint-output-filter-functions
+                 #'py-shell-font-lock-comint-output-filter-function
+                 'local)
+    (when msg
+      (message "Shell font-lock is disabled"))))
+
+(defun py-shell-font-lock-toggle (&optional msg)
+  "Toggle font-lock for shell.
+With argument MSG show activation/deactivation message."
+  (interactive "p")
+  (with-current-buffer (current-buffer)
+    (set (make-local-variable 'py-shell-fontify-p)
+         (not py-shell-fontify-p))
+    (if py-shell-fontify-p
+        (py-shell-font-lock-turn-on msg)
+      (py-shell-font-lock-turn-off msg))
+    py-shell-fontify-p))
+
+(defun py-info-encoding-from-cookie ()
+  "Detect current buffer's encoding from its coding cookie.
+Returns the encoding as a symbol."
+  (let ((first-two-lines
+         (save-excursion
+           (save-restriction
+             (widen)
+             (goto-char (point-min))
+             (forward-line 2)
+             (buffer-substring-no-properties
+              (point)
+              (point-min))))))
+    (when (string-match (py-rx coding-cookie) first-two-lines)
+      (intern (match-string-no-properties 1 first-two-lines)))))
+
+(unless (functionp 'file-local-name)
+  (defun file-local-name (file)
+    "Return the local name component of FILE.
+This function removes from FILE the specification of the remote host
+and the method of accessing the host, leaving only the part that
+identifies FILE locally on the remote system.
+The returned file name can be used directly as argument of
+`process-file', `start-file-process', or `shell-command'."
+    (or (file-remote-p file 'localname) file)))
+
+
+
+
 ;; python-components-map
 
 (defvar py-use-menu-p t
@@ -8215,6 +9438,7 @@ ORIG - consider orignial position or point.
 DONE - transaktional argument
 REPEAT - count and consider repeats"
   (interactive)
+  (switch-to-buffer (current-buffer))
   (unless (eobp)
     (let ((repeat (or (and repeat (1+ repeat)) 0))
 	  (orig (or orig (point)))
@@ -8227,7 +9451,7 @@ REPEAT - count and consider repeats"
       (cond
        ;; which-function-mode, lp:1235375
        ((< py-max-specpdl-size repeat)
-	(error "Py-forward-statement reached loops max. If no error, customize `py-max-specpdl-size'"))
+	(error "py-forward-statement reached loops max. If no error, customize `py-max-specpdl-size'"))
        ;; list
        ((nth 1 pps)
 	(if (<= orig (point))
@@ -8247,15 +9471,15 @@ REPEAT - count and consider repeats"
 		(setq err (py--record-list-error pps))
 		(goto-char orig)))))
        ;; in comment
-       ((looking-at (concat " *" comment-start))
+       ((and comment-start (looking-at (concat " *" comment-start)))
 	(goto-char (match-end 0))
 	(py-forward-statement orig done repeat))
        ((nth 4 pps)
 	(py--end-of-comment-intern (point))
 	(py--skip-to-comment-or-semicolon done)
-	(while (and (eq (char-before (point)) ?\\ )
-		    (py-escaped)(setq last (point)))
-	  (forward-line 1)(end-of-line))
+	(while (and (eq (char-before (point)) ?\\)
+		    (py-escaped) (setq last (point)))
+	  (forward-line 1) (end-of-line))
 	(and last (goto-char last)
 	     (forward-line 1)
 	     (back-to-indentation))
@@ -8273,7 +9497,7 @@ REPEAT - count and consider repeats"
        ((py-current-line-backslashed-p)
 	(end-of-line)
 	(skip-chars-backward " \t\r\n\f" (line-beginning-position))
-	(while (and (eq (char-before (point)) ?\\ )
+	(while (and (eq (char-before (point)) ?\\)
 		    (py-escaped))
 	  (forward-line 1)
 	  (end-of-line)
@@ -9586,14 +10810,13 @@ Optional SHELL BUFFER PROC"
 	 ;; TBD remove redundant outbuf
          (outbuf procbuf))
     ;; wait is used only when a new py-shell buffer was connected
-    (and wait (sit-for wait))
+    (and wait (sit-for wait t))
     (unwind-protect
         (condition-case nil
             (progn
               (with-current-buffer outbuf
                 (delete-region (point-min) (point-max)))
               (with-current-buffer procbuf
-                ;; (sit-for 3)
                 (comint-redirect-send-command-to-process
                  cmd outbuf proc nil t)
                 (accept-process-output proc 5))
@@ -9613,28 +10836,6 @@ With EOB-P, go to end of buffer."
   (pop-to-buffer (process-buffer (py-proc)) t) ;Runs python if needed.
   (when eob-p
     (goto-char (point-max))))
-
-(defalias 'py-shell-send-file 'py-send-file)
-(defun py-send-file (file-name &optional process temp-file-name)
-  "Send FILE-NAME to Python PROCESS.
-
-If TEMP-FILE-NAME is passed then that file is used for processing
-instead, while internally the shell will continue to use
-FILE-NAME."
-  (interactive "fFile to send: ")
-  (let* ((process (or process (get-buffer-process (py-shell))))
-         (temp-file-name (when temp-file-name
-                           (expand-file-name temp-file-name)))
-         (file-name (or (expand-file-name file-name) temp-file-name)))
-    (when (not file-name)
-      (error "If FILE-NAME is nil then TEMP-FILE-NAME must be non-nil"))
-    (py-send-string
-     (format
-      (concat "__pyfile = open('''%s''');"
-              "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
-              "__pyfile.close()")
-      file-name file-name)
-     process)))
 
 (defun toggle-force-local-shell (&optional arg)
   "If locally indicated Python shell should be taken.
@@ -9820,12 +11021,16 @@ With optional \\[universal-argument] user is prompted by
 ‘py-choose-shell’ for command and options to pass to the Python
 interpreter."
   (interactive "P")
-  (py-shell argprompt t))
+  (py-shell argprompt nil t))
+
+(defun py-ipython--which-version (shell)
+  "Returns IPython version as string"
+  (shell-command-to-string (concat (downcase (replace-regexp-in-string  "[[:punct:]+]" "" shell)) " -V")))
 
 (defun py-set-ipython-completion-command-string (shell)
   "Set and return ‘py-ipython-completion-command-string’ according to SHELL."
   (interactive)
-  (let* ((ipython-version (shell-command-to-string (concat shell " -V"))))
+  (let* ((ipython-version (py-ipython--which-version shell)))
     (if (string-match "[0-9]" ipython-version)
         (setq py-ipython-completion-command-string
               (cond ((string-match "^[^0].+" ipython-version)
@@ -9932,7 +11137,7 @@ SEPCHAR is the file-path separator of your system."
 (defun py--jump-to-exception (perr origline &optional file)
   "Jump to the PERR Python code at ORIGLINE in optional FILE."
   (let (
-        ;; (inhibit-point-motion-hooks t)
+        (inhibit-point-motion-hooks t)
         (file (or file (car perr)))
         (act (nth 2 perr)))
     (cond ((and py-exception-buffer
@@ -10014,16 +11219,17 @@ according to ‘py-split-windows-on-execute-function’."
     (with-current-buffer (get-buffer exception-buffer)
       (when (< number-of-windows py-split-window-on-execute-threshold)
 	(unless
-	    (member (get-buffer-window output-buffer)(window-list))
+	    (member (get-buffer-window output-buffer) (window-list))
 	  (py--manage-windows-split exception-buffer)))
-      (display-buffer output-buffer t))))
+      (display-buffer output-buffer t)
+      (switch-to-buffer exception-buffer))))
 
 (defun py--shell-manage-windows (output-buffer &optional exception-buffer split switch)
   "Adapt or restore window configuration from OUTPUT-BUFFER.
 
 Optional EXCEPTION-BUFFER SPLIT SWITCH
 Return nil."
-  (let* ((exception-buffer (or exception-buffer (other-buffer)))
+  (let* ((exception-buffer  (or exception-buffer (other-buffer)))
 	 (output-buffer (get-buffer  (or output-buffer py-buffer-name)))
 	 (old-window-list (window-list))
 	 (number-of-windows (length old-window-list))
@@ -10059,7 +11265,6 @@ Return nil."
        switch)
       (switch-to-buffer (current-buffer))
       (delete-other-windows)
-      ;; (sit-for py-new-shell-delay)
       (py--manage-windows-split exception-buffer)
       ;; otherwise new window appears above
       (other-window 1)
@@ -10132,16 +11337,6 @@ Receives a ‘buffer-name’ as argument"
       (setq erg (substring erg 0 (string-match "-" erg))))
     erg))
 
-(defun py--shell-make-comint (executable buffer args)
-  "Create comint-proces according to EXECUTABLE return the BUFFER and ARGS."
-  (let* ((buffer (apply #'make-comint-in-buffer executable buffer executable nil (split-string-and-unquote (car args))))
-	 (proc (get-buffer-process buffer)))
-    (with-current-buffer buffer
-      (if (string-match "^i" (process-name proc))
-	  (py-ipython-shell-mode)
-	(py-python-shell-mode)))
-    buffer))
-
 (defun py--guess-buffer-name (argprompt dedicated)
   "Guess the ‘buffer-name’ core string according to ARGPROMPT DEDICATED."
   (when (and (not dedicated) argprompt
@@ -10163,37 +11358,20 @@ Receives a ‘buffer-name’ as argument"
 	   (or py-jython-command name))
 	  (t (or py-python-command name)))))
 
-(defun py--grab-prompt-ps1 (proc buffer)
-  (py--send-string-no-output "import sys")
-  (py-fast-send-string "sys.ps1" proc buffer t))
+;; (defun py--grab-prompt-ps1 (proc)
+;;   (py-send-string "import sys" proc nil t)
+;;   (py-send-string "sys.ps1" proc t t))
+
+;; (defun py--start-fast-process (shell buffer args)
+;;   (apply 'start-process shell buffer shell (list args))
+;;   (switch-to-buffer buffer)
+;;   (setq py-output-buffer buffer))
 
 (defun py--start-fast-process (shell buffer)
   (start-process shell buffer shell))
 
-(defun py--shell-fast-proceeding (proc buffer shell setup-code)
-  (unless (get-buffer-process (get-buffer buffer))
-    (setq proc (py--start-fast-process shell buffer))
-    (setq py-output-buffer buffer)
-    (py-fast-send-string-intern setup-code proc)))
-
 (defun py--reuse-existing-shell (exception-buffer)
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
-
-(defun py--create-new-shell (executable args buffer exception-buffer)
-  (let ((buf (or exception-buffer (current-buffer))))
-    (with-current-buffer (get-buffer-create buffer)
-	(apply #'make-comint-in-buffer executable buffer executable nil (split-string-and-unquote args))
-      (let ((proc (get-buffer-process (current-buffer))))
-	(if (string-match "^i" (process-name proc))
-	    (py-ipython-shell-mode)
-	  (py-python-shell-mode)))
-      (unless  py-force-default-output-buffer-p
-	  (setq py-output-buffer (current-buffer)))
-      (sit-for 0.1 t)
-      (goto-char (point-max))
-      ;; otherwise comint might initialize it with point-min
-      (set-marker comint-last-input-end (point))
-      (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) buf)))))
 
 (defun py--determine-local-default ()
   (if (not (string= "" py-shell-local-path))
@@ -10201,90 +11379,35 @@ Receives a ‘buffer-name’ as argument"
     (when py-use-local-default
       (error "Abort: ‘py-use-local-default’ is set to t but ‘py-shell-local-path’ is empty. Maybe call ‘py-toggle-local-default-use’"))))
 
-(defun py--provide-command-args (shell fast-process argprompt)
-  (cond ((and fast-process (not (string-match "^[Ii]" shell))) "-u")
-	((eq 2 (prefix-numeric-value argprompt))
-	 (mapconcat 'identity py-python2-command-args " "))
-	((string-match "^[Ii]" shell)
-	 py-ipython-command-args)
-	((string-match "^[^-]+3" shell)
-	 (mapconcat 'identity py-python3-command-args " "))
-	(t (mapconcat 'identity py-python-command-args " "))))
+(defun py--provide-command-args (shell fast-process)
+  "Unbuffered WRT fast-process"
+  (let ((erg
+	 (delq nil
+	       (cond
+		;; ((eq 2 (prefix-numeric-value argprompt))
+		;; py-python2-command-args)
+		((string-match "^[Ii]" shell)
+		 (if (string-match "^[0-4]" (py-ipython--which-version shell))
+		     (remove "--simple-prompt"  py-ipython-command-args)
+		   (if (member "--simple-prompt"  py-ipython-command-args)
+		       py-ipython-command-args
+		     (cons "--simple-prompt"  py-ipython-command-args))))
+		((string-match "^[^-]+3" shell)
+		 py-python3-command-args)
+		(t
+		 py-python-command-args)))))
+    (if (and fast-process (not (member "-u" erg)))
+	(cons "-u" erg)
+      erg)))
 
-;;;###autoload
-(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch internal)
-  "Start a Python interpreter.
-
-Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
-  \\[universal-argument] 2 prompts for ‘py-python-command-args’.
-  If ‘default-directory’ is a remote file name, it is also prompted
-  to change if called with a prefix arg.
-  Optional ARGPROMPT DEDICATED
-  Optional string SHELL overrides default ‘py-shell-name’.
-  Returns py-shell's ‘buffer-name’.
-  BUFFER allows specifying a name, the Python process is connected to
-  FAST process not in ‘comint-mode’ buffer
-  EXCEPTION-BUFFER point to error
-  Optional SPLIT see var ‘py-split-window-on-execute’
-  Optional SWITCH see var ‘py-switch-buffers-on-execute-p’
-  Optional INPUT-PROMPT permit command to set prompt
-  Optional INTERNAL shell will be invisible for users
-
- \\[describe-mode] in the process buffer provides more info."
-  (interactive
-   (when current-prefix-arg
-     (list
-      (y-or-n-p "Make dedicated process? ")
-      (= (prefix-numeric-value current-prefix-arg) 4))))
-  ;; (list (python-shell-calculate-command) nil t)))
-  ;; (message "py-last-exeption-buffer: %s" py-last-exeption-buffer)
-  (let* ((exception-buffer (or exception-buffer (current-buffer)))
-	 (fast (or fast py-fast-process-p))
-	 (dedicated (or dedicated py-dedicated-process-p))
-	 (shell (or shell (py-choose-shell)))
-	 (args (py--provide-command-args shell fast argprompt))
-	 (py-use-local-default (py--determine-local-default))
-	 (buffer-raw (or buffer
-			 ;; Guess according to ARGPROMPT DEDICATED.
-			 (py--guess-buffer-name argprompt dedicated)))
-	 (buffer (if internal
-		     ;; make unvisible for users
-		     (concat " " (or buffer-raw (py--choose-buffer-name nil dedicated fast)))
-		   (or buffer-raw (py--choose-buffer-name shell dedicated fast))))
-	 (executable (cond
-		      (shell)
-		      (py-shell-name)
-		      (buffer
-		       (py--report-executable buffer))))
-	 ;; (cmd (format "%s %s" executable args))
-)
-    (set (make-local-variable 'py-last-exeption-buffer) exception-buffer)
-    (if fast
-	;; user rather wants an interactive shell
-	(py--shell-fast-proceeding nil buffer shell py-shell-completion-setup-code)
-      (if (comint-check-proc buffer)
-      	  (py--reuse-existing-shell exception-buffer)
-      	;; buffer might exist but not being empty
-      	(when (or (buffer-live-p buffer)(bufferp (get-buffer buffer)))
-	  ;; kill-buffer-unconditional buffer
-	  (with-current-buffer buffer
-          (set-buffer-modified-p 'nil)
-          (kill-buffer (current-buffer))))
-      	(py--create-new-shell executable args buffer exception-buffer)))
-    (when (or (called-interactively-p 'any)
-    	      (eq 1 argprompt)
-    	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-      (py--shell-manage-windows buffer exception-buffer split switch))
-    buffer))
-
-(defun py-shell-get-process (&optional argprompt dedicated shell buffer)
+(defun py-shell-get-process (&optional argprompt args dedicated shell buffer)
   "Get appropriate Python process for current buffer and return it.
 
 Optional ARGPROMPT DEDICATED SHELL BUFFER"
   (interactive)
-  (let ((erg (get-buffer-process (py-shell argprompt dedicated shell buffer))))
-    (when (called-interactively-p 'any) (message "%S" erg))
-    erg))
+  (or (and buffer (get-buffer-process buffer))
+      (get-buffer-process (current-buffer))
+      (get-buffer-process (py-shell argprompt args dedicated shell buffer))))
 
 (defun py-switch-to-shell ()
   "Switch to Python process buffer."
@@ -10296,7 +11419,8 @@ Optional ARGPROMPT DEDICATED SHELL BUFFER"
   "Return the command appropriate to Python version and FILENAME.
 
 Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for Python 2 series."
-  (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename))
+  (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
+  )
 
 (defun py--store-result-maybe (erg)
   "If no error occurred and ‘py-store-result-p’ store ERG for yank."
@@ -10306,6 +11430,103 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   "Delete TEMPBUF and TEMPFILE."
   (unless py-debug-p
     (when tempfile (py-delete-temporary tempfile tempbuf))))
+
+(defun py-shell-send-file (file-name &optional process temp-file-name
+                                     delete)
+  "Send FILE-NAME to Python PROCESS.
+
+If TEMP-FILE-NAME is passed then that file is used for processing
+instead, while internally the shell will continue to use
+FILE-NAME.  If TEMP-FILE-NAME and DELETE are non-nil, then
+TEMP-FILE-NAME is deleted after evaluation is performed.  When
+optional argument."
+  (interactive
+   (list
+    (read-file-name "File to send: ")))
+  (let* ((proc (or process (py-shell-get-process)))
+         (encoding (with-temp-buffer
+                     (insert-file-contents
+                      (or temp-file-name file-name))
+                     (py-info-encoding)))
+         (file-name (expand-file-name (file-local-name file-name)))
+         (temp-file-name (when temp-file-name
+                           (expand-file-name
+                            (file-local-name temp-file-name)))))
+    (py-shell-send-string
+     (format
+      (concat
+       "import codecs, os;"
+       "__pyfile = codecs.open('''%s''', encoding='''%s''');"
+       "__code = __pyfile.read().encode('''%s''');"
+       "__pyfile.close();"
+       (when (and delete temp-file-name)
+         (format "os.remove('''%s''');" temp-file-name))
+       "exec(compile(__code, '''%s''', 'exec'));")
+      (or temp-file-name file-name) encoding encoding file-name)
+     proc)))
+
+(defun py--execute-file-base (&optional proc filename cmd procbuf origline no-output)
+  "Send to Python interpreter process PROC.
+
+In Python version 2.. \"execfile('FILENAME')\".
+
+Takes also CMD PROCBUF ORIGLINE NO-OUTPUT.
+
+Make that process's buffer visible and force display.  Also make
+comint believe the user typed this string so that
+‘kill-output-from-shell’ does The Right Thing.
+Returns position where output starts."
+  ;; (message "(current-buffer) %s" (current-buffer) )
+  (let* ((buffer (or procbuf (and proc (process-buffer proc)) (py-shell)))
+	 (proc (or proc (get-buffer-process buffer)))
+	 (cmd (or cmd (py-which-execute-file-command filename)))
+	 erg)
+        (if no-output
+	(py-send-string cmd proc nil t)
+      (py-send-string cmd proc)
+      (switch-to-buffer buffer)
+      (when (or py-return-result-p py-store-result-p)
+	(setq erg (py--postprocess-comint buffer origline))
+	(if py-error
+	    (setq py-error (prin1-to-string py-error))
+	  erg)))))
+
+(defun py--execute-buffer-finally (strg which-shell proc procbuf origline)
+  (let* ((temp (make-temp-name
+                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
+         (tempbuf (get-buffer-create temp))
+	 erg)
+    (setq py-tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
+    (with-current-buffer tempbuf
+      (insert strg)
+      (write-file py-tempfile))
+    (unwind-protect
+	(setq erg (py--execute-file-base proc py-tempfile nil procbuf origline)))
+    erg))
+
+(defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end which-shell &optional fast return)
+  "Select the handler according to:
+
+STRG FILENAME PROC FILE WHOLEBUF
+BUFFER ORIGLINE EXECUTE-DIRECTORY START END WHICH-SHELL
+Optional FAST RETURN"
+  ;; (message "(current-buffer) %s" (current-buffer))
+  (let ((execute-directory (py--update-execute-directory proc buffer execute-directory)))
+    (setq py-error nil)
+
+    ;; (message "(current-buffer) %s" (current-buffer))
+    (cond (fast (py--send-to-fast-process strg proc buffer return))
+	  ;; enforce proceeding as python-mode.el v5
+	  (python-mode-v5-behavior-p
+	   (py-execute-python-mode-v5 start end py-exception-buffer origline))
+	  (py-execute-no-temp-p
+	   (py--execute-ge24.3 start end execute-directory which-shell py-exception-buffer proc file origline))
+	  ((and filename wholebuf)
+	   (py--execute-file-base proc filename nil buffer origline))
+	  (t
+	   ;; (message "(current-buffer) %s" (current-buffer))
+	   (py--execute-buffer-finally strg which-shell proc buffer origline)
+	   (py--delete-temp-file py-tempfile)))))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch return)
   "Update optionial variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH RETURN."
@@ -10351,7 +11572,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
  	 (proc (or proc (get-buffer-process buffer)
 		   (prog1
-		       (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch))
+		       (get-buffer-process (py-shell nil nil dedicated shell buffer fast exception-buffer split switch))
 		     (sit-for 0.1))))
 	 (fast (or fast py-fast-process-p))
 	 (return (or return py-return-result-p py-store-result-p)))
@@ -10364,54 +11585,19 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   "Called inside of ‘py--execute-base-intern’.
 
 Optional STRG PROC OUTPUT-BUFFER RETURN"
-  (let ((output-buffer (or output-buffer (process-buffer proc))))
+  (let ((output-buffer (or output-buffer (process-buffer proc)))
+	(inhibit-read-only t))
+    ;; (switch-to-buffer (current-buffer))
     (with-current-buffer output-buffer
-      (erase-buffer)
+      ;; (erase-buffer)
       (py-fast-send-string strg
 			   proc
-			   output-buffer return)
-      ;; (sit-for 0.1)
-      )))
+			   output-buffer return))))
 
 (defun py--delete-temp-file (tempfile &optional tempbuf)
   "After ‘py--execute-buffer-finally’ returned delete TEMPFILE &optional TEMPBUF."
   (sit-for py--delete-temp-file-delay t)
   (py--close-execution tempbuf tempfile))
-
-(defun py--execute-buffer-finally (strg which-shell proc procbuf origline)
-  (let* ((temp (make-temp-name
-		;; FixMe: that should be simpler
-                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
-         (tempbuf (get-buffer-create temp))
-	 erg)
-    (setq py-tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
-    (with-current-buffer tempbuf
-      (insert strg)
-      (write-file py-tempfile))
-    (unwind-protect
-	(setq erg (py--execute-file-base proc py-tempfile nil procbuf origline)))
-    erg))
-
-(defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end which-shell &optional fast return)
-  "Select the handler according to:
-
-STRG FILENAME PROC FILE WHOLEBUF
-BUFFER ORIGLINE EXECUTE-DIRECTORY START END WHICH-SHELL
-Optional FAST RETURN"
-  (let ()
-    (setq py-error nil)
-    (py--update-execute-directory proc buffer execute-directory)
-    (cond (fast (py--send-to-fast-process strg proc buffer return))
-	  ;; enforce proceeding as python-mode.el v5
-	  (python-mode-v5-behavior-p
-	   (py-execute-python-mode-v5 start end py-exception-buffer origline))
-	  (py-execute-no-temp-p
-	   (py--execute-ge24.3 start end execute-directory which-shell py-exception-buffer proc file origline))
-	  ((and filename wholebuf)
-	   (py--execute-file-base proc filename nil buffer origline))
-	  (t
-	   (py--execute-buffer-finally strg which-shell proc buffer origline)
-	   (py--delete-temp-file py-tempfile)))))
 
 (defun py--fetch-error (&optional origline)
   "Highlight exceptions found in BUF.
@@ -10451,47 +11637,48 @@ Indicate LINE if code wasn't run from a file, thus remember ORIGLINE of source b
       (sit-for 0.1 t)
       py-error)))
 
-(defun py--fetch-result (orig)
+(defun py--fetch-result (&optional orig fast)
   "Return ‘buffer-substring’ from ORIG to ‘point-max’."
   ;; (switch-to-buffer (current-buffer))
-  ;; otherwise py-ert-fast-complete-1 fails
-  (goto-char orig)
-  (if (derived-mode-p 'comint-mode)
-      (replace-regexp-in-string
-       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-       ""
-       (buffer-substring-no-properties orig (point-max)))
-    (while (re-search-forward (format "[ \n]*%s[ \n]*" py-fast-filter-re) nil t 1)
-      (replace-match ""))
-    (buffer-substring-no-properties orig (point-max))))
+  (let ((orig (or orig (point-min))))
+    (cond ((derived-mode-p 'comint-mode)
+	   (string-trim (replace-regexp-in-string
+			 (format "[ \\n]*%s[ \\n]*" py-fast-filter-re)
+			 ""
+			 ;; (buffer-substring-no-properties (car-safe comint-last-prompt) (cdr-safe comint-last-prompt)))))
+	  		 (buffer-substring-no-properties (car-safe comint-last-prompt) (progn (ignore-errors (goto-char (car-safe comint-last-prompt)))(re-search-backward py-fast-filter-re nil t 1))))))
+	  (fast (replace-regexp-in-string
+		 (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+		 ""
+		 (buffer-substring-no-properties (point-min) (point-max))))
+	  (t (replace-regexp-in-string
+	      (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+	      ""
+	      (buffer-substring-no-properties orig (point-max)))))))
 
-(defun py--postprocess-comint (output-buffer origline orig)
+(defun py--postprocess-comint (output-buffer origline &optional orig)
   "Provide return values, check result for error, manage windows.
 
 According to OUTPUT-BUFFER ORIGLINE ORIG"
   ;; py--fast-send-string doesn't set origline
-  (let (py-result py-error)
-    (when py-return-result-p
-      (with-current-buffer output-buffer
-	(sit-for 0.1 t)
-	;; (when py-debug-p (switch-to-buffer (current-buffer)))
-	;; (delete-region (point-min) orig)
-	(setq py-result (py--fetch-result orig)))
-      ;; (when py-debug-p (message "py-result: %s" py-result))
-      (and (string-match "\n$" py-result)
-	   (setq py-result (replace-regexp-in-string py-fast-filter-re "" (substring py-result 0 (match-beginning 0)))))
-      (if (and py-result (not (string= "" py-result)))
-	  (if (string-match "^Traceback" py-result)
-	      (progn
-		(with-temp-buffer
-		  (insert py-result)
-		  (sit-for 0.1 t)
-		  (setq py-error (py--fetch-error origline))))
-	    ;; position no longer needed, no need to correct
-	    (when py-store-result-p
-	      (when (and py-result (not (string= "" py-result))(not (string= (car kill-ring) py-result))) (kill-new py-result)))
-	    py-result)
-	(message "py--postprocess-comint: %s" "Don't see any result")))))
+  (when (or py-return-result-p py-store-result-p)
+    (with-current-buffer output-buffer
+      (switch-to-buffer (current-buffer))
+      (sit-for 0.1 t)
+      (setq py-result (py--fetch-result orig)))
+    (and (string-match "\n$" py-result)
+	 (setq py-result (replace-regexp-in-string py-fast-filter-re "" (substring py-result 0 (match-beginning 0)))))
+    (if (and py-result (not (string= "" py-result)))
+	(if (string-match "^Traceback" py-result)
+	    (progn
+	      (with-temp-buffer
+		(insert py-result)
+		(sit-for 0.1 t)
+		(setq py-error (py--fetch-error origline))))
+	  (when py-store-result-p
+	    (kill-new py-result))
+	  py-result)
+      (message "py--postprocess-comint: %s" "Don't see any result"))))
 
 (defun py--execute-ge24.3 (start end execute-directory which-shell &optional exception-buffer proc file origline)
   "An alternative way to do it.
@@ -10509,9 +11696,9 @@ May we get rid of the temporary file?"
          (tempfile (or (py--buffer-filename-remote-maybe) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
          (proc (or proc (if py-dedicated-process-p
-                            (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))
+                            (get-buffer-process (py-shell nil nil py-dedicated-process-p which-shell py-buffer-name))
                           (or (get-buffer-process py-buffer-name)
-                              (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))))))
+                              (get-buffer-process (py-shell nil nil py-dedicated-process-p which-shell py-buffer-name))))))
          (procbuf (process-buffer proc))
          (file (or file (with-current-buffer py-buffer-name
                           (concat (file-remote-p default-directory) tempfile))))
@@ -10576,37 +11763,6 @@ May we get rid of the temporary file?"
   "Fix offline amount, make error point at the correct LINE."
   (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
 
-(defun py--execute-file-base (&optional proc filename cmd procbuf origline)
-  "Send to Python interpreter process PROC.
-
-In Python version 2.. \"execfile('FILENAME')\".
-
-Takes also CMD PROCBUF ORIGLINE.
-
-Make that process's buffer visible and force display.  Also make
-comint believe the user typed this string so that
-‘kill-output-from-shell’ does The Right Thing.
-Returns position where output starts."
-  (let* ((origline (or (ignore-errors origline) 1))
-	 (buffer (or procbuf (py-shell nil nil nil procbuf)))
-	 (proc (or proc (get-buffer-process buffer)))
-	 (cmd (or cmd (py-which-execute-file-command filename)))
-
-	 ;; (windows-config (window-configuration-to-register py-windows-config-register))
-	 erg orig)
-    (with-current-buffer buffer
-      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
-      ;; (goto-char (point-max))
-      (setq orig (copy-marker (point-max)))
-      (py-send-string cmd proc)
-      (py-send-string cmd proc)
-      (when (or py-return-result-p py-store-result-p)
-	(setq erg (py--postprocess-comint buffer origline orig))
-	(if py-error
-	    (setq py-error (prin1-to-string py-error))
-	  erg)))
-))
-
 (defun py-execute-file (filename)
   "When called interactively, user is prompted for FILENAME."
   (interactive "fFilename: ")
@@ -10630,13 +11786,11 @@ Returns position where output starts."
   (comint-send-string proc (concat "import os;os.chdir(\"" dir "\")\n")))
 
 (defun py--update-execute-directory (proc procbuf execute-directory)
-  (let ((py-exception-buffer (current-buffer))
-        cwd)
-    (set-buffer procbuf)
-    (setq cwd (py--current-working-directory))
-    (unless (string= execute-directory (concat cwd "/"))
-      (py--update-execute-directory-intern (or py-execute-directory execute-directory) proc)
-      (set-buffer py-exception-buffer))))
+  (let (cwd)
+    (with-current-buffer procbuf
+      (setq cwd (py--current-working-directory))
+      (unless (string= execute-directory (concat cwd "/"))
+	(py--update-execute-directory-intern (or py-execute-directory execute-directory) proc)))))
 
 (defun py-execute-string (&optional strg shell dedicated switch fast)
   "Send the optional argument STRG to Python default interpreter.
@@ -10791,7 +11945,7 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
-                     (get-buffer-process (py-shell nil py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
+                     (get-buffer-process (py-shell nil nil py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
           ;; Maybe save some buffers
           (save-some-buffers (not py-ask-about-save) nil)
           (py--execute-file-base proc file
@@ -11055,11 +12209,9 @@ Optional BEG END"
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((erg
-	 (py--send-string-return-output
-	  (format completion-code input) process)))
-    ;; (sit-for 0.2 t)
+	 (py-send-string-no-output (format completion-code input) process)))
     (if (and erg (> (length erg) 2))
-      (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
+	(setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
       (and py-verbose-p (message "py--shell-completion-get-completions: %s" "Don't see a completion")))
     erg))
 
@@ -11081,38 +12233,42 @@ Takes END"
                   (eq last-command 'choose-completion)
                   (eq last-command 'py-shell-complete))
                  (eq this-command 'self-insert-command))))
-    (set-window-configuration
-     py-last-window-configuration))
+    ;; (set-window-configuration
+    ;;  py-last-window-configuration)
+    ;; (jump-to-register py-windows-config-register)
+    (py-restore-window-configuration)
+    )
+
   (goto-char end))
 
 (defalias 'ipython-complete 'py-shell-complete)
 
-(defun py--try-completion-intern (input completion)
-  (let (erg)
-    (when (and (setq erg (try-completion input completion))
-	       (looking-back input (line-beginning-position))
-	       (not (string= input erg)))
-      (delete-region (match-beginning 0) (match-end 0))
-      (insert erg))
-    erg))
+(defun py--try-completion-intern (input completion buffer)
+  (with-current-buffer buffer
+    (let (erg)
+      (and (setq erg (try-completion input completion))
+	   (sit-for 0.1)
+	   (looking-back input (line-beginning-position))
+	   (not (string= input erg))
+	   (setq erg (completion-in-region (match-beginning 0) (match-end 0) completion)))
+      ;; (delete-region (match-beginning 0) (match-end 0))
+      ;; (insert erg)
+      erg))
+  (set-window-configuration py-last-window-configuration))
 
 (defun py--try-completion (input completion)
   "Repeat `try-completion' as long as match are found.
 
 Interal used. Takes INPUT COMPLETION"
   (let (erg newlist)
-    (setq erg (py--try-completion-intern input completion))
-    (when erg
+    (unless (py--try-completion-intern input completion (current-buffer))
       (dolist (elt completion)
 	(unless (string= erg elt)
 	  (push elt newlist)))
       (if (< 1 (length newlist))
 	  (with-output-to-temp-buffer py-python-completions
 	    (display-completion-list
-	     (all-completions input (or newlist completion))))
-	(set-window-configuration py-last-window-configuration))
-      ;; (skip-chars-forward "^ \t\r\n\f")
-)))
+	     (all-completions input (or newlist completion))))))))
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
@@ -11124,7 +12280,8 @@ Interal used. Takes INPUT COMPLETION"
 		       (string= input (car completion)))
 		  (and (stringp completion)
 		       (string= input completion)))))
-	((and completion (stringp completion)(not (string= input completion)))
+	((and completion (stringp completion)(or (string= input completion) (string= "''" completion))))
+	((and completion (stringp completion))
 	 (progn (delete-char (- (length input)))
 		(insert completion)))
 	(t (py--try-completion input completion)))
@@ -11135,40 +12292,33 @@ Interal used. Takes INPUT COMPLETION"
 
 Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
   (when imports
-    (py--send-string-no-output imports process))
-  ;; (py--delay-process-dependent process)
+    (py-send-string imports process nil t))
   (sit-for 0.1 t)
   (let* ((completion
 	  (py--shell-completion-get-completions
 	   input process code)))
     (set-buffer exception-buffer)
-    ;; (py--delay-process-dependent process)
-    ;; (sit-for 1 t)
-    (when (and completion 
-	       ;; (not (or (string= "''" completion) (string= "" completion)))
-)
+    (when completion
       (py--shell-insert-completion-maybe completion input))))
 
 (defun py--complete-base (shell word imports buffer)
-  (let* ((shell (or shell (py-choose-shell)))
-         (proc (or
+  (let* ((proc (or
 		;; completing inside a shell
 		(get-buffer-process buffer)
 		(and (comint-check-proc shell)
 		     (get-process shell))
 		(prog1
-		    (get-buffer-process (py-shell nil nil shell))
-		  (sit-for py-new-shell-delay))))
+		    (get-buffer-process (py-shell nil nil nil shell))
+		  (sit-for py-new-shell-delay t))))
 	 ;; (buffer (process-buffer proc))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
-    (py--python-send-completion-setup-code buffer)
     (py--shell-do-completion-at-point proc imports word buffer code)))
 
-(defun py-shell-complete (&optional shell beg end word fast-complete)
+(defun py-shell-complete (&optional shell beg end word fast)
+  (interactive)
   (let* ((exception-buffer (current-buffer))
-         ;; (pos (copy-marker (point)))
 	 (pps (parse-partial-sexp
 	       (or
 		(ignore-errors (cdr-safe comint-last-prompt))
@@ -11176,48 +12326,35 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 		(line-beginning-position))
 	       (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
-         ;; (beg
-	 ;;  (save-excursion
-	 ;;    (or beg
-	 ;; 	(and in-string
-	 ;; 	     ;; possible completion of filenames
-	 ;; 	     (progn
-	 ;; 	       (goto-char in-string)
-	 ;; 	       (and
-	 ;; 		(save-excursion
-	 ;; 		  (skip-chars-backward "^ \t\r\n\f")(looking-at "open")))
+         (beg
+	  (save-excursion
+	    (or beg
+	 	(and in-string
+	 	     ;; possible completion of filenames
+	 	     (progn
+	 	       (goto-char in-string)
+	 	       (and
+	 		(save-excursion
+	 		  (skip-chars-backward "^ \t\r\n\f") (looking-at "open")))
 
-	 ;; 	       (skip-chars-forward "\"'")(point)))
-	 ;; 	(progn (and (eq (char-before) ?\()(forward-char -1))
-	 ;; 	       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
-         ;; (end (or end (point)))
-	 ;; ;;
-         ;; (word (or word (buffer-substring-no-properties beg end)))
-	 (word (save-excursion (skip-chars-backward " \t\r\n\f") (unless (bolp) (forward-char -1) (thing-at-point 'word t))))  
-	 (ausdruck (and (string-match "^/" word)(setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
+	 	       (skip-chars-forward "\"'") (point)))
+	 	(progn (and (eq (char-before) ?\()(forward-char -1))
+	 	       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
+         (end (or end (point)))
+	 (word (or word (buffer-substring-no-properties beg end)))
+	 (ausdruck (and (string-match "^/" word) (setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
 	 ;; when in string, assume looking for filename
 	 (filenames (and in-string ausdruck
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p erg)
-    (cond (fast-complete (py--fast-complete-base shell word imports))
+    (cond (fast (py--fast-complete-base shell word imports))
 	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
 	     (insert erg)))
 	  (t (py--complete-base shell word imports exception-buffer)))
     nil))
-
-;; (defun py-shell-complete (&optional shell beg end word)
-;;   "Complete word before point, if any.
-
-;; Optional SHELL BEG END WORD"
-;;   (interactive)
-;;   ;; (save-excursion
-;;   ;;   (and (buffer-live-p (get-buffer "*Python Completions*"))
-;;   ;; 	 (py-kill-buffer-unconditional "*Python Completions*")))
-;;   ;; fast-complete is called
-;;   (py-shell-complete shell beg end word))
 
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
@@ -11231,22 +12368,24 @@ Use `C-q TAB' to insert a literally TAB-character
 In ‘python-mode’ `py-complete-function' is called,
 in (I)Python shell-modes `py-shell-complete'"
   (interactive "*")
-  (setq py-last-window-configuration
-        (current-window-configuration))
+  (window-configuration-to-register py-windows-config-register)
+  ;; (setq py-last-window-configuration
+  ;;       (current-window-configuration))
   (cond ((use-region-p)
 	 (py-indent-region (region-beginning) (region-end)))
 	((or (bolp)
-	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
+	     (member (char-before) (list 9 10 12 13 32 ?: ?\) ?\] ?\}))
 	     (not (looking-at "[ \t]*$")))
 	 (py-indent-line))
-	;; ((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	(if (string-match "ipython" (py-choose-shell))
-	;;      (py-shell-complete)
-	;;    (funcall py-complete-function)))
 	((comint-check-proc (current-buffer))
-	 (py-shell-complete (substring (process-name (get-buffer-process (current-buffer))) 0 (string-match "<" (process-name (get-buffer-process (current-buffer)))))))
+	 ;; (let* ((shell (process-name (get-buffer-process (current-buffer)))))
+	 (ignore-errors (completion-at-point)))
 	(t
-	 (py-fast-complete))))
+	 ;; (py-fast-complete)
+	 (ignore-errors (completion-at-point))
+)))
 
+	    ;; (substring (process-name (get-buffer-process (current-buffer))) 0 (string-match "<" (process-name (get-buffer-process (current-buffer)))))
 ;; python-components-pdb
 
 (defun py-execute-statement-pdb ()
@@ -11375,26 +12514,6 @@ Otherwise return resuslt from `executable-find'"
     (py-execute-buffer)))
 
 
-;; python-components-pdbtrack
-
-;; pdbtrack constants
-(defconst py-pdbtrack-stack-entry-regexp
-   (concat ".*\\("py-shell-input-prompt-1-regexp">\\|"py-ipython-input-prompt-re">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
-  "Regular expression pdbtrack uses to find a stack trace entry.")
-
-(defconst py-pdbtrack-marker-regexp-file-group 2
-  "Group position in gud-pydb-marker-regexp that matches the file name.")
-
-(defconst py-pdbtrack-marker-regexp-line-group 3
-  "Group position in gud-pydb-marker-regexp that matches the line number.")
-
-(defconst py-pdbtrack-marker-regexp-funcname-group 4
-  "Group position in gud-pydb-marker-regexp that matches the function name.")
-
-(defconst py-pdbtrack-track-range 10000
-  "Max number of characters from end of buffer to search for stack entry.")
-
-(defvar py-pdbtrack-is-tracking-p nil)
 
 (defun py--pdbtrack-overlay-arrow (activation)
   "Activate or de arrow at beginning-of-line in current buffer."
@@ -11562,6 +12681,27 @@ named for funcname or define a function funcname."
 
 
 ;; pdbtrack functions
+
+(defun py-pdbtrack-set-tracked-buffer (file-name)
+  "Set the buffer for FILE-NAME as the tracked buffer.
+Internally it uses the `py-pdbtrack-tracked-buffer' variable.
+Returns the tracked buffer."
+  (let* ((file-name-prospect (concat (file-remote-p default-directory)
+                              file-name))
+         (file-buffer (get-file-buffer file-name-prospect)))
+    (if file-buffer
+        (setq py-pdbtrack-tracked-buffer file-buffer)
+      (cond
+       ((file-exists-p file-name-prospect)
+        (setq file-buffer (find-file-noselect file-name-prospect)))
+       ((and (not (equal file-name file-name-prospect))
+             (file-exists-p file-name))
+        ;; Fallback to a locally available copy of the file.
+        (setq file-buffer (find-file-noselect file-name-prospect))))
+      (when (not (member file-buffer py-pdbtrack-buffers-to-kill))
+        (add-to-list 'py-pdbtrack-buffers-to-kill file-buffer)))
+    file-buffer))
+
 (defun py-pdbtrack-toggle-stack-tracking (arg)
   "Set variable `py-pdbtrack-do-tracking-p'. "
   (interactive "P")
@@ -11591,6 +12731,69 @@ named for funcname or define a function funcname."
 (defun turn-off-pdbtrack ()
   (interactive)
   (py-pdbtrack-toggle-stack-tracking 0))
+
+
+
+(if pdb-track-stack-from-shell-p
+    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
+  (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t))
+
+
+(defun py-pdbtrack-comint-output-filter-function (output)
+  "Move overlay arrow to current pdb line in tracked buffer.
+Argument OUTPUT is a string with the output from the comint process."
+  (when (and pdb-track-stack-from-shell-p (not (string= output "")))
+    (let* ((full-output (ansi-color-filter-apply
+                         (buffer-substring comint-last-input-end (point-max))))
+           (line-number)
+           (file-name
+            (with-temp-buffer
+              (insert full-output)
+              ;; When the debugger encounters a pdb.set_trace()
+              ;; command, it prints a single stack frame.  Sometimes
+              ;; it prints a bit of extra information about the
+              ;; arguments of the present function.  When ipdb
+              ;; encounters an exception, it prints the _entire_ stack
+              ;; trace.  To handle all of these cases, we want to find
+              ;; the _last_ stack frame printed in the most recent
+              ;; batch of output, then jump to the corresponding
+              ;; file/line number.
+              (goto-char (point-max))
+              (when (re-search-backward py-pdbtrack-stacktrace-info-regexp nil t)
+                (setq line-number (string-to-number
+                                   (match-string-no-properties 2)))
+                (match-string-no-properties 1)))))
+      (if (and file-name line-number)
+          (let* ((tracked-buffer
+                  (py-pdbtrack-set-tracked-buffer file-name))
+                 (shell-buffer (current-buffer))
+                 (tracked-buffer-window (get-buffer-window tracked-buffer))
+                 (tracked-buffer-line-pos))
+            (with-current-buffer tracked-buffer
+              (set (make-local-variable 'overlay-arrow-string) "=>")
+              (set (make-local-variable 'overlay-arrow-position) (make-marker))
+              (setq tracked-buffer-line-pos (progn
+                                              (goto-char (point-min))
+                                              (forward-line (1- line-number))
+                                              (point-marker)))
+              (when tracked-buffer-window
+                (set-window-point
+                 tracked-buffer-window tracked-buffer-line-pos))
+              (set-marker overlay-arrow-position tracked-buffer-line-pos))
+            (pop-to-buffer tracked-buffer)
+            (switch-to-buffer-other-window shell-buffer))
+        (when py-pdbtrack-tracked-buffer
+          (with-current-buffer py-pdbtrack-tracked-buffer
+            (set-marker overlay-arrow-position nil))
+          (mapc #'(lambda (buffer)
+                    (ignore-errors (kill-buffer buffer)))
+                py-pdbtrack-buffers-to-kill)
+          (setq py-pdbtrack-tracked-buffer nil
+                py-pdbtrack-buffers-to-kill nil)))))
+  output)
+
+;; python-components-pdbtrack
+
 
 ;; python-components-help
 (defvar py-eldoc-string-code
@@ -11796,18 +12999,20 @@ not inside a defun."
 If symbol is defined in current buffer, jump to it's definition"
   (interactive)
   (let ((orig (point))
-	(symbol (thing-at-point 'symbol t)))
+	(symbol
+	 ;; (thing-at-point 'symbol t)
+	 (py-symbol-at-point)))
     ;; avoid repeated call at identic pos
     (unless (eq orig (ignore-errors py-last-position))
       (setq py-last-position orig))
-    (unless (member (get-buffer-window "*Python-Help*")(window-list))
+    (unless (member (get-buffer-window "*Python-Help*") (window-list))
       (window-configuration-to-register py-windows-config-register))
     (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
     (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
 	(progn
 	  (py-restore-window-configuration)
 	  (goto-char orig))
-      (if 
+      (if
 	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
 	  (not (string= "" symbol))
 	  (py--help-at-point-intern symbol orig)
@@ -12148,8 +13353,8 @@ local bindings to py-newline-and-indent."))
 (defalias 'py-find-function 'py-find-definition)
 (defun py--find-definition-question-type (symbol imports)
   (let (erg)
-    (cond ((setq erg (py--send-string-return-output (concat "import inspect;inspect.isbuiltin(\"" symbol "\")"))))
-	  (t (setq erg (py--send-string-return-output (concat imports "import inspect;inspect.getmodule(\"" symbol "\")")))))
+    (cond ((setq erg (py-send-string (concat "import inspect;inspect.isbuiltin(\"" symbol "\")"))))
+	  (t (setq erg (py-send-string (concat imports "import inspect;inspect.getmodule(\"" symbol "\")")))))
     erg))
 
 (defun py-find-definition (&optional symbol)
@@ -12169,7 +13374,7 @@ Interactively, prompt for SYMBOL."
          ;; (enable-recursive-minibuffers t)
          (symbol (if (interactive-p)
 		     (read-string (format "Find location of (default %s): " symbol-raw)
-		                  symbol-raw  nil symbol-raw)
+		                  symbol-raw nil symbol-raw)
 		   symbol-raw))
          (local (progn (goto-char (point-min)) (re-search-forward (concat "^[ \t]*" "\\(def\\|class\\)" "[ \t]" symbol) orig t))))
     ;; ismethod(), isclass(), isfunction() or isbuiltin()
@@ -12186,25 +13391,6 @@ Interactively, prompt for SYMBOL."
 	  (exchange-point-and-mark))
       (with-help-window (help-buffer)
 	(princ (py--find-definition-question-type symbol imports))))))
-
-;;   (if erg
-;; 	  (cond ((string-match "SyntaxError" erg)
-;; 		 (setq erg (substring-no-properties erg (match-beginning 0)))
-;; 		 (set-window-configuration last-window-configuration)
-;; 		 ;; (jump-to-register 98888888)
-;; 		 (message "Can't get source: %s" erg))
-;; 		((and erg (string-match "builtin" erg))
-;; 		 (progn
-;; 		   (set-window-configuration last-window-configuration)
-;; 		   ;; (jump-to-register 98888888)
-;; 		   (message "%s" erg)))
-;; 		((and erg (setq erg (replace-regexp-in-string "'" "" (py--send-string-return-output "import os;os.getcwd()")))
-;; 		      (setq sourcefile (replace-regexp-in-string "'" "" (py--send-string-return-output (concat "inspect.getsourcefile(" symbol ")")))))
-;; 		 (message "%s" sourcefile)
-;; 		 (py--find-definition-in-source sourcefile symbol)
-;; 		 (display-buffer exception-buffer)))
-;; 	(error "Couldn't find source, please consider a bug-report"))
-;; erg)))
 
 (defun py-find-imports ()
   "Find top-level imports.
@@ -12749,8 +13935,8 @@ Assumes vars are defined in current source buffer"
           (insert (concat "\n** "(car ele) "\n"))
           (insert (concat "   " (cdr ele) "\n\n")))
         ;; (richten)
-        (sit-for 0.01))
-      (sit-for 0.01)
+        (sit-for 0.01 t))
+      (sit-for 0.01 t)
       (org-mode))))
 
 ;; common typo
@@ -13012,7 +14198,7 @@ Matches lists, but also block, statement, string and comment. "
 (defun py-documentation (w)
   "Launch PyDOC on the Word at Point"
   (interactive
-   (list (let* ((word (thing-at-point 'word))
+   (list (let* ((word (py-symbol-at-point))
                 (input (read-string
                         (format "pydoc entry%s: "
                                 (if (not word) "" (format " (default %s)" word))))))
@@ -13065,7 +14251,7 @@ With optional \\[universal-argument] print as string"
 (defun py-line-to-printform-python2 ()
   "Transforms the item on current in a print statement. "
   (interactive "*")
-  (let* ((name (thing-at-point 'word))
+  (let* ((name (py-symbol-at-point))
          (form (concat "print(\"" name ": %s \" % " name ")")))
     (delete-region (line-beginning-position) (line-end-position))
     (insert form))
@@ -13087,58 +14273,58 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
            (replace-match "True"))
           (t (message "%s" "Can't see \"True or False\" here")))))
 
-(when (featurep 'thing-at-point-utils)
-  (defun py-beginning-of-list (&optional iact orig limit done last)
-    "Go to beginning of any parentized, braced or bracketed expression in statement. "
-    (interactive "p")
-    (save-restriction
-      (let ((orig (or orig (point)))
-            (done done)
-            (limit (or limit (re-search-backward "^[a-zA-Z]" nil t 1)))
-            (last last))
-        (unless (or done (not limit)) (narrow-to-region limit (point-max)))
-        (setq done t)
-        (goto-char orig)
-        (let* ((pt (car-safe (ar-in-parentized-p-atpt)))
-               (br (car-safe (ar-in-braced-p-atpt)))
-               (bk (car-safe (ar-in-bracketed-p-atpt)))
-               (erg (car (sort (delq nil (list pt br bk)) '<))))
-          (if erg
-              (progn
-                (goto-char (1- erg))
-                (setq last erg)
-                (py-beginning-of-list iact (1- erg) limit done last))
-            (when last
-              (goto-char last))
-            (when iact (message "%s" last))
-            last)))))
+;; (when (featurep 'thing-at-point-utils)
+;;   (defun py-beginning-of-list (&optional iact orig limit done last)
+;;     "Go to beginning of any parentized, braced or bracketed expression in statement. "
+;;     (interactive "p")
+;;     (save-restriction
+;;       (let ((orig (or orig (point)))
+;;             (done done)
+;;             (limit (or limit (re-search-backward "^[a-zA-Z]" nil t 1)))
+;;             (last last))
+;;         (unless (or done (not limit)) (narrow-to-region limit (point-max)))
+;;         (setq done t)
+;;         (goto-char orig)
+;;         (let* ((pt (car-safe (ar-in-parentized-p-atpt)))
+;;                (br (car-safe (ar-in-braced-p-atpt)))
+;;                (bk (car-safe (ar-in-bracketed-p-atpt)))
+;;                (erg (car (sort (delq nil (list pt br bk)) '<))))
+;;           (if erg
+;;               (progn
+;;                 (goto-char (1- erg))
+;;                 (setq last erg)
+;;                 (py-beginning-of-list iact (1- erg) limit done last))
+;;             (when last
+;;               (goto-char last))
+;;             (when iact (message "%s" last))
+;;             last)))))
 
-  (defun py-end-of-list (&optional iact orig limit done last)
-    "Go to end of any parentized, braced or bracketed expression in statement. "
-    (interactive "p")
-    (save-restriction
-      (let ((orig (or orig (point)))
-            (done done)
-            (limit (or limit (re-search-backward "^[a-zA-Z]" nil t 1)))
-            (last last))
-        (unless (or done (not limit)) (narrow-to-region limit (point-max)))
-        (setq done t)
-        (goto-char orig)
-        (let* ((pt (car-safe (ar-in-parentized-p-atpt)))
-               (br (car-safe (ar-in-braced-p-atpt)))
-               (bk (car-safe (ar-in-bracketed-p-atpt)))
-               (erg (car (sort (delq nil (list pt br bk)) '<))))
-          (if erg
-              (progn
-                (goto-char (1- erg))
-                (setq last erg)
-                (py-end-of-list iact (1- erg) limit done last))
-            (when last
-              (goto-char last)
-              (match-paren)
-              (setq last (1+ (point)))
-              (when iact (message "%s" last))
-              last)))))))
+;;   (defun py-end-of-list (&optional iact orig limit done last)
+;;     "Go to end of any parentized, braced or bracketed expression in statement. "
+;;     (interactive "p")
+;;     (save-restriction
+;;       (let ((orig (or orig (point)))
+;;             (done done)
+;;             (limit (or limit (re-search-backward "^[a-zA-Z]" nil t 1)))
+;;             (last last))
+;;         (unless (or done (not limit)) (narrow-to-region limit (point-max)))
+;;         (setq done t)
+;;         (goto-char orig)
+;;         (let* ((pt (car-safe (ar-in-parentized-p-atpt)))
+;;                (br (car-safe (ar-in-braced-p-atpt)))
+;;                (bk (car-safe (ar-in-bracketed-p-atpt)))
+;;                (erg (car (sort (delq nil (list pt br bk)) '<))))
+;;           (if erg
+;;               (progn
+;;                 (goto-char (1- erg))
+;;                 (setq last erg)
+;;                 (py-end-of-list iact (1- erg) limit done last))
+;;             (when last
+;;               (goto-char last)
+;;               (match-paren)
+;;               (setq last (1+ (point)))
+;;               (when iact (message "%s" last))
+;;               last)))))))
 
 ;; python-components-imenu
 ;; Imenu definitions
@@ -13498,267 +14684,267 @@ not be passed explicitly unless you know what you are doing."
 ;; python-components-named-shells
 
 ;;;###autoload
-(defun ipython (&optional argprompt buffer fast exception-buffer split switch)
+(defun ipython (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun ipython2 (&optional argprompt buffer fast exception-buffer split switch)
-  "Start an IPython2 interpreter.
+(defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an IPython2.7 interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython2" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun ipython3 (&optional argprompt buffer fast exception-buffer split switch)
+(defun ipython3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython3 interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun jython (&optional argprompt buffer fast exception-buffer split switch)
+(defun jython (&optional argprompt args buffer fast exception-buffer split)
   "Start an Jython interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "jython" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun python (&optional argprompt buffer fast exception-buffer split switch)
+(defun python (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun python2 (&optional argprompt buffer fast exception-buffer split switch)
+(defun python2 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python2 interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python2" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "python2" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;;;###autoload
-(defun python3 (&optional argprompt buffer fast exception-buffer split switch)
+(defun python3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python3 interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python3" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; dedicated
-(defun ipython-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun ipython-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique IPython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun ipython2-dedicated (&optional argprompt buffer fast exception-buffer split switch)
-  "Start an unique IPython2 interpreter in another window.
+(defun ipython2.7-dedicated (&optional argprompt args buffer fast exception-buffer split)
+  "Start an unique IPython2.7 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython2" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun ipython3-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun ipython3-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique IPython3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython3" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "ipython3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun jython-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun jython-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique Jython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "jython" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun python-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun python-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique Python interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun python2-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun python2-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique Python2 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python2" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "python2" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun python3-dedicated (&optional argprompt buffer fast exception-buffer split switch)
+(defun python3-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique Python3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python3" buffer fast exception-buffer split switch))
+  (interactive "p")
+  (py-shell argprompt args  t "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; switch
-(defun ipython-switch (&optional argprompt buffer fast exception-buffer split)
+(defun ipython-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to IPython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython" buffer fast exception-buffer split t))
 
-(defun ipython2-switch (&optional argprompt buffer fast exception-buffer split)
-  "Switch to IPython2 interpreter in another window.
+(defun ipython2.7-switch (&optional argprompt args buffer fast exception-buffer split)
+  "Switch to IPython2.7 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython2" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split t))
 
-(defun ipython3-switch (&optional argprompt buffer fast exception-buffer split)
+(defun ipython3-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to IPython3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split t))
 
-(defun jython-switch (&optional argprompt buffer fast exception-buffer split)
+(defun jython-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to Jython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "jython" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "jython" buffer fast exception-buffer split t))
 
-(defun python-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to Python interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "python" buffer fast exception-buffer split t))
 
-(defun python2-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python2-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to Python2 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python2" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "python2" buffer fast exception-buffer split t))
 
-(defun python3-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python3-switch (&optional argprompt args buffer fast exception-buffer split)
   "Switch to Python3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python3" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args nil "python3" buffer fast exception-buffer split t))
 
 ;; no-switch
-(defun ipython-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun ipython-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an IPython interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython" buffer fast exception-buffer split))
 
-(defun ipython2-no-switch (&optional argprompt buffer fast exception-buffer split)
-  "Open an IPython2 interpreter in another window, but do not switch to it.
+(defun ipython2.7-no-switch (&optional argprompt args  buffer fast exception-buffer split)
+  "Open an IPython2.7 interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython2" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split))
 
-(defun ipython3-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun ipython3-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an IPython3 interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split))
 
-(defun jython-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun jython-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an Jython interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "jython" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "jython" buffer fast exception-buffer split))
 
-(defun python-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an Python interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "python" buffer fast exception-buffer split))
 
-(defun python2-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python2-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an Python2 interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python2" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "python2" buffer fast exception-buffer split))
 
-(defun python3-no-switch (&optional argprompt buffer fast exception-buffer split)
+(defun python3-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an Python3 interpreter in another window, but do not switch to it.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt nil "python3" buffer fast exception-buffer split))
+  (interactive "p")
+  (py-shell argprompt args nil "python3" buffer fast exception-buffer split))
 
 ;; dedicated switch
 (defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
-(defun ipython-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun ipython-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique IPython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "ipython" buffer fast exception-buffer split t))
 
-(defalias 'ipython2-dedicated-switch 'ipython2-switch-dedicated)
-(defun ipython2-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
-  "Switch to an unique IPython2 interpreter in another window.
+(defalias 'ipython2.7-dedicated-switch 'ipython2.7-switch-dedicated)
+(defun ipython2.7-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
+  "Switch to an unique IPython2.7 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython2" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "ipython2.7" buffer fast exception-buffer split t))
 
 (defalias 'ipython3-dedicated-switch 'ipython3-switch-dedicated)
-(defun ipython3-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun ipython3-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique IPython3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "ipython3" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "ipython3" buffer fast exception-buffer split t))
 
 (defalias 'jython-dedicated-switch 'jython-switch-dedicated)
-(defun jython-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun jython-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique Jython interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "jython" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "jython" buffer fast exception-buffer split t))
 
 (defalias 'python-dedicated-switch 'python-switch-dedicated)
-(defun python-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun python-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique Python interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "python" buffer fast exception-buffer split t))
 
 (defalias 'python2-dedicated-switch 'python2-switch-dedicated)
-(defun python2-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun python2-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique Python2 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python2" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "python2" buffer fast exception-buffer split t))
 
 (defalias 'python3-dedicated-switch 'python3-switch-dedicated)
-(defun python3-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
+(defun python3-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Switch to an unique Python3 interpreter in another window.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
-  (interactive "P")
-  (py-shell argprompt t "python3" buffer fast exception-buffer split t))
+  (interactive "p")
+  (py-shell argprompt args t "python3" buffer fast exception-buffer split t))
 
 ;; python-components-electric
 (defun py-electric-colon (arg)
@@ -15655,7 +16841,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-block-python-no-switch (&optional dedicated fast split  proc)
   "Send block at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -15937,7 +17123,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-block-or-clause-python-no-switch (&optional dedicated fast split  proc)
   "Send block-or-clause at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -16408,7 +17594,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-buffer-python-no-switch (&optional dedicated fast split  proc)
   "Send buffer at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -16781,7 +17967,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-class-python-no-switch (&optional dedicated fast split  proc)
   "Send class at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17063,7 +18249,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-clause-python-no-switch (&optional dedicated fast split  proc)
   "Send clause at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17345,7 +18531,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-def-python-no-switch (&optional dedicated fast split  proc)
   "Send def at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17627,7 +18813,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-def-or-class-python-no-switch (&optional dedicated fast split  proc)
   "Send def-or-class at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17909,7 +19095,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-expression-python-no-switch (&optional dedicated fast split  proc)
   "Send expression at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18191,7 +19377,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-indent-python-no-switch (&optional dedicated fast split  proc)
   "Send indent at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18473,7 +19659,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-line-python-no-switch (&optional dedicated fast split  proc)
   "Send line at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18755,7 +19941,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-minor-block-python-no-switch (&optional dedicated fast split  proc)
   "Send minor-block at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19037,7 +20223,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-paragraph-python-no-switch (&optional dedicated fast split  proc)
   "Send paragraph at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19319,7 +20505,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-partial-expression-python-no-switch (&optional dedicated fast split  proc)
   "Send partial-expression at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19601,7 +20787,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-region-python-no-switch (beg end &optional dedicated fast split  proc)
   "Send region at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive "r")
@@ -19693,7 +20879,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (py--execute-prepare region 'python3 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-statement (&optional shell dedicated fast split switch proc)
-  "Send statement at point to  interpreter."
+  "Send statement at point to interpreter."
   (interactive)
   (let (wholebuf)
     (py--execute-prepare statement shell dedicated switch nil nil nil fast proc wholebuf split)))
@@ -19883,7 +21069,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-statement-python-no-switch (&optional dedicated fast split  proc)
   "Send statement at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -20165,7 +21351,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-top-level-python-no-switch (&optional dedicated fast split  proc)
   "Send top-level at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -21818,10 +23004,13 @@ Return code of ‘py-top-level’ at point, a string."
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-  ;; (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) ""
-  (ansi-color-filter-apply strg)
-  ;;)
-  )
+  (replace-regexp-in-string
+;;   (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+      py-fast-filter-re
+ ""
+			    (ansi-color-filter-apply strg)
+			    ;;)
+			    ))
 
 (defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
@@ -21845,13 +23034,19 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 (defun py-fast-send-string (strg proc output-buffer &optional return)
   ;; (process-send-string proc "\n")
   (with-current-buffer output-buffer
-    (let ((orig (point)))
-      (py-fast-send-string-intern strg proc)
-      (accept-process-output proc 1)
-      (when return
-	(sit-for 0.1)
-	(setq py-result (py--filter-result (py--fetch-result orig))))
-      py-result)))
+    ;; (erase-buffer)
+    ;; (switch-to-buffer (current-buffer))
+    ;; (let ((orig (point)))
+    (py-fast-send-string-intern strg
+				proc)
+    (py-fast-send-string-intern "\n"
+				proc)
+
+    ;; (accept-process-output proc 0.1)
+    (when return
+      (sit-for 0.1 t)
+      (setq py-result (py--filter-result (py--fetch-result))))
+    py-result))
 
 (defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
@@ -22298,15 +23493,15 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
-  (with-current-buffer buffer
-    (erase-buffer)
-    (let ((completions
-	   (py-fast-send-string
-	    (format completion-code input) process buffer t)))
-      (when (> (length completions) 2)
-	(split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
+  ;; (with-current-buffer buffer
+  ;; (erase-buffer)
+  (let ((completions
+	 (py-fast-send-string
+	  (format completion-code input) process buffer t)))
+    (when (> (length completions) 2)
+      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--fast--do-completion-at-point (process imports input code output-buffer)
+(defun py--fast--do-completion-at-point (process imports input code buffer)
   "Do completion at point for PROCESS."
   ;; send setup-code
   (let (py-store-result-p)
@@ -22314,7 +23509,7 @@ completions on the current context."
       ;; (message "%s" imports)
       (py-fast-send-string-intern imports process)))
   (let* ((completion
-	  (py--fast-completion-get-completions input process code output-buffer)))
+	  (py--fast-completion-get-completions input process code buffer)))
     (sit-for 0.1)
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "`t' is returned, not completion. Might be a bug.")))
@@ -22327,23 +23522,22 @@ completions on the current context."
 		    (and (stringp completion)
 			 (string= input completion))))
 	   (set-window-configuration py-last-window-configuration))
-	  ((and completion (stringp completion)(not (string= input completion)))
+	  ((and completion (stringp completion) (not (string= input completion)))
 	   (progn (delete-char (- (length input)))
 		  (insert completion)
 		  ;; (move-marker orig (point))
 		  ;; minibuffer.el expects a list
-))
+		  ))
 	  (t (py--try-completion input completion)))))
 
 (defun py--fast-complete-base (shell word imports)
-  (let* ((shell (or shell "python"))
-	 (buffer (get-buffer-create "*Python Fast*"))
-	 (proc (or (get-buffer-process buffer) (py--start-fast-process shell buffer)))
+  (let* (py-split-window-on-execute py-switch-buffers-on-execute-p
+	 (shell (or shell "python"))
+	 (buffer (py-shell nil nil nil shell nil t))
+	 (proc (get-buffer-process buffer))
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
-    ;; (with-current-buffer buffer
-    ;;   (erase-buffer))
     (py--python-send-completion-setup-code buffer)
     (py--fast--do-completion-at-point proc imports word code buffer)))
 
@@ -22351,27 +23545,17 @@ completions on the current context."
   "Complete word before point, if any.
 
 Use `py-fast-process' "
-  (interactive)
+  (interactive "*")
+  (window-configuration-to-register py-windows-config-register)
   (setq py-last-window-configuration
-	(current-window-configuration))
- (py-shell-complete shell beg end word t))
+  	(current-window-configuration))
+  (py-shell-complete shell beg end word t)
+  )
 
 ;; python-components-intern
 
 ;;  Keymap
 
-;; (defun py--indent-prepare (inter-re)
-;;   (progn (back-to-indentation)
-;;       (or (py--beginning-of-statement-p)
-;;           (ar-backward-statement))
-;;       (cond ((eq 0 (current-indentation))
-;;              (current-indentation))
-;;             ((looking-at (symbol-value inter-re))
-;;              (current-indentation))
-;;             (t
-;;              (if (<= py-indent-offset (current-indentation))
-;;                  (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
-;;                py-indent-offset)))))
 
 (defun py-separator-char ()
   "Return the file-path separator char from current machine.
@@ -22449,29 +23633,6 @@ Returns position reached if successful"
   (unless (bobp)
     (goto-char (point-min))))
 
-;; (defun py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf split buffer)
-;;   "Used by python-components-extended-executes ."
-;;   (save-excursion
-;;     (let* ((form (prin1-to-string form))
-;;            (origline (py-count-lines))
-;;            (beg (unless file
-;;                   (prog1
-;;                       (or beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-
-;;                           (funcall (intern-soft (concat "py-backward-" form)))
-;;                           (push-mark)))))
-;;            (end (unless file
-;;                   (or end (save-excursion (funcall (intern-soft (concat "py-forward-" form)))))))
-;;            filename)
-;;       ;; (setq py-buffer-name nil)
-;;       (if file
-;;           (progn
-;;             (setq filename (expand-file-name form))
-;;             (if (file-readable-p filename)
-;;                 (py--execute-file-base nil filename nil nil origline)
-;;               (message "%s not readable. %s" file "Do you have write permissions?")))
-;;         (py--execute-base beg end shell filename proc file wholebuf fast dedicated split switch buffer)))))
-
 (defmacro py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf split buffer)
   "Used by python-components-extended-executes ."
   (save-excursion
@@ -22545,6 +23706,95 @@ Interactively output of `--version' is displayed. "
   "`comint-input-filter' function for Python process.
 Don't save anything for STR matching `py-history-filter-regexp'."
   (not (string-match py-history-filter-regexp str)))
+
+(defun py--update-lighter (shell)
+  "Select lighter for mode-line display"
+  (setq py-modeline-display
+	(cond
+	 ;; ((eq 2 (prefix-numeric-value argprompt))
+	 ;; py-python2-command-args)
+	 ((string-match "^[^-]+3" shell)
+	  py-python3-modeline-display)
+	 ((string-match "^[^-]+2" shell)
+	  py-python2-modeline-display)
+	 ((string-match "^.[Ii]" shell)
+	  py-ipython-modeline-display)
+	 ((string-match "^.[Jj]" shell)
+	  py-jython-modeline-display)
+	 (t
+	  python-mode-modeline-display))))
+
+(defun py-shell (&optional argprompt args dedicated shell buffer fast exception-buffer split switch)
+  "Connect process to BUFFER.
+
+Start an interpreter according to ‘py-shell-name’ or SHELL.
+
+Optional ARGPROMPT: with \\[universal-argument] start in a new
+dedicated shell.
+
+Optional ARGS: Specify other than default command args.
+
+Optional DEDICATED: start in a new dedicated shell.
+Optional string SHELL overrides default ‘py-shell-name’.
+Optional string BUFFER allows a name, the Python process is connected to
+Optional FAST: no fontification in process-buffer.
+Optional EXCEPTION-BUFFER: point to error.
+Optional SPLIT: see var ‘py-split-window-on-execute’
+Optional SWITCH: see var ‘py-switch-buffers-on-execute-p’
+Optional INTERNAL shell will be invisible for users
+
+Reusing existing processes: For a given buffer and same values,
+if a process is already running for it, it will do nothing.
+
+Runs the hook `py-shell-mode-hook' after
+`comint-mode-hook' is run.  (Type \\[describe-mode] in the
+process buffer for a list of commands.)"
+  (interactive "p")
+  (let* ((interactivep (and argprompt (eq 1 (prefix-numeric-value argprompt))))
+	 (fast (or fast py-fast-process-p))
+	 (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
+	 (shell (or shell (py-choose-shell)))
+	 (args (or args (py--provide-command-args shell fast)))
+	 (py-use-local-default (py--determine-local-default))
+	 (buffer-name
+	  (or buffer
+	      (py--choose-buffer-name shell dedicated)))
+	 ;; (executable (cond
+	 ;; 	      (shell)
+	 ;; 	      (py-shell-name)
+	 ;; 	      (buffer
+	 ;; 	       (py--report-executable buffer))))
+	 ;; (avoid-delay)
+	 (proc (get-buffer-process buffer-name))
+	 (done nil)
+	 (delay nil)
+	 (py-modeline-display nil)
+	 (buffer
+	  (or
+	   (and (ignore-errors (process-buffer proc))(setq done t) (process-buffer proc))
+	   (save-excursion
+	     (py-shell-with-environment
+	       (apply #'make-comint-in-buffer shell buffer-name
+		      shell nil args))))))
+    (unless done
+      (with-current-buffer buffer
+	(setq py-modeline-display (py--update-lighter buffer-name))
+	(setq delay (py--which-delay-process-dependent buffer-name))
+	(unless fast
+	  (py-shell-mode)
+	  (when interactivep
+	    (cond ((string-match "^.I" buffer-name)
+		   (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
+		  ((string-match "^.+3" buffer-name)
+		   (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
+	  (sit-for delay t)
+	  (py-send-string-no-output "print(\"py-shell-mode loaded\")" (get-buffer-process buffer) buffer-name)
+	  ;; (py--update-lighter shell)
+	  )))
+    (when (or interactivep
+    	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
+      (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
+    buffer))
 
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the Python process.
@@ -23434,7 +24684,9 @@ Optional ENFORCE-REGEXP: search for regexp only."
     (let* ((orig (point))
 	   (indent (or indent 0))
 	   done
-	   (regexpvalue (symbol-value regexp))
+	   (regexpvalue (if (member regexp (list 'py-def-re 'py-def-or-class-re 'py-class-re))
+			    (concat (symbol-value regexp) "\\|" (symbol-value 'py-decorator-re))
+			    (symbol-value regexp)))
 	   (lastvalue (and secondvalue
 			   (pcase regexp
 			     (`py-try-re py-finally-re)
@@ -23446,7 +24698,7 @@ Optional ENFORCE-REGEXP: search for regexp only."
 		  (cond (enforce-regexp
 			 ;; using regexpvalue might stop behind global settings, missing the end of form
 			 (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
-			(t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_]+") nil 'move 1))))
+			(t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
 	   (or (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
 	       (and secondvalue (looking-at secondvalue))
 	       (and lastvalue (looking-at lastvalue))
@@ -23531,7 +24783,8 @@ REGEXP: a symbol"
 (defun py--end-base (regexp &optional orig bol repeat)
   "Used internal by functions going to the end FORM.
 
-Returns the indentation of FORM-start "
+Returns the indentation of FORM-start
+Arg REGEXP, a symbol"
   (unless (eobp)
     (let ((orig (or orig (point))))
       (unless (eobp)
@@ -23673,7 +24926,7 @@ See customizable variables `py-current-defun-show' and `py-current-defun-delay'.
         (when (and erg py-current-defun-show)
           (push-mark (point) t t) (skip-chars-forward "^ (")
           (exchange-point-and-mark)
-          (sit-for py-current-defun-delay))
+          (sit-for py-current-defun-delay t))
         (when iact (message (prin1-to-string erg)))
         erg))))
 
@@ -23835,69 +25088,184 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
           (setq element (cdr element))))
       element)))
 
-(defun py--delay-process-dependent (process)
-  "Call a `py-ipython-send-delay' or `py-python-send-delay' according to process"
-  (if (string-match "ipython" (prin1-to-string process))
-      (sit-for py-ipython-send-delay t)
-    (sit-for py-python-send-delay t)))
+(defun py--which-delay-process-dependent (buffer)
+  "Call a `py-ipython-sendx-delay' or `py-python-send-delay' according to process"
+  (if (string-match "^.I" buffer)
+      py-ipython-send-delay
+    py-python-send-delay))
 
-(defun py-send-string (strg &optional process)
-  "Evaluate STRG in Python PROCESS."
-  (interactive "sPython command: ")
-  (let* ((buffer (if process (process-buffer process) (py-shell)))
-         (proc (or process (get-buffer-process buffer))))
-    (py-fast-send-string strg proc buffer)))
+(defun py-temp-file-name (strg)
+  (let* ((temporary-file-directory
+          (if (file-remote-p default-directory)
+              (concat (file-remote-p default-directory) "/tmp")
+            temporary-file-directory))
+         (temp-file-name (make-temp-file "py")))
 
-(defun py--send-string-no-output (strg &optional process)
-  "Send STRING to PROCESS and inhibit output display.
-When MSG is non-nil messages the first line of STRING.  Return
-the output."
-  (let* (output
-         (process (or process (get-buffer-process (py-shell))))
+    (with-temp-file temp-file-name
+      (insert strg)
+      (delete-trailing-whitespace))
+    temp-file-name))
+
+
+
+(defun py--report-end-marker (process)
+  ;; (message "py--report-end-marker in %s" (current-buffer))
+  (if (derived-mode-p 'comint-mode)
+      (if (markerp (car-safe comint-last-prompt))
+	  (car-safe comint-last-prompt)
+	(dotimes (_ 3) (when (not (markerp (car-safe comint-last-prompt)))(sit-for 1 t))))
+    (if (markerp (process-mark process))
+	(process-mark process)
+      (progn
+	(dotimes (_ 3) (when (not (markerp (process-mark process)))(sit-for 1 t)))
+	(process-mark process)))))
+
+(defun py--cleanup-shell (orig buffer &optional result)
+  (with-current-buffer buffer
+    (sit-for 0.1)
+    ;; (switch-to-buffer (current-buffer))
+    (let ((inhibit-read-only t)
+	  (end (py--report-end-marker (get-buffer-process buffer))))
+      (if end
+	  (if result
+	      (prog1 (replace-regexp-in-string
+		      (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+		      "" (buffer-substring-no-properties orig end))
+		(delete-region orig end))
+	    (delete-region orig end))
+	(error "py--cleanup-shell: end-marker not found")))))
+
+(defun py-shell--save-temp-file (strg)
+  (let* ((temporary-file-directory
+          (if (file-remote-p default-directory)
+              (concat (file-remote-p default-directory) "/tmp")
+            temporary-file-directory))
+         (temp-file-name (make-temp-file "py"))
+         (coding-system-for-write (py-info-encoding)))
+    (with-temp-file temp-file-name
+      (insert strg)
+      (delete-trailing-whitespace))
+    temp-file-name))
+
+(defun py-shell-send-string (strg &optional process)
+  "Send STRING to Python PROCESS.
+
+Uses ‘comint-send-string’."
+  (interactive
+   (list (read-string "Python command: ") nil t))
+  (let ((process (or process (py-shell-get-process))))
+    (if (string-match ".\n+." strg)   ;Multiline.
+        (let* ((temp-file-name (py-shell--save-temp-file strg))
+               (file-name (or (buffer-file-name) temp-file-name)))
+          (py-shell-send-file file-name process temp-file-name t))
+      (comint-send-string process strg)
+      (when (or (not (string-match "\n\\'" strg))
+                (string-match "\n[ \t].*\n?\\'" strg))
+        (comint-send-string process "\n")))))
+
+(defun py-shell-output-filter (strg)
+  "Filter used in `py-shell-send-string-no-output' to grab output.
+STRING is the output received to this point from the process.
+This filter saves received output from the process in
+`py-shell-output-filter-buffer' and stops receiving it after
+detecting a prompt at the end of the buffer."
+  (let ((py-shell--prompt-calculated-output-regexp
+	 (or py-shell--prompt-calculated-output-regexp (py-shell-prompt-set-calculated-regexps))))
+    (setq
+     strg (ansi-color-filter-apply strg)
+     py-shell-output-filter-buffer
+     (concat py-shell-output-filter-buffer strg))
+    (when (py-shell-comint-end-of-output-p
+	   py-shell-output-filter-buffer)
+      ;; Output ends when `py-shell-output-filter-buffer' contains
+      ;; the prompt attached at the end of it.
+      (setq py-shell-output-filter-in-progress nil
+	    py-shell-output-filter-buffer
+	    (substring py-shell-output-filter-buffer
+		       0 (match-beginning 0)))
+      (when (string-match
+	     py-shell--prompt-calculated-output-regexp
+	     py-shell-output-filter-buffer)
+	;; Some shells, like IPython might append a prompt before the
+	;; output, clean that.
+	(setq py-shell-output-filter-buffer
+	      (substring py-shell-output-filter-buffer (match-end 0)))))
+    ""))
+
+(defun py-send-string-no-output (strg &optional process buffer-name)
+  "Send STRING to PROCESS and inhibit output.
+
+Return the output."
+  (let* ((proc (or process (py-shell-get-process)))
+	 (buffer (or buffer-name (if proc (buffer-name (process-buffer proc)) (py-shell))))
          (comint-preoutput-filter-functions
-          (append comint-preoutput-filter-functions
-                  '(ansi-color-filter-apply
-                    (lambda (strg)
-                      (setq output strg)
-                      "")))))
-    (py-send-string strg process)
-    (sit-for 0.1 t)
-    ;; (py--delay-process-dependent process)
-    (when (and output (not (string= "" output)))
-            (py--string-strip
-             (format "[ \n]*%s[ \n]*" py-fast-filter-re)))))
+          '(py-shell-output-filter))
+         (py-shell-output-filter-in-progress t)
+         (inhibit-quit t)
+	 (delay (py--which-delay-process-dependent buffer)))
+    (or
+     (with-local-quit
+       (if (and (string-match ".\n+." strg) (string-match "^\*[Ii]" buffer))  ;; IPython or multiline
+           (let* ((temp-file-name (py-temp-file-name strg))
+		  (file-name (or (buffer-file-name) temp-file-name)))
+	     (py-send-file file-name proc))
+	 (py-shell-send-string strg proc))
+       ;; (switch-to-buffer buffer)
+       ;; (accept-process-output proc 9)
+       (while py-shell-output-filter-in-progress
+         ;; `py-shell-output-filter' takes care of setting
+         ;; `py-shell-output-filter-in-progress' to NIL after it
+         ;; detects end of output.
+         (accept-process-output proc delay))
+       (prog1
+           py-shell-output-filter-buffer
+         (setq py-shell-output-filter-buffer nil)))
+     (with-current-buffer (process-buffer proc)
+       (comint-interrupt-subjob)))))
 
-(defmacro py--return-and-cleanup-maybe (end orig)
-  `(unless (eq ,end ,orig)
-    (prog1 (buffer-substring-no-properties ,orig ,end)
-      (delete-region ,orig ,end))))
+(defun py-send-string (strg &optional process result no-output orig buffer)
+  "Evaluate STRG in Python PROCESS.
 
-(defun py--send-string-return-output (strg &optional process)
-  "Send STRING to PROCESS and return output.
+With optional Arg RESULT return output"
+  (interactive "sPython command: ")
+  (save-excursion
+    (let* ((proc (or process (py-shell)))
+	   (buffer (or buffer (process-buffer proc)))
+	   (orig (or orig (point))))
+      (cond (no-output
+	     (py-send-string-no-output strg proc))
+	    ((and (string-match ".\n+." strg) (string-match "^[Ii]" buffer))  ;; multiline
+	     (let* ((temp-file-name (py-temp-file-name strg))
+		    (file-name (or (buffer-file-name) temp-file-name)))
+	       (py-send-file file-name proc)))
+	    (t (with-current-buffer buffer
+		 (setq orig (py--report-end-marker proc))
+		 (comint-send-string proc strg)
+		 (when (or (not (string-match "\n\\'" strg))
+			   (string-match "\n[ \t].*\n?\\'" strg))
+		   (comint-send-string proc "\n"))
+		 (accept-process-output proc 0.1)
+		 (cond (result
+			(sit-for 0.1 t)
+			(py--filter-result
+			 (py--cleanup-shell orig buffer result)))
+		       (no-output
+			(sit-for 0.1)
+			(and orig (py--cleanup-shell orig buffer))))))))))
 
-When MSG is non-nil messages the first line of STRING.  Return
-the output."
-  (let ((process (or process (get-buffer-process (py-shell))))
-	(inhibit-read-only t)
-        erg)
-    (with-current-buffer (process-buffer process)
-      (let ((orig (ignore-errors (or comint-last-input-end (and comint-last-prompt (cdr comint-last-prompt)) (point))))
-            (end (point)))
-        (py-send-string strg process)
-        ;; (accept-process-output process)
-        (setq end (ignore-errors (and comint-last-prompt (1- (car comint-last-prompt)))))
-        (setq erg (py--return-and-cleanup-maybe end orig))
-        (if (and erg (stringp erg) (not (or (string= "" erg) (string= "''" erg))))
-            (setq erg
-                  (replace-regexp-in-string
-                   (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-                   "" erg))
-          (setq erg nil))
-        ;; don't insert empty completion string
-        ;; (when end
-        ;; (when delete (delete-region orig end)))
-	))
-    erg))
+(defun py-send-file (file-name process)
+  "Send FILE-NAME to Python PROCESS."
+  (interactive "fFile to send: ")
+  (let* ((proc (or
+		   process (get-buffer-process (py-shell))))
+	 (file-name (expand-file-name file-name)))
+    (py-send-string
+     (format
+      (concat "__pyfile = open('''%s''');"
+	      "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
+	      "__pyfile.close()")
+      file-name file-name)
+     proc)))
 
 (defun py-which-def-or-class (&optional orig)
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
@@ -24315,16 +25683,15 @@ Use current region unless optional args BEG END are delivered."
       (goto-char (cdr-safe erg)))
     res))
 
-(defun py-rotate-shell-fontify-style (msg)
-  "Rotates between possible values 'all, 'input and nil. "
+(defun py-toggle-shell-fontification (msg)
+  "Toggles value of ‘py-shell-fontify-p’. "
   (interactive "p")
-  (cond ((eq py-shell-fontify-style 'all)
-         (setq py-shell-fontify-style nil))
-        ((eq py-shell-fontify-style 'input)
-         (setq py-shell-fontify-style 'all))
-        (t (setq py-shell-fontify-style 'input)))
-  (py--shell-setup-fontification py-shell-fontify-style)
-  (when msg (message "py-shell-fontify-style set to: %s" py-shell-fontify-style)))
+
+  (if (setq py-shell-fontify-p (not py-shell-fontify-p))
+      (progn
+	(py-shell-font-lock-turn-on))
+    (py-shell-font-lock-turn-off))
+    (when msg (message "py-shell-fontify-p set to: %s" py-shell-fontify-p)))
 
 (defun py-toggle-execute-use-temp-file ()
   (interactive)
@@ -24449,6 +25816,26 @@ Return and move to match-beginning if successful"
         (py--go-to-keyword regexp (or indent (current-indentation)) '<))
   ;; now from beginning-of-block go one indent level upwards
   (py--go-to-keyword regexp (- (or indent (current-indentation)) py-indent-offset) '<))
+
+(defun py-comint-delete-output ()
+  "Delete all output from interpreter since last input.
+Does not delete the prompt."
+  (interactive)
+  (let ((proc (get-buffer-process (current-buffer)))
+	(replacement nil)
+	(inhibit-read-only t))
+    (save-excursion
+      (let ((pmark (progn (goto-char (process-mark proc))
+			  (forward-line 0)
+			  (point-marker))))
+	(delete-region comint-last-input-end pmark)
+	(goto-char (process-mark proc))
+	(setq replacement (concat "*** output flushed ***\n"
+				  (buffer-substring pmark (point))))
+	(delete-region pmark (point))))
+    ;; Output message and put back prompt
+    (comint-output-filter proc replacement)))
+
 
 ;; python-components-shell-menu
 
@@ -26466,62 +27853,53 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 ;; python-components-foot
 
 ;; sliced from python.el
-(defun py-pdbtrack-comint-output-filter-function (output)
-  "Move overlay arrow to current pdb line in tracked buffer.
-Argument OUTPUT is a string with the output from the comint process."
-  (when (and py-pdbtrack-do-tracking-p (not (string= output "")))
-    (let* ((full-output (ansi-color-filter-apply
-                         (buffer-substring comint-last-input-end (point-max))))
-           (line-number)
-           (file-name
-            (with-temp-buffer
-              (insert full-output)
-              ;; When the debugger encounters a pdb.set_trace()
-              ;; command, it prints a single stack frame.  Sometimes
-              ;; it prints a bit of extra information about the
-              ;; arguments of the present function.  When ipdb
-              ;; encounters an exception, it prints the _entire_ stack
-              ;; trace.  To handle all of these cases, we want to find
-              ;; the _last_ stack frame printed in the most recent
-              ;; batch of output, then jump to the corresponding
-              ;; file/line number.
-              (goto-char (point-max))
-              (when (re-search-backward py-pdbtrack-stacktrace-info-regexp nil t)
-                (setq line-number (string-to-number
-                                   (match-string-no-properties 2)))
-                (match-string-no-properties 1)))))
-      (if (and file-name line-number)
-          (let* ((tracked-buffer
-                  ;; (python-pdbtrack-set-tracked-buffer file-name)
-		  ;; (python-pdbtrack-set-tracked-buffer (buffer-name py-exception-buffer)
-		  (buffer-name py-exception-buffer))
-                 (shell-buffer (current-buffer))
-                 (tracked-buffer-window (get-buffer-window tracked-buffer))
-                 (tracked-buffer-line-pos))
-            (with-current-buffer tracked-buffer
-              (set (make-local-variable 'overlay-arrow-string) "=>")
-              (set (make-local-variable 'overlay-arrow-position) (make-marker))
-              (setq tracked-buffer-line-pos (progn
-                                              (goto-char (point-min))
-                                              (forward-line (1- line-number))
-                                              (point-marker)))
-              (when tracked-buffer-window
-                (set-window-point
-                 tracked-buffer-window tracked-buffer-line-pos))
-              (set-marker overlay-arrow-position tracked-buffer-line-pos))
-            (pop-to-buffer tracked-buffer)
-            (switch-to-buffer-other-window shell-buffer)
-	    (goto-char (point-max)))
-        ;; (when python-pdbtrack-tracked-buffer
-        ;;   (with-current-buffer python-pdbtrack-tracked-buffer
-        ;;     (set-marker overlay-arrow-position nil))
-        ;;   (mapc #'(lambda (buffer)
-        ;;             (ignore-errors (kill-buffer buffer)))
-        ;;         python-pdbtrack-buffers-to-kill)
-        ;;   (setq python-pdbtrack-tracked-buffer nil
-        ;;         python-pdbtrack-buffers-to-kill nil))
-	)))
-  output)
+;; (defun py-pdbtrack-comint-output-filter-function (output)
+;;   "Move overlay arrow to current pdb line in tracked buffer.
+;; Argument OUTPUT is a string with the output from the comint process."
+;;   (when (and py-pdbtrack-do-tracking-p (not (string= output "")))
+;;     (let* ((full-output (ansi-color-filter-apply
+;;                          (buffer-substring comint-last-input-end (point-max))))
+;;            (line-number)
+;;            (file-name
+;;             (with-temp-buffer
+;;               (insert full-output)
+;;               ;; When the debugger encounters a pdb.set_trace()
+;;               ;; command, it prints a single stack frame.  Sometimes
+;;               ;; it prints a bit of extra information about the
+;;               ;; arguments of the present function.  When ipdb
+;;               ;; encounters an exception, it prints the _entire_ stack
+;;               ;; trace.  To handle all of these cases, we want to find
+;;               ;; the _last_ stack frame printed in the most recent
+;;               ;; batch of output, then jump to the corresponding
+;;               ;; file/line number.
+;;               (goto-char (point-max))
+;;               (when (re-search-backward py-pdbtrack-stacktrace-info-regexp nil t)
+;;                 (setq line-number (string-to-number
+;;                                    (match-string-no-properties 2)))
+;;                 (match-string-no-properties 1)))))
+;;       (if (and file-name line-number)
+;;           (let* ((tracked-buffer
+;;                   ;; (python-pdbtrack-set-tracked-buffer file-name)
+;; 		  ;; (python-pdbtrack-set-tracked-buffer (buffer-name py-exception-buffer)
+;; 		  (buffer-name py-exception-buffer))
+;;                  (shell-buffer (current-buffer))
+;;                  (tracked-buffer-window (get-buffer-window tracked-buffer))
+;;                  (tracked-buffer-line-pos))
+;;             (with-current-buffer tracked-buffer
+;;               (set (make-local-variable 'overlay-arrow-string) "=>")
+;;               (set (make-local-variable 'overlay-arrow-position) (make-marker))
+;;               (setq tracked-buffer-line-pos (progn
+;;                                               (goto-char (point-min))
+;;                                               (forward-line (1- line-number))
+;;                                               (point-marker)))
+;;               (when tracked-buffer-window
+;;                 (set-window-point
+;;                  tracked-buffer-window tracked-buffer-line-pos))
+;;               (set-marker overlay-arrow-position tracked-buffer-line-pos))
+;;             (pop-to-buffer tracked-buffer)
+;;             (switch-to-buffer-other-window shell-buffer)
+;; 	    (goto-char (point-max))))))
+;;   output)
 
 (defun py-shell-fontify ()
   "Fontifies input in shell buffer. "
@@ -26574,6 +27952,59 @@ Argument OUTPUT is a string with the output from the comint process."
 	(message "%s" "python-mode loaded from python-components-mode"))
     (message "python-mode loaded from: %s" python-mode-message-string)))
 
+(defalias 'IPython 'ipython)
+(defalias 'Ipython 'ipython)
+(defalias 'Python 'python)
+(defalias 'Python2 'python2)
+(defalias 'Python3 'python3)
+(defalias 'ipy 'ipython)
+(defalias 'iyp 'ipython)
+(defalias 'py-execute-region-default 'py-execute-region)
+(defalias 'py-execute-region-default-dedicated 'py-execute-region-dedicated)
+(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
+(defalias 'pyhotn 'python)
+(defalias 'pyhton 'python)
+(defalias 'pyt 'python)
+(defalias 'py3 'python3)
+(defalias 'py-beginning-of-block 'py-backward-block)
+(defalias 'py-beginning-of-block-bol 'py-backward-block-bol)
+(defalias 'py-beginning-of-block-or-clause 'py-backward-block-or-clause)
+(defalias 'py-beginning-of-class 'py-backward-class)
+(defalias 'py-beginning-of-class-bol 'py-backward-class-bol)
+(defalias 'py-beginning-of-clause 'py-backward-clause)
+(defalias 'py-beginning-of-clause-bol 'py-backward-clause-bol)
+(defalias 'py-beginning-of-comment 'py-backward-comment)
+(defalias 'py-beginning-of-declarations 'py-backward-declarations)
+(defalias 'py-beginning-of-decorator 'py-backward-decorator)
+(defalias 'py-beginning-of-decorator-bol 'py-backward-decorator)
+(defalias 'py-beginning-of-def-or-class 'py-backward-def-or-class)
+(defalias 'py-beginning-of-expression 'py-backward-expression)
+(defalias 'py-beginning-of-line 'py-backward-line)
+(defalias 'py-beginning-of-minor-block 'py-backward-minor-block)
+(defalias 'py-beginning-of-partial-expression 'py-backward-partial-expression)
+(defalias 'py-beginning-of-section 'py-backward-section)
+(defalias 'py-beginning-of-statement 'py-backward-statement)
+(defalias 'py-beginning-of-statement-bol 'py-backward-statement-bol)
+(defalias 'py-beginning-of-top-level 'py-backward-top-level)
+(defalias 'py-end-of-block 'py-forward-block)
+(defalias 'py-end-of-block-or-clause 'py-forward-block-or-clause)
+(defalias 'py-end-of-class 'py-forward-class)
+(defalias 'py-end-of-clause 'py-forward-clause)
+(defalias 'py-end-of-comment 'py-forward-comment)
+(defalias 'py-end-of-decorator 'py-forward-decorator)
+(defalias 'py-end-of-def-or-class 'py-forward-def-or-class)
+(defalias 'py-end-of-expression 'py-forward-expression)
+(defalias 'py-end-of-line 'py-forward-line)
+(defalias 'py-end-of-partial-expression 'py-forward-partial-expression)
+(defalias 'py-end-of-section 'py-forward-section)
+(defalias 'py-end-of-statement 'py-forward-statement)
+(defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
+(defalias 'py-end-of-top-level 'py-forward-top-level)
+(defalias 'py-next-statement 'py-forward-statement)
+(defalias 'py-markup-region-as-section 'py-sectionize-region)
+(defalias 'py-up 'py-up-block)
+(defalias 'py-count-indentation 'py-compute-indentation)
+
 ;;;###autoload
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
   "Run auto-completion"
@@ -26593,6 +28024,8 @@ Argument OUTPUT is a string with the output from the comint process."
 	   t
 	   #'py-complete-auto)))
   (force-mode-line-update))
+
+(autoload 'python-mode "python-mode" "Python Mode." t)
 
 ;;;###autoload
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
@@ -26715,6 +28148,8 @@ See available customizations listed in files variables-python-mode at directory 
   ;; this should go into interactive modes
   ;; (when py-pdbtrack-do-tracking-p
   ;;   (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file))
+  (py-shell-prompt-set-calculated-regexps)
+  (setq comint-prompt-regexp py-shell--prompt-calculated-input-regexp)
   (cond
    (py-complete-function
     (add-hook 'completion-at-point-functions
@@ -26725,6 +28160,7 @@ See available customizations listed in files variables-python-mode at directory 
    (t
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
+  ;; #'python-shell-completion-at-point nil 'local)))
   ;; (if py-auto-complete-p
   ;; (add-hook 'python-mode-hook 'py--run-completion-timer)
   ;; (remove-hook 'python-mode-hook 'py--run-completion-timer))
@@ -26758,203 +28194,59 @@ See available customizations listed in files variables-python-mode at directory 
     (py-message-which-python-mode))
   (force-mode-line-update))
 
-(defun py--shell-setup-fontification (&optional style)
-  "Expected values are either nil, 'all or 'input. "
-  (setq style (or style py-shell-fontify-style))
-  (if style
-      (progn
-	(cond ((eq 'all style)
-	       (remove-hook 'change-major-mode-hook 'font-lock-defontify)
-	       (set (make-local-variable 'py--shell-unfontify) 'py-shell-unfontify-p)
-	       (when py--shell-unfontify
-	       	 (add-hook 'py-python-shell-mode-hook #'py--run-unfontify-timer (current-buffer)))
-	       (remove-hook 'post-command-hook 'py-shell-fontify t)
-	       (set (make-local-variable 'font-lock-defaults)
-		    '(python-font-lock-keywords nil nil nil nil
-						(font-lock-syntactic-keywords
-						 . py-font-lock-syntactic-keywords)))
-	       (if (fboundp 'font-lock-ensure)
-		   (funcall 'font-lock-ensure)
-		 (font-lock-default-fontify-buffer)))
-	      ;; style is 'input, prepare `py-shell-fontify'
-	      (t (set (make-local-variable 'delay-mode-hooks) t)
-		 (save-current-buffer
-		   ;; Prepare the buffer where the input is fontified
-		   (set-buffer (get-buffer-create py-shell--font-lock-buffer))
-		   (font-lock-mode 1)
-		   (python-mode))
-		 ;; post-self-insert-hook
-		 (add-hook 'post-command-hook
-			   #'py-shell-fontify nil 'local)))
-	(force-mode-line-update))
-    ;; no fontification in py-shell
-    (remove-hook 'py-python-shell-mode-hook 'py--run-unfontify-timer t)
-    (remove-hook 'post-command-hook 'py-shell-fontify t)))
+(define-derived-mode py-shell-mode comint-mode py-modeline-display
+  "Major mode for Python shell process.
 
-;;;###autoload
-(define-derived-mode py-python-shell-mode comint-mode "Py"
-  "Major mode for interacting with a Python process.
-A Python process can be started with \\[py-shell].
+Variables
+`py-shell-prompt-regexp',
+`py-shell-prompt-output-regexp',
+`py-shell-input-prompt-2-regexp',
+`py-shell-fontify-p',
+`py-completion-setup-code',
+`py-shell-completion-string-code',
+`py-python-eldoc-setup-code', `py-python-eldoc-string-code',
+`py-python-ffap-setup-code' and `py-python-ffap-string-code' can
+customize this mode for different Python interpreters.
 
-You can send text to the Python process from other buffers
-containing Python source.
- * \\[py-execute-region] sends the current region to the Python process.
+This mode resets `comint-output-filter-functions' locally, so you
+may want to re-add custom functions to it using the
+`py-shell-mode-hook'.
 
-Sets basic comint variables, see also versions-related stuff in `py-shell'.
-\\{py-python-shell-mode-map}"
-  :group 'python-mode
-  ;; (require 'ansi-color) ; for ipython
+\(Type \\[describe-mode] in the process buffer for a list of commands.)"
   (setq mode-line-process '(":%s"))
-  ;; (sit-for 0.1)
-  (when py-verbose-p (message "%s" "Initializing Python shell, please wait"))
-  (py--all-shell-mode-setting (current-buffer))
-  (set-process-sentinel (get-buffer-process (current-buffer)) #'shell-write-history-on-exit)
-  (comint-read-input-ring t)
-  (if py-complete-function
-      (progn
-  	(add-hook 'completion-at-point-functions
-  		  py-complete-function nil 'local)
-  	(push py-complete-function comint-dynamic-complete-functions))
-    (add-hook 'completion-at-point-functions
-              'py-shell-complete nil 'local)
-    (push 'py-shell-complete comint-dynamic-complete-functions))
-  (when py-sexp-use-expression-p
-    (define-key py-python-shell-mode-map [(control meta f)] 'py-forward-expression)
-    (define-key py-python-shell-mode-map [(control meta b)] 'py-backward-expression))
-  (force-mode-line-update))
-
-(defun py--all-shell-mode-setting (buffer)
-  (py--shell-setup-fontification)
-  (setenv "PAGER" "cat")   
-  (setenv "TERM" "dumb")
-  ;; provide next-error etc.
-  (compilation-shell-minor-mode 1)
-  (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
-  (set (make-local-variable 'compilation-error-regexp-alist)
-       py-shell-compilation-regexp-alist)
-  (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
-  (setq mode-line-process '(":%s"))
-  ;; (set (make-local-variable 'inhibit-eol-conversion) t)
-  (set (make-local-variable 'comint-move-point-for-output) t)
-  (set (make-local-variable 'comint-scroll-show-maximum-output) t)
-  (set-syntax-table python-mode-syntax-table)
+  (set (make-local-variable 'indent-tabs-mode) nil)
+  (set (make-local-variable 'py-shell--prompt-calculated-input-regexp) nil)
+  (set (make-local-variable 'py-shell--block-prompt) nil)
+  (set (make-local-variable 'py-shell--prompt-calculated-output-regexp) nil)
+  (py-shell-prompt-set-calculated-regexps)
+  (set (make-local-variable 'comint-prompt-read-only) t)
   (set (make-local-variable 'comint-output-filter-functions)
        '(ansi-color-process-output
+         py-comint-watch-for-first-prompt-output-filter
          py-pdbtrack-comint-output-filter-function
+         py-comint-postoutput-scroll-to-bottom
          comint-watch-for-password-prompt))
-  (if py-auto-complete-p
-      (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
-    (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
-  ;; comint settings
-  (set (make-local-variable 'comint-prompt-regexp)
-       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" (buffer-name (current-buffer)))
-	      (concat "\\("
-		      (mapconcat 'identity
-				 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-				 "\\|")
-		      "\\)"))
-	     (t (concat "\\("
-			(mapconcat 'identity
-				   (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
-				   "\\|")
-			"\\)"))))
-  (remove-hook 'comint-output-filter-functions 'font-lock-extend-jit-lock-region-after-change t)
-  (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
-  (set (make-local-variable 'comment-column) 40)
-  (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
-  (set (make-local-variable 'indent-region-function) 'py-indent-region)
-  (set (make-local-variable 'indent-line-function) 'py-indent-line)
-  (set (make-local-variable 'inhibit-point-motion-hooks) t)
-  (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send)
-  (py--python-send-eldoc-setup-code buffer)
-  (and (ignore-errors py-ffap-p (py--python-send-ffap-setup-code buffer)))
-  (force-mode-line-update))
-
-;;;###autoload
-(define-derived-mode py-ipython-shell-mode comint-mode "IPy"
-  "Major mode for interacting with a (I)Python process.
-A Python process can be started with \\[py-shell].
-
-You can send text to the (I)Python process from other buffers
-containing Python source.
- * \\[py-execute-region] sends the current region to the Python process.
-
-Sets basic comint variables, see also versions-related stuff in `py-shell'.
-\\{py-ipython-shell-mode-map}"
-  (py--all-shell-mode-setting (current-buffer))
-  (py--ipython-import-module-completion)
-  (py-set-ipython-completion-command-string (process-name (get-buffer-process (current-buffer))))
-  ;; (sit-for 0.1 t)
-  (if py-complete-function
-      (progn
-  	(add-hook 'completion-at-point-functions
-  		  py-complete-function nil 'local)
-  	(push py-complete-function comint-dynamic-complete-functions))
-    (add-hook 'completion-at-point-functions
-              'py-shell-complete nil 'local)
-    (push 'py-shell-complete comint-dynamic-complete-functions))
-  ;; (sit-for 0.5 t)
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       py-shell-compilation-regexp-alist)
+  (compilation-shell-minor-mode 1)
   (add-hook 'completion-at-point-functions
-            #'python-shell-completion-at-point nil 'local)
-    )
-
-(autoload 'python-mode "python-mode" "Python Mode." t)
-
-
-(defalias 'IPython 'ipython)
-(defalias 'Ipython 'ipython)
-(defalias 'Python 'python)
-(defalias 'Python2 'python2)
-(defalias 'Python3 'python3)
-(defalias 'ipy 'ipython)
-(defalias 'iyp 'ipython)
-(defalias 'py-execute-region-default 'py-execute-region)
-(defalias 'py-execute-region-default-dedicated 'py-execute-region-dedicated)
-(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
-(defalias 'pyhotn 'python)
-(defalias 'pyhton 'python)
-(defalias 'pyt 'python)
-
-(defalias 'py-beginning-of-block 'py-backward-block)
-(defalias 'py-beginning-of-block-bol 'py-backward-block-bol)
-(defalias 'py-beginning-of-block-or-clause 'py-backward-block-or-clause)
-(defalias 'py-beginning-of-class 'py-backward-class)
-(defalias 'py-beginning-of-class-bol 'py-backward-class-bol)
-(defalias 'py-beginning-of-clause 'py-backward-clause)
-(defalias 'py-beginning-of-clause-bol 'py-backward-clause-bol)
-(defalias 'py-beginning-of-comment 'py-backward-comment)
-(defalias 'py-beginning-of-declarations 'py-backward-declarations)
-(defalias 'py-beginning-of-decorator 'py-backward-decorator)
-(defalias 'py-beginning-of-decorator-bol 'py-backward-decorator)
-(defalias 'py-beginning-of-def-or-class 'py-backward-def-or-class)
-(defalias 'py-beginning-of-expression 'py-backward-expression)
-(defalias 'py-beginning-of-line 'py-backward-line)
-(defalias 'py-beginning-of-minor-block 'py-backward-minor-block)
-(defalias 'py-beginning-of-partial-expression 'py-backward-partial-expression)
-(defalias 'py-beginning-of-section 'py-backward-section)
-(defalias 'py-beginning-of-statement 'py-backward-statement)
-(defalias 'py-beginning-of-statement-bol 'py-backward-statement-bol)
-(defalias 'py-beginning-of-top-level 'py-backward-top-level)
-(defalias 'py-end-of-block 'py-forward-block)
-(defalias 'py-end-of-block-or-clause 'py-forward-block-or-clause)
-(defalias 'py-end-of-class 'py-forward-class)
-(defalias 'py-end-of-clause 'py-forward-clause)
-(defalias 'py-end-of-comment 'py-forward-comment)
-(defalias 'py-end-of-decorator 'py-forward-decorator)
-(defalias 'py-end-of-def-or-class 'py-forward-def-or-class)
-(defalias 'py-end-of-expression 'py-forward-expression)
-(defalias 'py-end-of-line 'py-forward-line)
-(defalias 'py-end-of-partial-expression 'py-forward-partial-expression)
-(defalias 'py-end-of-section 'py-forward-section)
-(defalias 'py-end-of-statement 'py-forward-statement)
-(defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
-(defalias 'py-end-of-top-level 'py-forward-top-level)
-(defalias 'py-next-statement 'py-forward-statement)
-(defalias 'py-markup-region-as-section 'py-sectionize-region)
-(defalias 'py-up 'py-up-block)
-(defalias 'py-count-indentation 'py-compute-indentation)
+	    #'py-shell-completion-at-point nil 'local)
+  (cond
+   ((string-match "^[Jj]" (process-name (get-buffer-process (current-buffer))))
+    'indent-for-tab-command)
+   (t
+    (define-key py-shell-mode-map "\t"
+      'py-indent-or-complete)))
+  (make-local-variable 'py-pdbtrack-buffers-to-kill)
+  (make-local-variable 'py-pdbtrack-tracked-buffer)
+  (make-local-variable 'py-shell-fast-last-output)
+  (set (make-local-variable 'py-shell--block-prompt) nil)
+  (set (make-local-variable 'py-shell--prompt-calculated-output-regexp) nil)
+  (py-shell-prompt-set-calculated-regexps)
+  (if py-shell-fontify-p
+      (progn
+	(py-shell-font-lock-turn-on))
+    (py-shell-font-lock-turn-off)))
 
 ;;;
 (provide 'python-mode)

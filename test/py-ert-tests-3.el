@@ -50,7 +50,7 @@ py_if_name_main_permission_test()
       (skip-chars-backward " >\t\r\n\f")
       ;; (forward-line -1)
       (end-of-line)
-      (sit-for 0.2)
+      (sit-for 0.2 t)
       (assert (looking-back "run" (line-beginning-position)) nil "py-if-name-main-permission-lp-326620-test #1 failed"))))
 
 (ert-deftest py-ert-indent-try-test ()
@@ -723,7 +723,7 @@ print(\"%(language)s has %(number)03d quote types.\" %
       "#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-os.chmod"
+os.continue"
     'python-mode
     'py-debug-p
     (goto-char (point-max))
@@ -732,8 +732,8 @@ os.chmod"
     (sit-for 0.1)
     (set-buffer "*Python-Help*")
     (goto-char (point-min))
-    ;; (switch-to-buffer (current-buffer))
-    (should (looking-at "Help on built-in function chmod in os:"))))
+    (switch-to-buffer (current-buffer))
+    (should (string-match "continue" (buffer-substring-no-properties (point-min) (line-end-position))))))
 
 (ert-deftest py-execute-import-or-reload-test ()
   (py-test
@@ -852,9 +852,25 @@ def main():
     'python-mode
     'py-debug-p
     (goto-char (point-max))
+    (sit-for 0.1) 
     (search-backward "elif")
     (py-backward-clause)
     (should (looking-at "if True"))))
+
+(ert-deftest py-shell-dedicated-buffer-test-t3Sizn ()
+  (let ((buffer (py-shell nil nil t)))
+  (should (buffer-live-p buffer))))
+
+(ert-deftest py-shell-fontify-test-t3Sizn ()
+  (let ((buffer (py-shell nil nil t)))
+    (with-current-buffer buffer
+      (switch-to-buffer (current-buffer))
+      (goto-char (point-max))
+      (insert "def")
+      (backward-char)
+      (should (eq (char-after) ?f)))))
+
+
 
 ;; (ert-deftest py-help-at-point-test-Feo2B6 ()
 ;;   (py-test "import django

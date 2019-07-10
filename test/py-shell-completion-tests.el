@@ -26,8 +26,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    ;; (set-buffer (py-shell nil t "python" nil "/"))
-    (py-test-with-temp-buffer (py-shell nil t "python")
+    (py-test-with-temp-buffer (py-shell nil nil t "python")
     (sit-for 0.1 t) 
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     ;; (goto-char (point-max))
@@ -44,7 +43,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (set-buffer (py-shell nil t "python2.7"))
+    (set-buffer (py-shell nil nil t "python2.7"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     (sit-for 0.1)
     (goto-char (point-max))
@@ -59,7 +58,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (set-buffer (py-shell nil t "~/arbeit/python/epdfree/epd_free-7.2-2-rh5-x86/bin/python2.7"))
+    (set-buffer (py-shell nil nil t "~/arbeit/python/epdfree/epd_free-7.2-2-rh5-x86/bin/python2.7"))
     (sit-for 0.2 t)
     (goto-char (point-max))
     (insert "pri")
@@ -73,7 +72,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (set-buffer (py-shell nil t "python3"))
+    (set-buffer (py-shell nil nil t "python3"))
     (when (interactive-p) (switch-to-buffer (current-buffer)))
     (goto-char (point-max))
     (insert "pri")
@@ -89,7 +88,7 @@
         py-split-window-on-execute)
     (and (buffer-live-p (get-buffer "*Ipython*"))
 	 (kill-buffer-unconditional "*Ipython*"))
-    (set-buffer (py-shell nil t "ipython"))
+    (set-buffer (py-shell nil nil t "ipython"))
     (switch-to-buffer (current-buffer))
     (sit-for 0.1)
     (goto-char (point-max))
@@ -106,7 +105,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (set-buffer (py-shell nil t "/usr/bin/ipython"))
+    (set-buffer (py-shell nil nil t "/usr/bin/ipython"))
     (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
@@ -121,7 +120,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (set-buffer (py-shell nil t "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython"))
+    (set-buffer (py-shell nil nil t "~/arbeit/python/epd_free-7.1-2-rh5-x86/bin/ipython"))
     (sit-for 0.1)
     (switch-to-buffer (current-buffer))
     (goto-char (point-max))

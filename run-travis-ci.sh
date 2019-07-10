@@ -87,6 +87,7 @@ hier() {
 -l $TEST6 \
 -l $TEST7 \
 -l $TEST8 \
+-l $TEST11 \
 -l $TEST12 \
 -l $TEST13 \
 -l $TEST14 \
@@ -119,7 +120,7 @@ $EMACS -Q --batch \
 
 if [ $WERKSTATT -eq 0 ]; then
     hier
-    echo "Lade \$DIR6 und \$DIR7"
+    echo "Lade testumgebung \"HIER\""
 else
     echo "entfernt"
     echo "\$WERKSTATT: $WERKSTATT"
