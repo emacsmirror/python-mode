@@ -11495,20 +11495,20 @@ Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 ‘kill-output-from-shell’ does The Right Thing.
 Returns position where output starts."
-  ;; (message "(current-buffer) %s" (current-buffer) )
+  ;; (message "(current-buffer) %s" (current-buffer))
   (let* ((buffer (or procbuf (and proc (process-buffer proc)) (py-shell)))
 	 (proc (or proc (get-buffer-process buffer)))
 	 (cmd (or cmd (py-which-execute-file-command filename)))
 	 erg)
-        (if no-output
+    (if no-output
 	(py-send-string cmd proc nil t)
       (py-send-string cmd proc)
-      (switch-to-buffer buffer)
-      (when (or py-return-result-p py-store-result-p)
-	(setq erg (py--postprocess-comint buffer origline))
-	(if py-error
-	    (setq py-error (prin1-to-string py-error))
-	  erg)))))
+      (with-current-buffer buffer
+	(when (or py-return-result-p py-store-result-p)
+	  (setq erg (py--postprocess-comint buffer origline))
+	  (if py-error
+	      (setq py-error (prin1-to-string py-error))
+	    erg))))))
 
 (defun py--execute-buffer-finally (strg which-shell proc procbuf origline)
   (let* ((temp (make-temp-name
@@ -11661,11 +11661,12 @@ Indicate LINE if code wasn't run from a file, thus remember ORIGLINE of source b
   ;; (switch-to-buffer (current-buffer))
   (let ((orig (or orig (point-min))))
     (cond ((derived-mode-p 'comint-mode)
-	   (string-trim (replace-regexp-in-string
+	   (ignore-errors
+	     (string-trim (replace-regexp-in-string
 			 (format "[ \\n]*%s[ \\n]*" py-fast-filter-re)
 			 ""
 			 ;; (buffer-substring-no-properties (car-safe comint-last-prompt) (cdr-safe comint-last-prompt)))))
-	  		 (buffer-substring-no-properties (car-safe comint-last-prompt) (progn (ignore-errors (goto-char (car-safe comint-last-prompt)))(re-search-backward py-fast-filter-re nil t 1))))))
+	  		 (buffer-substring-no-properties (car-safe comint-last-prompt) (progn (ignore-errors (goto-char (car-safe comint-last-prompt)))(re-search-backward py-fast-filter-re nil t 1)))))))
 	  (fast (replace-regexp-in-string
 		 (format "[ \n]*%s[ \n]*" py-fast-filter-re)
 		 ""
@@ -11682,22 +11683,22 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
   ;; py--fast-send-string doesn't set origline
   (when (or py-return-result-p py-store-result-p)
     (with-current-buffer output-buffer
-      (switch-to-buffer (current-buffer))
+      ;; (switch-to-buffer (current-buffer))
       (sit-for 0.1 t)
-      (setq py-result (py--fetch-result orig)))
-    (and (string-match "\n$" py-result)
-	 (setq py-result (replace-regexp-in-string py-fast-filter-re "" (substring py-result 0 (match-beginning 0)))))
-    (if (and py-result (not (string= "" py-result)))
-	(if (string-match "^Traceback" py-result)
-	    (progn
-	      (with-temp-buffer
-		(insert py-result)
-		(sit-for 0.1 t)
-		(setq py-error (py--fetch-error origline))))
-	  (when py-store-result-p
-	    (kill-new py-result))
-	  py-result)
-      (message "py--postprocess-comint: %s" "Don't see any result"))))
+      (and (setq py-result (py--fetch-result orig))
+	   (string-match "\n$" py-result)
+	   (setq py-result (replace-regexp-in-string py-fast-filter-re "" (substring py-result 0 (match-beginning 0)))))
+      (if (and py-result (not (string= "" py-result)))
+	  (if (string-match "^Traceback" py-result)
+	      (progn
+		(with-temp-buffer
+		  (insert py-result)
+		  (sit-for 0.1 t)
+		  (setq py-error (py--fetch-error origline))))
+	    (when py-store-result-p
+	      (kill-new py-result))
+	    py-result)
+	(message "py--postprocess-comint: %s" "Don't see any result")))))
 
 (defun py--execute-ge24.3 (start end execute-directory which-shell &optional exception-buffer proc file origline)
   "An alternative way to do it.
@@ -11733,8 +11734,7 @@ May we get rid of the temporary file?"
       ;; (not (string= execute-directory default-directory)))
       ;; (message "Warning: options ‘execute-directory’ and ‘py-use-current-dir-when-execute-p’ may conflict"))
       (and execute-directory
-           (process-send-string proc (concat "import os; os.chdir(\"" execute-directory "\")\n"))
-	   ))
+           (process-send-string proc (concat "import os; os.chdir(\"" execute-directory "\")\n"))))
     (set-buffer filebuf)
     (process-send-string proc
                          (buffer-substring-no-properties
@@ -14758,6 +14758,14 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "p")
   (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
+;;;###autoload
+(defun pypy (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Pypy interpreter.
+
+Optional ARG \\[universal-argument] prompts for path to the interpreter."
+  (interactive "p")
+  (py-shell argprompt args nil "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
 ;; dedicated
 (defun ipython-dedicated (&optional argprompt args buffer fast exception-buffer split)
   "Start an unique IPython interpreter in another window.
@@ -14807,6 +14815,13 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter."
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "p")
   (py-shell argprompt args  t "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun pypy-dedicated (&optional argprompt args buffer fast exception-buffer split)
+  "Start an unique Pypy interpreter in another window.
+
+Optional ARG \\[universal-argument] prompts for path to the interpreter."
+  (interactive "p")
+  (py-shell argprompt args  t "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; switch
 (defun ipython-switch (&optional argprompt args buffer fast exception-buffer split)
@@ -14858,6 +14873,13 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "p")
   (py-shell argprompt args nil "python3" buffer fast exception-buffer split t))
 
+(defun pypy-switch (&optional argprompt args buffer fast exception-buffer split)
+  "Switch to Pypy interpreter in another window.
+
+Optional ARG \\[universal-argument] prompts for path to the interpreter."
+  (interactive "p")
+  (py-shell argprompt args nil "pypy" buffer fast exception-buffer split t))
+
 ;; no-switch
 (defun ipython-no-switch (&optional argprompt args  buffer fast exception-buffer split)
   "Open an IPython interpreter in another window, but do not switch to it.
@@ -14907,6 +14929,13 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter."
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "p")
   (py-shell argprompt args nil "python3" buffer fast exception-buffer split))
+
+(defun pypy-no-switch (&optional argprompt args  buffer fast exception-buffer split)
+  "Open an Pypy interpreter in another window, but do not switch to it.
+
+Optional ARG \\[universal-argument] prompts for path to the interpreter."
+  (interactive "p")
+  (py-shell argprompt args nil "pypy" buffer fast exception-buffer split))
 
 ;; dedicated switch
 (defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
@@ -14964,6 +14993,14 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter."
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "p")
   (py-shell argprompt args t "python3" buffer fast exception-buffer split t))
+
+(defalias 'pypy-dedicated-switch 'pypy-switch-dedicated)
+(defun pypy-switch-dedicated (&optional argprompt args buffer fast exception-buffer split)
+  "Switch to an unique Pypy interpreter in another window.
+
+Optional ARG \\[universal-argument] prompts for path to the interpreter."
+  (interactive "p")
+  (py-shell argprompt args t "pypy" buffer fast exception-buffer split t))
 
 ;; python-components-electric
 (defun py-electric-colon (arg)
@@ -27872,55 +27909,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
             )))))
 
 ;; python-components-foot
-
-;; sliced from python.el
-;; (defun py-pdbtrack-comint-output-filter-function (output)
-;;   "Move overlay arrow to current pdb line in tracked buffer.
-;; Argument OUTPUT is a string with the output from the comint process."
-;;   (when (and py-pdbtrack-do-tracking-p (not (string= output "")))
-;;     (let* ((full-output (ansi-color-filter-apply
-;;                          (buffer-substring comint-last-input-end (point-max))))
-;;            (line-number)
-;;            (file-name
-;;             (with-temp-buffer
-;;               (insert full-output)
-;;               ;; When the debugger encounters a pdb.set_trace()
-;;               ;; command, it prints a single stack frame.  Sometimes
-;;               ;; it prints a bit of extra information about the
-;;               ;; arguments of the present function.  When ipdb
-;;               ;; encounters an exception, it prints the _entire_ stack
-;;               ;; trace.  To handle all of these cases, we want to find
-;;               ;; the _last_ stack frame printed in the most recent
-;;               ;; batch of output, then jump to the corresponding
-;;               ;; file/line number.
-;;               (goto-char (point-max))
-;;               (when (re-search-backward py-pdbtrack-stacktrace-info-regexp nil t)
-;;                 (setq line-number (string-to-number
-;;                                    (match-string-no-properties 2)))
-;;                 (match-string-no-properties 1)))))
-;;       (if (and file-name line-number)
-;;           (let* ((tracked-buffer
-;;                   ;; (python-pdbtrack-set-tracked-buffer file-name)
-;; 		  ;; (python-pdbtrack-set-tracked-buffer (buffer-name py-exception-buffer)
-;; 		  (buffer-name py-exception-buffer))
-;;                  (shell-buffer (current-buffer))
-;;                  (tracked-buffer-window (get-buffer-window tracked-buffer))
-;;                  (tracked-buffer-line-pos))
-;;             (with-current-buffer tracked-buffer
-;;               (set (make-local-variable 'overlay-arrow-string) "=>")
-;;               (set (make-local-variable 'overlay-arrow-position) (make-marker))
-;;               (setq tracked-buffer-line-pos (progn
-;;                                               (goto-char (point-min))
-;;                                               (forward-line (1- line-number))
-;;                                               (point-marker)))
-;;               (when tracked-buffer-window
-;;                 (set-window-point
-;;                  tracked-buffer-window tracked-buffer-line-pos))
-;;               (set-marker overlay-arrow-position tracked-buffer-line-pos))
-;;             (pop-to-buffer tracked-buffer)
-;;             (switch-to-buffer-other-window shell-buffer)
-;; 	    (goto-char (point-max))))))
-;;   output)
 
 (defun py-shell-fontify ()
   "Fontifies input in shell buffer. "
