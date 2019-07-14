@@ -1227,32 +1227,27 @@ Edit for your needs."
   :tag "py-shells"
   :group 'python-mode)
 
+(defcustom py-known-shells-extended-commands
+  (list "ipython"
+	"python"
+	"python3"
+	"pypy"
+	)
+  "A list of shells instrumented for finer grained commands
+like ‘py-execute-statement-ipython’
+Expects its executables installed
+
+Edit for your needs."
+  :type '(repeat string)
+  :tag "py-shells"
+  :group 'python-mode)
+
 (defun py-install-named-shells-fix-doc (ele)
   (cond ((string-match "^i" ele)
 	 (concat "I" (capitalize (substring ele 1))))
 	((string-match "^pypy" ele)
 	 "PyPy")
 	(t (capitalize ele))))
-
-(defun py-load-named-shells ()
-  (interactive)
-  (dolist (ele py-known-shells)
-    (unless (string= "" ele)
-      (let* ((erg (py-install-named-shells-fix-doc ele)))
-	(eval (fset (car (read-from-string ele)) (car
-						  (read-from-string (concat "(lambda (&optional argprompt args) \"Start a " erg " interpreter
-Optional ARGPROMPT: with \\\\[universal-argument] start in a new
-dedicated shell.
-\"
-  (interactive) (py-shell (eq 4  (prefix-numeric-value argprompt)) args nil \""ele"\"))")))))
-	(eval (fset (car (read-from-string (concat ele "-dedicated"))) (car
-						  (read-from-string (concat "(lambda (&optional argprompt args) \"Start a dedicated " erg " interpreter\"
-  (interactive) (py-shell argprompt args t \""ele"\"))")))))
-	)))
-  (when (functionp (car (read-from-string (car-safe py-known-shells))))
-    (when py-verbose-p (message "py-load-named-shells: %s" "installed named-shells"))))
-
-(py-load-named-shells)
 
 (defcustom py-jython-packages
   '("java" "javax")
@@ -23602,6 +23597,26 @@ process buffer for a list of commands.)"
     	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
       (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
     buffer))
+
+(defun py-load-named-shells ()
+  (interactive)
+  (dolist (ele py-known-shells)
+    (unless (string= "" ele)
+      (let* ((erg (py-install-named-shells-fix-doc ele)))
+	(eval (fset (car (read-from-string ele)) (car
+						  (read-from-string (concat "(lambda (&optional argprompt args) \"Start a " erg " interpreter
+Optional ARGPROMPT: with \\\\[universal-argument] start in a new
+dedicated shell.
+\"
+  (interactive) (py-shell (eq 4  (prefix-numeric-value argprompt)) args nil \""ele"\"))")))))
+	(eval (fset (car (read-from-string (concat ele "-dedicated"))) (car
+						  (read-from-string (concat "(lambda (&optional argprompt args) \"Start a dedicated " erg " interpreter\"
+  (interactive) (py-shell argprompt args t \""ele"\"))")))))
+	)))
+  (when (functionp (car (read-from-string (car-safe py-known-shells))))
+    (when py-verbose-p (message "py-load-named-shells: %s" "installed named-shells"))))
+
+(py-load-named-shells)
 
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the Python process.
