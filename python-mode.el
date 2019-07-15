@@ -1210,15 +1210,16 @@ file heading imports to see if they look Java-like."
 ;; ))
 
 (defcustom py-known-shells
-  (list "ipython"
-	"ipython2.7"
-	"ipython3"
-	"jython"
-	"python"
-	"python2"
-	"python3"
-	"pypy"
-	)
+  (list
+   "ipython"
+   "ipython2.7"
+   "ipython3"
+   "jython"
+   "python"
+   "python2"
+   "python3"
+   "pypy"
+   )
   "A list of available shells instrumented for commands.
  Expects its executables installed
 
@@ -6439,32 +6440,32 @@ Delete the preceding character or all preceding whitespace"]
 	 :help " `py-hungry-delete-forward'
 Delete the following character or all following whitespace"])
        ("Filling"
-	["Py docstring style" py-py-docstring-style
-	 :help " `py-py-docstring-style'"]
+	["Py docstring style" py-docstring-style
+	 :help " `py-docstring-style'"]
 
-	["Py fill comment" py-py-fill-comment
-	 :help " `py-py-fill-comment'"]
+	["Py fill comment" py-fill-comment
+	 :help " `py-fill-comment'"]
 
-	["Py fill paragraph" py-py-fill-paragraph
-	 :help " `py-py-fill-paragraph'"]
+	["Py fill paragraph" py-fill-paragraph
+	 :help " `py-fill-paragraph'"]
 
-	["Py fill string" py-py-fill-string
-	 :help " `py-py-fill-string'"]
+	["Py fill string" py-fill-string
+	 :help " `py-fill-string'"]
 
-	["Py fill string django" py-py-fill-string-django
-	 :help " `py-py-fill-string-django'"]
+	["Py fill string django" py-fill-string-django
+	 :help " `py-fill-string-django'"]
 
-	["Py fill string onetwo" py-py-fill-string-onetwo
-	 :help " `py-py-fill-string-onetwo'"]
+	["Py fill string onetwo" py-fill-string-onetwo
+	 :help " `py-fill-string-onetwo'"]
 
-	["Py fill string pep 257" py-py-fill-string-pep-257
-	 :help " `py-py-fill-string-pep-257'"]
+	["Py fill string pep 257" py-fill-string-pep-257
+	 :help " `py-fill-string-pep-257'"]
 
-	["Py fill string pep 257 nn" py-py-fill-string-pep-257-nn
-	 :help " `py-py-fill-string-pep-257-nn'"]
+	["Py fill string pep 257 nn" py-fill-string-pep-257-nn
+	 :help " `py-fill-string-pep-257-nn'"]
 
-	["Py fill string symmetric" py-py-fill-string-symmetric
-	 :help " `py-py-fill-string-symmetric'"])
+	["Py fill string symmetric" py-fill-string-symmetric
+	 :help " `py-fill-string-symmetric'"])
        ("Abbrevs"	   :help "see also `py-add-abbrev'"
 	:filter (lambda (&rest junk)
 		  (abbrev-table-menu python-mode-abbrev-table)))
@@ -6473,14 +6474,14 @@ Delete the following character or all following whitespace"])
 	:help " `py-add-abbrev'
 Defines python-mode specific abbrev for last expressions before point."]
        ("Completion"
-	["Py indent or complete" py-py-indent-or-complete
-	 :help " `py-py-indent-or-complete'"]
+	["Py indent or complete" py-indent-or-complete
+	 :help " `py-indent-or-complete'"]
 
-	["Py shell complete" py-py-shell-complete
-	 :help " `py-py-shell-complete'"]
+	["Py shell complete" py-shell-complete
+	 :help " `py-shell-complete'"]
 
-	["Py complete" py-py-complete
-	 :help " `py-py-complete'"])
+	["Py complete" py-complete
+	 :help " `py-complete'"])
 
        ["Find function" py-find-function
 	:help " `py-find-function'
@@ -7528,7 +7529,7 @@ Returns value of `py-autopair-mode'."
     py-switch-buffers-on-execute-p))
 
 (defun py-switch-buffers-on-execute-p-on (&optional arg)
-  "Toggle `py-py-switch-buffers-on-execute-p' according to ARG.
+  "Toggle `py-switch-buffers-on-execute-p' according to ARG.
 
 Returns value of `py-switch-buffers-on-execute-p'."
   (interactive)
@@ -7560,7 +7561,7 @@ Returns value of `py-switch-buffers-on-execute-p'."
     py-split-window-on-execute))
 
 (defun py-split-window-on-execute-on (&optional arg)
-  "Toggle `py-py-split-window-on-execute' according to ARG.
+  "Toggle `py-split-window-on-execute' according to ARG.
 
 Returns value of `py-split-window-on-execute'."
   (interactive)
@@ -7600,7 +7601,7 @@ Returns value of `py-split-window-on-execute'."
     py-fontify-shell-buffer-p))
 
 (defun py-fontify-shell-buffer-p-on (&optional arg)
-  "Toggle `py-py-fontify-shell-buffer-p' according to ARG.
+  "Toggle `py-fontify-shell-buffer-p' according to ARG.
 
 Returns value of `py-fontify-shell-buffer-p'."
   (interactive)
@@ -21324,7 +21325,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
 						 (forward-list))))
 		   (paragraph-start "\f\\|[ \t]*$")
 		   (paragraph-separate ","))
-	      (when end (narrow-to-region beg end)
+	      (when (and beg end (narrow-to-region beg end))
 		    (fill-region beg end justify)
 		    (while (not (eobp))
 		      (forward-line 1)
@@ -21714,16 +21715,17 @@ Fill according to `py-docstring-style' "
 		      docstring))
 	 (beg (and (nth 3 pps) (nth 8 pps)))
 	 end)
-    (if docstring
-	(py--fill-docstring justify style docstring orig indent)
-      (save-excursion
-	(setq end
-	      (progn (goto-char beg)
-		     ;; (setq tqs (looking-at "\"\"\"\|'''"))
-		     (forward-sexp) (point))))
-      (save-restriction
-	(narrow-to-region beg end)
-	(py-fill-paragraph justify pps beg end)))))
+    (when beg
+      (if docstring
+	  (py--fill-docstring justify style docstring orig indent)
+	(save-excursion
+	  (setq end
+		(progn (goto-char beg)
+		       ;; (setq tqs (looking-at "\"\"\"\|'''"))
+		       (forward-sexp) (point))))
+	(save-restriction
+	  (narrow-to-region beg end)
+	  (py-fill-paragraph justify pps beg end))))))
 
 (defun py--continue-lines-region (beg end)
   (save-excursion
@@ -23580,16 +23582,21 @@ process buffer for a list of commands.)"
 		      shell nil args))))))
     (unless done
       (with-current-buffer buffer
-	(setq py-modeline-display (py--update-lighter buffer-name))
 	(setq delay (py--which-delay-process-dependent buffer-name))
 	(unless fast
+	  (when interactivep
+	    (cond ((string-match "^.I" buffer-name)
+		   (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
+		  ((string-match "^.+3" buffer-name)
+		   (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
+	  (setq py-modeline-display (py--update-lighter buffer-name))
+	  (sit-for delay t)
 	  (py-shell-mode)
 	  (when interactivep
 	    (cond ((string-match "^.I" buffer-name)
 		   (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
 		  ((string-match "^.+3" buffer-name)
 		   (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
-	  (sit-for delay t)
 	  (py-send-string-no-output "print(\"py-shell-mode loaded\")" (get-buffer-process buffer) buffer-name)
 	  ;; (py--update-lighter shell)
 	  )))
@@ -23606,17 +23613,14 @@ process buffer for a list of commands.)"
   (dolist (ele py-known-shells)
     (let ((erg (py-install-named-shells-fix-doc ele)))
       (eval (fset (car (read-from-string ele)) (car
-						(read-from-string (concat "(lambda (&optional argprompt args) \"Start a ‘" erg "’ interpreter.
-Optional ARGPROMPT: with \\\\[universal-argument] start in a new
+						(read-from-string (concat "(lambda (&optional dedicated args) \"Start a ‘" erg "’ interpreter.
+Optional DEDICATED: with \\\\[universal-argument] start in a new
 dedicated shell.
 Optional ARGS overriding ‘py-" ele "-command-args’.
-\"
-  (interactive) (py-shell (eq 4 (prefix-numeric-value argprompt)) args nil \""ele"\"))")))))
 
-      (eval (fset (car (read-from-string (concat ele "-dedicated"))) (car
-								      (read-from-string (concat "(lambda (&optional argprompt args) \"Start a dedicated ‘" erg "’ interpreter.
-Optional ARGS overriding ‘py-" ele "-command-args’.\"
-  (interactive) (py-shell argprompt args t \""ele"\"))")))))))
+Calls ‘py-shell’
+\"
+  (interactive \"p\") (py-shell dedicated args nil \""ele"\"))")))))))
   (when (functionp (car (read-from-string (car-safe py-known-shells))))
     (when py-verbose-p (message "py-load-named-shells: %s" "installed named-shells"))))
 
@@ -27665,14 +27669,14 @@ expansion.
 
 Don't use this function in a Lisp program; use `define-abbrev' instead."]
           ("Completion"
-	   ["Py indent or complete" py-py-indent-or-complete
-	    :help " `py-py-indent-or-complete'"]
+	   ["Py indent or complete" py-indent-or-complete
+	    :help " `py-indent-or-complete'"]
 
-	   ["Py shell complete" py-py-shell-complete
-	    :help " `py-py-shell-complete'"]
+	   ["Py shell complete" py-shell-complete
+	    :help " `py-shell-complete'"]
 
-	   ["Py complete" py-py-complete
-	    :help " `py-py-complete'"]
+	   ["Py complete" py-complete
+	    :help " `py-complete'"]
             )))))
 
 ;; python-components-foot
@@ -27839,6 +27843,7 @@ See available customizations listed in files variables-python-mode at directory 
   ;; load known shell listed in 
   ;; Local vars
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
+  (set (make-local-variable 'auto-fill-function) 'py-fill-string) 
   (set (make-local-variable 'electric-indent-inhibit) nil)
   (set (make-local-variable 'outline-regexp)
        (concat (mapconcat 'identity
