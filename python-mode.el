@@ -21719,7 +21719,7 @@ Fill according to `py-docstring-style' "
 	 (pps (parse-partial-sexp (point-min) (point)))
 	 (indent (save-excursion (and (nth 3 pps) (goto-char (nth 8 pps)) (current-indentation))))
 	 ;; fill-paragraph sets orig
-	 (orig (copy-marker (point)))
+	 (orig (point))
 	 (docstring (if (and docstring (not (number-or-marker-p docstring)))
 			(py--in-or-behind-or-before-a-docstring)
 		      docstring))
@@ -21731,22 +21731,30 @@ Fill according to `py-docstring-style' "
 	(save-excursion
 	  (setq end
 		(progn (goto-char beg)
-		       (setq tqs (looking-at "\"\"\"\|'''"))
+		       (setq tqs (looking-at "\"\"\"\\|'''"))
 		       (forward-sexp) (point))))
 	(save-restriction
-	  (narrow-to-region beg end)
-	  (fill-region beg end justify)
-	  (when (not tqs)
-		   (py--continue-lines-region beg end))
-	  ;; (py-fill-paragraph justify pps beg end)
-	  )))))
+	  (if (not tqs)
+	      (if (py-preceding-line-backslashed-p)
+		  (progn
+		    (narrow-to-region (line-beginning-position) end)
+		    (fill-region (line-beginning-position) end)
+		    (when (< 1 (py-count-lines))
+		      (py--continue-lines-region (point-min) end)))
+		(narrow-to-region beg end)
+		(fill-region beg end justify)
+		(when
+		    ;; counting in narrowed buffer
+		    (< 1 (py-count-lines))
+		  (py--continue-lines-region beg end)))
+	    (fill-region beg end justify)))))))
 
 (defun py--continue-lines-region (beg end)
   (save-excursion
     (goto-char beg)
     (while (< (line-end-position) end)
       (end-of-line)
-      (unless (py-escaped-p) (insert-and-inherit 32)(insert-and-inherit 92))
+      (unless (py-escaped-p) (insert-and-inherit 32) (insert-and-inherit 92))
       (ignore-errors (forward-line 1)))))
 
 (defun py-fill-paragraph (&optional justify pps beg end tqs)
@@ -27910,7 +27918,7 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'open-paren-in-column-0-is-defun-start) nil)
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
   (set (make-local-variable 'fill-paragraph-function) 'py-fill-paragraph)
-  (set (make-local-variable 'auto-fill-function) 'py-fill-string)
+  (set (make-local-variable 'normal-auto-fill-function) 'py-fill-string)
   (set (make-local-variable 'require-final-newline) mode-require-final-newline)
   (set (make-local-variable 'tab-width) py-indent-offset)
   (set (make-local-variable 'eldoc-documentation-function)
