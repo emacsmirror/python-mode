@@ -8119,7 +8119,7 @@ Returns value of `indent-tabs-mode' switched to."
       (setq indent-tabs-mode (not indent-tabs-mode))
     (setq tab-width py-indent-offset))
   (when (and py-verbose-p (called-interactively-p 'any)) (message "indent-tabs-mode %s  py-indent-offset %s" indent-tabs-mode py-indent-offset))
-  indent-tabs-mode)
+  indentnnnnnnn-tabs-mode)
 
 (defun py-indent-tabs-mode (arg &optional iact)
   "With positive ARG switch `indent-tabs-mode' on.
@@ -11205,7 +11205,7 @@ SEPCHAR is the file-path separator of your system."
            (setq erg (replace-regexp-in-string "^\*" (concat "*" prefix " ") erg)))
           (prefix
            (setq erg (concat "*" prefix " " erg "*")))
-          (t (unless (string-match "^\*" erg)(setq erg (concat "*" erg "*")))))
+          (t (unless (string-match "^\*" erg) (setq erg (concat "*" erg "*")))))
     erg))
 
 (defun py--jump-to-exception-intern (act exception-buffer origline)
@@ -12369,11 +12369,9 @@ Takes END"
 	   (sit-for 0.1)
 	   (looking-back input (line-beginning-position))
 	   (not (string= input erg))
-	   (setq erg (completion-in-region (match-beginning 0) (match-end 0) completion)))
-      ;; (delete-region (match-beginning 0) (match-end 0))
-      ;; (insert erg)
-      erg))
-  (set-window-configuration py-last-window-configuration))
+	   (setq erg (completion-in-region (match-beginning 0) (match-end 0) completion)))))
+  ;; (set-window-configuration py-last-window-configuration)
+  )
 
 (defun py--try-completion (input completion)
   "Repeat `try-completion' as long as match are found.
@@ -13105,12 +13103,16 @@ not inside a defun."
 			"sys.path.insert(0, '"
 			(file-name-directory origfile) "')\n")))
     (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-    (with-temp-buffer
-      (insert cmd)
-      (write-file file))
-    (py-process-file file "*Python-Help*")
-    (when (file-readable-p file)
-      (unless py-debug-p (delete-file file)))))
+    (with-help-window
+	(py-send-string cmd nil t)
+	;; (insert cmd)
+      ;; (with-temp-buffer
+      ;; (insert cmd)
+      )))
+      ;; (write-file file))
+    ;; (py-process-file file "*Python-Help*")
+    ;; (when (file-readable-p file)
+    ;;   (unless py-debug-p (delete-file file)))))
 
 (defun py-help-at-point ()
   "Print help on symbol at point.
@@ -22869,13 +22871,13 @@ Return code of ‘py-top-level’ at point, a string."
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-  (replace-regexp-in-string
-;;   (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-      py-fast-filter-re
- ""
-			    (ansi-color-filter-apply strg)
-			    ;;)
-			    ))
+  (string-trim (replace-regexp-in-string
+		;;   (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+		py-fast-filter-re
+		""
+		(ansi-color-filter-apply strg)
+		;;)
+		)))
 
 (defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
@@ -23502,7 +23504,7 @@ Returns position reached if successful"
   (save-excursion
     `(let* ((form ,(prin1-to-string form))
            (origline (py-count-lines))
-	   (py-exception-buffer (current-buffer)) 
+	   (py-exception-buffer (current-buffer))
            (beg (unless ,file
                   (prog1
                       (or ,beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
@@ -23623,7 +23625,7 @@ process buffer for a list of commands.)"
 	 (py-use-local-default (py--determine-local-default))
 	 (buffer-name
 	  (or buffer
-	      (py--choose-buffer-name shell dedicated)))
+	      (py--choose-buffer-name shell dedicated fast)))
 	 ;; (executable (cond
 	 ;; 	      (shell)
 	 ;; 	      (py-shell-name)
@@ -25120,8 +25122,9 @@ Return the output."
 With optional Arg RESULT return output"
   (interactive "sPython command: ")
   (save-excursion
-    (let* ((proc (or process (py-shell)))
-	   (buffer (or buffer (process-buffer proc)))
+    (let* (
+	   (buffer (or buffer (or (and process (buffer-name  (process-buffer process))) (buffer-name (py-shell)))))
+	   (proc (or process (get-buffer-process buffer)))
 	   (orig (or orig (point))))
       (cond (no-output
 	     (py-send-string-no-output strg proc))
@@ -25135,11 +25138,11 @@ With optional Arg RESULT return output"
 		 (when (or (not (string-match "\n\\'" strg))
 			   (string-match "\n[ \t].*\n?\\'" strg))
 		   (comint-send-string proc "\n"))
-		 (accept-process-output proc 0.1)
 		 (cond (result
 			(sit-for 0.1 t)
-			(py--filter-result
-			 (py--cleanup-shell orig buffer result)))
+			(setq py-result
+			      (py--filter-result
+			       (py--cleanup-shell orig buffer result))))
 		       (no-output
 			(sit-for 0.1)
 			(and orig (py--cleanup-shell orig buffer))))))))))
@@ -27868,6 +27871,12 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 
 (autoload 'python-mode "python-mode" "Python Mode." t)
 
+(defun all-mode-setting ()
+  (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
+  (set (make-local-variable 'eldoc-message-function) 'py-help-at-point)
+  
+  )
+
 ;;;###autoload
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
@@ -27903,7 +27912,7 @@ See available customizations listed in files variables-python-mode at directory 
   :group 'python-mode
   ;; load known shell listed in 
   ;; Local vars
-  (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
+  (all-mode-setting)
   (set (make-local-variable 'electric-indent-inhibit) nil)
   (set (make-local-variable 'outline-regexp)
        (concat (mapconcat 'identity
@@ -28057,7 +28066,8 @@ may want to re-add custom functions to it using the
 
 \(Type \\[describe-mode] in the process buffer for a list of commands.)"
   (setq mode-line-process '(":%s"))
-  (set (make-local-variable 'indent-tabs-mode) nil)
+  (all-mode-setting)
+  ;; (set (make-local-variable 'indent-tabs-mode) nil)
   (set (make-local-variable 'py-shell--prompt-calculated-input-regexp) nil)
   (set (make-local-variable 'py-shell--block-prompt) nil)
   (set (make-local-variable 'py-shell--prompt-calculated-output-regexp) nil)
