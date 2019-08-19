@@ -197,7 +197,8 @@ impo")))
 (ert-deftest py-wrong-on-quotes-31-test ()
   (py-test-with-temp-buffer
       "print(\"don't\")"
-    (py-execute-statement)))
+    (py-execute-statement)
+    (should (not (nth 3 (parse-partial-sexp (point-min) (point)))))))
 
 (ert-deftest py-support-PEP-553-built-in-breakpoint-42-test ()
   (py-test-with-temp-buffer
@@ -239,6 +240,33 @@ def foo(x):
     (end-of-line)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?\\))))
+
+(ert-deftest py-clause-indent-test-UXZsX9 ()
+  (py-test
+      "def ziffernraten ()
+    ziffer = random\.randint(1,20)
+
+    guess = 0
+    tries = 0
+
+    print('Try to guess a number between 1 and 20, using the four clues if you need them, You have 5 guesses')
+
+
+    while (guess!=ziffer) and (tries<5):
+        print(\"Falsch\")
+        tries += 1
+        guess = int(input ('What is your guess? '))
+
+
+    if guess == ziffer:
+        print(\"Erfolg\")
+else: "
+    'python-mode
+    py-verbose-p
+    (goto-char (point-max))
+    (should (eq 4  (py-compute-indentation)))))
+
+
 
 (provide 'py-interactive-tests)
 ;;; py-interactive-tests.el ends here
