@@ -252,22 +252,20 @@ Default is t"
 (defcustom py-session-p t
   "If commands would use an existing process.
 
-See also `py-dedicated-process-p'"
+Default is t"
 
   :type 'boolean
   :tag "py-session-p"
   :group 'python-mode
   :safe 'booleanp)
 
-(defcustom py-fast-session-p nil
-  "If commands would use an existing fast process.
+(defun py-toggle-session-p (&optional arg)
+  "Switches boolean variable ‘py-session-p’.
 
-Default is nil"
-
-  :type 'boolean
-  :tag "py-fast-session-p"
-  :group 'python-mode
-  :safe 'booleanp)
+With optional ARG message state switched to"
+  (interactive "p")
+  (setq py-session-p (not py-session-p))
+  (when arg (message "py-session-p: %s" py-session-p)))
 
 (defcustom py-max-help-buffer-p nil
   "If \"\*Python-Help\*\"-buffer should appear as the only visible.
@@ -1280,12 +1278,12 @@ Default is t."
   :tag "py-current-defun-delay"
   :group 'python-mode)
 
-(defcustom py--delete-temp-file-delay 1
-  "Used by `py--delete-temp-file'."
+;; (defcustom py--delete-temp-file-delay 1
+;;   "Used by `py--delete-temp-file'."
 
-  :type 'number
-  :tag "py--delete-temp-file-delay"
-  :group 'python-mode)
+;;   :type 'number
+;;   :tag "py--delete-temp-file-delay"
+;;   :group 'python-mode)
 
 (defcustom py-python-send-delay 1
   "Seconds to wait for output, used by `py--send-...' functions.
@@ -1838,6 +1836,12 @@ As v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncode
   :tag "python-mode-v5-behavior-p"
   :group 'python-mode)
 
+(defun py-toggle-python-mode-v5-behavior ()
+  "Switch the values of ‘python-mode-v5-behavior-p’"
+  (interactive) 
+  (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
+  (when (interactive-p) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
+
 (defcustom py-trailing-whitespace-smart-delete-p nil
   "Default is nil.
 
@@ -2119,9 +2123,9 @@ Default is nil"
   :group 'python-mode)
 
 (defvar py-output-buffer "*Python Output*"
-    "Currently unused.
+      "Used if ‘python-mode-v5-behavior-p’ is t.
 
-Output buffer is created dynamically according to Python version and kind of process-handling")
+Otherwise output buffer is created dynamically according to Python version and kind of process-handling")
 (make-variable-buffer-local 'py-output-buffer)
 
 (defcustom py-force-default-output-buffer-p nil
@@ -4012,13 +4016,44 @@ With optional ARG message state switched to"
   (setq py-closing-list-dedents-bos (not py-closing-list-dedents-bos))
   (when arg (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
 
-(defun py-toggle-fast-session-p (&optional arg)
-  "Switches boolean variable ‘py-fast-session-p’.
 
-With optional ARG message state switched to"
-  (interactive "p")
-  (setq py-fast-session-p (not py-fast-session-p))
-  (when arg (message "py-fast-session-p: %s" py-fast-session-p)))
+(defmacro py-test-with-temp-buffer-point-min (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode py--imenu-create-index-p)
+       (insert ,contents)
+       (python-mode)
+       (goto-char (point-min))
+       (when py-debug-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
+       ,@body)))
+
+(defmacro py-test-with-temp-buffer (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode py--imenu-create-index-p)
+       (insert ,contents)
+       (python-mode)
+       (when py-debug-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
+       ,@body)))
+
+;; from jit-lock.el
+(defmacro with-buffer-prepared-for-jit-lock (&rest body)
+  "Execute BODY in current buffer, overriding several variables.
+Preserves the `buffer-modified-p' state of the current buffer."
+  (declare (debug t))
+  `(let ((inhibit-point-motion-hooks t))
+     (with-silent-modifications
+       ,@body)))
 
 ;; now installed by py-load-named-shells
 ;; (require 'python-components-named-shells)
@@ -4315,8 +4350,7 @@ Copy statement at point."]
 
 	["Copy top level" py-copy-top-level
 	 :help " `py-copy-top-level'
-Copy top-level at point."]
-	)
+Copy top-level at point."])
        ("Kill"
 	["Kill block" py-kill-block
 	 :help " `py-kill-block'
@@ -5322,21 +5356,9 @@ Send top-level at point to Python3 interpreter."])
 	 :help " `py-hide-block'
 Hide block at point."]
 
-	["Hide block or clause" py-hide-block-or-clause
-	 :help " `py-hide-block-or-clause'
-Hide block-or-clause at point."]
-
-	["Hide class" py-hide-class
-	 :help " `py-hide-class'
-Hide class at point."]
-
-	["Hide clause" py-hide-clause
-	 :help " `py-hide-clause'
-Hide clause at point."]
-
-	["Hide comment" py-hide-comment
-	 :help " `py-hide-comment'
-Hide comment at point."]
+	["Hide top level" py-hide-top-level
+	 :help " `py-hide-top-level'
+Hide top-level at point."]
 
 	["Hide def" py-hide-def
 	 :help " `py-hide-def'
@@ -5346,43 +5368,59 @@ Hide def at point."]
 	 :help " `py-hide-def-or-class'
 Hide def-or-class at point."]
 
-	["Hide elif block" py-hide-elif-block
-	 :help " `py-hide-elif-block'
-Hide elif-block at point."]
+	["Hide statement" py-hide-statement
+	 :help " `py-hide-statement'
+Hide statement at point."]
 
-	["Hide else block" py-hide-else-block
-	 :help " `py-hide-else-block'
-Hide else-block at point."]
+	["Hide class" py-hide-class
+	 :help " `py-hide-class'
+Hide class at point."]
 
-	["Hide except block" py-hide-except-block
-	 :help " `py-hide-except-block'
-Hide except-block at point."]
+	["Hide clause" py-hide-clause
+	 :help " `py-hide-clause'
+Hide clause at point."]
 
-	["Hide expression" py-hide-expression
-	 :help " `py-hide-expression'
-Hide expression at point."]
+	["Hide block or clause" py-hide-block-or-clause
+	 :help " `py-hide-block-or-clause'
+Hide block-or-clause at point."]
 
-	["Hide for block" py-hide-for-block
-	 :help " `py-hide-for-block'
-Hide for-block at point."]
-
-	["Hide if block" py-hide-if-block
-	 :help " `py-hide-if-block'
-Hide if-block at point."]
+	["Hide comment" py-hide-comment
+	 :help " `py-hide-comment'
+Hide comment at point."]
 
 	["Hide indent" py-hide-indent
 	 :help " `py-hide-indent'
 Hide indent at point."]
 
+	["Hide expression" py-hide-expression
+	 :help " `py-hide-expression'
+Hide expression at point."]
+
 	["Hide line" py-hide-line
 	 :help " `py-hide-line'
 Hide line at point."]
 
-	["Hide minor block" py-hide-minor-block
-	 :help " `py-hide-minor-block'
-Hide minor-block at point."]
+	["Hide for-block" py-hide-for-block
+	 :help " `py-hide-for-block'
+Hide for-block at point."]
 
-	["Hide minor block" py-hide-minor-block
+	["Hide if-block" py-hide-if-block
+	 :help " `py-hide-if-block'
+Hide if-block at point."]
+
+	["Hide elif-block" py-hide-elif-block
+	 :help " `py-hide-elif-block'
+Hide elif-block at point."]
+
+	["Hide else-block" py-hide-else-block
+	 :help " `py-hide-else-block'
+Hide else-block at point."]
+
+	["Hide except-block" py-hide-except-block
+	 :help " `py-hide-except-block'
+Hide except-block at point."]
+
+	["Hide minor-block" py-hide-minor-block
 	 :help " `py-hide-minor-block'
 Hide minor-block at point."]
 
@@ -5396,103 +5434,15 @@ Hide partial-expression at point."]
 
 	["Hide section" py-hide-section
 	 :help " `py-hide-section'
-Hide section at point."]
-
-	["Hide statement" py-hide-statement
-	 :help " `py-hide-statement'
-Hide statement at point."]
-
-	["Hide top level" py-hide-top-level
-	 :help " `py-hide-top-level'
-Hide top-level at point."])
+Hide section at point."])
        ("Show"
-	["Show block" py-show-block
-	 :help " `py-show-block'
-Show block at point."]
+	["Show all" py-show-all
+	 :help " `py-show-all'
+Show all in buffer."]
 
-	["Show block or clause" py-show-block-or-clause
-	 :help " `py-show-block-or-clause'
-Show block-or-clause at point."]
-
-	["Show class" py-show-class
-	 :help " `py-show-class'
-Show class at point."]
-
-	["Show clause" py-show-clause
-	 :help " `py-show-clause'
-Show clause at point."]
-
-	["Show comment" py-show-comment
-	 :help " `py-show-comment'
-Show comment at point."]
-
-	["Show def" py-show-def
-	 :help " `py-show-def'
-Show def at point."]
-
-	["Show def or class" py-show-def-or-class
-	 :help " `py-show-def-or-class'
-Show def-or-class at point."]
-
-	["Show elif block" py-show-elif-block
-	 :help " `py-show-elif-block'
-Show elif-block at point."]
-
-	["Show else block" py-show-else-block
-	 :help " `py-show-else-block'
-Show else-block at point."]
-
-	["Show except block" py-show-except-block
-	 :help " `py-show-except-block'
-Show except-block at point."]
-
-	["Show expression" py-show-expression
-	 :help " `py-show-expression'
-Show expression at point."]
-
-	["Show for block" py-show-for-block
-	 :help " `py-show-for-block'
-Show for-block at point."]
-
-	["Show if block" py-show-if-block
-	 :help " `py-show-if-block'
-Show if-block at point."]
-
-	["Show indent" py-show-indent
-	 :help " `py-show-indent'
-Show indent at point."]
-
-	["Show line" py-show-line
-	 :help " `py-show-line'
-Show line at point."]
-
-	["Show minor block" py-show-minor-block
-	 :help " `py-show-minor-block'
-Show minor-block at point."]
-
-	["Show minor block" py-show-minor-block
-	 :help " `py-show-minor-block'
-Show minor-block at point."]
-
-	["Show paragraph" py-show-paragraph
-	 :help " `py-show-paragraph'
-Show paragraph at point."]
-
-	["Show partial expression" py-show-partial-expression
-	 :help " `py-show-partial-expression'
-Show partial-expression at point."]
-
-	["Show section" py-show-section
-	 :help " `py-show-section'
-Show section at point."]
-
-	["Show statement" py-show-statement
-	 :help " `py-show-statement'
-Show statement at point."]
-
-	["Show top level" py-show-top-level
-	 :help " `py-show-top-level'
-Show top-level at point."]))
+	["Show" py-show
+	 :help " `py-show'
+Show hidden code at point."]))
       ("Fast process"
        ["Execute block fast" py-execute-block-fast
 	:help " `py-execute-block-fast'
@@ -5909,8 +5859,7 @@ It will be lined up under the first character of
 
 my_list = \[
     1, 2, 3,
-    4, 5, 6,
-]
+    4, 5, 6,]
 
 Use `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-closing-list-dedents-bos]
@@ -6402,6 +6351,13 @@ See original source: http://pymacs.progiciels-bpi.caUse `M-x customize-variable'
 
 Default is nil. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-verbose-p]
+	 ;; ["No session mode "
+	 ;; 	  (setq py-no-session-p
+	 ;; 		(not py-no-session-p))
+	 ;; 	  :help "If shell should be in session-mode.
+
+	 ;; Default is nil. Use `M-x customize-variable' to set it permanently"
+	 ;; 	  :style toggle :selected py-no-session-p]
 
 	 ["Empty comment line separates paragraph "
 	  (setq py-empty-comment-line-separates-paragraph-p
@@ -11285,6 +11241,7 @@ according to ‘py-split-windows-on-execute-function’."
 (defun py--split-t-not-switch-wm (output-buffer number-of-windows exception-buffer)
   (unless (window-live-p output-buffer)
     (with-current-buffer (get-buffer exception-buffer)
+
       (when (< number-of-windows py-split-window-on-execute-threshold)
 	(unless
 	    (member (get-buffer-window output-buffer) (window-list))
@@ -11299,7 +11256,6 @@ according to ‘py-split-windows-on-execute-function’."
 Optional EXCEPTION-BUFFER SPLIT SWITCH
 Return nil."
   (let* ((exception-buffer  (or exception-buffer (other-buffer)))
-	 (output-buffer (get-buffer  (or output-buffer py-buffer-name)))
 	 (old-window-list (window-list))
 	 (number-of-windows (length old-window-list))
 	 (split (or split py-split-window-on-execute))
@@ -11426,13 +11382,6 @@ Receives a ‘buffer-name’ as argument"
 	  ((string-match "[Jj]ython" name)
 	   (or py-jython-command name))
 	  (t (or py-python-command name)))))
-
-;; (defun py--grab-prompt-ps1 (proc)
-;;   (py-send-string "import sys" proc nil t)
-;;   (py-send-string "sys.ps1" proc t t))
-
-(defun py--reuse-existing-shell (exception-buffer)
-  (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
 (defun py--determine-local-default ()
   (if (not (string= "" py-shell-local-path))
@@ -11569,13 +11518,12 @@ optional argument."
       (or temp-file-name file-name) encoding encoding file-name)
      proc)))
 
-(defun py--fetch-result (buffer cmd)
-  "CMD: the command might be echoed in output-buffer
+(defun py--fetch-result (buffer &optional cmd)
+  "CMD: some shells echo the command in output-buffer
 Delete it here"
-  (with-current-buffer buffer
-    ;; (when py-debug-p (switch-to-buffer buffer))
-    ;; (switch-to-buffer (current-buffer))
-    ;; (message "py--fetch-result: (current-buffer) %s" (current-buffer))
+  (if python-mode-v5-behavior-p
+      (with-current-buffer buffer
+	(string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
     (with-silent-modifications
       (goto-char (point-max))
       (let ((orig (point-marker)))
@@ -11588,19 +11536,19 @@ Delete it here"
 		  (or (and (re-search-backward py-fast-filter-re nil t 1)
 			   (progn
 			     (goto-char (match-end 0))
-			     (when (looking-at cmd)
+			     (when (and cmd (looking-at cmd))
 			       (delete-region (line-beginning-position) (line-end-position)))
 			     (prog1 (string-trim
 				     (buffer-substring-no-properties (point) end)
 				     "\n")
-			       (message "py--fetch-result: last-command %s" last-command)
+			       ;; (when py-verbose-p (message "py--fetch-result: last-command %s" last-command))
 			       ;; cleanup
 			       (and (or
 				     (eq last-command 'py-help-at-point)
 				     py-cleanup-p)
 				    (delete-region (point) end)))))
-		  (throw 'py--fetch-result-beg (message "py--fetch-result: %s" "-beg re-search-backward py-fast-filter-re failed"))))))
-	(goto-char orig))))))
+		      (throw 'py--fetch-result-beg (message "py--fetch-result: %s" "-beg re-search-backward py-fast-filter-re failed"))))))
+	  (goto-char orig))))))
 
 (defun py--postprocess (output-buffer origline &optional cmd filename)
   "Provide return values, check result for error, manage windows.
@@ -11627,7 +11575,6 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
 		(kill-new py-result))
 	      py-result)
 	  (message "py--postprocess: %s" "Don't see any result"))))))
-
 
 (defun py--execute-file-base (&optional proc filename cmd procbuf origline fast)
   "Send to Python interpreter process PROC.
@@ -11659,13 +11606,33 @@ Returns position where output starts."
   (if (and filename (not (buffer-modified-p)))
       (unwind-protect
 	  (py--execute-file-base proc filename nil procbuf origline fast))
-    (let* ((py-tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp.py")))
+    (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
       (with-temp-buffer
 	(insert strg)
-	(write-file py-tempfile))
+	(write-file tempfile))
       (unwind-protect
-	  (py--execute-file-base proc py-tempfile nil procbuf origline fast)
-	(and (file-readable-p py-tempfile) (delete-file py-tempfile py-debug-p))))))
+	  (py--execute-file-base proc tempfile nil procbuf origline fast)
+	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
+
+(defun py-execute-python-mode-v5 (start end exception-buffer origline filename)
+  "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
+  (interactive "r")
+  (let ((output-buffer "*Python Output*")
+	(py-split-window-on-execute 'just-two)
+	(pcmd (concat py-shell-name (if (string-equal py-which-bufname
+                                                      "Jython")
+                                        " -"
+                                      ;; " -c "
+                                      ""))))
+    (save-excursion
+      (shell-command-on-region start end
+                               pcmd output-buffer))
+    (if (not (get-buffer output-buffer))
+        (message "No output.")
+      (setq py-result (py--fetch-result (get-buffer  output-buffer)))
+      (if (string-match "Traceback" py-result)
+	  (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
+	py-result))))
 
 (defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end &optional fast)
   "Select the handler according to:
@@ -11677,7 +11644,7 @@ Optional FAST RETURN"
   (cond ;; (fast (py-fast-send-string strg proc buffer result))
    ;; enforce proceeding as python-mode.el v5
    (python-mode-v5-behavior-p
-    (py-execute-python-mode-v5 start end py-exception-buffer origline))
+    (py-execute-python-mode-v5 start end py-exception-buffer origline filename))
    (py-execute-no-temp-p
     (py--execute-ge24.3 start end execute-directory py-shell-name py-exception-buffer proc file origline))
    ((and filename wholebuf)
@@ -11685,68 +11652,97 @@ Optional FAST RETURN"
    (t
     ;; (message "(current-buffer) %s" (current-buffer))
     (py--execute-buffer-finally strg proc buffer origline filename fast)
-    (py--delete-temp-file py-tempfile))))
+    ;; (py--delete-temp-file tempfile)
+    )))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch)
   "Update optional variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
-  (let ((buffer (py--choose-buffer-name shell dedicated fast)))
-    (setq py-error nil)
-    (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
-    (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional buffer)))
-    (let* ((fast (or fast py-fast-process-p))
-	   (exception-buffer (current-buffer))
-	   (start (or start (and (use-region-p) (region-beginning)) (point-min)))
-	   (end (or end (and (use-region-p) (region-end)) (point-max)))
-	   (strg-raw (if py-if-name-main-permission-p
-			 (buffer-substring-no-properties start end)
-		       (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
-	   (strg (py--fix-start strg-raw))
-	   (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
-	   ;; (windows-config (window-configuration-to-register py-windows-config-register))
-	   (origline
-	    (save-restriction
-	      (widen)
-	      (py-count-lines (point-min) end)))
-	   ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
-	   (shell (or
-		   (and shell
-			;; shell might be specified in different ways
-			(or (and (stringp shell) shell)
-			    (ignore-errors (eval shell))
-			    (and (symbolp shell) (format "%s" shell))))
-		   ;; (save-excursion
-		   (py-choose-shell)
-		   ;;)
-		   ))
-	   (execute-directory
-	    (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
-		  ((and py-use-current-dir-when-execute-p (buffer-file-name))
-		   (file-name-directory (buffer-file-name)))
-		  ((and py-use-current-dir-when-execute-p
-			py-fileless-buffer-use-default-directory-p)
-		   (expand-file-name default-directory))
-		  ((stringp py-execute-directory)
-		   py-execute-directory)
-		  ((getenv "VIRTUAL_ENV"))
-		  (t (getenv "HOME"))))
-	   (filename (or (and filename (expand-file-name filename))
-			 (py--buffer-filename-remote-maybe)))
-	   (py-orig-buffer-or-file (or filename (current-buffer)))
-	   (proc (or proc (get-buffer-process buffer)
-		     (prog1
-			 (get-buffer-process (py-shell nil nil dedicated shell buffer fast exception-buffer split switch))
-		       (sit-for 0.1)))))
-      (setq py-buffer-name buffer)
-      (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end fast)
-      (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
-	(py--shell-manage-windows buffer exception-buffer split switch)))))
+  (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
+			     (py--choose-buffer-name shell dedicated fast)))
+  (setq py-error nil)
+  (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
+  (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
+  (let* ((orig (point))
+	 (fast (or fast py-fast-process-p))
+	 (exception-buffer (current-buffer))
+	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
+	 (end (or end (and (use-region-p) (region-end)) (point-max)))
+	 (strg-raw (if py-if-name-main-permission-p
+		       (buffer-substring-no-properties start end)
+		     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
+	 (strg (py--fix-start strg-raw))
+	 (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
+	 ;; (windows-config (window-configuration-to-register py-windows-config-register))
+	 (origline
+	  (format "%s" (save-restriction
+			 (widen)
+			 (py-count-lines (point-min) orig))))
+	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
+	 (shell (or
+		 (and shell
+		      ;; shell might be specified in different ways
+		      (or (and (stringp shell) shell)
+			  (ignore-errors (eval shell))
+			  (and (symbolp shell) (format "%s" shell))))
+		 ;; (save-excursion
+		 (py-choose-shell)
+		 ;;)
+		 ))
+	 (execute-directory
+	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
+		((and py-use-current-dir-when-execute-p (buffer-file-name))
+		 (file-name-directory (buffer-file-name)))
+		((and py-use-current-dir-when-execute-p
+		      py-fileless-buffer-use-default-directory-p)
+		 (expand-file-name default-directory))
+		((stringp py-execute-directory)
+		 py-execute-directory)
+		((getenv "VIRTUAL_ENV"))
+		(t (getenv "HOME"))))
+	 (filename (or (and filename (expand-file-name filename))
+		       (py--buffer-filename-remote-maybe)))
+	 (py-orig-buffer-or-file (or filename (current-buffer)))
+	 (proc (or proc (get-buffer-process py-output-buffer)
+		   (prog1
+		       (get-buffer-process (py-shell nil nil dedicated shell py-output-buffer fast exception-buffer split switch))
+		     (sit-for 0.1))))
+	 (split (if python-mode-v5-behavior-p 'just-two split)))
+    (py--execute-base-intern strg filename proc file wholebuf py-output-buffer origline execute-directory start end fast)
+    (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
+      (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))))
 
-(defun py--delete-temp-file (tempfile &optional tempbuf)
-  "After ‘py--execute-buffer-finally’ returned delete TEMPFILE &optional TEMPBUF."
-  (sit-for py--delete-temp-file-delay t)
-  (py--close-execution tempbuf tempfile))
+(defmacro py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf split)
+  "Used by python-components-extended-executes ."
+  (declare  (debug t))
+  (save-excursion
+    `(let* ((form ,(prin1-to-string form))
+           (origline (py-count-lines))
+	   (fast (or ,fast py-fast-process-p))
+	   (py-exception-buffer (current-buffer))
+           (beg (unless ,file
+                  (prog1
+                      (or ,beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
 
-(defun py--fetch-error (&optional origline filename)
+                          (funcall (intern-soft (concat "py-backward-" form)))
+                          (push-mark)))))
+           (end (unless ,file
+                  (or ,end (save-excursion (funcall (intern-soft (concat "py-forward-" form)))))))
+           filename)
+      ;; (setq py-buffer-name nil)
+      (if ,file
+          (progn
+            (setq filename (expand-file-name ,file))
+            (if (file-readable-p filename)
+                (py--execute-file-base nil filename nil nil origline)
+              (message "%s not readable. %s" ,file "Do you have write permissions?")))
+        (py--execute-base beg end ,shell filename ,proc ,file ,wholebuf ,fast ,dedicated ,split ,switch)))))
+
+;; (defun py--delete-temp-file (tempfile &optional tempbuf)
+;;   "After ‘py--execute-buffer-finally’ returned delete TEMPFILE &optional TEMPBUF."
+;;   (sit-for py--delete-temp-file-delay t)
+;;   (py--close-execution tempbuf tempfile))
+
+(defun py--fetch-error (output-buffer &optional origline filename)
   "Highlight exceptions found in BUF.
 
 If an exception occurred return error-string, otherwise return nil.
@@ -11754,24 +11750,28 @@ BUF must exist.
 
 Indicate LINE if code wasn't run from a file, thus remember ORIGLINE of source buffer"
   (let* (erg)
-    (when py-debug-p (switch-to-buffer (current-buffer)))
-    (if filename
-	(setq py-error (buffer-substring-no-properties (point) (point-max)))
+    (with-current-buffer output-buffer
+      (when py-debug-p (switch-to-buffer (current-buffer)))
+      ;; (setq py-error (buffer-substring-no-properties (point) (point-max)))
       (goto-char (point-min))
       (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
-	;; (while (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t))
-	(setq erg (copy-marker (point)))
-	;; Replace hints to temp-file by orig-file
-	(delete-region (progn (beginning-of-line)
-			      (save-match-data
-				(when (looking-at
-				       ;; all prompt-regexp known
-				       py-fast-filter-re)
-				  (goto-char (match-end 0))))
+	(when filename
+	  (replace-match filename nil nil nil 1))
+	(replace-match origline nil nil nil 2)
+	(setq py-error (buffer-substring-no-properties (point) (point-max))))
+      ;; (while (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t))
+      ;; (setq erg (copy-marker (point)))
+      ;; Replace hints to temp-file by orig-file
+      ;; (delete-region (progn (beginning-of-line)
+      ;; 			(save-match-data
+      ;; 			  (when (looking-at
+      ;; 				 ;; all prompt-regexp known
+      ;; 				 py-fast-filter-re)
+      ;; 			    (goto-char (match-end 0))))
 
-			      (skip-chars-forward " \t\r\n\f") (point)) (line-end-position))
-	(insert (concat "    File " (buffer-name py-exception-buffer) ", line "
-			(prin1-to-string origline))))
+      ;; 			(skip-chars-forward " \t\r\n\f") (line-end-position) (point)))
+      ;; (insert (concat "    File " (buffer-name py-exception-buffer) ", line "
+      ;; 		  (prin1-to-string origline))))
       (when erg
 	(goto-char erg)
 	(save-match-data
@@ -11802,7 +11802,7 @@ May we get rid of the temporary file?"
          (tempfile (or (py--buffer-filename-remote-maybe) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
          (proc (or proc (if py-dedicated-process-p
-                            (get-buffer-process (py-shell nil nil py-dedicated-process-p which-shell py-buffer-name))
+                            (get-buffer-process (py-shell nil nil t which-shell))
                           (or (get-buffer-process py-buffer-name)
                               (get-buffer-process (py-shell nil nil py-dedicated-process-p which-shell py-buffer-name))))))
          (procbuf (process-buffer proc))
@@ -11841,29 +11841,6 @@ May we get rid of the temporary file?"
     (set-buffer-modified-p 'nil)
     (kill-buffer filebuf)))
 
-(defun py-execute-python-mode-v5 (start end &optional exception-buffer origline)
-  "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
-  (interactive "r")
-  (let ((exception-buffer (or exception-buffer (current-buffer)))
-        (pcmd (concat py-shell-name (if (string-equal py-which-bufname
-                                                      "Jython")
-                                        " -"
-                                      ;; " -c "
-                                      ""))))
-    (save-excursion
-      (shell-command-on-region start end
-                               pcmd py-output-buffer))
-    (if (not (get-buffer py-output-buffer))
-        (message "No output.")
-      (setq py-error (py--postprocess-intern origline exception-buffer))
-      (let* ((line (cadr py-error)))
-        (if py-error
-            (when (and py-jump-on-exception line)
-              (pop-to-buffer exception-buffer))
-          (pop-to-buffer py-output-buffer)
-          (goto-char (point-max))
-          (copy-marker (point)))))))
-
 (defun py--insert-offset-lines (line)
   "Fix offline amount, make error point at the correct LINE."
   (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
@@ -11880,7 +11857,7 @@ May we get rid of the temporary file?"
             (setq erg (py--execute-file-base nil (expand-file-name filename) nil nil origline))
           (py--execute-file-base nil (expand-file-name filename)))
       (message "%s not readable. %s" filename "Do you have write permissions?"))
-    (py--shell-manage-windows py-buffer-name py-exception-buffer nil (or (interactive-p)))
+    (py--shell-manage-windows py-output-buffer py-exception-buffer nil (or (interactive-p)))
     erg))
 
 (defun py-execute-string (&optional strg shell dedicated switch fast)
@@ -12152,8 +12129,8 @@ With \\[univeral-argument] (programmatically, optional argument
 BOTTOM), jump to the bottom (innermost) exception in the exception
 stack."
   (interactive "P")
-  (let* ((proc (get-process "Python"))
-         (buffer (if proc "*Python*" py-output-buffer)))
+  (let* ((proc (get-process py-output-buffer))
+         (buffer py-output-buffer))
     (if bottom
         (py--find-next-exception 'eob buffer 're-search-backward "Bottom")
       (py--find-next-exception 'eol buffer 're-search-forward "Bottom"))))
@@ -12163,8 +12140,8 @@ stack."
 With \\[universal-argument] (programmatically, optional argument TOP)
 jump to the top (outermost) exception in the exception stack."
   (interactive "P")
-  (let* ((proc (get-process "Python"))
-         (buffer (if proc "*Python*" py-output-buffer)))
+  (let* ((proc (get-process py-output-buffer))
+         (buffer py-output-buffer))
     (if top
         (py--find-next-exception 'bob buffer 're-search-forward "Top")
       (py--find-next-exception 'bol buffer 're-search-backward "Top"))))
@@ -12172,7 +12149,7 @@ jump to the top (outermost) exception in the exception stack."
 ;;  obsolete by py--fetch-result
 ;;  followed by py--fetch-error
 ;;  still used by py--execute-ge24.3
-(defun py--postprocess-intern (&optional origline exception-buffer)
+(defun py--postprocess-intern (&optional origline exception-buffer output-buffer)
   "Highlight exceptions found in BUF.
 
 Optional ORIGLINE EXCEPTION-BUFFER
@@ -12180,57 +12157,58 @@ If an exception occurred return error-string, otherwise return nil.
 BUF must exist.
 
 Indicate LINE if code wasn't run from a file, thus remember line of source buffer"
-  (let* ((pmx (copy-marker (point-max)))
-	 estring ecode erg)
-    ;; (switch-to-buffer (current-buffer))
-    (goto-char pmx)
-    (sit-for 0.1 t)
-    (save-excursion
-      (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
-        (forward-line -1)
-        (end-of-line)
-        (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
-                  (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
-          (save-excursion
-            (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
-              (setq erg (copy-marker (point)))
-              (delete-region (progn (beginning-of-line)
-				    (save-match-data
-				      (when (looking-at
-					     ;; all prompt-regexp known
-					     py-fast-filter-re)
-					(goto-char (match-end 0))))
+  (save-excursion
+    (with-current-buffer output-buffer
+      (let* (estring ecode erg)
+	;; (switch-to-buffer (current-buffer))
+	(goto-char (point-max))
+	(sit-for 0.1)
+	(save-excursion
+	  (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
+	    (forward-line -1)
+	    (end-of-line)
+	    (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
+		      (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
+	      (save-excursion
+		(when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
+		  (setq erg (copy-marker (point)))
+		  (delete-region (progn (beginning-of-line)
+					(save-match-data
+					  (when (looking-at
+						 ;; all prompt-regexp known
+						 py-fast-filter-re)
+					    (goto-char (match-end 0))))
 
-				    (skip-chars-forward " \t\r\n\f")(point)) (line-end-position))
-	      (insert (concat "    File " (buffer-name exception-buffer) ", line "
-			      (prin1-to-string origline)))))
-	  ;; these are let-bound as ‘tempbuf’
-	  (and (boundp 'tempbuf)
-	       ;; (message "%s" tempbuf)
-	       (search-forward (buffer-name tempbuf) nil t)
-	       (delete-region (line-beginning-position) (1+ (line-end-position))))
-          ;; if no buffer-file exists, signal "Buffer", not "File(when
-          (when erg
-            (goto-char erg)
-            ;; (forward-char -1)
-            ;; (skip-chars-backward "^\t\r\n\f")
-            ;; (skip-chars-forward " \t")
-            (save-match-data
-              (and (not (py--buffer-filename-remote-maybe
-                         (or
-                          (get-buffer exception-buffer)
-                          (get-buffer (file-name-nondirectory exception-buffer)))))
-		   (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
-		   (looking-at "[ \t]*File")
-		   (replace-match " Buffer")))
-            (push origline py-error)
-            (push (buffer-name exception-buffer) py-error)
-            (forward-line 1)
-            (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
-              (setq estring (match-string-no-properties 1))
-              (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
-              (push 'py-error ecode))))))
-    py-error))
+					(skip-chars-forward " \t\r\n\f") (point) (line-end-position)))
+		  (insert (concat "    File " (buffer-name exception-buffer) ", line "
+				  (prin1-to-string origline)))))
+	      ;; these are let-bound as ‘tempbuf’
+	      (and (boundp 'tempbuf)
+		   ;; (message "%s" tempbuf)
+		   (search-forward (buffer-name tempbuf) nil t)
+		   (delete-region (line-beginning-position) (1+ (line-end-position))))
+	      ;; if no buffer-file exists, signal "Buffer", not "File(when
+	      (when erg
+		(goto-char erg)
+		;; (forward-char -1)
+		;; (skip-chars-backward "^\t\r\n\f")
+		;; (skip-chars-forward " \t")
+		(save-match-data
+		  (and (not (py--buffer-filename-remote-maybe
+			     (or
+			      (get-buffer exception-buffer)
+			      (get-buffer (file-name-nondirectory exception-buffer)))))
+		       (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
+		       (looking-at "[ \t]*File")
+		       (replace-match " Buffer")))
+		(push origline py-error)
+		(push (buffer-name exception-buffer) py-error)
+		(forward-line 1)
+		(when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
+		  (setq estring (match-string-no-properties 1))
+		  (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
+		  (push 'py-error ecode))))))
+	py-error))))
 
 (defun py--find-next-exception-prepare (direction start)
   "According to DIRECTION and START setup exception regexps.
@@ -13014,7 +12992,7 @@ Useful for newly defined symbol, not known to python yet."
           (when erg
             (set-buffer (get-buffer-create "*Python-Help*"))
             (erase-buffer)
-            (when (interactive-p) (switch-to-buffer (current-buffer)))
+            ;; (when (interactive-p) (switch-to-buffer (current-buffer)))
             (insert erg)))))))
 
 (defun py-info-current-defun (&optional include-type)
@@ -13075,8 +13053,6 @@ not inside a defun."
 			"sys.path.insert(0, '"
 			(file-name-directory origfile) "')\n")))
     (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-    ;; (with-temp-buffer-window "*Python-Help*"
-    ;; 			     (switch-to-buffer "*Python-Help*") 'help-window-setup (insert (py-send-string cmd nil t)))
     (ignore-errors (py-kill-buffer-unconditional buffer-name))
     (with-temp-buffer-window
      (set-buffer (get-buffer-create buffer-name))
@@ -13084,16 +13060,18 @@ not inside a defun."
      (setq inhibit-point-motion-hooks t)
        (erase-buffer)
        (when py-debug-p (message "%s" (current-buffer)))
-       (let ((erg (py-send-string cmd nil t nil nil nil t)))
-	 (when erg
-	   (insert erg))))))
+       (py-send-string cmd nil nil nil nil (current-buffer))
+       )))
+       ;; (let ((erg (py-send-string cmd nil t nil nil (current-buffer))))
+       ;; 	 (when erg
+       ;; 	   (insert erg))))))
 
 (defun py-help-at-point ()
   "Print help on symbol at point.
 
 If symbol is defined in current buffer, jump to it's definition"
   (interactive)
-   (let* ((py-cleanup-p t)
+  (let* ((py-cleanup-p t)
 	 (orig (point))
 	 (beg (and (use-region-p) (region-beginning)))
 	 (end (and (use-region-p) (region-end)))
@@ -13105,13 +13083,8 @@ If symbol is defined in current buffer, jump to it's definition"
     ;; avoid repeated call at identic pos
     (unless (eq orig (ignore-errors py-last-position))
       (setq py-last-position orig))
-    ;; (unless (looking-at symbol)
-    ;;   backward-word)
-    ;; (and (looking-at symbol)
-    ;; 	 (push-mark) (forward-word 1)
-    ;; 	 (shell-command-on-region (region-beginning) (region-end)
-    (unless (member (get-buffer-window "*Python-Help*") (window-list))
-      (window-configuration-to-register py-windows-config-register))
+    ;; (unless (member (get-buffer-window "*Python-Help*") (window-list))
+    ;;   (window-configuration-to-register py-windows-config-register))
     (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
     (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
 	(progn
@@ -13121,7 +13094,8 @@ If symbol is defined in current buffer, jump to it's definition"
 	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
 	  (not (string= "" symbol))
 	  (py--help-at-point-intern symbol orig)
-	(py-restore-window-configuration)))))
+	;; (py-restore-window-configuration)
+	))))
 
 ;;  Documentation functions
 
@@ -13550,9 +13524,9 @@ Imports done are displayed in message buffer."
           (orig (point))
           (erg (py-find-imports)))
       (goto-char orig)
-      (when (called-interactively-p 'any)
-        (switch-to-buffer (current-buffer))
-        (message "%s" erg))
+      ;; (when (called-interactively-p 'any)
+      ;;   (switch-to-buffer (current-buffer))
+      ;;   (message "%s" erg))
       erg)))
 
 ;;  Code-Checker
@@ -14006,7 +13980,6 @@ Keegan Carruthers-Smith"
 (defun py-display-state-of-variables ()
   "Read the state of ‘python-mode’ variables.
 
-Display the result in an org-mode buffer.
 Assumes vars are defined in current source buffer"
   (interactive)
   (save-restriction
@@ -14041,8 +14014,7 @@ Assumes vars are defined in current source buffer"
           (insert (concat "   " (cdr ele) "\n\n")))
         ;; (richten)
         (sit-for 0.01 t))
-      (sit-for 0.01 t)
-      (org-mode))))
+      (sit-for 0.01 t))))
 
 ;; common typo
 (defalias 'iypthon 'ipython)
@@ -14574,7 +14546,7 @@ of the first definition found."
         cur-indent def-pos
         (class-paren (first py-imenu-generic-parens))
         (def-paren (second py-imenu-generic-parens)))
-    (switch-to-buffer (current-buffer))
+    ;; (switch-to-buffer (current-buffer))
     (setq looking-p
           (re-search-forward py-imenu-generic-regexp (point-max) t))
     (while looking-p
@@ -22665,7 +22637,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
   (interactive)
   (let ((this-buffer
          (set-buffer (or (and buffer (get-buffer-create buffer))
-                         (get-buffer-create py-buffer-name)))))
+                         (get-buffer-create py-shell-name)))))
     (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
       (with-current-buffer this-buffer
         (erase-buffer))
@@ -22675,7 +22647,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
   (let ((inhibit-read-only t)
 	erg)
     (with-current-buffer output-buffer
-      (switch-to-buffer (current-buffer))
+      ;; (switch-to-buffer (current-buffer))
       ;; (erase-buffer)
       (process-send-string proc strg)
       (or (string-match "\n$" strg)
@@ -22875,22 +22847,6 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
             (set-buffer-modified-p modified))
         (error (concat "No " (format "%s" form) " at point"))))))
 
-(defun py-show-base (form &optional beg end)
-  "Remove invisibility of existing form at point."
-  (save-excursion
-    (hs-discard-overlays (line-beginning-position) (point))
-    (let* ((form (prin1-to-string form))
-           (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-                            (funcall (intern-soft (concat "py-backward-" form))))))
-           (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
-           (modified (buffer-modified-p))
-           (inhibit-read-only t))
-      (if (and beg end)
-          (progn
-            (hs-discard-overlays beg end)
-            (set-buffer-modified-p modified))
-        (error (concat "No " (format "%s" form) " at point"))))))
-
 (defun py-hide-show (&optional form beg end)
   "Toggle visibility of existing forms at point."
   (interactive)
@@ -22907,6 +22863,25 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
             (hs-make-overlay beg end 'code))
         (error (concat "No " (format "%s" form) " at point")))
       (set-buffer-modified-p modified))))
+
+(defun py-show ()
+  "Remove invisibility of existing form at point."
+  (interactive)
+  (with-silent-modifications
+    (save-excursion
+      (back-to-indentation)
+      (let ((end (next-overlay-change (point))))
+	(hs-discard-overlays (point) end)))))
+
+(defun py-show-all ()
+  "Remove invisibility of hidden forms in buffer."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let (end)
+      (while (and (not (eobp))  (setq end (next-overlay-change (point))))
+	(hs-discard-overlays (point) end)
+	(goto-char end)))))
 
 (defun py-hide-region (beg end)
   "Hide active region."
@@ -22927,210 +22902,105 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (py-hide-base 'block))
 
-(defun py-show-block ()
-  "Show block at point."
-  (interactive)
-  (py-show-base 'block))
-
 (defun py-hide-block-or-clause ()
   "Hide block-or-clause at point."
   (interactive)
   (py-hide-base 'block-or-clause))
-
-(defun py-show-block-or-clause ()
-  "Show block-or-clause at point."
-  (interactive)
-  (py-show-base 'block-or-clause))
 
 (defun py-hide-class ()
   "Hide class at point."
   (interactive)
   (py-hide-base 'class))
 
-(defun py-show-class ()
-  "Show class at point."
-  (interactive)
-  (py-show-base 'class))
-
 (defun py-hide-clause ()
   "Hide clause at point."
   (interactive)
   (py-hide-base 'clause))
-
-(defun py-show-clause ()
-  "Show clause at point."
-  (interactive)
-  (py-show-base 'clause))
 
 (defun py-hide-comment ()
   "Hide comment at point."
   (interactive)
   (py-hide-base 'comment))
 
-(defun py-show-comment ()
-  "Show comment at point."
-  (interactive)
-  (py-show-base 'comment))
-
 (defun py-hide-def ()
   "Hide def at point."
   (interactive)
   (py-hide-base 'def))
-
-(defun py-show-def ()
-  "Show def at point."
-  (interactive)
-  (py-show-base 'def))
 
 (defun py-hide-def-or-class ()
   "Hide def-or-class at point."
   (interactive)
   (py-hide-base 'def-or-class))
 
-(defun py-show-def-or-class ()
-  "Show def-or-class at point."
-  (interactive)
-  (py-show-base 'def-or-class))
-
 (defun py-hide-elif-block ()
   "Hide elif-block at point."
   (interactive)
   (py-hide-base 'elif-block))
-
-(defun py-show-elif-block ()
-  "Show elif-block at point."
-  (interactive)
-  (py-show-base 'elif-block))
 
 (defun py-hide-else-block ()
   "Hide else-block at point."
   (interactive)
   (py-hide-base 'else-block))
 
-(defun py-show-else-block ()
-  "Show else-block at point."
-  (interactive)
-  (py-show-base 'else-block))
-
 (defun py-hide-except-block ()
   "Hide except-block at point."
   (interactive)
   (py-hide-base 'except-block))
-
-(defun py-show-except-block ()
-  "Show except-block at point."
-  (interactive)
-  (py-show-base 'except-block))
 
 (defun py-hide-expression ()
   "Hide expression at point."
   (interactive)
   (py-hide-base 'expression))
 
-(defun py-show-expression ()
-  "Show expression at point."
-  (interactive)
-  (py-show-base 'expression))
-
 (defun py-hide-for-block ()
   "Hide for-block at point."
   (interactive)
   (py-hide-base 'for-block))
-
-(defun py-show-for-block ()
-  "Show for-block at point."
-  (interactive)
-  (py-show-base 'for-block))
 
 (defun py-hide-if-block ()
   "Hide if-block at point."
   (interactive)
   (py-hide-base 'if-block))
 
-(defun py-show-if-block ()
-  "Show if-block at point."
-  (interactive)
-  (py-show-base 'if-block))
-
 (defun py-hide-indent ()
   "Hide indent at point."
   (interactive)
   (py-hide-base 'indent))
-
-(defun py-show-indent ()
-  "Show indent at point."
-  (interactive)
-  (py-show-base 'indent))
 
 (defun py-hide-line ()
   "Hide line at point."
   (interactive)
   (py-hide-base 'line))
 
-(defun py-show-line ()
-  "Show line at point."
-  (interactive)
-  (py-show-base 'line))
-
 (defun py-hide-minor-block ()
   "Hide minor-block at point."
   (interactive)
   (py-hide-base 'minor-block))
-
-(defun py-show-minor-block ()
-  "Show minor-block at point."
-  (interactive)
-  (py-show-base 'minor-block))
 
 (defun py-hide-paragraph ()
   "Hide paragraph at point."
   (interactive)
   (py-hide-base 'paragraph))
 
-(defun py-show-paragraph ()
-  "Show paragraph at point."
-  (interactive)
-  (py-show-base 'paragraph))
-
 (defun py-hide-partial-expression ()
   "Hide partial-expression at point."
   (interactive)
   (py-hide-base 'partial-expression))
-
-(defun py-show-partial-expression ()
-  "Show partial-expression at point."
-  (interactive)
-  (py-show-base 'partial-expression))
 
 (defun py-hide-section ()
   "Hide section at point."
   (interactive)
   (py-hide-base 'section))
 
-(defun py-show-section ()
-  "Show section at point."
-  (interactive)
-  (py-show-base 'section))
-
 (defun py-hide-statement ()
   "Hide statement at point."
   (interactive)
   (py-hide-base 'statement))
 
-(defun py-show-statement ()
-  "Show statement at point."
-  (interactive)
-  (py-show-base 'statement))
-
 (defun py-hide-top-level ()
   "Hide top-level at point."
   (interactive)
   (py-hide-base 'top-level))
-
-(defun py-show-top-level ()
-  "Show top-level at point."
-  (interactive)
-  (py-show-base 'top-level))
 
 ;; python-components-hide-show.el ends here
 ;; python-components-fast-complete
@@ -23278,32 +23148,6 @@ Returns position reached if successful"
   (unless (bobp)
     (goto-char (point-min))))
 
-(defmacro py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf split)
-  "Used by python-components-extended-executes ."
-  (declare  (debug t))
-  (save-excursion
-    `(let* ((form ,(prin1-to-string form))
-           (origline (py-count-lines))
-	   (fast (or ,fast py-fast-process-p))
-	   (py-exception-buffer (current-buffer))
-           (beg (unless ,file
-                  (prog1
-                      (or ,beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-
-                          (funcall (intern-soft (concat "py-backward-" form)))
-                          (push-mark)))))
-           (end (unless ,file
-                  (or ,end (save-excursion (funcall (intern-soft (concat "py-forward-" form)))))))
-           filename)
-      ;; (setq py-buffer-name nil)
-      (if ,file
-          (progn
-            (setq filename (expand-file-name ,file))
-            (if (file-readable-p filename)
-                (py--execute-file-base nil filename nil nil origline)
-              (message "%s not readable. %s" ,file "Do you have write permissions?")))
-        (py--execute-base beg end ,shell filename ,proc ,file ,wholebuf ,fast ,dedicated ,split ,switch)))))
-
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
   (interactive)
@@ -23438,7 +23282,8 @@ process buffer for a list of commands.)"
 	       (if fast
 		   (process-buffer (apply 'start-process shell buffer-name shell args))
 		 (apply #'make-comint-in-buffer shell buffer-name
-			shell nil args)))))))
+			shell nil args))))))
+	 (py-output-buffer (if python-mode-v5-behavior-p py-output-buffer buffer)))
     (unless done
       (with-current-buffer buffer
 	(setq delay (py--which-delay-process-dependent buffer-name))
@@ -24917,16 +24762,16 @@ With optional Arg RESULT return output"
   (interactive "sPython command: ")
   (save-excursion
     (let* ((buffer (or buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell)))))
-	   (proc (or process (get-buffer-process buffer)))
+	   (proc (or process (get-buffer-process buffer) (py-shell nil nil nil nil (buffer-name buffer))))
 	   (orig (or orig (point))))
       (cond (no-output
 	     (py-send-string-no-output strg proc))
-	    ((and (string-match ".\n+." strg) (string-match "^[Ii]" buffer))  ;; multiline
+	    ((and (string-match ".\n+." strg) (string-match "^[Ii]" (buffer-name buffer)))  ;; multiline
 	     (let* ((temp-file-name (py-temp-file-name strg))
 		    (file-name (or (buffer-file-name) temp-file-name)))
 	       (py-send-file file-name proc)))
 	    (t (with-current-buffer buffer
-		 (setq orig (py--report-end-marker proc))
+		 ;; (setq orig (py--report-end-marker proc))
 		 ;; remove stuff after last prompt
 		 (with-silent-modifications
 		   (unless (ignore-errors (eq (field-beginning (point)) (field-end (point))))
@@ -26535,49 +26380,13 @@ Hide line at point."]
 Hide top-level at point."]
            )
           ("Show"
-	   ["Show region" py-show-region
-	    :help " `py-show-region'
-Un-hide active region."]
+	   ["Show" py-show
+	    :help " `py-show'
+Un-hide at point."]
 
-	   ["Show statement" py-show-statement
-	    :help " `py-show-statement'
-Show statement at point."]
-
-	   ["Show block" py-show-block
-	    :help " `py-show-block'
-Show block at point."]
-
-	   ["Show clause" py-show-clause
-	    :help " `py-show-clause'
-Show clause at point."]
-
-	   ["Show block or clause" py-show-block-or-clause
-	    :help " `py-show-block-or-clause'
-Show block-or-clause at point."]
-
-	   ["Show def" py-show-def
-	    :help " `py-show-def'
-Show def at point."]
-
-	   ["Show class" py-show-class
-	    :help " `py-show-class'
-Show class at point."]
-
-	   ["Show expression" py-show-expression
-	    :help " `py-show-expression'
-Show expression at point."]
-
-	   ["Show partial expression" py-show-partial-expression
-	    :help " `py-show-partial-expression'
-Show partial-expression at point."]
-
-	   ["Show line" py-show-line
-	    :help " `py-show-line'
-Show line at point."]
-
-	   ["Show top level" py-show-top-level
-	    :help " `py-show-top-level'
-Show top-level at point."]
+	   ["Show all" py-show-all
+	    :help " `py-show-all'
+Un-hide all in buffer."]
            ))
          ("Virtualenv"
           ["Virtualenv activate" virtualenv-activate
