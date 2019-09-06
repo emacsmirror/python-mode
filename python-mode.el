@@ -1080,21 +1080,6 @@ No semantic indent,  which diff to `py-indent-offset' indicates"
   :version "25.1"
   :type 'float)
 
-(defcustom py-shell-compilation-regexp-alist
-  `((,(rx line-start (1+ (any " \t")) "File \""
-          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
-          "\", line " (group (1+ digit)))
-     1 2)
-    (,(rx " in file " (group (1+ not-newline)) " on line "
-          (group (1+ digit)))
-     1 2)
-    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
-          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
-     1 2))
-  "`compilation-error-regexp-alist' for inferior Python."
-  :type '(alist string)
-  :group 'python-mode)
-
 (defvar py-shell--first-prompt-received-output-buffer nil)
 (defvar py-shell--first-prompt-received nil)
 
@@ -1110,8 +1095,6 @@ eventually provide a shell."
   :group 'python-mode)
 
 (defvar py-shell--parent-buffer nil)
-
-(defvar py-shell--font-lock-buffer nil)
 
 (defvar py-shell--package-depth 10)
 
@@ -1464,6 +1447,8 @@ If `py-keep-windows-configuration' is t, this will take precedence over setting 
   :type 'boolean
   :tag "py-switch-buffers-on-execute-p"
   :group 'python-mode)
+;; made buffer-local as pdb might need t in all circumstances
+(make-variable-buffer-local 'py-switch-buffers-on-execute-p)
 
 (defcustom py-split-window-on-execute 'just-two
   "When non-nil split windows.
@@ -1838,7 +1823,7 @@ As v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncode
 
 (defun py-toggle-python-mode-v5-behavior ()
   "Switch the values of ‘python-mode-v5-behavior-p’"
-  (interactive) 
+  (interactive)
   (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
   (when (interactive-p) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
 
@@ -2807,7 +2792,7 @@ for options to pass to the DOCNAME interpreter. \"
   (interactive \"P\")
   (let\* ((py-shell-name \"FULLNAME\"))
     (py-shell argprompt)
-    (when (called-interactively-p 'any) (switch-to-buffer (current-buffer))
+    (when (interactive-p) (switch-to-buffer (current-buffer))
           (goto-char (point-max)))))
 ")
 
@@ -3288,29 +3273,21 @@ to paths in Emacs."
   :tag "py-pdbtrack-minor-mode-string"
   :group 'python-mode)
 
-(defcustom py-pdbtrack-stacktrace-info-regexp
-  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression matching stacktrace information.
-Used to extract the current line and module being inspected."
-  :type 'string
-  :group 'python-mode
-  :safe 'stringp)
+;; (defcustom py-pdbtrack-stacktrace-info-regexp
+;;   "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+;;   "Regular expression matching stacktrace information.
+;; Used to extract the current line and module being inspected."
+;;   :type 'string
+;;   :group 'python-mode
+;;   :safe 'stringp)
 
-(defcustom py-pdbtrack-stacktrace-info-regexp
-  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression matching stacktrace information.
-Used to extract the current line and module being inspected."
-  :type 'string
-  :group 'python-mode
-  :safe 'stringp)
-
-(defvar py-pdbtrack-tracked-buffer nil
-  "Variable containing the value of the current tracked buffer.
-Never set this variable directly, use
-`py-pdbtrack-set-tracked-buffer' instead.")
-
-(defvar py-pdbtrack-buffers-to-kill nil
-  "List of buffers to be deleted after tracking finishes.")
+;; (defcustom py-pdbtrack-stacktrace-info-regexp
+;;   "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
+;;   "Regular expression matching stacktrace information.
+;; Used to extract the current line and module being inspected."
+;;   :type 'string
+;;   :group 'python-mode
+;;   :safe 'stringp)
 
 (defconst py-pdbtrack-stack-entry-regexp
    (concat ".*\\("py-shell-input-prompt-1-regexp">\\|"py-ipython-input-prompt-re">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
@@ -3330,76 +3307,7 @@ Never set this variable directly, use
 
 (defvar py-pdbtrack-is-tracking-p nil)
 
-(defcustom py-shell-completion-native-output-timeout 5.0
-  "Time in seconds to wait for completion output before giving up."
-  :version "25.1"
-  :type 'float)
-
-(defcustom py-shell-completion-native-try-output-timeout 1.0
-  "Time in seconds to wait for *trying* native completion output."
-  :version "25.1"
-  :type 'float)
-
-(defcustom py-shell-compilation-regexp-alist
-  `((,(rx line-start (1+ (any " \t")) "File \""
-          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
-          "\", line " (group (1+ digit)))
-     1 2)
-    (,(rx " in file " (group (1+ not-newline)) " on line "
-          (group (1+ digit)))
-     1 2)
-    (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
-          "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
-     1 2))
-  "`compilation-error-regexp-alist' for inferior Python."
-  :type '(alist string)
-  :group 'python-mode)
-
-(defcustom py-pdbtrack-stacktrace-info-regexp
-  "> \\([^\"(<]+\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>]+\\)()"
-  "Regular expression matching stacktrace information.
-Used to extract the current line and module being inspected."
-  :type 'string
-  :group 'python-mode
-  :safe 'stringp)
-
-(defvar py-pdbtrack-tracked-buffer nil
-  "Variable containing the value of the current tracked buffer.
-Never set this variable directly, use
-`py-pdbtrack-set-tracked-buffer' instead.")
-
-(defvar py-pdbtrack-buffers-to-kill nil
-  "List of buffers to be deleted after tracking finishes.")
-
-(defvar py-shell--first-prompt-received-output-buffer nil)
-(defvar py-shell--first-prompt-received nil)
-
-(defcustom py-shell-first-prompt-hook nil
-  "Hook run upon first (non-pdb) shell prompt detection.
-This is the place for shell setup functions that need to wait for
-output.  Since the first prompt is ensured, this helps the
-current process to not hang while waiting.  This is useful to
-safely attach setup code for long-running processes that
-eventually provide a shell."
-  :version "25.1"
-  :type 'hook
-  :group 'python-mode)
-
-(defvar py-shell--parent-buffer nil)
-
 (defvar py-shell--font-lock-buffer nil)
-
-(defvar py-shell--package-depth 10)
-
-;; (defcustom py-shell-completion-native-enable t
-;;   "Enable readline based native completion."
-;;   :version "25.1"
-;;   :type 'boolean)
-
-(defcustom py-shell-completion-native-output-timeout 5.0
-  "Time in seconds to wait for completion output before giving up."
-  :version "25.1"
-  :type 'float)
 
 (defcustom py-completion-setup-code
   "
@@ -3993,7 +3901,6 @@ Optional argument END specify end."
 (defun py--escape-open-paren-col1 (start end)
   "Start from position START until position END."
   (goto-char start)
-  ;; (switch-to-buffer (current-buffer))
   (while (re-search-forward "^(" end t 1)
     (insert "\\")
     (end-of-line)))
@@ -4001,12 +3908,13 @@ Optional argument END specify end."
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
 ;; Macros
-(defmacro empty-line-p ()
-  "Return t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
-  `(save-excursion
-     (progn
-       (beginning-of-line)
-       (looking-at "\\s-*$"))))
+(unless (functionp 'empty-line-p)
+  (defmacro empty-line-p ()
+    "Return t if cursor is at an line with nothing but whitespace-characters, nil otherwise."
+    `(save-excursion
+       (progn
+	 (beginning-of-line)
+	 (looking-at "\\s-*$")))))
 
 (defun py-toggle-closing-list-dedents-bos (&optional arg)
   "Switches boolean variable ‘py-closing-list-dedents-bos’.
@@ -11255,11 +11163,12 @@ according to ‘py-split-windows-on-execute-function’."
 
 Optional EXCEPTION-BUFFER SPLIT SWITCH
 Return nil."
-  (let* ((exception-buffer  (or exception-buffer (other-buffer)))
+  (let* ((exception-buffer (or exception-buffer (other-buffer)))
 	 (old-window-list (window-list))
 	 (number-of-windows (length old-window-list))
 	 (split (or split py-split-window-on-execute))
-	 (switch (or switch py-switch-buffers-on-execute-p)))
+	 (switch
+	  (or py-switch-buffers-on-execute-p switch py-pdbtrack-tracked-buffer)))
     ;; (output-buffer-displayed-p)
     (cond
      (py-keep-windows-configuration
@@ -11268,7 +11177,7 @@ Return nil."
       (goto-char (point-max)))
      ((and (eq split 'always)
 	   switch)
-      (if (member (get-buffer-window output-buffer)(window-list))
+      (if (member (get-buffer-window output-buffer) (window-list))
 	  ;; (delete-window (get-buffer-window output-buffer))
 	  (select-window (get-buffer-window output-buffer))
 	(py--manage-windows-split exception-buffer)
@@ -11280,7 +11189,7 @@ Return nil."
      ((and
        (eq split 'always)
        (not switch))
-      (if (member (get-buffer-window output-buffer)(window-list))
+      (if (member (get-buffer-window output-buffer) (window-list))
 	  (select-window (get-buffer-window output-buffer))
 	(py--manage-windows-split exception-buffer)
 	(display-buffer output-buffer)
@@ -11301,7 +11210,7 @@ Return nil."
       (switch-to-buffer exception-buffer)
       (delete-other-windows)
       (unless
-	  (member (get-buffer-window output-buffer)(window-list))
+	  (member (get-buffer-window output-buffer) (window-list))
 	(py--manage-windows-split exception-buffer))
       ;; Fixme: otherwise new window appears above
       (save-excursion
@@ -11313,23 +11222,23 @@ Return nil."
        split
        (not switch))
       ;; https://bugs.launchpad.net/python-mode/+bug/1478122
-      ;; > If the shell is visible in any of the windows it  should re-use that window
+      ;; > If the shell is visible in any of the windows it should re-use that window
       ;; > I did double check and py-keep-window-configuration is nil and split is t.
       (py--split-t-not-switch-wm output-buffer number-of-windows exception-buffer))
      ((and split switch)
       (unless
-	  (member (get-buffer-window output-buffer)(window-list))
+	  (member (get-buffer-window output-buffer) (window-list))
 	(py--manage-windows-split exception-buffer))
       ;; Fixme: otherwise new window appears above
       ;; (save-excursion
       ;; (other-window 1)
-	;; (pop-to-buffer output-buffer)
-	;; [Bug 1579309] python buffer window on top when using python3
-	(set-buffer output-buffer)
-	(switch-to-buffer output-buffer)
-	(goto-char (point-max))
-	;; (other-window 1)
-	)
+      ;; (pop-to-buffer output-buffer)
+      ;; [Bug 1579309] python buffer window on top when using python3
+      (set-buffer output-buffer)
+      (switch-to-buffer output-buffer)
+      (goto-char (point-max))
+      ;; (other-window 1)
+      )
      ((not switch)
       (let (pop-up-windows)
 	(py-restore-window-configuration))))))
@@ -11614,7 +11523,7 @@ Returns position where output starts."
 	  (py--execute-file-base proc tempfile nil procbuf origline fast)
 	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
 
-(defun py-execute-python-mode-v5 (start end exception-buffer origline filename)
+(defun py-execute-python-mode-v5 (start end origline filename)
   "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
   (interactive "r")
   (let ((output-buffer "*Python Output*")
@@ -11644,7 +11553,7 @@ Optional FAST RETURN"
   (cond ;; (fast (py-fast-send-string strg proc buffer result))
    ;; enforce proceeding as python-mode.el v5
    (python-mode-v5-behavior-p
-    (py-execute-python-mode-v5 start end py-exception-buffer origline filename))
+    (py-execute-python-mode-v5 start end origline filename))
    (py-execute-no-temp-p
     (py--execute-ge24.3 start end execute-directory py-shell-name py-exception-buffer proc file origline))
    ((and filename wholebuf)
@@ -12129,8 +12038,7 @@ With \\[univeral-argument] (programmatically, optional argument
 BOTTOM), jump to the bottom (innermost) exception in the exception
 stack."
   (interactive "P")
-  (let* ((proc (get-process py-output-buffer))
-         (buffer py-output-buffer))
+  (let* ((buffer py-output-buffer))
     (if bottom
         (py--find-next-exception 'eob buffer 're-search-backward "Bottom")
       (py--find-next-exception 'eol buffer 're-search-forward "Bottom"))))
@@ -12140,8 +12048,7 @@ stack."
 With \\[universal-argument] (programmatically, optional argument TOP)
 jump to the top (outermost) exception in the exception stack."
   (interactive "P")
-  (let* ((proc (get-process py-output-buffer))
-         (buffer py-output-buffer))
+  (let* ((buffer py-output-buffer))
     (if top
         (py--find-next-exception 'bob buffer 're-search-forward "Top")
       (py--find-next-exception 'bol buffer 're-search-backward "Top"))))
@@ -12177,9 +12084,9 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 					  (when (looking-at
 						 ;; all prompt-regexp known
 						 py-fast-filter-re)
-					    (goto-char (match-end 0))))
+					    (goto-char (match-end 0)))))
 
-					(skip-chars-forward " \t\r\n\f") (point) (line-end-position)))
+					(progn (skip-chars-forward " \t\r\n\f"   (line-end-position))(point)))
 		  (insert (concat "    File " (buffer-name exception-buffer) ", line "
 				  (prin1-to-string origline)))))
 	      ;; these are let-bound as ‘tempbuf’
@@ -13062,10 +12969,7 @@ not inside a defun."
        (when py-debug-p (message "%s" (current-buffer)))
        (py-send-string cmd nil nil nil nil (current-buffer))
        )))
-       ;; (let ((erg (py-send-string cmd nil t nil nil (current-buffer))))
-       ;; 	 (when erg
-       ;; 	   (insert erg))))))
-
+       
 (defun py-help-at-point ()
   "Print help on symbol at point.
 
@@ -23256,9 +23160,6 @@ process buffer for a list of commands.)"
       (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
     buffer))
 
-(defun py-determine-argsdoc (ele)
-  (py--provide-command-args erg py-fast-process-p))
-
 (defun py-load-named-shells ()
   (interactive)
   (dolist (ele py-known-shells)
@@ -24296,7 +24197,8 @@ Arg REGEXP, a symbol"
 		  (py--down-according-to-indent regexp nil 0))
 		 ;; look upward
 		 (t (py--go-to-keyword regexp))))
-	       (secondvalue (ignore-errors (nth 2 res))))
+	       (secondvalue (ignore-errors (nth 2 res)))
+	       erg)
 	       ;; (py-for-block-p (looking-at py-for-re))
 	  (setq indent (or (and res (car-safe res)) indent))
 	  (cond
@@ -24702,7 +24604,7 @@ Return the output."
      (with-current-buffer (process-buffer proc)
        (comint-interrupt-subjob)))))
 
-(defun py-send-string (strg &optional process result no-output orig buffer delete)
+(defun py-send-string (strg &optional process result no-output orig buffer)
   "Evaluate STRG in Python PROCESS.
 
 With optional Arg RESULT return output"
@@ -27642,7 +27544,6 @@ may want to re-add custom functions to it using the
     (define-key py-shell-mode-map "\t"
       'py-indent-or-complete)))
   (make-local-variable 'py-pdbtrack-buffers-to-kill)
-  (make-local-variable 'py-pdbtrack-tracked-buffer)
   (make-local-variable 'py-shell-fast-last-output)
   (set (make-local-variable 'py-shell--block-prompt) nil)
   (set (make-local-variable 'py-shell--prompt-calculated-output-regexp) nil)
