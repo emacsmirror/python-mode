@@ -21619,7 +21619,7 @@ Fill according to `py-docstring-style' "
 				   (or
 				    (and in-string
 					 (progn
-					   (goto-char beg)
+					   (goto-char (nth 8 pps))
 					   (setq tqs (looking-at "\"\"\"\\|'''"))
 					   (forward-sexp) (point)))
 				    (progn
