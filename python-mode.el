@@ -9042,10 +9042,15 @@ Returns final position when called from inside section, nil otherwise"
 	(last (point))
 	(orig (point))
 	(indent (current-indentation)))
-    (while (and (not (eobp)) (not done) (progn (forward-line 1) (back-to-indentation) (or (and (<= indent (current-indentation))(< last (point))(setq last (point)))(setq done t)))))
-    (when last (goto-char last))
-    (end-of-line)
-    (skip-chars-backward " \t\r\n\f")
+    (while (and (not (eobp)) (not done) (progn (forward-line 1) (back-to-indentation) (or (empty-line-p) (and (<= indent (current-indentation))(< last (point))(setq last (point)))(setq done t))))
+      (and (< indent (current-indentation))(setq done t)))
+    (if (and last (< orig last))
+	(progn (goto-char last)
+	       (end-of-line)
+	       (skip-chars-backward " \t\r\n\f"))
+      (skip-chars-forward " \t\r\n\f")
+      (end-of-line)
+      (skip-chars-backward " \t\r\n\f"))
     (and (< orig (point))(point))))
 
 (defun py-forward-indent-bol ()
@@ -22851,6 +22856,19 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
   "Hide top-level at point."
   (interactive)
   (py-hide-base 'top-level))
+
+(defun py-dynamically-hide-indent ()
+  (interactive)
+  (py-show)
+  (py-hide-indent))
+
+(defun py-dynamically-hide-further-indent (&optional arg) 
+  (interactive "P")
+  (if (eq 4  (prefix-numeric-value arg))
+      (py-show)
+  (py-show)
+  (py-forward-indent)
+  (py-hide-indent)))
 
 ;; python-components-hide-show.el ends here
 ;; python-components-fast-complete
