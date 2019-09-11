@@ -16885,6 +16885,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
         (wholebuf t)
+	(shell (py-choose-shell))
         filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
