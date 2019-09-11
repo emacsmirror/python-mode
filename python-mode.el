@@ -2111,7 +2111,7 @@ Default is nil"
       "Used if ‘python-mode-v5-behavior-p’ is t.
 
 Otherwise output buffer is created dynamically according to Python version and kind of process-handling")
-(make-variable-buffer-local 'py-output-buffer)
+;; (make-variable-buffer-local 'py-output-buffer)
 
 (defcustom py-force-default-output-buffer-p nil
   "Enforce sending output to the default output ‘buffer-name’.
@@ -23151,7 +23151,7 @@ process buffer for a list of commands.)"
 		   (process-buffer (apply 'start-process shell buffer-name shell args))
 		 (apply #'make-comint-in-buffer shell buffer-name
 			shell nil args))))))
-	 (py-output-buffer (if python-mode-v5-behavior-p py-output-buffer buffer)))
+	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer))))
     (unless done
       (with-current-buffer buffer
 	(setq delay (py--which-delay-process-dependent buffer-name))
@@ -23173,9 +23173,9 @@ process buffer for a list of commands.)"
 	  ;; (py--update-lighter shell)
 	  )))
     (when (or interactivep
-	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-      (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
-    buffer))
+	      (or switch dedicated py-switch-buffers-on-execute-p py-split-window-on-execute))
+      (py--shell-manage-windows buffer exception-buffer split (or interactivep switch dedicated))
+    buffer)))
 
 (defun py-load-named-shells ()
   (interactive)
@@ -23193,7 +23193,7 @@ Calls ‘py-shell’
   (when (functionp (car (read-from-string (car-safe py-known-shells))))
     (when py-verbose-p (message "py-load-named-shells: %s" "installed named-shells"))))
 
-(py-load-named-shells)
+;; (py-load-named-shells)
 
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the Python process.
@@ -25236,6 +25236,64 @@ Does not delete the prompt."
 	(delete-region pmark (point))))
     ;; Output message and put back prompt
     (comint-output-filter proc replacement)))
+
+;; python-components-named-shells
+
+(defun ipython (&optional argprompt args buffer fast exception-buffer split)
+  "Start an IPython interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an IPython2.7 interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun ipython3 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an IPython3 interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun jython (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Jython interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun python (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Python interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun python2 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Python2 interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "python2" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun python3 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Python3 interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun pypy (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Pypy interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; python-components-shell-menu
 
