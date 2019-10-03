@@ -11638,7 +11638,7 @@ Optional FAST RETURN"
   (save-excursion
     `(let* ((form ,(prin1-to-string form))
            (origline (py-count-lines))
-	   (fast (or fast py-fast-process-p))
+	   (fast (or ,fast py-fast-process-p))
 	   (py-exception-buffer (current-buffer))
            (beg (unless ,file
                   (prog1
@@ -16447,11 +16447,10 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (let (wholebuf)
     (py--execute-prepare block 'ipython3 t 'switch nil nil nil fast proc wholebuf split)))
 
-(defun py-execute-block-jython (&optional dedicated fast split switch
-					  proc)   
+(defun py-execute-block-jython (&optional dedicated fast split switch proc)
   "Send block at point to Jython interpreter."
   (interactive)
-  (let (wholebuf fast)
+  (let (wholebuf)
     (py--execute-prepare block 'jython dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-jython-switch (&optional dedicated fast split proc)
