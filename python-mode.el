@@ -6404,6 +6404,7 @@ Find source of definition of SYMBOL."])))
 
 ;; python-components-extra
 
+;; Stuff merged/adapted from python.el
 (defun py-info-encoding ()
   "Return encoding for file.
 Try `py-info-encoding-from-cookie', if none is found then
@@ -6938,9 +6939,9 @@ goes wrong and syntax highlighting in the shell gets messed up."
 (defun py-font-lock-post-command-hook ()
   "Fontifies current line in shell buffer."
   (let ((prompt-end
-	 (or (cdr (python-util-comint-last-prompt))
+	 (or (cdr (py-util-comint-last-prompt))
 	     (progn (sit-for 0.1)
-		    (cdr (python-util-comint-last-prompt))))))
+		    (cdr (py-util-comint-last-prompt))))))
     (when (and prompt-end (> (point) prompt-end)
                (process-live-p (get-buffer-process (current-buffer))))
       (let* ((input (buffer-substring-no-properties
@@ -7080,10 +7081,10 @@ Default is t")
         (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
         ;; (define-key map [(control y)] 'py-electric-yank)
         ;; moving point
-        (define-key map [(control c)(control p)] 'py-backward-statement)
-        (define-key map [(control c)(control n)] 'py-forward-statement)
-        (define-key map [(control c)(control u)] 'py-backward-block)
-        (define-key map [(control c)(control q)] 'py-forward-block)
+        (define-key map [(control c) (control p)] 'py-backward-statement)
+        (define-key map [(control c) (control n)] 'py-forward-statement)
+        (define-key map [(control c) (control u)] 'py-backward-block)
+        (define-key map [(control c) (control q)] 'py-forward-block)
         (define-key map [(control meta a)] 'py-backward-def-or-class)
         (define-key map [(control meta e)] 'py-forward-def-or-class)
 
@@ -7096,37 +7097,37 @@ Default is t")
         (define-key map [(super backspace)] 'py-dedent)
         ;; (define-key map [(control return)] 'py-newline-and-dedent)
         ;; indentation level modifiers
-        (define-key map [(control c)(control l)] 'py-shift-left)
-        (define-key map [(control c)(control r)] 'py-shift-right)
-        (define-key map [(control c)(<)] 'py-shift-left)
-        (define-key map [(control c)(>)] 'py-shift-right)
-        (define-key map [(control c)(tab)] 'py-indent-region)
-        (define-key map [(control c)(:)] 'py-guess-indent-offset)
+        (define-key map [(control c) (control l)] 'py-shift-left)
+        (define-key map [(control c) (control r)] 'py-shift-right)
+        (define-key map [(control c) (<)] 'py-shift-left)
+        (define-key map [(control c) (>)] 'py-shift-right)
+        (define-key map [(control c) (tab)] 'py-indent-region)
+        (define-key map [(control c) (:)] 'py-guess-indent-offset)
         ;; subprocess commands
-        (define-key map [(control c)(control c)] 'py-execute-buffer)
-        (define-key map [(control c)(control m)] 'py-execute-import-or-reload)
-        (define-key map [(control c)(control s)] 'py-execute-string)
-        (define-key map [(control c)(|)] 'py-execute-region)
+        (define-key map [(control c) (control c)] 'py-execute-buffer)
+        (define-key map [(control c) (control m)] 'py-execute-import-or-reload)
+        (define-key map [(control c) (control s)] 'py-execute-string)
+        (define-key map [(control c) (|)] 'py-execute-region)
         (define-key map [(control meta x)] 'py-execute-def-or-class)
-        (define-key map [(control c)(!)] 'py-shell)
-        (define-key map [(control c)(control t)] 'py-toggle-shell)
+        (define-key map [(control c) (!)] 'py-shell)
+        (define-key map [(control c) (control t)] 'py-toggle-shell)
         (define-key map [(control meta h)] 'py-mark-def-or-class)
-        (define-key map [(control c)(control k)] 'py-mark-block-or-clause)
-        (define-key map [(control c)(.)] 'py-expression)
+        (define-key map [(control c) (control k)] 'py-mark-block-or-clause)
+        (define-key map [(control c) (.)] 'py-expression)
         ;; Miscellaneous
         ;; (define-key map [(super q)] 'py-copy-statement)
-        (define-key map [(control c)(control d)] 'py-pdbtrack-toggle-stack-tracking)
-        (define-key map [(control c)(control f)] 'py-sort-imports)
-        (define-key map [(control c)(\#)] 'py-comment-region)
-        (define-key map [(control c)(\?)] 'py-describe-mode)
-        (define-key map [(control c)(control e)] 'py-help-at-point)
-        (define-key map [(control c)(-)] 'py-up-exception)
-        (define-key map [(control c)(=)] 'py-down-exception)
+        (define-key map [(control c) (control d)] 'py-pdbtrack-toggle-stack-tracking)
+        (define-key map [(control c) (control f)] 'py-sort-imports)
+        (define-key map [(control c) (\#)] 'py-comment-region)
+        (define-key map [(control c) (\?)] 'py-describe-mode)
+        (define-key map [(control c) (control e)] 'py-help-at-point)
+        (define-key map [(control c) (-)] 'py-up-exception)
+        (define-key map [(control c) (=)] 'py-down-exception)
         (define-key map [(control x) (n) (d)] 'py-narrow-to-defun)
         ;; information
-        (define-key map [(control c)(control b)] 'py-submit-bug-report)
-        (define-key map [(control c)(control v)] 'py-version)
-        (define-key map [(control c)(control w)] 'py-pychecker-run)
+        (define-key map [(control c) (control b)] 'py-submit-bug-report)
+        (define-key map [(control c) (control v)] 'py-version)
+        (define-key map [(control c) (control w)] 'py-pychecker-run)
         ;; (define-key map (kbd "TAB") 'py-indent-line)
         (define-key map (kbd "TAB") 'py-indent-or-complete)
 	;; (if py-complete-function
@@ -8476,7 +8477,7 @@ Returns the string inserted."
 	(switch-to-buffer (current-buffer))
 	(insert docstring)
 	(python-mode)
-	(local-set-key [(control c)(control c)] 'py--write-back-docstring)
+	(when (eq this-command 'py-edit-docstring)(local-set-key [(control c)(control c)] 'py--write-back-docstring))
 	(goto-char relpos)
 	(message "%s" "Type C-c C-c writes contents back")))))
 
@@ -11572,8 +11573,6 @@ Optional FAST RETURN"
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch)
   "Update optional variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
-  (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
-			     (py--choose-buffer-name shell dedicated fast)))
   (setq py-error nil)
   (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
   (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
@@ -11603,6 +11602,9 @@ Optional FAST RETURN"
 		 (py-choose-shell)
 		 ;;)
 		 ))
+	 (shell (or shell (py-choose-shell)))
+	 (buffer-name
+	      (py--choose-buffer-name shell dedicated fast))
 	 (execute-directory
 	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
 		((and py-use-current-dir-when-execute-p (buffer-file-name))
@@ -11617,11 +11619,15 @@ Optional FAST RETURN"
 	 (filename (or (and filename (expand-file-name filename))
 		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
-	 (proc (or proc (get-buffer-process py-output-buffer)
+	 (proc (get-buffer-process buffer-name))
+
+	 (proc (or proc (get-buffer-process buffer-name)
 		   (prog1
-		       (get-buffer-process (py-shell nil nil dedicated shell py-output-buffer fast exception-buffer split switch))
+		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
 		     (sit-for 0.1))))
-	 (split (if python-mode-v5-behavior-p 'just-two split)))
+	 (split (if python-mode-v5-behavior-p 'just-two split))
+	 (py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
+			       (py--choose-buffer-name shell dedicated fast))))
     (py--execute-base-intern strg filename proc file wholebuf py-output-buffer origline execute-directory start end fast)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
       (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))))
@@ -15016,22 +15022,21 @@ When `delete-active-region' and (use-region-p), delete region "
          (eq (current-column)(current-indentation))
          (point))))
 
-(defun py--beginning-of-indent-p (&optional pps)
+(defun py--beginning-of-indent-p ()
   "Return position, if cursor is at the beginning of a ‘indent’, nil otherwise."
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and ;; (not (or (nth 8 pps)(nth 1 pps)))
-         (looking-at py-indent-re)
-         (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column)(current-indentation))
-         (point))))
+  (and ;; (not (or (nth 8 pps)(nth 1 pps)))
+   (looking-at py-indent-re)
+   (looking-back "[^ \t]*" (line-beginning-position))
+   (eq (current-column) (current-indentation))
+   (point)))
 
 (defun py--beginning-of-minor-block-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘minor-block’, nil otherwise."
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (not (or (nth 8 pps)(nth 1 pps)))
+    (and (not (or (nth 8 pps) (nth 1 pps)))
          (looking-at py-minor-block-re)
          (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column)(current-indentation))
+         (eq (current-column) (current-indentation))
          (point))))
 
 (defun py--beginning-of-statement-p (&optional pps)
@@ -16871,17 +16876,18 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (py--execute-prepare block-or-clause 'python3 t 'switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-buffer (&optional shell dedicated fast split switch proc)
-  "Send buffer at point to  interpreter."
+  "Send buffer at point to interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
         (wholebuf t)
-	(shell (py-choose-shell))
+	(shell (or shell (py-choose-shell)))
         filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
 		       (find-file-noselect filename)))
       (set-buffer buffer))
+    (unless (and (file-readable-p (buffer-file-name)) (not (buffer-modified-p))) (write-file (buffer-file-name)))
     (py--execute-prepare buffer shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-switch (&optional shell dedicated fast split proc)
@@ -23118,12 +23124,6 @@ process buffer for a list of commands.)"
 	 (buffer-name
 	  (or buffer
 	      (py--choose-buffer-name shell dedicated fast)))
-	 ;; (executable (cond
-	 ;; 	      (shell)
-	 ;; 	      (py-shell-name)
-	 ;; 	      (buffer
-	 ;; 	       (py--report-executable buffer))))
-	 ;; (avoid-delay)
 	 (proc (get-buffer-process buffer-name))
 	 (done nil)
 	 (delay nil)
@@ -23142,7 +23142,8 @@ process buffer for a list of commands.)"
 		   (process-buffer (apply 'start-process shell buffer-name shell args))
 		 (apply #'make-comint-in-buffer shell buffer-name
 			shell nil args))))))
-	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer))))
+	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer)))
+	 erg)
     (unless done
       (with-current-buffer buffer
 	(setq delay (py--which-delay-process-dependent buffer-name))
@@ -23478,7 +23479,6 @@ When interactively called, copy and message it"
   (ignore-errors (with-current-buffer buffer
     (let (kill-buffer-query-functions set-buffer-modified-p)
       (ignore-errors (kill-process (get-buffer-process buffer)))
-      (set-buffer-modified-p 'nil)
       (ignore-errors (kill-buffer buffer))))))
 
 (defun py--line-backward-maybe ()
@@ -27486,7 +27486,8 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
   (set (make-local-variable 'indent-region-function) 'py-indent-region)
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
-  (set (make-local-variable 'hs-hide-comments-when-hiding-all) 'py-hide-comments-when-hiding-all)
+  ;; introduced to silence compiler warning, no real setting
+  ;; (set (make-local-variable 'hs-hide-comments-when-hiding-all) 'py-hide-comments-when-hiding-all)
   (set (make-local-variable 'outline-heading-end-regexp) ":[^\n]*\n")
   (set (make-local-variable 'open-paren-in-column-0-is-defun-start) nil)
   (set (make-local-variable 'add-log-current-defun-function) 'py-current-defun)
