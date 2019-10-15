@@ -11503,8 +11503,8 @@ Returns position where output starts."
 	    (setq py-error (prin1-to-string py-error))
 	  erg)))))
 
-(defun py--execute-buffer-finally (strg proc procbuf origline filename fast)
-  (if (and filename (not (buffer-modified-p)))
+(defun py--execute-buffer-finally (strg proc procbuf origline filename fast wholebuf)
+  (if (and filename wholebuf (not (buffer-modified-p)))
       (unwind-protect
 	  (py--execute-file-base proc filename nil procbuf origline fast))
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
@@ -11530,7 +11530,7 @@ Returns position where output starts."
                                pcmd output-buffer))
     (if (not (get-buffer output-buffer))
         (message "No output.")
-      (setq py-result (py--fetch-result (get-buffer  output-buffer)))
+      (setq py-result (py--fetch-result (get-buffer  output-buffer) nil))
       (if (string-match "Traceback" py-result)
 	  (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
 	py-result))))
@@ -11552,7 +11552,7 @@ Optional FAST RETURN"
     (py--execute-file-base proc filename nil buffer origline fast))
    (t
     ;; (message "(current-buffer) %s" (current-buffer))
-    (py--execute-buffer-finally strg proc buffer origline filename fast)
+    (py--execute-buffer-finally strg proc buffer origline filename fast wholebuf)
     ;; (py--delete-temp-file tempfile)
     )))
 
@@ -11622,8 +11622,10 @@ Optional FAST RETURN"
   (declare  (debug t))
   (save-excursion
     `(let* ((form ,(prin1-to-string form))
-           (origline (py-count-lines))
-	   (fast (or ,fast py-fast-process-p))
+           ;; (origline (py-count-lines))
+	   (fast 
+	    (or fast py-fast-process-p)
+	    )
 	   (py-exception-buffer (current-buffer))
            (beg (unless ,file
                   (prog1
@@ -20531,6 +20533,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send statement at point to interpreter."
   (interactive)
   (let (wholebuf)
+    ;; (macroexpand
     (py--execute-prepare statement shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-switch (&optional shell dedicated fast split proc)
@@ -22483,6 +22486,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 
 (defun py-fast-send-string (strg proc output-buffer &optional result no-output)
   (let ((inhibit-read-only t)
+	(limit (marker-position (process-mark proc)))
 	erg)
     (with-current-buffer output-buffer
       ;; (switch-to-buffer (current-buffer))
@@ -22494,12 +22498,12 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 	     (erase-buffer))
 	    (result
 	     (if
-		 (setq erg (py--fetch-result output-buffer strg))
+		 (setq erg (py--fetch-result output-buffer limit strg))
 		 (setq py-result (py--filter-result erg))
 	       (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer proc))(sit-for 1 t)))
-	       (unless (setq erg (py--fetch-result output-buffer proc))
+	       (unless (setq erg (py--fetch-result output-buffer limit))
 		 (setq py-result nil)
-		 (error "py-fast-send-string: py--fetch-result output-buffer proc: no result")))))
+		 (error "py-fast-send-string: py--fetch-result: no result")))))
       py-result)))
 
 (defun py--send-to-fast-process (strg proc output-buffer result)
@@ -24613,7 +24617,8 @@ With optional Arg RESULT return output"
   (save-excursion
     (let* ((buffer (or buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell)))))
 	   (proc (or process (get-buffer-process buffer) (py-shell nil nil nil nil (buffer-name buffer))))
-	   (orig (or orig (point))))
+	   (orig (or orig (point)))
+	   (limit (marker-position (process-mark proc))))
       (cond (no-output
 	     (py-send-string-no-output strg proc))
 	    ((and (string-match ".\n+." strg) (string-match "^[Ii]" (buffer-name buffer)))  ;; multiline
@@ -24633,7 +24638,7 @@ With optional Arg RESULT return output"
 		 (sit-for py-python-send-delay)
 		 (cond (result
 			(setq py-result
-			      (py--fetch-result buffer strg)))
+			      (py--fetch-result buffer limit strg)))
 		       (no-output
 			(and orig (py--cleanup-shell orig buffer))))))))))
 
