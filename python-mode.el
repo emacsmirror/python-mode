@@ -2875,7 +2875,7 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
 
 See ‘py-no-outdent-re-raw’ for better readable content")
 
-(defconst py-assignment-re "\\_<\\w+\\_>[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\).*"
+(defconst py-assignment-re "\\_<\\w+\\_>[[:alnum:]:, \t]*[ \t]*\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\).*"
   "If looking at the beginning of an assignment.")
 
 ;; 'name':
@@ -8476,6 +8476,12 @@ arg MODE: which buffer-mode used in edit-buffer"
   (interactive "*")
   (py-edit--intern "Edit docstring" 'python-mode))
 
+(defun py-prettyprint-assignment ()
+  "Prettyprint assignment in ‘python-mode’."
+  (interactive "*")
+  (let* ((beg (py-beginning-of-assignment)))
+    (py-edit--intern "Prettyprint assignment" 'python-mode)))
+
 ;; python-components-backward-forms
 
 (defun py-backward-region ()
@@ -9741,6 +9747,25 @@ Return position if successful"
 ;; (defun py-forward-paragraph ()
 ;;   (interactive)
 ;;   (py--end-of-paragraph 'py-paragraph-re))
+
+(defun py-backward-assignment()
+  "Go to beginning of assigment if inside.
+
+Return position of successful, nil of not started from inside
+When called at beginning non-assignment, check next form upwards."
+  (interactive)
+  (let (last
+	(erg
+	 (or (py--beginning-of-assignment-p)
+	     (progn
+	       (while (and (setq last (py-backward-statement))
+			   (not (looking-at py-assignment-re))
+			   ;; (not (bolp))
+			   ))
+	       (and (looking-at py-assignment-re) last)))))
+    (when (and py-verbose-p (interactive-p))
+      (message "%s" erg))
+    erg))
 
 ;; python-components-kill-forms
 
@@ -23102,7 +23127,7 @@ Don't save anything for STR matching `py-history-filter-regexp'."
 
 (defun py-shell (&optional argprompt args dedicated shell buffer fast exception-buffer split switch)
   "Connect process to BUFFER.
-
+ 
 Start an interpreter according to ‘py-shell-name’ or SHELL.
 
 Optional ARGPROMPT: with \\[universal-argument] start in a new
