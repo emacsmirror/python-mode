@@ -7649,6 +7649,13 @@ See bug report at launchpad, lp:940812"
          (sheb (concat "#! " erg)))
     (insert sheb)))
 
+(defun py--beginning-of-expression-p (&optional pps)
+  "Return position, if cursor is at the beginning of a ‘expression’, nil otherwise."
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (and (not (or (nth 8 pps)(nth 1 pps)))
+         (looking-at (concat "\\b" py-expression-re))
+         (point))))
+
 (defun py--top-level-form-p ()
   "Return non-nil, if line start with a top level definition.
 
@@ -14887,14 +14894,6 @@ When `delete-active-region' and (use-region-p), delete region "
          (looking-at py-paragraph-re)
          (point))))
 
-(defun py--beginning-of-expression-p (&optional pps)
-  "Return position, if cursor is at the beginning of a ‘expression’, nil otherwise."
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (not (or (nth 8 pps)(nth 1 pps)))
-         (looking-at py-expression-re)
-	 (not (save-excursion (< 0 (abs (skip-chars-backward py-expression-skip-chars)))))
-         (point))))
-
 (defun py--beginning-of-partial-expression-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘partial-expression’, nil otherwise."
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
@@ -14914,6 +14913,15 @@ When `delete-active-region' and (use-region-p), delete region "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-top-level-re)
+         (point))))
+
+(defun py--beginning-of-assignment-p (&optional pps)
+  "Return position, if cursor is at the beginning of a ‘assignment’, nil otherwise."
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (and (not (or (nth 8 pps)(nth 1 pps)))
+         (looking-at py-assignment-re)
+         (looking-back "[^ \t]*" (line-beginning-position))
+         (eq (current-column)(current-indentation))
          (point))))
 
 (defun py--beginning-of-block-p (&optional pps)
@@ -15015,21 +15023,22 @@ When `delete-active-region' and (use-region-p), delete region "
          (eq (current-column)(current-indentation))
          (point))))
 
-(defun py--beginning-of-indent-p ()
+(defun py--beginning-of-indent-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘indent’, nil otherwise."
-  (and ;; (not (or (nth 8 pps)(nth 1 pps)))
-   (looking-at py-indent-re)
-   (looking-back "[^ \t]*" (line-beginning-position))
-   (eq (current-column) (current-indentation))
-   (point)))
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (and (not (or (nth 8 pps)(nth 1 pps)))
+         (looking-at py-indent-re)
+         (looking-back "[^ \t]*" (line-beginning-position))
+         (eq (current-column)(current-indentation))
+         (point))))
 
 (defun py--beginning-of-minor-block-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘minor-block’, nil otherwise."
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (not (or (nth 8 pps) (nth 1 pps)))
+    (and (not (or (nth 8 pps)(nth 1 pps)))
          (looking-at py-minor-block-re)
          (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column) (current-indentation))
+         (eq (current-column)(current-indentation))
          (point))))
 
 (defun py--beginning-of-statement-p (&optional pps)
@@ -15048,6 +15057,15 @@ When `delete-active-region' and (use-region-p), delete region "
          (looking-at py-try-re)
          (looking-back "[^ \t]*" (line-beginning-position))
          (eq (current-column)(current-indentation))
+         (point))))
+
+(defun py--beginning-of-assignment-bol-p (&optional pps)
+  "Return position, if cursor is at the beginning of a ‘assignment’, nil otherwise."
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (and (bolp)
+         (not (or (nth 8 pps)(nth 1 pps)))
+         (looking-at py-assignment-re)
+         (looking-back "[^ \t]*" (line-beginning-position))
          (point))))
 
 (defun py--beginning-of-block-bol-p (&optional pps)
