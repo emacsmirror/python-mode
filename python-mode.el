@@ -4442,17 +4442,9 @@ Comments top-level at point."]))
 	 :help " `py-backward-block'
 Go to beginning of ‘block’."]
 
-	["Backward block or clause" py-backward-block-or-clause
-	 :help " `py-backward-block-or-clause'
-Go to beginning of ‘block-or-clause’."]
-
 	["Backward class" py-backward-class
 	 :help " `py-backward-class'
 Go to beginning of class."]
-
-	["Backward clause" py-backward-clause
-	 :help " `py-backward-clause'
-Go to beginning of ‘clause’."]
 
 	["Backward def" py-backward-def
 	 :help " `py-backward-def'
@@ -4461,6 +4453,28 @@ Go to beginning of def."]
 	["Backward def or class" py-backward-def-or-class
 	 :help " `py-backward-def-or-class'
 Go to beginning of def-or-class."]
+
+	["Backward statement" py-backward-statement
+	 :help " `py-backward-statement'
+Go to the initial line of a simple statement."]
+
+	["Backward indent" py-backward-indent
+	 :help " `py-backward-indent'
+Go to the beginning of a section of equal indent."]
+
+	["Backward top level" py-backward-top-level
+	 :help " `py-backward-top-level'
+Go up to beginning of statments until level of indentation is null."]
+
+       ("Other"
+
+	["Backward block or clause" py-backward-block-or-clause
+	 :help " `py-backward-block-or-clause'
+Go to beginning of ‘block-or-clause’."]
+
+	["Backward clause" py-backward-clause
+	 :help " `py-backward-clause'
+Go to beginning of ‘clause’."]
 
 	["Backward elif block" py-backward-elif-block
 	 :help " `py-backward-elif-block'
@@ -4478,56 +4492,32 @@ Go to beginning of ‘except-block’."]
 	 :help " `py-backward-expression'
 Go to the beginning of a python expression."]
 
-	["Backward for block" py-backward-for-block
-	 :help " `py-backward-for-block'
-Go to beginning of ‘for-block’."]
-
 	["Backward if block" py-backward-if-block
 	 :help " `py-backward-if-block'
 Go to beginning of ‘if-block’."]
-
-	["Backward indent" py-backward-indent
-	 :help " `py-backward-indent'
-Go to the beginning of a section of equal indent."]
 
 	["Backward minor block" py-backward-minor-block
 	 :help " `py-backward-minor-block'
 Go to beginning of ‘minor-block’."]
 
-	["Backward partial expression" py-backward-partial-expression
-	 :help " `py-backward-partial-expression'"]
-
 	["Backward section" py-backward-section
 	 :help " `py-backward-section'
 Go to next section start upward in buffer."]
 
-	["Backward statement" py-backward-statement
-	 :help " `py-backward-statement'
-Go to the initial line of a simple statement."]
-
-	["Backward top level" py-backward-top-level
-	 :help " `py-backward-top-level'
-Go up to beginning of statments until level of indentation is null."]
+	["Backward partial expression" py-backward-partial-expression
+	 :help " `py-backward-partial-expression'"]
 
 	["Backward try block" py-backward-try-block
 	 :help " `py-backward-try-block'
-Go to beginning of ‘try-block’."])
+Go to beginning of ‘try-block’."]))
        ("Forward"
 	["Forward block" py-forward-block
 	 :help " `py-forward-block'
 Go to end of block."]
 
-	["Forward block or clause" py-forward-block-or-clause
-	 :help " `py-forward-block-or-clause'
-Go to end of block-or-clause."]
-
 	["Forward class" py-forward-class
 	 :help " `py-forward-class'
 Go to end of class."]
-
-	["Forward clause" py-forward-clause
-	 :help " `py-forward-clause'
-Go to end of clause."]
 
 	["Forward def" py-forward-def
 	 :help " `py-forward-def'
@@ -4536,6 +4526,32 @@ Go to end of def."]
 	["Forward def or class" py-forward-def-or-class
 	 :help " `py-forward-def-or-class'
 Go to end of def-or-class."]
+
+	["Forward for block" py-forward-for-block
+	 :help " `py-forward-for-block'
+Go to end of for-block."]
+
+	["Forward indent" py-forward-indent
+	 :help " `py-forward-indent'
+Go to the end of a section of equal indentation."]
+
+	["Forward statement" py-forward-statement
+	 :help " `py-forward-statement'
+Go to the last char of current statement."]
+
+	["Forward top level" py-forward-top-level
+	 :help " `py-forward-top-level'
+Go to end of top-level form at point."]
+	
+       ("Other"
+
+	["Forward block or clause" py-forward-block-or-clause
+	 :help " `py-forward-block-or-clause'
+Go to end of block-or-clause."]
+
+	["Forward clause" py-forward-clause
+	 :help " `py-forward-clause'
+Go to end of clause."]
 
 	["Forward elif block" py-forward-elif-block
 	 :help " `py-forward-elif-block'
@@ -4553,17 +4569,9 @@ Go to end of except-block."]
 	 :help " `py-forward-expression'
 Go to the end of a compound python expression."]
 
-	["Forward for block" py-forward-for-block
-	 :help " `py-forward-for-block'
-Go to end of for-block."]
-
 	["Forward if block" py-forward-if-block
 	 :help " `py-forward-if-block'
 Go to end of if-block."]
-
-	["Forward indent" py-forward-indent
-	 :help " `py-forward-indent'
-Go to the end of a section of equal indentation."]
 
 	["Forward minor block" py-forward-minor-block
 	 :help " `py-forward-minor-block'
@@ -4576,17 +4584,9 @@ Go to end of minor-block."]
 	 :help " `py-forward-section'
 Go to next section end downward in buffer."]
 
-	["Forward statement" py-forward-statement
-	 :help " `py-forward-statement'
-Go to the last char of current statement."]
-
-	["Forward top level" py-forward-top-level
-	 :help " `py-forward-top-level'
-Go to end of top-level form at point."]
-
 	["Forward try block" py-forward-try-block
 	 :help " `py-forward-try-block'
-Go to end of try-block."])
+Go to end of try-block."]))
        ("BOL-forms"
 	("Backward"
 	 ["Backward block bol" py-backward-block-bol
