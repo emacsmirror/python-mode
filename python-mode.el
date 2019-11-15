@@ -8451,7 +8451,7 @@ Returns the string inserted."
   (delete-region py--docbeg py--docend)
   (insert-buffer-substring py-edit-buffer))
 
-(defun py-edit--intern (buffer-name mode &optional beg end)
+(defun py-edit--intern (buffer-name mode &optional beg end prefix suffix action)
   "Edit string or active region in ‘python-mode’.
 
 arg BUFFER-NAME: a string.
@@ -8463,7 +8463,8 @@ arg MODE: which buffer-mode used in edit-buffer"
       (setq py--oldbuf (current-buffer))
       (let* ((orig (point))
 	     (bounds (or (and beg end)(py--edit-set-vars)))
-	     relpos editstrg)
+	     relpos editstrg
+	     erg)
 	(setq py--docbeg (or beg (car bounds)))
 	(setq py--docend (or end (cdr bounds)))
 	;; store relative position in editstrg
@@ -8472,8 +8473,14 @@ arg MODE: which buffer-mode used in edit-buffer"
 	(set-buffer (get-buffer-create buffer-name))
 	(erase-buffer)
 	(switch-to-buffer (current-buffer))
+	(when prefix (insert prefix))
 	(insert editstrg)
+	(when suffix (insert suffix))
 	(funcall mode)
+	(when action
+	  (setq erg (funcall action))
+	  (erase-buffer)
+	  (insert erg))
 	(local-set-key [(control c) (control c)] 'py--write-edit)
 	(goto-char relpos)
 	(message "%s" "Type C-c C-c writes contents back")))))
@@ -8483,11 +8490,40 @@ arg MODE: which buffer-mode used in edit-buffer"
   (interactive "*")
   (py-edit--intern "Edit docstring" 'python-mode))
 
-;; (defun py-prettyprint-assignment ()
-;;   "Prettyprint assignment in ‘python-mode’."
-;;   (interactive "*")
-;;   (let* ((beg (py-beginning-of-assignment)))
-;;     (py-edit--intern "Prettyprint assignment" 'python-mode)))
+(defun py--prettyprint-assignment-intern (beg end name buffer)
+  (let ((oldbuf (current-buffer))
+	(proc (get-buffer-process buffer)))
+    (py-send-string "import pprint" proc nil t)
+    ;; send the dict/assigment
+    (py-send-string (buffer-substring-no-properties beg end) proc nil t)
+    ;; do pretty-print
+    (setq erg (py-send-string (concat "pprint(" name")") proc t))
+    (py-edit--intern "PPrint" 'python-mode beg end)
+    (setq erg (py-execute-region-dedicated beg end nil nil t t))
+    (message "%s" erg)))
+
+(defun py-prettyprint-assignment ()
+  "Prettyprint assignment in ‘python-mode’."
+  (interactive "*")
+  (save-excursion
+    (let* ((beg (py-beginning-of-assignment))
+	   (name (py-expression))
+	   (end (py-end-of-assignment))
+	   (proc-buf (python '(4))))
+      (py--prettyprint-assignment-intern beg end name proc-buf))))
+
+(defun py-unpretty-assignment ()
+  "Revoke prettyprint, write assignment in a shortest way."
+  (interactive "*")
+  (save-excursion
+    (let* ((beg (py-beginning-of-assignment))
+	   (end (copy-marker (py-forward-assignment)))
+	   last)
+      (goto-char beg)
+      (while (setq last (re-search-forward "[ \t]+" end t 1))
+	(when (eq (current-column) (current-indentation)) (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point))))
+	(fixup-whitespace)
+	(goto-char last)))))
 
 ;; python-components-backward-forms
 
@@ -9756,10 +9792,24 @@ Return position if successful"
 ;;   (py--end-of-paragraph 'py-paragraph-re))
 
 (defun py-backward-assignment()
+  "Go to backward in buffer to beginning of an assigment.
+
+Return position if successful."
+  (interactive)
+  (let* (last
+	 (erg
+	  (progn
+	    (while (and (setq last (py-backward-statement))
+			(not (looking-at py-assignment-re))))
+	    (and (looking-at py-assignment-re) last))))
+    (when (and py-verbose-p (interactive-p))
+      (message "%s" erg))
+    erg))
+
+(defun py-beginning-of-assignment()
   "Go to beginning of assigment if inside.
 
-Return position of successful, nil of not started from inside
-When called at beginning non-assignment, check next form upwards."
+Return position of successful, nil of not started from inside."
   (interactive)
   (let* (last
 	 (erg
@@ -9781,6 +9831,31 @@ When called at beginning non-assignment, check next form upwards."
        ;; (eq (car (syntax-after (point))) 4)
        (progn (forward-sexp) (point))))
 
+(defun py-end-of-assignment()
+  "Go to end of assigment at point if inside.
+
+Return position of successful, nil of not started from inside"
+  (interactive)
+  (unless (eobp)
+    (if (eq last-command 'py-backward-assignment)
+	;; assume at start of an assignment
+	(py--forward-assignment-intern)
+      ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
+      (let* (last
+	     (orig (point))
+	     (beg
+	      (or (py--beginning-of-assignment-p)
+		  (progn
+		    (while (and (setq last (py-backward-statement))
+				(not (looking-at py-assignment-re))
+				;; (not (bolp))
+				))
+		    (and (looking-at py-assignment-re) last))))
+	     erg)
+	(and beg (setq erg (py--forward-assignment-intern)))
+	(when (and py-verbose-p (interactive-p)) (message "%s" erg))
+	erg))))
+
 (defun py-forward-assignment()
   "Go to end of assigment at point if inside.
 
@@ -9794,20 +9869,21 @@ When called at the end of an assignment, check next form downwards."
       ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
       (let* (last
 	     (orig (point))
-	     (erg
+	     (beg
 	      (or (py--beginning-of-assignment-p)
 		  (progn
 		    (while (and (setq last (py-backward-statement))
 				(not (looking-at py-assignment-re))
 				;; (not (bolp))
 				))
-		    (and (looking-at py-assignment-re) last)))))
-	(and erg (py--forward-assignment-intern))
+		    (and (looking-at py-assignment-re) last))))
+	     erg)
+	(and beg (setq erg (py--forward-assignment-intern)))
 	(when (eq (point) orig)
 	  (while (and (not (eobp)) (re-search-forward py-assignment-re) (setq last (match-beginning 1)) (py-in-string-or-comment-p)))
 	  (when last
 	    (goto-char last)
-	    (py-forward-assignment)))
+	    (setq erg (point))))
 	(when (and py-verbose-p (interactive-p)) (message "%s" erg))
 	erg))))
 
@@ -23276,12 +23352,9 @@ process buffer for a list of commands.)"
 	(progn
 	  (with-current-buffer buffer
 	    (py-shell-mode))
-	  ;; (py-send-string-no-output "print(\"py-shell-mode loaded\")" (get-buffer-process buffer) buffer-name)
-	  ;; (py--update-lighter shell)
-
 	  (when (or interactivep
 		    (or switch dedicated py-switch-buffers-on-execute-p py-split-window-on-execute))
-	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch dedicated))
+	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch))
 	    buffer))
       (setq erg (py--fetch-error py-output-buffer))
       ;; (message "%s" erg)
@@ -24731,13 +24804,17 @@ Return the output."
      (with-current-buffer (process-buffer proc)
        (comint-interrupt-subjob)))))
 
-(defun py-send-string (strg &optional process result no-output orig buffer)
+(defun py-send-string (strg &optional process result no-output orig output-buffer)
   "Evaluate STRG in Python PROCESS.
 
-With optional Arg RESULT return output"
+With optional Arg PROCESS send to process.
+With optional Arg RESULT store result in var ‘py-result’, also return it.
+With optional Arg NO-OUTPUT don't display any output
+With optional Arg ORIG deliver original position.
+With optional Arg OUTPUT-BUFFER specify output-buffer"
   (interactive "sPython command: ")
   (save-excursion
-    (let* ((buffer (or buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell)))))
+    (let* ((buffer (or output-buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell)))))
 	   (proc (or process (get-buffer-process buffer) (py-shell nil nil nil nil (buffer-name buffer))))
 	   (orig (or orig (point)))
    	   (limit (ignore-errors (marker-position (process-mark proc)))))
@@ -24762,7 +24839,8 @@ With optional Arg RESULT return output"
 			(setq py-result
 			      (py--fetch-result buffer limit strg)))
 		       (no-output
-			(and orig (py--cleanup-shell orig buffer))))))))))
+			(and orig (py--cleanup-shell orig buffer)))))))))
+  (switch-to-buffer (current-buffer)))
 
 (defun py-send-file (file-name process)
   "Send FILE-NAME to Python PROCESS."
@@ -27487,8 +27565,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 (defalias 'py-markup-region-as-section 'py-sectionize-region)
 (defalias 'py-up 'py-up-block)
 (defalias 'py-count-indentation 'py-compute-indentation)
-(defalias 'py-beginning-of-assignment 'py-backward-assignment)
-(defalias 'py-end-of-assignment 'py-forward-assignment)
 
 ;;;###autoload
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
