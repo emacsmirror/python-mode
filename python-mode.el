@@ -8490,17 +8490,37 @@ arg MODE: which buffer-mode used in edit-buffer"
   (interactive "*")
   (py-edit--intern "Edit docstring" 'python-mode))
 
+(defun py-unpretty-assignment ()
+  "Revoke prettyprint, write assignment in a shortest way."
+  (interactive "*")
+  (save-excursion
+    (let* ((beg (py-beginning-of-assignment))
+	   (end (copy-marker (py-forward-assignment)))
+	   last)
+      (goto-char beg)
+      (while (and (not (eobp))(re-search-forward "^\\([ \t]*\\)\[\]\"'{}]" end t 1) (setq last (copy-marker (point))))
+	(save-excursion (goto-char (match-end 1))
+			(when (eq (current-column) (current-indentation)) (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point)))))
+	(when last (goto-char last))))))
+
 (defun py--prettyprint-assignment-intern (beg end name buffer)
   (let ((oldbuf (current-buffer))
 	(proc (get-buffer-process buffer)))
-    (py-send-string "import pprint" proc nil t)
+    ;; (py-send-string "import pprint" proc nil t)
+    (py-send-string "import json" proc nil t)
     ;; send the dict/assigment
     (py-send-string (buffer-substring-no-properties beg end) proc nil t)
     ;; do pretty-print
-    (setq erg (py-send-string (concat "pprint(" name")") proc t))
-    (py-edit--intern "PPrint" 'python-mode beg end)
-    (setq erg (py-execute-region-dedicated beg end nil nil t t))
-    (message "%s" erg)))
+    ;; print(json.dumps(neudict4, indent=4))
+    (setq erg (py-send-string (concat "print(json.dumps("name", indent=5))") proc t))
+    ;; (message "%s" erg)
+    ;; (py-edit--intern "PPrint" 'python-mode beg end)
+    ;; (message "%s" (current-buffer))
+    ;; (switch-to-buffer (current-buffer))
+    (goto-char beg)
+    (skip-chars-forward "^{")
+    (delete-region (point) (progn (forward-sexp) (point)))
+    (insert erg)))
 
 (defun py-prettyprint-assignment ()
   "Prettyprint assignment in ‘python-mode’."
@@ -8511,19 +8531,6 @@ arg MODE: which buffer-mode used in edit-buffer"
 	   (end (py-end-of-assignment))
 	   (proc-buf (python '(4))))
       (py--prettyprint-assignment-intern beg end name proc-buf))))
-
-(defun py-unpretty-assignment ()
-  "Revoke prettyprint, write assignment in a shortest way."
-  (interactive "*")
-  (save-excursion
-    (let* ((beg (py-beginning-of-assignment))
-	   (end (copy-marker (py-forward-assignment)))
-	   last)
-      (goto-char beg)
-      (while (setq last (re-search-forward "[ \t]+" end t 1))
-	(when (eq (current-column) (current-indentation)) (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point))))
-	(fixup-whitespace)
-	(goto-char last)))))
 
 ;; python-components-backward-forms
 
@@ -11745,7 +11752,7 @@ Optional FAST RETURN"
 		 ))
 	 (shell (or shell (py-choose-shell)))
 	 (buffer-name
-	      (py--choose-buffer-name shell dedicated fast))
+	  (py--choose-buffer-name shell dedicated fast))
 	 (execute-directory
 	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
 		((and py-use-current-dir-when-execute-p (buffer-file-name))
@@ -11766,9 +11773,9 @@ Optional FAST RETURN"
 		   (prog1
 		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
 		     (sit-for 0.1))))
-	 (split (if python-mode-v5-behavior-p 'just-two split))
-	 (py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
-			       (py--choose-buffer-name shell dedicated fast))))
+	 (split (if python-mode-v5-behavior-p 'just-two split)))
+    (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
+			       (py--choose-buffer-name shell dedicated fast)))
     (py--execute-base-intern strg filename proc file wholebuf py-output-buffer origline execute-directory start end fast)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
       (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))))
@@ -23330,8 +23337,8 @@ process buffer for a list of commands.)"
 		   (process-buffer (apply 'start-process shell buffer-name shell args))
 		 (apply #'make-comint-in-buffer shell buffer-name
 			shell nil args))))))
-	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer)))
 	 erg)
+    (setq py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer)))
     (unless done
       (with-current-buffer buffer
 	(setq delay (py--which-delay-process-dependent buffer-name))
@@ -23353,7 +23360,7 @@ process buffer for a list of commands.)"
 	  (with-current-buffer buffer
 	    (py-shell-mode))
 	  (when (or interactivep
-		    (or switch dedicated py-switch-buffers-on-execute-p py-split-window-on-execute))
+		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
 	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch))
 	    buffer))
       (setq erg (py--fetch-error py-output-buffer))
@@ -24840,7 +24847,8 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 			      (py--fetch-result buffer limit strg)))
 		       (no-output
 			(and orig (py--cleanup-shell orig buffer)))))))))
-  (switch-to-buffer (current-buffer)))
+  ;; (switch-to-buffer (current-buffer))
+  )
 
 (defun py-send-file (file-name process)
   "Send FILE-NAME to Python PROCESS."
