@@ -1466,7 +1466,6 @@ visible, open them manually and set `py-keep-windows-configuration' to t.
 
 See also `py-keep-windows-configuration'"
   :type '(choice
-
           (const :tag "default" just-two)
 	  (const :tag "reuse" t)
           (const :tag "no split" nil)
@@ -8505,7 +8504,8 @@ arg MODE: which buffer-mode used in edit-buffer"
 
 (defun py--prettyprint-assignment-intern (beg end name buffer)
   (let ((oldbuf (current-buffer))
-	(proc (get-buffer-process buffer)))
+	(proc (get-buffer-process buffer))
+	erg)
     ;; (py-send-string "import pprint" proc nil t)
     (py-send-string "import json" proc nil t)
     ;; send the dict/assigment
@@ -11618,7 +11618,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
   ;; py--fast-send-string doesn't set origline
   (when (or py-return-result-p py-store-result-p)
     (with-current-buffer output-buffer
-      (when py-debug-p (switch-to-buffer (current-buffer)))
+      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
       (sit-for (py--which-delay-process-dependent (prin1-to-string output-buffer)))
       ;; (catch 'py--postprocess
       (setq py-result (py--fetch-result output-buffer limit cmd))
@@ -11659,6 +11659,7 @@ Returns position where output starts."
     (if fast
 	(process-send-string proc cmd)
       (py-send-string cmd proc))
+    ;; (message "%s" (current-buffer))
     (with-current-buffer buffer
       (when (or py-return-result-p py-store-result-p)
 	(setq erg (py--postprocess buffer origline limit cmd filename))
@@ -11767,9 +11768,9 @@ Optional FAST RETURN"
 	 (filename (or (and filename (expand-file-name filename))
 		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
-	 (proc (get-buffer-process buffer-name))
+	 (proc-raw (or proc (get-buffer-process buffer-name)))
 
-	 (proc (or proc (get-buffer-process buffer-name)
+	 (proc (or proc-raw (get-buffer-process buffer-name)
 		   (prog1
 		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
 		     (sit-for 0.1))))
@@ -23361,11 +23362,9 @@ process buffer for a list of commands.)"
 	    (py-shell-mode))
 	  (when (or interactivep
 		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch))
-	    buffer))
-      (setq erg (py--fetch-error py-output-buffer))
-      ;; (message "%s" erg)
-      (error erg))))
+	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
+	  buffer)
+      (error (concat "py-shell:" (py--fetch-error py-output-buffer))))))
 
 (defun py-load-named-shells ()
   (interactive)
