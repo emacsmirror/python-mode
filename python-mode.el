@@ -3448,7 +3448,8 @@ See also `py-object-reference-face'"
   :group 'python-mode)
 
 ;; subr-x.el might not exist yet
-(unless (functionp 'string-trim)
+;; #73, Byte compilation on Emacs 25.3 fails on different trim-right signature
+(unless (or (functionp 'string-trim) (functionp 'string-trim-right)(functionp 'string-trim-left))
   (defsubst string-trim-left (strg &optional regexp)
     "Trim STRING of leading string matching REGEXP.
 
@@ -22734,14 +22735,14 @@ Optional STRG PROC OUTPUT-BUFFER RETURN"
 
 Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
-  (py--execute-prepare block shell dedicated switch beg end file t))
+  (py--execute-prepare 'block shell dedicated switch beg end file t))
 
 (defun py-execute-block-or-clause-fast (&optional shell dedicated switch beg end file fast)
   "Process block-or-clause at point by a Python interpreter.
 
 Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
-  (py--execute-prepare block-or-clause shell dedicated switch beg end file t))
+  (py--execute-prepare 'block-or-clause shell dedicated switch beg end file t))
 
 (defun py-execute-class-fast (&optional shell dedicated switch beg end file)
   "Process class at point by a Python interpreter.
