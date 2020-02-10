@@ -2793,7 +2793,7 @@ for options to pass to the DOCNAME interpreter. \"
   "Recognize the pydb-prompt.")
 ;; (setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
 
-(defvar py-fast-filter-re (concat "^\\("
+(defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
 					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
 					  "\\|")
@@ -2802,7 +2802,7 @@ for options to pass to the DOCNAME interpreter. \"
 ‘ansi-color-filter-apply’ might return
 Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
 
-(setq py-fast-filter-re (concat "^\\("
+(setq py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
 					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
 					  "\\|")
@@ -3114,7 +3114,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   ;; whether this is an opening or closing triple or whether it's
   ;; quoted anyhow, and should be ignored.  (For that we need to do
   ;; the same job as `syntax-ppss' to be correct and it seems to be OK
-  ;; to use it here despite initial worries.)  We also have to sort
+  ;; to use it here despite initial worries.) We also have to sort
   ;; out a possible prefix -- well, we don't _have_ to, but I think it
   ;; should be treated as part of the string.
 
@@ -3128,8 +3128,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
     (cond
      ;; Consider property for the last char if in a fenced string.
      ((= n 3)
-      (let* ((font-lock-syntactic-keywords nil)
-	     (syntax (parse-partial-sexp (point-min) (point))))
+      (let* ((syntax (parse-partial-sexp (point-min) (point))))
 	(when (eq t (nth 3 syntax))	; after unclosed fence
 	  (goto-char (nth 8 syntax))	; fence position
 	  ;; (skip-chars-forward "uUrR")	; skip any prefix
@@ -3137,13 +3136,12 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 	  (if (eq (char-after) (char-after (match-beginning 2)))
 	      (eval-when-compile (string-to-syntax "|"))))))
      ;; Consider property for initial char, accounting for prefixes.
-     ((or (and (= n 2)			; leading quote (not prefix)
+     ((or (and (= n 2) ; leading quote (not prefix)
 	       (not (match-end 1)))     ; prefix is null
-	  (and (= n 1)			; prefix
+	  (and (= n 1) ; prefix
 	       (match-end 1)))          ; non-empty
-      (let ((font-lock-syntactic-keywords nil))
-	(unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
-	  (eval-when-compile (string-to-syntax "|")))))
+      (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
+	(eval-when-compile (string-to-syntax "|"))))
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
@@ -7273,12 +7271,27 @@ Default is t")
 	   symbol-end) (1 py-builtins-face))
         ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
          (1 py-variable-name-face nil nil))
+	;; https://emacs.stackexchange.com/questions/55184/
+	;; how-to-highlight-in-different-colors-for-variables-inside-fstring-on-python-mo
+	;;
+	;; this is the full string.
+        ;; group 1 is the quote type and a closing quote is matched
+        ;; group 2 is the string part
+        ("f\\(['\"]\\{1,3\\}\\)\\([^\\1]+?\\)\\1"
+         ;; these are the {keywords}
+         ("{[^}]*?}"
+          ;; Pre-match form
+          (progn (goto-char (match-beginning 0)) (match-end 0))
+          ;; Post-match form
+          (goto-char (match-end 0))
+          ;; face for this match
+          (0 font-lock-variable-name-face t)))
         ;; a, b, c = (1, 2, 3)
         (,(lambda (limit)
             (let ((re (rx (group (+ (any word ?. ?_))) (* space)
-			   (* ?, (* space) (+ (any word ?. ?_)) (* space))
-			   ?, (* space) (+ (any word ?. ?_)) (* space)
-			   (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**=" ">>=" "<<=" "&=" "^=" "|=")))
+			  (* ?, (* space) (+ (any word ?. ?_)) (* space))
+			  ?, (* space) (+ (any word ?. ?_)) (* space)
+			  (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**=" ">>=" "<<=" "&=" "^=" "|=")))
                   (res nil))
               (while (and (setq res (re-search-forward re limit t))
                           (goto-char (match-end 1))
@@ -11589,11 +11602,12 @@ optional argument."
 (defun py--fetch-result (buffer limit &optional cmd)
   "CMD: some shells echo the command in output-buffer
 Delete it here"
-  ;; (switch-to-buffer (current-buffer)) 
+  ;; (switch-to-buffer (current-buffer))
   (if python-mode-v5-behavior-p
       (with-current-buffer buffer
 	(string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
     (with-silent-modifications
+      ;; (switch-to-buffer (current-buffer))
       (when (< limit (point-max))
 	(goto-char (point-max))
 	(let ((orig (point-marker)))
