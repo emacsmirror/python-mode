@@ -3970,12 +3970,13 @@ Preserves the `buffer-modified-p' state of the current buffer."
 
 
 (require 'ansi-color)
-(require 'subr-x)
+(ignore-errors (require 'subr-x))
 (require 'cc-cmds)
 (require 'cl)
 (require 'comint)
 (require 'compile)
 (require 'custom)
+(require 'ert)
 (require 'flymake)
 (require 'hippie-exp)
 (require 'shell)
@@ -3983,6 +3984,7 @@ Preserves the `buffer-modified-p' state of the current buffer."
 (require 'which-func)
 (require 'tramp)
 (require 'tramp-sh)
+(require 'org)
 
 (defun py-define-menu (map)
   (easy-menu-define py-menu map "Py"
