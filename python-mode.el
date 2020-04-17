@@ -6710,8 +6710,7 @@ Build and set the values for input- and output-prompt regexp
 using the values from `py-shell-prompt-regexp',
 `py-shell-input-prompt-2-regexp', `py-shell-prompt-pdb-regexp',
 `py-shell-prompt-output-regexp', `py-shell-prompt-input-regexp',
-`py-shell-prompt-output-regexps' and detected prompts from
-`py-shell-prompt-detect'."
+ and detected prompts from `py-shell-prompt-detect'."
   (when (not (and py-shell--prompt-calculated-input-regexp
                   py-shell--prompt-calculated-output-regexp))
     (let* ((detected-prompts (py-shell-prompt-detect))
@@ -8538,12 +8537,12 @@ arg MODE: which buffer-mode used in edit-buffer"
   (let ((proc (get-buffer-process buffer))
 	erg)
     ;; (py-send-string "import pprint" proc nil t)
-    (py-send-string "import json" proc nil t)
+    (py-fast-send-string "import json" proc buffer)
     ;; send the dict/assigment
-    (py-send-string (buffer-substring-no-properties beg end) proc nil t)
+    (py-fast-send-string (buffer-substring-no-properties beg end) proc buffer)
     ;; do pretty-print
     ;; print(json.dumps(neudict4, indent=4))
-    (setq erg (py-send-string (concat "print(json.dumps("name", indent=5))") proc t))
+    (setq erg (py-fast-send-string (concat "print(json.dumps("name", indent=5))") proc buffer t))
     ;; (message "%s" erg)
     ;; (py-edit--intern "PPrint" 'python-mode beg end)
     ;; (message "%s" (current-buffer))
@@ -8556,12 +8555,14 @@ arg MODE: which buffer-mode used in edit-buffer"
 (defun py-prettyprint-assignment ()
   "Prettyprint assignment in ‘python-mode’."
   (interactive "*")
+  (window-configuration-to-register py-windows-config-register)
   (save-excursion
     (let* ((beg (py-beginning-of-assignment))
 	   (name (py-expression))
 	   (end (py-end-of-assignment))
-	   (proc-buf (python '(4))))
-      (py--prettyprint-assignment-intern beg end name proc-buf))))
+	   (proc-buf (python nil nil "Fast Intern Utility Re-Use")))
+      (py--prettyprint-assignment-intern beg end name proc-buf)))
+  (py-restore-window-configuration))
 
 ;; python-components-backward-forms
 
@@ -11617,33 +11618,20 @@ optional argument."
 (defun py--fetch-result (buffer limit &optional cmd)
   "CMD: some shells echo the command in output-buffer
 Delete it here"
-  ;; (switch-to-buffer (current-buffer))
-  (if python-mode-v5-behavior-p
-      (with-current-buffer buffer
-	(string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
-    (with-silent-modifications
-      ;; (switch-to-buffer (current-buffer))
+  (let ((fetch-re (if (and py-shell--prompt-calculated-input-regexp
+			   py-shell--prompt-calculated-output-regexp)
+		      (concat py-shell--prompt-calculated-input-regexp "\\|" py-shell--prompt-calculated-output-regexp)
+		    (progn
+		      (py-shell-prompt-set-calculated-regexps)
+		      (concat py-shell--prompt-calculated-input-regexp "\\|" py-shell--prompt-calculated-output-regexp)
+		      ))))
+    (when py-verbose-p (message "(current-buffer): %s" (current-buffer))
+	  (switch-to-buffer (current-buffer)))
+    (if python-mode-v5-behavior-p
+	(with-current-buffer buffer
+	  (string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
       (when (< limit (point-max))
-	(goto-char (point-max))
-	(let ((orig (point-marker)))
-	  (unwind-protect
-	      (let ((end
-		     (or (and (re-search-backward py-fast-filter-re limit t 1) (progn (skip-chars-backward " \t\r\n\f") (point-marker)))
-			 (throw 'py--fetch-result-end (error "py--fetch-result: %s" "re-search-backward py-fast-filter-re failed")))))
-		(and limit end
-		     (progn
-		       (goto-char limit)
-		       (when (and cmd (looking-at cmd))
-			 (delete-region (line-beginning-position) (line-end-position)))
-		       (prog1 (string-trim
-			       (buffer-substring-no-properties (point) end)
-			       "\n")
-			 ;; cleanup
-			 (and (or
-			       (eq last-command 'py-help-at-point)
-			       py-cleanup-p)
-			      (delete-region (point) end))
-			 (goto-char orig)))))))))))
+	(string-trim (replace-regexp-in-string fetch-re "" (buffer-substring-no-properties limit (point-max))))))))
 
 (defun py--postprocess (output-buffer origline limit &optional cmd filename)
   "Provide return values, check result for error, manage windows.
@@ -11652,7 +11640,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
   ;; py--fast-send-string doesn't set origline
   (when (or py-return-result-p py-store-result-p)
     (with-current-buffer output-buffer
-      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
+      (when py-debug-p (switch-to-buffer (current-buffer)))
       (sit-for (py--which-delay-process-dependent (prin1-to-string output-buffer)))
       ;; (catch 'py--postprocess
       (setq py-result (py--fetch-result output-buffer limit cmd))
@@ -22748,7 +22736,9 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
       ;; (erase-buffer)
       (process-send-string proc strg)
       (or (string-match "\n$" strg)
-	  (process-send-string proc "\n"))
+	  (process-send-string proc "\n")
+	  (goto-char (point-max))
+	  )
       (cond (no-output
 	     ;; (erase-buffer)
 	     (delete-region (point-min) (line-beginning-position))
@@ -22758,10 +22748,8 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 		 (setq erg (py--fetch-result output-buffer limit strg))
 		 (setq py-result (py--filter-result erg))
 	       (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer limit))(sit-for 1 t)))
-	       (unless (setq erg (py--fetch-result output-buffer limit))
-		 (setq py-result nil)
-		 (error "py-fast-send-string: py--fetch-result: no result")))))
-      py-result)))
+	       (or (py--fetch-result output-buffer limit))
+	       (error "py-fast-send-string: py--fetch-result: no result")))))))
 
 (defun py--send-to-fast-process (strg proc output-buffer result)
   "Called inside of ‘py--execute-base-intern’.
