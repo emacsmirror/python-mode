@@ -1381,19 +1381,122 @@ Default is \"--errors-only\""
 (defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *"
   "Recognize the prompt.")
 
-(defcustom py-shell-input-prompt-1-regexp ">>> "
-  "A regular expression to match the input prompt of the shell."
-  :type 'regexp
-  :tag "py-shell-input-prompt-1-regexp"
+;; (defcustom py-shell-input-prompt-1-regexp ">>> "
+;;   "A regular expression to match the input prompt of the shell."
+;;   :type 'regexp
+;;   :tag "py-shell-input-prompt-1-regexp"
+;;   :group 'python-mode)
+
+;; (defcustom py-shell-input-prompt-2-regexp "[.][.][.]:? "
+;;   "A regular expression to match the input prompt.
+
+;; Applies to the shell after the first line of input."
+;;   :type 'string
+;;   :tag "py-shell-input-prompt-2-regexp"
+;;   :group 'python-mode)
+
+(defvar py-shell-input-prompt-1-regexp ">>> *"
+  "Regular Expression matching top-level input prompt of python shell.
+It should not contain a caret (^) at the beginning.")
+
+(defvar py-shell-input-prompt-2-regexp "\\.\\.\\. "
+  "Regular Expression matching top-level input prompt of python shell.
+It should not contain a caret (^) at the beginning.")
+
+(defvar py-shell-ipython-input-prompt-1-regexp "In \\[[0-9]+\\]: "
+  "Regular Expression matching top-level input prompt of python shell.
+It should not contain a caret (^) at the beginning.")
+
+(defvar py-shell-ipython-input-prompt-2-regexp "   \\.\\.\\.: "
+  "Regular Expression matching top-level input prompt of python shell.
+It should not contain a caret (^) at the beginning.")
+
+(defcustom py-shell-input-prompt-2-regexps
+  '(">>> " "\\.\\.\\. "                 ; Python
+    "In \\[[0-9]+\\]: "                 ; IPython
+    "   \\.\\.\\.: "                    ; IPython
+    ;; Using ipdb outside IPython may fail to cleanup and leave static
+    ;; IPython prompts activated, this adds some safeguard for that.
+    "In : " "\\.\\.\\.: ")
+  "List of regular expressions matching input prompts."
+  :type '(repeat string)
+  :version "24.4"
   :group 'python-mode)
 
-(defcustom py-shell-input-prompt-2-regexp "[.][.][.]:? "
-  "A regular expression to match the input prompt.
-
-Applies to the shell after the first line of input."
-  :type 'string
-  :tag "py-shell-input-prompt-2-regexp"
+(defcustom py-shell-input-prompt-regexps
+  '(">>> " "\\.\\.\\. "                 ; Python
+    "In \\[[0-9]+\\]: "                 ; IPython
+    "   \\.\\.\\.: "                    ; IPython
+    ;; Using ipdb outside IPython may fail to cleanup and leave static
+    ;; IPython prompts activated, this adds some safeguard for that.
+    "In : " "\\.\\.\\.: ")
+  "List of regular expressions matching input prompts."
+  :type '(repeat regexp)
+  :version "24.4"
   :group 'python-mode)
+
+(defvar py-ipython-output-prompt-re "^Out\\[[0-9]+\\]: "
+  "A regular expression to match the output prompt of IPython.")
+
+(defcustom py-shell-output-prompt-regexps
+  '(""                                  ; Python
+    "Out\\[[0-9]+\\]: "                 ; IPython
+    "Out :")                            ; ipdb safeguard
+  "List of regular expressions matching output prompts."
+  :type '(repeat string)
+  :version "24.4"
+  :group 'python-mode)
+
+(defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
+  "Recognize the pydb-prompt.")
+;; (setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
+
+(defvar py-ipython-input-prompt-re "In \\[?[0-9 ]*\\]?: *\\|^[ ]\\{3\\}[.]\\{3,\\}: *"
+  "A regular expression to match the IPython input prompt.")
+
+(defvar py-shell-prompt-regexp
+  (concat "\\("
+	  (mapconcat 'identity
+		     (delq nil
+			   (list
+			    py-shell-input-prompt-1-regexp
+			    py-shell-input-prompt-2-regexp
+			    py-ipython-input-prompt-re
+			    py-ipython-output-prompt-re
+			    py-pdbtrack-input-prompt
+			    py-pydbtrack-input-prompt
+			    "[.]\\{3,\\}:? *"
+			    ))
+		     "\\|")
+	  "\\)")
+  "Internally used by `py-fast-filter'.
+‘ansi-color-filter-apply’ might return
+Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
+
+(defvar py-fast-filter-re
+  (concat "\\("
+	  (mapconcat 'identity
+		     (delq nil
+			   (list
+			    py-shell-input-prompt-1-regexp
+			    py-shell-input-prompt-2-regexp
+			    py-ipython-input-prompt-re
+			    py-ipython-output-prompt-re
+			    py-pdbtrack-input-prompt
+			    py-pydbtrack-input-prompt
+			    "[.]\\{3,\\}:? *"
+			    ))
+		     "\\|")
+	  "\\)")
+  "Internally used by `py-fast-filter'.
+‘ansi-color-filter-apply’ might return
+Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
+
+(defcustom py-shell-prompt-detect-p nil
+  "Non-nil enables autodetection of interpreter prompts."
+  :type 'boolean
+  :safe 'booleanp
+  :version "24.4")
 
 (defcustom py-shell-prompt-read-only t
   "If non-nil, the python prompt is read only.
@@ -1402,6 +1505,22 @@ Setting this variable will only effect new shells."
   :type 'boolean
   :tag "py-shell-prompt-read-only"
   :group 'python-mode)
+
+(setq py-fast-filter-re
+  (concat "\\("
+	  (mapconcat 'identity
+		     (delq nil
+			   (list
+			    py-shell-input-prompt-1-regexp
+			    py-shell-input-prompt-2-regexp
+			    py-ipython-input-prompt-re
+			    py-ipython-output-prompt-re
+			    py-pdbtrack-input-prompt
+			    py-pydbtrack-input-prompt
+			    "[.]\\{3,\\}:? *"
+			    ))
+		     "\\|")
+	  "\\)"))
 
 (defcustom py-honor-IPYTHONDIR-p nil
   "When non-nil ipython-history file is constructed by $IPYTHONDIR.
@@ -2120,38 +2239,6 @@ Bug #31 - wrong fontification caused by string-delimiters in output"
   :tag "py-force-default-output-buffer-p"
   :group 'python-mode)
 
-(defcustom py-shell-prompt-regexp ">>> *"
-  "Regular Expression matching top-level input prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :tag "py-shell-prompt-regexp"
-  :group 'python-mode)
-
-(defcustom py-shell-prompt-input-regexp
-  '(">>> " "\\.\\.\\. "                 ; Python
-    "In \\[[0-9]+\\]: "                 ; IPython
-    "   \\.\\.\\.: "                    ; IPython
-    ;; Using ipdb outside IPython may fail to cleanup and leave static
-    ;; IPython prompts activated, this adds some safeguard for that.
-    "In : " "\\.\\.\\.: ")
-  "List of regular expressions matching input prompts."
-  :type '(repeat string)
-  :version "24.4")
-
-(defcustom py-shell-prompt-output-regexps
-  '(""                                  ; Python
-    "Out\\[[0-9]+\\]: "                 ; IPython
-    "Out :")                            ; ipdb safeguard
-  "List of regular expressions matching output prompts."
-  :type '(repeat string)
-  :version "24.4")
-
-(defcustom py-shell-prompt-detect-p nil
-  "Non-nil enables autodetection of interpreter prompts."
-  :type 'boolean
-  :safe 'booleanp
-  :version "24.4")
-
 (defcustom py-shell-unbuffered t
   "Should shell output be unbuffered?.
 When non-nil, this may prevent delayed and missing output in the
@@ -2438,12 +2525,14 @@ This variant of `rx' supports common Python named REGEXPS."
               (t
                (rx-to-string (car regexps) t)))))))
 
-(defcustom py-shell-prompt-output-regexp ""
-  "Regular Expression matching output prompt of python shell.
-It should not contain a caret (^) at the beginning."
-  :type 'string
-  :tag "py-shell-prompt-output-regexp"
-  :group 'python-mode)
+(defvar py-shell-prompt-output-regexp ""
+  "See py-shell-prompt-output-regexps")
+
+(defvar py-shell-prompt-output-regexps
+  '(""                                  ; Python
+    "Out\\[[0-9]+\\]: "                 ; IPython
+    "Out :")                            ; ipdb safeguard
+  "List of regular expressions matching output prompts.")
 
 (defvar py-underscore-word-syntax-p t
   "This is set later by defcustom, only initial value here.
@@ -2582,11 +2671,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
                           `py-custom-temp-directory' will take precedence when setq")
 
-(defvar py-ipython-input-prompt-re "In \\[?[0-9 ]*\\]?: *\\|^[ ]\\{3\\}[.]\\{3,\\}: *"
-  "A regular expression to match the IPython input prompt.")
-
-;; (setq py-ipython-input-prompt-re "In \\[?[0-9 ]*\\]?: *\\|^[ ]\\{3\\}[.]\\{3,\\}: *")
-
 (defvar py-exec-command nil
   "Internally used.")
 
@@ -2601,9 +2685,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-pyflakespep8-history nil)
 
 (defvar py-pylint-history nil)
-
-(defvar py-ipython-output-prompt-re "^Out\\[[0-9]+\\]: "
-  "A regular expression to match the output prompt of IPython.")
 
 (defvar py-mode-output-map nil
   "Keymap used in *Python Output* buffers.")
@@ -2789,25 +2870,6 @@ for options to pass to the DOCNAME interpreter. \"
     (when (interactive-p) (switch-to-buffer (current-buffer))
           (goto-char (point-max)))))
 ")
-
-(defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
-  "Recognize the pydb-prompt.")
-;; (setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
-
-(defvar py-fast-filter-re (concat "\\("
-			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
-					  "\\|")
-			       "\\)")
-  "Internally used by `py-fast-filter'.
-‘ansi-color-filter-apply’ might return
-Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
-
-(setq py-fast-filter-re (concat "\\("
-			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
-					  "\\|")
-			       "\\)"))
 
 ;; Constants
 (defconst py-block-closing-keywords-re
@@ -3849,7 +3911,7 @@ Optional argument END specify end."
 	(if (or (eq major-mode 'comint-mode)
 		(eq major-mode 'py-shell-mode))
 	    (if
-		(re-search-backward py-fast-filter-re nil t 1)
+		(re-search-backward py-shell-prompt-regexp nil t 1)
 		(goto-char (match-end 0))
 	      ;; (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
 	      (goto-char beg))
@@ -3925,7 +3987,6 @@ With optional ARG message state switched to"
   (interactive "p")
   (setq py-closing-list-dedents-bos (not py-closing-list-dedents-bos))
   (when arg (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
-
 
 (defmacro py-test-with-temp-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
@@ -6672,7 +6733,7 @@ detection and just returns nil."
               "  + `py-shell-input-prompt-2-regexp'\n"
               "  + `py-shell-prompt-output-regexp'\n"
               "Or alternatively in:\n"
-              "  + `py-shell-prompt-input-regexp'\n"
+              "  + `py-shell-input-prompt-regexps'\n"
               "  + `py-shell-prompt-output-regexps'"))
           prompts)))))
 
@@ -6687,14 +6748,12 @@ regexps: `py-shell-prompt-regexp',
 `py-shell-input-prompt-2-regexp',
 `py-shell-prompt-pdb-regexp',
 `py-shell-prompt-output-regexp',
-`py-shell-prompt-input-regexp',
+`py-shell-input-prompt-regexps',
 `py-shell-prompt-output-regexps'."
-  (dolist (symbol (list 'py-shell-prompt-input-regexp
+  (dolist (symbol (list 'py-shell-input-prompt-1-regexp
                         'py-shell-prompt-output-regexps
-                        'py-shell-prompt-regexp
                         'py-shell-input-prompt-2-regexp
-                        'py-shell-prompt-pdb-regexp
-                        'py-shell-prompt-output-regexp))
+                        'py-shell-prompt-pdb-regexp))
     (dolist (regexp (let ((regexps (symbol-value symbol)))
                       (if (listp regexps)
                           regexps
@@ -6709,7 +6768,7 @@ regexps: `py-shell-prompt-regexp',
 Build and set the values for input- and output-prompt regexp
 using the values from `py-shell-prompt-regexp',
 `py-shell-input-prompt-2-regexp', `py-shell-prompt-pdb-regexp',
-`py-shell-prompt-output-regexp', `py-shell-prompt-input-regexp',
+`py-shell-prompt-output-regexp', `py-shell-input-prompt-regexps',
  and detected prompts from `py-shell-prompt-detect'."
   (when (not (and py-shell--prompt-calculated-input-regexp
                   py-shell--prompt-calculated-output-regexp))
@@ -6732,9 +6791,8 @@ using the values from `py-shell-prompt-regexp',
       ;; Validate ALL regexps
       (py-shell-prompt-validate-regexps)
       ;; Collect all user defined input prompts
-      (dolist (prompt (append py-shell-prompt-input-regexp
-                              (list py-shell-prompt-regexp
-                                    py-shell-input-prompt-2-regexp
+      (dolist (prompt (append py-shell-input-prompt-regexps
+                              (list py-shell-input-prompt-2-regexp
                                     py-shell-prompt-pdb-regexp)))
         (cl-pushnew prompt input-prompts :test #'string=))
       ;; Collect all user defined output prompts
@@ -11618,20 +11676,13 @@ optional argument."
 (defun py--fetch-result (buffer limit &optional cmd)
   "CMD: some shells echo the command in output-buffer
 Delete it here"
-  (let ((fetch-re (if (and py-shell--prompt-calculated-input-regexp
-			   py-shell--prompt-calculated-output-regexp)
-		      (concat py-shell--prompt-calculated-input-regexp "\\|" py-shell--prompt-calculated-output-regexp)
-		    (progn
-		      (py-shell-prompt-set-calculated-regexps)
-		      (concat py-shell--prompt-calculated-input-regexp "\\|" py-shell--prompt-calculated-output-regexp)
-		      ))))
-    (when py-verbose-p (message "(current-buffer): %s" (current-buffer))
-	  (switch-to-buffer (current-buffer)))
-    (if python-mode-v5-behavior-p
-	(with-current-buffer buffer
-	  (string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
-      (when (< limit (point-max))
-	(string-trim (replace-regexp-in-string fetch-re "" (buffer-substring-no-properties limit (point-max))))))))
+  (when py-verbose-p (message "(current-buffer): %s" (current-buffer))
+	(switch-to-buffer (current-buffer)))
+  (if python-mode-v5-behavior-p
+      (with-current-buffer buffer
+	(string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n"))
+    (when (< limit (point-max))
+      (string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max)))))))
 
 (defun py--postprocess (output-buffer origline limit &optional cmd filename)
   "Provide return values, check result for error, manage windows.
@@ -11757,7 +11808,7 @@ Optional FAST RETURN"
 		     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
 	 (strg (py--fix-start strg-raw))
 	 (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
-	 ;; (windows-config (window-configuration-to-register py-windows-config-register))
+	 ;; error messages may mention differently when running from a temp-file
 	 (origline
 	  (format "%s" (save-restriction
 			 (widen)
@@ -12271,8 +12322,9 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 	  (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
 	    (forward-line -1)
 	    (end-of-line)
-	    (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
-		      (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
+	    (when (re-search-backward py-shell-prompt-regexp t 1)
+		;; (or (re-search-backward py-shell-prompt-regexp nil t 1)
+		;; (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
 	      (save-excursion
 		(when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
 		  (setq erg (copy-marker (point)))
@@ -12280,7 +12332,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 					(save-match-data
 					  (when (looking-at
 						 ;; all prompt-regexp known
-						 py-fast-filter-re)
+						 1py-shell-prompt-regexp)
 					    (goto-char (match-end 0)))))
 
 					(progn (skip-chars-forward " \t\r\n\f"   (line-end-position))(point)))
@@ -13157,14 +13209,15 @@ not inside a defun."
     (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
     (ignore-errors (py-kill-buffer-unconditional buffer-name))
     (with-temp-buffer-window
-     (set-buffer (get-buffer-create buffer-name))
-     (setq inhibit-read-only t)
-     (setq inhibit-point-motion-hooks t)
-       (erase-buffer)
-       (when py-debug-p (message "%s" (current-buffer)))
-       (py-send-string cmd nil nil nil nil (current-buffer))
-       )))
-       
+	(set-buffer (get-buffer-create buffer-name))
+	(setq inhibit-read-only t)
+	(setq inhibit-point-motion-hooks t)
+      (erase-buffer)
+      (when py-debug-p (message "%s" (current-buffer)))
+      (py-send-string cmd nil t)
+      (insert py-result)
+      )))
+
 (defun py-help-at-point ()
   "Print help on symbol at point.
 
@@ -22727,12 +22780,15 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
         (erase-buffer))
       proc)))
 
-(defun py-fast-send-string (strg proc output-buffer &optional result no-output)
-  (let ((inhibit-read-only t)
-	(limit (marker-position (process-mark proc)))
-	erg)
+(defun py-fast-send-string (strg  &optional proc output-buffer result no-output argprompt args dedicated shell exception-buffer)
+  (interactive
+   (list (read-string "Python command: ")))
+  (py-send-string strg proc result no-output nil output-buffer t argprompt args dedicated shell exception-buffer))
+
+(defun py--fast-send-string-no-output-intern (strg proc limit output-buffer no-output)
+  (let (erg)
     (with-current-buffer output-buffer
-      ;; (switch-to-buffer (current-buffer))
+      (when py-debug-p (switch-to-buffer (current-buffer)))
       ;; (erase-buffer)
       (process-send-string proc strg)
       (or (string-match "\n$" strg)
@@ -22750,6 +22806,9 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 	       (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer limit))(sit-for 1 t)))
 	       (or (py--fetch-result output-buffer limit))
 	       (error "py-fast-send-string: py--fetch-result: no result")))))))
+  
+(defun py--fast-send-string-no-output (strg  &optional proc output-buffer result)
+  (py-fast-send-string strg proc output-buffer result t))
 
 (defun py--send-to-fast-process (strg proc output-buffer result)
   "Called inside of ‘py--execute-base-intern’.
@@ -23397,7 +23456,7 @@ process buffer for a list of commands.)"
     (if (setq proc (get-buffer-process buffer))
 	(progn
 	  (with-current-buffer buffer
-	    (py-shell-mode)
+	    (unless fast (py-shell-mode))
 	    (and internal (set-process-query-on-exit-flag proc nil)))
 	  (when (or interactivep
 		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
@@ -24860,7 +24919,7 @@ Return the output."
      (with-current-buffer (process-buffer proc)
        (comint-interrupt-subjob)))))
 
-(defun py-send-string (strg &optional process result no-output orig output-buffer)
+(defun py-send-string (strg &optional process result no-output orig output-buffer fast argprompt args dedicated shell exception-buffer split switch internal)
   "Evaluate STRG in Python PROCESS.
 
 With optional Arg PROCESS send to process.
@@ -24870,13 +24929,19 @@ With optional Arg ORIG deliver original position.
 With optional Arg OUTPUT-BUFFER specify output-buffer"
   (interactive "sPython command: ")
   (save-excursion
-    (let* ((buffer (or output-buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell)))))
-	   (proc (or process (get-buffer-process buffer) (py-shell nil nil nil nil (buffer-name buffer))))
+    (let* ((buffer (or output-buffer (or (and process (buffer-name (process-buffer process))) (buffer-name (py-shell argprompt args dedicated shell output-buffer fast exception-buffer split switch internal)))))
+	   (proc (or process (get-buffer-process buffer)))
+	   ;; nil nil nil nil (buffer-name buffer))))
 	   (orig (or orig (point)))
    	   (limit (ignore-errors (marker-position (process-mark proc)))))
-      (cond (no-output
+      (cond ((and no-output fast)
+	     (py--fast-send-string-no-output-intern strg proc limit buffer no-output))
+	    (no-output
 	     (py-send-string-no-output strg proc))
-	    ((and (string-match ".\n+." strg) (string-match "^[Ii]" (buffer-name buffer)))  ;; multiline
+	    ((and (string-match ".\n+." strg) (string-match "^[Ii]"
+							    ;; (buffer-name buffer)
+							    buffer
+							    ))  ;; multiline
 	     (let* ((temp-file-name (py-temp-file-name strg))
 		    (file-name (or (buffer-file-name) temp-file-name)))
 	       (py-send-file file-name proc)))
@@ -24890,9 +24955,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 			(setq py-result
 			      (py--fetch-result buffer limit strg)))
 		       (no-output
-			(and orig (py--cleanup-shell orig buffer)))))))))
-  ;; (switch-to-buffer (current-buffer))
-  )
+			(and orig (py--cleanup-shell orig buffer))))))))))
 
 (defun py-send-file (file-name process)
   "Send FILE-NAME to Python PROCESS."
