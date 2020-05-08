@@ -1381,27 +1381,19 @@ Default is \"--errors-only\""
 (defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *"
   "Recognize the prompt.")
 
-;; (defcustom py-shell-input-prompt-1-regexp ">>> "
-;;   "A regular expression to match the input prompt of the shell."
-;;   :type 'regexp
-;;   :tag "py-shell-input-prompt-1-regexp"
-;;   :group 'python-mode)
+(defcustom py-shell-input-prompt-1-regexp ">>> "
+  "A regular expression to match the input prompt of the shell."
+  :type 'regexp
+  :tag "py-shell-input-prompt-1-regexp"
+  :group 'python-mode)
 
-;; (defcustom py-shell-input-prompt-2-regexp "[.][.][.]:? "
-;;   "A regular expression to match the input prompt.
+(defcustom py-shell-input-prompt-2-regexp "[.][.][.]:? "
+  "A regular expression to match the input prompt.
 
-;; Applies to the shell after the first line of input."
-;;   :type 'string
-;;   :tag "py-shell-input-prompt-2-regexp"
-;;   :group 'python-mode)
-
-(defvar py-shell-input-prompt-1-regexp ">>> *"
-  "Regular Expression matching top-level input prompt of python shell.
-It should not contain a caret (^) at the beginning.")
-
-(defvar py-shell-input-prompt-2-regexp "\\.\\.\\. "
-  "Regular Expression matching top-level input prompt of python shell.
-It should not contain a caret (^) at the beginning.")
+Applies to the shell after the first line of input."
+  :type 'string
+  :tag "py-shell-input-prompt-2-regexp"
+  :group 'python-mode)
 
 (defvar py-shell-ipython-input-prompt-1-regexp "In \\[[0-9]+\\]: "
   "Regular Expression matching top-level input prompt of python shell.
@@ -1942,6 +1934,15 @@ As v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncode
   (interactive)
   (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
   (when (interactive-p) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
+
+(defun py-toggle-py-verbose-p ()
+  "Switch the values of ‘py-verbose-p-p’
+
+Default is nil.
+If on, messages value of ‘py-result’ for instance."
+  (interactive)
+  (setq py-verbose-p-p (not py-verbose-p-p))
+  (when (interactive-p) (message "py-verbose-p-p: %s" py-verbose-p-p)))
 
 (defcustom py-trailing-whitespace-smart-delete-p nil
   "Default is nil.
@@ -22806,7 +22807,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 	       (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer limit))(sit-for 1 t)))
 	       (or (py--fetch-result output-buffer limit))
 	       (error "py-fast-send-string: py--fetch-result: no result")))))))
-  
+
 (defun py--fast-send-string-no-output (strg  &optional proc output-buffer result)
   (py-fast-send-string strg proc output-buffer result t))
 
@@ -22823,8 +22824,26 @@ Optional STRG PROC OUTPUT-BUFFER RETURN"
 			   proc
 			   output-buffer result))))
 
+(defun py-execute-buffer-fast (&optional shell dedicated split switch proc)
+  "Send accessible part of buffer to a Python interpreter.
+
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SPLIT: split buffers after executing
+Optional SWITCH: switch to output buffer after executing
+Optional PROC: select an already running process for executing"
+  (interactive)
+  (py-execute-buffer shell dedicated t split switch proc))
+
 (defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
+  "Send region to a Python interpreter.
+
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SPLIT: split buffers after executing
+Optional SWITCH: switch to output buffer after executing
+Optional PROC: select an already running process for executing"
   (interactive "r")
   (let ((py-fast-process-p t))
     (py-execute-region beg end shell dedicated t split switch proc)))
@@ -22832,77 +22851,121 @@ Optional STRG PROC OUTPUT-BUFFER RETURN"
 (defun py-execute-block-fast (&optional shell dedicated switch beg end file)
   "Process block at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'block shell dedicated switch beg end file t))
 
 (defun py-execute-block-or-clause-fast (&optional shell dedicated switch beg end file)
   "Process block-or-clause at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'block-or-clause shell dedicated switch beg end file t))
 
 (defun py-execute-class-fast (&optional shell dedicated switch beg end file)
   "Process class at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'class shell dedicated switch beg end file t))
 
 (defun py-execute-clause-fast (&optional shell dedicated switch beg end file)
   "Process clause at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'clause shell dedicated switch beg end file t))
 
 (defun py-execute-def-fast (&optional shell dedicated switch beg end file)
   "Process def at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'def shell dedicated switch beg end file t))
 
 (defun py-execute-def-or-class-fast (&optional shell dedicated switch beg end file)
   "Process def-or-class at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'def-or-class shell dedicated switch beg end file t))
 
 (defun py-execute-expression-fast (&optional shell dedicated switch beg end file)
   "Process expression at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'expression shell dedicated switch beg end file t))
 
 (defun py-execute-partial-expression-fast (&optional shell dedicated switch beg end file)
   "Process partial-expression at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'partial-expression shell dedicated switch beg end file t))
 
 (defun py-execute-section-fast (&optional shell dedicated switch beg end file)
   "Process section at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'section shell dedicated switch beg end file t))
 
 (defun py-execute-statement-fast (&optional shell dedicated switch beg end file)
   "Process statement at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'statement shell dedicated switch beg end file t))
 
 (defun py-execute-top-level-fast (&optional shell dedicated switch beg end file)
   "Process top-level at point by a Python interpreter.
 
-Output buffer not in comint-mode, displays \"Fast\"  by default"
+Output buffer not in comint-mode, displays \"Fast\"  by default
+Optional SHELL: Selecte a Python-shell(VERSION) as py-shell-name
+Optional DEDICATED: run in a dedicated process
+Optional SWITCH: switch to output buffer after executing
+Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare 'top-level shell dedicated switch beg end file t))
 
