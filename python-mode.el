@@ -2433,71 +2433,71 @@ or ‘py-shell--prompt-calculated-output-regexp’ are set
 ‘py-shell-prompt-set-calculated-regexps’ isn't run.
 ")
 
-(defmacro py-rx (&rest regexps)
-  "Python mode specialized rx macro.
-This variant of `rx' supports common Python named REGEXPS."
-  `(rx-let ((block-start       (seq symbol-start
-                                    (or "def" "class" "if" "elif" "else" "try"
-                                        "except" "finally" "for" "while" "with"
-                                        ;; Python 3.5+ PEP492
-                                        (and "async" (+ space)
-                                             (or "def" "for" "with")))
-                                    symbol-end))
-            (dedenter          (seq symbol-start
-                                    (or "elif" "else" "except" "finally")
-                                    symbol-end))
-            (block-ender       (seq symbol-start
-                                    (or
-                                     "break" "continue" "pass" "raise" "return")
-                                    symbol-end))
-            (decorator         (seq line-start (* space) ?@ (any letter ?_)
-                                    (* (any word ?_))))
-            (defun             (seq symbol-start
-                                    (or "def" "class"
-                                        ;; Python 3.5+ PEP492
-                                        (and "async" (+ space) "def"))
-                                    symbol-end))
-            (if-name-main      (seq line-start "if" (+ space) "__name__"
-                                    (+ space) "==" (+ space)
-                                    (any ?' ?\") "__main__" (any ?' ?\")
-                                    (* space) ?:))
-            (symbol-name       (seq (any letter ?_) (* (any word ?_))))
-            (open-paren        (or "{" "[" "("))
-            (close-paren       (or "}" "]" ")"))
-            (simple-operator   (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))
-            (not-simple-operator (not simple-operator))
-            (operator          (or "==" ">=" "is" "not"
-                                   "**" "//" "<<" ">>" "<=" "!="
-                                   "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-                                   "=" "%"))
-            (assignment-operator (or "+=" "-=" "*=" "/=" "//=" "%=" "**="
-                                     ">>=" "<<=" "&=" "^=" "|="
-                                     "="))
-            (string-delimiter  (seq
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by an
-                                    ;; escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"\"\"" "\"" "'''" "'"))))
-            (coding-cookie (seq line-start ?# (* space)
-                                (or
-                                 ;; # coding=<encoding name>
-                                 (: "coding" (or ?: ?=) (* space)
-                                    (group-n 1 (+ (or word ?-))))
-                                 ;; # -*- coding: <encoding name> -*-
-                                 (: "-*-" (* space) "coding:" (* space)
-                                    (group-n 1 (+ (or word ?-)))
-                                    (* space) "-*-")
-                                 ;; # vim: set fileencoding=<encoding name> :
-                                 (: "vim:" (* space) "set" (+ space)
-                                    "fileencoding" (* space) ?= (* space)
-                                    (group-n 1 (+ (or word ?-)))
-                                    (* space) ":")))))
-     (rx ,@regexps)))
+;; (defmacro py-rx (&rest regexps)
+;;   "Python mode specialized rx macro.
+;; This variant of `rx' supports common Python named REGEXPS."
+;;   `(rx-let ((block-start       (seq symbol-start
+;;                                     (or "def" "class" "if" "elif" "else" "try"
+;;                                         "except" "finally" "for" "while" "with"
+;;                                         ;; Python 3.5+ PEP492
+;;                                         (and "async" (+ space)
+;;                                              (or "def" "for" "with")))
+;;                                     symbol-end))
+;;             (dedenter          (seq symbol-start
+;;                                     (or "elif" "else" "except" "finally")
+;;                                     symbol-end))
+;;             (block-ender       (seq symbol-start
+;;                                     (or
+;;                                      "break" "continue" "pass" "raise" "return")
+;;                                     symbol-end))
+;;             (decorator         (seq line-start (* space) ?@ (any letter ?_)
+;;                                     (* (any word ?_))))
+;;             (defun             (seq symbol-start
+;;                                     (or "def" "class"
+;;                                         ;; Python 3.5+ PEP492
+;;                                         (and "async" (+ space) "def"))
+;;                                     symbol-end))
+;;             (if-name-main      (seq line-start "if" (+ space) "__name__"
+;;                                     (+ space) "==" (+ space)
+;;                                     (any ?' ?\") "__main__" (any ?' ?\")
+;;                                     (* space) ?:))
+;;             (symbol-name       (seq (any letter ?_) (* (any word ?_))))
+;;             (open-paren        (or "{" "[" "("))
+;;             (close-paren       (or "}" "]" ")"))
+;;             (simple-operator   (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))
+;;             (not-simple-operator (not simple-operator))
+;;             (operator          (or "==" ">=" "is" "not"
+;;                                    "**" "//" "<<" ">>" "<=" "!="
+;;                                    "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+;;                                    "=" "%"))
+;;             (assignment-operator (or "+=" "-=" "*=" "/=" "//=" "%=" "**="
+;;                                      ">>=" "<<=" "&=" "^=" "|="
+;;                                      "="))
+;;             (string-delimiter  (seq
+;;                                 ;; Match even number of backslashes.
+;;                                 (or (not (any ?\\ ?\' ?\")) point
+;;                                     ;; Quotes might be preceded by an
+;;                                     ;; escaped quote.
+;;                                     (and (or (not (any ?\\)) point) ?\\
+;;                                          (* ?\\ ?\\) (any ?\' ?\")))
+;;                                 (* ?\\ ?\\)
+;;                                 ;; Match single or triple quotes of any kind.
+;;                                 (group (or  "\"\"\"" "\"" "'''" "'"))))
+;;             (coding-cookie (seq line-start ?# (* space)
+;;                                 (or
+;;                                  ;; # coding=<encoding name>
+;;                                  (: "coding" (or ?: ?=) (* space)
+;;                                     (group-n 1 (+ (or word ?-))))
+;;                                  ;; # -*- coding: <encoding name> -*-
+;;                                  (: "-*-" (* space) "coding:" (* space)
+;;                                     (group-n 1 (+ (or word ?-)))
+;;                                     (* space) "-*-")
+;;                                  ;; # vim: set fileencoding=<encoding name> :
+;;                                  (: "vim:" (* space) "set" (+ space)
+;;                                     "fileencoding" (* space) ?= (* space)
+;;                                     (group-n 1 (+ (or word ?-)))
+;;                                     (* space) ":")))))
+;;      (rx ,@regexps)))
 
 (defvar py-shell-prompt-output-regexp ""
   "See py-shell-prompt-output-regexps")
@@ -6840,8 +6840,9 @@ using that one instead of current buffer's process."
        (start
 	(save-excursion
 	  (if (not (re-search-backward
-		    (py-rx
-		     (or whitespace open-paren close-paren string-delimiter simple-operator))
+		    ;; (py-rx
+		    ;;  (or whitespace open-paren close-paren string-delimiter simple-operator))
+		    "[[:space:]]\\|[([{]\\|[])}]\\|\\(?:[^\"'\\]\\|\\=\\|\\(?:[^\\]\\|\\=\\)\\\\\\(?:\\\\\\\\\\)*[\"']\\)\\(?:\\\\\\\\\\)*\\(\\(?:\"\"\"\\|'''\\|[\"']\\)\\)\\|[%&*+/<->^|~-]"
 		    line-start
 		    t 1))
 	      line-start
@@ -7082,7 +7083,10 @@ Returns the encoding as a symbol."
              (buffer-substring-no-properties
               (point)
               (point-min))))))
-    (when (string-match (py-rx coding-cookie) first-two-lines)
+    (when (string-match 
+	   ;; (py-rx coding-cookie)
+	   "^#[[:space:]]*\\(?:coding[:=][[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)\\|-\\*-[[:space:]]*coding:[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*-\\*-\\|vim:[[:space:]]*set[[:space:]]+fileencoding[[:space:]]*=[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*:\\)"
+	   first-two-lines)
       (intern (match-string-no-properties 1 first-two-lines)))))
 
 (unless (functionp 'file-local-name)
