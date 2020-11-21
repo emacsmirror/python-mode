@@ -1575,7 +1575,7 @@ See also `py-keep-windows-configuration'"
   "Toggle between customized value and nil"
   (interactive)
   (setq py-split-window-on-execute (not py-split-window-on-execute))
-  (when (interactive-p)
+  (when (called-interactively-p 'interactive)
     (message "py-split-window-on-execute: %s" py-split-window-on-execute)
     py-split-window-on-execute))
 
@@ -1917,7 +1917,8 @@ As v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncode
   "Switch the values of ‘python-mode-v5-behavior-p’"
   (interactive)
   (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
-  (when (interactive-p) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
+  (when (called-interactively-p 'interactive)
+    (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
 
 (defun py-toggle-py-verbose-p ()
   "Switch the values of ‘py-verbose-p’
@@ -1926,7 +1927,8 @@ Default is nil.
 If on, messages value of ‘py-result’ for instance."
   (interactive)
   (setq py-verbose-p (not py-verbose-p))
-  (when (interactive-p) (message "py-verbose-p: %s" py-verbose-p)))
+  (when (called-interactively-p 'interactive)
+    (message "py-verbose-p: %s" py-verbose-p)))
 
 (defcustom py-trailing-whitespace-smart-delete-p nil
   "Default is nil.
@@ -2759,8 +2761,9 @@ for options to pass to the DOCNAME interpreter. \"
   (interactive \"P\")
   (let\* ((py-shell-name \"FULLNAME\"))
     (py-shell argprompt)
-    (when (interactive-p) (switch-to-buffer (current-buffer))
-          (goto-char (point-max)))))
+    (when (called-interactively-p 'interactive)
+      (switch-to-buffer (current-buffer))
+      (goto-char (point-max)))))
 ")
 
 ;; Constants
@@ -3442,13 +3445,15 @@ TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
   "Toggle value of ‘py--imenu-create-index-p’"
   (interactive)
   (setq py--imenu-create-index-p (not py--imenu-create-index-p))
-  (when (interactive-p) (message "py--imenu-create-index-p: %s" py--imenu-create-index-p)))
+  (when (called-interactively-p 'interactive)
+    (message "py--imenu-create-index-p: %s" py--imenu-create-index-p)))
 
 (defun py-toggle-shell-completion ()
   "Switches value of buffer-local var ‘py-shell-complete-p’"
   (interactive)
     (setq py-shell-complete-p (not py-shell-complete-p))
-    (when (interactive-p) (message "py-shell-complete-p: %s" py-shell-complete-p)))
+    (when (called-interactively-p 'interactive)
+      (message "py-shell-complete-p: %s" py-shell-complete-p)))
 
 (defun py--python-send-setup-code-intern (name buffer)
   (save-excursion
@@ -7049,7 +7054,7 @@ Default is t")
         (define-key map [(control j)] 'py-newline-and-indent)
         ;; Most Pythoneers expect RET `py-newline-and-indent'
         ;; (define-key map (kbd "RET") 'py-newline-and-dedent)
-        (define-key map (kbd "RET") py-return-key)
+        (define-key map (kbd "RET") 'py-return-key)
         ;; (define-key map (kbd "RET") 'newline)
         (define-key map [(super backspace)] 'py-dedent)
         ;; (define-key map [(control return)] 'py-newline-and-dedent)
@@ -9804,7 +9809,7 @@ Return position if successful."
 	    (while (and (setq last (py-backward-statement))
 			(not (looking-at py-assignment-re))))
 	    (and (looking-at py-assignment-re) last))))
-    (when (and py-verbose-p (interactive-p))
+    (when (and py-verbose-p (called-interactively-p 'interactive))
       (message "%s" erg))
     erg))
 
@@ -9822,7 +9827,7 @@ Return position of successful, nil of not started from inside."
 			    ;; (not (bolp))
 			    ))
 		(and (looking-at py-assignment-re) last)))))
-    (when (and py-verbose-p (interactive-p))
+    (when (and py-verbose-p (called-interactively-p 'interactive))
       (message "%s" erg))
     erg))
 
@@ -9854,7 +9859,8 @@ Return position of successful, nil of not started from inside"
 		    (and (looking-at py-assignment-re) last))))
 	     erg)
 	(and beg (setq erg (py--forward-assignment-intern)))
-	(when (and py-verbose-p (interactive-p)) (message "%s" erg))
+	(when (and py-verbose-p (called-interactively-p 'interactive))
+          (message "%s" erg))
 	erg))))
 
 (defun py-forward-assignment()
@@ -9885,7 +9891,8 @@ When called at the end of an assignment, check next form downwards."
 	  (when last
 	    (goto-char last)
 	    (setq erg (point))))
-	(when (and py-verbose-p (interactive-p)) (message "%s" erg))
+	(when (and py-verbose-p (called-interactively-p 'interactive))
+          (message "%s" erg))
 	erg))))
 
 ;; python-components-kill-forms
@@ -11507,7 +11514,8 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
     (if proc
 	(setq erg (py-send-string (concat "import os\;os.getcwd()") proc nil t))
       (setq erg (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -c \"import os; print(os.getcwd())\"")))))
-    (when (interactive-p) (message "CWD: %s" erg))
+    (when (called-interactively-p 'interactive)
+      (message "CWD: %s" erg))
     erg))
 
 (defun py-set-working-directory (&optional directory)
@@ -11520,7 +11528,8 @@ when given, to value of ‘py-default-working-directory’ otherwise"
 	 erg)
     (py-send-string (concat "import os\;os.chdir(\"" dir "\")") proc nil t)
     (setq erg (py-send-string "os.getcwd()" proc nil t))
-    (when (interactive-p) (message "CWD changed to: %s" erg))
+    (when (called-interactively-p 'interactive)
+      (message "CWD changed to: %s" erg))
     erg))
 
 (defun py--update-execute-directory-intern (dir proc procbuf fast)
@@ -11917,7 +11926,8 @@ May we get rid of the temporary file?"
             (setq erg (py--execute-file-base nil (expand-file-name filename) nil nil origline))
           (py--execute-file-base nil (expand-file-name filename)))
       (message "%s not readable. %s" filename "Do you have write permissions?"))
-    (py--shell-manage-windows py-output-buffer py-exception-buffer nil (or (interactive-p)))
+    (py--shell-manage-windows py-output-buffer py-exception-buffer nil
+                              (or (called-interactively-p 'interactive)))
     erg))
 
 (defun py-execute-string (&optional strg shell dedicated switch fast)
@@ -13049,7 +13059,8 @@ Useful for newly defined symbol, not known to python yet."
           (when erg
             (set-buffer (get-buffer-create "*Python-Help*"))
             (erase-buffer)
-            ;; (when (interactive-p) (switch-to-buffer (current-buffer)))
+            ;; (when (called-interactively-p 'interactive)
+            ;;   (switch-to-buffer (current-buffer)))
             (insert erg)))))))
 
 (defun py-info-current-defun (&optional include-type)
@@ -13505,7 +13516,7 @@ Interactively, prompt for SYMBOL."
          (symbol-raw (or symbol (with-syntax-table py-dotted-expression-syntax-table
 				  (current-word))))
          ;; (enable-recursive-minibuffers t)
-         (symbol (if (interactive-p)
+         (symbol (if (called-interactively-p 'interactive)
 		     (read-string (format "Find location of (default %s): " symbol-raw)
 		                  symbol-raw nil symbol-raw)
 		   symbol-raw))
@@ -23720,7 +23731,7 @@ When interactively called, copy and message it"
   (let ((erg (with-syntax-table
                  py-dotted-expression-syntax-table
                (current-word))))
-    (when (interactive-p) (kill-new erg)
+    (when (called-interactively-p 'interactive) (kill-new erg)
 	  (message "%s" erg))
     erg))
 
@@ -27671,7 +27682,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 (defun all-mode-setting ()
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
   (set (make-local-variable 'eldoc-message-function) 'py-help-at-point)
-  
   )
 
 ;;;###autoload
@@ -27707,7 +27717,7 @@ See available customizations listed in files variables-python-mode at directory 
 
 \\{python-mode-map}"
   :group 'python-mode
-  ;; load known shell listed in 
+  ;; load known shell listed in
   ;; Local vars
   (all-mode-setting)
   (set (make-local-variable 'electric-indent-inhibit) nil)
@@ -27840,7 +27850,7 @@ See available customizations listed in files variables-python-mode at directory 
 
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   (when py-outline-minor-mode-p (outline-minor-mode 1))
-  (when (interactive-p)
+  (when (called-interactively-p 'interactive)
     (py-message-which-python-mode))
   (force-mode-line-update))
 

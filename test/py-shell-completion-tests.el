@@ -27,8 +27,9 @@
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
     (py-test-with-temp-buffer (py-shell nil nil t "python")
-    (sit-for 0.1 t) 
-    (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (sit-for 0.1 t)
+    (when (called-interactively-p 'interactive)
+      (switch-to-buffer (current-buffer)))
     ;; (goto-char (point-max))
     (sit-for 0.1 t)
     (goto-char (or (and (boundp 'comint-last-prompt)(cdr comint-last-prompt)) (point-max)))
@@ -44,7 +45,8 @@
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
     (set-buffer (py-shell nil nil t "python2.7"))
-    (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (when (called-interactively-p 'interactive)
+      (switch-to-buffer (current-buffer)))
     (sit-for 0.1)
     (goto-char (point-max))
     (insert "pri")
@@ -73,7 +75,8 @@
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
     (set-buffer (py-shell nil nil t "python3"))
-    (when (interactive-p) (switch-to-buffer (current-buffer)))
+    (when (called-interactively-p 'interactive)
+      (switch-to-buffer (current-buffer)))
     (goto-char (point-max))
     (insert "pri")
     (py-shell-complete)
