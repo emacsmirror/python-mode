@@ -1111,13 +1111,16 @@ eventually provide a shell."
   :tag "py-uncomment-indents-p"
   :group 'python-mode)
 
-(defcustom py-separator-char 47
+(defcustom py-separator-char "/"
   "The character, which separates the system file-path components.
 
 Precedes guessing when not empty, returned by function `py-separator-char'."
-  :type 'character
+  :type 'string
   :tag "py-separator-char"
   :group 'python-mode)
+
+(defvar py-separator-char "/"
+  "Values set by defcustom only will not be seen in batch-mode.")
 
 (and
  ;; used as a string finally
@@ -2514,9 +2517,6 @@ or ‘py-ipython0.11-completion-command-string’.
 (defvar py-shebang-regexp "#![ \t]?\\([^ \t\n]+\\)[ \t]*\\([biptj]+ython[^ \t\n]*\\)"
   "Detecting the shell in head of file.")
 ;; (setq py-shebang-regexp   "#![ \t]?\\([^ \t\n]+\\)[ \t]*\\([biptj]+ython[^ \t\n]*\\)")
-
-(defvar py-separator-char "/"
-  "Values set by defcustom only will not be seen in batch-mode.")
 
 (defvar py-temp-directory
   (let ((ok '(lambda (x)
@@ -13051,9 +13051,9 @@ Used with ‘eval-after-load’."
 ;; ;
 (defun py--warn-tmp-files-left ()
   "Detect and warn about file of form \"py11046IoE\" in py-temp-directory."
-  (let ((erg1 (file-readable-p (concat py-temp-directory (char-to-string py-separator-char)  (car (directory-files  py-temp-directory nil "py[[:alnum:]]+$"))))))
+  (let ((erg1 (file-readable-p (concat py-temp-directory py-separator-char (car (directory-files  py-temp-directory nil "py[[:alnum:]]+$"))))))
     (when (and py-verbose-p erg1)
-      (message "py--warn-tmp-files-left: %s ?" (concat py-temp-directory (char-to-string py-separator-char) (car (directory-files  py-temp-directory nil "py[[:alnum:]]*$")))))))
+      (message "py--warn-tmp-files-left: %s ?" (concat py-temp-directory py-separator-char (car (directory-files  py-temp-directory nil "py[[:alnum:]]*$")))))))
 
 (defun py-fetch-docu ()
   "Lookup in current buffer for the doku for the symbol at point.
@@ -13492,10 +13492,6 @@ local bindings to py-newline-and-indent."))
 (defun py--find-definition-in-source (sourcefile symbol)
   (called-interactively-p 'any) (message "sourcefile: %s" sourcefile)
   (when (find-file sourcefile)
-    ;; (if (stringp py-separator-char)
-    ;; py-separator-char
-    ;; (char-to-string py-separator-char))
-
     (goto-char (point-min))
     (when
 	(or (re-search-forward (concat py-def-or-class-re symbol) nil t 1)
@@ -23137,15 +23133,12 @@ Use `py-fast-process' "
 
 ;;  Keymap
 
-(defun py-separator-char ()
+(defun py-machine-separator-char ()
   "Return the file-path separator char from current machine.
 
 When `py-separator-char' is customized, its taken.
 Returns char found. "
-  (let ((erg (cond ((characterp py-separator-char)
-                    (char-to-string py-separator-char))
-                   ;; epd hack
-                   ((and
+  (let ((erg (cond ((and
                      (string-match "[Ii][Pp]ython" py-shell-name)
                      (string-match "epd\\|EPD" py-shell-name))
                     (replace-regexp-in-string "\n" ""
