@@ -3465,7 +3465,7 @@ TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
 	(with-temp-buffer
 	  (insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
 	  (write-file setup-file)))
-      (py--execute-file-base (get-buffer-process buffer) setup-file nil buffer nil t)
+      (py--execute-file-base setup-file (get-buffer-process buffer) nil buffer nil t)
       ;; (when py-verbose-p (message "%s" (concat name " setup-code sent to " (process-name (get-buffer-process buffer)))))
       )))
 
@@ -3486,7 +3486,7 @@ Used by `py-ipython-module-completion-string'"
       (with-temp-buffer
 	(insert py-ipython-module-completion-code)
 	(write-file setup-file)))
-    (py--execute-file-base nil setup-file nil (current-buffer) nil t)))
+    (py--execute-file-base setup-file nil nil (current-buffer) nil t)))
 
 (defun py--at-raw-string ()
   "If at beginning of a raw-string."
@@ -11637,7 +11637,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
 	    py-result)
 	(when py-verbose-p (message "py--postprocess: %s" "Don't see any result"))))))
 
-(defun py--execute-file-base (&optional proc filename cmd procbuf origline fast)
+(defun py--execute-file-base (filename &optional proc cmd procbuf origline fast)
   "Send to Python interpreter process PROC.
 
 In Python version 2.. \"execfile('FILENAME')\".
@@ -11668,13 +11668,13 @@ Returns position where output starts."
 (defun py--execute-buffer-finally (strg proc procbuf origline filename fast wholebuf)
   (if (and filename wholebuf (not (buffer-modified-p)))
       (unwind-protect
-	  (py--execute-file-base proc filename nil procbuf origline fast))
+	  (py--execute-file-base filename proc nil procbuf origline fast))
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
       (with-temp-buffer
 	(insert strg)
 	(write-file tempfile))
       (unwind-protect
-	  (py--execute-file-base proc tempfile nil procbuf origline fast)
+	  (py--execute-file-base tempfile proc nil procbuf origline fast)
 	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
 
 (defun py-execute-python-mode-v5 (start end origline filename)
@@ -11711,7 +11711,7 @@ Optional FAST RETURN"
    (py-execute-no-temp-p
     (py--execute-ge24.3 start end execute-directory py-shell-name py-exception-buffer proc file origline))
    ((and filename wholebuf)
-    (py--execute-file-base proc filename nil buffer origline fast))
+    (py--execute-file-base filename proc nil buffer origline fast))
    (t
     ;; (message "(current-buffer) %s" (current-buffer))
     (py--execute-buffer-finally strg proc buffer origline filename fast wholebuf)
@@ -11803,7 +11803,7 @@ Optional FAST RETURN"
 ;;           (progn
 ;;             (setq filename (expand-file-name ,file))
 ;;             (if (file-readable-p filename)
-;;                 (py--execute-file-base nil filename nil nil origline)
+;;                 (py--execute-file-base filename nil nil nil origline)
 ;;               (message "%s not readable. %s" ,file "Do you have write permissions?")))
 ;;         (py--execute-base beg end ,shell filename ,proc ,file ,wholebuf ,fast ,dedicated ,split ,switch)))))
 
@@ -11829,7 +11829,7 @@ Optional FAST RETURN"
           (progn
             (setq filename (expand-file-name file))
             (if (file-readable-p filename)
-                (py--execute-file-base nil filename nil nil origline)
+                (py--execute-file-base filename nil nil nil origline)
               (message "%s not readable. %s" file "Do you have write permissions?")))
         (py--execute-base beg end shell filename proc file wholebuf fast dedicated split switch)))))
 
@@ -11937,8 +11937,8 @@ May we get rid of the temporary file?"
         erg)
     (if (file-readable-p filename)
         (if py-store-result-p
-            (setq erg (py--execute-file-base nil (expand-file-name filename) nil nil origline))
-          (py--execute-file-base nil (expand-file-name filename)))
+            (setq erg (py--execute-file-base (expand-file-name filename) nil nil nil origline))
+          (py--execute-file-base (expand-file-name filename)))
       (message "%s not readable. %s" filename "Do you have write permissions?"))
     (py--shell-manage-windows py-output-buffer py-exception-buffer nil
                               (or (called-interactively-p 'interactive)))
@@ -12099,7 +12099,7 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
                      (get-buffer-process (py-shell nil nil py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
           ;; Maybe save some buffers
           (save-some-buffers (not py-ask-about-save) nil)
-          (py--execute-file-base proc file
+          (py--execute-file-base file proc
                                 (if (string-match "\\.py$" file)
                                     (let ((m (py--qualified-module-name (expand-file-name file))))
                                       (if (string-match "python2" py-shell-name)
@@ -14942,7 +14942,16 @@ When `delete-active-region' and (use-region-p), delete region "
          )
         (t (yank arg))))
 
-(defun py-toggle-py-electric-colon-active-p ()
+(defun py-toggle-py-electric-colon-active-p-1 ()
+  (interactive)
+  (setq py-electric-colon-active-p (not py-electric-colon-active-p))
+  (when (and py-verbose-p 
+	     ;; (interactive-p)
+	     (called-interactively-p 'interactive)
+	      )
+    (message "py-electric-colon-active-p: %s" py-electric-colon-active-p)))
+
+(defun py-toggle-py-electric-colon-active-p-2 ()
   (interactive)
   (setq py-electric-colon-active-p (not py-electric-colon-active-p))
   (when (and py-verbose-p 
@@ -22153,82 +22162,82 @@ Return outmost indentation reached."
 (defun py-execute-file-ipython (filename)
   "Send file to IPython interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython" nil nil nil nil filename))
+  (py--execute-base nil nil "ipython" filename))
 
 (defun py-execute-file-ipython2.7 (filename)
   "Send file to IPython2.7 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython2.7" nil nil nil nil filename))
+  (py--execute-base nil nil "ipython2.7" filename))
 
 (defun py-execute-file-ipython3 (filename)
   "Send file to IPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython3" nil nil nil nil filename))
+  (py--execute-base nil nil "ipython3" filename))
 
 (defun py-execute-file-jython (filename)
   "Send file to Jython interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "jython" nil nil nil nil filename))
+  (py--execute-base nil nil "jython" filename))
 
 (defun py-execute-file-python (filename)
   "Send file to Python interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python" nil nil nil nil filename))
+  (py--execute-base nil nil "python" filename))
 
 (defun py-execute-file-python2 (filename)
   "Send file to Python2 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python2" nil nil nil nil filename))
+  (py--execute-base nil nil "python2" filename))
 
 (defun py-execute-file-python3 (filename)
   "Send file to Python3 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python3" nil nil nil nil filename))
+  (py--execute-base nil nil "python3" filename))
 
 (defun py-execute-file-pypy (filename)
   "Send file to PyPy interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "pypy" nil nil nil nil filename))
+  (py--execute-base nil nil "pypy" filename))
 
 (defun py-execute-file-ipython-dedicated (filename)
   "Send file to a dedicatedIPython interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython" t nil nil nil filename))
+  (py--execute-base nil nil "ipython" filename nil t t nil t))
 
 (defun py-execute-file-ipython2.7-dedicated (filename)
   "Send file to a dedicatedIPython2.7 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython2.7" t nil nil nil filename))
+  (py--execute-base nil nil "ipython2.7" filename nil t t nil t))
 
 (defun py-execute-file-ipython3-dedicated (filename)
   "Send file to a dedicatedIPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "ipython3" t nil nil nil filename))
+  (py--execute-base nil nil "ipython3" filename nil t t nil t))
 
 (defun py-execute-file-jython-dedicated (filename)
   "Send file to a dedicatedJython interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "jython" t nil nil nil filename))
+  (py--execute-base nil nil "jython" filename nil t t nil t))
 
 (defun py-execute-file-python-dedicated (filename)
   "Send file to a dedicatedPython interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python" t nil nil nil filename))
+  (py--execute-base nil nil "python" filename nil t t nil t))
 
 (defun py-execute-file-python2-dedicated (filename)
   "Send file to a dedicatedPython2 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python2" t nil nil nil filename))
+  (py--execute-base nil nil "python2" filename nil t t nil t))
 
 (defun py-execute-file-python3-dedicated (filename)
   "Send file to a dedicatedPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "python3" t nil nil nil filename))
+  (py--execute-base nil nil "python3" filename nil t t nil t))
 
 (defun py-execute-file-pypy-dedicated (filename)
   "Send file to a dedicatedPyPy interpreter"
   (interactive "fFile: ")
-  (py--execute-prepare file "pypy" t nil nil nil filename))
+  (py--execute-base nil nil "pypy" filename nil t t nil t))
 
 ;; python-components-section-forms
 
@@ -23138,7 +23147,7 @@ Use `py-fast-process' "
 
 ;; When `py-separator-char' is customized, its taken.
 ;; Returns char found. "
-;;   (interactive) 
+;;   (interactive)
 ;;   (let ((erg (cond ((and
 ;;                      (string-match "[Ii][Pp]ython" py-shell-name)
 ;;                      (string-match "epd\\|EPD" py-shell-name))
@@ -23382,7 +23391,7 @@ Treating it as a module keeps the global namespace clean, provides
 function location information for debugging, and supports users of
 module-qualified names."
   (interactive "f")
-  (py--execute-file-base (get-buffer-process (get-buffer (py-shell))) file-name))
+  (py--execute-file-base file-name (get-buffer-process (get-buffer (py-shell)))))
 
 (defun py-proc (&optional argprompt)
   "Return the current Python process.
