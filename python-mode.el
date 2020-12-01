@@ -11697,7 +11697,7 @@ Returns position where output starts."
 	  (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
 	py-result))))
 
-(defun py--execute-base-intern (strg filename proc file wholebuf buffer origline execute-directory start end &optional fast)
+(defun py--execute-base-intern (strg filename proc wholebuf buffer origline execute-directory start end &optional fast)
   "Select the handler according to:
 
 STRG FILENAME PROC FILE WHOLEBUF
@@ -11709,7 +11709,7 @@ Optional FAST RETURN"
    (python-mode-v5-behavior-p
     (py-execute-python-mode-v5 start end origline filename))
    (py-execute-no-temp-p
-    (py--execute-ge24.3 start end execute-directory py-shell-name py-exception-buffer proc file origline))
+    (py--execute-ge24.3 start end execute-directory py-shell-name py-exception-buffer proc filename origline))
    ((and filename wholebuf)
     (py--execute-file-base filename proc nil buffer origline fast))
    (t
@@ -11718,7 +11718,7 @@ Optional FAST RETURN"
     ;; (py--delete-temp-file tempfile)
     )))
 
-(defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch)
+(defun py--execute-base (&optional start end shell filename proc wholebuf fast dedicated split switch)
   "Update optional variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
   (setq py-error nil)
   (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
@@ -11732,7 +11732,7 @@ Optional FAST RETURN"
 		       (buffer-substring-no-properties start end)
 		     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
 	 (strg (py--fix-start strg-raw))
-	 (wholebuf (unless file (or wholebuf (and (eq (buffer-size) (- end start))))))
+	 (wholebuf (unless filename (or wholebuf (and (eq (buffer-size) (- end start))))))
 	 ;; error messages may mention differently when running from a temp-file
 	 (origline
 	  (format "%s" (save-restriction
@@ -11775,7 +11775,7 @@ Optional FAST RETURN"
 	 (split (if python-mode-v5-behavior-p 'just-two split)))
     (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
 			       (py--choose-buffer-name shell dedicated fast)))
-    (py--execute-base-intern strg filename proc file wholebuf py-output-buffer origline execute-directory start end fast)
+    (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
       (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))))
 
@@ -11805,9 +11805,9 @@ Optional FAST RETURN"
 ;;             (if (file-readable-p filename)
 ;;                 (py--execute-file-base filename nil nil nil origline)
 ;;               (message "%s not readable. %s" ,file "Do you have write permissions?")))
-;;         (py--execute-base beg end ,shell filename ,proc ,file ,wholebuf ,fast ,dedicated ,split ,switch)))))
+;;         (py--execute-base beg end ,shell filename ,proc ,wholebuf ,fast ,dedicated ,split ,switch)))))
 
-(defun py--execute-prepare (form shell &optional dedicated switch beg end file fast proc wholebuf split)
+(defun py--execute-prepare (form shell &optional dedicated switch beg end filename fast proc wholebuf split)
   "Update some vars."
   (save-excursion
     (let* ((form (prin1-to-string form))
@@ -11815,23 +11815,20 @@ Optional FAST RETURN"
 	   (fast
 	    (or fast py-fast-process-p))
 	   (py-exception-buffer (current-buffer))
-           (beg (unless file
+           (beg (unless filename
                   (prog1
                       (or beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
 
                           (funcall (intern-soft (concat "py-backward-" form)))
                           (push-mark)))))
-           (end (unless file
-                  (or end (save-excursion (funcall (intern-soft (concat "py-forward-" form)))))))
-           filename)
+           (end (unless filename
+                  (or end (save-excursion (funcall (intern-soft (concat "py-forward-" form))))))))
       ;; (setq py-buffer-name nil)
-      (if file
-          (progn
-            (setq filename (expand-file-name file))
+      (if filename
             (if (file-readable-p filename)
-                (py--execute-file-base filename nil nil nil origline)
-              (message "%s not readable. %s" file "Do you have write permissions?")))
-        (py--execute-base beg end shell filename proc file wholebuf fast dedicated split switch)))))
+                (py--execute-file-base (expand-file-name filename) nil nil nil origline)
+              (message "%s not readable. %s" filename "Do you have write permissions?"))
+        (py--execute-base beg end shell filename proc wholebuf fast dedicated split switch)))))
 
 ;; (defun py--delete-temp-file (tempfile &optional tempbuf)
 ;;   "After ‘py--execute-buffer-finally’ returned delete TEMPFILE &optional TEMPBUF."
