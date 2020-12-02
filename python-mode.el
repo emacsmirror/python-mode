@@ -3667,7 +3667,6 @@ Return nil, if no executable found."
 	  (when (called-interactively-p 'any) (message "%s" "Could not detect Python on your system. Maybe set `py-edit-only-p'?")))
 	erg)))
 
-
 (defun py--normalize-directory (directory)
   "Make sure DIRECTORY ends with a file-path separator char.
 
@@ -7685,7 +7684,6 @@ Used by `py-electric-colon', which will not indent than."
                     (looking-at py-def-re))))
     erg))
 
-
 (defun py-indent-line-outmost (&optional arg)
   "Indent the current line to the outmost reasonable indent.
 
@@ -12826,9 +12824,7 @@ named for funcname or define a function funcname."
           (setq got buf)))
     got))
 
-
 ;; pdbtrack functions
-
 (defun py-pdbtrack-set-tracked-buffer (file-name)
   "Set the buffer for FILE-NAME as the tracked buffer.
 Internally it uses the `py-pdbtrack-tracked-buffer' variable.
@@ -23502,7 +23498,6 @@ Start a new process if necessary. "
 (when py--warn-tmp-files-left-p
   (add-hook 'python-mode-hook 'py--warn-tmp-files-left))
 
-
 (defun py-guess-pdb-path ()
   "If py-pdb-path isn't set, find location of pdb.py. "
   (interactive)
