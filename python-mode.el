@@ -7671,19 +7671,19 @@ See bug report at launchpad, lp:940812"
          (looking-at (concat "\\b" py-expression-re))
          (point))))
 
-;; TODO: The following function can lead to false positive (inside a string).
-;; See ticket #95: https://gitlab.com/python-mode-devs/python-mode/-/issues/95
 (defun py--top-level-form-p ()
-  "Return non-nil, if line start with a top level definition.
-
-Used by `py-electric-colon', which will not indent then."
+  "Return non-nil, if line start with a top level form."
   (save-excursion
     (beginning-of-line)
     (unless
 	;; in string
 	(nth 3 (parse-partial-sexp (point-min) (point)))
-      (or (looking-at py-class-re)
-          (looking-at py-def-re)))))
+      (and (eq (current-indentation)  0)
+	   (looking-at "[[:alpha:]_]+")
+	   ;; (or (looking-at py-def-or-class-re)
+           ;;     (looking-at py-block-or-clause-re)
+	   ;;     (looking-at py-assignment-re))
+	   ))))
 
 (defun py-indent-line-outmost (&optional arg)
   "Indent the current line to the outmost reasonable indent.
@@ -14826,7 +14826,7 @@ See also `py-electric-colon-greedy-p'"
                              (save-excursion
                                (py-backward-statement)
                                (current-indentation))))
-                    (and (py--top-level-form-p)
+                    (and (looking-at py-def-or-class-re)
                          (< (current-indentation) indent)))
           (beginning-of-line)
           (delete-horizontal-space)
