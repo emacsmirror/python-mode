@@ -12065,6 +12065,24 @@ See also doku of variable ‘py-master-file’"
           (setq py-master-file (match-string-no-properties 2))))))
   (when (called-interactively-p 'any) (message "%s" py-master-file)))
 
+(defun py--qualified-module-name-intern (d f)
+  ""
+  (let* ((dir (file-name-directory d))
+         (initpy (concat dir "__init__.py")))
+    (if (file-exists-p initpy)
+        (let ((d2 (directory-file-name d)))
+          (py--qualified-module-name-intern (file-name-directory d2)
+                   (concat (file-name-nondirectory d2) "." f)))
+      f)))
+
+(defun py--qualified-module-name (file)
+  (interactive "f") 
+  "Find the qualified module name for filename FILE.
+
+Basically, this goes down the directory tree as long as there are __init__.py files there."
+  (py--qualified-module-name-intern (file-name-directory file)
+           (file-name-sans-extension (file-name-nondirectory file))))
+
 (defun py-execute-import-or-reload (&optional shell)
   "Import the current buffer's file in a Python interpreter.
 
@@ -12114,21 +12132,6 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
                                   ;; (format "execfile(r'%s')\n" file)
                                   (py-which-execute-file-command file))))
       (py-execute-buffer))))
-
-(defun py--qualified-module-name (file)
-  "Find the qualified module name for filename FILE.
-
-Basically, this goes down the directory tree as long as there are __init__.py files there."
-  (let ((rec #'(lambda (d f)
-                 (let* ((dir (file-name-directory d))
-                        (initpy (concat dir "__init__.py")))
-                   (if (file-exists-p initpy)
-                       (let ((d2 (directory-file-name d)))
-                         (funcall rec (file-name-directory d2)
-                                  (concat (file-name-nondirectory d2) "." f)))
-                     f)))))
-    (funcall rec (file-name-directory file)
-             (file-name-sans-extension (file-name-nondirectory file)))))
 
 ;;  Fixme: Try to define the function or class within the relevant
 ;;  module, not just at top level.
