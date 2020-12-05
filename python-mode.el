@@ -355,6 +355,12 @@ When non-nil, return resulting string of `py-execute-...'.
 Imports will use it with nil.
 Default is nil")
 
+(defun py-toggle-py-return-result-p ()
+  "Toggle value of ‘py-return-result-p’"
+  (interactive)
+  (setq py-return-result-p (not py-return-result-p))
+  (when (called-interactively-p) (message "py-return-result-p: %s" py-return-result-p)))
+
 (defcustom py--execute-use-temp-file-p nil
  "Assume execution at a remote machine.
 
@@ -14364,18 +14370,6 @@ Matches lists, but also block, statement, string and comment. "
              input)))) ;sinon input
   (shell-command (concat py-shell-name " -c \"from pydoc import help;help(\'" w "\')\"") "*PYDOCS*")
   (view-buffer-other-window "*PYDOCS*" t 'kill-buffer-and-window))
-
-(defun eva ()
-  "Put \"eval(...)\" forms around strings at point. "
-  (interactive "*")
-  (skip-chars-forward " \t\r\n\f")
-  (let* ((bounds (ar-bounds-of-word-atpt))
-         (beg (car bounds))
-         (end (cdr bounds)))
-    (goto-char end)
-    (insert ")")
-    (goto-char beg)
-    (insert "eval(")))
 
 (defun pst-here ()
   "Kill previous \"pdb.set_trace()\" and insert it at point. "
