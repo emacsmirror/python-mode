@@ -912,7 +912,9 @@ If nil, default, it will not move from at any reasonable level."
   :group 'python-mode)
 
 (defcustom py-mark-decorators nil
-  "If ‘py-mark-def-or-class’ functions should mark decorators too.  Default is nil."
+  "If ‘py-mark-def-or-class’ functions should mark decorators too.  Default is nil.
+
+Also used by navigation"
   :type 'boolean
   :tag "py-mark-decorators"
   :group 'python-mode)
@@ -7020,6 +7022,113 @@ The returned file name can be used directly as argument of
 `process-file', `start-file-process', or `shell-command'."
     (or (file-remote-p file 'localname) file)))
 
+;; python-components-font-lock
+
+(setq python-font-lock-keywords
+      ;; Keywords
+      `(,(rx symbol-start
+             (or
+	      "if" "and" "del"  "not" "while" "as" "elif" "global"
+	      "or" "async with" "with" "assert" "else"  "pass" "yield" "break"
+	      "exec" "in" "continue" "finally" "is" "except" "raise"
+	      "return"  "async for" "for" "lambda" "await")
+             symbol-end)
+        (,(rx symbol-start (or "async def" "def" "class") symbol-end) . py-def-class-face)
+        (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
+        (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
+        ;; functions
+        (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
+         (1 font-lock-function-name-face))
+        (,(rx symbol-start "async def" (1+ space) (group (1+ (or word ?_))))
+         (1 font-lock-function-name-face))
+        ;; classes
+        (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
+         (1 py-def-class-face) (2 py-class-name-face))
+        (,(rx symbol-start
+              (or "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
+              symbol-end) . py-pseudo-keyword-face)
+        ;; Decorators.
+        (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
+                                                (0+ "." (1+ (or word ?_)))))
+         (1 py-decorators-face))
+	(,(rx symbol-start (or "cls" "self")
+	      symbol-end) . py-object-reference-face)
+
+        ;; Exceptions
+        (,(rx word-start
+              (or "ArithmeticError" "AssertionError" "AttributeError"
+                  "BaseException" "BufferError" "BytesWarning" "DeprecationWarning"
+                  "EOFError" "EnvironmentError" "Exception" "FloatingPointError"
+                  "FutureWarning" "GeneratorExit" "IOError" "ImportError"
+                  "ImportWarning" "IndentationError" "IndexError" "KeyError"
+                  "KeyboardInterrupt" "LookupError" "MemoryError" "NameError" "NoResultFound"
+                  "NotImplementedError" "OSError" "OverflowError"
+                  "PendingDeprecationWarning" "ReferenceError" "RuntimeError"
+                  "RuntimeWarning" "StandardError" "StopIteration" "SyntaxError"
+                  "SyntaxWarning" "SystemError" "SystemExit" "TabError" "TypeError"
+                  "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
+                  "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
+                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError"
+                  ;; OSError subclasses
+                  "BlockIOError" "ChildProcessError" "ConnectionError"
+                  "BrokenPipError" "ConnectionAbortedError"
+                  "ConnectionRefusedError" "ConnectionResetError"
+                  "FileExistsError" "FileNotFoundError" "InterruptedError"
+                  "IsADirectoryError" "NotADirectoryError" "PermissionError"
+                  "ProcessLookupError" "TimeoutError")
+              word-end) . py-exception-name-face)
+        ;; Builtins
+        (,(rx
+	   (or space line-start (not (any ".")))
+	   symbol-start
+	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
+		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
+		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
+		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
+		      "execfile" "filter" "float" "format" "frozenset"
+		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
+		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
+		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
+		      "ord" "pow" "property" "range" "raw_input" "reduce"
+		      "reload" "repr" "reversed" "round" "set" "setattr" "slice"
+		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
+		      "unichr" "unicode" "vars" "xrange" "zip"))
+	   symbol-end) (1 py-builtins-face))
+        ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
+         (1 py-variable-name-face nil nil))
+	;; https://emacs.stackexchange.com/questions/55184/
+	;; how-to-highlight-in-different-colors-for-variables-inside-fstring-on-python-mo
+	;;
+	;; this is the full string.
+        ;; group 1 is the quote type and a closing quote is matched
+        ;; group 2 is the string part
+        ("f\\(['\"]\\{1,3\\}\\)\\([^\\1]+?\\)\\1"
+         ;; these are the {keywords}
+         ("{[^}]*?}"
+          ;; Pre-match form
+          (progn (goto-char (match-beginning 0)) (match-end 0))
+          ;; Post-match form
+          (goto-char (match-end 0))
+          ;; face for this match
+          (0 font-lock-variable-name-face t)))
+	;; assignment
+        ;; a, b, c = (1, 2, 3)
+        (,(lambda (limit)
+            (let ((re (rx (group (+ (any word ?. ?_))) (* space)
+			  (* ?, (* space) (+ (any word ?. ?_)) (* space))
+			  (or ":" "=" "+=" "-=" "*=" "/=" "//=" "%=" "**=" ">>=" "<<=" "&=" "^=" "|=")))
+                  (res nil))
+              (while (and (setq res (re-search-forward re limit t))
+                          (goto-char (match-end 1))
+                          (nth 1 (parse-partial-sexp (point-min) (point)))
+                          ;; (python-syntax-context 'paren)
+			  ))
+              res))
+         (1 py-variable-name-face nil nil))
+        ;; Numbers
+	;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
+	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)))
+
 ;; python-components-map
 
 (defvar py-use-menu-p t
@@ -7171,111 +7280,6 @@ Default is t")
   "Unless setting of ipython-shell-mode needs to be different, let's save some lines of code and copy ‘py-python-shell-mode-map’ here.")
 
 (defvar py-shell-map py-python-shell-mode-map)
-
-(setq python-font-lock-keywords
-      ;; Keywords
-      `(,(rx symbol-start
-             (or
-	      "if" "and" "del"  "not" "while" "as" "elif" "global"
-	      "or" "async with" "with" "assert" "else"  "pass" "yield" "break"
-	      "exec" "in" "continue" "finally" "is" "except" "raise"
-	      "return"  "async for" "for" "lambda" "await")
-             symbol-end)
-        (,(rx symbol-start (or "async def" "def" "class") symbol-end) . py-def-class-face)
-        (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
-        (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
-        ;; functions
-        (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-function-name-face))
-        (,(rx symbol-start "async def" (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-function-name-face))
-        ;; classes
-        (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
-         (1 py-def-class-face) (2 py-class-name-face))
-        (,(rx symbol-start
-              (or "Ellipsis" "True" "False" "None"  "__debug__" "NotImplemented")
-              symbol-end) . py-pseudo-keyword-face)
-        ;; Decorators.
-        (,(rx line-start (* (any " \t")) (group "@" (1+ (or word ?_))
-                                                (0+ "." (1+ (or word ?_)))))
-         (1 py-decorators-face))
-	(,(rx symbol-start (or "cls" "self")
-	      symbol-end) . py-object-reference-face)
-
-        ;; Exceptions
-        (,(rx word-start
-              (or "ArithmeticError" "AssertionError" "AttributeError"
-                  "BaseException" "BufferError" "BytesWarning" "DeprecationWarning"
-                  "EOFError" "EnvironmentError" "Exception" "FloatingPointError"
-                  "FutureWarning" "GeneratorExit" "IOError" "ImportError"
-                  "ImportWarning" "IndentationError" "IndexError" "KeyError"
-                  "KeyboardInterrupt" "LookupError" "MemoryError" "NameError" "NoResultFound"
-                  "NotImplementedError" "OSError" "OverflowError"
-                  "PendingDeprecationWarning" "ReferenceError" "RuntimeError"
-                  "RuntimeWarning" "StandardError" "StopIteration" "SyntaxError"
-                  "SyntaxWarning" "SystemError" "SystemExit" "TabError" "TypeError"
-                  "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
-                  "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
-                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError"
-                  ;; OSError subclasses
-                  "BlockIOError" "ChildProcessError" "ConnectionError"
-                  "BrokenPipError" "ConnectionAbortedError"
-                  "ConnectionRefusedError" "ConnectionResetError"
-                  "FileExistsError" "FileNotFoundError" "InterruptedError"
-                  "IsADirectoryError" "NotADirectoryError" "PermissionError"
-                  "ProcessLookupError" "TimeoutError")
-              word-end) . py-exception-name-face)
-        ;; Builtins
-        (,(rx
-	   (or space line-start (not (any ".")))
-	   symbol-start
-	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
-		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
-		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
-		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
-		      "execfile" "filter" "float" "format" "frozenset"
-		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
-		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
-		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
-		      "ord" "pow" "property" "range" "raw_input" "reduce"
-		      "reload" "repr" "reversed" "round" "set" "setattr" "slice"
-		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
-		      "unichr" "unicode" "vars" "xrange" "zip"))
-	   symbol-end) (1 py-builtins-face))
-        ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
-         (1 py-variable-name-face nil nil))
-	;; https://emacs.stackexchange.com/questions/55184/
-	;; how-to-highlight-in-different-colors-for-variables-inside-fstring-on-python-mo
-	;;
-	;; this is the full string.
-        ;; group 1 is the quote type and a closing quote is matched
-        ;; group 2 is the string part
-        ("f\\(['\"]\\{1,3\\}\\)\\([^\\1]+?\\)\\1"
-         ;; these are the {keywords}
-         ("{[^}]*?}"
-          ;; Pre-match form
-          (progn (goto-char (match-beginning 0)) (match-end 0))
-          ;; Post-match form
-          (goto-char (match-end 0))
-          ;; face for this match
-          (0 font-lock-variable-name-face t)))
-	;; assignment
-        ;; a, b, c = (1, 2, 3)
-        (,(lambda (limit)
-            (let ((re (rx (group (+ (any word ?. ?_))) (* space)
-			  (* ?, (* space) (+ (any word ?. ?_)) (* space))
-			  (or ":" "=" "+=" "-=" "*=" "/=" "//=" "%=" "**=" ">>=" "<<=" "&=" "^=" "|=")))
-                  (res nil))
-              (while (and (setq res (re-search-forward re limit t))
-                          (goto-char (match-end 1))
-                          (nth 1 (parse-partial-sexp (point-min) (point)))
-                          ;; (python-syntax-context 'paren)
-			  ))
-              res))
-         (1 py-variable-name-face nil nil))
-        ;; Numbers
-	;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
-	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)))
 
 ;; python-components-switches
 
@@ -22545,20 +22549,25 @@ the default"
   "When called interactively, mark Block at point.
 
 When called from a programm, return source-code of Block at point, a string.
-  Optional arg DECORATORS: include decorators when called at def or class."
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "block" decorators)
-    (py--thing-at-point "block" decorators)))
+      (py--mark-base "block" (or decorators py-mark-decorators))
+    (py--thing-at-point "block" (or decorators py-mark-decorators))))
 
-(defun py-block-or-clause ()
+(defun py-block-or-clause (&optional decorators)
   "When called interactively, mark Block-Or-Clause at point.
 
-When called from a programm, return source-code of Block-Or-Clause at point, a string."
+When called from a programm, return source-code of Block-Or-Clause at point, a string.
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "block-or-clause" decorators)
-    (py--thing-at-point "block-or-clause" decorators)))
+      (py--mark-base "block-or-clause" (or decorators py-mark-decorators))
+    (py--thing-at-point "block-or-clause" (or decorators py-mark-decorators))))
 
 (defun py-buffer ()
   "When called interactively, mark Buffer at point.
@@ -22566,17 +22575,20 @@ When called from a programm, return source-code of Block-Or-Clause at point, a s
 When called from a programm, return source-code of Buffer at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "buffer" decorators)
-    (py--thing-at-point "buffer" decorators)))
+      (py--mark-base "buffer")
+    (py--thing-at-point "buffer")))
 
-(defun py-class ()
+(defun py-class (&optional decorators)
   "When called interactively, mark Class at point.
 
-When called from a programm, return source-code of Class at point, a string."
+When called from a programm, return source-code of Class at point, a string.
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "class" decorators)
-    (py--thing-at-point "class" decorators)))
+      (py--mark-base "class" (or decorators py-mark-decorators))
+    (py--thing-at-point "class" (or decorators py-mark-decorators))))
 
 (defun py-clause ()
   "When called interactively, mark Clause at point.
@@ -22584,26 +22596,32 @@ When called from a programm, return source-code of Class at point, a string."
 When called from a programm, return source-code of Clause at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "clause" decorators)
-    (py--thing-at-point "clause" decorators)))
+      (py--mark-base "clause")
+    (py--thing-at-point "clause")))
 
-(defun py-def ()
+(defun py-def (&optional decorators)
   "When called interactively, mark Def at point.
 
-When called from a programm, return source-code of Def at point, a string."
+When called from a programm, return source-code of Def at point, a string.
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "def" decorators)
-    (py--thing-at-point "def" decorators)))
+      (py--mark-base "def" (or decorators py-mark-decorators))
+    (py--thing-at-point "def" (or decorators py-mark-decorators))))
 
-(defun py-def-or-class ()
+(defun py-def-or-class (&optional decorators)
   "When called interactively, mark Def-Or-Class at point.
 
-When called from a programm, return source-code of Def-Or-Class at point, a string."
+When called from a programm, return source-code of Def-Or-Class at point, a string.
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "def-or-class" decorators)
-    (py--thing-at-point "def-or-class" decorators)))
+      (py--mark-base "def-or-class" (or decorators py-mark-decorators))
+    (py--thing-at-point "def-or-class" (or decorators py-mark-decorators))))
 
 (defun py-expression ()
   "When called interactively, mark Expression at point.
@@ -22611,8 +22629,8 @@ When called from a programm, return source-code of Def-Or-Class at point, a stri
 When called from a programm, return source-code of Expression at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "expression" decorators)
-    (py--thing-at-point "expression" decorators)))
+      (py--mark-base "expression")
+    (py--thing-at-point "expression")))
 
 (defun py-indent ()
   "When called interactively, mark Indent at point.
@@ -22620,8 +22638,8 @@ When called from a programm, return source-code of Expression at point, a string
 When called from a programm, return source-code of Indent at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "indent" decorators)
-    (py--thing-at-point "indent" decorators)))
+      (py--mark-base "indent")
+    (py--thing-at-point "indent")))
 
 (defun py-line ()
   "When called interactively, mark Line at point.
@@ -22629,8 +22647,8 @@ When called from a programm, return source-code of Indent at point, a string."
 When called from a programm, return source-code of Line at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "line" decorators)
-    (py--thing-at-point "line" decorators)))
+      (py--mark-base "line")
+    (py--thing-at-point "line")))
 
 (defun py-minor-block ()
   "When called interactively, mark Minor-Block at point.
@@ -22638,8 +22656,8 @@ When called from a programm, return source-code of Line at point, a string."
 When called from a programm, return source-code of Minor-Block at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "minor-block" decorators)
-    (py--thing-at-point "minor-block" decorators)))
+      (py--mark-base "minor-block")
+    (py--thing-at-point "minor-block")))
 
 (defun py-paragraph ()
   "When called interactively, mark Paragraph at point.
@@ -22647,8 +22665,8 @@ When called from a programm, return source-code of Minor-Block at point, a strin
 When called from a programm, return source-code of Paragraph at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "paragraph" decorators)
-    (py--thing-at-point "paragraph" decorators)))
+      (py--mark-base "paragraph")
+    (py--thing-at-point "paragraph")))
 
 (defun py-partial-expression ()
   "When called interactively, mark Partial-Expression at point.
@@ -22656,8 +22674,8 @@ When called from a programm, return source-code of Paragraph at point, a string.
 When called from a programm, return source-code of Partial-Expression at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "partial-expression" decorators)
-    (py--thing-at-point "partial-expression" decorators)))
+      (py--mark-base "partial-expression")
+    (py--thing-at-point "partial-expression")))
 
 (defun py-region ()
   "When called interactively, mark Region at point.
@@ -22665,8 +22683,8 @@ When called from a programm, return source-code of Partial-Expression at point, 
 When called from a programm, return source-code of Region at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "region" decorators)
-    (py--thing-at-point "region" decorators)))
+      (py--mark-base "region")
+    (py--thing-at-point "region")))
 
 (defun py-statement ()
   "When called interactively, mark Statement at point.
@@ -22674,17 +22692,20 @@ When called from a programm, return source-code of Region at point, a string."
 When called from a programm, return source-code of Statement at point, a string."
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "statement" decorators)
-    (py--thing-at-point "statement" decorators)))
+      (py--mark-base "statement")
+    (py--thing-at-point "statement")))
 
-(defun py-top-level ()
+(defun py-top-level (&optional decorators)
   "When called interactively, mark Top-Level at point.
 
-When called from a programm, return source-code of Top-Level at point, a string."
+When called from a programm, return source-code of Top-Level at point, a string.
+
+Optional arg DECORATORS: include decorators when called at def or class.
+Also honors setting of ‘py-mark-decorators’"
   (interactive)
   (if (called-interactively-p 'interactive)
-      (py--mark-base "top-level" decorators)
-    (py--thing-at-point "top-level" decorators)))
+      (py--mark-base "top-level" (or decorators py-mark-decorators))
+    (py--thing-at-point "top-level" (or decorators py-mark-decorators))))
 
 ;; python-components-forms-code.el ends here
 ;; python-components-fast-forms
@@ -25221,7 +25242,7 @@ Return position."
 Text properties are stripped.
 If PY-MARK-DECORATORS, `def'- and `class'-forms include decorators
 If BOL is t, from beginning-of-line"
-  (interactive) 
+  (interactive)
   (let* ((begform (intern-soft (concat "py-backward-" form)))
          (endform (intern-soft (concat "py-forward-" form)))
          (begcheckform (intern-soft (concat "py--beginning-of-" form "-p")))
@@ -25280,7 +25301,9 @@ If BOL is t, mark from beginning-of-line"
     (unless end (when (< beg (point))
                   (setq end (point))))
     (if (and beg end (<= beg orig) (<= orig end))
-        (cons beg end)
+        (progn
+	  (cons beg end)
+	  (exchange-point-and-mark))
       nil)))
 
 (defun py--mark-base-bol (form &optional mark-decorators)
