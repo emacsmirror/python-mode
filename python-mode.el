@@ -8,7 +8,7 @@
 
 ;; Package-Requires: ((emacs "24"))
 
-;; Copyright (C) 1992,1993,1994  Tim Peters
+;; Copyright (C) 1992,1993,1994,2020  Tim Peters
 
 ;; Author: 2015-2020 https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
@@ -2592,14 +2592,14 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-shell-complete-debug nil
   "For interal use when debugging, stores completions." )
 
-(defcustom py-debug-p nil
-  "When non-nil, keep resp. store information useful for debugging.
+(defvar py--debug-p nil
+  "Activate extra code for analysis and test purpose when non-nil.
 
 Temporary files are not deleted. Other functions might implement
-some logging etc."
-  :type 'boolean
-  :tag "py-debug-p"
-  :group 'python-mode)
+some logging, etc.
+For normal operation, leave it set to nil, its default.
+Defined with a defvar form to allow testing the loading of new versions.")
+
 
 (defcustom py-shell-complete-p nil
   "Enable native completion.
@@ -3826,7 +3826,7 @@ Optional argument END specify end."
 	    (if
 		(re-search-backward py-shell-prompt-regexp nil t 1)
 		(goto-char (match-end 0))
-	      ;; (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
+	      ;; (when py--debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
 	      (goto-char beg))
 	  (goto-char beg)))
       (while (and (< (point) end)(not (eobp)) (skip-chars-forward "^\n" end))
@@ -3834,7 +3834,7 @@ Optional argument END specify end."
         (unless (or (not (< (point) end)) (eobp)) (forward-char 1)
                 (setq count (+ count (abs (skip-chars-forward "\n" end))))))
       (when (bolp) (setq count (1+ count)))
-      (when (and py-debug-p (called-interactively-p 'any)) (message "%s" count))
+      (when (and py--debug-p (called-interactively-p 'any)) (message "%s" count))
       count)))
 
 (defmacro py-escaped ()
@@ -3918,7 +3918,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (python-mode)
        (goto-char (point-min))
-       (when py-debug-p
+       (when py--debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
@@ -3932,7 +3932,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode py--imenu-create-index-p)
        (insert ,contents)
        (python-mode)
-       (when py-debug-p
+       (when py--debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
@@ -6118,14 +6118,14 @@ Customize `py-match-paren-key' which key to use. Use `M-x customize-variable' to
 
 	("Debug"
 
-	 ["py-debug-p"
-	  (setq py-debug-p
-		(not py-debug-p))
+	 ["py--debug-p"
+	  (setq py--debug-p
+		(not py--debug-p))
 	  :help "When non-nil, keep resp\. store information useful for debugging\.
 
 Temporary files are not deleted\. Other functions might implement
 some logging etc\. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-debug-p]
+	  :style toggle :selected py--debug-p]
 
 	 ["Pdbtrack do tracking "
 	  (setq py-pdbtrack-do-tracking-p
@@ -11515,7 +11515,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 
 (defun py--store-result-maybe (erg)
   "If no error occurred and ‘py-store-result-p’ store ERG for yank."
-  (and (not py-error) erg (or py-debug-p py-store-result-p) (kill-new erg)))
+  (and (not py-error) erg (or py--debug-p py-store-result-p) (kill-new erg)))
 
 (defun py-current-working-directory ()
   "Return the directory of current python SHELL."
@@ -11558,7 +11558,7 @@ when given, to value of ‘py-default-working-directory’ otherwise"
 
 (defun py--close-execution (tempbuf tempfile)
   "Delete TEMPBUF and TEMPFILE."
-  (unless py-debug-p
+  (unless py--debug-p
     (when tempfile (py-delete-temporary tempfile tempbuf))))
 
 (defun py-shell-send-file (file-name &optional process temp-file-name
@@ -11615,7 +11615,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
   ;; py--fast-send-string doesn't set origline
   (when (or py-return-result-p py-store-result-p)
     (with-current-buffer output-buffer
-      (when py-debug-p (switch-to-buffer (current-buffer)))
+      (when py--debug-p (switch-to-buffer (current-buffer)))
       (sit-for (py--which-delay-process-dependent (prin1-to-string output-buffer)))
       ;; (catch 'py--postprocess
       (setq py-result (py--fetch-result output-buffer limit cmd))
@@ -11674,7 +11674,7 @@ Returns position where output starts."
 	(write-file tempfile))
       (unwind-protect
 	  (py--execute-file-base tempfile proc nil procbuf origline fast)
-	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
+	(and (file-readable-p tempfile) (delete-file tempfile py--debug-p))))))
 
 (defun py-execute-python-mode-v5 (start end origline filename)
   "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
@@ -11720,7 +11720,7 @@ Optional FAST RETURN"
 (defun py--execute-base (&optional start end shell filename proc wholebuf fast dedicated split switch)
   "Update optional variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
   (setq py-error nil)
-  (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
+  (when py--debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
   (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
   (let* ((orig (point))
 	 (fast (or fast py-fast-process-p))
@@ -11842,7 +11842,7 @@ BUF must exist.
 
 Indicate LINE if code wasn't run from a file, thus remember ORIGLINE of source buffer"
   (with-current-buffer output-buffer
-    (when py-debug-p (switch-to-buffer (current-buffer)))
+    (when py--debug-p (switch-to-buffer (current-buffer)))
     ;; (setq py-error (buffer-substring-no-properties (point) (point-max)))
     (goto-char (point-max))
     (when (re-search-backward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
@@ -12016,7 +12016,7 @@ See ‘py-if-name-main-permission-p’"
 
 Takes STRG
 Avoid empty lines at the beginning."
-  ;; (when py-debug-p (message "py--fix-start:"))
+  ;; (when py--debug-p (message "py--fix-start:"))
   (let (py--imenu-create-index-p
 	py-guess-py-install-directory-p
 	py-autopair-mode
@@ -13141,7 +13141,7 @@ not inside a defun."
 	(setq inhibit-read-only t)
 	(setq inhibit-point-motion-hooks t)
       (erase-buffer)
-      (when py-debug-p (message "%s" (current-buffer)))
+      (when py--debug-p (message "%s" (current-buffer)))
       (py-send-string cmd nil t)
       (insert py-result)
       )))
@@ -22739,7 +22739,7 @@ It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to t
 (defun py--fast-send-string-no-output-intern (strg proc limit output-buffer no-output)
   (let (erg)
     (with-current-buffer output-buffer
-      (when py-debug-p (switch-to-buffer (current-buffer)))
+      (when py--debug-p (switch-to-buffer (current-buffer)))
       ;; (erase-buffer)
       (process-send-string proc strg)
       (or (string-match "\n$" strg)
@@ -24828,7 +24828,7 @@ Remove trailing newline"
   (with-current-buffer buffer
     (with-silent-modifications
       (sit-for py-python3-send-delay)
-      (when py-debug-p (switch-to-buffer (current-buffer)))
+      (when py--debug-p (switch-to-buffer (current-buffer)))
       (delete-region orig (point-max)))))
 
 (defun py-shell--save-temp-file (strg)
@@ -27359,14 +27359,14 @@ Customize `py-match-paren-key' which key to use. Use `M-x customize-variable' to
 
 	   ("Debug"
 
-	    ["py-debug-p"
-	     (setq py-debug-p
-		   (not py-debug-p))
+	    ["py--debug-p"
+	     (setq py--debug-p
+		   (not py--debug-p))
 	     :help "When non-nil, keep resp\. store information useful for debugging\.
 
 Temporary files are not deleted\. Other functions might implement
 some logging etc\. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-debug-p]
+	     :style toggle :selected py--debug-p]
 
 	    ["Pdbtrack do tracking "
 	     (setq py-pdbtrack-do-tracking-p
