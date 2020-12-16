@@ -107,15 +107,6 @@ avoiding it might speed up things."
   :group 'python-mode
   :safe 'booleanp)
 
-(defcustom py-eldoc-mode-p nil
-  "If eldoc-mode is loaded by python-mode.
-
-Default is nil"
-  :type 'boolean
-  :tag "py-eldoc-mode-p"
-  :group 'python-mode
-  :safe 'booleanp)
-
 (defcustom py-pythonpath ""
   "Define $PYTHONPATH here, if needed.
 
@@ -1866,11 +1857,6 @@ Default /usr/bin/jython"
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
-(defvar py-cleanup-p nil
-  "Internally used.
-
-Cleanup Python shell when output is used in other places.")
-
 (defcustom py-match-paren-mode nil
   "Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
@@ -2315,84 +2301,6 @@ virtualenv."
   :tag "py-shell-virtualenv-root"
   :group 'python-mode)
 
-(defvar py-eldoc-window-configuration nil
-  "Keeps window-configuration when function ‘eldoc-mode’ is called.")
-
-(defvar py-eldoc-setup-code
-  "def __PYDOC_get_help(obj):
-    try:
-        import inspect
-        if hasattr(obj, 'startswith'):
-            obj = eval(obj, globals())
-        doc = inspect.getdoc(obj)
-        if not doc and callable(obj):
-            target = None
-            if inspect.isclass(obj) and hasattr(obj, '__init__'):
-                target = obj.__init__
-                objtype = 'class'
-            else:
-                target = obj
-                objtype = 'def'
-            if target:
-                args = inspect.formatargspec(
-                    *inspect.getargspec(target))
-                name = obj.__name__
-                doc = '{objtype} {name}{args}'.format(
-                    objtype=objtype, name=name, args=args)
-        else:
-            doc = doc.splitlines()[0]
-    except:
-        doc = ''
-    try:
-        exec('print doc')
-    except SyntaxError:
-        print(doc)"
-  "Python code to setup documentation retrieval.")
-
-(defcustom py-python-eldoc-setup-code
-  "def __PYDOC_get_help(obj):
-    try:
-        import inspect
-        try:
-            str_type = basestring
-            argspec_function = inspect.getargspec
-        except NameError:
-            str_type = str
-            argspec_function = inspect.getfullargspec
-        if isinstance(obj, str_type):
-            obj = eval(obj, globals())
-        doc = inspect.getdoc(obj)
-        if not doc and callable(obj):
-            target = None
-            if inspect.isclass(obj) and hasattr(obj, '__init__'):
-                target = obj.__init__
-                objtype = 'class'
-            else:
-                target = obj
-                objtype = 'def'
-            if target:
-                args = inspect.formatargspec(*argspec_function(target))
-                name = obj.__name__
-                doc = '{objtype} {name}{args}'.format(
-                    objtype=objtype, name=name, args=args
-                )
-        else:
-            doc = doc.splitlines()[0]
-    except:
-        doc = ''
-    return doc"
-  "Python code to setup documentation retrieval."
-  :type 'string
-  :tag "py-python-eldoc-setup-code"
-  :group 'python-mode)
-
-(defcustom py-python-eldoc-string-code
-  "__PYDOC_get_help('''%s''')"
-  "Python code used to get a string with the documentation of an object."
-  :type 'string
-  :tag "py-python-eldoc-string-code"
-  :group 'python-mode)
-
 (defvar py-shell-completion-native-redirect-buffer
   " *Py completions redirect*"
   "Buffer to be used to redirect output of readline commands.")
@@ -2600,6 +2508,11 @@ some logging, etc.
 For normal operation, leave it set to nil, its default.
 Defined with a defvar form to allow testing the loading of new versions.")
 
+(defun py-toggle-py--debug-p ()
+  "Toggle value of ‘py--debug-p’"
+  (interactive)
+  (setq py--debug-p (not py--debug-p))
+  (when (called-interactively-p 'interactive) (message "py--debug-p: %s" py--debug-p)))
 
 (defcustom py-shell-complete-p nil
   "Enable native completion.
@@ -2734,7 +2647,7 @@ Currently-active file is at the head of the list.")
 (defvar py-shell-hook nil
   "Hook called by `py-shell'.")
 
-(defvar python-font-lock-keywords nil)
+;; (defvar python-font-lock-keywords nil)
 
 (defvar py-dotted-expression-syntax-table
   (let ((table (make-syntax-table python-mode-syntax-table)))
@@ -2841,19 +2754,23 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 ;; 'name':
 (defconst py-dict-re "'\\_<\\w+\\_>':")
 
-(defvar py-block-re-raw (list
-		       "async def"
-		       "async for"
-		       "async with"
-		       "class"
-		       "def"
-		       "for"
-		       "if"
-		       "try"
-		       "while"
-		       "with"
-		       )
-  "Used by ‘py-block-re’")
+(defcustom py-block-re-raw
+  (list
+   "async def"
+   "async for"
+   "async with"
+   "class"
+   "def"
+   "for"
+   "if"
+   "try"
+   "while"
+   "with"
+   )
+  "Matches the beginning of a compound statement but not it's clause."
+  :type '(repeat string)
+  :tag "py-block-re-raw"
+  :group 'python-mode)
 
 (defconst py-block-re (concat
 		       ;; "[ \t]*"
@@ -2942,28 +2859,6 @@ Second group grabs the name")
   (concat
    "[ \t]*"
    (regexp-opt  py-block-or-clause-re-raw 'symbols)
-   "[( \t]*.*:?")
-  "See ‘py-block-or-clause-re-raw’, which it reads.")
-
-(defcustom py-block-re-raw
-  (list
-   "async with"
-   "except"
-   "for"
-   "if"
-   "try"
-   "while"
-   "with"
-   )
-  "Matches the beginning of a compound statement but not it's clause."
-  :type '(repeat string)
-  :tag "py-block-re-raw"
-  :group 'python-mode)
-
-(defvar py-block-re
-  (concat
-   "[ \t]*"
-   (regexp-opt  py-block-re-raw 'symbols)
    "[( \t]*.*:?")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
 
@@ -3251,8 +3146,6 @@ to paths in Emacs."
 
 (defvar py-pdbtrack-is-tracking-p nil)
 
-(defvar py-shell--font-lock-buffer nil)
-
 (defvar py--docbeg nil
   "internally used by py--write-edit")
 
@@ -3477,10 +3370,6 @@ TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
 (defun py--python-send-completion-setup-code (buffer)
   "For Python see py--python-send-setup-code."
   (py--python-send-setup-code-intern "shell-completion" buffer))
-
-(defun py--python-send-eldoc-setup-code (buffer)
-  "For Python see py--python-send-setup-code."
-  (py--python-send-setup-code-intern "eldoc" buffer))
 
 (defun py--ipython-import-module-completion ()
   "Setup IPython v0.11 or greater.
@@ -3948,6 +3837,7 @@ Preserves the `buffer-modified-p' state of the current buffer."
 
 ;; now installed by py-load-named-shells
 ;; (require 'python-components-named-shells)
+;; (require 'python-components-eldoc)
 
 
 
@@ -12947,9 +12837,6 @@ Argument OUTPUT is a string with the output from the comint process."
 
 
 ;; python-components-help
-(defvar py-eldoc-string-code
-  "__PYDOC_get_help('''%s''')\n"
-  "Python code used to get a string with the documentation of an object.")
 
 ;;  Info-look functionality.
 (require 'info-look)
@@ -13115,44 +13002,24 @@ not inside a defun."
 (defalias 'py-describe-symbol 'py-help-at-point)
 (defun py--help-at-point-intern (sym orig)
   (let* ((origfile (py--buffer-filename-remote-maybe))
-	 ;; (temp (md5 (buffer-name)))
-	 (buffer-name "*Python-Help*")
 	 (cmd (py-find-imports))
-	 ;; if symbol is defined in current buffer, go to
-	 (erg (progn (goto-char (point-min))
-		     (when
-			 (re-search-forward (concat "^[ \t]*def " sym "(") nil t 1)
-		       (forward-char -2)
-		       (point)))))
-    (if erg
-	(progn (push-mark orig) (push-mark (point))
-	       (when (and (called-interactively-p 'any) py-verbose-p) (message "Jump to previous position with %s" "C-u C-<SPC> C-u C-<SPC>")))
-      (goto-char orig))
-    (setq cmd (concat cmd "\nimport pydoc\n"
-		      ))
+	 (oldbuf (current-buffer))
+	 )
     (when (not py-remove-cwd-from-path)
       (setq cmd (concat cmd "import sys\n"
 			"sys.path.insert(0, '"
 			(file-name-directory origfile) "')\n")))
-    (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
-    (ignore-errors (py-kill-buffer-unconditional buffer-name))
-    (with-temp-buffer-window
-	(set-buffer (get-buffer-create buffer-name))
-	(setq inhibit-read-only t)
-	(setq inhibit-point-motion-hooks t)
-      (erase-buffer)
-      (when py--debug-p (message "%s" (current-buffer)))
-      (py-send-string cmd nil t)
-      (insert py-result)
-      )))
+    ;; (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
+    (py-send-string (concat cmd "help('" sym "')\n") nil t nil orig nil nil nil nil nil nil oldbuf t)
+    (display-buffer oldbuf)))
+    ;; (with-help-window "Hilfe" (insert py-result))))
 
 (defun py-help-at-point ()
   "Print help on symbol at point.
 
 If symbol is defined in current buffer, jump to it's definition"
   (interactive)
-  (let* ((py-cleanup-p t)
-	 (orig (point))
+  (let* ((orig (point))
 	 (beg (and (use-region-p) (region-beginning)))
 	 (end (and (use-region-p) (region-end)))
 	 (symbol
@@ -13160,22 +13027,29 @@ If symbol is defined in current buffer, jump to it's definition"
 		   (buffer-substring-no-properties beg end))
 	      ;; (thing-at-point 'symbol t)
 	      (py-symbol-at-point))))
+    (and symbol (unless (string= "" symbol)
+		  (py--help-at-point-intern symbol orig))
+	 ;; (py--shell-manage-windows buffer exception-buffer split (or interactivep switch))
+	 )))
+
+
+
     ;; avoid repeated call at identic pos
-    (unless (eq orig (ignore-errors py-last-position))
-      (setq py-last-position orig))
+    ;; (unless (eq orig (ignore-errors py-last-position))
+    ;;   (setq py-last-position orig))
     ;; (unless (member (get-buffer-window "*Python-Help*") (window-list))
     ;;   (window-configuration-to-register py-windows-config-register))
-    (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
-    (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
-	(progn
-	  (py-restore-window-configuration)
-	  (goto-char orig))
-      (if
-	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
-	  (not (string= "" symbol))
-	  (py--help-at-point-intern symbol orig)
-	;; (py-restore-window-configuration)
-	))))
+    ;; (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
+    ;; (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
+    ;; 	(progn
+    ;; 	  (py-restore-window-configuration)
+    ;; 	  (goto-char orig))
+    ;;   (if
+    ;; 	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
+    ;; 	  (not (string= "" symbol))
+    ;; 	  (py--help-at-point-intern symbol orig)
+    ;; 	;; (py-restore-window-configuration)
+    ;; 	))))
 
 ;;  Documentation functions
 
@@ -23766,9 +23640,10 @@ When interactively called, copy and message it"
    (list (current-buffer)))
   ;; (when (bufferp buffer)
   (ignore-errors (with-current-buffer buffer
-    (let (kill-buffer-query-functions set-buffer-modified-p)
+    (let (kill-buffer-query-functions)
+      (set-buffer-modified-p nil)
       (ignore-errors (kill-process (get-buffer-process buffer)))
-      (ignore-errors (kill-buffer buffer))))))
+      (kill-buffer buffer)))))
 
 (defun py--line-backward-maybe ()
   "Return result of (< 0 (abs (skip-chars-backward \" \\t\\r\\n\\f\"))) "
@@ -27754,7 +27629,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 
 (defun all-mode-setting ()
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
-  (set (make-local-variable 'eldoc-message-function) 'py-help-at-point)
   )
 
 ;;;###autoload
@@ -27799,10 +27673,7 @@ See available customizations listed in files variables-python-mode at directory 
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
                                   py-outline-mode-keywords)
                           "\\|")))
-  (when (>= emacs-major-version 25)
-    (global-eldoc-mode -1)
-    (eldoc-mode py-eldoc-mode-p))
-  (when py-font-lock-defaults-p
+    (when py-font-lock-defaults-p
     (if py-use-font-lock-doc-face-p
 	(set (make-local-variable 'font-lock-defaults)
              '(python-font-lock-keywords nil nil nil nil
@@ -27850,7 +27721,6 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'normal-auto-fill-function) 'py-fill-string-or-comment)
   (set (make-local-variable 'require-final-newline) mode-require-final-newline)
   (set (make-local-variable 'tab-width) py-indent-offset)
-  (set (make-local-variable 'eldoc-documentation-function) 'py-eldoc-function)
   (and py-load-skeletons-p (py-load-skeletons))
   (and py-guess-py-install-directory-p (py-set-load-path))
   (and py-autopair-mode
@@ -27932,8 +27802,7 @@ Variables
 `py-shell-fontify-p',
 `py-completion-setup-code',
 `py-shell-completion-string-code',
-`py-python-eldoc-setup-code', `py-python-eldoc-string-code', can
-customize this mode for different Python interpreters.
+can customize this mode for different Python interpreters.
 
 This mode resets `comint-output-filter-functions' locally, so you
 may want to re-add custom functions to it using the
