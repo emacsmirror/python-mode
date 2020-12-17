@@ -2998,8 +2998,8 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      (3 (py--quote-syntax 3) t t)
      (6 (py--quote-syntax 1) t t))))
 
-(defconst py-windows-config-register 313465889
-  "Internal used.")
+(defconst py--windows-config-register 313465889
+  "Internal used by ‘window-configuration-to-register’.")
 
 (put 'py-indent-offset 'safe-local-variable 'integerp)
 
@@ -8378,7 +8378,7 @@ arg MODE: which buffer-mode used in edit-buffer"
 (defun py-prettyprint-assignment ()
   "Prettyprint assignment in ‘python-mode’."
   (interactive "*")
-  (window-configuration-to-register py-windows-config-register)
+  (window-configuration-to-register py--windows-config-register)
   (save-excursion
     (let* ((beg (py-beginning-of-assignment))
 	   (name (py-expression))
@@ -10764,8 +10764,8 @@ Don't store data in kill ring."
 (defun py-restore-window-configuration ()
   "Restore ‘py-restore-window-configuration’ when completion is done resp. abandoned."
   (let (val)
-    (and (setq val (get-register py-windows-config-register))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
-	 (jump-to-register py-windows-config-register))))
+    (and (setq val (get-register py--windows-config-register))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
+	 (jump-to-register py--windows-config-register))))
 
 (defun py-shell-execute-string-now (strg &optional shell buffer proc)
   "Send STRG to Python interpreter process.
@@ -12214,9 +12214,6 @@ Takes END"
                   (eq last-command 'choose-completion)
                   (eq last-command 'py-shell-complete))
                  (eq this-command 'self-insert-command))))
-    ;; (set-window-configuration
-    ;;  py-last-window-configuration)
-    ;; (jump-to-register py-windows-config-register)
     (py-restore-window-configuration)
     )
 
@@ -12347,7 +12344,7 @@ Use `C-q TAB' to insert a literally TAB-character
 In ‘python-mode’ `py-complete-function' is called,
 in (I)Python shell-modes `py-shell-complete'"
   (interactive "*")
-  (window-configuration-to-register py-windows-config-register)
+  (window-configuration-to-register py--windows-config-register)
   ;; (setq py-last-window-configuration
   ;;       (current-window-configuration))
   (cond ((use-region-p)
@@ -12968,32 +12965,6 @@ If symbol is defined in current buffer, jump to it's definition"
 		  (py--help-at-point-intern symbol orig))
 	 ;; (py--shell-manage-windows buffer exception-buffer split (or interactivep switch))
 	 )))
-
-
-
-    ;; avoid repeated call at identic pos
-    ;; (unless (eq orig (ignore-errors py-last-position))
-    ;;   (setq py-last-position orig))
-    ;; (unless (member (get-buffer-window "*Python-Help*") (window-list))
-    ;;   (window-configuration-to-register py-windows-config-register))
-    ;; (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
-    ;; (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
-    ;; 	(progn
-    ;; 	  (py-restore-window-configuration)
-    ;; 	  (goto-char orig))
-    ;;   (if
-    ;; 	  ;; (or (< 0 (abs (skip-chars-backward "a-zA-Z0-9_." (line-beginning-position))))(looking-at "\\sw"))
-    ;; 	  (not (string= "" symbol))
-    ;; 	  (py--help-at-point-intern symbol orig)
-    ;; 	;; (py-restore-window-configuration)
-    ;; 	))))
-
-;;  Documentation functions
-
-;;  dump the long form of the mode blurb; does the usual doc escapes,
-;;  plus lines of the form ^[vc]:name\$ to suck variable & command docs
-;;  out of the right places, along with the keys they're on & current
-;;  values
 
 (defun py--dump-help-string (str)
   (with-output-to-temp-buffer "*Help*"
@@ -21602,7 +21573,7 @@ Fill according to `py-docstring-style' "
   (interactive "*")
   (save-excursion
     (save-restriction
-      (window-configuration-to-register py-windows-config-register)
+      (window-configuration-to-register py--windows-config-register)
       (let* ((tqs tqs)
 	     (pps (or pps (parse-partial-sexp (point-min) (point))))
 	     (docstring (unless (not py-docstring-style) (py--in-or-behind-or-before-a-docstring pps)))
@@ -21640,7 +21611,7 @@ Fill according to `py-docstring-style' "
 		 (and beg end (fill-region beg end))
 		 (when (and in-string (not tqs))
 		   (py--continue-lines-region beg end))))))
-      (jump-to-register py-windows-config-register))))
+      (jump-to-register py--windows-config-register))))
 
 (defun py-fill-string-or-comment ()
   "Serve auto-fill-mode"
@@ -23049,7 +23020,7 @@ completions on the current context."
 
 Use `py-fast-process' "
   (interactive "*")
-  (window-configuration-to-register py-windows-config-register)
+  (window-configuration-to-register py--windows-config-register)
   (setq py-last-window-configuration
   	(current-window-configuration))
   (py-shell-complete shell beg end word t)
