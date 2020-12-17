@@ -12943,7 +12943,7 @@ Used with ‘eval-after-load’."
 (defun py--warn-tmp-files-left ()
   "Detect and warn about file of form \"py11046IoE\" in py-temp-directory."
   (let ((erg1 (file-readable-p (concat py-temp-directory py-separator-char (car (directory-files  py-temp-directory nil "py[[:alnum:]]+$"))))))
-    (when (and py-verbose-p erg1)
+    (when erg1
       (message "py--warn-tmp-files-left: %s ?" (concat py-temp-directory py-separator-char (car (directory-files  py-temp-directory nil "py[[:alnum:]]*$")))))))
 
 (defun py-fetch-docu ()
@@ -22870,7 +22870,6 @@ Optional File: execute through running a temp-file"
 
 ;; python-components-hide-show
 
-
 ;; (setq hs-block-start-regexp 'py-extended-block-or-clause-re)
 ;; (setq hs-forward-sexp-func 'py-forward-block)
 
@@ -22938,7 +22937,7 @@ Optional File: execute through running a temp-file"
   (interactive
    (list
     (and (use-region-p) (region-beginning))(and (use-region-p) (region-end))))
-  (py-show-base 'region beg end))
+  (hs-discard-overlays beg end))
 
 (defun py-hide-block ()
   "Hide block at point."
@@ -23050,7 +23049,7 @@ Optional File: execute through running a temp-file"
   (py-show)
   (py-hide-indent))
 
-(defun py-dynamically-hide-further-indent (&optional arg) 
+(defun py-dynamically-hide-further-indent (&optional arg)
   (interactive "P")
   (if (eq 4  (prefix-numeric-value arg))
       (py-show)
