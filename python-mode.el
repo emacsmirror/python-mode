@@ -1683,8 +1683,6 @@ Else python"
 "
   :group 'python-mode)
 
-(defvar py-default-interpreter py-shell-name)
-
 (defvar py-tempfile nil
   "Internally used.")
 
