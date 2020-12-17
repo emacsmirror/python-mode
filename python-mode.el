@@ -8,7 +8,6 @@
 
 ;; Package-Requires: ((emacs "24"))
 
-
 ;; Author: 2015-2020 https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
@@ -2401,12 +2400,6 @@ Syntax or has word syntax and isn't a letter.")
           (modify-syntax-entry ?\_ "_" table))
         table))
 
-(defvar-local py-local-command nil
-  "Returns locally used executable-name.")
-
-(defvar-local py-local-versioned-command nil
-  "Returns locally used executable-name including its version.")
-
 (defvar py-ipython-completion-command-string nil
   "Select command according to IPython version.
 
@@ -2492,9 +2485,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar hs-hide-comments-when-hiding-all t
   "Defined in hideshow.el, silence compiler warnings here.")
-
-(defvar py-force-local-shell-p nil
-  "Used internally, see `toggle-force-local-shell'.")
 
 (defvar py-shell-complete-debug nil
   "For interal use when debugging, stores completions." )
@@ -5423,12 +5413,7 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 
 	 ["Don't enforce default interpreter" force-py-shell-name-p-off
 	  :help "Make execute commands guess interpreter from environment"]
-
-	 ["Enforce local Python shell " py-force-local-shell-on
-	  :help "Locally indicated Python being enforced upon sessions execute commands. "]
-
-	 ["Remove local Python shell enforcement, restore default" py-force-local-shell-off
-	  :help "Restore `py-shell-name' default value and `behaviour'. "])
+	 )
 
 	("Execute"
 
@@ -10828,51 +10813,6 @@ With EOB-P, go to end of buffer."
   (when eob-p
     (goto-char (point-max))))
 
-(defun toggle-force-local-shell (&optional arg)
-  "If locally indicated Python shell should be taken.
-
-Enforced upon sessions execute commands.
-
-Toggles boolean ‘py-force-local-shell-p’ along with ‘py-force-py-shell-name-p’
-Returns value of ‘toggle-force-local-shell’ switched to.
-
-See also commands
-‘py-force-local-shell-on’
-‘py-force-local-shell-off’"
-  (interactive)
-  (let ((arg (or arg (if py-force-local-shell-p -1 1))))
-    (if (< 0 arg)
-        (progn
-          (setq py-shell-name (or py-local-command (py-choose-shell)))
-          (setq py-force-local-shell-p t))
-      (setq py-shell-name (default-value 'py-shell-name))
-      (setq py-force-local-shell-p nil))
-    (when (called-interactively-p 'any)
-      (if py-force-local-shell-p
-          (when py-verbose-p (message "Enforce %s"  py-shell-name))
-        (when py-verbose-p (message "py-shell-name default restored to: %s" py-shell-name))))
-    py-shell-name))
-
-(defun py-force-local-shell-on ()
-  "Make sure, ‘py-force-local-shell-p’ is on.
-
-Returns value of ‘py-force-local-shell-p’.
-Optional FAST
-Kind of an option 'follow', local shell sets ‘py-shell-name’, enforces its use afterwards"
-  (interactive)
-  (toggle-force-local-shell 1)
-  (when (or py-verbose-p (called-interactively-p 'any))
-    (message "Enforce %s" py-shell-name)))
-
-(defun py-force-local-shell-off ()
-  "Restore ‘py-shell-name’ default value and ‘behaviour’.
-
-Optional FAST"
-  (interactive)
-  (toggle-force-local-shell 1)
-  (when (or py-verbose-p (called-interactively-p 'any))
-    (message "py-shell-name default restored to: %s" py-shell-name)))
-
 (defun toggle-force-py-shell-name-p (&optional arg)
   "If customized default ‘py-shell-name’ should be enforced upon execution.
 
@@ -11947,7 +11887,6 @@ See also doku of variable ‘py-master-file’"
             (re-search-forward (concat "^\\( *# py-master-file: *\\)\"\\([^ \t]+\\)\" *$") nil t 1)
           (setq py-master-file (match-string-no-properties 2))))))
   (when (called-interactively-p 'any) (message "%s" py-master-file)))
-
 
 (defun py--qualified-module-name (file)
   "Return the fully qualified Python module name for FILE.
@@ -23301,7 +23240,6 @@ process buffer for a list of commands.)"
 	 (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
 	 (shell (or shell (py-choose-shell)))
 	 (args (or args (py--provide-command-args shell fast)))
-	 (py-use-local-default (py--determine-local-default))
 	 (buffer-name
 	  (or buffer
 	      (py--choose-buffer-name shell dedicated fast)))
@@ -26631,11 +26569,7 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 	    ["Don't enforce default interpreter" force-py-shell-name-p-off
 	     :help "Make execute commands guess interpreter from environment"]
 
-	    ["Enforce local Python shell " py-force-local-shell-on
-	     :help "Locally indicated Python being enforced upon sessions execute commands. "]
-
-	    ["Remove local Python shell enforcement, restore default" py-force-local-shell-off
-	     :help "Restore `py-shell-name' default value and `behaviour'. "])
+	    )
 
 	   ("Execute"
 
