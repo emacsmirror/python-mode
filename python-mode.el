@@ -8427,7 +8427,6 @@ Return beginning of form if successful, nil otherwise"
                                                  (setq erg (point))))
     erg))
 
-;;;###autoload
 (defun py-backward-class ()
  "Go to beginning of ‘class’.
 
@@ -8440,7 +8439,6 @@ Return beginning of form if successful, nil otherwise"
                                                  (setq erg (point))))
     erg))
 
-;;;###autoload
 (defun py-backward-def ()
  "Go to beginning of ‘def’.
 
@@ -8453,7 +8451,6 @@ Return beginning of form if successful, nil otherwise"
                                                  (setq erg (point))))
     erg))
 
-;;;###autoload
 (defun py-backward-def-or-class ()
  "Go to beginning of ‘def-or-class’.
 
@@ -8500,6 +8497,16 @@ Return beginning of ‘def-or-class’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-def-or-class)
        (progn (beginning-of-line)(point))))
+
+(defun py-backward-assignment ()
+ "Go to beginning of ‘assignment’.
+
+If already at beginning, go one ‘assignment’ backward.
+Return beginning of form if successful, nil otherwise"
+  (interactive)
+  (let (erg)
+    (setq erg (car-safe (cdr-safe (py--go-to-keyword 'py-assignment-re))))
+    erg))
 
 (defun py-backward-block-or-clause ()
  "Go to beginning of ‘block-or-clause’.
@@ -8590,6 +8597,14 @@ Return beginning of form if successful, nil otherwise"
   (let (erg)
     (setq erg (car-safe (cdr-safe (py--go-to-keyword 'py-try-re))))
     erg))
+
+(defun py-backward-assignment-bol ()
+  "Go to beginning of ‘assignment’, go to BOL.
+If already at beginning, go one ‘assignment’ backward.
+Return beginning of ‘assignment’ if successful, nil otherwise"
+  (interactive)
+  (and (py-backward-assignment)
+       (progn (beginning-of-line)(point))))
 
 (defun py-backward-block-or-clause-bol ()
   "Go to beginning of ‘block-or-clause’, go to BOL.
@@ -9688,25 +9703,6 @@ Return position if successful"
     (and last (goto-char last))
     (when (and (looking-back py-section-end (line-beginning-position))(< orig (point)))
       (point))))
-
-;; (defun py-forward-paragraph ()
-;;   (interactive)
-;;   (py--end-of-paragraph 'py-paragraph-re))
-
-(defun py-backward-assignment()
-  "Go to backward in buffer to beginning of an assigment.
-
-Return position if successful."
-  (interactive)
-  (let* (last
-	 (erg
-	  (progn
-	    (while (and (setq last (py-backward-statement))
-			(not (looking-at py-assignment-re))))
-	    (and (looking-at py-assignment-re) last))))
-    (when (and py-verbose-p (called-interactively-p 'interactive))
-      (message "%s" erg))
-    erg))
 
 (defun py-beginning-of-assignment()
   "Go to beginning of assigment if inside.
