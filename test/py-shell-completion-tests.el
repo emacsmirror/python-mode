@@ -1,6 +1,6 @@
 ;;; py-shell-completion-tests.el --- Test completion for available Python shell
 
-;; Author: Andreas Röhler <andreas.roehler@online.de>
+;; URL: https://gitlab.com/python-mode-devs
 ;; Keywords: languages
 
 ;; This program is free software; you can redistribute it and/or modify
