@@ -8683,7 +8683,25 @@ Return beginning of ‘try-block’ if successful, nil otherwise"
 (defun py-forward-region ()
   "Go to the end of current region."
   (interactive)
-  (goto-char (region-end)))
+  (let ((end (region-end)))
+    (when end (goto-char end))))
+
+(defun py-forward-assignment (&optional orig bol)
+  "Go to end of assignment.
+
+Return end of ‘assignment’ if successful, nil otherwise
+Optional ORIG: start position
+Optional BOL: go to beginning of line following end-position"
+  (interactive)
+  (cdr-safe (py--end-base 'py-assignment-re orig bol)))
+
+(defun py-forward-assignment-bol ()
+  "Goto beginning of line following end of ‘assignment’.
+
+Return position reached, if successful, nil otherwise.
+See also ‘py-down-assignment’: down from current definition to next beginning of ‘assignment’ below."
+  (interactive)
+  (py-forward-assignment nil t))
 
 (defun py-forward-block (&optional orig bol)
   "Go to end of block.
@@ -9754,37 +9772,38 @@ Return position of successful, nil of not started from inside"
           (message "%s" erg))
 	erg))))
 
-(defun py-forward-assignment()
-  "Go to end of assigment at point if inside.
+;; now in python-components-forward-forms.el
+;; (defun py-forward-assignment()
+;;   "Go to end of assigment at point if inside.
 
-Return position of successful, nil of not started from inside
-When called at the end of an assignment, check next form downwards."
-  (interactive)
-  (unless (eobp)
-    (if (eq last-command 'py-backward-assignment)
-	;; assume at start of an assignment
-	(py--forward-assignment-intern)
-      ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
-      (let* (last
-	     (orig (point))
-	     (beg
-	      (or (py--beginning-of-assignment-p)
-		  (progn
-		    (while (and (setq last (py-backward-statement))
-				(not (looking-at py-assignment-re))
-				;; (not (bolp))
-				))
-		    (and (looking-at py-assignment-re) last))))
-	     erg)
-	(and beg (setq erg (py--forward-assignment-intern)))
-	(when (eq (point) orig)
-	  (while (and (not (eobp)) (re-search-forward py-assignment-re) (setq last (match-beginning 1)) (py-in-string-or-comment-p)))
-	  (when last
-	    (goto-char last)
-	    (setq erg (point))))
-	(when (and py-verbose-p (called-interactively-p 'interactive))
-          (message "%s" erg))
-	erg))))
+;; Return position of successful, nil of not started from inside
+;; When called at the end of an assignment, check next form downwards."
+;;   (interactive)
+;;   (unless (eobp)
+;;     (if (eq last-command 'py-backward-assignment)
+;; 	;; assume at start of an assignment
+;; 	(py--forward-assignment-intern)
+;;       ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
+;;       (let* (last
+;; 	     (orig (point))
+;; 	     (beg
+;; 	      (or (py--beginning-of-assignment-p)
+;; 		  (progn
+;; 		    (while (and (setq last (py-backward-statement))
+;; 				(not (looking-at py-assignment-re))
+;; 				;; (not (bolp))
+;; 				))
+;; 		    (and (looking-at py-assignment-re) last))))
+;; 	     erg)
+;; 	(and beg (setq erg (py--forward-assignment-intern)))
+;; 	(when (eq (point) orig)
+;; 	  (while (and (not (eobp)) (re-search-forward py-assignment-re) (setq last (match-beginning 1)) (py-in-string-or-comment-p)))
+;; 	  (when last
+;; 	    (goto-char last)
+;; 	    (setq erg (point))))
+;; 	(when (and py-verbose-p (called-interactively-p 'interactive))
+;;           (message "%s" erg))
+;; 	erg))))
 
 ;; python-components-kill-forms
 
