@@ -9326,14 +9326,12 @@ ORIG - consider orignial position or point.
 DONE - transaktional argument
 REPEAT - count and consider repeats"
   (interactive)
-  (switch-to-buffer (current-buffer))
   (unless (eobp)
     (let ((repeat (or (and repeat (1+ repeat)) 0))
 	  (orig (or orig (point)))
 	  erg last
 	  ;; use by scan-lists
 	  forward-sexp-function pps err)
-      ;; (unless done (py--skip-to-comment-or-semicolon done))
       (setq pps (parse-partial-sexp (point-min) (point)))
       ;; (origline (or origline (py-count-lines)))
       (cond
@@ -23990,7 +23988,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
     end))
 
 (defun py--in-comment-p ()
-  "Return the beginning of current line's comment, if inside. "
+  "Return the beginning of current line's comment, if inside or at comment-start. "
   (save-restriction
     (widen)
     (let* ((pps (parse-partial-sexp (point-min) (point)))
@@ -24906,7 +24904,7 @@ Returns `t' if point was moved"
           ((not done)
            (end-of-line)))
     (skip-chars-backward " \t" (line-beginning-position))
-    (and (< orig (point))(setq done t)
+    (and (< orig (point))(setq done (point))
          done)))
 
 (defun py-backward-top-level ()
