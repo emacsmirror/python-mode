@@ -2615,6 +2615,8 @@ This variable is set in ‘py-execute-region’ and used in ‘py--jump-to-excep
 
 (defvar py-class-name-face 'py-class-name-face)
 
+(defvar py-def-face 'py-def-face)
+
 (defvar py-exception-name-face 'py-exception-name-face)
 
 (defvar py-import-from-face 'py-import-from-face)
@@ -3280,6 +3282,12 @@ See also `py-object-reference-face'"
 
 (defface py-class-name-face
   '((t (:inherit font-lock-type-face)))
+  "Face for classes."
+  :tag "py-class-name-face"
+  :group 'python-mode)
+
+(defface py-def-face
+  '((t (:inherit font-lock-function-name-face)))
   "Face for classes."
   :tag "py-class-name-face"
   :group 'python-mode)
@@ -6903,9 +6911,11 @@ The returned file name can be used directly as argument of
         (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
         ;; functions
         (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-function-name-face))
+	 ;; (1 font-lock-function-name-face))
+         (1 py-def-face))
         (,(rx symbol-start "async def" (1+ space) (group (1+ (or word ?_))))
-         (1 font-lock-function-name-face))
+	 ;; (1 font-lock-function-name-face))
+         (1 py-def-face))
         ;; classes
         (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
          (1 py-def-class-face) (2 py-class-name-face))
@@ -6959,8 +6969,8 @@ The returned file name can be used directly as argument of
 		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
 		      "unichr" "unicode" "vars" "xrange" "zip"))
 	   symbol-end) (1 py-builtins-face))
-        ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
-         (1 py-variable-name-face nil nil))
+        ;; ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
+        ;;  (1 py-variable-name-face nil nil))
 	;; https://emacs.stackexchange.com/questions/55184/
 	;; how-to-highlight-in-different-colors-for-variables-inside-fstring-on-python-mo
 	;;
@@ -22031,42 +22041,42 @@ Return outmost indentation reached."
 (defun py-execute-file-ipython-dedicated (filename)
   "Send file to a dedicatedIPython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython" filename nil t t nil t))
+  (py--execute-base nil nil "ipython" filename nil t t t))
 
 (defun py-execute-file-ipython2.7-dedicated (filename)
   "Send file to a dedicatedIPython2.7 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython2.7" filename nil t t nil t))
+  (py--execute-base nil nil "ipython2.7" filename nil t t t))
 
 (defun py-execute-file-ipython3-dedicated (filename)
   "Send file to a dedicatedIPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython3" filename nil t t nil t))
+  (py--execute-base nil nil "ipython3" filename nil t t t))
 
 (defun py-execute-file-jython-dedicated (filename)
   "Send file to a dedicatedJython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "jython" filename nil t t nil t))
+  (py--execute-base nil nil "jython" filename nil t t t))
 
 (defun py-execute-file-python-dedicated (filename)
   "Send file to a dedicatedPython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python" filename nil t t nil t))
+  (py--execute-base nil nil "python" filename nil t t t))
 
 (defun py-execute-file-python2-dedicated (filename)
   "Send file to a dedicatedPython2 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python2" filename nil t t nil t))
+  (py--execute-base nil nil "python2" filename nil t t t))
 
 (defun py-execute-file-python3-dedicated (filename)
   "Send file to a dedicatedPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python3" filename nil t t nil t))
+  (py--execute-base nil nil "python3" filename nil t t t))
 
 (defun py-execute-file-pypy-dedicated (filename)
   "Send file to a dedicatedPyPy interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "pypy" filename nil t t nil t))
+  (py--execute-base nil nil "pypy" filename nil t t t))
 
 ;; python-components-section-forms
 
