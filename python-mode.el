@@ -64,6 +64,7 @@
 ;; `py-partial-expression' beginns with a "(", which is
 ;; not taken as proposal.
 
+
 ;;; Code:
 
 (ignore-errors (require 'subr-x))
@@ -3238,7 +3239,7 @@ See also `py-object-reference-face'"
   :group 'python-mode)
 
 (defface py-variable-name-face
-  '((t (:inherit default)))
+  '((t (:inherit font-lock-variable-name-face)))
   "Face method decorators."
   :tag "py-variable-name-face"
   :group 'python-mode)
@@ -3822,10 +3823,6 @@ Preserves the `buffer-modified-p' state of the current buffer."
   `(let ((inhibit-point-motion-hooks t))
      (with-silent-modifications
        ,@body)))
-
-;; now installed by py-load-named-shells
-;; (require 'python-components-named-shells)
-;; (require 'python-components-eldoc)
 
 
 
@@ -6969,6 +6966,7 @@ The returned file name can be used directly as argument of
 		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
 		      "unichr" "unicode" "vars" "xrange" "zip"))
 	   symbol-end) (1 py-builtins-face))
+	;; #104, GNU bug 44568 font lock of assignments with type hints
         ;; ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
         ;;  (1 py-variable-name-face nil nil))
 	;; https://emacs.stackexchange.com/questions/55184/
@@ -6985,7 +6983,8 @@ The returned file name can be used directly as argument of
           ;; Post-match form
           (goto-char (match-end 0))
           ;; face for this match
-          (0 font-lock-variable-name-face t)))
+          ;; (0 font-lock-variable-name-face t)))
+	  (0 py-variable-name-face t)))
 	;; assignment
         ;; a, b, c = (1, 2, 3)
         (,(lambda (limit)
@@ -11736,7 +11735,7 @@ May we get rid of the temporary file?"
   "Fix offline amount, make error point at the correct LINE."
   (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
 
-(defun py-execute-file (filename)
+(defun py-execute-file (filename &optional proc)
   "When called interactively, user is prompted for FILENAME."
   (interactive "fFilename: ")
   (let (;; postprocess-output-buffer might want origline
@@ -11746,7 +11745,7 @@ May we get rid of the temporary file?"
     (if (file-readable-p filename)
         (if py-store-result-p
             (setq erg (py--execute-file-base (expand-file-name filename) nil nil nil origline))
-          (py--execute-file-base (expand-file-name filename)))
+          (py--execute-file-base (expand-file-name filename) proc))
       (message "%s not readable. %s" filename "Do you have write permissions?"))
     (py--shell-manage-windows py-output-buffer py-exception-buffer nil
                               (or (called-interactively-p 'interactive)))
@@ -24289,7 +24288,6 @@ Arg REGEXP, a symbol"
 	   (res (setq erg
 		      (and
 		       (py--down-according-to-indent regexp secondvalue (current-indentation))
-		       ;; (py--forward-regexp-keep-indent "^[ \t]*[[:alnum:]_]" (current-indentation))
 		       (py--down-end-form))))
 	   (t (unless (< 0 repeat) (goto-char orig))
 	      (py--forward-regexp (symbol-value regexp))
@@ -24673,7 +24671,7 @@ Return the output."
        (if (and (string-match ".\n+." strg) (string-match "^\*[Ii]" buffer))  ;; IPython or multiline
            (let* ((temp-file-name (py-temp-file-name strg))
 		  (file-name (or (buffer-file-name) temp-file-name)))
-	     (py-send-file file-name proc))
+	     (py-execute-file file-name proc))
 	 (py-shell-send-string strg proc))
        ;; (switch-to-buffer buffer)
        ;; (accept-process-output proc 9)
@@ -24713,7 +24711,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 							    ))  ;; multiline
 	     (let* ((temp-file-name (py-temp-file-name strg))
 		    (file-name (or (buffer-file-name) temp-file-name)))
-	       (py-send-file file-name proc)))
+	       (py-execute-file file-name proc)))
 	    (t (with-current-buffer buffer
 		 (comint-send-string proc strg)
 		 (when (or (not (string-match "\n\\'" strg))
@@ -24726,19 +24724,19 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 		       (no-output
 			(and orig (py--cleanup-shell orig buffer))))))))))
 
-(defun py-send-file (file-name process)
-  "Send FILE-NAME to Python PROCESS."
-  (interactive "fFile to send: ")
-  (let* ((proc (or
-		   process (get-buffer-process (py-shell))))
-	 (file-name (expand-file-name file-name)))
-    (py-send-string
-     (format
-      (concat "__pyfile = open('''%s''');"
-	      "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
-	      "__pyfile.close()")
-      file-name file-name)
-     proc)))
+;; (defun py-send-file (file-name process)
+;;   "Send FILE-NAME to Python PROCESS."
+;;   (interactive "fFile to send: ")
+;;   (let* ((proc (or
+;; 		   process (get-buffer-process (py-shell))))
+;; 	 (file-name (expand-file-name file-name)))
+;;     (py-send-string
+;;      (format
+;;       (concat "__pyfile = open('''%s''');"
+;; 	      "exec(compile(__pyfile.read(), '''%s''', 'exec'));"
+;; 	      "__pyfile.close()")
+;;       file-name file-name)
+;;      proc)))
 
 (defun py-which-def-or-class (&optional orig)
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
