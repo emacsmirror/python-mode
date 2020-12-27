@@ -3786,44 +3786,6 @@ With optional ARG message state switched to"
   (setq py-closing-list-dedents-bos (not py-closing-list-dedents-bos))
   (when arg (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
 
-(defmacro py-test-with-temp-buffer-point-min (contents &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
-BODY is code to be executed within the temp buffer.  Point is
- at the beginning of buffer."
-  (declare (indent 1) (debug t))
-  `(with-temp-buffer
-     (let (hs-minor-mode py--imenu-create-index-p)
-       (insert ,contents)
-       (python-mode)
-       (goto-char (point-min))
-       (when py--debug-p
-	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-region (point-min) (point-max)))
-       ,@body)))
-
-(defmacro py-test-with-temp-buffer (contents &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
-BODY is code to be executed within the temp buffer.  Point is
- at the end of buffer."
-  (declare (indent 1) (debug t))
-  `(with-temp-buffer
-     (let (hs-minor-mode py--imenu-create-index-p)
-       (insert ,contents)
-       (python-mode)
-       (when py--debug-p
-	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-region (point-min) (point-max)))
-       ,@body)))
-
-;; from jit-lock.el
-(defmacro with-buffer-prepared-for-jit-lock (&rest body)
-  "Execute BODY in current buffer, overriding several variables.
-Preserves the `buffer-modified-p' state of the current buffer."
-  (declare (debug t))
-  `(let ((inhibit-point-motion-hooks t))
-     (with-silent-modifications
-       ,@body)))
-
 
 
 (require 'ansi-color)
