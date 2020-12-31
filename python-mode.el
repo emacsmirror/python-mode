@@ -7168,7 +7168,7 @@ Default is t")
   "Used inside a Python-shell.")
 
 (defvar py-ipython-shell-mode-map py-python-shell-mode-map
-  "Unless setting of ipython-shell-mode needs to be different, let's save some lines of code and copy ‘py-python-shell-mode-map’ here.")
+  "Copy ‘py-python-shell-mode-map’ here.")
 
 (defvar py-shell-map py-python-shell-mode-map)
 
@@ -24139,7 +24139,7 @@ When already at end, go to EOB."
       (or (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	  (py-backward-comment))))
 
-(defun py--down-according-to-indent (regexp secondvalue &optional indent enforce-regexp)
+(defun py--down-according-to-indent (regexp secondvalue &optional indent use-regexp)
   "Return position if moved, nil otherwise.
 
 Optional ENFORCE-REGEXP: search for regexp only."
@@ -24158,7 +24158,7 @@ Optional ENFORCE-REGEXP: search for regexp only."
 	  (and
 	   (not done)
 	   (progn (end-of-line)
-		  (cond (enforce-regexp
+		  (cond (use-regexp
 			 ;; using regexpvalue might stop behind global settings, missing the end of form
 			 (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
 			(t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
@@ -24166,7 +24166,9 @@ Optional ENFORCE-REGEXP: search for regexp only."
 	       (and secondvalue (looking-at secondvalue))
 	       (and lastvalue (looking-at lastvalue))
 	       (and (looking-at regexpvalue) (setq done t))
-	       (setq done t))))
+	       ;; py-forward-def-or-class-test-3JzvVW
+	       ;; (setq done t)
+	       )))
       (and (< orig (point)) (point)))))
 
 (defun py--end-of-paragraph (regexp)
@@ -24249,7 +24251,9 @@ REGEXP: a symbol"
 Returns the indentation of FORM-start
 Arg REGEXP, a symbol"
   (unless (eobp)
-    (let ((orig (or orig (point))))
+    (let (;; not looking for an assignment
+	  (use-regexp (member regexp (list 'py-def-re 'py-class-re 'py-def-or-class-re)))
+	  (orig (or orig (point))))
       (unless (eobp)
 	(unless (py-beginning-of-statement-p)
 	  (py-beginning-of-statement))
@@ -24257,11 +24261,12 @@ Arg REGEXP, a symbol"
 	       (regexp (py--refine-regexp-maybe regexp))
                (regexpvalue (symbol-value regexp))
                ;; (regexp (or regexp (symbol-value 'py-extended-block-or-clause-re)))
-	       (repeat (or repeat 0))
+	       (repeat (if repeat (1+ repeat) 0))
 	       (indent (if
 			   (looking-at regexpvalue)
-			   (abs
-			    (- (current-indentation) py-indent-offset))
+			   (if (bolp) 0
+			     (abs
+			      (- (current-indentation) py-indent-offset)))
 			 (current-indentation)))
 	       ;; when at block-start, be specific
 	       ;; return current-indentation, position and possibly needed clause-regexps (secondvalue)
@@ -24279,18 +24284,22 @@ Arg REGEXP, a symbol"
 		 ((looking-at regexpvalue)
 		  (list (current-indentation) (point) (py--end-base-determine-secondvalue regexp)))
 		 ((eq 0 (current-indentation))
-		  (py--down-according-to-indent regexp nil 0))
+		  (py--down-according-to-indent regexp nil 0 use-regexp))
 		 ;; look upward
 		 (t (py--go-to-keyword regexp))))
 	       (secondvalue (ignore-errors (nth 2 res)))
 	       erg)
-	       ;; (py-for-block-p (looking-at py-for-re))
+	  ;; (py-for-block-p (looking-at py-for-re))
 	  (setq indent (or (and res (car-safe res)) indent))
 	  (cond
 	   (res (setq erg
 		      (and
 		       (py--down-according-to-indent regexp secondvalue (current-indentation))
-		       (py--down-end-form))))
+		       ;; (if (>= indent (current-indentation))
+		       (py--down-end-form)
+		       ;; (py--end-base regexp orig bol repeat)
+		       ;; )
+		       )))
 	   (t (unless (< 0 repeat) (goto-char orig))
 	      (py--forward-regexp (symbol-value regexp))
 	      (beginning-of-line)
