@@ -774,8 +774,8 @@ Default is nil."
   :type '(choice
 
           (const :tag "default" nil)
-          (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
-          (const :tag "py-end-of-expression" py-end-of-expression))
+          (const :tag "py-forward-partial-expression" py-forward-partial-expression)
+          (const :tag "py-forward-expression" py-forward-expression))
   :tag "py-sexp-function"
   :group 'python-mode)
 
@@ -783,7 +783,7 @@ Default is nil."
   "If a newline is inserted, when line after block isn't empty.
 
 Default is non-nil.
-When non-nil, `py-end-of-def' and related will work faster"
+When non-nil, `py-forward-def' and related will work faster"
   :type 'boolean
   :tag "py-close-provides-newline"
   :group 'python-mode)
@@ -991,7 +991,7 @@ Also used by navigation"
 Default is nil.
 
 beginning-of defun, ‘end-of-defun’ forms use
-commands `py-backward-top-level', `py-end-of-top-level'
+commands `py-backward-top-level', `py-forward-top-level'
 
 ‘mark-defun’ marks function ‘top-level’ form at point etc."
 
@@ -5753,7 +5753,6 @@ Returns position where output starts."
     (and (setq val (get-register py--windows-config-register))(and (consp val) (window-configuration-p (car val))(markerp (cadr val)))(marker-buffer (cadr val))
 	 (jump-to-register py--windows-config-register))))
 
-(defalias 'py-toggle-split-window-on-execute-function 'py-toggle-split-window-function)
 (defun py-toggle-split-window-function ()
   "If window is splitted vertically or horizontally.
 
@@ -8915,42 +8914,17 @@ Return position of successful, nil of not started from inside."
 		(and (looking-at py-assignment-re) last)))))
     erg))
 
-(defun py--forward-assignment-intern ()
-  (and (looking-at py-assignment-re)
-       (goto-char (match-end 2))
-       (skip-chars-forward " \t\r\n\f")
-       ;; (eq (car (syntax-after (point))) 4)
-       (progn (forward-sexp) (point))))
+;; (defun py--forward-assignment-intern ()
+;;   (and (looking-at py-assignment-re)
+;;        (goto-char (match-end 2))
+;;        (skip-chars-forward " \t\r\n\f")
+;;        ;; (eq (car (syntax-after (point))) 4)
+;;        (progn (forward-sexp) (point))))
 
-(defun py-end-of-assignment()
-  "Go to end of assigment at point if inside.
-
-Return position of successful, nil of not started from inside"
-  (interactive)
-  (unless (eobp)
-    (if (eq last-command 'py-backward-assignment)
-	;; assume at start of an assignment
-	(py--forward-assignment-intern)
-      ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
-      (let* (last
-	     (beg
-	      (or (py--beginning-of-assignment-p)
-		  (progn
-		    (while (and (setq last (py-backward-statement))
-				(not (looking-at py-assignment-re))
-				;; (not (bolp))
-				))
-		    (and (looking-at py-assignment-re) last))))
-	     erg)
-	(and beg (setq erg (py--forward-assignment-intern)))
-	erg))))
-
-;; now in python-components-forward-forms.el
 ;; (defun py-forward-assignment()
 ;;   "Go to end of assigment at point if inside.
 
-;; Return position of successful, nil of not started from inside
-;; When called at the end of an assignment, check next form downwards."
+;; Return position of successful, nil of not started from inside"
 ;;   (interactive)
 ;;   (unless (eobp)
 ;;     (if (eq last-command 'py-backward-assignment)
@@ -8958,7 +8932,6 @@ Return position of successful, nil of not started from inside"
 ;; 	(py--forward-assignment-intern)
 ;;       ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
 ;;       (let* (last
-;; 	     (orig (point))
 ;; 	     (beg
 ;; 	      (or (py--beginning-of-assignment-p)
 ;; 		  (progn
@@ -8969,13 +8942,6 @@ Return position of successful, nil of not started from inside"
 ;; 		    (and (looking-at py-assignment-re) last))))
 ;; 	     erg)
 ;; 	(and beg (setq erg (py--forward-assignment-intern)))
-;; 	(when (eq (point) orig)
-;; 	  (while (and (not (eobp)) (re-search-forward py-assignment-re) (setq last (match-beginning 1)) (py-in-string-or-comment-p)))
-;; 	  (when last
-;; 	    (goto-char last)
-;; 	    (setq erg (point))))
-;; 	(when (and py-verbose-p (called-interactively-p 'interactive))
-;;           (message "%s" erg))
 ;; 	erg))))
 
 ;; python-components-end-position-forms
@@ -14155,7 +14121,6 @@ With EOB-P, go to end of buffer."
     (goto-char (point-max))))
 
 ;;  Split-Windows-On-Execute forms
-(defalias 'toggle-py-split-windows-on-execute 'py-toggle-split-windows-on-execute)
 (defun py-toggle-split-windows-on-execute (&optional arg)
   "If ‘py-split-window-on-execute’ should be on or off.
 
@@ -14175,7 +14140,7 @@ optional ARG
 Returns value of ‘py-split-window-on-execute’."
   (interactive "p")
   (let ((arg (or arg 1)))
-    (toggle-py-split-windows-on-execute arg))
+    (py-toggle-split-windows-on-execute arg))
   (when (called-interactively-p 'any) (message "py-split-window-on-execute: %s" py-split-window-on-execute))
   py-split-window-on-execute)
 
@@ -14184,14 +14149,12 @@ Returns value of ‘py-split-window-on-execute’."
 
 Returns value of ‘py-split-window-on-execute’."
   (interactive)
-  (toggle-py-split-windows-on-execute -1)
+  (py-toggle-split-windows-on-execute -1)
   (when (called-interactively-p 'any) (message "py-split-window-on-execute: %s" py-split-window-on-execute))
   py-split-window-on-execute)
 
 ;;  Shell-Switch-Buffers-On-Execute forms
-(defalias 'py-toggle-switch-buffers-on-execute 'py-toggle-shell-switch-buffers-on-execute)
-(defalias 'toggle-py-shell-switch-buffers-on-execute 'py-toggle-shell-switch-buffers-on-execute)
-(defun py-toggle-shell-switch-buffers-on-execute (&optional arg)
+(defun py-toggle-switch-buffers-on-execute (&optional arg)
   "If ‘py-switch-buffers-on-execute-p’ according to ARG.
 
   Returns value of ‘py-switch-buffers-on-execute-p’ switched to."
@@ -14203,22 +14166,22 @@ Returns value of ‘py-split-window-on-execute’."
     (when (called-interactively-p 'any) (message "py-shell-switch-buffers-on-execute: %s" py-switch-buffers-on-execute-p))
     py-switch-buffers-on-execute-p))
 
-(defun py-shell-switch-buffers-on-execute-on (&optional arg)
+(defun py-switch-buffers-on-execute-on (&optional arg)
   "Make sure, ‘py-switch-buffers-on-execute-p’ according to ARG.
 
 Returns value of ‘py-switch-buffers-on-execute-p’."
   (interactive "p")
   (let ((arg (or arg 1)))
-    (toggle-py-shell-switch-buffers-on-execute arg))
+    (py-toggle-switch-buffers-on-execute arg))
   (when (called-interactively-p 'any) (message "py-shell-switch-buffers-on-execute: %s" py-switch-buffers-on-execute-p))
   py-switch-buffers-on-execute-p)
 
-(defun py-shell-switch-buffers-on-execute-off ()
+(defun py-switch-buffers-on-execute-off ()
   "Make sure, ‘py-switch-buffers-on-execute-p’ is off.
 
 Returns value of ‘py-switch-buffers-on-execute-p’."
   (interactive)
-  (toggle-py-shell-switch-buffers-on-execute -1)
+  (py-toggle-switch-buffers-on-execute -1)
   (when (called-interactively-p 'any) (message "py-shell-switch-buffers-on-execute: %s" py-switch-buffers-on-execute-p))
   py-switch-buffers-on-execute-p)
 
@@ -14307,8 +14270,6 @@ Receives a ‘buffer-name’ as argument"
       (expand-file-name py-shell-local-path)
     (when py-use-local-default
       (error "Abort: ‘py-use-local-default’ is set to t but ‘py-shell-local-path’ is empty. Maybe call ‘py-toggle-local-default-use’"))))
-
-
 
 (defun py-switch-to-shell ()
   "Switch to Python process buffer."
@@ -14524,14 +14485,6 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
                                   ;; (format "execfile(r'%s')\n" file)
                                   (py-which-execute-file-command file))))
       (py-execute-buffer))))
-
-
-
-(defalias 'ipython-send-and-indent 'py-execute-line-ipython)
-(defalias 'py-execute-region-in-shell 'py-execute-region)
-(defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
-(defalias 'py-send-region-ipython 'py-execute-region-ipython)
-(defalias 'py-send-region 'py-execute-region)
 
 ;; python-components-intern
 
@@ -14974,7 +14927,7 @@ module-qualified names."
   "Store the original state of auto-fill-mode. ")
 
 ;; py-fill-column-orig  already defined
-(defun py-comment-auto-fill (&optional arg) 
+(defun py-comment-auto-fill (&optional arg)
   "Toggles comment-auto-fill mode"
   (interactive "P")
   (if (or (and arg (< 0 (prefix-numeric-value arg))) (and (boundp 'py-comment-auto-fill)(not py-comment-auto-fill)))
@@ -15511,6 +15464,7 @@ If BOL is t, from beginning-of-line"
     (unless end (when (< beg (point))
                   (setq end (point))))
     (cons beg end)))
+
 (defun py--mark-base (form &optional mark-decorators)
   "Returns boundaries of FORM, a cons.
 
@@ -18310,7 +18264,7 @@ arg MODE: which buffer-mode used in edit-buffer"
   (save-excursion
     (let* ((beg (py-beginning-of-assignment))
 	   (name (py-expression))
-	   (end (py-end-of-assignment))
+	   (end (py-forward-assignment))
 	   (proc-buf (py-shell nil nil "Fast Intern Utility Re-Use")))
       (py--prettyprint-assignment-intern beg end name proc-buf)))
   (py-restore-window-configuration))
@@ -21722,62 +21676,62 @@ Go to beginning try-block, skip whitespace at BOL.
 Returns beginning of try-block if successful, nil otherwise"]
            )
           ("Forward"
-	   ["End of block" py-end-of-block
-	    :help " `py-end-of-block'
+	   ["End of block" py-forward-block
+	    :help " `py-forward-block'
 Go to end of block.
 
 Returns end of block if successful, nil otherwise"]
 
-	   ["End of block or clause" py-end-of-block-or-clause
-	    :help " `py-end-of-block-or-clause'
+	   ["End of block or clause" py-forward-block-or-clause
+	    :help " `py-forward-block-or-clause'
 Go to end of block-or-clause.
 
 Returns end of block-or-clause if successful, nil otherwise"]
 
-	   ["End of class" py-end-of-class
-	    :help " `py-end-of-class'
+	   ["End of class" py-forward-class
+	    :help " `py-forward-class'
 Go to end of class.
 
 Returns end of class if successful, nil otherwise"]
 
-	   ["End of clause" py-end-of-clause
-	    :help " `py-end-of-clause'
+	   ["End of clause" py-forward-clause
+	    :help " `py-forward-clause'
 Go to end of clause.
 
 Returns end of clause if successful, nil otherwise"]
 
-	   ["End of def" py-end-of-def
-	    :help " `py-end-of-def'
+	   ["End of def" py-forward-def
+	    :help " `py-forward-def'
 Go to end of def.
 
 Returns end of def if successful, nil otherwise"]
 
-	   ["End of def or class" py-end-of-def-or-class
-	    :help " `py-end-of-def-or-class'
+	   ["End of def or class" py-forward-def-or-class
+	    :help " `py-forward-def-or-class'
 Go to end of def-or-class.
 
 Returns end of def-or-class if successful, nil otherwise"]
 
-	   ["End of elif block" py-end-of-elif-block
-	    :help " `py-end-of-elif-block'
+	   ["End of elif block" py-forward-elif-block
+	    :help " `py-forward-elif-block'
 Go to end of elif-block.
 
 Returns end of elif-block if successful, nil otherwise"]
 
-	   ["End of else block" py-end-of-else-block
-	    :help " `py-end-of-else-block'
+	   ["End of else block" py-forward-else-block
+	    :help " `py-forward-else-block'
 Go to end of else-block.
 
 Returns end of else-block if successful, nil otherwise"]
 
-	   ["End of except block" py-end-of-except-block
-	    :help " `py-end-of-except-block'
+	   ["End of except block" py-forward-except-block
+	    :help " `py-forward-except-block'
 Go to end of except-block.
 
 Returns end of except-block if successful, nil otherwise"]
 
-	   ["End of expression" py-end-of-expression
-	    :help " `py-end-of-expression'
+	   ["End of expression" py-forward-expression
+	    :help " `py-forward-expression'
 Go to the end of a compound python expression.
 
 With numeric ARG do it that many times.
@@ -21788,29 +21742,29 @@ Expression here is conceived as the syntactical component of a statement in Pyth
 
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
 
-	   ["End of if block" py-end-of-if-block
-	    :help " `py-end-of-if-block'
+	   ["End of if block" py-forward-if-block
+	    :help " `py-forward-if-block'
 Go to end of if-block.
 
 Returns end of if-block if successful, nil otherwise"]
 
-	   ["End of partial expression" py-end-of-partial-expression
-	    :help " `py-end-of-partial-expression'"]
+	   ["End of partial expression" py-forward-partial-expression
+	    :help " `py-forward-partial-expression'"]
 
-	   ["End of statement" py-end-of-statement
-	    :help " `py-end-of-statement'
+	   ["End of statement" py-forward-statement
+	    :help " `py-forward-statement'
 Go to the last char of current statement.
 
 Optional argument REPEAT, the number of loops done already, is checked for py-max-specpdl-size error. Avoid eternal loops due to missing string delimters etc."]
 
-	   ["End of top level" py-end-of-top-level
-	    :help " `py-end-of-top-level'
+	   ["End of top level" py-forward-top-level
+	    :help " `py-forward-top-level'
 Go to end of top-level form at point.
 
 Returns position if successful, nil otherwise"]
 
-	   ["End of try block" py-end-of-try-block
-	    :help " `py-end-of-try-block'
+	   ["End of try block" py-forward-try-block
+	    :help " `py-forward-try-block'
 Go to end of try-block.
 
 Returns end of try-block if successful, nil otherwise"]
@@ -21903,94 +21857,94 @@ Go to beginning try-block, go to BOL.
 Returns beginning of try-block if successful, nil otherwise"]
             )
            ("Forward"
-	    ["End of block bol" py-end-of-block-bol
-	     :help " `py-end-of-block-bol'
+	    ["End of block bol" py-forward-block-bol
+	     :help " `py-forward-block-bol'
 Goto beginning of line following end of block.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-block': down from current definition to next beginning of block below."]
 
-	    ["End of block or clause bol" py-end-of-block-or-clause-bol
-	     :help " `py-end-of-block-or-clause-bol'
+	    ["End of block or clause bol" py-forward-block-or-clause-bol
+	     :help " `py-forward-block-or-clause-bol'
 Goto beginning of line following end of block-or-clause.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-block-or-clause': down from current definition to next beginning of block-or-clause below."]
 
-	    ["End of class bol" py-end-of-class-bol
-	     :help " `py-end-of-class-bol'
+	    ["End of class bol" py-forward-class-bol
+	     :help " `py-forward-class-bol'
 Goto beginning of line following end of class.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-class': down from current definition to next beginning of class below."]
 
-	    ["End of clause bol" py-end-of-clause-bol
-	     :help " `py-end-of-clause-bol'
+	    ["End of clause bol" py-forward-clause-bol
+	     :help " `py-forward-clause-bol'
 Goto beginning of line following end of clause.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-clause': down from current definition to next beginning of clause below."]
 
-	    ["End of def bol" py-end-of-def-bol
-	     :help " `py-end-of-def-bol'
+	    ["End of def bol" py-forward-def-bol
+	     :help " `py-forward-def-bol'
 Goto beginning of line following end of def.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-def': down from current definition to next beginning of def below."]
 
-	    ["End of def or class bol" py-end-of-def-or-class-bol
-	     :help " `py-end-of-def-or-class-bol'
+	    ["End of def or class bol" py-forward-def-or-class-bol
+	     :help " `py-forward-def-or-class-bol'
 Goto beginning of line following end of def-or-class.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-def-or-class': down from current definition to next beginning of def-or-class below."]
 
-	    ["End of elif block bol" py-end-of-elif-block-bol
-	     :help " `py-end-of-elif-block-bol'
+	    ["End of elif block bol" py-forward-elif-block-bol
+	     :help " `py-forward-elif-block-bol'
 Goto beginning of line following end of elif-block.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-elif-block': down from current definition to next beginning of elif-block below."]
 
-	    ["End of else block bol" py-end-of-else-block-bol
-	     :help " `py-end-of-else-block-bol'
+	    ["End of else block bol" py-forward-else-block-bol
+	     :help " `py-forward-else-block-bol'
 Goto beginning of line following end of else-block.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-else-block': down from current definition to next beginning of else-block below."]
 
-	    ["End of except block bol" py-end-of-except-block-bol
-	     :help " `py-end-of-except-block-bol'
+	    ["End of except block bol" py-forward-except-block-bol
+	     :help " `py-forward-except-block-bol'
 Goto beginning of line following end of except-block.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-except-block': down from current definition to next beginning of except-block below."]
 
-	    ["End of expression bol" py-end-of-expression-bol
-	     :help " `py-end-of-expression-bol'"]
+	    ["End of expression bol" py-forward-expression-bol
+	     :help " `py-forward-expression-bol'"]
 
-	    ["End of if block bol" py-end-of-if-block-bol
-	     :help " `py-end-of-if-block-bol'
+	    ["End of if block bol" py-forward-if-block-bol
+	     :help " `py-forward-if-block-bol'
 Goto beginning of line following end of if-block.
   Returns position reached, if successful, nil otherwise.
 
 See also `py-down-if-block': down from current definition to next beginning of if-block below."]
 
-	    ["End of partial expression bol" py-end-of-partial-expression-bol
-	     :help " `py-end-of-partial-expression-bol'"]
+	    ["End of partial expression bol" py-forward-partial-expression-bol
+	     :help " `py-forward-partial-expression-bol'"]
 
-	    ["End of statement bol" py-end-of-statement-bol
-	     :help " `py-end-of-statement-bol'
+	    ["End of statement bol" py-forward-statement-bol
+	     :help " `py-forward-statement-bol'
 Go to the beginning-of-line following current statement."]
 
-	    ["End of top level bol" py-end-of-top-level-bol
-	     :help " `py-end-of-top-level-bol'
+	    ["End of top level bol" py-forward-top-level-bol
+	     :help " `py-forward-top-level-bol'
 Go to end of top-level form at point, stop at next beginning-of-line.
 
 Returns position successful, nil otherwise"]
 
-	    ["End of try block bol" py-end-of-try-block-bol
-	     :help " `py-end-of-try-block-bol'
+	    ["End of try block bol" py-forward-try-block-bol
+	     :help " `py-forward-try-block-bol'
 Goto beginning of line following end of try-block.
   Returns position reached, if successful, nil otherwise.
 
@@ -22597,7 +22551,7 @@ Use `M-x customize-variable' to set it permanently"
 	     :help "When non-nil, keys C-M-a, C-M-e address top-level form.
 
 Beginning- end-of-defun forms use
-commands `py-backward-top-level', `py-end-of-top-level'
+commands `py-backward-top-level', `py-forward-top-level'
 
 mark-defun marks top-level form at point etc. "
 	     :style toggle :selected py-defun-use-top-level-p]
@@ -23025,10 +22979,6 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 
 ;; python-components-complete
 
-(defalias 'py-script-complete 'py-shell-complete)
-(defalias 'py-python2-shell-complete 'py-shell-complete)
-(defalias 'py-python3-shell-complete 'py-shell-complete)
-
 (defun py--shell-completion-get-completions (input process completion-code)
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
@@ -23062,8 +23012,6 @@ Takes END"
     )
 
   (goto-char end))
-
-(defalias 'ipython-complete 'py-shell-complete)
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
@@ -24107,8 +24055,8 @@ the block structure:
 \\[py-goto-block-up]\t move up to start of current block
 \\[py-backward-def-or-class]\t move to start of def
 \\[universal-argument] \\[py-backward-def-or-class]\t move to start of class
-\\[py-end-of-def-or-class]\t move to end of def
-\\[universal-argument] \\[py-end-of-def-or-class]\t move to end of class
+\\[py-forward-def-or-class]\t move to end of def
+\\[universal-argument] \\[py-forward-def-or-class]\t move to end of class
 
 The first two move to one statement beyond the statement that contains
 point.  A numeric prefix argument tells them to move that many
@@ -24122,7 +24070,7 @@ Or do \\[py-previous-statement] with a huge prefix argument.
 %c:py-next-statement
 %c:py-goto-block-up
 %c:py-backward-def-or-class
-%c:py-end-of-def-or-class
+%c:py-forward-def-or-class
 
 @LITTLE-KNOWN EMACS COMMANDS PARTICULARLY USEFUL IN PYTHON MODE
 
@@ -26517,7 +26465,6 @@ Optional PROC: select an already running process for executing"
   (interactive)
   (py-execute-buffer shell dedicated t split switch proc))
 
-(defalias 'py-process-region-fast 'py-execute-region-fast)
 (defun py-execute-region-fast (beg end &optional shell dedicated split switch proc)
   "Send region to a Python interpreter.
 
@@ -26931,54 +26878,9 @@ Optional File: execute through running a temp-file"
 	(message "%s" "python-mode loaded from python-components-mode"))
     (message "python-mode loaded from: %s" python-mode-message-string)))
 
-(defalias 'IPython 'ipython)
-(defalias 'Ipython 'ipython)
-(defalias 'Python 'python)
-(defalias 'Python2 'python2)
-(defalias 'Python3 'python3)
-(defalias 'ipy 'ipython)
-(defalias 'iyp 'ipython)
-(defalias 'py-execute-region-default 'py-execute-region)
-(defalias 'py-execute-region-default-dedicated 'py-execute-region-dedicated)
-(defalias 'py-kill-minor-expression 'py-kill-partial-expression)
-(defalias 'pyhotn 'python)
-(defalias 'pyhton 'python)
-(defalias 'pyt 'python)
-(defalias 'py3 'python3)
-(defalias 'py2 'python2)
-(defalias 'py-beginning-of-block 'py-backward-block)
-(defalias 'py-beginning-of-block-bol 'py-backward-block-bol)
-(defalias 'py-beginning-of-block-or-clause 'py-backward-block-or-clause)
-(defalias 'py-beginning-of-class 'py-backward-class)
-(defalias 'py-beginning-of-class-bol 'py-backward-class-bol)
-(defalias 'py-beginning-of-clause 'py-backward-clause)
-(defalias 'py-beginning-of-clause-bol 'py-backward-clause-bol)
-(defalias 'py-beginning-of-declarations 'py-backward-declarations)
-(defalias 'py-beginning-of-decorator 'py-backward-decorator)
-(defalias 'py-beginning-of-decorator-bol 'py-backward-decorator)
-(defalias 'py-beginning-of-expression 'py-backward-expression)
-(defalias 'py-beginning-of-line 'py-backward-line)
-(defalias 'py-beginning-of-minor-block 'py-backward-minor-block)
-(defalias 'py-beginning-of-section 'py-backward-section)
-(defalias 'py-end-of-block 'py-forward-block)
-(defalias 'py-end-of-block-or-clause 'py-forward-block-or-clause)
-(defalias 'py-end-of-class 'py-forward-class)
-(defalias 'py-end-of-clause 'py-forward-clause)
-(defalias 'py-end-of-comment 'py-forward-comment)
-(defalias 'py-end-of-decorator 'py-forward-decorator)
-(defalias 'py-end-of-def-or-class 'py-forward-def-or-class)
-(defalias 'py-end-of-expression 'py-forward-expression)
-(defalias 'py-end-of-line 'py-forward-line)
-(defalias 'py-end-of-partial-expression 'py-forward-partial-expression)
-(defalias 'py-end-of-section 'py-forward-section)
-(defalias 'py-end-of-statement 'py-forward-statement)
-(defalias 'py-end-of-statement-bol 'py-forward-statement-bol)
-(defalias 'py-end-of-top-level 'py-forward-top-level)
 (defalias 'py-next-statement 'py-forward-statement)
+(defalias 'py-previous-statement 'py-backward-statement)
 (defalias 'py-markup-region-as-section 'py-sectionize-region)
-(defalias 'py-send-string 'py-execute-string)
-(defalias 'py-up 'py-up-block)
-(defalias 'py-count-indentation 'py-compute-indentation)
 
 ;;;###autoload
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
@@ -27152,13 +27054,13 @@ See available customizations listed in files variables-python-mode at directory 
   (if py-defun-use-top-level-p
       (progn
         (set (make-local-variable 'beginning-of-defun-function) 'py-backward-top-level)
-        (set (make-local-variable 'end-of-defun-function) 'py-end-of-top-level)
+        (set (make-local-variable 'end-of-defun-function) 'py-forward-top-level)
         (define-key python-mode-map [(control meta a)] 'py-backward-top-level)
-        (define-key python-mode-map [(control meta e)] 'py-end-of-top-level))
+        (define-key python-mode-map [(control meta e)] 'py-forward-top-level))
     (set (make-local-variable 'beginning-of-defun-function) 'py-backward-def-or-class)
-    (set (make-local-variable 'end-of-defun-function) 'py-end-of-def-or-class)
+    (set (make-local-variable 'end-of-defun-function) 'py-forward-def-or-class)
     (define-key python-mode-map [(control meta a)] 'py-backward-def-or-class)
-    (define-key python-mode-map [(control meta e)] 'py-end-of-def-or-class))
+    (define-key python-mode-map [(control meta e)] 'py-forward-def-or-class))
   (when py-sexp-use-expression-p
     (define-key python-mode-map [(control meta f)] 'py-forward-expression)
     (define-key python-mode-map [(control meta b)] 'py-backward-expression))
