@@ -283,10 +283,11 @@ The returned file name can be used directly as argument of
   "Return `t' if emacs major version is above 23"
   (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
 
-(defun py-which-execute-file-command (filename)
-  "Return the command appropriate to Python version and FILENAME.
+;; (format "execfile(r'%s')\n" file)
+(defun py-execute-file-command (filename)
+  "Return the command using FILENAME.
 
-Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for Python 2 series."
+Default was \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for Python 2 series."
   (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
   )
 
@@ -5720,7 +5721,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 		       (no-output
 			(and orig (py--cleanup-shell orig buffer))))))))))
 
-(defun py--execute-file-base (filename &optional proc cmd procbuf origline fast)
+(defun py--execute-file-base (filename &optional proc cmd procbuf origline fast interactivep)
   "Send to Python interpreter process PROC.
 
 In Python version 2.. \"execfile('FILENAME')\".
@@ -5731,10 +5732,11 @@ Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 ‘kill-output-from-shell’ does The Right Thing.
 Returns position where output starts."
-  (let* ((buffer (or procbuf (and proc (process-buffer proc)) (py-shell nil nil nil nil nil fast)))
+  (let* ((filename (expand-file-name filename))
+	 (buffer (or procbuf (and proc (process-buffer proc)) (py-shell nil nil nil nil nil fast)))
 	 (proc (or proc (get-buffer-process buffer)))
 	 (limit (marker-position (process-mark proc)))
-	 (cmd (or cmd (py-which-execute-file-command filename)))
+	 (cmd (or cmd (py-execute-file-command filename)))
 	 erg)
     (if fast
 	(process-send-string proc cmd)
@@ -5745,7 +5747,10 @@ Returns position where output starts."
 	(setq erg (py--postprocess buffer origline limit cmd filename))
 	(if py-error
 	    (setq py-error (prin1-to-string py-error))
-	  erg)))))
+	  erg)))
+    (when (or interactivep
+	      (or py-switch-buffers-on-execute-p py-split-window-on-execute))
+      (py--shell-manage-windows buffer (find-file-noselect filename) py-split-window-on-execute py-switch-buffers-on-execute-p))))
 
 (defun py-restore-window-configuration ()
   "Restore ‘py-restore-window-configuration’ when completion is done resp. abandoned."
@@ -7921,7 +7926,7 @@ Optional FAST RETURN"
   "Update optional variables START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
   (setq py-error nil)
   (when py--debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
-  (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
+  ;; (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
   (let* ((orig (point))
 	 (fast (or fast py-fast-process-p))
 	 (exception-buffer (current-buffer))
@@ -7989,82 +7994,114 @@ Optional FAST RETURN"
 (defun py-execute-file-ipython (filename)
   "Send file to IPython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "ipython" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-ipython2.7 (filename)
   "Send file to IPython2.7 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython2.7" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "ipython2.7" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-ipython3 (filename)
   "Send file to IPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython3" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "ipython3" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-jython (filename)
   "Send file to Jython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "jython" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "jython" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python (filename)
   "Send file to Python interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "python" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python2 (filename)
   "Send file to Python2 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python2" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "python2" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python3 (filename)
   "Send file to Python3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python3" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "python3" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-pypy (filename)
   "Send file to PyPy interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "pypy" filename))
+  (let ((interactivep (called-interactively-p 'interactive))
+	(buffer (py-shell nil nil nil "pypy" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-ipython-dedicated (filename)
   "Send file to a dedicatedIPython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "ipython" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-ipython2.7-dedicated (filename)
   "Send file to a dedicatedIPython2.7 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython2.7" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "ipython2.7" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-ipython3-dedicated (filename)
   "Send file to a dedicatedIPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "ipython3" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "ipython3" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-jython-dedicated (filename)
   "Send file to a dedicatedJython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "jython" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "jython" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python-dedicated (filename)
   "Send file to a dedicatedPython interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "python" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python2-dedicated (filename)
   "Send file to a dedicatedPython2 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python2" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "python2" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-python3-dedicated (filename)
   "Send file to a dedicatedPython3 interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "python3" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "python3" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 (defun py-execute-file-pypy-dedicated (filename)
   "Send file to a dedicatedPyPy interpreter"
   (interactive "fFile: ")
-  (py--execute-base nil nil "pypy" filename nil t t t))
+  (let ((interactivep (called-interactively-p 'interactive))
+        (buffer (py-shell nil nil t "pypy" nil t nil py-split-window-on-execute py-switch-buffers-on-execute-p)))
+    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
 
 ;; python-components-up
 
@@ -14483,7 +14520,7 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
                                           (format "import sys\nif sys.modules.has_key('%s'):\n reload(%s)\nelse:\n import %s\n" m m m)
                                         (format "import sys,imp\nif'%s' in sys.modules:\n imp.reload(%s)\nelse:\n import %s\n" m m m)))
                                   ;; (format "execfile(r'%s')\n" file)
-                                  (py-which-execute-file-command file))))
+                                  (py-execute-file-command file))))
       (py-execute-buffer))))
 
 ;; python-components-intern
@@ -14922,7 +14959,6 @@ module-qualified names."
                #'(lambda () (interactive) (beep))))
            (where-is-internal 'self-insert-command)))
 
-
 (defvar py-auto-fill-mode-orig (auto-fill-mode)
   "Store the original state of auto-fill-mode. ")
 
@@ -14933,7 +14969,7 @@ module-qualified names."
   (if (or (and arg (< 0 (prefix-numeric-value arg))) (and (boundp 'py-comment-auto-fill)(not py-comment-auto-fill)))
       (progn
         (set (make-local-variable 'py-comment-auto-fill-p) t)
-        (setq fill-column comment-fill-column)
+        (setq fill-column py-comment-fill-column)
         (auto-fill-mode 1))
     (set (make-local-variable 'py-comment-auto-fill-p) nil)
 ;;    (set (make-local-variable 'py-comment-auto-fill-only-comments) nil)
@@ -25568,8 +25604,6 @@ Pass ARG to the command `yank'."
 (if (getenv "WORKON_HOME")
     (setq virtualenv-workon-home (getenv "WORKON_HOME"))
   (setq virtualenv-workon-home "~/.virtualenvs"))
-
-(setq virtualenv-name nil)
 
 ;;TODO: Move to a generic UTILITY or TOOL package
 (defun virtualenv-filter (predicate sequence)
