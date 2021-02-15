@@ -3354,7 +3354,7 @@ See also `py-object-reference-face'"
   :group 'python-mode)
 
 (defface py-number-face
- '((t (:inherit default)))
+ '((t (:inherit nil)))
   "Highlight numbers."
   :tag "py-number-face"
   :group 'python-mode)
@@ -3825,7 +3825,7 @@ Return and move to match-beginning if successful"
 			(point))
 		    (point))))))
       (when (and erg (py-backward-statement))
-	(when (looking-at py-def-or-class-re)
+	(when (or (bobp) (looking-at py-def-or-class-re)(looking-at "\\_<__[[:alnum:]_]+__\\_>"))
 	  erg)))))
 
 (defun py--font-lock-syntactic-face-function (state)
@@ -14541,7 +14541,8 @@ Choices are:
 (defun py-compute-list-indent--according-to-circumstance (pps line origline)
   (and (nth 1 pps) (goto-char (nth 1 pps)))
   (if (looking-at "[({\\[][ \t]*$")
-      (+ (current-indentation) py-indent-offset)
+      (min (+ (current-indentation) py-indent-offset)
+	   (1+ (current-column)))
     (if (or line (< (py-count-lines) origline))
 	(py-compute-indentation--according-to-list-style))))
 
