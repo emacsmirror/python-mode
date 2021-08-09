@@ -14839,6 +14839,8 @@ LIEP stores line-end-position at point-of-interest
 			((and (eq liep (line-end-position))
                               (save-excursion
 				(and (setq erg (py--go-to-keyword 'py-extended-block-or-clause-re (* py-indent-offset 99)))
+				     ;; maybe Result: (nil nil nil), which evaluates to ‘t’
+				     (not (bobp))
 				     (if (and (not indent-offset) py-smart-indentation) (setq indent-offset (py-guess-indent-offset)) t)
 				     (ignore-errors (< orig (or (py-forward-block-or-clause) (point)))))))
 			 (+ (car erg) (if py-smart-indentation
@@ -23255,7 +23257,7 @@ in (I)Python shell-modes `py-shell-complete'"
 
 Optional LINE FILE CONDITION"
   (interactive "p")
-  (let ((line (or line (py-count-lines))))
+  (let ((line (number-to-string (or line (py-count-lines)))))
     (py-execute-string (concat "import pdb;pdb.break('" line "')"))))
 
 (defun py--pdb-versioned ()
