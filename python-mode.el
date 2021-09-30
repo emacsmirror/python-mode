@@ -4874,13 +4874,13 @@ Optional ENFORCE-REGEXP: search for regexp only."
       py-ipython-send-delay
     py-python-send-delay))
 
-(defun py-temp-file-name (strg proc)
+(defun py-temp-file-name (strg)
   (let* ((temporary-file-directory
-	  (with-current-buffer (process-buffer proc)
-            (if (file-remote-p default-directory)
-		(concat (file-remote-p default-directory) "/tmp")
-              temporary-file-directory)))
+          (if (file-remote-p default-directory)
+              (concat (file-remote-p default-directory) "/tmp")
+            temporary-file-directory))
          (temp-file-name (make-temp-file "py")))
+
     (with-temp-file temp-file-name
       (insert strg)
       (delete-trailing-whitespace))
@@ -5681,7 +5681,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 							    ;; (buffer-name buffer)
 							    buffer
 							    ))  ;; multiline
-	     (let* ((temp-file-name (py-temp-file-name strg proc))
+	     (let* ((temp-file-name (py-temp-file-name strg))
 		    (file-name (or (buffer-file-name) temp-file-name)))
 	       (py-execute-file file-name proc)))
 	    (t (with-current-buffer buffer
@@ -5918,7 +5918,7 @@ Return the output."
     (or
      (with-local-quit
        (if (and (string-match ".\n+." strg) (string-match "^\*[Ii]" buffer))  ;; IPython or multiline
-           (let* ((temp-file-name (py-temp-file-name strg proc))
+           (let* ((temp-file-name (py-temp-file-name strg))
 		  (file-name (or (buffer-file-name) temp-file-name)))
 	     (py-execute-file file-name proc))
 	 (py-shell-send-string strg proc))
@@ -6118,8 +6118,8 @@ process buffer for a list of commands.)"
 	    (unless fast (py-shell-mode))
 	    (and internal (set-process-query-on-exit-flag proc nil)))
 	  (when (or interactivep
-		    (unless internal (or switch py-switch-buffers-on-execute-p py-split-window-on-execute)))
-	    (py--shell-manage-windows buffer exception-buffer (unless internal split) (unless internal (or interactivep switch))))
+		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
+	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
 	  buffer)
       (error (concat "py-shell:" (py--fetch-error py-output-buffer))))))
 
@@ -6161,23 +6161,19 @@ banner and the initial prompt are received separately."
   "Do completion at point using PROCESS for IMPORT or INPUT.
 When IMPORT is non-nil takes precedence over INPUT for
 completion."
-  (let ((input (or import input))
-	(process (if (string-match "^i" (process-name process) )
-		     ;; bug #111, Pressing tab key in IPython shell creates new window
-		     (get-buffer-process (py-shell nil nil nil "python" nil nil nil nil nil t))
-		   process)))
-    (with-current-buffer (process-buffer process)
-      (let ((completions
-             (ignore-errors
-	       (py--string-trim
-		(py-send-string-no-output
-		 (format
-		  (concat py-completion-setup-code
-			  "\nprint (" py-shell-completion-string-code ")")
-		  input) process (buffer-name (current-buffer)))))))
-	(when (> (length completions) 2)
-          (split-string completions
-			"^'\\|^\"\\|;\\|'$\\|\"$" t))))))
+  (setq input (or import input))
+  (with-current-buffer (process-buffer process)
+    (let ((completions
+           (ignore-errors
+	     (py--string-trim
+	      (py-send-string-no-output
+	       (format
+		(concat py-completion-setup-code
+			"\nprint (" py-shell-completion-string-code ")")
+		input) process (buffer-name (current-buffer)))))))
+      (when (> (length completions) 2)
+        (split-string completions
+                      "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
 
 (defun py-shell-completion-at-point (&optional process)
   "Function for `completion-at-point-functions' in `py-shell-mode'.
@@ -8607,10 +8603,7 @@ Returns final position when called from inside section, nil otherwise"
 	(orig (point))
 	(indent (current-indentation)))
     (while (and (not (eobp)) (not done) (progn (forward-line 1) (back-to-indentation) (or (py-empty-line-p) (and (<= indent (current-indentation))(< last (point))(setq last (point)))(setq done t))))
-      (when (< (current-indentation) indent)(setq done t)))
-    (skip-chars-forward " \t\r\n\f")
-    (if (eq (current-indentation) indent)
-	(py-forward-indent) 
+      (and (< indent (current-indentation))(setq done t)))
     (if (and last (< orig last))
 	(progn (goto-char last)
 	       (end-of-line)
@@ -8618,7 +8611,7 @@ Returns final position when called from inside section, nil otherwise"
       (skip-chars-forward " \t\r\n\f")
       (end-of-line)
       (skip-chars-backward " \t\r\n\f"))
-    (and (< orig (point))(point)))))
+    (and (< orig (point))(point))))
 
 (defun py-forward-indent-bol ()
   "Go to beginning of line following of a section of equal indentation.
@@ -9907,7 +9900,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9922,7 +9915,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer shell dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9937,7 +9930,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer shell dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9950,7 +9943,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer shell t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9963,7 +9956,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer shell t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9976,7 +9969,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -9991,7 +9984,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10006,7 +9999,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10019,7 +10012,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10032,7 +10025,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10045,7 +10038,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython2.7 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10060,7 +10053,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython2.7 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10075,7 +10068,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython2.7 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10088,7 +10081,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython2.7 t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10101,7 +10094,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython2.7 t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10114,7 +10107,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10129,7 +10122,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10144,7 +10137,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10157,7 +10150,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython3 t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10170,7 +10163,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'ipython3 t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10183,7 +10176,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'jython dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10198,7 +10191,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'jython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10213,7 +10206,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'jython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10226,7 +10219,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'jython t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10239,7 +10232,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'jython t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10254,7 +10247,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10271,7 +10264,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10288,7 +10281,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10303,7 +10296,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10318,7 +10311,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10331,7 +10324,7 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python2 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10346,7 +10339,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python2 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10361,7 +10354,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python2 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10374,7 +10367,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python2 t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10387,7 +10380,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python2 t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10400,7 +10393,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10415,7 +10408,7 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10430,7 +10423,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10443,7 +10436,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python3 t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -10456,7 +10449,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
-		       (find-file-noselect filename noninteractive)))
+		       (find-file-noselect filename)))
       (set-buffer buffer))
     (py--execute-prepare 'buffer 'python3 t 'switch (point-min) (point-max) nil fast proc wholebuf split)))
 
@@ -15508,9 +15501,6 @@ If BOL is t, mark from beginning-of-line"
       nil)))
 
 (defun py--mark-base-bol (form &optional mark-decorators)
-    "Mark indent, take beginning of line positions. 
-
-Return beginning and end positions of region, a cons."
   (let* ((begform (intern-soft (concat "py-backward-" form "-bol")))
          (endform (intern-soft (concat "py-forward-" form "-bol")))
          (begcheckform (intern-soft (concat "py--beginning-of-" form "-bol-p")))
@@ -16301,7 +16291,7 @@ Return beginning and end positions of marked area, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-assignment ()
-  "Mark assignment, take beginning of line positions.
+  "Mark assignment, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16309,7 +16299,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-block ()
-  "Mark block, take beginning of line positions.
+  "Mark block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16317,7 +16307,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-block-or-clause ()
-  "Mark block-or-clause, take beginning of line positions.
+  "Mark block-or-clause, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16325,7 +16315,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-class (&optional arg)
-  "Mark class, take beginning of line positions.
+  "Mark class, take beginning of line positions. 
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -16335,7 +16325,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-clause ()
-  "Mark clause, take beginning of line positions.
+  "Mark clause, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16343,7 +16333,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-def (&optional arg)
-  "Mark def, take beginning of line positions.
+  "Mark def, take beginning of line positions. 
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -16353,7 +16343,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class, take beginning of line positions.
+  "Mark def-or-class, take beginning of line positions. 
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -16363,7 +16353,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-elif-block ()
-  "Mark elif-block, take beginning of line positions.
+  "Mark elif-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16371,7 +16361,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-else-block ()
-  "Mark else-block, take beginning of line positions.
+  "Mark else-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16379,7 +16369,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-except-block ()
-  "Mark except-block, take beginning of line positions.
+  "Mark except-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16387,7 +16377,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-for-block ()
-  "Mark for-block, take beginning of line positions.
+  "Mark for-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16395,7 +16385,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-if-block ()
-  "Mark if-block, take beginning of line positions.
+  "Mark if-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16403,15 +16393,15 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-indent ()
-  "Mark indent, take beginning of line positions.
+  "Mark indent, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
-  (progn (py--mark-base-bol "indent")
-	 (exchange-point-and-mark)))
+  (py--mark-base-bol "indent")
+  (exchange-point-and-mark))
 
 (defun py-mark-minor-block ()
-  "Mark minor-block, take beginning of line positions.
+  "Mark minor-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16419,7 +16409,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-statement ()
-  "Mark statement, take beginning of line positions.
+  "Mark statement, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -16427,7 +16417,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark))
 
 (defun py-mark-try-block ()
-  "Mark try-block, take beginning of line positions.
+  "Mark try-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -23200,9 +23190,8 @@ Use `py-fast-process' "
   (setq py-last-window-configuration
   	(current-window-configuration))
   (py-shell-complete shell nil nil word 1 imports)
-  (save-excursion
-    (py-restore-window-configuration)
-    ))
+  (py-restore-window-configuration)
+  )
 
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
