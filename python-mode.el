@@ -2713,6 +2713,12 @@ This variable is set in ‘py-execute-region’ and used in ‘py--jump-to-excep
 
 (defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
 
+(defface py-variable-name-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face method decorators."
+  :tag "py-variable-name-face"
+  :group 'python-mode)
+
 (defvar py-variable-name-face 'py-variable-name-face)
 
 (defvar py-number-face 'py-number-face)
@@ -3353,11 +3359,7 @@ See also `py-object-reference-face'"
   :tag "py-object-reference-face"
   :group 'python-mode)
 
-(defface py-variable-name-face
-  '((t (:inherit font-lock-variable-name-face)))
-  "Face method decorators."
-  :tag "py-variable-name-face"
-  :group 'python-mode)
+
 
 (defface py-number-face
  '((t (:inherit nil)))
@@ -18534,12 +18536,12 @@ With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
   (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
-  "Start an IPython2.7 interpreter.
+;; (defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
+;;   "Start an IPython2.7 interpreter.
 
-With optional \\[universal-argument] get a new dedicated shell."
-  (interactive "p")
-  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+;; With optional \\[universal-argument] get a new dedicated shell."
+;;   (interactive "p")
+;;   (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 (defun ipython3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython3 interpreter.
@@ -18555,12 +18557,13 @@ With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
   (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun python (&optional argprompt args buffer fast exception-buffer split)
-  "Start an Python interpreter.
 
-With optional \\[universal-argument] get a new dedicated shell."
-  (interactive "p")
-  (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+;; (defun python (&optional argprompt args buffer fast exception-buffer split)
+;;   "Start an Python interpreter.
+
+;; With optional \\[universal-argument] get a new dedicated shell."
+;;   (interactive "p")
+;;   (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 (defun python2 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python2 interpreter.
