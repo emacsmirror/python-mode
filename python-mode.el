@@ -4855,15 +4855,15 @@ Optional ENFORCE-REGEXP: search for regexp only."
       (or (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	  (py-backward-comment))))
 
-(defun py-kill-buffer-unconditional (buffer)
-  "Kill buffer unconditional, kill buffer-process if existing. "
-  (interactive
-   (list (current-buffer)))
-  (ignore-errors (with-current-buffer buffer
-    (let (kill-buffer-query-functions)
-      (set-buffer-modified-p nil)
-      (ignore-errors (kill-process (get-buffer-process buffer)))
-      (kill-buffer buffer)))))
+;; (defun py-kill-buffer-unconditional (buffer)
+;;   "Kill buffer unconditional, kill buffer-process if existing. "
+;;   (interactive
+;;    (list (current-buffer)))
+;;   (ignore-errors (with-current-buffer buffer
+;;     (let (kill-buffer-query-functions)
+;;       (set-buffer-modified-p nil)
+;;       (ignore-errors (kill-process (get-buffer-process buffer)))
+;;       (kill-buffer buffer)))))
 
 (defun py--down-end-form ()
   "Return position."
@@ -6079,7 +6079,11 @@ process buffer for a list of commands.)"
 	 (fast (unless (eq major-mode 'org-mode)
 		 (or fast py-fast-process-p)))
 	 (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
-	 (shell (or shell (py-choose-shell)))
+	 (shell (if shell
+		    (if (executable-find shell)
+			shell
+		      (error (concat "py-shell: Can't see an executable for ‘"shell "’ on your system. Maybe needs a link?")))
+		    (py-choose-shell)))
 	 (args (or args (py--provide-command-args shell fast)))
 	 (buffer-name
 	  (or buffer
@@ -8664,14 +8668,24 @@ If already at the end, go down to next indent in buffer
 Returns final position when called from inside section, nil otherwise"
   (interactive)
   (unless (eobp)
-    (let (erg indent)
-      ;; (when (py-forward-statement)
-      (when (py-forward-indent)
-	;; (save-excursion
-      	;; (setq indent (and (py-backward-statement)(current-indentation))))
-	;; (setq erg (py--travel-this-indent-forward indent))
-	(unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
-      erg)))
+    (when (py-forward-indent)
+      (unless (eobp) (progn (forward-line 1) (beginning-of-line) (point))))))
+
+;; (defun py-forward-indent-bol ()
+;;   "Go to beginning of line following of a section of equal indentation.
+
+;; If already at the end, go down to next indent in buffer
+;; Returns final position when called from inside section, nil otherwise"
+;;   (interactive)
+;;   (unless (eobp)
+;;     (let (erg indent)
+;;       ;; (when (py-forward-statement)
+;;       (when (py-forward-indent)
+;; 	;; (save-excursion
+;;       	;; (setq indent (and (py-backward-statement)(current-indentation))))
+;; 	;; (setq erg (py--travel-this-indent-forward indent))
+;; 	(unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
+;;       erg)))
 
 (defun py-backward-expression (&optional orig done repeat)
   "Go to the beginning of a python expression.
@@ -15940,6 +15954,22 @@ Returns imports"
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" imports))
     imports))
 
+(defun py-kill-buffer-unconditional (&optional buffer)
+  "Kill buffer unconditional, kill buffer-process if existing."
+  (interactive
+   (list (current-buffer)))
+  (let ((buffer (or (and (bufferp buffer) buffer)
+		    (get-buffer (current-buffer))))
+	proc kill-buffer-query-functions)
+    (if (buffer-live-p buffer)
+        (progn
+          (setq proc (get-buffer-process buffer))
+          (and proc (kill-process proc))
+          (set-buffer buffer)
+          (set-buffer-modified-p 'nil)
+          (kill-buffer (current-buffer)))
+      (message "Can't see a buffer %s" buffer))))
+
 ;; python-components-copy-forms
 
 
@@ -18557,13 +18587,12 @@ With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
   (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
+(defun python (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Python interpreter.
 
-;; (defun python (&optional argprompt args buffer fast exception-buffer split)
-;;   "Start an Python interpreter.
-
-;; With optional \\[universal-argument] get a new dedicated shell."
-;;   (interactive "p")
-;;   (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 (defun python2 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python2 interpreter.
@@ -25724,42 +25753,42 @@ string or comment."
 (defun py-electric-backspace (&optional arg)
   "Delete preceding character or level of indentation.
 
+With optinal ARG, kill that many chars before point.
+
 Delete region when both variable `delete-active-region' and (use-region-p)
 are non-nil.
 
-Unless at indentation:
-  With `py-electric-kill-backward-p' delete whitespace before point.
-  With `py-electric-kill-backward-p' at end of a list, empty that list.
+Unless at indentation delete whitespace before point.
+With `py-electric-kill-backward-p' at end of a list, empty that list.
 
 Returns column reached."
   (interactive "p*")
   (or arg (setq arg 1))
-  (let (erg)
-    (cond
-     ((and (use-region-p)
-           ;; Emacs23 doesn't know that var
-           (boundp 'delete-active-region)
-           delete-active-region)
-      (backward-delete-char-untabify arg))
-     ;; (delete-region (region-beginning) (region-end)))
-     ((looking-back "^[ \t]+" (line-beginning-position))
-      (let* ((remains (% (current-column) py-indent-offset)))
-        (if (< 0 remains)
-            (delete-char (- remains))
-          (indent-line-to (- (current-indentation) py-indent-offset)))))
-     ;;
-     ((and py-electric-kill-backward-p
-           (member (char-before) (list ?\) ?\] ?\})))
-      (py-empty-out-list-backward))
-     ;;
-     ((and py-electric-kill-backward-p
-           (< 0 (setq erg (abs (skip-chars-backward " \t\r\n\f")))))
-      (delete-region (point) (+ erg (point))))
-     ;;
-     (t
-      (delete-char (- 1))))
-    (setq erg (current-column))
-    erg))
+  (cond
+   ((< 1 (prefix-numeric-value arg))
+    (delete-char (- arg)))
+   ((and (use-region-p)
+         ;; Emacs23 doesn't know that var
+         (boundp 'delete-active-region)
+         delete-active-region)
+    (backward-delete-char-untabify arg))
+   ;; (delete-region (region-beginning) (region-end)))
+   ((looking-back "^[ \t]+" (line-beginning-position))
+    (let* ((remains (% (current-column) py-indent-offset)))
+      (if (< 0 remains)
+          (delete-char (- remains))
+        (indent-line-to (- (current-indentation) py-indent-offset)))))
+   ;;
+   ((and py-electric-kill-backward-p
+         (member (char-before) (list ?\) ?\] ?\})))
+    (py-empty-out-list-backward))
+   ;;
+   ((progn (push-mark) (< 0 (abs (skip-chars-backward " \t" (line-beginning-position)))))
+    (delete-region (point) (mark)))
+   ;;
+   (t
+    (delete-char (- arg))))
+  (current-column))
 
 ;; TODO: PRouleau: the key binding in python-mode-map for command only works
 ;;       when Emacs runs in Graphics mode, not in terminal mode. It'd be nice
