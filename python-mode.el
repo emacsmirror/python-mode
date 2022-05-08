@@ -25712,7 +25712,7 @@ string or comment."
 
 (defun py-electric-backspace (&optional arg)
   "Delete reasonable amount of whitespace before point
-until outmost reasonabla indentation.
+until outmost reasonable indentation.
 
 If called at whitespace below max indentation,
 
@@ -25777,12 +25777,11 @@ At no-whitespace char, delete one char at point.
      ((looking-at "[ \t]+")
       (delete-region (if (< (match-beginning 0) delpos) delpos (match-beginning 0))  (match-end 0) )
       (unless (or (bolp) (<= (point) delpos)) (py-electric-backspace)))
-     ((bolp)
-      ;; do nothing electric a beginning-of-line
-      )
      ((member (char-before) (list 9 32 ?\r))
       (py-electric-backspace)
 	)
+     ;; Do noting at EOB
+     ((eobp))
      (t (delete-char 1)))))
 
 ;; TODO: PRouleau: the electric yank mechanism is currently commented out.
