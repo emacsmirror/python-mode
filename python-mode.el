@@ -17925,7 +17925,7 @@ Requires BEG, END as the boundery of region"
 ;; TODO: Add docstring.
 ;; What is the intent of the this utility function?
 ;; What is the purpose of each argument?
-(defun py--indent-line-intern (need cui indent col &optional beg end region outmost-only)
+(defun py--indent-line-intern (need cui indent col &optional beg end region outmost-only dedent)
   (let (erg)
     (if py-tab-indent
 	(progn
@@ -17953,7 +17953,8 @@ Requires BEG, END as the boundery of region"
            ;;
 	   ((eq need cui)
 	    (if (and (not outmost-only)
-		     (or (eq this-command last-command)
+		     (or dedent
+			 (eq this-command last-command)
 			 (eq this-command 'py-indent-line)))
 		(if (and py-tab-shifts-region-p region)
 		    (while (and (goto-char beg) (< 0 (current-indentation)))
@@ -17989,7 +17990,7 @@ Requires BEG, END as the boundery of region"
 		(beginning-of-line))))))
       (insert-tab))))
 
-(defun py--indent-line-or-region-base (beg end region cui need arg this-indent-offset col &optional outmost-only)
+(defun py--indent-line-or-region-base (beg end region cui need arg this-indent-offset col &optional outmost-only dedent)
   (cond ((eq 4 (prefix-numeric-value arg))
 	 (if (and (eq cui (current-indentation))
 		  (<= need cui))
@@ -17999,8 +18000,8 @@ Requires BEG, END as the boundery of region"
 	   (indent-to (+ need py-indent-offset))))
 	((not (eq 1 (prefix-numeric-value arg)))
 	 (py-smart-indentation-off)
-	 (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only))
-	(t (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only))))
+	 (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only dedent))
+	(t (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only dedent))))
 
 (defun py--calculate-indent-backwards (cui indent-offset)
   "Return the next reasonable indent lower than current indentation.
@@ -18012,7 +18013,7 @@ Requires current indent-offset as INDENT-OFFSET"
       (/ cui indent-offset)
     (- cui indent-offset)))
 
-(defun py-indent-line (&optional arg outmost-only)
+(defun py-indent-line (&optional arg outmost-only dedent)
   "Indent the current line according ARG.
 
 When called interactivly with \\[universal-argument],
@@ -18031,6 +18032,8 @@ but the region is shiftet that way.
 
 If `py-tab-indents-region-p' is t and first TAB doesn't shift
 --as indent is at outmost reasonable--, ‘indent-region’ is called.
+
+Optional arg DEDENT: force dedent.
 
 \\[quoted-insert] TAB inserts a literal TAB-character."
   (interactive "P")
@@ -18060,7 +18063,7 @@ If `py-tab-indents-region-p' is t and first TAB doesn't shift
 		(t (default-value 'py-indent-offset))))
     (setq outmost (py-compute-indentation nil nil nil nil nil nil nil this-indent-offset))
     ;; now choose the indent
-    (unless (and (not (eq this-command last-command))(eq outmost (current-indentation)))
+    (unless (and (not dedent)(not (eq this-command last-command))(eq outmost (current-indentation)))
       (setq need
 	    (cond ((eq this-command last-command)
 		   (if outmost-only
@@ -18073,7 +18076,7 @@ If `py-tab-indents-region-p' is t and first TAB doesn't shift
 		  (t
 		   outmost
 		   )))
-      (py--indent-line-or-region-base beg end region cui need arg this-indent-offset col outmost-only)
+      (py--indent-line-or-region-base beg end region cui need arg this-indent-offset col outmost-only dedent)
       (and region (or py-tab-shifts-region-p
 		      py-tab-indents-region-p)
 	   (not (eq (point) orig))
@@ -25708,7 +25711,10 @@ string or comment."
 ;;         It would be nice to have a binding that works in terminal mode too.
 
 (defun py-electric-backspace (&optional arg)
-  "Delete reasonable amount of whitespace before point. Keep indentation.
+  "Delete reasonable amount of whitespace before point
+until outmost reasonabla indentation.
+
+If called at whitespace below max indentation,
 
 Delete region when both variable `delete-active-region' and ‘use-region-p’
 are non-nil.
@@ -25732,10 +25738,13 @@ At no-whitespace character, delete one before point.
 	   (backward-delete-char-untabify 1))
 	  ((looking-at "[ \t]*$")
 	   (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point))))
+	  ((bolp)
+	   (backward-delete-char 1))
 	  (t
-	   (while (and (member (char-before)  (list 9 32 ?\r))
-		       (< indent (current-column)))
-	     (backward-delete-char-untabify 1))
+	   (py-indent-line nil nil t)
+	   ;; (while (and (member (char-before)  (list 9 32 ?\r))
+	   ;; 	       (< indent (current-column)))
+	   ;;   (backward-delete-char-untabify 1))
 	   ))))
 
 (defun py-electric-delete (&optional arg)
@@ -25767,7 +25776,7 @@ At no-whitespace char, delete one char at point.
       (delete-char 1))
      ((looking-at "[ \t]+")
       (delete-region (if (< (match-beginning 0) delpos) delpos (match-beginning 0))  (match-end 0) )
-      (unless (bolp) (py-electric-backspace)))
+      (unless (or (bolp) (<= (point) delpos)) (py-electric-backspace)))
      ((bolp)
       ;; do nothing electric a beginning-of-line
       )
