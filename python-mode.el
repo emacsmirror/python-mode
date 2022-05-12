@@ -4308,15 +4308,6 @@ These are Python temporary files awaiting execution."
     (push '(py-pdbtrack-is-tracking-p py-pdbtrack-minor-mode-string)
           minor-mode-alist))
 
-(defun py-set-command-args (arguments)
-  "Set Python arguments on the fly, override defaults in this session.
-
-Use `defcustom' to keep value across sessions "
-  (interactive
-   (list
-    (read-from-minibuffer "Command args: " py-python-command-args)))
-    (setq py-python-command-args arguments))
-
 (defun py--update-lighter (shell)
   "Select lighter for mode-line display"
   (setq py-modeline-display
@@ -18613,6 +18604,13 @@ With optional \\[universal-argument] get a new dedicated shell."
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
   (py-shell argprompt args nil "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+
+(defun isympy3 (&optional argprompt args buffer fast exception-buffer split)
+  "Start an Pypy interpreter.
+
+With optional \\[universal-argument] get a new dedicated shell."
+  (interactive "p")
+  (py-shell argprompt args nil "isympy3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; python-components-font-lock
 
