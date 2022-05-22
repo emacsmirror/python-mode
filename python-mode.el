@@ -5886,13 +5886,14 @@ Return the output."
           '(py-shell-output-filter))
          (py-shell-output-filter-in-progress t)
          (inhibit-quit t)
-	 (delay (py--which-delay-process-dependent buffer)))
+	 (delay (py--which-delay-process-dependent buffer))
+	 temp-file-name)
     (or
      (with-local-quit
        (if (and (string-match ".\n+." strg) (string-match "^\*[Ii]" buffer))  ;; IPython or multiline
-           (let* ((temp-file-name (py-temp-file-name strg))
-		  (file-name (or (buffer-file-name) temp-file-name)))
-	     (py-execute-file file-name proc))
+           (let ((file-name (or (buffer-file-name) (setq temp-file-name (py-temp-file-name strg)))))
+	     (py-execute-file file-name proc)
+	     (when temp-file-name (delete-file temp-file-name)))
 	 (py-shell-send-string strg proc))
        ;; (switch-to-buffer buffer)
        ;; (accept-process-output proc 9)
@@ -6087,11 +6088,12 @@ process buffer for a list of commands.)"
 		  ((string-match "^.+3" buffer-name)
 		   (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
 	  (setq py-modeline-display (py--update-lighter buffer-name))
-	  (sit-for delay t))))
+	  ;; (sit-for delay t)
+	  )))
     (if (setq proc (get-buffer-process buffer))
 	(progn
 	  (with-current-buffer buffer
-	    (unless fast (py-shell-mode))
+	    (unless (or done fast) (py-shell-mode))
 	    (and internal (set-process-query-on-exit-flag proc nil)))
 	  (when (or interactivep
 		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
@@ -6208,8 +6210,6 @@ using that one instead of current buffer's process."
           (let ((inhibit-quit nil))
             (run-hooks 'py-shell-first-prompt-hook))))))
   output)
-
-
 
 (defun py-shell-font-lock-get-or-create-buffer ()
   "Get or create a font-lock buffer for current inferior process."
@@ -6371,6 +6371,41 @@ With argument MSG show activation/deactivation message."
         (py-shell-font-lock-turn-on msg)
       (py-shell-font-lock-turn-off msg))
     py-shell-fontify-p))
+
+(defun comint-mime-setup-py-shell ()
+  "Enable ‘comint-mime’.
+
+Setup code specific to `py-shell-mode'."
+  (interactive)
+  ;; (if (not py-shell--first-prompt-received)
+  ;; (add-hook 'py-shell-first-prompt-hook #'comint-mime-setup-py-shell nil t)
+  (setq py-python-command "ipython3"
+	py-ipython-command "ipython3"
+	py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt")
+	py-python-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
+  (py-send-string-no-output
+   (format "%s\n__COMINT_MIME_setup('''%s''')"
+           (with-temp-buffer
+	     (switch-to-buffer (current-buffer)) 
+	     (insert-file-contents
+	      (expand-file-name "comint-mime.py"
+                                comint-mime-setup-script-dir))
+	     (buffer-string))
+           (if (listp comint-mime-enabled-types)
+	       (string-join comint-mime-enabled-types ";")
+	     comint-mime-enabled-types))))
+;; )
+
+(when (featurep 'comint-mime)
+  (add-hook 'py-shell-mode-hook 'comint-mime-setup-py-shell)
+  (push '(py-shell-mode . comint-mime-setup-py-shell)
+	comint-mime-setup-function-alist)
+  ;; (setq py-python-command "ipython3"
+  ;; 	py-ipython-command "ipython3"
+  ;; 	py-python-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt")
+  ;; 	;; "-i" doesn't work with ‘isympy3’
+  ;; 	py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
+  )
 
 ;; python-components-shift-forms
 
@@ -7591,8 +7626,6 @@ Returns value of ‘py-force-py-shell-name-p’."
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-force-py-shell-name-p: %s" py-force-py-shell-name-p))
   py-force-py-shell-name-p)
 
-
-
 (defun py--fix-if-name-main-permission (strg)
   "Remove \"if __name__ == '__main__ '\" STRG from code to execute.
 
@@ -7707,10 +7740,6 @@ Unless DIRECTION is symbol 'forward, go backward first"
       (when (called-interactively-p 'any) (message "%s" py-indent-offset))
       py-indent-offset)))
 
-
-
-
-
 (defun py--execute-buffer-finally (strg proc procbuf origline filename fast wholebuf)
   (if (and filename wholebuf (not (buffer-modified-p)))
       (unwind-protect
@@ -7722,7 +7751,6 @@ Unless DIRECTION is symbol 'forward, go backward first"
       (unwind-protect
 	  (py--execute-file-base tempfile proc nil procbuf origline fast)
 	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
-
 
 (defun py--postprocess-intern (&optional origline exception-buffer output-buffer)
   "Highlight exceptions found in BUF.
@@ -7930,17 +7958,14 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
 	 (proc (or proc-raw (get-buffer-process buffer-name)
 		   (prog1
 		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
-		     (sit-for 0.1))))
+		     (sit-for 1)
+		     )))
 	 (split (if python-mode-v5-behavior-p 'just-two split)))
     (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
 			       (py--choose-buffer-name shell dedicated fast)))
     (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
       (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))))
-
-
-
-
 
 ;; python-components-execute-file
 
@@ -25711,11 +25736,9 @@ string or comment."
 ;;         graphics mode, it does not work when Emacs runs in terminal mode.
 ;;         It would be nice to have a binding that works in terminal mode too.
 ;; keep-one handed over form ‘py-electric-delete’ maybe
-(defun py-electric-backspace (&optional arg keep-one)
+(defun py-electric-backspace (&optional arg)
   "Delete one or more of whitespace chars left from point.
 Honor indentation.
-
-With optional arg KEEP-ONE: don't delete a single space.
 
 If called at whitespace below max indentation,
 
@@ -25731,7 +25754,8 @@ At no-whitespace character, delete one before point.
   (interactive "*P")
   (unless (bobp)
     (let ((backward-delete-char-untabify-method 'untabify)
-	  (indent (py-compute-indentation)))
+	  (indent (py-compute-indentation))
+	  done)
       (cond ((eq 4 (prefix-numeric-value arg))
 	     (backward-delete-char-untabify 1))
 	    ((use-region-p)
@@ -27412,7 +27436,7 @@ may want to re-add custom functions to it using the
     'indent-for-tab-command)
    (t
     (define-key py-shell-mode-map "\t"
-      'py-indent-or-complete)))
+		'py-indent-or-complete)))
   (make-local-variable 'py-pdbtrack-buffers-to-kill)
   (make-local-variable 'py-shell-fast-last-output)
   (set (make-local-variable 'py-shell--block-prompt) nil)
@@ -27420,7 +27444,7 @@ may want to re-add custom functions to it using the
   (py-shell-prompt-set-calculated-regexps)
   (if py-shell-fontify-p
       (progn
-	(py-shell-font-lock-turn-on))
+  	(py-shell-font-lock-turn-on))
     (py-shell-font-lock-turn-off)))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
