@@ -2848,11 +2848,10 @@ See ‘py-no-outdent-re-raw’ for better readable content")
    "def"
    "for"
    "if"
+   "match"
    "try"
    "while"
    "with"
-   "match"
-   "case"
    )
   "Matches the beginning of a compound statement but not it's clause."
   :type '(repeat string)
@@ -2999,6 +2998,7 @@ Second group grabs the name")
 
 (defcustom py-minor-clause-re-raw
   (list
+   "case"
    "elif"
    "else"
    "except"
@@ -14982,9 +14982,10 @@ LIEP stores line-end-position at point-of-interest
 				;; (and (py--backward-regexp 'py-block-or-clause-re) (current-indentation)))
 			       	(and (py--go-to-keyword 'py-block-or-clause-re nil nil t) (current-indentation)))
 			       ((bobp) 0)
-			       (t (save-excursion (skip-chars-backward " \t\r\n\f")
-						  (if
-						      (py--backward-regexp 'py-block-or-clause-re)
+			       (t (save-excursion  
+				    ;; (skip-chars-backward " \t\r\n\f")
+						  (if (py-backward-block) 
+						      ;; (py--backward-regexp 'py-block-or-clause-re)
 						      (+ py-indent-offset (current-indentation))
 						    0)))))
 			((looking-at py-extended-block-or-clause-re)
