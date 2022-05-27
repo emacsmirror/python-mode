@@ -18639,6 +18639,7 @@ With optional \\[universal-argument] get a new dedicated shell."
   (py-shell argprompt args nil "isympy3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; python-components-font-lock
+(require 'python)
 
 (defconst python-font-lock-keywords
   ;; Keywords
@@ -18709,8 +18710,7 @@ With optional \\[universal-argument] get a new dedicated shell."
                   "ord" "pow" "property" "range" "raw_input" "reduce"
                   "reload" "repr" "reversed" "round" "set" "setattr" "slice"
                   "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
-                  "unichr" "unicode" "vars" "xrange" "zip"))
-       symbol-end) (1 py-builtins-face))
+                  "unichr" "unicode" "vars" "xrange" "zip")) symbol-end) . (1 py-builtins-face))
     ;; #104, GNU bug 44568 font lock of assignments with type hints
     ;; ("\\([._[:word:]]+\\)\\(?:\\[[^]]+]\\)?[[:space:]]*\\(?:\\(?:\\*\\*\\|//\\|<<\\|>>\\|[%&*+/|^-]\\)?=\\)"
     ;;  (1 py-variable-name-face nil nil))
@@ -18732,6 +18732,24 @@ With optional \\[universal-argument] get a new dedicated shell."
       (0 py-variable-name-face t)))
     ;; assignment
     ;; a, b, c = (1, 2, 3)
+    ;; a, *b, c = range(10)
+    ;; inst.a, inst.b, inst.c = 'foo', 'bar', 'baz'
+    ;; (a, b, *c, d) = x, *y = 5, 6, 7, 8, 9
+    (,(python-font-lock-assignment-matcher
+       (python-rx line-start (* space) (? (or "[" "("))
+                  grouped-assignment-target (* space) ?, (* space)
+                  (* assignment-target (* space) ?, (* space))
+                  (? assignment-target (* space))
+                  (? ?, (* space))
+                  (? (or ")" "]") (* space))
+                  (group assignment-operator)))
+     (1 py-variable-name-face)
+     (,(python-rx grouped-assignment-target)
+      (progn
+        (goto-char (match-end 1))       ; go back after the first symbol
+        (match-beginning 2))            ; limit the search until the assignment
+      nil
+      (1 py-variable-name-face)))
     (,(lambda (limit)
         (let ((re (rx (group (+ (any word ?. ?_))) (* space)
                       (* ?, (* space) (+ (any word ?. ?_)) (* space))
@@ -18741,9 +18759,8 @@ With optional \\[universal-argument] get a new dedicated shell."
                       (goto-char (match-end 1))
                       (nth 1 (parse-partial-sexp (point-min) (point)))
                       ;; (python-syntax-context 'paren)
-                      ))
-          res))
-     (1 py-variable-name-face nil nil))
+		      ))
+          res)) . (1 py-variable-name-face nil nil))
     ;; Numbers
     ;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
     (,(rx symbol-start (1+ digit) symbol-end) . py-number-face))
