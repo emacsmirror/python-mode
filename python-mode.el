@@ -842,8 +842,8 @@ my_list = [
 ]
 
 result = some_function_that_takes_arguments(
-    'a', 'b', 'c',
-    'd', 'e', 'f'
+    \\='a\\=', \\='b\\=', \\='c\\=',
+    \\='d\\=', \\='e\\=', \\='f\\='
 )
 
 Default is nil, i.e.
@@ -853,8 +853,8 @@ my_list = [
     4, 5, 6
     ]
 result = some_function_that_takes_arguments(
-    'a', 'b', 'c',
-    'd', 'e', 'f'
+    \\='a\\=', \\='b\\=', \\='c\\=',
+    \\='d\\=', \\='e\\=', \\='f\\='
     )
 
 Examples from PEP8
@@ -1644,7 +1644,7 @@ Other buffer will be hidden that way.
 When set to t, `python-mode' tries to reuse existing windows
 and will split only if needed.
 
-With 'always, results will displayed in a new window.
+With \\='always, results will displayed in a new window.
 
 Both t and `always' is experimental still.
 
@@ -1652,7 +1652,7 @@ For the moment: If a multitude of python-shells/buffers should be
 visible, open them manually and set `py-keep-windows-configuration' to t.
 
 See also `py-keep-windows-configuration'"
-  :type '(choice
+  :type `(choice
           (const :tag "default" just-two)
 	  (const :tag "reuse" t)
           (const :tag "no split" nil)
@@ -2022,7 +2022,7 @@ If on, messages value of `py-result' for instance."
   "Default is nil.
 
 When t, `python-mode' calls
-\(add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local)
+\(add-hook \\='before-save-hook \\='delete-trailing-whitespace nil \\='local)
 
 Also commands may delete trailing whitespace by the way.
 When editing other peoples code, this may produce a larger diff than expected"
@@ -2055,8 +2055,8 @@ Default is known to work an Ubuntu 14.10 - having python-
 mode, pymacs and auto-complete-el, with the following minimal
 Emacs initialization:
 
-\(require 'pymacs)
-\(require 'auto-complete-config)
+\(require \\='pymacs)
+\(require \\='auto-complete-config)
 \(ac-config-default)"
   :type 'hook
   :tag "py-complete-ac-sources"
@@ -3140,7 +3140,7 @@ Default is nil"
   "If t, track source from shell-buffer.
 
 Default is t.
-Add hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file"
+Add hook \\='comint-output-filter-functions \\='py--pdbtrack-track-stack-file"
 
   :type 'boolean
   :tag "pdb-track-stack-from-shell-p"
@@ -7723,7 +7723,7 @@ Set local value of `py-indent-offset', return it
 Might change local value of `py-indent-offset' only when called
 downwards from beginning of block followed by a statement.
 Otherwise `default-value' is returned.
-Unless DIRECTION is symbol 'forward, go backward first"
+Unless DIRECTION is symbol \\='forward, go backward first"
   (interactive)
   (save-excursion
     (let* ((indents
@@ -11512,9 +11512,9 @@ This may be preferable to `\\[py-execute-buffer]' because:
 
 Choices are:
 
-'line-up-with-first-element (default)
-'one-level-to-beginning-of-statement
-'one-level-from-opener"
+\\='line-up-with-first-element (default)
+\\='one-level-to-beginning-of-statement
+\\='one-level-from-opener"
   (save-excursion
     (pcase py-indent-list-style
       (`line-up-with-first-element
@@ -15430,7 +15430,7 @@ With optional \\[universal-argument] get a new dedicated shell."
   (py-shell argprompt args nil "isympy3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 ;; python-components-font-lock
-(require 'python)
+;; (require 'python)
 
 (defmacro py-rx (&rest regexps)
   "Python mode specialized rx macro.
@@ -23047,42 +23047,42 @@ See available styles at `py-fill-paragraph' or var `py-docstring-style'
   (py-fill-string justify 'symmetric t))
 
 (defun py-set-nil-docstring-style ()
-  "Set py-docstring-style to 'nil"
+  "Set py-docstring-style to \\='nil"
   (interactive)
   (setq py-docstring-style 'nil)
   (when (and (called-interactively-p 'any) py-verbose-p)
     (message "docstring-style set to:  %s" py-docstring-style)))
 
 (defun py-set-pep-257-nn-docstring-style ()
-  "Set py-docstring-style to 'pep-257-nn"
+  "Set py-docstring-style to \\='pep-257-nn"
   (interactive)
   (setq py-docstring-style 'pep-257-nn)
   (when (and (called-interactively-p 'any) py-verbose-p)
     (message "docstring-style set to:  %s" py-docstring-style)))
 
 (defun py-set-pep-257-docstring-style ()
-  "Set py-docstring-style to 'pep-257"
+  "Set py-docstring-style to \\='pep-257"
   (interactive)
   (setq py-docstring-style 'pep-257)
   (when (and (called-interactively-p 'any) py-verbose-p)
     (message "docstring-style set to:  %s" py-docstring-style)))
 
 (defun py-set-django-docstring-style ()
-  "Set py-docstring-style to 'django"
+  "Set py-docstring-style to \\='django"
   (interactive)
   (setq py-docstring-style 'django)
   (when (and (called-interactively-p 'any) py-verbose-p)
     (message "docstring-style set to:  %s" py-docstring-style)))
 
 (defun py-set-symmetric-docstring-style ()
-  "Set py-docstring-style to 'symmetric"
+  "Set py-docstring-style to \\='symmetric"
   (interactive)
   (setq py-docstring-style 'symmetric)
   (when (and (called-interactively-p 'any) py-verbose-p)
     (message "docstring-style set to:  %s" py-docstring-style)))
 
 (defun py-set-onetwo-docstring-style ()
-  "Set py-docstring-style to 'onetwo"
+  "Set py-docstring-style to \\='onetwo"
   (interactive)
   (setq py-docstring-style 'onetwo)
   (when (and (called-interactively-p 'any) py-verbose-p)
