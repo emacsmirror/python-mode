@@ -7194,7 +7194,6 @@ can expand to any number of values."
    (t (error "Bad rx expression: %S" item))))
 
 
-;;;###autoload
 (defun rx-to-string (form &optional no-group)
   "Translate FORM from `rx' sexp syntax into a string regexp.
 The arguments to `literal' and `regexp' forms inside FORM must be
@@ -7231,7 +7230,6 @@ For extending the `rx' notation in FORM, use `rx-define' or `rx-let-eval'."
           (t (car args)))))                            ; 1 arg
 
 
-;;;###autoload
 (defmacro rx (&rest regexps)
   "Translate regular expressions REGEXPS in sexp form to a regexp string.
 Each argument is one of the forms below; RX is a subform, and RX... stands
@@ -7377,7 +7375,6 @@ BINDSPEC is on the form (NAME [ARGLIST] DEFINITION)."
   (append (mapcar #'rx--make-named-binding bindspecs)
           rx--local-definitions))
 
-;;;###autoload
 (defmacro rx-let-eval (bindings &rest body)
   "Evaluate BODY with local BINDINGS for `rx-to-string'.
 BINDINGS, after evaluation, is a list of definitions each on the form
@@ -7403,7 +7400,6 @@ For more details, see Info node `(elisp) Extending Rx'.
   `(let ((rx--local-definitions (rx--extend-local-defs ,bindings)))
      ,@body))
 
-;;;###autoload
 (defmacro rx-let (bindings &rest body)
   "Evaluate BODY with local BINDINGS for `rx'.
 BINDINGS is an unevaluated list of bindings each on the form
@@ -7432,7 +7428,6 @@ For more details, see Info node `(elisp) Extending Rx'.
                      (cons (cons :rx-locals (append new-locals prev-locals))
                            macroexpand-all-environment))))
 
-;;;###autoload
 (defmacro rx-define (name &rest definition)
   "Define NAME as a global `rx' definition.
 If the ARGS list is omitted, define NAME as an alias for the `rx'
@@ -7493,7 +7488,6 @@ into a plain rx-expression, collecting names into `rx--pcase-vars'."
       (funcall f (car l) (rx--reduce-right f (cdr l)))
     (car l)))
 
-;;;###autoload
 (pcase-defmacro rx (&rest regexps)
   "A pattern that matches strings against `rx' REGEXPS in sexp form.
 REGEXPS are interpreted as in `rx'.  The pattern matches any
@@ -8710,7 +8704,6 @@ See also `py-down-block-or-clause'."
   (interactive)
   (py-forward-block-or-clause nil t))
 
-;;;###autoload
 (defun py-forward-class (&optional orig bol)
   "Go to end of class.
 
@@ -8745,7 +8738,6 @@ See also `py-down-clause'."
   (interactive)
   (py-forward-clause nil t))
 
-;;;###autoload
 (defun py-forward-def (&optional orig bol)
   "Go to end of def.
 
@@ -8763,7 +8755,6 @@ See also `py-down-def'."
   (interactive)
   (py-forward-def nil t))
 
-;;;###autoload
 (defun py-forward-def-or-class (&optional orig bol)
   "Go to end of def-or-class.
 
@@ -25628,7 +25619,6 @@ Optional File: execute through running a temp-file"
 (defalias 'py-previous-statement 'py-backward-statement)
 (defalias 'py-markup-region-as-section 'py-sectionize-region)
 
-;;;###autoload
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
   "Run auto-completion"
   ;; disable company
@@ -25654,7 +25644,6 @@ Optional File: execute through running a temp-file"
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
   )
 
-;;;###autoload
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
