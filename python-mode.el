@@ -25684,6 +25684,11 @@ Optional File: execute through running a temp-file"
     (message "python-mode loaded from: %s" python-mode-message-string)))
 
 (defalias 'py-next-statement 'py-forward-statement)
+;; #134, cython-mode compatibility
+(defalias 'py-end-of-statement 'py-forward-statement)
+(defalias 'py-beginning-of-statement 'py-backward-statement)
+(defalias 'py-beginning-of-block 'py-backward-block)
+(defalias 'py-end-of-block 'py-forward-block)
 (defalias 'py-previous-statement 'py-backward-statement)
 (defalias 'py-markup-region-as-section 'py-sectionize-region)
 
