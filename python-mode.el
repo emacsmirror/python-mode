@@ -4788,23 +4788,25 @@ Return and move to match-beginning if successful"
 (defun py--beginning-of-statement-p (&optional pps)
   "Return position, if cursor is at the beginning of a `statement', nil otherwise."
   (interactive)
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (not (or (nth 8 pps)(nth 1 pps)))
-         (looking-at py-statement-re)
-         (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column)(current-indentation))
-	 (eq (point) (progn (py-forward-statement) (py-backward-statement)))
-         (point))))
+  (save-excursion
+    (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+      (and (not (or (nth 8 pps) (nth 1 pps)))
+           (looking-at py-statement-re)
+           (looking-back "[^ \t]*" (line-beginning-position))
+           (eq (current-column) (current-indentation))
+	   (eq (point) (progn (py-forward-statement) (py-backward-statement)))
+           (point)))))
 
 (defun py--beginning-of-statement-bol-p (&optional pps)
   "Return position, if cursor is at the beginning of a `statement', nil otherwise."
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (bolp)
-         (not (or (nth 8 pps)(nth 1 pps)))
-         (looking-at py-statement-re)
-         (looking-back "[^ \t]*" (line-beginning-position))
-	 (eq (point) (progn (py-forward-statement-bol) (py-backward-statement-bol)))
-         (point))))
+  (save-excursion
+    (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+      (and (bolp)
+           (not (or (nth 8 pps) (nth 1 pps)))
+           (looking-at py-statement-re)
+           (looking-back "[^ \t]*" (line-beginning-position))
+	   (eq (point) (progn (py-forward-statement-bol) (py-backward-statement-bol)))
+           (point)))))
 
 (defun py--refine-regexp-maybe (regexp)
   "Use a more specific regexp if possible. "
@@ -13268,11 +13270,9 @@ LIEP stores line-end-position at point-of-interest
 			((and (looking-at py-minor-clause-re) (not line)
                               (eq liep (line-end-position)))
 
-
 			 (cond
                           ((looking-at py-case-re)
                            (py--backward-regexp 'py-match-re) (+ (current-indentation) py-indent-offset))
-
                           ((looking-at py-outdent-re)
 				;; (and (py--backward-regexp 'py-block-or-clause-re) (current-indentation)))
 			       	(and (py--go-to-keyword 'py-block-or-clause-re nil nil t) (current-indentation)))
@@ -24246,7 +24246,7 @@ At no-whitespace character, delete one before point.
   (interactive "*P")
   (unless (bobp)
     (let ((backward-delete-char-untabify-method 'untabify)
-	  (indent (py-compute-indentation))
+	  indent
 	  done)
       (cond
        ;; electric-pair-mode
@@ -24271,6 +24271,7 @@ At no-whitespace character, delete one before point.
 	(backward-delete-char-untabify 1))
        ;; before code
        ((looking-back "^[ \t]+" (line-beginning-position))
+        (setq indent (py-compute-indentation))
 	(cond ((< indent (current-indentation))
 	       (back-to-indentation)
 	       (delete-region (line-beginning-position) (point))
