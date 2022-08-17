@@ -2913,7 +2913,7 @@ See `py-minor-block-re-raw' for better readable content")
 (defconst py-case-re "[ \t]*\\_<case\\_>[: \t][^:]*:"
   "Matches a `case' clause.")
 
-(defconst py-match-re "[ \t]*\\_<match\\_>[: \t][^:]*:"
+(defconst py-match-case-re "[ \t]*\\_<match\\_>[: \t][^:]*:"
   "Matches a `case' clause.")
 
 (defconst py-for-re "[ \t]*\\_<\\(async for\\|for\\)\\_> +[[:alpha:]_][[:alnum:]_]* +in +[[:alpha:]_][[:alnum:]_()]* *[: \n\t]"
@@ -3783,7 +3783,9 @@ Return and move to match-beginning if successful"
 	    (py-backward-comment (point)))
     (let* (pps
 	   (regexpvalue (or regexpvalue (symbol-value regexp)))
-	   (indent (or indent (current-indentation)))
+	   (indent (cond ((eq regexp 'py-match-case-re)
+                          nil)
+                       (t (or indent (current-indentation)))))
 	   (condition (or condition '<=))
 	   (orig (or orig (point))))
       (if (eq (current-indentation) (current-column))
@@ -13272,7 +13274,7 @@ LIEP stores line-end-position at point-of-interest
 
 		    (cond
                      ((looking-at py-case-re)
-                      (py--backward-regexp 'py-match-re) (+ (current-indentation) py-indent-offset))
+                      (py--backward-regexp 'py-match-case-re) (+ (current-indentation) py-indent-offset))
                      ((looking-at py-outdent-re)
 		      ;; (and (py--backward-regexp 'py-block-or-clause-re) (current-indentation)))
 		      (and (py--go-to-keyword 'py-block-or-clause-re (current-indentation) '< t) (current-indentation)))
