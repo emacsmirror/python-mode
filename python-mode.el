@@ -2669,15 +2669,17 @@ Remember source buffer where error might occur.")
 (defvar py-not-expression-chars " #\t\r\n\f"
   "Chars indicated probably will not compose a `py-expression'.")
 
-(defvar py-partial-expression-backward-chars "^] .=,\"'()[{}:#\t\r\n\f"
-  "Chars indicated possibly compose a `py-partial-expression', skip it.")
-;; (setq py-partial-expression-backward-chars "^] .=,\"'()[{}:#\t\r\n\f")
+;; (defvar py-partial-expression-stop-backward-chars "^] .=,\"'()[{}:#\t\r\n\f"
+(defvar py-partial-expression-stop-backward-chars "^] .=,\"'()[{}:#\t\r\n\f"
+    "Chars indicated which not possibly compose a `py-partial-expression',
+stop at it.")
+;; (setq py-partial-expression-stop-backward-chars "^] .=,\"'()[{}:#\t\r\n\f")
 
 (defvar py-partial-expression-forward-chars "^ .\"')}]:#\t\r\n\f")
 ;; (setq py-partial-expression-forward-chars "^ .\"')}]:#\t\r\n\f")
 
-(defvar py-partial-expression-re (concat "[" py-partial-expression-backward-chars (substring py-partial-expression-forward-chars 1) "]+"))
-(setq py-partial-expression-re (concat "[" py-partial-expression-backward-chars "]+"))
+(defvar py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars (substring py-partial-expression-forward-chars 1) "]+"))
+(setq py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars "]+"))
 
 (defvar py-statement-re py-partial-expression-re)
 (defvar py-indent-re ".+"
@@ -10289,9 +10291,9 @@ REPEAT - count and consider repeats"
     ;; part of py-partial-expression-forward-chars
     (when (member (char-after) (list ?\ ?\" ?' ?\) ?} ?\] ?: ?#))
       (forward-char -1))
-    (skip-chars-backward py-partial-expression-forward-chars)
-    (when (< 0 (abs (skip-chars-backward py-partial-expression-backward-chars)))
-      (while (and (not (bobp)) (py--in-comment-p)(< 0 (abs (skip-chars-backward py-partial-expression-backward-chars))))))
+    (skip-chars-backward py-partial-expression-stop-backward-chars)
+    (when (< 0 (abs (skip-chars-backward py-partial-expression-stop-backward-chars)))
+      (while (and (not (bobp)) (py--in-comment-p)(< 0 (abs (skip-chars-backward py-partial-expression-stop-backward-chars))))))
     (when (< (point) orig)
       (unless
 	  (and (bobp) (member (char-after) (list ?\ ?\t ?\r ?\n ?\f)))
@@ -10299,16 +10301,20 @@ REPEAT - count and consider repeats"
     erg))
 
 (defun py-forward-partial-expression ()
-  "Forward partial-expression."
+  "Forward partial-expression.
+
+Return position reached."
   (interactive)
-  (let (erg)
-    (skip-chars-forward py-partial-expression-backward-chars)
-    ;; group arg
-    (while
-     (looking-at "[\[{(]")
-     (goto-char (scan-sexps (point) 1)))
-    (setq erg (point))
-    erg))
+  (skip-chars-forward py-partial-expression-stop-backward-chars)
+  ;; group arg
+  (while
+      (or (and (eq (char-after) ?\()
+               (eq (char-after (1+ (point))) 41))
+          (and (eq (char-after) ?\[)
+               (or (eq (char-after (1+ (point))) ?\])
+                   (eq (char-after (+ 2 (point))) ?\]))))
+    (goto-char (scan-sexps (point) 1)))
+  (point))
 
 ;; Partial- or Minor Expression
 ;;  Line
@@ -10514,7 +10520,7 @@ Return position of successful, nil of not started from inside."
 	 (py-backward-block))
    ((py-beginning-of-statement-p)
 	 (py-backward-block-or-clause))
-   (t (py-backward-statement)) 
+   (t (py-backward-statement))
    ))
 
 
@@ -19701,6 +19707,7 @@ Default is t")
         (define-key map [(control meta h)] 'py-mark-def-or-class)
         (define-key map [(control c) (control k)] 'py-mark-block-or-clause)
         (define-key map [(control c) (.)] 'py-expression)
+        (define-key map [(control c) (?,)] 'py-partial-expression)
         ;; Miscellaneous
         ;; (define-key map [(super q)] 'py-copy-statement)
         (define-key map [(control c) (control d)] 'py-pdbtrack-toggle-stack-tracking)
