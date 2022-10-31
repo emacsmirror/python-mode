@@ -6156,6 +6156,7 @@ process buffer for a list of commands.)"
 	(setq delay (py--which-delay-process-dependent buffer-name))
 	(unless fast
 	  (when interactivep
+            (setq py-shell-mode-syntax-table python-mode-syntax-table)
 	    (cond ((string-match "^.I" buffer-name)
 		   (message "Waiting according to `py-ipython-send-delay:' %s" delay))
 		  ((string-match "^.+3" buffer-name)
@@ -24853,6 +24854,7 @@ See lp:1066489 "
     (setq fill-prefix old-fill-prefix)))
 
 (defun py--fill-docstring (docstring &optional beg end)
+  "Fills paragraph in docstring below or at cursor position."
   (let* ((orig (point))
          (beg (or beg (progn (goto-char docstring) (line-beginning-position))))
          (end (copy-marker (or end (progn (goto-char beg)
@@ -24922,7 +24924,7 @@ Fill according to `py-docstring-style' "
 			   docstring)
 			  (t (py--in-or-behind-or-before-a-docstring pps))))
 	 (beg (and (nth 3 pps) (nth 8 pps)))
-	 (tqs (progn (and beg (goto-char beg) (looking-at "\"\"\"\\|'''") (setq indent (current-column)))))
+	 (tqs (progn (and beg (goto-char beg) (looking-at "\"\"\"\\|'''"))))
 	 (end (copy-marker (if tqs
 			       (or
 				(progn (ignore-errors (forward-sexp))(and (< orig (point)) (point)))
@@ -25009,7 +25011,7 @@ Fill according to `py-docstring-style' "
   (unless (< (current-column) fill-column)
   (let ((pps (parse-partial-sexp (point-min) (point))))
     (if (nth 3 pps)
-	(py-fill-string nil nil nil pps)
+	(py-fill-string nil nil pps)
       ;; (py-fill-comment pps)
       (do-auto-fill)
       ))))
