@@ -1022,5 +1022,23 @@ with file(\"foo\" + zeit + \".ending\", 'w') as datei:
     (search-backward "in")
     (should (eq 8 (py-compute-indentation)))))
 
+(ert-deftest py-comment-shouldnt-outdent-109-test-vkJNom ()
+  (py-test-with-temp-buffer
+      "def addProductToShopify(sample)
+    try:
+        a = sample
+    except NoResultFound as e:
+        return False
+
+    # comment 1
+    # comment 2
+    # comment 3
+    return True
+"
+    (goto-char (point-max))
+    (search-backward "comment" nil t 2)
+    (should (eq 4 (py-compute-indentation)))
+    ))
+
 (provide 'py-ert-indent-tests)
 ;;; py-ert-indent-tests.el ends here
