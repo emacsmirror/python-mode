@@ -2513,6 +2513,9 @@ Syntax or has word syntax and isn't a letter.")
           (modify-syntax-entry ?\_ "_" table))
         table))
 
+(defvar py-shell-mode-syntax-table nil
+  "Set from py-shell")
+
 (defvar py-ipython-completion-command-string nil
   "Select command according to IPython version.
 
@@ -6133,7 +6136,7 @@ process buffer for a list of commands.)"
 		      (_ (if (executable-find shell)
 			     shell
 		           (error (concat "py-shell: Can't see an executable for `"shell "' on your system. Maybe needs a link?")))))
-		         (py-choose-shell)))
+		  (py-choose-shell)))
 	 (args (or args (py--provide-command-args shell fast)))
          ;; Make sure a new one is created if required
 	 (buffer-name
@@ -6404,20 +6407,20 @@ Left-fold the list L, starting with X, by the binary function F."
     (setq l (cdr l)))
   x)
 
-(defun rx--normalise-or-arg (form)
+(defun rx--normalize-or-arg (form)
   "Normalize the `or' argument FORM.
 Characters become strings, user-definitions and `eval' forms are expanded,
 and `or' forms are normalized recursively."
   (cond ((characterp form)
          (char-to-string form))
         ((and (consp form) (memq (car form) '(or |)))
-         (cons (car form) (mapcar #'rx--normalise-or-arg (cdr form))))
+         (cons (car form) (mapcar #'rx--normalize-or-arg (cdr form))))
         ((and (consp form) (eq (car form) 'eval))
-         (rx--normalise-or-arg (rx--expand-eval (cdr form))))
+         (rx--normalize-or-arg (rx--expand-eval (cdr form))))
         (t
          (let ((expanded (rx--expand-def form)))
            (if expanded
-               (rx--normalise-or-arg expanded)
+               (rx--normalize-or-arg expanded)
              form)))))
 
 (defun rx--all-string-or-args (body)
@@ -6452,7 +6455,7 @@ Return (REGEXP . PRECEDENCE)."
    ((null (cdr body))              ; Single item.
     (rx--translate (car body)))
    (t
-    (let* ((args (mapcar #'rx--normalise-or-arg body))
+    (let* ((args (mapcar #'rx--normalize-or-arg body))
            (all-strings (catch 'rx--nonstring (rx--all-string-or-args args))))
       (cond
        (all-strings                       ; Only strings.
@@ -17202,6 +17205,22 @@ sign in chained assignment."
                   (group assignment-operator)))
      (1 py-variable-name-face)
      (2 'font-lock-operator-face))
+    ;; https://emacs.stackexchange.com/questions/55184/
+    ;; how-to-highlight-in-different-colors-for-variables-inside-fstring-on-python-mo
+    ;;
+    ;; this is the full string.
+    ;; group 1 is the quote type and a closing quote is matched
+    ;; group 2 is the string part
+    ;; ("f\\(['\"]\\{1,3\\}\\)\\([^\\1]+?\\)\\1"
+    ;;  ;; these are the {keywords}
+    ;;  ("{[^}]*?}"
+    ;;   ;; Pre-match form
+    ;;   (progn (goto-char (match-beginning 0)) (match-end 0))
+    ;;   ;; Post-match form
+    ;;   (goto-char (match-end 0))
+    ;;   ;; face for this match
+    ;;   ;; (0 font-lock-variable-name-face t)))
+    ;;   (0 py-variable-name-face t)))
     ;; Numbers
     ;;        (,(rx symbol-start (or (1+ digit) (1+ hex-digit)) symbol-end) . py-number-face)
     ("\\_<[[:digit:]]+\\_>" . py-number-face))
