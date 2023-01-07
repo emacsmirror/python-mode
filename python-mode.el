@@ -1806,7 +1806,8 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defvaralias 'py-shell-name 'py-python-command)
+(defvar py-shell-name py-python-command)
+;; (defvaralias 'py-shell-name 'py-python-command)
 
 (defcustom py-python-command-args '("-i")
   "String arguments to be used when starting a Python shell."
@@ -2330,9 +2331,9 @@ Set `py-keep-windows-configuration' onto \\'force
 Default is nil"
 
   :type '(choice
-          (const :tag "nil" 'nil)
-          (const :tag "t" 't)
-          (const :tag "force" 'force))
+          (const :tag "nil" nil)
+          (const :tag "t" t)
+          (const :tag "force" force))
   :tag "py-keep-windows-configuration"
   :group 'python-mode)
 
@@ -3521,7 +3522,7 @@ TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
   "Returns position if point was moved."
   (let ((orig (point)))
     (cond ((while (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
-                       ;; (sit-for 1) 
+                       ;; (sit-for 1)
                        (and (nth 8 (parse-partial-sexp (point-min) (point))) (skip-chars-forward "#;" (line-end-position)))))))
     (and (< orig (point))(point))))
 
@@ -9315,10 +9316,9 @@ thus remember line of source buffer"
 		  (insert (concat "    File " (buffer-name exception-buffer) ", line "
 				  (prin1-to-string origline)))))
 	      ;; these are let-bound as `tempbuf'
-	      (and (boundp 'tempbuf)
-		   ;; (message "%s" tempbuf)
-		   (search-forward (buffer-name tempbuf) nil t)
-		   (delete-region (line-beginning-position) (1+ (line-end-position))))
+	      ;; (and (boundp 'tempbuf)
+	      ;;      (search-forward (buffer-name tempbuf) nil t)
+	      ;;      (delete-region (line-beginning-position) (1+ (line-end-position))))
 	      ;; if no buffer-file exists, signal "Buffer", not "File(when
 	      (when erg
 		(goto-char erg)
@@ -13961,7 +13961,7 @@ Returns position successful, nil otherwise"
       (setq erg (point)))
     erg))
 
-(defun py-down (&optional indent)
+(defun py-down ()
   "Go to beginning one level below.
 
 Of compound statement or definition at point.
@@ -14120,19 +14120,19 @@ If no further element at same level, go one level up."
                          (py-backward-same-level))))))
     erg))
 
-(defun py-forward-same-level ()
-  "Go form forward keeping indent level if possible.
+;; (defun py-forward-same-level ()
+;;   "Go form forward keeping indent level if possible.
 
-If inside a delimited form --string or list-- go to its beginning.
-If not at beginning of a statement or block, go to its beginning.
-If at beginning of a statement or block, go to previous beginning.
-If no further element at same level, go one level up."
-  (interactive)
-  (let (erg)
-    (unless (py-beginning-of-statement-p)
-      (py-backward-statement))
-    (setq erg (py-down (current-indentation)))
-    erg))
+;; If inside a delimited form --string or list-- go to its beginning.
+;; If not at beginning of a statement or block, go to its beginning.
+;; If at beginning of a statement or block, go to previous beginning.
+;; If no further element at same level, go one level up."
+;;   (interactive)
+;;   (let (erg)
+;;     (unless (py-beginning-of-statement-p)
+;;       (py-backward-statement))
+;;     (setq erg (py-down (current-indentation)))
+;;     erg))
 
 (defun py--end-of-buffer-p ()
   "Returns position, if cursor is at the end of buffer, nil otherwise. "
