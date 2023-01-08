@@ -22266,7 +22266,7 @@ problem as best as we can determine."
 
             (t (format "Not found: %s(), %s" funcname filename))))))
 
-(defun py--pdbtrack-grub-for-buffer (funcname lineno)
+(defun py--pdbtrack-grub-for-buffer (funcname)
   "Find most recent buffer itself named or having function funcname.
 
 We walk the buffer-list history for python-mode buffers that are
@@ -22284,9 +22284,9 @@ named for funcname or define a function funcname."
                    (string-match (concat "^\\s-*\\(def\\|class\\)\\s-+"
                                          funcname "\\s-*(")
                                  (save-excursion
-                                   (with-current-buffer  buf
-                                   (buffer-substring (point-min)
-                                                     (point-max)))))))
+                                   (with-current-buffer buf
+                                     (buffer-substring (point-min)
+                                                       (point-max)))))))
           (setq got buf)))
     got))
 
@@ -22296,7 +22296,7 @@ named for funcname or define a function funcname."
 Internally it uses the `py-pdbtrack-tracked-buffer' variable.
 Returns the tracked buffer."
   (let* ((file-name-prospect (concat (file-remote-p default-directory)
-                              file-name))
+                                     file-name))
          (file-buffer (get-file-buffer file-name-prospect)))
     (if file-buffer
         (setq py-pdbtrack-tracked-buffer file-buffer)
@@ -23832,16 +23832,17 @@ alternative for finding the index.")
 Finds all Python classes and functions/methods. Calls function
 \\[py--imenu-create-index-engine].  See that function for the details
 of how this works."
-  (save-excursion
-    (setq py-imenu-generic-regexp (car py-imenu-generic-expression)
-	  py-imenu-generic-parens (if py-imenu-show-method-args-p
-				      py-imenu-method-arg-parens
-				    py-imenu-method-no-arg-parens))
-    (goto-char (point-min))
-    ;; Warning: When the buffer has no classes or functions, this will
-    ;; return nil, which seems proper according to the Imenu API, but
-    ;; causes an error in the XEmacs port of Imenu.  Sigh.
-    (setq index-alist (cdr (py--imenu-create-index-engine nil)))))
+  (let (index-alist)
+    (save-excursion
+      (setq py-imenu-generic-regexp (car py-imenu-generic-expression)
+	    py-imenu-generic-parens (if py-imenu-show-method-args-p
+				        py-imenu-method-arg-parens
+				      py-imenu-method-no-arg-parens))
+      (goto-char (point-min))
+      ;; Warning: When the buffer has no classes or functions, this will
+      ;; return nil, which seems proper according to the Imenu API, but
+      ;; causes an error in the XEmacs port of Imenu.  Sigh.
+      (setq index-alist (cdr (py--imenu-create-index-engine nil))))))
 
 (defun py--imenu-create-index-engine (&optional start-indent)
   "Function for finding Imenu definitions in Python.
