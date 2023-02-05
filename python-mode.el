@@ -1,14 +1,12 @@
-;;; python-mode.el --- Edit, debug, develop, run Python programs. -*- lexical-binding: t; -*- 
+;;; python-mode.el --- Edit, debug, develop, run Python programs. -*- lexical-binding: t; -*-
 
 ;; Version: 6.3.1
-
-;; Keywords: languages, processes, python, oop
 
 ;; URL: https://gitlab.com/groups/python-mode-devs
 
 ;; Package-Requires: ((emacs "24"))
 
-;; Author: 2015-2021 https://gitlab.com/groups/python-mode-devs
+;; Author: 2015-2023 https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
@@ -4258,14 +4256,14 @@ Does not delete the prompt."
 (defun py-in-comment-p ()
   "Return the beginning of current line's comment, if inside. "
   (interactive)
-  (let* ((pps (parse-partial-sexp (point-min) (point)))
-         (erg (and (nth 4 pps) (nth 8 pps))))
-    erg))
+  (let ((pps (parse-partial-sexp (point-min) (point))))
+    (and (nth 4 pps) (nth 8 pps))))
+
 ;;
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
   (or (nth 8 (parse-partial-sexp (point-min) (point)))
-      (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
+      (when (or (looking-at "\"") (looking-at "[ \t]*#[ \t]*"))
         (point))))
 
 (defvar python-mode-map nil)
@@ -4783,6 +4781,7 @@ Return and move to match-beginning if successful"
       (unless
 	  (nth 8 (parse-partial-sexp (point-min) (point)))
         erg))))
+
 (defun py--forward-regexp-keep-indent (regexp &optional indent)
   "Search forward next regexp not in string or comment.
 
@@ -4884,23 +4883,23 @@ Optional ENFORCE-REGEXP: search for regexp only."
 			     (`py-if-re py-else-re)))))
       (if (eq regexp 'py-clause-re)
           (py-forward-clause-intern indent)
-      (while
-	  (and
-	   (not done)
-	   (progn (end-of-line)
-		  (cond (use-regexp
-			 ;; using regexpvalue might stop behind global settings, missing the end of form
-			 (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
-			(t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
-	   (or (nth 8 (parse-partial-sexp (point-min) (point)))
-	       (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
-	       (and secondvalue (looking-at secondvalue))
-	       (and lastvalue (looking-at lastvalue))
-	       (and (looking-at regexpvalue) (setq done t))
-	       ;; py-forward-def-or-class-test-3JzvVW
-	       ;; (setq done t)
-               )))
-      (and (< orig (point)) (point))))))
+        (while
+	    (and
+	     (not done)
+	     (progn (end-of-line)
+		    (cond (use-regexp
+			   ;; using regexpvalue might stop behind global settings, missing the end of form
+			   (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
+			  (t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
+	     (or (nth 8 (parse-partial-sexp (point-min) (point)))
+	         (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
+	         (and secondvalue (looking-at secondvalue))
+	         (and lastvalue (looking-at lastvalue))
+	         (and (looking-at regexpvalue) (setq done t))
+	         ;; py-forward-def-or-class-test-3JzvVW
+	         ;; (setq done t)
+                 )))
+        (and (< orig (point)) (point))))))
 
 (defun py--backward-empty-lines-or-comment ()
   "Travel backward"
@@ -8548,7 +8547,6 @@ Return beginning of `block' if successful, nil otherwise"
   (and (py-backward-block)
        (progn (beginning-of-line)(point))))
 
-;;;###autoload
 (defun py-backward-class-bol ()
   "Go to beginning of `class', go to BOL.
 If already at beginning, go one `class' backward.
@@ -8557,7 +8555,6 @@ Return beginning of `class' if successful, nil otherwise"
   (and (py-backward-class)
        (progn (beginning-of-line)(point))))
 
-;;;###autoload
 (defun py-backward-def-bol ()
   "Go to beginning of `def', go to BOL.
 If already at beginning, go one `def' backward.
@@ -8566,7 +8563,6 @@ Return beginning of `def' if successful, nil otherwise"
   (and (py-backward-def)
        (progn (beginning-of-line)(point))))
 
-;;;###autoload
 (defun py-backward-def-or-class-bol ()
   "Go to beginning of `def-or-class', go to BOL.
 If already at beginning, go one `def-or-class' backward.
@@ -13812,7 +13808,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
   (if (derived-mode-p 'comint-mode)
       (if (bound-and-true-p comint-last-prompt)
 	  (car-safe comint-last-prompt)
-	(dotimes (_ 3) (when (not (bound-and-true-p comint-last-prompt)))(sit-for 1 t))
+	(dotimes (_ 3) (when (not (bound-and-true-p comint-last-prompt))(sit-for 1 t)))
 	(and (bound-and-true-p comint-last-prompt)
 	     (car-safe comint-last-prompt)))
     (if (markerp (process-mark process))
@@ -13973,7 +13969,9 @@ Returns position if successful, nil otherwise"
   (interactive)
   (let ((orig (point))
         (pps (parse-partial-sexp (point-min) (point))))
-    (cond ((nth 4 pps)
+    (cond ((eq (syntax-class (syntax-after (point))) 4)
+           (forward-sexp))
+          ((nth 4 pps)
            (py-forward-comment))
           ((nth 3 pps)
            (goto-char (nth 8 pps))
@@ -14882,7 +14880,7 @@ Return beginning and end positions of marked area, a cons."
   (cons (region-beginning) (region-end)))
 
 (defun py-mark-assignment ()
-  "Mark assignment, take beginning of line positions. 
+  "Mark assignment, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14890,7 +14888,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-block ()
-  "Mark block, take beginning of line positions. 
+  "Mark block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14898,7 +14896,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-block-or-clause ()
-  "Mark block-or-clause, take beginning of line positions. 
+  "Mark block-or-clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14906,7 +14904,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-class (&optional arg)
-  "Mark class, take beginning of line positions. 
+  "Mark class, take beginning of line positions.
 
 With ARG \\[universal-argument] or `py-mark-decorators' set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -14916,7 +14914,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-clause ()
-  "Mark clause, take beginning of line positions. 
+  "Mark clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14924,7 +14922,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-def (&optional arg)
-  "Mark def, take beginning of line positions. 
+  "Mark def, take beginning of line positions.
 
 With ARG \\[universal-argument] or `py-mark-decorators' set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -14934,7 +14932,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class, take beginning of line positions. 
+  "Mark def-or-class, take beginning of line positions.
 
 With ARG \\[universal-argument] or `py-mark-decorators' set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -14944,7 +14942,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-elif-block ()
-  "Mark elif-block, take beginning of line positions. 
+  "Mark elif-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14952,7 +14950,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-else-block ()
-  "Mark else-block, take beginning of line positions. 
+  "Mark else-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14960,7 +14958,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-except-block ()
-  "Mark except-block, take beginning of line positions. 
+  "Mark except-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14968,7 +14966,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-for-block ()
-  "Mark for-block, take beginning of line positions. 
+  "Mark for-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14976,7 +14974,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-if-block ()
-  "Mark if-block, take beginning of line positions. 
+  "Mark if-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14984,7 +14982,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-indent ()
-  "Mark indent, take beginning of line positions. 
+  "Mark indent, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -14992,7 +14990,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-minor-block ()
-  "Mark minor-block, take beginning of line positions. 
+  "Mark minor-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15000,7 +14998,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-statement ()
-  "Mark statement, take beginning of line positions. 
+  "Mark statement, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15008,7 +15006,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-try-block ()
-  "Mark try-block, take beginning of line positions. 
+  "Mark try-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15911,6 +15909,7 @@ Returns value of `py-smart-indentation'."
   Returns value of `py-autopair-mode' switched to."
   (interactive)
   (and (py-autopair-check)
+       (declare-function autopair-mode "autopair-mode" ())
        (setq py-autopair-mode (autopair-mode (if autopair-mode 0 1)))))
 
 (defun py-autopair-mode-on ()
@@ -16586,7 +16585,7 @@ See also `py--bounds-of-statements'"
       (setq beg (line-beginning-position))
       ;; look upward first
       (while (and
-              (or 
+              (or
                 (py--beginning-of-statement-p)
                   (py-backward-statement))
               (py-backward-statement)
@@ -22246,7 +22245,7 @@ problem as best as we can determine."
             ((file-exists-p (py--pdbtrack-map-filename filename))
              (list lineno (find-file-noselect (py--pdbtrack-map-filename filename))))
 
-            ((setq funcbuffer (py--pdbtrack-grub-for-buffer funcname lineno))
+            ((setq funcbuffer (py--pdbtrack-grub-for-buffer funcname))
              (if (string-match "/Script (Python)$" filename)
                  ;; Add in number of lines for leading '##' comments:
                  (setq lineno
@@ -25801,6 +25800,8 @@ VARIABLES
   (and py-guess-py-install-directory-p (py-set-load-path))
   (and py-autopair-mode
        (load-library "autopair")
+       (declare-function autopair-python-triple-quote-action "autopair" ())
+       (declare-function autopair-default-handle-action "autopair" ())
        (add-hook 'python-mode-hook
                  #'(lambda ()
                      (setq autopair-handle-action-fns
