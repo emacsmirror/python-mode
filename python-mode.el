@@ -5236,24 +5236,25 @@ In source-buffer, this will deliver the exception-buffer again.")
 
 (defun py--jump-to-exception (perr origline &optional file)
   "Jump to the PERR Python code at ORIGLINE in optional FILE."
-  (let (
-        (inhibit-point-motion-hooks t)
-        (file (or file (car perr)))
-        (act (nth 2 perr)))
-    (cond ((and py-exception-buffer
-                (buffer-live-p py-exception-buffer))
-           ;; (pop-to-buffer procbuf)
-           (py--jump-to-exception-intern act py-exception-buffer origline))
-          ((ignore-errors (file-readable-p file))
-           (find-file file)
-           (py--jump-to-exception-intern act (get-buffer (file-name-nondirectory file)) origline))
-          ((buffer-live-p (get-buffer file))
-           (set-buffer file)
-           (py--jump-to-exception-intern act file origline))
-          (t (setq file (find-file (read-file-name "Exception file: "
-                                                   nil
-                                                   file t)))
-             (py--jump-to-exception-intern act file origline)))))
+  (with-silent-modifications
+    (let (
+          ;; (inhibit-point-motion-hooks t)
+          (file (or file (car perr)))
+          (act (nth 2 perr)))
+      (cond ((and py-exception-buffer
+                  (buffer-live-p py-exception-buffer))
+             ;; (pop-to-buffer procbuf)
+             (py--jump-to-exception-intern act py-exception-buffer origline))
+            ((ignore-errors (file-readable-p file))
+             (find-file file)
+             (py--jump-to-exception-intern act (get-buffer (file-name-nondirectory file)) origline))
+            ((buffer-live-p (get-buffer file))
+             (set-buffer file)
+             (py--jump-to-exception-intern act file origline))
+            (t (setq file (find-file (read-file-name "Exception file: "
+                                                     nil
+                                                     file t)))
+               (py--jump-to-exception-intern act file origline))))))
 
 (defun py-goto-exception (&optional file line)
   "Go to FILE and LINE indicated by the traceback."
@@ -22048,6 +22049,8 @@ Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
 	       (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
       "pdb")))
 
+(declare-function gud-query-cmdline "gud" ())
+
 (defun py-pdb (command-line)
   "Run pdb on program FILE in buffer `*gud-FILE*'.
 The directory containing FILE becomes the initial working directory
@@ -22326,9 +22329,9 @@ Returns the tracked buffer."
          (setq py-pdbtrack-do-tracking-p t)))
   ;; (if py-pdbtrack-do-tracking-p
   ;;     (progn
-  ;;       (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
-  ;;       (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t))
-  ;;   (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
+  ;;       (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
+  ;;       (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file))
+  ;;   (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
   ;;   )
   (message "%sabled Python's pdbtrack"
            (if py-pdbtrack-do-tracking-p "En" "Dis")))
@@ -22344,8 +22347,8 @@ Returns the tracked buffer."
 
 
 (if pdb-track-stack-from-shell-p
-    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
-  (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t))
+    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
+  (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file))
 
 
 (defun py-pdbtrack-comint-output-filter-function (output)
@@ -25821,9 +25824,6 @@ VARIABLES
     (imenu-add-to-menubar "PyIndex"))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
-  ;; this should go into interactive modes
-  ;; (when py-pdbtrack-do-tracking-p
-  ;;   (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file))
   (py-shell-prompt-set-calculated-regexps)
   (setq comint-prompt-regexp py-shell--prompt-calculated-input-regexp)
   (cond
