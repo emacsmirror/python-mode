@@ -3472,15 +3472,17 @@ REGEXP defaults to \"[ \\t\\n\\r]+\"."
 TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
   (py--string-trim-left (py--string-trim-right strg trim-right) trim-left))
 
-(defsubst string-blank-p (strg)
-  "Check whether STRING is either empty or only whitespace."
-  (string-match-p "\\`[ \t\n\r]*\\'" strg))
+;; subr-x
+;; (defsubst string-blank-p (strg)
+;;   "Check whether STRING is either empty or only whitespace."
+;;   (string-match-p "\\`[ \t\n\r]*\\'" strg))
 
-(defsubst string-remove-prefix (prefix strg)
-  "Remove PREFIX from STRING if present."
-  (if (string-prefix-p prefix strg)
-      (substring strg (length prefix))
-    strg))
+;; subr-x
+;; (defsubst string-remove-prefix (prefix strg)
+;;   "Remove PREFIX from STRING if present."
+;;   (if (string-prefix-p prefix strg)
+;;       (substring strg (length prefix))
+;;     strg))
 
 (defun py-toggle-imenu-create-index ()
   "Toggle value of ‘py--imenu-create-index-p’."
@@ -21989,8 +21991,8 @@ in (I)Python shell-modes ‘py-shell-complete’"
 	((and py-do-completion-p (comint-check-proc (current-buffer)))
 	 ;; (let* ((shell (process-name (get-buffer-process (current-buffer)))))
 	 (ignore-errors (completion-at-point)))
-	((and py-do-completion-p t)
-	 (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘t’-clause"))
+	(py-do-completion-p
+	 (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘(completion-at-point)’"))
 	 ;; (py-fast-complete)
 	 (completion-at-point))))
 
@@ -25829,11 +25831,11 @@ VARIABLES
   (cond
    (py-complete-function
     (add-hook 'completion-at-point-functions
-              py-complete-function))
+              py-complete-function nil 'local))
    (py-load-pymacs-p
     (add-hook 'completion-at-point-functions
               'py-complete-completion-at-point nil 'local))
-   (t
+   (py-do-completion-p
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
   ;; #'python-shell-completion-at-point nil 'local)))
