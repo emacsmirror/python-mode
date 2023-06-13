@@ -3303,6 +3303,57 @@ to paths in Emacs."
 (defvar py--docend nil
   "Internally used by ‘py--write-edit’.")
 
+(defvar py-completion-setup-code  "def __PYTHON_EL_get_completions(text):
+    completions = []
+    completer = None
+
+    try:
+        import readline
+
+        try:
+            import __builtin__
+        except ImportError:
+            # Python 3
+            import builtins as __builtin__
+        builtins = dir(__builtin__)
+
+        is_ipython = ('__IPYTHON__' in builtins or
+                      '__IPYTHON__active' in builtins)
+        splits = text.split()
+        is_module = splits and splits[0] in ('from', 'import')
+
+        if is_ipython and is_module:
+            from IPython.core.completerlib import module_completion
+            completions = module_completion(text.strip())
+        elif is_ipython and '__IP' in builtins:
+            completions = __IP.complete(text)
+        elif is_ipython and 'get_ipython' in builtins:
+            completions = get_ipython().Completer.all_completions(text)
+        else:
+            # Try to reuse current completer.
+            completer = readline.get_completer()
+            if not completer:
+                # importing rlcompleter sets the completer, use it as a
+                # last resort to avoid breaking customizations.
+                import rlcompleter
+                completer = readline.get_completer()
+            if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+                completer.print_mode = False
+            i = 0
+            while True:
+                completion = completer(text, i)
+                if not completion:
+                    break
+                i += 1
+                completions.append(completion)
+    except:
+        pass
+    finally:
+        if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+            completer.print_mode = True
+    return completions"
+  "Code used to setup completion in inferior Python processes.")
+
 (defcustom py-completion-setup-code
   "
 def __PYTHON_EL_get_completions(text):
@@ -7678,7 +7729,8 @@ completion."
 	       (format
 		(concat py-completion-setup-code
 			"\nprint (" py-shell-completion-string-code ")")
-		input) process (buffer-name (current-buffer)))))))
+		input)
+               process (buffer-name (current-buffer)))))))
       (when (> (length completions) 2)
         (split-string completions
                       "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
@@ -10550,9 +10602,12 @@ If already at the beginning of a block, move these form upward."
       (while (nth 8 pps)
         (goto-char (nth 8 pps))
         (setq last (point))
+        (when py-debug-p (message "last: %s" (point)))
         (skip-chars-backward " \t\r\n\f")
         (setq pps (parse-partial-sexp (point-min) (point))))
-      (when last (goto-char last)))
+      (when last (goto-char last))
+      (when py-debug-p (message "last-pos-reached: %s" (point)))
+      )
      ((nth 1 pps)
       (goto-char (nth 1 pps)))
      (t (py-backward-statement)))))
