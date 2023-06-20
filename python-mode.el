@@ -1415,18 +1415,18 @@ variable section, e.g.:
   :tag "py-pychecker-command-args"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command "pyflakes"
-  "Shell command used to run Pyflakes."
+(defcustom py-pyflakes3-command "pyflakes3"
+  "Shell command used to run Pyflakes3."
   :type 'string
-  :tag "py-pyflakes-command"
+  :tag "py-pyflakes3-command"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command-args ""
-  "String arguments to be passed to pyflakes.
+(defcustom py-pyflakes3-command-args ""
+  "String arguments to be passed to pyflakes3.
 
 Default is \"\""
   :type 'string
-  :tag "py-pyflakes-command-args"
+  :tag "py-pyflakes3-command-args"
   :group 'python-mode)
 
 (defcustom py-pep8-command "pep8"
@@ -2584,7 +2584,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-pychecker-history nil)
 
-(defvar py-pyflakes-history nil)
+(defvar py-pyflakes3-history nil)
 
 (defvar py-pep8-history nil)
 
@@ -18776,9 +18776,6 @@ Execute statement running pdb."]
 	:help " ‘pdb’
 Run pdb on program FILE in buffer `*gud-FILE*'."])
       ("Checks"
-       ["Pychecker run" py-pychecker-run
-	:help " ‘py-pychecker-run’
-*Run pychecker (default on the file currently visited)."]
        ("Pylint"
 	["Pylint run" py-pylint-run
 	 :help " ‘py-pylint-run’
@@ -18803,16 +18800,16 @@ Display pep8 command line help messages."]
 	["Pep8 flymake mode" pep8-flymake-mode
 	 :help " `pep8-flymake-mode'
 Toggle `pep8’ ‘flymake-mode’."])
-       ("Pyflakes"
-	["Pyflakes run" py-pyflakes-run
-	 :help " ‘py-pyflakes-run’
+       ("Pyflakes3"
+	["Pyflakes3 run" py-pyflakes3-run
+	 :help " ‘py-pyflakes3-run’
 *Run pyflakes (default on the file currently visited)."]
 
-	["Pyflakes help" py-pyflakes-help
-	 :help " ‘py-pyflakes-help’
-Display Pyflakes command line help messages."]
+	["Pyflakes3 help" py-pyflakes3-help
+	 :help " ‘py-pyflakes3-help’
+Display Pyflakes3 command line help messages."]
 
-	["Pyflakes flymake mode" pyflakes-flymake-mode
+	["Pyflakes3 flymake mode" pyflakes-flymake-mode
 	 :help " ‘pyflakes-flymake-mode’
 Toggle ‘pyflakes’ ‘flymake-mode’."])
        ("Flake8"
@@ -18824,14 +18821,15 @@ Flake8 is a wrapper around these tools:"]
 	 :help " `py-flake8-help'
 Display flake8 command line help messages."]
 	("Pyflakes-pep8"
-	 ["Pyflakes pep8 run" py-pyflakes-pep8-run
+	 ["Pyflakes pep8 run" py-pyflakes3-pep8-run
 	  :help " `py-pyflakes-pep8-run'"]
 
 	 ["Pyflakes pep8 help" py-pyflakes-pep8-help
 	  :help " `py-pyflakes-pep8-help'"]
 
 	 ["Pyflakes pep8 flymake mode" pyflakes-pep8-flymake-mode
-	  :help " `pyflakes-pep8-flymake-mode'"])))
+	  :help " `pyflakes-pep8-flymake-mode'"])
+        ))
       ("Customize"
 
        ["Python-mode customize group" (customize-group 'python-mode)
@@ -23127,41 +23125,42 @@ Calls `pylint --full-documentation'"
   (erase-buffer)
   (shell-command "pylint --full-documentation" "*Pylint-Documentation*"))
 
-;;  Pyflakes
-(defalias 'pyflakes 'py-pyflakes-run)
-(defun py-pyflakes-run (command)
-  "*Run pyflakes on COMMAND.
-
-Default on the file currently visited.
-
-For help see \\[pyflakes-help] resp. \\[pyflakes-long-help].
-Home-page: http://www.logilab.org/project/pyflakes"
+;;  Pyflakes3
+(defalias 'pyflakes 'py-pyflakes3-run)
+(defun py-pyflakes3-run (command)
+  "Check Python source files for errors."
   (interactive
-   (let ((default
-           (if (py--buffer-filename-remote-maybe)
-               (format "%s %s %s" py-pyflakes-command
-                       (mapconcat 'identity py-pyflakes-command-args " ")
-                       (py--buffer-filename-remote-maybe))
-             (format "%s %s" py-pyflakes-command
-                     (mapconcat 'identity py-pyflakes-command-args " "))))
-         (last (when py-pyflakes-history
-                 (let* ((lastcmd (car py-pyflakes-history))
-                        (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
-                   (mapconcat 'identity newcmd " ")))))
-
+   (let* ((py-pyflakes3-command
+           (if (string= "" py-pyflakes3-command)
+               (or (executable-find "pyflakes3")
+                   (error "Don't see \"pyflakes3\" on your system.
+Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
+             py-pyflakes3-command))
+          (default
+            (if (py--buffer-filename-remote-maybe)
+                (format "%s %s %s" py-pyflakes3-command
+                        py-pyflakes3-command-args
+                        (py--buffer-filename-remote-maybe))
+              (format "%s %s" py-pyflakes3-command
+                      py-pyflakes3-command-args)))
+          (last
+           (when py-pyflakes3-history
+             (let* ((lastcmd (car py-pyflakes3-history))
+                    (cmd (cdr (reverse (split-string lastcmd))))
+                    (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
+               (mapconcat 'identity newcmd " ")))))
      (list
       (if (fboundp 'read-shell-command)
-          (read-shell-command "Run pyflakes like this: "
-                              (if last
-                                  last
-                                default)
-                              'py-pyflakes-history)
-        (read-string "Run pyflakes like this: "
+          (read-shell-command "Run pyflakes3 like this: "
+                              ;; (if last
+                              ;; last
+                              default
+                              'py-pyflakes3-history1)
+        (read-string "Run pyflakes3 like this: "
                      (if last
                          last
                        default)
-                     'py-pyflakes-history)))))
+                     'py-pyflakes3-history)))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23170,39 +23169,12 @@ Home-page: http://www.logilab.org/project/pyflakes"
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-(defalias 'pyflakes-help 'py-pyflakes-help)
-(defun py-pyflakes-help ()
-  "Display Pyflakes command line help messages."
+(defalias 'pyflakes-help 'py-pyflakes3-help)
+(defun py-pyflakes3-help ()
+  "Display Pyflakes3 command line help messages."
   (interactive)
-  ;; (set-buffer (get-buffer-create "*Pyflakes-Help*"))
-  ;; (erase-buffer)
-  (with-help-window "*Pyflakes-Help*"
-    (with-current-buffer standard-output
-      (insert "       pyflakes [file-or-directory ...]
-
-       Pyflakes is a simple program which checks Python
-       source files for errors. It is similar to
-       PyChecker in scope, but differs in that it does
-       not execute the modules to check them. This is
-       both safer and faster, although it does not
-       perform as many checks. Unlike PyLint, Pyflakes
-       checks only for logical errors in programs; it
-       does not perform any checks on style.
-
-       All commandline arguments are checked, which
-       have to be either regular files or directories.
-       If a directory is given, every .py file within
-       will be checked.
-
-       When no commandline arguments are given, data
-       will be read from standard input.
-
-       The exit status is 0 when no warnings or errors
-       are found. When errors are found the exit status
-       is 2. When warnings (but no errors) are found
-       the exit status is 1.
-
-Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))))
+  (with-help-window "*pyflakes3-Help*"
+    (shell-command "pyflakes3 --help" "*pyflakes3-Help*")))
 
 ;;  Pyflakes-pep8
 (defalias 'pyflakespep8 'py-pyflakespep8-run)
@@ -23312,7 +23284,7 @@ See ‘py-check-command’ for the default."
 
 ;;  flake8
 (defalias 'flake8 'py-flake8-run)
-(defun py-flake8-run (command)
+ (defun py-flake8-run (command)
   "COMMAND Flake8 is a wrapper around these tools:
 - PyFlakes
         - pep8
