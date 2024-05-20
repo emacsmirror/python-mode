@@ -123,6 +123,28 @@ Needed for completion and other environment stuff only."
   :group 'python-mode
   :safe 'booleanp)
 
+(defcustom py-register-shell-buffer-p nil
+  "If non-nil, register new py-shell according to py-register-char as REGISTER.
+
+Default is nil.
+See ‘window-configuration-to-register’"
+
+  :type 'boolean
+  :tag "py-register-shell-buffer-p"
+  :group 'python-mode
+  :safe 'booleanp)
+
+(defcustom py-register-char ?y
+  "Char used by py-register-shell-buffer-p
+
+Default is ‘y’.
+See also ‘window-configuration-to-register’"
+
+  :type 'char
+  :tag "py-register-char"
+  :group 'python-mode
+  :safe 'characterp)
+
 (defcustom py-pythonpath ""
   "Define $PYTHONPATH here, if needed.
 
@@ -6238,6 +6260,10 @@ process buffer for a list of commands.)"
     (if (setq proc (get-buffer-process buffer))
 	(progn
 	  (with-current-buffer buffer
+            (setq buffer buffer)
+            (switch-to-buffer (current-buffer)) 
+            (when py-register-shell-buffer-p
+              (funcall (lambda nil (window-configuration-to-register 121))))
 	    (unless (or done fast) (py-shell-mode))
 	    (and internal (set-process-query-on-exit-flag proc nil)))
 	  (when (or interactivep
@@ -10627,6 +10653,7 @@ If already at the beginning of a block, move these form upward."
      ;;  (py-backward-block-or-clause))
 
 (defun py-nav-last-prompt ()
+  "Move to previous prompt in py-shell."
   (interactive)
   (goto-char (pos-bol))
   (when
@@ -17038,7 +17065,10 @@ With optional \\[universal-argument] get a new dedicated shell."
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  ;; (with-current-buffer
+  (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))
+  ;; (switch-to-buffer (current-buffer))
+  (funcall (lambda nil (window-configuration-to-register 121))))
 
 (defun pypy (&optional argprompt args buffer fast exception-buffer split)
   "Start an Pypy interpreter.
@@ -20422,7 +20452,11 @@ the default"]
            ))
          ("Move"
           ("Backward"
-	   ["Beginning of block" py-beginning-of-block
+	   ["Go backward one prompt" py-nav-last-prompt
+	    :help " ‘py-nav-last-prompt’
+Like ‘comint-show-output’ known from in shell-mode"]
+
+           ["Beginning of block" py-beginning-of-block
 	    :help " ‘py-beginning-of-block’
 Go to beginning block, skip whitespace at BOL.
 
