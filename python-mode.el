@@ -4072,7 +4072,8 @@ Return nil, if no executable found."
       (let* (res
 	     done
 	     (erg
-	      (cond (py-force-py-shell-name-p
+	      (cond (py-shell-name)
+                    (py-force-py-shell-name-p
 		     (default-value 'py-shell-name))
 		    (py-use-local-default
 		     (if (not (string= "" py-shell-local-path))
@@ -17036,66 +17037,70 @@ arg MODE: which buffer-mode used in edit-buffer"
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
-
-;; (defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
-;;   "Start an IPython2.7 interpreter.
-
-;; With optional \\[universal-argument] get a new dedicated shell."
-;;   (interactive "p")
-;;   (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun ipython3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython3 interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "ipython3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun jython (&optional argprompt args buffer fast exception-buffer split)
   "Start an Jython interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "jython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun python (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "python" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun python2 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python2 interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "python2" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "python2" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun python3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an Python3 interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  ;; (with-current-buffer
-  (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))
-  ;; (switch-to-buffer (current-buffer))
-  (funcall (lambda nil (window-configuration-to-register 121))))
+  (let ((buffer (py-shell argprompt args nil "python3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 (defun pypy (&optional argprompt args buffer fast exception-buffer split)
   "Start an Pypy interpreter.
 
 With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
-  (py-shell argprompt args nil "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
-
-(defun isympy3 (&optional argprompt args buffer fast exception-buffer split)
-  "Start an Pypy interpreter.
-
-With optional \\[universal-argument] get a new dedicated shell."
-  (interactive "p")
-  (py-shell argprompt args nil "isympy3" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+  (let ((buffer (py-shell argprompt args nil "pypy" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt))))))
+    (funcall (lambda nil (window-configuration-to-register 121)))
+    (goto-char (point-max)) 
+    buffer))
 
 ;; python-components-font-lock
 
