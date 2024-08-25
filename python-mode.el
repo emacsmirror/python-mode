@@ -3882,26 +3882,22 @@ Return and move to match-beginning if successful"
 	   (indent (cond ((eq regexp 'py-match-case-re)
                           nil)
                        (t (or indent (current-indentation)))))
-	   (condition (or condition '<=))
+	   ;; (condition '<)
+            (condition (or condition '<=))
 	   (orig (or orig (point))))
       (if (eq (current-indentation) (current-column))
-	  (while (and
-		  (not (bobp))
-		  ;; # class kugel(object) -> a[1:2]:
-		  ;; class kugel(object):
-		  ;; (re-search-backward regexpvalue nil 'move 1)
-		  ;; (re-search-backward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1)
+	  (while (and (not (bobp))
 		  (re-search-backward regexpvalue nil 'move 1)
-		  ;; (re-search-backward (concat "^" "def") nil 'move 1)
-		  ;; re-search-backward not greedy
 		  (not (and (looking-back "async *" (line-beginning-position))
 			    (goto-char (match-beginning 0))))
 		  (or (and
                        (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
                        (goto-char pps))
-		      ;; needed by py-backward-clause
                       (and (not (eq (current-column) 0)) indent
-		      	   (funcall condition indent (current-indentation))))))
+                           ;; def foo(): pass
+                           ;; def bar(): pass_|_
+                           ;; need '<
+		      	   (funcall condition indent (current-indentation)))))))
 	(back-to-indentation)
 	(and
          (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
@@ -3909,7 +3905,7 @@ Return and move to match-beginning if successful"
 	(unless (and (< (point) orig) (looking-at regexpvalue))
 	  (py--backward-regexp regexp (current-indentation) condition orig)))
       (unless (or (eq (point) orig)(bobp)) (back-to-indentation))
-      (and (looking-at regexpvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point)))))
+      (and (looking-at regexpvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point))))
 
 (defun py--fetch-indent-statement-above (orig)
   "Report the preceding indent. "
@@ -4810,8 +4806,8 @@ Optional IGNOREINDENT: find next keyword at any indentation"
   (unless (bobp)
     ;;    (when (py-empty-line-p) (skip-chars-backward " \t\r\n\f"))
     (let* ((orig (point))
-	   (condition
-	    (or condition (if (member regexp (list 'py-block-re 'py-clause-re)) '< '<=)))
+	   ;; (condition
+	   ;;  (or condition (if (member regexp (list 'py-block-re 'py-clause-re 'py-def-or-class-re 'py-def-re 'py-class-re)) '< '<=)))
 	   ;; py-clause-re would not match block
 	   (regexp (if (eq regexp 'py-clause-re) 'py-extended-block-or-clause-re regexp))
 	   (regexpvalue (symbol-value regexp))
@@ -4828,17 +4824,28 @@ Optional IGNOREINDENT: find next keyword at any indentation"
       (unless (py-beginning-of-statement-p)
 	(py-backward-statement))
       (cond
-       ((looking-at (concat (symbol-value regexp)))
+       ((looking-at regexpvalue)
 	(if (eq (point) orig)
-	    (setq erg (py--backward-regexp regexp maxindent condition orig regexpvalue))
+	    (setq erg (py--backward-regexp regexp maxindent
+                                           ;; condition
+                                           (if (member regexp (list 'py-block-re 'py-clause-re 'py-def-or-class-re 'py-def-re 'py-class-re)) '< '<=)
+                                           orig regexpvalue))
 	  (setq erg (point))))
        ((looking-at py-block-closing-keywords-re)
         ;; maybe update maxindent, if already behind the form closed here
         (unless ;; do not update if still starting line
             (eq (line-end-position) lep)
           (setq maxindent (min maxindent (- (current-indentation) py-indent-offset))))
-        (setq erg (py--backward-regexp regexp maxindent condition orig regexpvalue)))
-       (t (setq erg (py--backward-regexp regexp maxindent condition orig regexpvalue))))
+        (setq erg
+              (py--backward-regexp regexp maxindent
+                                   ;; condition
+                                   '<=
+                                   orig regexpvalue)
+              ))
+       (t (setq erg (py--backward-regexp regexp maxindent
+                                         ;; condition
+                                         '<=
+                                         orig regexpvalue))))
       (when erg (setq erg (cons (current-indentation) erg)))
       (list (car erg) (cdr erg) (py--end-base-determine-secondvalue regexp)))))
 
@@ -8523,7 +8530,7 @@ Arg REGEXP, a symbol"
 		 ((eq 0 (current-indentation))
 		  (py--down-according-to-indent regexp nil 0 use-regexp))
 		 ;; look upward
-		 (t (py--go-to-keyword regexp))))
+		 (t (py--go-to-keyword regexp nil (if (and (member regexp (list 'py-block-re 'py-clause-re 'py-def-or-class-re 'py-def-re 'py-class-re)) (looking-at (symbol-value regexp))) '< '<=)))))
 	       (secondvalue (ignore-errors (nth 2 res)))
 	       erg)
 	  ;; (py-for-block-p (looking-at py-for-re))
@@ -13313,17 +13320,7 @@ LIEP stores line-end-position at point-of-interest
                          0))
                ;; nesting: started nesting a list
                (nesting nesting)
-               (cubuf (current-buffer))
                erg indent this-line)
-          ;; (if (and (< repeat 1)
-          ;;          (and (comint-check-proc (current-buffer))
-          ;;               (re-search-backward (concat py-shell-prompt-regexp "\\|" py-ipython-output-prompt-re "\\|" py-ipython-input-prompt-re) nil t 1)))
-          ;;     ;; common recursion not suitable because of prompt
-          ;;     (with-temp-buffer
-          ;;       ;; (switch-to-buffer (current-buffer))
-          ;;       (insert-buffer-substring cubuf (match-end 0) orig)
-          ;;       (python-mode)
-          ;;       (setq indent (py-compute-indentation)))
           (if (< py-max-specpdl-size repeat)
               (error "‘py-compute-indentation’ reached loops max.")
             (setq nesting (nth 0 pps))
