@@ -2645,9 +2645,7 @@ Defined with a defvar form to allow testing the loading of new versions.")
   (when (called-interactively-p 'interactive) (message "py-debug-p: %s" py-debug-p)))
 
 (defcustom py-shell-complete-p nil
-  "Enable native completion.
-
-Set TAB accordingly."
+  "Enable native completion."
 
   :type 'boolean
   :tag "py-shell-complete-p"
@@ -19921,7 +19919,7 @@ Default is t")
         (define-key map [(control c) (control v)] 'py-version)
         (define-key map [(control c) (control w)] 'py-pychecker-run)
         ;; (define-key map (kbd "TAB") 'py-indent-line)
-        (define-key map (kbd "TAB") 'py-indent-or-complete)
+        (define-key map (kbd "TAB") 'py-indent-line)
 	;; (if py-complete-function
         ;;     (progn
         ;;       (define-key map [(meta tab)] py-complete-function)
@@ -19945,7 +19943,7 @@ Default is t")
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 	  'py-nav-last-prompt)
     (define-key map (kbd "RET") 'comint-send-input)
-    (define-key map (kbd "TAB") 'py-indent-or-complete)
+    (define-key map (kbd "TAB") 'py-indent-line)
     (define-key map [(control c) (!)] 'py-shell)
     (define-key map [(control c) (-)] 'py-up-exception)
     (define-key map [(control c) (.)] 'py-expression)
@@ -26092,7 +26090,7 @@ may want to re-add custom functions to it using the
     'indent-for-tab-command)
    (t
     (define-key py-shell-mode-map "\t"
-		'py-indent-or-complete)))
+		'py-indent-line)))
   (define-key py-shell-mode-map [(control c) (control r)] 'py-nav-last-prompt)
   (make-local-variable 'py-pdbtrack-buffers-to-kill)
   (make-local-variable 'py-shell-fast-last-output)
