@@ -13209,7 +13209,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
                                   (py-execute-file-command file))))
       (py-execute-buffer))))
 
-;; python-components-intern
+;; python-components-compute-indentation
 
 ;;  Keymap
 
@@ -13589,6 +13589,12 @@ LIEP stores line-end-position at point-of-interest
             ;; (when (or (eq 1 (prefix-numeric-value iact)) py-verbose-p) (message "%s" indent))
             (when py-verbose-p (message "%s" indent))
             indent))))))
+
+;; python-components-intern
+
+;;  Keymap
+
+;;  Utility stuff
 
 (defun py--uncomment-intern (beg end)
   (uncomment-region beg end)
@@ -14176,7 +14182,6 @@ Returns position if successful, nil otherwise"
           (t
            (py-forward-statement)))
     (and (< orig (point)) (point))))
-
 
 (defun py--thing-at-point (form &optional mark-decorators)
   "Returns buffer-substring of string-argument FORM as cons.
