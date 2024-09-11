@@ -8470,6 +8470,22 @@ Return position if successful"
       (looking-at (symbol-value regexp))
     (py--go-to-keyword regexp '< (- (or indent (current-indentation)) py-indent-offset))))
 
+(defun py-up-base-bol (regexp)
+  "Go to the beginning of next form upwards in buffer.
+
+Return position if form found, nil otherwise.
+Argument REGEXP determined by form"
+  (let* (;;(orig (point))
+         erg)
+    (if (bobp)
+        (setq erg nil)
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (parse-partial-sexp (point-min) (point)))))
+      (beginning-of-line)
+      (when (looking-at regexp) (setq erg (point)))
+      ;; (when py-verbose-p (message "%s" erg))
+      erg)))
+
 (defun py--down-according-to-indent (regexp secondvalue &optional indent use-regexp)
   "Return position if moved, nil otherwise.
 
