@@ -3596,293 +3596,6 @@ TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
      (and (eq (char-before (point)) ?\\ )
           (py-escaped-p))))
 
-(defun py--skip-to-comment-or-semicolon ()
-  "Returns position if point was moved."
-  (let ((orig (point)))
-    (cond ((while (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
-                       ;; (sit-for 1)
-                       (and (nth 8 (parse-partial-sexp (point-min) (point))) (skip-chars-forward "#;" (line-end-position)))))))
-    (and (< orig (point))(point))))
-
-(defun py-forward-statement (&optional orig done repeat)
-  "Go to the last char of current statement.
-
-ORIG - consider original position or point.
-DONE - transaktional argument
-REPEAT - count and consider repeats"
-  (interactive)
-  (unless (eobp)
-    (let ((repeat (or (and repeat (1+ repeat)) 0))
-	  (orig (or orig (point)))
-	  erg last
-	  ;; use by scan-lists
-	  forward-sexp-function pps err)
-      (setq pps (parse-partial-sexp (point-min) (point)))
-      ;; (origline (or origline (py-count-lines)))
-      (cond
-       ;; which-function-mode, lp:1235375
-       ((< py-max-specpdl-size repeat)
-	(error "py-forward-statement reached loops max. If no error, customize ‘py-max-specpdl-size’"))
-       ;; list
-       ((nth 1 pps)
-	(if (<= orig (point))
-	    (progn
-	      (setq orig (point))
-	      ;; do not go back at a possible unclosed list
-	      (goto-char (nth 1 pps))
-	      (if
-		  (ignore-errors (forward-list))
-		  (progn
-		    (when (looking-at ":[ \t]*$")
-		      (forward-char 1))
-		    (setq done t)
-		    (skip-chars-forward "^#" (line-end-position))
-		    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		    (py-forward-statement orig done repeat))
-		(setq err (py--record-list-error pps))
-		(goto-char orig)))))
-       ;; in comment
-       ((and comment-start (looking-at (concat " *" comment-start)))
-        (py--end-of-comment-intern (point)))
-       ;; (goto-char (match-end 0))
-       ;; (py-forward-statement orig done repeat))
-       ((nth 4 pps)
-	(py--end-of-comment-intern (point))
-	(py--skip-to-comment-or-semicolon)
-	(while (and (eq (char-before (point)) ?\\)
-		    (py-escaped-p) (setq last (point)))
-	  (forward-line 1) (end-of-line))
-	(and last (goto-char last)
-	     (forward-line 1)
-	     (back-to-indentation))
-	;; py-forward-statement-test-3JzvVW
-	(unless (or (looking-at (concat " *" comment-start))(eolp))
-	  (py-forward-statement orig done repeat)))
-       ;; string
-       ((looking-at py-string-delim-re)
-	(goto-char (match-end 0))
-	(py-forward-statement orig done repeat))
-       ((nth 3 pps)
-	(when (py-end-of-string)
-	  (end-of-line)
-	  (skip-chars-forward " \t\r\n\f")
-	  (setq pps (parse-partial-sexp (point-min) (point)))
-	  (unless (and done (not (or (nth 1 pps) (nth 8 pps))) (eolp)) (py-forward-statement orig done repeat))))
-       ((py-current-line-backslashed-p)
-	(end-of-line)
-	(skip-chars-backward " \t\r\n\f" (line-beginning-position))
-	(while (and (eq (char-before (point)) ?\\)
-		    (py-escaped-p))
-	  (forward-line 1)
-	  (end-of-line)
-	  (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
-	(unless (eobp)
-	  (py-forward-statement orig done repeat)))
-       ((eq orig (point))
-	(if (eolp)
-	    (skip-chars-forward " \t\r\n\f#'\"")
-	  (end-of-line)
-	  (skip-chars-backward " \t\r\n\f" orig))
-	;; point at orig due to a trailing whitespace
-	(and (eq (point) orig) (skip-chars-forward " \t\r\n\f"))
-	;; (setq done t)
-	(py-forward-statement orig done repeat))
-       ((eq (current-indentation) (current-column))
-	(py--skip-to-comment-or-semicolon)
-	(setq pps (parse-partial-sexp orig (point)))
-	(if (nth 1 pps)
-	    (py-forward-statement orig done repeat)
-	  (unless done
-	    (py-forward-statement orig done repeat))))
-       ((and (looking-at "[[:print:]]+$") (not done) (py--skip-to-comment-or-semicolon))
-	(py-forward-statement orig done repeat)))
-      (unless
-	  (or
-	   (eq (point) orig)
-	   (member (char-before) (list 10 32 9 ?#)))
-	(setq erg (point)))
-      (if (and py-verbose-p err)
-	  (py--message-error err))
-      erg)))
-
-(defun py-backward-statement (&optional orig done limit ignore-in-string-p repeat maxindent)
-  "Go to the initial line of a simple statement.
-
-For beginning of compound statement use ‘py-backward-block’.
-For beginning of clause ‘py-backward-clause’.
-
-‘ignore-in-string-p’ allows moves inside a docstring, used when
-computing indents
-ORIG - consider original position or point.
-DONE - transaktional argument
-LIMIT - honor limit
-IGNORE-IN-STRING-P - also much inside a string
-REPEAT - count and consider repeats
-Optional MAXINDENT: don't stop if indentation is larger"
-  (interactive)
-  (save-restriction
-    (unless (bobp)
-      (let* ((repeat (or (and repeat (1+ repeat)) 0))
-	     (orig (or orig (point)))
-             (pps (parse-partial-sexp (or limit (point-min))(point)))
-             (done done)
-             erg)
-	;; lp:1382788
-	(unless done
-	  (and (< 0 (abs (skip-chars-backward " \t\r\n\f")))
- 	       (setq pps (parse-partial-sexp (or limit (point-min))(point)))))
-        (cond
-	 ((< py-max-specpdl-size repeat)
-	  (error "Py-forward-statement reached loops max. If no error, customize ‘py-max-specpdl-size’"))
-         ((and (bolp) (eolp))
-          (skip-chars-backward " \t\r\n\f")
-          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; inside string
-         ((and (nth 3 pps) (not ignore-in-string-p))
-	  (setq done t)
-	  (goto-char (nth 8 pps))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ((nth 4 pps)
-	  (while (ignore-errors (goto-char (nth 8 pps)))
-	    (skip-chars-backward " \t\r\n\f")
-	    (setq pps (parse-partial-sexp (line-beginning-position) (point))))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-         ((nth 1 pps)
-          (goto-char (1- (nth 1 pps)))
-	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
-	    (setq done t))
-          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-         ((py-preceding-line-backslashed-p)
-          (forward-line -1)
-          (back-to-indentation)
-          (setq done t)
-          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at raw-string
-	 ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
-	 ((and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
-	  (forward-char -1)
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; BOL or at space before comment
-         ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
-          (forward-comment -1)
-          (while (and (not (bobp)) (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
-            (forward-comment -1))
-          (unless (bobp)
-            (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
-	 ;; at inline comment
-         ((looking-at "[ \t]*#")
-	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
-	    (setq done t))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at beginning of string
-	 ((looking-at py-string-delim-re)
-	  (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-	    (setq done t))
-	  (back-to-indentation)
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; after end of statement
-	 ((and (not done) (eq (char-before) ?\;))
-	  (skip-chars-backward ";")
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; travel until indentation or semicolon
-	 ((and (not done) (py--skip-to-semicolon-backward))
-	  (unless (and maxindent (< maxindent (current-indentation)))
-	    (setq done t))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at current indent
-	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ((and maxindent (< maxindent (current-indentation)))
-	  (forward-line -1)
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
-	;; return nil when before comment
-	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
-	  (when (< (point) orig)(setq erg (point))))
-	erg))))
-
-(defun py-backward-statement-bol ()
-  "Goto beginning of line where statement start.
-Returns position reached, if successful, nil otherwise.
-
-See also ‘py-up-statement’"
-  (interactive)
-  (let* ((orig (point))
-         erg)
-    (unless (bobp)
-      (cond ((bolp)
-	     (and (py-backward-statement orig)
-		  (progn (beginning-of-line)
-			 (setq erg (point)))))
-	    (t (setq erg
-		     (and
-		      (py-backward-statement)
-		      (progn (beginning-of-line) (point)))))))
-    erg))
-
-(defun py-forward-statement-bol ()
-  "Go to the ‘beginning-of-line’ following current statement."
-  (interactive)
-  (py-forward-statement)
-  (py--beginning-of-line-form))
-
-(defun py-beginning-of-statement-p ()
-  (interactive)
-  (save-restriction
-    (eq (point)
-    (save-excursion
-      (py-forward-statement)
-      (py-backward-statement)))))
-
-(defun py-up-statement ()
-  "go to the beginning of next statement upwards in buffer.
-
-Return position if statement found, nil otherwise."
-  (interactive)
-  (if (py--beginning-of-statement-p)
-      (py-backward-statement)
-    (progn (and (py-backward-statement) (py-backward-statement)))))
-
-(defun py--end-of-statement-p ()
-  "Return position, if cursor is at the end of a statement, nil otherwise."
-  (let ((orig (point)))
-    (save-excursion
-      (py-backward-statement)
-      (py-forward-statement)
-      (when (eq orig (point))
-        orig))))
-
-(defun py-down-statement ()
-  "Go to the beginning of next statement downwards in buffer.
-
-Corresponds to backward-up-list in Elisp
-Return position if statement found, nil otherwise."
-  (interactive)
-  (let* ((orig (point)))
-    (cond ((py--end-of-statement-p)
-	   (progn
-	     (and
-	      (py-forward-statement)
-	      (py-backward-statement)
-	      (< orig (point))
-	      (point))))
-	  ((ignore-errors (< orig (and (py-forward-statement) (py-backward-statement))))
-	   (point))
-	  ((ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))
-	     (point)))))
-
-(defun py--fetch-indent-statement-above (orig)
-  "Report the preceding indent. "
-  (save-excursion
-    (goto-char orig)
-    (forward-line -1)
-    (end-of-line)
-    (skip-chars-backward " \t\r\n\f")
-    (back-to-indentation)
-    (if (or (looking-at comment-start)(py-beginning-of-statement-p))
-        (current-indentation)
-      (py-backward-statement)
-      (current-indentation))))
-
 (defun py--docstring-p (pos)
   "Check to see if there is a docstring at POS.
 
@@ -4717,10 +4430,6 @@ Return beginning position, nil if not inside."
   "Receives a list (position line) "
   (message "Closing paren missed: line %s pos %s" (cadr err) (car err)))
 
-
-
-
-
 (defun py--forward-regexp (regexp)
   "Search forward next regexp not in string or comment.
 
@@ -4793,7 +4502,7 @@ Return and move to match-beginning if successful"
 
 (defun py--refine-regexp-maybe (regexp)
   "Use a more specific regexp if possible. "
-  (let ((regexpvalue (symbol-value regexp)))
+  (let ((regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp)))
     (if (looking-at regexpvalue)
 	(setq regexp
 	      (cond ((looking-at py-if-re)
@@ -4817,8 +4526,6 @@ Return and move to match-beginning if successful"
          (setq last (point))
          ))
     (when last (goto-char last))))
-
-
 
 (defun py--backward-empty-lines-or-comment ()
   "Travel backward"
@@ -8203,49 +7910,49 @@ Return outmost indentation reached."
 
 Return position if block found, nil otherwise."
   (interactive)
-  (py-down-base 'py-block-re indent))
+  (py-down-base (quote py-block-re) indent))
 
 (defun py-down-class (&optional indent)
   "Go to the beginning of next class downwards according to INDENT.
 
 Return position if class found, nil otherwise."
   (interactive)
-  (py-down-base 'py-class-re indent))
+  (py-down-base (quote py-class-re) indent))
 
 (defun py-down-clause (&optional indent)
   "Go to the beginning of next clause downwards according to INDENT.
 
 Return position if clause found, nil otherwise."
   (interactive)
-  (py-down-base 'py-clause-re indent))
+  (py-down-base (quote py-clause-re) indent))
 
 (defun py-down-block-or-clause (&optional indent)
   "Go to the beginning of next block-or-clause downwards according to INDENT.
 
 Return position if block-or-clause found, nil otherwise."
   (interactive)
-  (py-down-base 'py-block-or-clause-re indent))
+  (py-down-base (quote py-block-or-clause-re) indent))
 
 (defun py-down-def (&optional indent)
   "Go to the beginning of next def downwards according to INDENT.
 
 Return position if def found, nil otherwise."
   (interactive)
-  (py-down-base 'py-def-re indent))
+  (py-down-base (quote py-def-re) indent))
 
 (defun py-down-def-or-class (&optional indent)
   "Go to the beginning of next def-or-class downwards according to INDENT.
 
 Return position if def-or-class found, nil otherwise."
   (interactive)
-  (py-down-base 'py-def-or-class-re indent))
+  (py-down-base (quote py-def-or-class-re) indent))
 
 (defun py-down-minor-block (&optional indent)
   "Go to the beginning of next minor-block downwards according to INDENT.
 
 Return position if minor-block found, nil otherwise."
   (interactive)
-  (py-down-base 'py-minor-block-re indent))
+  (py-down-base (quote py-minor-block-re) indent))
 
 (defun py-down-block-bol (&optional indent)
   "Go to the beginning of next block below according to INDENT.
@@ -8254,7 +7961,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if block found, nil otherwise "
   (interactive)
-  (py-down-base 'py-block-re indent t)
+  (py-down-base (quote py-block-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-class-bol (&optional indent)
@@ -8264,7 +7971,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if class found, nil otherwise "
   (interactive)
-  (py-down-base 'py-class-re indent t)
+  (py-down-base (quote py-class-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-clause-bol (&optional indent)
@@ -8274,7 +7981,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if clause found, nil otherwise "
   (interactive)
-  (py-down-base 'py-clause-re indent t)
+  (py-down-base (quote py-clause-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-block-or-clause-bol (&optional indent)
@@ -8284,7 +7991,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if block-or-clause found, nil otherwise "
   (interactive)
-  (py-down-base 'py-block-or-clause-re indent t)
+  (py-down-base (quote py-block-or-clause-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-def-bol (&optional indent)
@@ -8294,7 +8001,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if def found, nil otherwise "
   (interactive)
-  (py-down-base 'py-def-re indent t)
+  (py-down-base (quote py-def-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-def-or-class-bol (&optional indent)
@@ -8304,7 +8011,7 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if def-or-class found, nil otherwise "
   (interactive)
-  (py-down-base 'py-def-or-class-re indent t)
+  (py-down-base (quote py-def-or-class-re) indent t)
   (progn (beginning-of-line)(point)))
 
 (defun py-down-minor-block-bol (&optional indent)
@@ -8314,18 +8021,307 @@ Go to beginning of line
 Optional INDENT: honor indentation
 Return position if minor-block found, nil otherwise "
   (interactive)
-  (py-down-base 'py-minor-block-re indent t)
+  (py-down-base (quote py-minor-block-re) indent t)
   (progn (beginning-of-line)(point)))
 
 ;; python-components-down.el ends here
 ;; python-components-start-Zf98zM
+
+
+(defun py--skip-to-comment-or-semicolon ()
+  "Returns position if point was moved."
+  (let ((orig (point)))
+    (cond ((while (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
+                       ;; (sit-for 1)
+                       (and (nth 8 (parse-partial-sexp (point-min) (point))) (skip-chars-forward "#;" (line-end-position)))))))
+    (and (< orig (point))(point))))
+
+(defun py-forward-statement (&optional orig done repeat)
+  "Go to the last char of current statement.
+
+ORIG - consider original position or point.
+DONE - transaktional argument
+REPEAT - count and consider repeats"
+  (interactive)
+  (unless (eobp)
+    (let ((repeat (or (and repeat (1+ repeat)) 0))
+	  (orig (or orig (point)))
+	  erg last
+	  ;; use by scan-lists
+	  forward-sexp-function pps err)
+      (setq pps (parse-partial-sexp (point-min) (point)))
+      ;; (origline (or origline (py-count-lines)))
+      (cond
+       ;; which-function-mode, lp:1235375
+       ((< py-max-specpdl-size repeat)
+	(error "forward-statement reached loops max. If no error, customize ‘max-specpdl-size’"))
+       ;; list
+       ((nth 1 pps)
+	(if (<= orig (point))
+	    (progn
+	      (setq orig (point))
+	      ;; do not go back at a possible unclosed list
+	      (goto-char (nth 1 pps))
+	      (if
+		  (ignore-errors (forward-list))
+		  (progn
+		    (when (looking-at ":[ \t]*$")
+		      (forward-char 1))
+		    (setq done t)
+		    (skip-chars-forward "^#" (line-end-position))
+		    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+		    (py-forward-statement orig done repeat))
+		(setq err (py--record-list-error pps))
+		(goto-char orig)))))
+       ;; in comment
+       ((and comment-start (looking-at (concat " *" comment-start)))
+        (py--end-of-comment-intern (point)))
+       ;; (goto-char (match-end 0))
+       ;; (py-forward-statement orig done repeat))
+       ((nth 4 pps)
+	(py--end-of-comment-intern (point))
+	(py--skip-to-comment-or-semicolon)
+	(while (and (eq (char-before (point)) ?\\)
+		    (py-escaped-p) (setq last (point)))
+	  (forward-line 1) (end-of-line))
+	(and last (goto-char last)
+	     (forward-line 1)
+	     (back-to-indentation))
+	;; py-forward-statement-test-3JzvVW
+	(unless (or (looking-at (concat " *" comment-start))(eolp))
+	  (py-forward-statement orig done repeat)))
+       ;; string
+       ((looking-at py-string-delim-re)
+	(goto-char (match-end 0))
+	(py-forward-statement orig done repeat))
+       ((nth 3 pps)
+	(when (py-end-of-string)
+	  (end-of-line)
+	  (skip-chars-forward " \t\r\n\f")
+	  (setq pps (parse-partial-sexp (point-min) (point)))
+	  (unless (and done (not (or (nth 1 pps) (nth 8 pps))) (eolp)) (py-forward-statement orig done repeat))))
+       ((py-current-line-backslashed-p)
+	(end-of-line)
+	(skip-chars-backward " \t\r\n\f" (line-beginning-position))
+	(while (and (eq (char-before (point)) ?\\)
+		    (py-escaped-p))
+	  (forward-line 1)
+	  (end-of-line)
+	  (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
+	(unless (eobp)
+	  (py-forward-statement orig done repeat)))
+       ((eq orig (point))
+	(if (eolp)
+	    (skip-chars-forward " \t\r\n\f#'\"")
+	  (end-of-line)
+	  (skip-chars-backward " \t\r\n\f" orig))
+	;; point at orig due to a trailing whitespace
+	(and (eq (point) orig) (skip-chars-forward " \t\r\n\f"))
+	;; (setq done t)
+	(py-forward-statement orig done repeat))
+       ((eq (current-indentation) (current-column))
+	(py--skip-to-comment-or-semicolon)
+	(setq pps (parse-partial-sexp orig (point)))
+	(if (nth 1 pps)
+	    (py-forward-statement orig done repeat)
+	  (unless done
+	    (py-forward-statement orig done repeat))))
+       ((and (looking-at "[[:print:]]+$") (not done) (py--skip-to-comment-or-semicolon))
+	(py-forward-statement orig done repeat)))
+      (unless
+	  (or
+	   (eq (point) orig)
+	   (member (char-before) (list 10 32 9 ?#)))
+	(setq erg (point)))
+      (if (and py-verbose-p err)
+	  (py--message-error err))
+      erg)))
+
+(defun py-backward-statement (&optional orig done limit ignore-in-string-p repeat maxindent)
+  "Go to the initial line of a simple statement.
+
+For beginning of compound statement use ‘ar-backward-block’.
+For beginning of clause ‘ar-backward-clause’.
+
+‘ignore-in-string-p’ allows moves inside a docstring, used when
+computing indents
+ORIG - consider original position or point.
+DONE - transaktional argument
+LIMIT - honor limit
+IGNORE-IN-STRING-P - also much inside a string
+REPEAT - count and consider repeats
+Optional MAXINDENT: don't stop if indentation is larger"
+  (interactive)
+  (save-restriction
+    (unless (bobp)
+      (let* ((repeat (or (and repeat (1+ repeat)) 0))
+	     (orig (or orig (point)))
+             (pps (parse-partial-sexp (or limit (point-min))(point)))
+             (done done)
+             erg)
+	;; lp:1382788
+	(unless done
+	  (and (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+ 	       (setq pps (parse-partial-sexp (or limit (point-min))(point)))))
+        (cond
+	 ((< py-max-specpdl-size repeat)
+	  (error "Py-forward-statement reached loops max. If no error, customize ‘ar-max-specpdl-size’"))
+         ((and (bolp) (eolp))
+          (skip-chars-backward " \t\r\n\f")
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; inside string
+         ((and (nth 3 pps) (not ignore-in-string-p))
+	  (setq done t)
+	  (goto-char (nth 8 pps))
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ((nth 4 pps)
+	  (while (ignore-errors (goto-char (nth 8 pps)))
+	    (skip-chars-backward " \t\r\n\f")
+	    (setq pps (parse-partial-sexp (line-beginning-position) (point))))
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ((nth 1 pps)
+          (goto-char (1- (nth 1 pps)))
+	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
+	    (setq done t))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ((py-preceding-line-backslashed-p)
+          (forward-line -1)
+          (back-to-indentation)
+          (setq done t)
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; at raw-string
+	 ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+	 ((and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+	  (forward-char -1)
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; BOL or at space before comment
+         ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
+          (forward-comment -1)
+          (while (and (not (bobp)) (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
+            (forward-comment -1))
+          (unless (bobp)
+            (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
+	 ;; at inline comment
+         ((looking-at "[ \t]*#")
+	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
+	    (setq done t))
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; at beginning of string
+	 ((looking-at py-string-delim-re)
+	  (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+	    (setq done t))
+	  (back-to-indentation)
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; after end of statement
+	 ((and (not done) (eq (char-before) ?\;))
+	  (skip-chars-backward ";")
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; travel until indentation or semicolon
+	 ((and (not done) (py--skip-to-semicolon-backward))
+	  (unless (and maxindent (< maxindent (current-indentation)))
+	    (setq done t))
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ;; at current indent
+	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+	 ((and maxindent (< maxindent (current-indentation)))
+	  (forward-line -1)
+	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
+	;; return nil when before comment
+	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
+	  (when (< (point) orig)(setq erg (point))))
+	erg))))
+
+(defun py-backward-statement-bol ()
+  "Goto beginning of line where statement start.
+Returns position reached, if successful, nil otherwise.
+
+See also ‘ar-up-statement’"
+  (interactive)
+  (let* ((orig (point))
+         erg)
+    (unless (bobp)
+      (cond ((bolp)
+	     (and (py-backward-statement orig)
+		  (progn (beginning-of-line)
+			 (setq erg (point)))))
+	    (t (setq erg
+		     (and
+		      (py-backward-statement)
+		      (progn (beginning-of-line) (point)))))))
+    erg))
+
+(defun py-forward-statement-bol ()
+  "Go to the ‘beginning-of-line’ following current statement."
+  (interactive)
+  (py-forward-statement)
+  (py--beginning-of-line-form))
+
+(defun py-beginning-of-statement-p ()
+  (interactive)
+  (save-restriction
+    (eq (point)
+    (save-excursion
+      (py-forward-statement)
+      (py-backward-statement)))))
+
+(defun py-up-statement ()
+  "go to the beginning of next statement upwards in buffer.
+
+Return position if statement found, nil otherwise."
+  (interactive)
+  (if (py--beginning-of-statement-p)
+      (py-backward-statement)
+    (progn (and (py-backward-statement) (py-backward-statement)))))
+
+
+(defun py--end-of-statement-p ()
+  "Return position, if cursor is at the end of a statement, nil otherwise."
+  (let ((orig (point)))
+    (save-excursion
+      (py-backward-statement)
+      (py-forward-statement)
+      (when (eq orig (point))
+        orig))))
+
+(defun py-down-statement ()
+  "Go to the beginning of next statement downwards in buffer.
+
+Corresponds to backward-up-list in Elisp
+Return position if statement found, nil otherwise."
+  (interactive)
+  (let* ((orig (point)))
+    (cond ((py--end-of-statement-p)
+	   (progn
+	     (and
+	      (py-forward-statement)
+	      (py-backward-statement)
+	      (< orig (point))
+	      (point))))
+	  ((ignore-errors (< orig (and (py-forward-statement) (py-backward-statement))))
+	   (point))
+	  ((ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))
+	     (point)))))
+
+(defun py--fetch-indent-statement-above (orig)
+  "Report the preceding indent. "
+  (save-excursion
+    (goto-char orig)
+    (forward-line -1)
+    (end-of-line)
+    (skip-chars-backward " \t\r\n\f")
+    (back-to-indentation)
+    (if (or (looking-at comment-start)(py-beginning-of-statement-p))
+        (current-indentation)
+      (py-backward-statement)
+      (current-indentation))))
 
 (defun py--end-base-determine-secondvalue (regexp)
   "Expects being at block-opener.
 
 REGEXP: a symbol"
   (cond
-   ((eq regexp 'py-minor-block-re)
+   ((eq regexp (quote py-minor-block-re))
     (cond ((looking-at py-else-re)
 	   nil)
 	  ((or (looking-at (concat py-try-re)))
@@ -8334,10 +8330,10 @@ REGEXP: a symbol"
 	   (concat py-elif-re "\\|" py-else-re))))
    ((member regexp
 	    (list
-	     'py-block-re
-	     'py-block-or-clause-re
-	     'py-clause-re
-	     'py-if-re
+	     (quote py-block-re)
+	     (quote py-block-or-clause-re)
+	     (quote py-clause-re)
+	     (quote py-if-re)
 	     ))
     (cond ((looking-at py-if-re)
 	   (concat py-elif-re "\\|" py-else-re))
@@ -8350,8 +8346,8 @@ REGEXP: a symbol"
 	   (concat py-else-re "\\|" py-finally-re))
 	  ((looking-at py-finally-re)
 	   nil)))
-   ((eq regexp 'py-for-re) nil)
-   ((eq regexp 'py-try-re)
+   ((eq regexp (quote py-for-re)) nil)
+   ((eq regexp (quote py-try-re))
     (cond
      ;; ((looking-at py-try-re)
      ;;  (concat py-except-re "\\|" py-else-re "\\|" py-finally-re))
@@ -8374,7 +8370,7 @@ Return position if successful"
 	     (indent (or indent (current-indentation)))
              (condition (or condition '<=))
 	     (orig (or orig (point)))
-             (allvalue (if (member regexp (list 'py-block-re 'py-clause-re 'py-def-or-class-re 'py-def-re 'py-class-re)) regexpvalue (symbol-value 'py-block-or-clause-re))))
+             (allvalue (if (member regexp (list (quote py-block-re) (quote py-clause-re) (quote py-def-or-class-re) (quote py-def-re) (quote py-class-re))) regexpvalue (symbol-value (quote py-block-or-clause-re)))))
         (if (eq (current-indentation) (current-column))
 	    (while (and (not (bobp))
 		        (re-search-backward allvalue nil 'move 1)
@@ -8395,7 +8391,7 @@ Return position if successful"
                           (when (< (current-indentation) indent)
 
                             ;; update required indent if a form should not match
-                            ;; as ‘def bar()’, when ‘py-backward-def’ from end below
+                            ;; as ‘def bar()’, when ‘ar-backward-def’ from end below
 
                             ;; def foo():
                             ;;     if True:
@@ -8434,15 +8430,15 @@ Optional IGNOREINDENT: find next keyword at any indentation"
   (unless (bobp)
     ;;    (when (py-empty-line-p) (skip-chars-backward " \t\r\n\f"))
     (let* ((orig (point))
-	   (regexp (if (eq regexp 'py-clause-re) 'py-extended-block-or-clause-re regexp))
-	   (regexpvalue (symbol-value regexp))
+	   (regexp (if (eq regexp (quote py-clause-re)) (quote py-extended-block-or-clause-re) regexp))
+	   (regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp))
 	   (maxindent
 	    (if ignoreindent
 		;; just a big value
 		9999
 	      (or maxindent
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
-           (allvalue (symbol-value 'py-block-or-clause-re))
+           (allvalue (symbol-value (quote py-block-or-clause-re)))
            erg)
       (unless (py-beginning-of-statement-p)
 	(py-backward-statement))
@@ -8459,7 +8455,7 @@ Optional IGNOREINDENT: find next keyword at any indentation"
       erg)))
 
 (defun py-up-base (regexp &optional indent)
-  "Expects a symbol as REGEXP like `'py-clause-re'
+  "Expects a symbol as REGEXP like `(quote py-clause-re)'
 
 Return position if successful"
   (unless (py-beginning-of-statement-p) (py-backward-statement))
@@ -8494,15 +8490,15 @@ Optional ENFORCE-REGEXP: search for regexp only."
     (let* ((orig (point))
 	   (indent (or indent 0))
 	   done
-	   (regexpvalue (if (member regexp (list 'py-def-re 'py-def-or-class-re 'py-class-re))
-			    (concat (symbol-value regexp) "\\|" (symbol-value 'py-decorator-re))
+	   (regexpvalue (if (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
+			    (concat (symbol-value regexp) "\\|" (symbol-value (quote py-decorator-re)))
 			  (symbol-value regexp)))
 	   (lastvalue (and secondvalue
 			   (pcase regexp
-			     (`py-try-re (concat py-finally-re "\\|" py-except-re "\\|" py-else-re))
-			     (`py-if-re py-else-re))))
+			     (`ar-try-re (concat py-finally-re "\\|" py-except-re "\\|" py-else-re))
+			     (`ar-if-re py-else-re))))
            last)
-      (if (eq regexp 'py-clause-re)
+      (if (eq regexp (quote py-clause-re))
           (py-forward-clause-intern indent)
         (while
 	    (and
@@ -8530,15 +8526,15 @@ Returns the indentation of FORM-start
 Arg REGEXP, a symbol"
   (unless (eobp)
     (let (;; not looking for an assignment
-	  (use-regexp (member regexp (list 'py-def-re 'py-class-re 'py-def-or-class-re)))
+	  (use-regexp (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))))
 	  (orig (or orig (point))))
       (unless (eobp)
 	(unless (py-beginning-of-statement-p)
 	  (py-backward-statement))
 	(let* (;; when at block-start, be specific
 	       ;; (regexp (py--refine-regexp-maybe regexp))
-               (regexpvalue (symbol-value regexp))
-               ;; (regexp (or regexp (symbol-value 'py-extended-block-or-clause-re)))
+               (regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp))
+               ;; (regexp (or regexp (symbol-value (quote py-extended-block-or-clause-re))))
 	       (repeat (if repeat (1+ repeat) 0))
 	       (indent (if
 			   (looking-at regexpvalue)
@@ -8554,10 +8550,10 @@ Arg REGEXP, a symbol"
 		 ((and (py-beginning-of-statement-p)
 		       ;; (eq 0 (current-column))
 		       (or (looking-at regexpvalue)
-			   (and (member regexp (list 'py-def-re 'py-def-or-class-re 'py-class-re))
+			   (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
 				(looking-at py-decorator-re)
 				(py-down-def-or-class (current-indentation)))
-			   (and (member regexp (list 'py-minor-block-re 'py-if-re 'py-for-re 'py-try-re))
+			   (and (member regexp (list (quote py-minor-block-re) (quote py-if-re) (quote py-for-re) (quote py-try-re)))
 				(looking-at py-minor-clause-re))))
 		  (list (current-indentation) (point) secondvalue))
 		 ((looking-at regexpvalue)
@@ -8565,8 +8561,8 @@ Arg REGEXP, a symbol"
 		 ((eq 0 (current-indentation))
 		  (py--down-according-to-indent regexp nil 0 use-regexp))
 		 ;; look upward
-		 (t (py--go-to-keyword regexp (if (member regexp (list 'py-def-re 'py-class-re 'py-def-or-class-re)) '< '<=)
-                                       ;; (if (and (member regexp (list 'py-block-re 'py-clause-re 'py-def-or-class-re 'py-def-re 'py-class-re)) (looking-at (symbol-value regexp))) '< '<=)
+		 (t (py--go-to-keyword regexp (if (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))) '< '<=)
+                                       ;; (if (and (member regexp (list (quote py-block-re) (quote py-clause-re) (quote py-def-or-class-re) (quote py-def-re) (quote py-class-re))) (looking-at (symbol-value regexp))) '< '<=)
                                        )))))
 	  ;; (py-for-block-p (looking-at py-for-re))
 	  ;; (setq indent (current-indentation))
@@ -8633,7 +8629,7 @@ If already at beginning, go one `block' backward.
 Return position if successful, nil otherwise"
   (interactive)
   (let (erg)
-    (setq erg (py--go-to-keyword 'py-block-re '<))
+    (setq erg (py--go-to-keyword (quote py-block-re) (quote <)))
     (when py-mark-decorators
       (and (py-backward-decorator) (setq erg (point))))
     erg))
@@ -8645,7 +8641,7 @@ If already at beginning, go one `class' backward.
 Return position if successful, nil otherwise"
   (interactive)
   (let (erg)
-    (setq erg (py--go-to-keyword 'py-class-re '<))
+    (setq erg (py--go-to-keyword (quote py-class-re) '<))
     (when py-mark-decorators
       (and (py-backward-decorator) (setq erg (point))))
     erg))
@@ -8657,7 +8653,7 @@ If already at beginning, go one `def' backward.
 Return position if successful, nil otherwise"
   (interactive)
   (let (erg)
-    (setq erg (py--go-to-keyword 'py-def-re '<))
+    (setq erg (py--go-to-keyword (quote py-def-re) '<))
     (when py-mark-decorators
       (and (py-backward-decorator) (setq erg (point))))
     erg))
@@ -8669,7 +8665,7 @@ If already at beginning, go one `def-or-class' backward.
 Return position if successful, nil otherwise"
   (interactive)
   (let (erg)
-    (setq erg (py--go-to-keyword 'py-def-or-class-re '<))
+    (setq erg (py--go-to-keyword (quote py-def-or-class-re) '<))
     (when py-mark-decorators
       (and (py-backward-decorator) (setq erg (point))))
     erg))
@@ -8712,7 +8708,7 @@ Return beginning of `def-or-class' if successful, nil otherwise"
 If already at beginning, go one `assignment' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-assignment-re '<))
+  (py--go-to-keyword (quote py-assignment-re) '<))
 
 (defun py-backward-block-or-clause ()
   "Go to beginning of `block-or-clause'.
@@ -8720,7 +8716,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `block-or-clause' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-block-or-clause-re '<))
+  (py--go-to-keyword (quote py-block-or-clause-re) '<))
 
 (defun py-backward-clause ()
   "Go to beginning of `clause'.
@@ -8728,7 +8724,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `clause' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-clause-re '<))
+  (py--go-to-keyword (quote py-clause-re) '<))
 
 (defun py-backward-elif-block ()
   "Go to beginning of `elif-block'.
@@ -8736,7 +8732,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `elif-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-elif-re '<))
+  (py--go-to-keyword (quote py-elif-re) '<))
 
 (defun py-backward-else-block ()
   "Go to beginning of `else-block'.
@@ -8744,7 +8740,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `else-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-else-re '<))
+  (py--go-to-keyword (quote py-else-re) '<))
 
 (defun py-backward-except-block ()
   "Go to beginning of `except-block'.
@@ -8752,7 +8748,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `except-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-except-re '<))
+  (py--go-to-keyword (quote py-except-re) '<))
 
 (defun py-backward-for-block ()
   "Go to beginning of `for-block'.
@@ -8760,7 +8756,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `for-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-for-re '<))
+  (py--go-to-keyword (quote py-for-re) '<))
 
 (defun py-backward-if-block ()
   "Go to beginning of `if-block'.
@@ -8768,7 +8764,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `if-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-if-re '<))
+  (py--go-to-keyword (quote py-if-re) '<))
 
 (defun py-backward-minor-block ()
   "Go to beginning of `minor-block'.
@@ -8776,7 +8772,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `minor-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-minor-block-re '<))
+  (py--go-to-keyword (quote py-minor-block-re) '<))
 
 (defun py-backward-try-block ()
   "Go to beginning of `try-block'.
@@ -8784,7 +8780,7 @@ Return position if successful, nil otherwise"
 If already at beginning, go one `try-block' backward.
 Return position if successful, nil otherwise"
   (interactive)
-  (py--go-to-keyword 'py-try-re '<))
+  (py--go-to-keyword (quote py-try-re) '<))
 
 (defun py-backward-assignment-bol ()
   "Go to beginning of `assignment', go to BOL.
@@ -8876,13 +8872,13 @@ Return end of `assignment' if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
-  (py--end-base 'py-assignment-re orig bol))
+  (py--end-base (quote py-assignment-re) orig bol))
 
 (defun py-forward-assignment-bol ()
   "Goto beginning of line following end of `assignment'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-assignment'."
+See also `ar-down-assignment'."
   (interactive)
   (py-forward-assignment nil t))
 
@@ -8900,16 +8896,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-block-re orig bol))
+    (unless (setq erg (py--end-base (quote py-block-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-block-re orig bol)))
+      (setq erg (py--end-base (quote py-block-re) orig bol)))
     erg))
 
 (defun py-forward-block-bol ()
   "Goto beginning of line following end of `block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-block'."
+See also `ar-down-block'."
   (interactive)
   (py-forward-block nil t))
 
@@ -8921,16 +8917,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-block-or-clause-re orig bol))
+    (unless (setq erg (py--end-base (quote py-block-or-clause-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-block-or-clause-re orig bol)))
+      (setq erg (py--end-base (quote py-block-or-clause-re) orig bol)))
     erg))
 
 (defun py-forward-block-or-clause-bol ()
   "Goto beginning of line following end of `block-or-clause'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-block-or-clause'."
+See also `ar-down-block-or-clause'."
   (interactive)
   (py-forward-block-or-clause nil t))
 
@@ -8942,16 +8938,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-class-re orig bol))
+    (unless (setq erg (py--end-base (quote py-class-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-class-re orig bol)))
+      (setq erg (py--end-base (quote py-class-re) orig bol)))
     erg))
 
 (defun py-forward-class-bol ()
   "Goto beginning of line following end of `class'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-class'."
+See also `ar-down-class'."
   (interactive)
   (py-forward-class nil t))
 
@@ -8963,16 +8959,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-clause-re orig bol))
+    (unless (setq erg (py--end-base (quote py-clause-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-clause-re orig bol)))
+      (setq erg (py--end-base (quote py-clause-re) orig bol)))
     erg))
 
 (defun py-forward-clause-bol ()
   "Goto beginning of line following end of `clause'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-clause'."
+See also `ar-down-clause'."
   (interactive)
   (py-forward-clause nil t))
 
@@ -8984,16 +8980,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-def-re orig bol))
+    (unless (setq erg (py--end-base (quote py-def-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-def-re orig bol)))
+      (setq erg (py--end-base (quote py-def-re) orig bol)))
     erg))
 
 (defun py-forward-def-bol ()
   "Goto beginning of line following end of `def'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-def'."
+See also `ar-down-def'."
   (interactive)
   (py-forward-def nil t))
 
@@ -9005,16 +9001,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-def-or-class-re orig bol))
+    (unless (setq erg (py--end-base (quote py-def-or-class-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-def-or-class-re orig bol)))
+      (setq erg (py--end-base (quote py-def-or-class-re) orig bol)))
     erg))
 
 (defun py-forward-def-or-class-bol ()
   "Goto beginning of line following end of `def-or-class'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-def-or-class'."
+See also `ar-down-def-or-class'."
   (interactive)
   (py-forward-def-or-class nil t))
 
@@ -9026,16 +9022,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-elif-re orig bol))
+    (unless (setq erg (py--end-base (quote py-elif-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-elif-re orig bol)))
+      (setq erg (py--end-base (quote py-elif-re) orig bol)))
     erg))
 
 (defun py-forward-elif-block-bol ()
   "Goto beginning of line following end of `elif-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-elif-block'."
+See also `ar-down-elif-block'."
   (interactive)
   (py-forward-elif-block nil t))
 
@@ -9047,16 +9043,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-else-re orig bol))
+    (unless (setq erg (py--end-base (quote py-else-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-else-re orig bol)))
+      (setq erg (py--end-base (quote py-else-re) orig bol)))
     erg))
 
 (defun py-forward-else-block-bol ()
   "Goto beginning of line following end of `else-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-else-block'."
+See also `ar-down-else-block'."
   (interactive)
   (py-forward-else-block nil t))
 
@@ -9068,16 +9064,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-except-re orig bol))
+    (unless (setq erg (py--end-base (quote py-except-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-except-re orig bol)))
+      (setq erg (py--end-base (quote py-except-re) orig bol)))
     erg))
 
 (defun py-forward-except-block-bol ()
   "Goto beginning of line following end of `except-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-except-block'."
+See also `ar-down-except-block'."
   (interactive)
   (py-forward-except-block nil t))
 
@@ -9089,16 +9085,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-for-re orig bol))
+    (unless (setq erg (py--end-base (quote py-for-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-for-re orig bol)))
+      (setq erg (py--end-base (quote py-for-re) orig bol)))
     erg))
 
 (defun py-forward-for-block-bol ()
   "Goto beginning of line following end of `for-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-for-block'."
+See also `ar-down-for-block'."
   (interactive)
   (py-forward-for-block nil t))
 
@@ -9110,16 +9106,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-if-re orig bol))
+    (unless (setq erg (py--end-base (quote py-if-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-if-re orig bol)))
+      (setq erg (py--end-base (quote py-if-re) orig bol)))
     erg))
 
 (defun py-forward-if-block-bol ()
   "Goto beginning of line following end of `if-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-if-block'."
+See also `ar-down-if-block'."
   (interactive)
   (py-forward-if-block nil t))
 
@@ -9131,16 +9127,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-minor-block-re orig bol))
+    (unless (setq erg (py--end-base (quote py-minor-block-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-minor-block-re orig bol)))
+      (setq erg (py--end-base (quote py-minor-block-re) orig bol)))
     erg))
 
 (defun py-forward-minor-block-bol ()
   "Goto beginning of line following end of `minor-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-minor-block'."
+See also `ar-down-minor-block'."
   (interactive)
   (py-forward-minor-block nil t))
 
@@ -9152,16 +9148,16 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base 'py-try-re orig bol))
+    (unless (setq erg (py--end-base (quote py-try-re) orig bol))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base 'py-try-re orig bol)))
+      (setq erg (py--end-base (quote py-try-re) orig bol)))
     erg))
 
 (defun py-forward-try-block-bol ()
   "Goto beginning of line following end of `try-block'.
 
 Return position reached, if successful, nil otherwise.
-See also `py-down-try-block'."
+See also `ar-down-try-block'."
   (interactive)
   (py-forward-try-block nil t))
 
@@ -9385,7 +9381,7 @@ Expects INDENTS, a cons"
                   (if (< second first)
                       (- first second)
                     (- second first))
-                (default-value 'py-indent-offset))))
+                (default-value (quote py-indent-offset)))))
     (setq erg (and (py-guessed-sanity-check erg) erg))
     erg))
 
@@ -9446,7 +9442,7 @@ Unless DIRECTION is symbol \\='forward, go backward first"
            (erg (py--guess-indent-final indents)))
       (if erg (setq py-indent-offset erg)
         (setq py-indent-offset
-              (default-value 'py-indent-offset)))
+              (default-value (quote py-indent-offset))))
       (when (called-interactively-p 'any) (message "%s" py-indent-offset))
       py-indent-offset)))
 
@@ -9521,7 +9517,7 @@ thus remember line of source buffer"
 		(when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
 		  (setq estring (match-string-no-properties 1))
 		  (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
-		  (push 'py-error ecode))))))
+		  (push (quote py-error) ecode))))))
 	py-error))))
 
 (defun py-execute-python-mode-v5 (start end origline filename)
@@ -9799,49 +9795,49 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
 
 Return position if block found, nil otherwise."
   (interactive)
-  (py-up-base 'py-block-re))
+  (py-up-base (quote py-block-re)))
 
 (defun py-up-class ()
   "Go to the beginning of next class upwards.
 
 Return position if class found, nil otherwise."
   (interactive)
-  (py-up-base 'py-class-re))
+  (py-up-base (quote py-class-re)))
 
 (defun py-up-clause ()
   "Go to the beginning of next clause upwards.
 
 Return position if clause found, nil otherwise."
   (interactive)
-  (py-up-base 'py-clause-re))
+  (py-up-base (quote py-clause-re)))
 
 (defun py-up-block-or-clause ()
   "Go to the beginning of next block-or-clause upwards.
 
 Return position if block-or-clause found, nil otherwise."
   (interactive)
-  (py-up-base 'py-block-or-clause-re))
+  (py-up-base (quote py-block-or-clause-re)))
 
 (defun py-up-def ()
   "Go to the beginning of next def upwards.
 
 Return position if def found, nil otherwise."
   (interactive)
-  (py-up-base 'py-def-re))
+  (py-up-base (quote py-def-re)))
 
 (defun py-up-def-or-class ()
   "Go to the beginning of next def-or-class upwards.
 
 Return position if def-or-class found, nil otherwise."
   (interactive)
-  (py-up-base 'py-def-or-class-re))
+  (py-up-base (quote py-def-or-class-re)))
 
 (defun py-up-minor-block ()
   "Go to the beginning of next minor-block upwards.
 
 Return position if minor-block found, nil otherwise."
   (interactive)
-  (py-up-base 'py-minor-block-re))
+  (py-up-base (quote py-minor-block-re)))
 
 (defun py-up-block-bol ()
   "Go to the beginning of next block upwards.
@@ -9849,7 +9845,7 @@ Return position if minor-block found, nil otherwise."
 Go to beginning of line.
 Return position if block found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-block-re)
+  (and (py-up-base (quote py-block-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-class-bol ()
@@ -9858,7 +9854,7 @@ Return position if block found, nil otherwise."
 Go to beginning of line.
 Return position if class found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-class-re)
+  (and (py-up-base (quote py-class-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-clause-bol ()
@@ -9867,7 +9863,7 @@ Return position if class found, nil otherwise."
 Go to beginning of line.
 Return position if clause found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-clause-re)
+  (and (py-up-base (quote py-clause-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-block-or-clause-bol ()
@@ -9876,7 +9872,7 @@ Return position if clause found, nil otherwise."
 Go to beginning of line.
 Return position if block-or-clause found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-block-or-clause-re)
+  (and (py-up-base (quote py-block-or-clause-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-def-bol ()
@@ -9885,7 +9881,7 @@ Return position if block-or-clause found, nil otherwise."
 Go to beginning of line.
 Return position if def found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-def-re)
+  (and (py-up-base (quote py-def-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-def-or-class-bol ()
@@ -9894,7 +9890,7 @@ Return position if def found, nil otherwise."
 Go to beginning of line.
 Return position if def-or-class found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-def-or-class-re)
+  (and (py-up-base (quote py-def-or-class-re))
     (progn (beginning-of-line)(point))))
 
 (defun py-up-minor-block-bol ()
@@ -9903,7 +9899,7 @@ Return position if def-or-class found, nil otherwise."
 Go to beginning of line.
 Return position if minor-block found, nil otherwise."
   (interactive)
-  (and (py-up-base 'py-minor-block-re)
+  (and (py-up-base (quote py-minor-block-re))
     (progn (beginning-of-line)(point))))
 
 ;; python-components-up.el ends here
@@ -10704,7 +10700,7 @@ Return position of successful, nil of not started from inside."
 ;; Return position of successful, nil of not started from inside"
 ;;   (interactive)
 ;;   (unless (eobp)
-;;     (if (eq last-command 'py-backward-assignment)
+;;     (if (eq last-command (quote py-backward-assignment))
 ;; 	;; assume at start of an assignment
 ;; 	(py--forward-assignment-intern)
 ;;       ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
@@ -12945,7 +12941,7 @@ Returns value of ‘py-switch-buffers-on-execute-p’."
   (setq shell-dirtrackp t)
   (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t))
 
-(defalias 'py-dedicated-shell 'py-shell-dedicated)
+(defalias (quote py-dedicated-shell) (quote py-shell-dedicated))
 (defun py-shell-dedicated (&optional argprompt)
   "Start an interpreter in another window according to ARGPROMPT.
 
@@ -13113,7 +13109,7 @@ Optional SHELL SWITCH FAST
 See also ‘py-execute-region’."
   (interactive)
   (let ((strg (or strg (read-from-minibuffer "String: ")))
-        (shell (or shell (default-value 'py-shell-name))))
+        (shell (or shell (default-value (quote py-shell-name)))))
     (with-temp-buffer
       (insert strg)
       (py-execute-region (point-min) (point-max) shell t switch fast))))
@@ -13212,7 +13208,11 @@ This may be preferable to `\\[py-execute-buffer]' because:
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
-                     (get-buffer-process (py-shell nil nil py-dedicated-process-p shell (or shell (default-value 'py-shell-name)))))))
+                     (get-buffer-process
+                      (py-shell nil nil py-dedicated-process-p shell
+                                ;; (or shell (default-value (quote py-shell-name)))
+                                (or shell py-shell-name)
+                     )))))
           ;; Maybe save some buffers
           (save-some-buffers (not py-ask-about-save) nil)
           (py--execute-file-base file proc
@@ -13515,18 +13515,18 @@ LIEP stores line-end-position at point-of-interest
                          (eq liep (line-end-position)))
 		    (cond
                      ((looking-at py-case-re)
-                      (and (py--backward-regexp 'py-match-case-re nil '>)
+                      (and (py--backward-regexp (quote py-match-case-re) nil '>)
                                            (+ (current-indentation) py-indent-offset)
                                            ))
                      ((looking-at py-minor-clause-re)
-		      (and (py--backward-regexp 'py-block-or-clause-re
+		      (and (py--backward-regexp (quote py-block-or-clause-re)
                       ;; an arbitray number, larger than an real expected indent
                       (* 99 py-indent-offset)
                       '<)
                            (current-indentation)))
 
                      ((looking-at py-outdent-re)
-		      (and (py--backward-regexp 'py-block-or-clause-re
+		      (and (py--backward-regexp (quote py-block-or-clause-re)
                       ;; an arbitray number, larger than an real expected indent
                       (* 99 py-indent-offset)
                       '<)))
@@ -13534,7 +13534,7 @@ LIEP stores line-end-position at point-of-interest
 		     (t (save-excursion
 			  ;; (skip-chars-backward " \t\r\n\f")
 			  (if (py-backward-block)
-			      ;; (py--backward-regexp 'py-block-or-clause-re)
+			      ;; (py--backward-regexp (quote py-block-or-clause-re))
 			      (+ py-indent-offset (current-indentation))
 			    0)))))
 		   ((looking-at py-extended-block-or-clause-re)
@@ -13589,7 +13589,7 @@ LIEP stores line-end-position at point-of-interest
 		   ((and (eq liep (line-end-position))
                          (save-excursion
 			   (and
-                            (py--go-to-keyword 'py-extended-block-or-clause-re nil (* py-indent-offset 99))
+                            (py--go-to-keyword (quote py-extended-block-or-clause-re) nil (* py-indent-offset 99))
                             (if (looking-at (concat py-block-re "\\|" py-outdent-re))
 		                (+ (current-indentation)
                                    (if py-smart-indentation
@@ -13665,7 +13665,7 @@ module-qualified names."
 ;;  arrange to kill temp files when Emacs exists
 
 (when py--warn-tmp-files-left-p
-  (add-hook 'python-mode-hook 'py--warn-tmp-files-left))
+  (add-hook 'python-mode-hook (quote py--warn-tmp-files-left)))
 
 (defun py-guess-pdb-path ()
   "If py-pdb-path isn't set, find location of pdb.py. "
@@ -13684,8 +13684,8 @@ module-qualified names."
 (if py-mode-output-map
     nil
   (setq py-mode-output-map (make-sparse-keymap))
-  (define-key py-mode-output-map [button2]  'py-mouseto-exception)
-  (define-key py-mode-output-map "\C-c\C-c" 'py-goto-exception)
+  (define-key py-mode-output-map [button2]  (quote py-mouseto-exception))
+  (define-key py-mode-output-map "\C-c\C-c" (quote py-goto-exception))
   ;; TBD: Disable all self-inserting keys.  This is bogus, we should
   ;; really implement this as *Python Output* buffer being read-only
   (mapc #' (lambda (key)
@@ -13697,12 +13697,12 @@ module-qualified names."
   "Toggles comment-auto-fill mode"
   (interactive "P")
   (if (or (and arg (< 0 (prefix-numeric-value arg)))
-	  (and (boundp 'py-comment-auto-fill-p)(not py-comment-auto-fill-p)))
+	  (and (boundp (quote py-comment-auto-fill-p))(not py-comment-auto-fill-p)))
       (progn
-        (set (make-local-variable 'py-comment-auto-fill-p) t)
+        (set (make-local-variable (quote py-comment-auto-fill-p)) t)
         (setq fill-column py-comment-fill-column)
         (auto-fill-mode 1))
-    (set (make-local-variable 'py-comment-auto-fill-p) nil)
+    (set (make-local-variable (quote py-comment-auto-fill-p)) nil)
     (auto-fill-mode -1)))
 
 (defun py-comment-auto-fill-on ()
@@ -13731,7 +13731,7 @@ module-qualified names."
       (setq py-autofill-timer
             (run-with-idle-timer
              py-autofill-timer-delay t
-             'py--set-auto-fill-values)))))
+             (quote py--set-auto-fill-values))))))
 
 ;;  unconditional Hooks
 ;;  (orgstruct-mode 1)
@@ -15233,7 +15233,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-block-re))
+  (py--close-intern (quote py-block-re)))
 
 (defun py-close-class ()
   "Close class at point.
@@ -15244,7 +15244,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-class-re))
+  (py--close-intern (quote py-class-re)))
 
 (defun py-close-clause ()
   "Close clause at point.
@@ -15255,7 +15255,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-clause-re))
+  (py--close-intern (quote py-clause-re)))
 
 (defun py-close-block-or-clause ()
   "Close block-or-clause at point.
@@ -15266,7 +15266,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-block-or-clause-re))
+  (py--close-intern (quote py-block-or-clause-re)))
 
 (defun py-close-def ()
   "Close def at point.
@@ -15277,7 +15277,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-def-re))
+  (py--close-intern (quote py-def-re)))
 
 (defun py-close-def-or-class ()
   "Close def-or-class at point.
@@ -15288,7 +15288,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-def-or-class-re))
+  (py--close-intern (quote py-def-or-class-re)))
 
 (defun py-close-minor-block ()
   "Close minor-block at point.
@@ -15299,7 +15299,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-minor-block-re))
+  (py--close-intern (quote py-minor-block-re)))
 
 (defun py-close-statement ()
   "Close statement at point.
@@ -15310,7 +15310,7 @@ If final line isn't empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
-  (py--close-intern 'py-statement-re))
+  (py--close-intern (quote py-statement-re)))
 
 ;; python-components-kill-forms
 
@@ -16080,7 +16080,7 @@ Returns value of ‘py-smart-indentation’ switched to."
           (setq py-smart-indentation t)
           (py-guess-indent-offset))
       (setq py-smart-indentation nil)
-      (setq py-indent-offset (default-value 'py-indent-offset)))
+      (setq py-indent-offset (default-value (quote py-indent-offset))))
     (when (called-interactively-p 'any) (message "py-smart-indentation: %s" py-smart-indentation))
     py-smart-indentation))
 
@@ -16107,7 +16107,7 @@ Returns value of ‘py-smart-indentation’."
 (defun py-toggle-sexp-function ()
   "Opens customization."
   (interactive)
-  (customize-variable 'py-sexp-function))
+  (customize-variable (quote py-sexp-function)))
 
 ;; Autopair mode
 ;; py-autopair-mode forms
@@ -16534,7 +16534,7 @@ Requires BEG, END as the boundery of region"
 	   ((eq need cui)
 	    (if (or dedent
 		    (eq this-command last-command)
-		    (eq this-command 'py-indent-line))
+		    (eq this-command (quote py-indent-line)))
 		(if (and py-tab-shifts-region-p region)
 		    (while (and (goto-char beg) (< 0 (current-indentation)))
 		      (py-shift-region-left 1))
@@ -16639,7 +16639,7 @@ Optional arg DEDENT: force dedent.
 		 (py-guess-indent-offset))
 		((and py-smart-indentation (eq this-command last-command) py-already-guessed-indent-offset)
 		 py-already-guessed-indent-offset)
-		(t (default-value 'py-indent-offset))))
+		(t (default-value (quote py-indent-offset)))))
     (setq outmost (py-compute-indentation nil nil nil nil nil nil nil this-indent-offset))
     ;; now choose the indent
     (unless (and (not dedent)(not (eq this-command last-command))(eq outmost (current-indentation)))
@@ -17081,7 +17081,7 @@ arg MODE: which buffer-mode used in edit-buffer"
 	(insert editstrg)
 	(when suffix (insert suffix))
 	(funcall mode)
-	(local-set-key [(control c) (control c)] 'py--write-edit)
+	(local-set-key [(control c) (control c)] (quote py--write-edit))
 	(goto-char relpos)
 	(message "%s" "Type C-c C-c writes contents back")))))
 
@@ -19881,126 +19881,123 @@ Default is t")
 (setq python-mode-map
       (let ((map (make-sparse-keymap)))
         ;; electric keys
-        (define-key map [(:)] 'py-electric-colon)
-        (define-key map [(\#)] 'py-electric-comment)
-        (define-key map [(delete)] 'py-electric-delete)
-        (define-key map [(backspace)] 'py-electric-backspace)
-        (define-key map [(control backspace)] 'py-hungry-delete-backwards)
-        (define-key map [(control c) (delete)] 'py-hungry-delete-forward)
-        ;; (define-key map [(control y)] 'py-electric-yank)
+        (define-key map [(:)] (quote py-electric-colon))
+        (define-key map [(\#)] (quote py-electric-comment))
+        (define-key map [(delete)] (quote py-electric-delete))
+        (define-key map [(backspace)] (quote py-electric-backspace))
+        (define-key map [(control backspace)] (quote py-hungry-delete-backwards))
+        (define-key map [(control c) (delete)] (quote py-hungry-delete-forward))
+        ;; (define-key map [(control y)] (quote py-electric-yank))
         ;; moving point
-        (define-key map [(control c) (control p)] 'py-backward-statement)
-        (define-key map [(control c) (control n)] 'py-forward-statement)
-        (define-key map [(control c) (control u)] 'py-backward-block)
-        (define-key map [(control c) (control q)] 'py-forward-block)
-        (define-key map [(control meta a)] 'py-backward-def-or-class)
-        (define-key map [(control meta e)] 'py-forward-def-or-class)
-        ;; (define-key map [(meta i)] 'py-indent-forward-line)
-        ;; (define-key map [(control j)] 'py-newline-and-indent)
+        (define-key map [(control c) (control p)] (quote py-backward-statement))
+        (define-key map [(control c) (control n)] (quote py-forward-statement))
+        (define-key map [(control c) (control u)] (quote py-backward-block))
+        (define-key map [(control c) (control q)] (quote py-forward-block))
+        (define-key map [(control meta a)] (quote py-backward-def-or-class))
+        (define-key map [(control meta e)] (quote py-forward-def-or-class))
+        ;; (define-key map [(meta i)] (quote py-indent-forward-line))
+        ;; (define-key map [(control j)] (quote py-newline-and-indent))
 	(define-key map (kbd "C-j") 'newline)
         ;; Most Pythoneers expect RET ‘py-newline-and-indent’
 	;; which is default of var py-return-key’
         (define-key map (kbd "RET") py-return-key)
         ;; (define-key map (kbd "RET") 'newline)
-        ;; (define-key map (kbd "RET") 'py-newline-and-dedent)
-        (define-key map [(super backspace)] 'py-dedent)
-        ;; (define-key map [(control return)] 'py-newline-and-dedent)
+        ;; (define-key map (kbd "RET") (quote py-newline-and-dedent))
+        (define-key map [(super backspace)] (quote py-dedent))
+        ;; (define-key map [(control return)] (quote py-newline-and-dedent))
         ;; indentation level modifiers
-        (define-key map [(control c) (control l)] 'py-shift-left)
-        (define-key map [(control c) (control r)] 'py-shift-right)
-        (define-key map [(control c) (<)] 'py-shift-left)
-        (define-key map [(control c) (>)] 'py-shift-right)
-        ;; (define-key map [(control c) (tab)] 'py-indent-region)
-	(define-key map (kbd "C-c TAB") 'py-indent-region)
-        (define-key map [(control c) (:)] 'py-guess-indent-offset)
+        (define-key map [(control c) (control l)] (quote py-shift-left))
+        (define-key map [(control c) (control r)] (quote py-shift-right))
+        (define-key map [(control c) (<)] (quote py-shift-left))
+        (define-key map [(control c) (>)] (quote py-shift-right))
+        ;; (define-key map [(control c) (tab)] (quote py-indent-region))
+	(define-key map (kbd "C-c TAB") (quote py-indent-region))
+        (define-key map [(control c) (:)] (quote py-guess-indent-offset))
         ;; subprocess commands
-        (define-key map [(control c) (control c)] 'py-execute-buffer)
-        (define-key map [(control c) (control m)] 'py-execute-import-or-reload)
-        (define-key map [(control c) (control s)] 'py-execute-string)
-        (define-key map [(control c) (|)] 'py-execute-region)
-        (define-key map [(control meta x)] 'py-execute-def-or-class)
-        (define-key map [(control c) (!)] 'py-shell)
-        (define-key map [(control c) (control t)] 'py-toggle-shell)
-        (define-key map [(control meta h)] 'py-mark-def-or-class)
-        (define-key map [(control c) (control k)] 'py-mark-block-or-clause)
-        (define-key map [(control c) (.)] 'py-expression)
-        (define-key map [(control c) (?,)] 'py-partial-expression)
+        (define-key map [(control c) (control c)] (quote py-execute-buffer))
+        (define-key map [(control c) (control m)] (quote py-execute-import-or-reload))
+        (define-key map [(control c) (control s)] (quote py-execute-string))
+        (define-key map [(control c) (|)] (quote py-execute-region))
+        (define-key map [(control meta x)] (quote py-execute-def-or-class))
+        (define-key map [(control c) (!)] (quote py-shell))
+        (define-key map [(control c) (control t)] (quote py-toggle-shell))
+        (define-key map [(control meta h)] (quote py-mark-def-or-class))
+        (define-key map [(control c) (control k)] (quote py-mark-block-or-clause))
+        (define-key map [(control c) (.)] (quote py-expression))
+        (define-key map [(control c) (?,)] (quote py-partial-expression))
         ;; Miscellaneous
-        ;; (define-key map [(super q)] 'py-copy-statement)
-        (define-key map [(control c) (control d)] 'py-pdbtrack-toggle-stack-tracking)
-        (define-key map [(control c) (control f)] 'py-sort-imports)
-        (define-key map [(control c) (\#)] 'py-comment-region)
-        (define-key map [(control c) (\?)] 'py-describe-mode)
-        (define-key map [(control c) (control e)] 'py-help-at-point)
-        (define-key map [(control c) (-)] 'py-up-exception)
-        (define-key map [(control c) (=)] 'py-down-exception)
-        (define-key map [(control x) (n) (d)] 'py-narrow-to-def-or-class)
+        ;; (define-key map [(super q)] (quote py-copy-statement))
+        (define-key map [(control c) (control d)] (quote py-pdbtrack-toggle-stack-tracking))
+        (define-key map [(control c) (control f)] (quote py-sort-imports))
+        (define-key map [(control c) (\#)] (quote py-comment-region))
+        (define-key map [(control c) (\?)] (quote py-describe-mode))
+        (define-key map [(control c) (control e)] (quote py-help-at-point))
+        (define-key map [(control c) (-)] (quote py-up-exception))
+        (define-key map [(control c) (=)] (quote py-down-exception))
+        (define-key map [(control x) (n) (d)] (quote py-narrow-to-def-or-class))
         ;; information
-        (define-key map [(control c) (control b)] 'py-submit-bug-report)
-        (define-key map [(control c) (control v)] 'py-version)
-        (define-key map [(control c) (control w)] 'py-pychecker-run)
-        ;; (define-key map (kbd "TAB") 'py-indent-line)
-        (define-key map (kbd "TAB") 'py-indent-line)
+        (define-key map [(control c) (control b)] (quote py-submit-bug-report))
+        (define-key map [(control c) (control v)] (quote py-version))
+        (define-key map [(control c) (control w)] (quote py-pychecker-run))
+        ;; (define-key map (kbd "TAB") (quote py-indent-line))
+        (define-key map (kbd "TAB") (quote py-indent-line))
 	;; (if py-complete-function
         ;;     (progn
         ;;       (define-key map [(meta tab)] py-complete-function)
         ;;       (define-key map [(esc) (tab)] py-complete-function))
-        ;;   (define-key map [(meta tab)] 'py-shell-complete)
-        ;;   (define-key map [(esc) (tab)] 'py-shell-complete))
+        ;;   (define-key map [(meta tab)] (quote py-shell-complete))
+        ;;   (define-key map [(esc) (tab)] (quote py-shell-complete)))
         (substitute-key-definition 'complete-symbol 'completion-at-point
                                    map global-map)
-        (substitute-key-definition 'backward-up-list 'py-up
+        (substitute-key-definition 'backward-up-list (quote py-up)
                                    map global-map)
-        (substitute-key-definition 'down-list 'py-down
+        (substitute-key-definition 'down-list (quote py-down)
                                    map global-map)
 	(when py-use-menu-p
 	  (setq map (py-define-menu map)))
         map))
 
-;; (defvar-keymap hypertext-mode-map "<down-mouse-3>" #'do-hyper-link)
-;; (defvar-keymap py-shell-mode-map "[(control c)(control r)]" #'py-nav-last-prompt))
-
 (defvar py-shell-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-r" 	  'py-nav-last-prompt)
+    (define-key map "\C-c\C-r" 	  (quote py-nav-last-prompt))
     (define-key map (kbd "RET") 'comint-send-input)
-    (define-key map (kbd "TAB") 'py-indent-line)
-    (define-key map [(control c) (!)] 'py-shell)
-    (define-key map [(control c) (-)] 'py-up-exception)
-    (define-key map [(control c) (.)] 'py-expression)
-    (define-key map [(control c) (:)] 'py-guess-indent-offset)
-    (define-key map [(control c) (<)] 'py-shift-left)
-    (define-key map [(control c) (=)] 'py-down-exception)
-    (define-key map [(control c) (>)] 'py-shift-right)
-    (define-key map [(control c) (\#)] 'py-comment-region)
-    (define-key map [(control c) (\?)] 'py-describe-mode)
-    (define-key map [(control c) (control b)] 'py-submit-bug-report)
-    (define-key map [(control c) (control d)] 'py-pdbtrack-toggle-stack-tracking)
-    (define-key map [(control c) (control e)] 'py-help-at-point)
-    (define-key map [(control c) (control k)] 'py-mark-block-or-clause)
+    (define-key map (kbd "TAB") (quote py-indent-line))
+    (define-key map [(control c) (!)] (quote py-shell))
+    (define-key map [(control c) (-)] (quote py-up-exception))
+    (define-key map [(control c) (.)] (quote py-expression))
+    (define-key map [(control c) (:)] (quote py-guess-indent-offset))
+    (define-key map [(control c) (<)] (quote py-shift-left))
+    (define-key map [(control c) (=)] (quote py-down-exception))
+    (define-key map [(control c) (>)] (quote py-shift-right))
+    (define-key map [(control c) (\#)] (quote py-comment-region))
+    (define-key map [(control c) (\?)] (quote py-describe-mode))
+    (define-key map [(control c) (control b)] (quote py-submit-bug-report))
+    (define-key map [(control c) (control d)] (quote py-pdbtrack-toggle-stack-tracking))
+    (define-key map [(control c) (control e)] (quote py-help-at-point))
+    (define-key map [(control c) (control k)] (quote py-mark-block-or-clause))
     (define-key map [(control c) (control l)] 'comint-dynamic-list-input-ring)
-    (define-key map [(control c) (control n)] 'py-forward-statement)
-    (define-key map [(control c) (control p)] 'py-backward-statement)
-    (define-key map [(control c) (control q)] 'py-forward-block)
-    (define-key map [(control c) (control t)] 'py-toggle-shell)
-    (define-key map [(control c) (control u)] 'py-backward-block)
-    (define-key map [(control c) (control v)] 'py-version)
-    (define-key map [(control c) (control w)] 'py-pychecker-run)
-    (define-key map [(control c) (tab)] 'py-indent-region)
-    (define-key map [(control j)] 'py-newline-and-indent)
-    (define-key map [(control meta a)] 'py-backward-def-or-class)
-    (define-key map [(control meta e)] 'py-forward-def-or-class)
-    (define-key map [(control meta h)] 'py-mark-def-or-class)
-    (define-key map [(control x) (n) (d)] 'py-narrow-to-def-or-class)
-    (define-key map [(meta tab)] 'py-shell-complete)
-    (define-key map [(super backspace)] 'py-dedent)
+    (define-key map [(control c) (control n)] (quote py-forward-statement))
+    (define-key map [(control c) (control p)] (quote py-backward-statement))
+    (define-key map [(control c) (control q)] (quote py-forward-block))
+    (define-key map [(control c) (control t)] (quote py-toggle-shell))
+    (define-key map [(control c) (control u)] (quote py-backward-block))
+    (define-key map [(control c) (control v)] (quote py-version))
+    (define-key map [(control c) (control w)] (quote py-pychecker-run))
+    (define-key map [(control c) (tab)] (quote py-indent-region))
+    (define-key map [(control j)] (quote py-newline-and-indent))
+    (define-key map [(control meta a)] (quote py-backward-def-or-class))
+    (define-key map [(control meta e)] (quote py-forward-def-or-class))
+    (define-key map [(control meta h)] (quote py-mark-def-or-class))
+    (define-key map [(control x) (n) (d)] (quote py-narrow-to-def-or-class))
+    (define-key map [(meta tab)] (quote py-shell-complete))
+    (define-key map [(super backspace)] (quote py-dedent))
     ;; (define-key map "\C-c\C-r" 	  'comint-show-output)
-    ;; (define-key map [(control c)(control r)] 'py-nav-last-prompt)
+    ;; (define-key map [(control c)(control r)] (quote py-nav-last-prompt))
     (substitute-key-definition 'complete-symbol 'completion-at-point
 			       map global-map)
-    (substitute-key-definition 'backward-up-list 'py-up
+    (substitute-key-definition 'backward-up-list (quote py-up)
 			       map global-map)
-    (substitute-key-definition 'down-list 'py-down
+    (substitute-key-definition 'down-list (quote py-down)
 			       map global-map)
     map)
   "Used inside a Python-shell.")
@@ -21989,12 +21986,12 @@ Takes END"
             (eq this-command 'completion-at-point)
             (eq this-command 'choose-completion)
             (eq this-command 'choose-completion)
-            (eq this-command 'py-shell-complete)
+            (eq this-command (quote py-shell-complete))
             (and (or
                   (eq last-command 'completion-at-point)
                   (eq last-command 'choose-completion)
                   (eq last-command 'choose-completion)
-                  (eq last-command 'py-shell-complete))
+                  (eq last-command (quote py-shell-complete)))
                  (eq this-command 'self-insert-command))))
     (py-restore-window-configuration)
     )
@@ -22526,7 +22523,7 @@ Returns the tracked buffer."
         ;; Fallback to a locally available copy of the file.
         (setq file-buffer (find-file-noselect file-name-prospect))))
       (when (not (member file-buffer py-pdbtrack-buffers-to-kill))
-        (add-to-list 'py-pdbtrack-buffers-to-kill file-buffer)))
+        (add-to-list (quote py-pdbtrack-buffers-to-kill) file-buffer)))
     file-buffer))
 
 (defun py-pdbtrack-toggle-stack-tracking (arg)
@@ -22544,9 +22541,9 @@ Returns the tracked buffer."
          (setq py-pdbtrack-do-tracking-p t)))
   ;; (if py-pdbtrack-do-tracking-p
   ;;     (progn
-  ;;       (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
+  ;;       (add-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file))
   ;;       (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file))
-  ;;   (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
+  ;;   (remove-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file))
   ;;   )
   (message "%sabled Python's pdbtrack"
            (if py-pdbtrack-do-tracking-p "En" "Dis")))
@@ -22562,8 +22559,8 @@ Returns the tracked buffer."
 
 
 (if pdb-track-stack-from-shell-p
-    (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file)
-  (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file))
+    (add-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file))
+  (remove-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file)))
 
 
 (defun py-pdbtrack-comint-output-filter-function (output)
@@ -22780,7 +22777,7 @@ not inside a defun."
     (when names
       (mapconcat (lambda (strg) strg) names "."))))
 
-(defalias 'py-describe-symbol 'py-help-at-point)
+(defalias (quote py-describe-symbol) (quote py-help-at-point))
 (defun py--help-at-point-intern (sym orig)
   (let* ((origfile (py--buffer-filename-remote-maybe))
 	 (cmd (py-find-imports))
@@ -23134,7 +23131,7 @@ local bindings to py-newline-and-indent."))
       (exchange-point-and-mark))))
 
 ;;  Find function stuff, lifted from python.el
-(defalias 'py-find-function 'py-find-definition)
+(defalias (quote py-find-function) (quote py-find-definition))
 (defun py--find-definition-question-type (symbol imports)
   (let (erg)
     (cond ((setq erg (py-execute-string (concat "import inspect;inspect.isbuiltin(\"" symbol "\")"))))
@@ -23189,7 +23186,7 @@ Imports done are displayed in message buffer."
 
 ;;  Code-Checker
 ;;  pep8
-(defalias 'pep8 'py-pep8-run)
+(defalias 'pep8 (quote py-pep8-run))
 (defun py-pep8-run (command)
   "*Run pep8 using COMMAND, check formatting.
 Default on the file currently visited."
@@ -23213,12 +23210,12 @@ Default on the file currently visited."
                               (if last
                                   last
                                 default)
-                              'py-pep8-history)
+                              (quote py-pep8-history))
         (read-string "Run pep8 like this: "
                      (if last
                          last
                        default)
-                     'py-pep8-history)))))
+                     (quote py-pep8-history))))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23235,7 +23232,7 @@ Default on the file currently visited."
   (shell-command "pep8 --help" "*pep8-Help*"))
 
 ;;  Pylint
-(defalias 'pylint 'py-pylint-run)
+(defalias 'pylint (quote py-pylint-run))
 (defun py-pylint-run (command)
   "Run pylint from COMMAND.
 
@@ -23252,7 +23249,7 @@ Home-page: http://www.logilab.org/project/pylint"
 			'read-shell-command 'read-string)
 		    "Run pylint like this: "
 		    (or default last)
-		    'py-pylint-history))))
+		    (quote py-pylint-history)))))
     (save-some-buffers (not py-ask-about-save))
   (set-buffer (get-buffer-create "*Pylint*"))
   (erase-buffer)
@@ -23260,7 +23257,7 @@ Home-page: http://www.logilab.org/project/pylint"
     (message "Warning: %s" "pylint needs a file"))
   (shell-command command "*Pylint*"))
 
-(defalias 'pylint-help 'py-pylint-help)
+(defalias 'pylint-help (quote py-pylint-help))
 (defun py-pylint-help ()
   "Display Pylint command line help messages.
 
@@ -23269,7 +23266,7 @@ Let's have this until more Emacs-like help is prepared"
   (with-help-window "*Pylint-Help*"
     (shell-command "pylint --long-help" "*Pylint-Help*")))
 
-(defalias 'pylint-doku 'py-pylint-doku)
+(defalias 'pylint-doku (quote py-pylint-doku))
 (defun py-pylint-doku ()
   "Display Pylint Documentation.
 
@@ -23280,7 +23277,7 @@ Calls `pylint --full-documentation'"
   (shell-command "pylint --full-documentation" "*Pylint-Documentation*"))
 
 ;;  Pyflakes3
-(defalias 'pyflakes 'py-pyflakes3-run)
+(defalias 'pyflakes (quote py-pyflakes3-run))
 (defun py-pyflakes3-run (command)
   "Check Python source files for errors."
   (interactive
@@ -23309,12 +23306,12 @@ Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
                               ;; (if last
                               ;; last
                               default
-                              'py-pyflakes3-history1)
+                              (quote py-pyflakes3-history1))
         (read-string "Run pyflakes3 like this: "
                      (if last
                          last
                        default)
-                     'py-pyflakes3-history)))))
+                     (quote py-pyflakes3-history))))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23323,7 +23320,7 @@ Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-(defalias 'pyflakes-help 'py-pyflakes3-help)
+(defalias 'pyflakes-help (quote py-pyflakes3-help))
 (defun py-pyflakes3-help ()
   "Display Pyflakes3 command line help messages."
   (interactive)
@@ -23331,7 +23328,7 @@ Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
     (shell-command "pyflakes3 --help" "*pyflakes3-Help*")))
 
 ;;  Pyflakes-pep8
-(defalias 'pyflakespep8 'py-pyflakespep8-run)
+(defalias 'pyflakespep8 (quote py-pyflakespep8-run))
 (defun py-pyflakespep8-run (command)
   "*Run COMMAND pyflakespep8, check formatting.
 
@@ -23356,12 +23353,12 @@ Default on the file currently visited."
                               (if last
                                   last
                                 default)
-                              'py-pyflakespep8-history)
+                              (quote py-pyflakespep8-history))
         (read-string "Run pyflakespep8 like this: "
                      (if last
                          last
                        default)
-                     'py-pyflakespep8-history)))))
+                     (quote py-pyflakespep8-history))))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23403,12 +23400,12 @@ Default on the file currently visited."
                               (if last
                                   last
                                 default)
-                              'py-pychecker-history)
+                              (quote py-pychecker-history))
         (read-string "Run pychecker like this: "
                      (if last
                          last
                        default)
-                     'py-pychecker-history)))))
+                     (quote py-pychecker-history))))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23437,7 +23434,7 @@ See ‘py-check-command’ for the default."
     (compilation-start command)))
 
 ;;  flake8
-(defalias 'flake8 'py-flake8-run)
+(defalias 'flake8 (quote py-flake8-run))
  (defun py-flake8-run (command)
   "COMMAND Flake8 is a wrapper around these tools:
 - PyFlakes
@@ -23477,12 +23474,12 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
                               ;; (if last
                               ;; last
                               default
-                              'py-flake8-history1)
+                              (quote py-flake8-history1))
         (read-string "Run flake8 like this: "
                      (if last
                          last
                        default)
-                     'py-flake8-history)))))
+                     (quote py-flake8-history))))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23593,7 +23590,7 @@ Assumes vars are defined in current source buffer"
         (let* ((name (symbol-at-point))
                (state
                 (unless
-                    (or (eq name 'py-menu)
+                    (or (eq name (quote py-menu))
                         (eq name 'python-mode-map)
                         (string-match "syntax-table" (prin1-to-string name)))
 
@@ -23796,7 +23793,7 @@ Returns position."
 
 (defun py--match-paren-blocks ()
   (cond
-   ((and (looking-back "^[ \t]*" (line-beginning-position))(if (eq last-command 'py-match-paren)(not py--match-paren-forward-p)t)
+   ((and (looking-back "^[ \t]*" (line-beginning-position))(if (eq last-command (quote py-match-paren))(not py--match-paren-forward-p)t)
 	 ;; (looking-at py-extended-block-or-clause-re)
 	 (looking-at "[[:alpha:]_]"))
     ;; from beginning of top-level, block, clause, statement
@@ -24187,17 +24184,17 @@ of the first definition found."
 
 ;; A modified slice from python.el
 (defvar py-imenu-format-item-label-function
-  'py-imenu-format-item-label
+  (quote py-imenu-format-item-label)
   "Imenu function used to format an item label.
 It must be a function with two arguments: TYPE and NAME.")
 
 (defvar py-imenu-format-parent-item-label-function
-  'py-imenu-format-parent-item-label
+  (quote py-imenu-format-parent-item-label)
   "Imenu function used to format a parent item label.
 It must be a function with two arguments: TYPE and NAME.")
 
 (defvar py-imenu-format-parent-item-jump-label-function
-  'py-imenu-format-parent-item-jump-label
+  (quote py-imenu-format-parent-item-jump-label)
   "Imenu function used to format a parent jump item label.
 It must be a function with two arguments: TYPE and NAME.")
 
@@ -24376,7 +24373,7 @@ string or comment."
   (if (and py-indent-comments py-electric-comment-p)
       (if (ignore-errors (eq 4 (car-safe arg)))
           (insert "#")
-        (when (and (eq last-command 'py-electric-comment)
+        (when (and (eq last-command (quote py-electric-comment))
                    (looking-back " " (line-beginning-position)))
           (forward-char -1))
         (if (called-interactively-p 'any)
@@ -24593,12 +24590,12 @@ Pass ARG to the command ‘yank’."
 ;;       the electric behaviours, not just the electric colon.
 
 ;; required for pending-del and delsel modes
-(put 'py-electric-colon 'delete-selection t) ;delsel
-(put 'py-electric-colon 'pending-delete t) ;pending-del
-(put 'py-electric-backspace 'delete-selection 'supersede) ;delsel
-(put 'py-electric-backspace 'pending-delete 'supersede) ;pending-del
-(put 'py-electric-delete 'delete-selection 'supersede) ;delsel
-(put 'py-electric-delete 'pending-delete 'supersede) ;pending-del
+(put (quote py-electric-colon) 'delete-selection t) ;delsel
+(put (quote py-electric-colon) 'pending-delete t) ;pending-del
+(put (quote py-electric-backspace) 'delete-selection 'supersede) ;delsel
+(put (quote py-electric-backspace) 'pending-delete 'supersede) ;pending-del
+(put (quote py-electric-delete) 'delete-selection 'supersede) ;delsel
+(put (quote py-electric-delete) 'pending-delete 'supersede) ;pending-del
 
 ;; python-components-virtualenv
 
@@ -25622,8 +25619,8 @@ Optional File: execute through running a temp-file"
 
 ;; python-components-hide-show
 
-;; (setq hs-block-start-regexp 'py-extended-block-or-clause-re)
-;; (setq hs-forward-sexp-func 'py-forward-block)
+;; (setq hs-block-start-regexp (quote py-extended-block-or-clause-re))
+;; (setq hs-forward-sexp-func (quote py-forward-block))
 
 (defun py-hide-base (form &optional beg end)
   "Hide visibility of existing form at point."
