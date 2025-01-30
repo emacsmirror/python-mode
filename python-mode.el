@@ -8448,7 +8448,7 @@ Optional IGNOREINDENT: find next keyword at any indentation"
 		9999
 	      (or maxindent
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
-           (allvalue (symbol-value (quote py-block-or-clause-re)))
+           ;; (allvalue (symbol-value (quote py-block-or-clause-re)))
            erg)
       (unless (py-beginning-of-statement-p)
 	(py-backward-statement))
@@ -9674,132 +9674,15 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
 	 (proc (or proc-raw (get-buffer-process buffer-name)
 		   (prog1
 		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
-		     (sit-for 1)
-		     )))
-	 (split (if python-mode-v5-behavior-p 'just-two split)))
+		     (sit-for 1))))
+
+         ;; (split (if python-mode-v5-behavior-p 'just-two split))
+         )
     (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
 			       (py--choose-buffer-name shell dedicated fast)))
-    (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)
-    ;; (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
-    ;;   (py--shell-manage-windows py-output-buffer exception-buffer (or split py-split-window-on-execute) switch))
-    ))
+    (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)))
 
 ;; python-components-execute-file
-
-;; Execute file given
-
-(defun py-execute-file-ipython (filename)
-  "Send file to IPython interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "ipython" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-ipython3 (filename)
-  "Send file to IPython3 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "ipython3" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-jython (filename)
-  "Send file to Jython interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "jython" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python (filename)
-  "Send file to Python interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "python" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python2 (filename)
-  "Send file to Python2 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "python2" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python3 (filename)
-  "Send file to Python3 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "python3" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-pypy (filename)
-  "Send file to PyPy interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "pypy" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file- (filename)
-  "Send file to  interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil nil "" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-ipython-dedicated (filename)
-  "Send file to a dedicatedIPython interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "ipython" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-ipython3-dedicated (filename)
-  "Send file to a dedicatedIPython3 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "ipython3" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-jython-dedicated (filename)
-  "Send file to a dedicatedJython interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "jython" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python-dedicated (filename)
-  "Send file to a dedicatedPython interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "python" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python2-dedicated (filename)
-  "Send file to a dedicatedPython2 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "python2" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-python3-dedicated (filename)
-  "Send file to a dedicatedPython3 interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "python3" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file-pypy-dedicated (filename)
-  "Send file to a dedicatedPyPy interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "pypy" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
-(defun py-execute-file--dedicated (filename)
-  "Send file to a dedicated interpreter"
-  (interactive "fFile: ")
-  (let ((interactivep (called-interactively-p 'interactive))
-        (buffer (py-shell nil nil t "" nil t)))
-    (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t interactivep)))
-
 ;; python-components-up
 
 
