@@ -8000,8 +8000,6 @@ Return position if minor-block found, nil otherwise "
 ;; python-components-down.el ends here
 ;; python-components-start-Zf98zM
 
-
-
 (defcustom py-mark-decorators nil
   "If decorators should be marked too.
 
@@ -26046,6 +26044,8 @@ VARIABLES
   (when py-outline-minor-mode-p (outline-minor-mode 1))
   (when (and py-debug-p (called-interactively-p 'any))
     (py-message-which-python-mode))
+  (when py-use-menu-p
+	  (py-define-menu python-mode-map))
   (force-mode-line-update))
 
 (define-derived-mode py-shell-mode comint-mode py-modeline-display
