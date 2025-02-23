@@ -3940,6 +3940,41 @@ Optional argument END specify end."
   :tag "py-default-working-directory"
   :group 'python-mode)
 
+(defcustom py-python-ffap-setup-code
+  "
+def __FFAP_get_module_path(objstr):
+    try:
+        import inspect
+        import os.path
+        # NameError exceptions are delayed until this point.
+        obj = eval(objstr)
+        module = inspect.getmodule(obj)
+        filename = module.__file__
+        ext = os.path.splitext(filename)[1]
+        if ext in ('.pyc', '.pyo'):
+            # Point to the source file.
+            filename = filename[:-1]
+        if os.path.exists(filename):
+            return filename
+        return ''
+    except:
+        return ''"
+  "Python code to get a module path."
+  :type 'string
+  :tag "py-python-ffap-setup-code"
+  :group 'python-mode)
+
+;; (defvar py-ffap-string-code
+;;   "__FFAP_get_module_path('''%s''')\n"
+;;   "Python code used to get a string with the path of a module.")
+
+(defcustom py-ffap-string-code
+  "__FFAP_get_module_path('''%s''')"
+  "Python code used to get a string with the path of a module."
+  :type 'string
+  :tag "py-python-ffap-string-code"
+  :group 'python-mode)
+
 (defun py-empty-line-p ()
   "Return t if cursor is at an empty line, nil otherwise."
   (save-excursion
@@ -4047,7 +4082,7 @@ Returns ‘t’ if point was moved"
               (nth 4 (parse-partial-sexp (point-min) (point)))))
       (setq last (line-end-position))
       (forward-line 1)
-      (skip-chars-forward " \t\r\n\f") 
+      (skip-chars-forward " \t\r\n\f")
       (unless (or (eobp) (eq (point) last))
         (back-to-indentation)))
     (when last (goto-char last))))
@@ -5309,7 +5344,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 	       (comint-send-string proc "\n"))
 	     (cond (result
                     ;; (sit-for py-python-send-delay)
-                    (sit-for py-python-send-delay)                                                     
+                    (sit-for py-python-send-delay)
 		    (py--fetch-result buffer limit strg))
 	           (no-output
 	            (and orig (py--cleanup-shell orig buffer))))))
@@ -16360,8 +16395,6 @@ Returns value of ‘py-underscore-word-syntax-p’."
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-underscore-word-syntax-p: %s" py-underscore-word-syntax-p))
   py-underscore-word-syntax-p)
 
-;; py-toggle-underscore-word-syntax-p must be known already
-;; circular: py-toggle-underscore-word-syntax-p sets and calls it
 (defcustom py-underscore-word-syntax-p t
   "If underscore chars should be of ‘syntax-class’ word.
 
@@ -16377,6 +16410,9 @@ See bug report at launchpad, lp:940812"
   :set (lambda (symbol value)
          (set-default symbol value)
          (py-toggle-underscore-word-syntax-p (if value 1 0))))
+
+;; py-toggle-underscore-word-syntax-p must be known already
+;; circular: py-toggle-underscore-word-syntax-p sets and calls it
 
 ;; python-components-edit
 
@@ -19626,10 +19662,13 @@ See also ‘py-execute-directory’Use `M-x customize-variable' to set it perman
 		 (not py-fileless-buffer-use-default-directory-p))
 	   :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-fileless-buffer-use-default-directory-p])
-
+         ["Py-electric-backspace-mode" py-electric-backspace-mode
+	  :help " ‘py-electric-backspace-mode’
+If <backspace> key deletes one or more of whitespace chars left from point .
+Default is nil."
+	  :style toggle :selected py-electric-backspace-mode]
 	 ("Underscore word syntax"
 	  :help "Toggle ‘py-underscore-word-syntax-p’"
-
 	  ["Toggle underscore word syntax" py-toggle-underscore-word-syntax-p
 	   :help " ‘py-toggle-underscore-word-syntax-p’
 
@@ -19728,6 +19767,9 @@ set it permanently"
 See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-edit-only-p])))
       ("Other"
+       ["Py-electric-backspace-mode" py-electric-backspace-mode
+	:help " ‘py-electric-backspace-mode’
+If <backspace> key deletes one or more of whitespace chars left from point ."]
        ["Boolswitch" py-boolswitch
 	:help " ‘py-boolswitch’
 Edit the assignment of a boolean variable, revert them."]
@@ -19842,7 +19884,6 @@ Default is t")
         (define-key map [(:)] (quote py-electric-colon))
         (define-key map [(\#)] (quote py-electric-comment))
         (define-key map [(delete)] (quote py-electric-delete))
-        (define-key map [(backspace)] (quote py-electric-backspace))
         (define-key map [(control backspace)] (quote py-hungry-delete-backwards))
         (define-key map [(control c) (delete)] (quote py-hungry-delete-forward))
         ;; (define-key map [(control y)] (quote py-electric-yank))
@@ -24546,6 +24587,14 @@ Pass ARG to the command ‘yank’."
   (setq py-electric-colon-active-p (not py-electric-colon-active-p))
   (when (and py-verbose-p (called-interactively-p 'interactive)) (message "py-electric-colon-active-p: %s" py-electric-colon-active-p)))
 
+(defun py-toggle-py-electric-backspace ()
+  "Toggle py-electric-backspace-mode."
+  (interactive)
+  ;; (py-electric-backspace-mode))
+  (setq py-electric-backspace-mode (not py-electric-backspace-mode))
+  (if py-electric-backspace-mode  (py-electric-backspace-mode 1) (py-electric-backspace-mode -1))
+  (when (and py-verbose-p (called-interactively-p 'interactive)) (message "py-electric-backspace-mode: %s" py-electric-backspace-mode)))
+
 ;; TODO: PRouleau: It might be beneficial to have toggle commands for all
 ;;       the electric behaviours, not just the electric colon.
 
@@ -24556,6 +24605,33 @@ Pass ARG to the command ‘yank’."
 (put (quote py-electric-backspace) 'pending-delete 'supersede) ;pending-del
 (put (quote py-electric-delete) 'delete-selection 'supersede) ;delsel
 (put (quote py-electric-delete) 'pending-delete 'supersede) ;pending-del
+
+(define-minor-mode py-electric-backspace-mode
+  "When on, <backspace> key will delete all whitespace chars before point.
+
+Default is nil"
+  :group 'python-mode
+  :lighter " eb"
+  (if py-electric-backspace-mode
+      (if (ignore-errors (functionp 'keymap-local-set))
+          (keymap-local-set "<backspace>" 'py-electric-backspace)
+        (local-set-key "<backspace>" 'py-electric-backspace))
+    (if (ignore-errors (functionp 'keymap-local-unset))
+        (keymap-local-unset "<backspace>")
+      (local-unset-key "<backspace>"))))
+
+(defcustom py-electric-backspace-mode nil
+  "When ‘t’, <backspace> key will delete all whitespace chars before point.
+
+Default nil"
+
+  :type 'boolean
+  :tag "py-electric-backspace-mode"
+  :group 'python-mode
+  :safe 'booleanp
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (py-electric-backspace-mode (if value 1 0))))
 
 ;; python-components-virtualenv
 
@@ -26004,6 +26080,7 @@ VARIABLES
   ;; (add-hook 'python-mode-hook
   ;; (lambda ()
   ;; (run-with-idle-timer 1 t 'py-shell-complete))))
+  ;; (when py-electric-backspace-p (py-electric-backspace-mode 1))
   (if py-auto-fill-mode
       (add-hook 'python-mode-hook 'py--run-auto-fill-timer)
     (remove-hook 'python-mode-hook 'py--run-auto-fill-timer))
