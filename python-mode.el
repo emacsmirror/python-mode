@@ -634,7 +634,7 @@ Default is nil"
   :group 'python-mode)
 
 (defvar highlight-indent-active nil)
-(defvar autopair-mode nil)
+;; (defvar autopair-mode nil)
 
 (defvar-local py--editbeg nil
   "Internally used by ‘py-edit-docstring’ and others")
@@ -671,15 +671,15 @@ See var ‘py-return-result-p’ and command ‘py-toggle-py-return-result-p’"
   :tag "py-timer-close-completions-p"
   :group 'python-mode)
 
-(defcustom py-autopair-mode nil
-  "If ‘python-mode’ calls (autopair-mode-on)
+;; (defcustom py-autopair-mode nil
+;;   "If ‘python-mode’ calls (autopair-mode-on)
 
-Default is nil
-Load ‘autopair-mode’ written by Joao Tavora <joaotavora [at] gmail.com>
-URL: http://autopair.googlecode.com"
-  :type 'boolean
-  :tag "py-autopair-mode"
-  :group 'python-mode)
+;; Default is nil
+;; Load ‘autopair-mode’ written by Joao Tavora <joaotavora [at] gmail.com>
+;; URL: http://autopair.googlecode.com"
+;;   :type 'boolean
+;;   :tag "py-autopair-mode"
+;;   :group 'python-mode)
 
 (defcustom py-indent-no-completion-p nil
   "If completion function should insert a TAB when no completion found.
@@ -9187,7 +9187,7 @@ Avoid empty lines at the beginning."
   ;; (when py-debug-p (message "py--fix-start:"))
   (let (py--imenu-create-index-p
 	py-guess-py-install-directory-p
-	py-autopair-mode
+	;; py-autopair-mode
 	py-complete-function
 	py-load-pymacs-p
 	py-load-skeletons-p
@@ -16101,44 +16101,6 @@ Returns value of ‘py-smart-indentation’."
   "Opens customization."
   (interactive)
   (customize-variable (quote py-sexp-function)))
-
-;; Autopair mode
-;; py-autopair-mode forms
-(declare-function autopair-mode "autopair" ())
-(defun py-autopair-check ()
-  "Check, if ‘autopair-mode’ is available.
-
-Give some hints, if not."
-  (interactive)
-  (if (featurep 'autopair)
-      't
-    (progn
-      (message "py-autopair-check: %s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
-      nil)))
-
-(defun py-toggle-autopair-mode ()
-  "If ‘py-autopair-mode’ should be on or off.
-
-  Returns value of ‘py-autopair-mode’ switched to."
-  (interactive)
-  (and (py-autopair-check)
-       (declare-function autopair-mode "autopair-mode" ())
-       (setq py-autopair-mode (autopair-mode (if autopair-mode 0 1)))))
-
-(defun py-autopair-mode-on ()
-  "Make sure, py-autopair-mode' is on.
-
-Returns value of ‘py-autopair-mode’."
-  (interactive)
-  (and (py-autopair-check)
-       (setq py-autopair-mode (autopair-mode 1))))
-
-(defun py-autopair-mode-off ()
-  "Make sure, py-autopair-mode' is off.
-
-Returns value of ‘py-autopair-mode’."
-  (interactive)
-  (setq py-autopair-mode (autopair-mode -1)))
 
 ;;  py-switch-buffers-on-execute-p forms
 (defun py-toggle-switch-buffers-on-execute-p (&optional arg)
@@ -26050,16 +26012,16 @@ VARIABLES
   (set (make-local-variable 'electric-indent-mode) nil)
   (and py-load-skeletons-p (py-load-skeletons))
   (and py-guess-py-install-directory-p (py-set-load-path))
-  (and py-autopair-mode
-       (declare-function autopair-python-triple-quote-action "autopair" ())
-       (declare-function autopair-default-handle-action "autopair" ())
-       (load-library "autopair")
-       (add-hook 'python-mode-hook
-                 #'(lambda ()
-                     (setq autopair-handle-action-fns
-                           (list #'autopair-default-handle-action
-                                 #'autopair-python-triple-quote-action))))
-       (py-autopair-mode-on))
+  ;; (and py-autopair-mode
+  ;;      (declare-function autopair-python-triple-quote-action "autopair" ())
+  ;;      (declare-function autopair-default-handle-action "autopair" ())
+  ;;      (load-library "autopair")
+  ;;      (add-hook 'python-mode-hook
+  ;;                #'(lambda ()
+  ;;                    (setq autopair-handle-action-fns
+  ;;                          (list #'autopair-default-handle-action
+  ;;                                #'autopair-python-triple-quote-action))))
+  ;;      (py-autopair-mode-on))
   (when (and py--imenu-create-index-p
              (fboundp 'imenu-add-to-menubar)
              (ignore-errors (require 'imenu)))
