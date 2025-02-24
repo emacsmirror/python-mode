@@ -89,6 +89,18 @@
 
 ;; (require 'org)
 
+(defvar comint-mime-setup-script-dir nil
+  "Avoid compiler warning")
+
+(defvar comint-mime-enabled-types nil
+  "Avoid compiler warning")
+
+(defvar comint-mime-setup-function-alist nil
+  "Avoid compiler warning")
+
+(defvar comint-mime-setup-function-alist nil
+  "Avoid compiler warning")
+
 (defgroup python-mode nil
   "Support for the Python programming language, <http://www.python.org/>"
   :group 'languages
@@ -620,17 +632,6 @@ Default is nil"
   :type 'boolean
   :tag "py-modeline-acronym-display-home-p"
   :group 'python-mode)
-
-(defun py-autopair-check ()
-  "Check, if ‘autopair-mode’ is available.
-
-Give some hints, if not."
-  (interactive)
-  (if (featurep 'autopair)
-      't
-    (progn
-      (message "py-autopair-check: %s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
-      nil)))
 
 (defvar highlight-indent-active nil)
 (defvar autopair-mode nil)
@@ -3590,9 +3591,9 @@ If succesful, returns beginning of docstring position in buffer"
   "STATE expected as result von (parse-partial-sexp (point-min) (point)."
   (if (nth 3 state)
       (if (py--docstring-p (nth 8 state))
-          font-lock-doc-face
-        font-lock-string-face)
-    font-lock-comment-face))
+          'font-lock-doc-face
+        'font-lock-string-face)
+    'font-lock-comment-face))
 
 (and (fboundp 'make-obsolete-variable)
      (make-obsolete-variable 'py-mode-hook 'python-mode-hook nil))
@@ -16104,6 +16105,17 @@ Returns value of ‘py-smart-indentation’."
 ;; Autopair mode
 ;; py-autopair-mode forms
 (declare-function autopair-mode "autopair" ())
+(defun py-autopair-check ()
+  "Check, if ‘autopair-mode’ is available.
+
+Give some hints, if not."
+  (interactive)
+  (if (featurep 'autopair)
+      't
+    (progn
+      (message "py-autopair-check: %s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
+      nil)))
+
 (defun py-toggle-autopair-mode ()
   "If ‘py-autopair-mode’ should be on or off.
 
@@ -24620,13 +24632,13 @@ Default is nil"
         (keymap-local-unset "<backspace>")
       (local-unset-key "<backspace>"))))
 
-(defcustom py-electric-backspace-mode nil
+(defcustom py-electric-backspace-p nil
   "When ‘t’, <backspace> key will delete all whitespace chars before point.
 
 Default nil"
 
   :type 'boolean
-  :tag "py-electric-backspace-mode"
+  :tag "py-electric-backspace-p"
   :group 'python-mode
   :safe 'booleanp
   :set (lambda (symbol value)
@@ -26080,7 +26092,10 @@ VARIABLES
   ;; (add-hook 'python-mode-hook
   ;; (lambda ()
   ;; (run-with-idle-timer 1 t 'py-shell-complete))))
-  ;; (when py-electric-backspace-p (py-electric-backspace-mode 1))
+  (add-hook 'python-mode-hook
+            (lambda ()
+              (if py-electric-backspace-p (py-electric-backspace-mode 1)
+                (py-electric-backspace-mode -1))))
   (if py-auto-fill-mode
       (add-hook 'python-mode-hook 'py--run-auto-fill-timer)
     (remove-hook 'python-mode-hook 'py--run-auto-fill-timer))
@@ -26099,7 +26114,7 @@ VARIABLES
     (set (make-local-variable 'end-of-defun-function) 'py-forward-def-or-class)
     (define-key python-mode-map [(control meta a)] 'py-backward-def-or-class)
     (define-key python-mode-map [(control meta e)] 'py-forward-def-or-class))
-    (when py-sexp-use-expression-p
+  (when py-sexp-use-expression-p
     (define-key python-mode-map [(control meta f)] 'py-forward-expression)
     (define-key python-mode-map [(control meta b)] 'py-backward-expression))
 
@@ -26108,7 +26123,7 @@ VARIABLES
   (when (and py-debug-p (called-interactively-p 'any))
     (py-message-which-python-mode))
   (when py-use-menu-p
-	  (py-define-menu python-mode-map))
+    (py-define-menu python-mode-map))
   (force-mode-line-update))
 
 (define-derived-mode py-shell-mode comint-mode py-modeline-display
