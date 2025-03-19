@@ -82,7 +82,7 @@ Provide fine grained navigation of all known Python constructs.
 
   There is also ‘python-mode-v5-behavior’
 
-* Indentation\
+* Indentation
 
   See customizable variable ‘py-indent-offset’ for default indent
 
