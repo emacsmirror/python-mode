@@ -1702,14 +1702,6 @@ See also ‘py-keep-windows-configuration’"
   :tag "py-split-window-on-execute"
   :group 'python-mode)
 
-;; (defun py-toggle-py-split-window-on-execute ()
-;;   "Toggle between customized value and nil."
-;;   (interactive)
-;;   (setq py-split-window-on-execute (not py-split-window-on-execute))
-;;   (when (called-interactively-p 'interactive)
-;;     (message "py-split-window-on-execute: %s" py-split-window-on-execute)
-;;     py-split-window-on-execute))
-
 (defcustom py-split-window-on-execute-threshold 3
   "Maximal number of displayed windows.
 
@@ -2956,7 +2948,7 @@ See ‘py-minor-block-re-raw’ for better readable content")
 (defconst py-for-re "[ \t]*\\_<\\(async for\\|for\\)\\_> +[[:alpha:]_][[:alnum:]_]* +in +[[:alpha:]_][[:alnum:]_()]* *[: \n\t]"
   "Matches the beginning of a ‘try’ block.")
 
-(defconst py-if-re "[ \t]*\\_<if\\_> +[^\n\r\f]+ *[: \n\t]"
+(defconst py-if-re "[ \t]*\\_<if\\_>[ (]+"
   "Matches the beginning of an ‘if’ block.")
 
 (defconst py-else-re "[ \t]*\\_<else:"
@@ -9470,7 +9462,8 @@ Unless DIRECTION is symbol \\='forward, go backward first"
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
       (with-temp-buffer
 	(insert strg)
-	(write-file tempfile))
+	(write-file tempfile)
+        (sit-for 0.1))
       (unwind-protect
 	  (py--execute-file-base tempfile proc nil procbuf origline fast)
 	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
@@ -10535,13 +10528,8 @@ If already at ‘beginning-of-line’ and not at BOB,
 go to beginning of previous line."
   (interactive)
   (unless (bobp)
-    (let ((erg
-           (if (bolp)
-               (progn
-                 (forward-line -1)
-                 (progn (beginning-of-line)(point)))
-             (progn (beginning-of-line)(point)))))
-      erg)))
+    (forward-line -1)
+    (point))) 
 
 (defun py-forward-line ()
   "Go to ‘end-of-line’, return position.
@@ -13227,7 +13215,36 @@ This may be preferable to `\\[py-execute-buffer]' because:
       (+ (current-indentation) py-indent-offset)
     (1+ (current-column))))
 
-(defun py-compute-indentation-according-to-list-style (pps)
+(defun py-compute-indentation-according-to-list-style-intern()
+  (pcase py-indent-list-style
+    (`line-up-with-first-element
+     (if (looking-at "\\s([ \\t]*$")
+         (cond ((save-excursion
+                  (back-to-indentation)
+                  (looking-at py-if-re))
+                ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=42513
+                0)
+               ((looking-back "^[ \\t]+ " (line-beginning-position))
+                ;; line with 'sword', from a single opener
+                ;; var5: Sequence[Mapping[str, Sequence[str]]] = [
+                ;;     {
+                ;;      'red': ['scarlet', 'vermilion', 'ruby'],
+                ;;      'green': ['emerald', 'aqua']
+                ;;     },
+                ;;     {
+                ;;                 'sword': ['cutlass', 'rapier']
+                ;;     }
+                ;; ]
+                (+ (current-indentation) 1))
+               (t
+                (+ (current-indentation) py-indent-offset)))
+       (+ (current-column) 1)))
+    (`one-level-to-beginning-of-statement
+     (+ (current-indentation) py-indent-offset))
+    (`one-level-from-first-element
+     (+ 1 (current-column) py-indent-offset))))
+
+(defun py-compute-indentation-according-to-list-style (pps line-beginning-position)
   "See ‘py-indent-list-style’
 
 Choices are:
@@ -13237,56 +13254,94 @@ Choices are:
 \\='one-level-from-opener
 
 See also py-closing-list-dedents-bos"
-  (goto-char (nth 1 pps))
-  (cond
-   ((and (looking-back py-assignment-re (line-beginning-position))
-         ;; flexible-indentation-lp-328842
-         (not (eq (match-beginning 0) (line-beginning-position))))
-    (+ (current-indentation) py-indent-offset))
-   (py-closing-list-dedents-bos
-    (current-indentation))
-   (t (pcase py-indent-list-style
-        (`line-up-with-first-element
-         (if (and (eq (car (syntax-after (point))) 4) (save-excursion (forward-char 1) (eolp)))
-             ;; asdf = {
-             ;;     'a':{
-             ;;          'b':3,
-             ;;          'c':4"
-             ;;
-             ;; b is at col 9
-             ;; (+ (current-indentation) py-indent-offset) would yield 8
-             ;; EOL-case dedent starts if larger at least 2
-             (cond ((< 1 (- (1+ (current-column))(+ (current-indentation) py-indent-offset)))
-                   (min (+ (current-indentation) py-indent-offset)(1+ (current-column))))
-                   (t (1+ (current-column))))
-           (1+ (current-column))))
-        (`one-level-to-beginning-of-statement
-         (+ (current-indentation) py-indent-offset))
-        (`one-level-from-first-element
-         (+ 1 (current-column) py-indent-offset))))))
+  (let ((orig (point))
+        (lines (py-count-lines))
+        (just-at-closer (save-excursion
+                          (or (looking-back "^[ \t]*\\s)" (line-beginning-position))
+                              (and (looking-at "[ \t]*\\s)")
+                                   (looking-back "^[ \t]*" (line-beginning-position))))))
+        (lines-from
+         (progn (goto-char (nth 1 pps))
+                (py-count-lines))))
+    ;; now at start of inner list
+    (cond
+     ((save-excursion
+        ;; from last 'pk': chained lists as special case
+        ;; data = {'key': {
+        ;;     'objlist': [
+        ;;         {'pk': 1,
+        ;;          'name': 'first'},
+        ;;         {'pk': 2,
+        ;;          'name': 'second'}
+        ;;     ]
+        ;; }}
+        (and
+         ;; list starts at current line
+         (< line-beginning-position (nth 1 pps))
+         ;; if previous line contains in another list, indent according to its start
+         (progn
+           (beginning-of-line)
+           (skip-chars-backward " \t\r\n\f")
+           (skip-chars-backward "^[[:alnum:]]")
+           (eq (nth 0 pps) (nth 0 (parse-partial-sexp (point-min) (point)))))))
+      (beginning-of-line)
+      (skip-chars-backward " \t\r\n\f")
+      (skip-chars-backward "^[[:alnum:]]")
+      (goto-char (nth 1 (parse-partial-sexp (point-min) (point))))
+      (current-indentation))
+     (just-at-closer
+      ;; dedents at opener or at openers indentation
+      (cond ((or (eq line-beginning-position (line-beginning-position)) py-closing-list-dedents-bos)
+             (current-indentation))
+            (t (py-compute-indentation-according-to-list-style-intern))))
+     ((save-excursion
+        (and
+         (not just-at-closer)
+         (< 1 (- lines lines-from))
+         (progn
+           (goto-char orig)
+           (forward-line -1)
+           ;; ignore if in higher nesting
+           (eq (nth 0 pps) (nth 0 (parse-partial-sexp (point-min) (point)))))))
+      (progn
+        (goto-char orig)
+        (forward-line -1)
+        (current-indentation)))
+     ((eq line-beginning-position (line-beginning-position))
+      ;; (and (eq line-beginning-position (line-beginning-position))  (looking-back [^ \\t]*))
+      (current-indentation))
+     ((eq (current-column) 0)
+      ;; List starts at BOL or indent,
+      ;; https://bugs.launchpad.net/python-mode/+bug/328842
+      (+ (current-indentation) py-indent-offset))
+     (t (py-compute-indentation-according-to-list-style-intern)))))
 
-(defun py-compute-indentation-closing-list (pps)
-  (cond
-   ((< 1 (nth 0 pps))
-    (goto-char (nth 1 pps))
-    ;; reach the outer list
-    (goto-char (nth 1 (parse-partial-sexp (point-min) (point))))
-    (py--computer-closing-inner-list))
-   ;; just close an maybe outer list
-   ((eq 1 (nth 0 pps))
-    (goto-char (nth 1 pps))
-    (py-compute-indentation-according-to-list-style pps))))
+;; (defun py-compute-indentation-closing-list (pps)
+;;   (cond
+;;    ((< 1 (nth 0 pps))
+;;     (goto-char (nth 1 pps))
+;;     ;; reach the outer list
+;;     (goto-char (nth 1 (parse-partial-sexp (point-min) (point))))
+;;     (py--computer-closing-inner-list))
+;;    ;; just close an maybe outer list
+;;    ((eq 1 (nth 0 pps))
+;;     (goto-char (nth 1 pps))
+;;     (py-compute-indentation-according-to-list-style pps))))
 
-(defun py-compute-indentation-in-list (pps line closing orig)
-  (if closing
-      (py-compute-indentation-closing-list pps)
-    (cond ((and (not line) (looking-back py-assignment-re (line-beginning-position)))
-	   (py--fetch-indent-statement-above orig))
-	  ;; (py-compute-indentation-according-to-list-style pps iact orig origline line nesting repeat indent-offset liep)
-	  (t (when (looking-back "[ \t]*\\(\\s(\\)" (line-beginning-position))
-	       (goto-char (match-beginning 1))
-	       (setq pps (parse-partial-sexp (point-min) (point))))
-	     (py-compute-indentation-according-to-list-style pps)))))
+;; (defun py-compute-indentation-in-list (pps line closing orig)
+;;   ;; (if closing
+;;   ;; (py-compute-indentation-closing-list pps)
+;;   (let ((orig (point))
+;;         (oldlinestart (line-beginning-position)))
+;;     (if
+;;         (and (not line) (not closing)
+;;              (progn (back-to-indentation)
+;;                     (skip-chars-backward " \t\r\n\f")
+;;                     (or line (setq line (< (line-beginning-position) oldlinestart)))
+;;                     (back-to-indentation)
+;;                     (< (nth 1 pps) (point))))
+;;         (current-indentation)
+;;       (py-compute-indentation-according-to-list-style pps closing))))
 
 (defun py-compute-comment-indentation (pps iact orig origline closing line nesting repeat indent-offset liep)
   (cond ((nth 8 pps)
@@ -13326,23 +13381,22 @@ See also py-closing-list-dedents-bos"
         ((and (eq 11 (syntax-after (point))) line py-indent-honors-inline-comment)
          (current-column))))
 
-(defun py-compute-indentation--at-closer-maybe (pps)
-  (save-excursion
-    (when (looking-back "^[ \t]*\\(\\s)\\)" (line-beginning-position))
-      (forward-char -1)
-      (setq pps (parse-partial-sexp (point-min) (point))))
-    (when (and (nth 1 pps)
-               (looking-at "[ \t]*\\(\\s)\\)") (nth 0 pps))
-      (cond
-       ;; no indent at empty argument (list
-       ((progn (skip-chars-backward " \t\r\n\f") (ignore-errors (eq 4 (car (syntax-after (1- (point)))))))
-        (current-indentation))
-       ;; beyond list start?
-       ((ignore-errors (< (progn (unless (bobp) (forward-line -1) (line-beginning-position))) (nth 1 (setq pps (parse-partial-sexp (point-min) (point))))))
-        (py-compute-indentation-according-to-list-style pps))
-       (py-closing-list-dedents-bos
-        (- (current-indentation) py-indent-offset))
-       (t (current-indentation))))))
+(defun py-compute-indentation--at-closer-maybe (erg)
+  (goto-char erg)
+  (backward-sexp)
+  (if py-closing-list-dedents-bos
+      (current-indentation)
+    (+ (current-indentation) py-indent-offset)))
+
+(defun py-compute-indentation--at-closer-p ()
+  "If on a line on with just on or more chars closing a list."
+  ;; (interactive)
+  (or
+   (and (looking-back "^[ \\t]*[\])}]+[ \\t]*" (line-beginning-position))(match-end 0))
+   (and (looking-back "^ *" (line-beginning-position))
+        (looking-at "[ \\t]*[\]})]+[ \\t]*$")
+        (match-end 0)
+        )))
 
 (defun py-compute-indentation (&optional iact orig origline closing line nesting repeat indent-offset liep beg)
   "Compute Python indentation.
@@ -13360,6 +13414,7 @@ INDENT-OFFSET allows calculation of block-local values
 LIEP stores line-end-position at point-of-interest
 "
   (interactive "p")
+  ;; (and (not line) (< (current-column) (current-indentation)) (back-to-indentation))
   (let ((beg
          (or beg
              (and (comint-check-proc (current-buffer))
@@ -13383,11 +13438,7 @@ LIEP stores line-end-position at point-of-interest
 		      ;; (when (eq 5 (car (syntax-after (1- (point)))))
 		      ;;   (forward-char -1))
 		      (parse-partial-sexp (point-min) (point))))
-               (closing
-                (or closing
-                    ;; returns update pps
-                    ;; (and line (py-compute-indentation--at-closer-maybe pps))
-                    (py-compute-indentation--at-closer-maybe pps)))
+
                ;; in a recursive call already
                (repeat (if repeat
                            (setq repeat (1+ repeat))
@@ -13399,7 +13450,7 @@ LIEP stores line-end-position at point-of-interest
               (error "‘py-compute-indentation’ reached loops max.")
             (setq nesting (nth 0 pps))
             (setq indent
-                  (cond ;; closing)
+                  (cond
                    ((bobp)
 		    (cond ((eq liep (line-end-position))
                            0)
@@ -13451,20 +13502,22 @@ LIEP stores line-end-position at point-of-interest
 		     (and (eq 11 (syntax-after (point))) line py-indent-honors-inline-comment))
 		    (py-compute-comment-indentation pps iact orig origline closing line nesting repeat indent-offset liep))
 		   ;; lists
+		   ;; ((and line (nth 1 pps))
 		   ((nth 1 pps)
-		    (if (< (nth 1 pps) (line-beginning-position))
-                        ;; Compute according to ‘py-indent-list-style’
+                    (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
+		   ;; (if (< (nth 1 pps) (line-beginning-position))
+                   ;; Compute according to ‘py-indent-list-style’
 
-                        ;; Choices are:
+                   ;; Choices are:
 
-                        ;; \\='line-up-with-first-element (default)
-                        ;; \\='one-level-to-beginning-of-statement
-                        ;; \\='one-level-from-opener"
+                   ;; \\='line-up-with-first-element (default)
+                   ;; \\='one-level-to-beginning-of-statement
+                   ;; \\='one-level-from-opener"
 
-                        ;; See also py-closing-list-dedents-bos
-			(py-compute-indentation-in-list pps line closing orig)
-		      (back-to-indentation)
-		      (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep beg)))
+                   ;; See also py-closing-list-dedents-bos
+		   ;;   (py-compute-indentation-in-list pps line closing orig)
+		   ;; (back-to-indentation)
+		   ;; (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep beg)))
 		   ((and (eq (char-after) (or ?\( ?\{ ?\[)) line)
 		    (1+ (current-column)))
 		   ((py-preceding-line-backslashed-p)
@@ -13498,29 +13551,25 @@ LIEP stores line-end-position at point-of-interest
 			  (- (current-indentation) (or indent-offset py-indent-offset)))
 		      (py-backward-block-or-clause)
 		      (current-indentation)))
-		   ;; ((and (looking-at py-elif-re) (eq (py-count-lines) origline))
-		   ;; (when (py--line-backward-maybe) (setq line t))
-		   ;; (car (py--clause-lookup-keyword py-elif-re -1 nil origline)))
 		   ((and (looking-at py-minor-clause-re) (not line)
                          (eq liep (line-end-position)))
 		    (cond
                      ((looking-at py-case-re)
                       (and (py--backward-regexp (quote py-match-case-re) nil '>)
-                                           ;; (+ (current-indentation) py-indent-offset)
-                                           (current-indentation)
-                                           ))
+                           ;; (+ (current-indentation) py-indent-offset)
+                           (current-indentation)))
                      ((looking-at py-minor-clause-re)
 		      (and (py--backward-regexp (quote py-block-or-clause-re)
-                      ;; an arbitray number, larger than an real expected indent
-                      (* 99 py-indent-offset)
-                      '<)
+                                                ;; an arbitray number, larger than an real expected indent
+                                                (* 99 py-indent-offset)
+                                                '<)
                            (current-indentation)))
 
                      ((looking-at py-outdent-re)
 		      (and (py--backward-regexp (quote py-block-or-clause-re)
-                      ;; an arbitray number, larger than an real expected indent
-                      (* 99 py-indent-offset)
-                      '<)))
+                                                ;; an arbitray number, larger than an real expected indent
+                                                (* 99 py-indent-offset)
+                                                '<)))
 		     ((bobp) 0)
 		     (t (save-excursion
 			  ;; (skip-chars-backward " \t\r\n\f")
@@ -16390,6 +16439,16 @@ See bug report at launchpad, lp:940812"
 
 ;; py-toggle-underscore-word-syntax-p must be known already
 ;; circular: py-toggle-underscore-word-syntax-p sets and calls it
+
+(defun py-toggle-py-closing-list-dedents-bos ()
+  "Toggle var py-closing-list-dedents-bos.
+
+Valid in current session only.
+At start may be set by custom-file"
+  (interactive) 
+  (setq py-closing-list-dedents-bos
+	(not py-closing-list-dedents-bos))
+  (when (or py-verbose-p (called-interactively-p 'any)) (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
 
 ;; python-components-edit
 
@@ -24509,8 +24568,8 @@ At no-whitespace char, delete one char at point.
 	(if (boundp 'delete-active-region)
             (delete-active-region)
 	  (delete-region (region-beginning) (region-end))))
-       ((looking-at "[[:graph:]]")
-	(delete-char 1))
+       ;; ((looking-at "[[:graph:]]")
+       ;;  (delete-char 1))
        ((or (eolp) (looking-at "[ \t]+$"))
 	(cond
 	 ((eolp) (delete-char 1))

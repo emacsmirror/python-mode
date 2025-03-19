@@ -3,25 +3,25 @@
 Send source code to all known Python shells without need to reconfigure default.
 Provide fine grained navigation of all known Python constructs.
 
-
 * Initialize
+
   Make sure the directory, where python-mode.el resides, is in load-path
   For expample put something like that in your init-file: 
 
-  (add-to-list 'load-path "PATH/TO/PYTHON-MODE")
+  (add-to-list 'load-path "PATH/TO/PYTHON-MODE")\
   (require 'python-mode)
 
   or probably still better: 
 
-  (setq py-install-directory "PATH/TO/PYTHON-MODE/")
-  (add-to-list 'load-path py-install-directory)
+  (setq py-install-directory "PATH/TO/PYTHON-MODE/")\
+  (add-to-list 'load-path py-install-directory)\
   (require 'python-mode)
 
 * Selecting a Python shell:
 
   Customize default Python shell as `py-shell-name'
 
-  `py-shell-name' might be an installed default executable as shell
+  ‘py-shell-name’ might be an installed default executable as shell
   command `type' would display, but also a PATH/TO/EXECUTABLE
 
   If different flavours of Python are installed, in order to adress
@@ -68,30 +68,87 @@ Provide fine grained navigation of all known Python constructs.
   (interactive)
   (py-shell nil DEDICATED PATH-TO-LOCAL-SHELL))
 
-* Prefix conventions
+* Executing code
 
-  Most python-mode.el commands start with prefix `py-'
+  - Python code might be processed by an interactive Python shell (DEFAULT)
 
-  `M-x py- TAB'
-  displays a list of them in completion-buffer.
-  See also commands list delivered in directory doc.
-
-  List virtualenv related `M-x virtualenv- TAB'
-  resp. Pymacs commands `M-x pymacs-'
-
-* Execution code
-  Python code might be processed by an
-
-- interactive Python shell (DEFAULT)
-- non-interactive Python (`py-fast-process-p')
+  - non-interactive Python (`py-fast-process-p')
+  
   The latter, while design for large output, seems more reliable - see  also PROBLEMS.org.
 
-Both processes might run in 
-- session, i.e. start from possible previous state (DEFAULT)
-- dedicated, (`py-dedicated-process-p') run in separate process
+  Both processes might run in 
+  - session, i.e. start from possible previous state (DEFAULT)
+  - dedicated, (`py-dedicated-process-p') run in separate process
 
-There is also
-- python-mode-v5-behavior
+  There is also ‘python-mode-v5-behavior’
+
+* Indentation\
+
+  See customizable variable ‘py-indent-offset’ for default indent
+
+  Rules according to ‘py-indent-list-style’
+
+  - ‘line-up-with-first-element’ (default)
+
+     Which would look like\
+     packed_entry = (long, sequence, of_items,
+                   that, needs, to_be, wrapped)
+
+     However, if a continuation list or tuple starts at the beginning line,
+     select ‘one-level-from-opener’ though
+
+     (long, sequence, of_items,
+         that, needs, to_be, wrapped) = input_list
+
+  - ‘one-level-to-beginning-of-statement’
+  - ‘one-level-from-opener’
+  
+  As for the closing line:\
+  ‘ py-closing-list-dedents-bos’
+  
+    my_list = [\
+      1, 2, 3,\
+      4, 5, 6
+    ]
+
+    otherwise
+
+    my_list = [\
+      1, 2, 3,\
+      4, 5, 6\
+      ]
+
+  With nested dicts: 
+  
+  closing, py-closing-list-dedents-bos t\
+  asdf = {\
+      'a':{\
+           'b':3,\
+           'c':4\
+      }\
+  }
+
+  otherwise
+
+  hanging, py-closing-list-dedents-bos nil\
+    asdf = {\
+        'a':{\
+             'b':3,\
+             'c':4\
+            }\
+        }
+
+  With opener at EOL, next line indents acording to ‘py-indent-offset’\
+  def long_function_name(\
+      var_one, var_two, var_three,\
+      var_four):\
+      print(var_one)
+
+  ‘one-level-from-first-element’ adds ‘py-indent-offset’ from first element\
+  def foo():\
+      if (foo &&\
+              baz):\
+          bar()"
 
 * Checks
   Access is provided to a couple of known checkers like Flake8, pep8, pylint
@@ -204,6 +261,17 @@ There is also
   Comment- and docstring settings might be disabled by
   any non-integer value, which means: do not use a
   different value of `fill-column' than emacs-wide
+
+* Prefix conventions
+
+  Most python-mode.el commands start with prefix `py-'
+
+  `M-x py- TAB'
+  displays a list of them in completion-buffer.
+  See also commands list delivered in directory doc.
+
+  List virtualenv related `M-x virtualenv- TAB'
+  resp. Pymacs commands `M-x pymacs-'
 
 * Python and IPython
 
