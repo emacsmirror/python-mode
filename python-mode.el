@@ -4452,8 +4452,7 @@ Return and move to match-beginning if successful"
            (point)))))
 
 (defun py--beginning-of-statement-p (&optional pps)
-  "Return position, if cursor is at the beginning of a ‘statement’, nil otherwise."
-  (interactive)
+  "Return ‘t’, if cursor is at the beginning of a ‘statement’, nil otherwise."
   (save-excursion
     (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
       (and (not (or (nth 8 pps) (nth 1 pps)))
@@ -4461,7 +4460,7 @@ Return and move to match-beginning if successful"
            (looking-back "[^ \t]*" (line-beginning-position))
            (eq (current-column) (current-indentation))
 	   (eq (point) (progn (py-forward-statement) (py-backward-statement)))
-           (point)))))
+           ))))
 
 (defun py--beginning-of-statement-bol-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘statement’, nil otherwise."
@@ -8288,13 +8287,13 @@ See also ‘ar-up-statement’"
   (py-forward-statement)
   (py--beginning-of-line-form))
 
-(defun py-beginning-of-statement-p ()
-  (interactive)
-  (save-restriction
-    (eq (point)
-    (save-excursion
-      (py-forward-statement)
-      (py-backward-statement)))))
+;; (defun py-beginning-of-statement-p ()
+;;   (interactive)
+;;   (save-restriction
+;;     (eq (point)
+;;     (save-excursion
+;;       (py-forward-statement)
+;;       (py-backward-statement)))))
 
 (defun py-up-statement ()
   "go to the beginning of next statement upwards in buffer.
@@ -8341,7 +8340,7 @@ Return position if statement found, nil otherwise."
     (end-of-line)
     (skip-chars-backward " \t\r\n\f")
     (back-to-indentation)
-    (if (or (looking-at comment-start)(py-beginning-of-statement-p))
+    (if (or (looking-at comment-start)(py--beginning-of-statement-p))
         (current-indentation)
       (py-backward-statement)
       (current-indentation))))
@@ -8396,7 +8395,7 @@ SECONDVALUE: travel these expressions
 "
   (unless (bobp)
     (save-match-data
-      (unless (py-beginning-of-statement-p) (skip-chars-backward " \t\r\n\f")
+      (unless (py--beginning-of-statement-p) (skip-chars-backward " \t\r\n\f")
 	      (py-backward-comment (point)))
       (let* (pps
              (regexpvalue (symbol-value regexp))
@@ -8460,7 +8459,7 @@ Optional IGNOREINDENT: find next keyword at any indentation"
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
            (allvalue (symbol-value (quote py-block-or-clause-re)))
            erg)
-      (unless (py-beginning-of-statement-p)
+      (unless (py--beginning-of-statement-p)
 	(py-backward-statement))
       (when (and (not (string= "" py-block-closing-keywords-re))(looking-at py-block-closing-keywords-re))
         (setq maxindent (min maxindent (- (current-indentation) py-indent-offset))))
@@ -8479,7 +8478,7 @@ Optional IGNOREINDENT: find next keyword at any indentation"
   "Expects a symbol as REGEXP like `(quote py-clause-re)'
 
 Return position if successful"
-  (unless (py-beginning-of-statement-p) (py-backward-statement))
+  (unless (py--beginning-of-statement-p) (py-backward-statement))
   (unless (looking-at (symbol-value regexp))
     (py--go-to-keyword regexp '< (or indent (current-indentation))))
   ;; now from beginning-of-block go one indent level upwards
@@ -8550,7 +8549,7 @@ Arg REGEXP, a symbol"
 	  (use-regexp (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))))
 	  (orig (or orig (point))))
       (unless (eobp)
-	(unless (py-beginning-of-statement-p)
+	(unless (py--beginning-of-statement-p)
 	  (py-backward-statement))
 	(let* (;; when at block-start, be specific
 	       ;; (regexp (py--refine-regexp-maybe regexp))
@@ -8563,7 +8562,7 @@ Arg REGEXP, a symbol"
 	       ;; return current-indentation, position and possibly needed clause-regexps (secondvalue)
 	       (res
 		(cond
-		 ((and (py-beginning-of-statement-p)
+		 ((and (py--beginning-of-statement-p)
 		       ;; (eq 0 (current-column))
 		       (or (looking-at regexpvalue)
 			   (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
@@ -14201,7 +14200,7 @@ Returns position if successful, nil otherwise"
           ((or (eq (car (syntax-after orig)) 15)
                (eq (car (syntax-after orig)) 4))
            (forward-sexp))
-          ((not (py-beginning-of-statement-p))
+          ((not (py--beginning-of-statement-p))
            (py-backward-statement)
            (cond ((py--beginning-of-class-p)
                   (py-forward-class))
