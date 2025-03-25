@@ -26,7 +26,7 @@
   (interactive)
   (let (py-switch-buffers-on-execute-p
         py-split-window-on-execute)
-    (py-test-with-temp-buffer (py-shell nil nil t "python")
+    (py-test (py-shell nil nil t "python")
     (sit-for 0.1 t)
     (when (called-interactively-p 'interactive)
       (switch-to-buffer (current-buffer)))

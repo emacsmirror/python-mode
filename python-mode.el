@@ -5340,7 +5340,7 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 	     (cond (result
                     ;; (sit-for py-python-send-delay)
                     (sit-for py-python-send-delay)
-		    (py--fetch-result buffer limit strg))
+		    (setq py-result (py--fetch-result buffer limit strg)))
 	           (no-output
 	            (and orig (py--cleanup-shell orig buffer))))))
       ;; (message "py-execute-string; current-buffer: %s" (current-buffer))
@@ -14384,10 +14384,11 @@ Use current region unless optional args BEG END are delivered."
     (save-excursion
       (goto-char beg)
       (unless (py-empty-line-p) (split-line))
-      (beginning-of-line)
+      ;; (beginning-of-line)
       (insert py-section-start)
       (goto-char end)
       (unless (py-empty-line-p) (newline 1))
+      (indent-according-to-mode) 
       (insert py-section-end))))
 
 (defun py-execute-section-prepare (&optional shell)
