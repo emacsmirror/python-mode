@@ -12990,7 +12990,7 @@ Receives a ‘buffer-name’ as argument"
 
 ;;  Code execution commands
 
-(defun py--store-result-maybe (erg)
+(defun py--store-result (erg)
   "If no error occurred and ‘py-store-result-p’ store ERG for yank."
   (and (not py-error) erg (or py-debug-p py-store-result-p) (kill-new erg)))
 
@@ -26099,6 +26099,8 @@ VARIABLES
   (add-hook 'python-mode-hook
             (lambda ()
               (setq imenu-create-index-function py--imenu-create-index-function)))
+  (add-hook 'completion-at-point-functions
+            #'py-fast-complete)
   ;; caused insert-file-contents error lp:1293172
   ;;  (add-hook 'after-change-functions 'py--after-change-function nil t)
   (if py-defun-use-top-level-p
