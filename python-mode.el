@@ -83,7 +83,7 @@
 (require 'org-loaddefs)
 (unless (functionp 'mapcan)
   (require 'cl-extra)
-  ;; mapcan doesn't exist in Emacs 25
+  ;; mapcan does not exist in Emacs 25
   (defalias 'mapcan 'cl-mapcan)
   )
 
@@ -112,7 +112,7 @@
   "Make sure it exists.")
 
 (defcustom py-install-directory nil
-  "Directory where python-mode.el and it's subdirectories should be installed.
+  "Directory where python-mode.el and its subdirectories should be installed.
 
 Needed for completion and other environment stuff only."
 
@@ -160,7 +160,7 @@ See also ‘window-configuration-to-register’"
 (defcustom py-pythonpath ""
   "Define $PYTHONPATH here, if needed.
 
-Emacs doesn't read .bashrc"
+Emacs does not read .bashrc"
 
   :type 'string
   :tag "py-pythonpath"
@@ -213,7 +213,7 @@ Used by virtualenv support."
 (defcustom info-lookup-mode "python"
   "Which Python documentation should be queried.
 
-Make sure it's accessible from Emacs by \\<emacs-lisp-mode-map> \\[info] ...
+Make sure it is accessible from Emacs by \\<emacs-lisp-mode-map> \\[info] ...
 See INSTALL-INFO-FILES for help."
 
   :type 'string
@@ -237,7 +237,7 @@ Results arrive in output buffer, which is not in comint-mode"
 ;; credits to python.el
 (defcustom py-shell-compilation-regexp-alist
   `((,(rx line-start (1+ (any " \t")) "File \""
-          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
+          (group (1+ (not (any "\"<")))) ; avoid ‘<stdin>’ &c
           "\", line " (group (1+ digit)))
      1 2)
     (,(rx " in file " (group (1+ not-newline)) " on line "
@@ -339,7 +339,7 @@ Return nil otherwise. "
 Removed chars default to values of ‘py-chars-before’ and ‘py-chars-after’
 i.e. spaces, tabs, carriage returns, newlines and newpages
 
-Optional arguments `CHARS-BEFORE' and `CHARS-AFTER' override default"
+Optional arguments ‘CHARS-BEFORE’ and ‘CHARS-AFTER’ override default"
   (let ((s-c-b (or chars-before
                    py-chars-before))
         (s-c-a (or chars-after
@@ -425,7 +425,7 @@ dedicated process is re-used instead of default
   :group 'python-mode)
 
 (defcustom py-store-result-p nil
-  "Put resulting string of `py-execute-...' into ‘kill-ring’.
+  "Put resulting string of ‘py-execute-...’ into ‘kill-ring’.
 
 Default is nil"
 
@@ -439,7 +439,7 @@ Default is nil"
 (defvar py-return-result-p nil
   "Internally used.
 
-When non-nil, return resulting string of `py-execute-...'.
+When non-nil, return resulting string of ‘py-execute-...’.
 Imports will use it with nil.
 Default is nil")
 
@@ -618,7 +618,7 @@ Might not be TRT when a lot of output arrives"
   "If the full PATH/TO/PYTHON be in modeline.
 
 Default is nil. Note: when ‘py-python-command’ is
-specified with path, it's shown as an acronym in
+specified with path, it is shown as an acronym in
 ‘buffer-name’ already."
 
   :type 'boolean
@@ -738,7 +738,7 @@ See also ‘py-tab-indents-region-p’"
   :group 'python-mode)
 
 (defcustom py-tab-indents-region-p nil
-  "When t and first TAB doesn't shift, ‘indent-region’ is called.
+  "When t and first TAB does not shift, ‘indent-region’ is called.
 
 Default is  nil
 See also ‘py-tab-shifts-region-p’"
@@ -768,7 +768,7 @@ Default is nil."
   "If ‘py-complete-initialize’.
 
 Sets up enviroment for Pymacs based py-complete.
- Should load it's keys into ‘python-mode-map’
+ Should load its keys into ‘python-mode-map’
 Default is nil.
 See also resp. edit ‘py-complete-set-keymap’"
 
@@ -783,10 +783,10 @@ See also resp. edit ‘py-complete-set-keymap’"
   :group 'python-mode)
 
 (defvar py-guess-py-install-directory-p nil
-  "If in cases, ‘py-install-directory’ isn't set,  ‘py-set-load-path’ guess it.")
+  "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’ guess it.")
 
 (defcustom py-guess-py-install-directory-p nil
-  "If in cases, ‘py-install-directory’ isn't set, ‘py-set-load-path’ guesses it."
+  "If in cases, ‘py-install-directory’ is not set, ‘py-set-load-path’ guesses it."
   :type 'boolean
   :tag "py-guess-py-install-directory-p"
   :group 'python-mode)
@@ -822,7 +822,7 @@ Default is nil."
   :group 'python-mode)
 
 (defcustom py-close-provides-newline t
-  "If a newline is inserted, when line after block isn't empty.
+  "If a newline is inserted, when line after block is not empty.
 
 Default is non-nil.
 When non-nil, ‘py-forward-def’ and related will work faster"
@@ -1084,7 +1084,7 @@ Default is the empty string."
   :group 'python-mode)
 
 (defvar py-flake8-history nil
-  "Used by flake8, resp. `py-flake8-command'.
+  "Used by flake8, resp. ‘py-flake8-command’.
 
 Default is nil.")
 
@@ -1145,16 +1145,16 @@ Which might slow down the proceeding."
 (defcustom py-block-comment-prefix "##"
   "String used by \\[comment-region] to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
-that the indentation commands won't get confused (i.e., the string
-should be of the form `#x...' where ‘x’ is not a blank or a tab, and
- `...' is arbitrary).  However, this string should not end in whitespace."
+that the indentation commands will not get confused (i.e., the string
+should be of the form ‘#x...’ where ‘x’ is not a blank or a tab, and
+ ‘...’ is arbitrary).  However, this string should not end in whitespace."
   :type 'string
   :tag "py-block-comment-prefix"
   :group 'python-mode)
 
 (defcustom py-indent-offset 4
   "Amount of offset per level of indentation.
-`\\[py-guess-indent-offset]' can usually guess a good value when
+‘\\[py-guess-indent-offset]’ can usually guess a good value when
 you're editing someone else's Python code."
   :type 'integer
   :tag "py-indent-offset"
@@ -1375,7 +1375,7 @@ Before returning to previous position."
   :group 'python-mode)
 
 (defcustom py-python-send-delay 1
-  "Seconds to wait for output, used by `py--send-...' functions.
+  "Seconds to wait for output, used by ‘py--send-...’ functions.
 
 See also ‘py-ipython-send-delay’"
 
@@ -1384,7 +1384,7 @@ See also ‘py-ipython-send-delay’"
   :group 'python-mode)
 
 (defcustom py-python3-send-delay 1
-  "Seconds to wait for output, used by `py--send-...' functions.
+  "Seconds to wait for output, used by ‘py--send-...’ functions.
 
 See also ‘py-ipython-send-delay’"
 
@@ -1393,7 +1393,7 @@ See also ‘py-ipython-send-delay’"
   :group 'python-mode)
 
 (defcustom py-ipython-send-delay 1
-  "Seconds to wait for output, used by `py--send-...' functions.
+  "Seconds to wait for output, used by ‘py--send-...’ functions.
 
 See also ‘py-python-send-delay’"
 
@@ -1459,7 +1459,7 @@ Default is \"\""
   :group 'python-mode)
 
 (defcustom py-pyflakespep8-command (concat py-install-directory "/pyflakespep8.py")
-  "Shell command used to run `pyflakespep8'."
+  "Shell command used to run ‘pyflakespep8’."
   :type 'string
   :tag "py-pyflakespep8-command"
   :group 'python-mode)
@@ -1640,7 +1640,7 @@ Otherwise value of ‘py-ipython-history’ is used."
 (defcustom py-ipython-history "~/.ipython/history"
   "Ipython-history default file.
 
-Used when `py-honor-IPYTHONDIR-p' is nil - th default"
+Used when ‘py-honor-IPYTHONDIR-p’ is nil - th default"
 
   :type 'string
   :tag "py-ipython-history"
@@ -1658,7 +1658,7 @@ Otherwise value of ‘py-python-history’ is used."
 (defcustom py-python-history "~/.python_history"
   "Python-history default file.
 
-Used when `py-honor-PYTHONHISTORY-p' is nil (default)."
+Used when ‘py-honor-PYTHONHISTORY-p’ is nil (default)."
 
   :type 'string
   :tag "py-python-history"
@@ -1706,7 +1706,7 @@ See also ‘py-keep-windows-configuration’"
   "Maximal number of displayed windows.
 
 Honored, when ‘py-split-window-on-execute’ is t, i.e. \"reuse\".
-Don't split when max number of displayed windows is reached."
+Do not split when max number of displayed windows is reached."
   :type 'number
   :tag "py-split-window-on-execute-threshold"
   :group 'python-mode)
@@ -1958,7 +1958,7 @@ Of functions and global variables."
   :tag "py--imenu-create-index-p"
   :group 'python-mode)
 
-(defvar py-history-filter-regexp "\\`\\s-*\\S-?\\S-?\\s-*\\'\\|'''/tmp/"
+(defvar py-history-filter-regexp "\\‘\\s-*\\S-?\\S-?\\s-*\\'\\|''’/tmp/"
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
@@ -1974,9 +1974,9 @@ Customize ‘py-match-paren-key’ which key to use."
 (defcustom py-match-paren-key "%"
   "String used by \\[comment-region] to comment out a block of code.
 This should follow the convention for non-indenting comment lines so
-that the indentation commands won't get confused (i.e., the string
-should be of the form `#x...' where ‘x’ is not a blank or a tab, and
-                               `...' is arbitrary).
+that the indentation commands will not get confused (i.e., the string
+should be of the form ‘#x...’ where ‘x’ is not a blank or a tab, and
+                               ‘...’ is arbitrary).
 However, this string should not end in whitespace."
   :type 'string
   :tag "py-match-paren-key"
@@ -2007,7 +2007,7 @@ deliver an installer, named-shells pointing to virtualenv's will be available."
   :group 'python-mode)
 
 (defcustom py-edit-only-p nil
-  "Don't check for installed Python executables.
+  "Do not check for installed Python executables.
 
 Default is nil.
 
@@ -2019,7 +2019,7 @@ See bug report at launchpad, lp:944093."
 (defcustom py-force-py-shell-name-p nil
   "When t, execution specified in ‘py-shell-name’ is enforced.
 
-Possibly shebang doesn't take precedence."
+Possibly shebang does not take precedence."
 
   :type 'boolean
   :tag "py-force-py-shell-name-p"
@@ -2036,7 +2036,7 @@ This might fail with certain chars - see UnicodeEncodeError lp:550661"
   :group 'python-mode)
 
 (defun py-toggle-python-mode-v5-behavior ()
-  "Switch the values of `python-mode-v5-behavior-p'."
+  "Switch the values of ‘python-mode-v5-behavior-p’."
   (interactive)
   (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
   (when (called-interactively-p 'interactive)
@@ -2187,7 +2187,7 @@ Use the following as the value of this variable:
 (defvar py-line-re "^"
   "Used by generated functions." )
 
-(defvar py-input-filter-re "\\`\\s-*\\S-?\\S-?\\s-*\\'"
+(defvar py-input-filter-re "\\‘\\s-*\\S-?\\S-?\\s-*\\’"
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
@@ -2206,7 +2206,7 @@ See also ‘string-chars-preserve’")
 
  are DJANGO, ONETWO, PEP-257, PEP-257-NN,SYMMETRIC, and NIL.
 
-A value of NIL won't care about quotes
+A value of NIL wo not care about quotes
 position and will treat docstrings a normal string, any other
 value may result in one of the following docstring styles:
 
@@ -2263,7 +2263,7 @@ SYMMETRIC:
     \"\"\""
   :type '(choice
 
-          (const :tag "Don't format docstrings" nil)
+          (const :tag "Do not format docstrings" nil)
           (const :tag "Django's coding standards style." django)
           (const :tag "One newline and start and Two at end style." onetwo)
           (const :tag "PEP-257 with 2 newlines at end of string." pep-257)
@@ -2290,7 +2290,7 @@ See also ‘py-execute-directory’"
   :group 'python-mode)
 
 (defcustom py-keep-shell-dir-when-execute-p nil
-  "Don't change Python shell's current working directory when sending code.
+  "Do not change Python shell's current working directory when sending code.
 
 See also ‘py-execute-directory’"
   :type 'boolean
@@ -2341,7 +2341,7 @@ Default is nil"
   :group 'python-mode)
 
 (defvar py-output-buffer "*Python Output*"
-      "Used if `python-mode-v5-behavior-p' is t.
+      "Used if ‘python-mode-v5-behavior-p’ is t.
 
 Otherwise output buffer is created dynamically according to version process.")
 
@@ -2442,7 +2442,7 @@ Do not set this variable directly.
 
 Iff ‘py-shell--prompt-calculated-input-regexp’
 or ‘py-shell--prompt-calculated-output-regexp’ are set
-‘py-shell-prompt-set-calculated-regexps’ isn't run.")
+‘py-shell-prompt-set-calculated-regexps’ is not run.")
 
 (defvar py-shell--prompt-calculated-output-regexp nil
   "Calculated output prompt regexp for inferior python shell.
@@ -2452,7 +2452,7 @@ Do not set this variable directly.
 
 Iff ‘py-shell--prompt-calculated-input-regexp’
 or ‘py-shell--prompt-calculated-output-regexp’ are set
-‘py-shell-prompt-set-calculated-regexps’ isn't run.")
+‘py-shell-prompt-set-calculated-regexps’ is not run.")
 
 (defvar py-shell-prompt-output-regexp ""
   "See ‘py-shell-prompt-output-regexps’.")
@@ -2475,7 +2475,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
 (defvar py-fill-column-orig fill-column
   "Used to reset fill-column")
 
-;; defvared value isn't updated maybe
+;; defvared value is not updated maybe
 (defvar python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
 	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
@@ -2483,7 +2483,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
     "python-components-mode")
   "Internally used. Reports the ‘python-mode’ branch.")
 
-;; defvared value isn't updated maybe
+;; defvared value is not updated maybe
 (setq python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
 	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
@@ -2493,12 +2493,12 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
 (defvar python-mode-syntax-table nil
   "Give punctuation syntax to ASCII that normally has symbol.
 
-Syntax or has word syntax and isn't a letter.")
+Syntax or has word syntax and is not a letter.")
 
 (setq python-mode-syntax-table
       (let ((table (make-syntax-table)))
         ;; Give punctuation syntax to ASCII that normally has symbol
-        ;; syntax or has word syntax and isn't a letter.
+        ;; syntax or has word syntax and is not a letter.
         (let ((symbol (string-to-syntax "_"))
               (sst (standard-syntax-table)))
           (dotimes (i 128)
@@ -2523,10 +2523,10 @@ Syntax or has word syntax and isn't a letter.")
 (defvar py-ipython-completion-command-string nil
   "Select command according to IPython version.
 
-Either `py-ipython0.10-completion-command-string'
-or `py-ipython0.11-completion-command-string'.
+Either ‘py-ipython0.10-completion-command-string’
+or ‘py-ipython0.11-completion-command-string’.
 
-`py-ipython0.11-completion-command-string' also covers version 0.12")
+‘py-ipython0.11-completion-command-string’ also covers version 0.12")
 
 (defvar py-ipython0.10-completion-command-string
   "print(';'.join(__IP.Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n"
@@ -2575,7 +2575,7 @@ or `py-ipython0.11-completion-command-string'.
           (setq erg (concat "c:" py-separator-char "Users")))
      ;; (funcall ok ".")
      (error
-      "Couldn't find a usable temp directory -- set ‘py-temp-directory’"))
+      "Could not find a usable temp directory -- set ‘py-temp-directory’"))
     (when erg (setq py-temp-directory erg)))
   "Directory used for temporary files created by a *Python* process.
 By default, guesses the first directory from this list that exists and that you
@@ -2901,7 +2901,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
    "while"
    "with"
    )
-  "Matches the beginning of a compound statement but not it's clause."
+  "Matches the beginning of a compound statement but not its clause."
   :type '(repeat string)
   :tag "py-block-re-raw"
   :group 'python-mode)
@@ -2909,7 +2909,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 (defconst py-block-re (concat
 		       ;; "[ \t]*"
 		       (regexp-opt py-block-re-raw 'symbols)
-		       "[:( \n\t]"
+		       ".*[:( \n\t]"
 		       )
   "Matches the beginning of a compound statement.")
 
@@ -2996,7 +2996,7 @@ Second group grabs the name")
    "match"
    "case"
    )
-  "Matches the beginning of a compound statement or it's clause."
+  "Matches the beginning of a compound statement or its clause."
   :type '(repeat string)
   :tag "py-block-or-clause-re-raw"
   :group 'python-mode)
@@ -3027,7 +3027,7 @@ Second group grabs the name")
    "match"
    "case"
    )
-  "Matches the beginning of a compound statement or it's clause."
+  "Matches the beginning of a compound statement or its clause."
   :type '(repeat string)
   :tag "py-extended-block-or-clause-re-raw"
   :group 'python-mode)
@@ -3108,7 +3108,7 @@ Customizing ‘py-block-or-clause-re-raw’  will change values here")
 
 (defcustom py-compilation-regexp-alist
   `((,(rx line-start (1+ (any " \t")) "File \""
-          (group (1+ (not (any "\"<")))) ; avoid `<stdin>' &c
+          (group (1+ (not (any "\"<")))) ; avoid ‘<stdin>’ &c
           "\", line " (group (1+ digit)))
      1 2)
     (,(rx " in file " (group (1+ not-newline)) " on line "
@@ -3127,11 +3127,11 @@ hooked into ‘compilation-error-regexp-alist’"
   "Put ‘syntax-table’ property correctly on triple quote.
 Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   ;; Given a triple quote, we have to check the context to know
-  ;; whether this is an opening or closing triple or whether it's
+  ;; whether this is an opening or closing triple or whether it is
   ;; quoted anyhow, and should be ignored.  (For that we need to do
   ;; the same job as ‘syntax-ppss’ to be correct and it seems to be OK
   ;; to use it here despite initial worries.) We also have to sort
-  ;; out a possible prefix -- well, we don't _have_ to, but I think it
+  ;; out a possible prefix -- well, we do not _have_ to, but I think it
   ;; should be treated as part of the string.
 
   ;; Test cases:
@@ -3654,7 +3654,7 @@ Optional argument SHELL selected shell."
 	 (treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
          version erg)
     (if treffer
-        ;; if a number if part of python name, assume it's the version
+        ;; if a number if part of python name, assume its the version
         (setq version (substring-no-properties cmd treffer))
       (setq erg (shell-command-to-string (concat cmd " --version")))
       (setq version (cond ((string-match (concat "\\(on top of Python \\)" "\\([0-9]\\.[0-9]+\\)") erg)
@@ -3783,7 +3783,7 @@ Returns t if successful."
 
 Used only, if ‘py-install-directory’ is empty."
   (interactive)
-  (cond (;; don't reset if it already exists
+  (cond (;; do not reset if it already exists
 	 py-install-directory)
         ;; ((locate-library "python-mode")
 	;;  (file-name-directory (locate-library "python-mode")))
@@ -3893,7 +3893,7 @@ Optional argument END specify end."
 	    (if
 		(re-search-backward py-shell-prompt-regexp nil t 1)
 		(goto-char (match-end 0))
-	      ;; (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
+	      ;; (when py-debug-p (message "%s"  "py-count-lines: Do not see a prompt here"))
 	      (goto-char beg))
 	  (goto-char beg)))
       (while (and (< (point) end)(not (eobp)) (skip-chars-forward "^\n" end))
@@ -4417,6 +4417,13 @@ Return and move to match-beginning if successful"
 	  (nth 8 (parse-partial-sexp (point-min) (point)))
         erg))))
 
+(defun py--forward-regexp-keep-indent-endform (last orig)
+  (unless
+      (nth 8 (parse-partial-sexp (point-min) (point)))
+    (if last (goto-char last)
+      (back-to-indentation))
+    (and (< orig (point)) (point))))
+
 (defun py--forward-regexp-keep-indent (regexp &optional indent)
   "Search forward next regexp not in string or comment.
 
@@ -4430,17 +4437,15 @@ Return and move to match-beginning if successful"
           last done)
       (forward-line 1)
       (beginning-of-line)
-      (while (and
-	      (not done)
-              (re-search-forward regexp nil 'move 1)
-              (or (nth 8 (parse-partial-sexp (point-min) (point)))
-                  (or (< indent (current-indentation))(setq done t))
-		  (setq last (line-end-position)))))
-      (unless
-          (nth 8 (parse-partial-sexp (point-min) (point)))
-	(if last (goto-char last)
-	  (back-to-indentation))
-        (and (< orig (point)) (point))))))
+      (if (<= (current-indentation) indent)
+          (py--forward-regexp-keep-indent-endform last orig)
+          (while (and
+	          (not done)
+                  (re-search-forward regexp nil 'move 1)
+                  (or (nth 8 (parse-partial-sexp (point-min) (point)))
+                      (or (< indent (current-indentation))(setq done t))
+		      (setq last (line-end-position)))))
+          (py--forward-regexp-keep-indent-endform last orig)))))
 
 (defun py-down-base (regexp &optional indent bol)
   (let ((indent (or indent (current-indentation))))
@@ -4534,7 +4539,7 @@ Return and move to match-beginning if successful"
 If an exception occurred return error-string, otherwise return nil.
 BUF must exist.
 
-Indicate LINE if code wasn't run from a file,
+Indicate LINE if code was not run from a file,
 thus remember ORIGLINE of source buffer"
   (with-current-buffer output-buffer
     (when py-debug-p (switch-to-buffer (current-buffer)))
@@ -4567,7 +4572,7 @@ Delete it here"
   "Provide return values, check result for error, manage windows.
 
 According to OUTPUT-BUFFER ORIGLINE ORIG"
-  ;; py--fast-send-string doesn't set origline
+  ;; py--fast-send-string does not set origline
   (when (or py-return-result-p py-store-result-p)
     (with-current-buffer output-buffer
       (when py-debug-p (switch-to-buffer (current-buffer)))
@@ -4589,7 +4594,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
 	      (kill-new py-result))
 	    (when py-verbose-p (message "py-result: %s" py-result))
 	    py-result)
-	(when py-verbose-p (message "py--postprocess: %s" "Don't see any result"))))))
+	(when py-verbose-p (message "py--postprocess: %s" "Do not see any result"))))))
 
 (defun py-fetch-py-master-file ()
   "Lookup if a ‘py-master-file’ is specified.
@@ -4913,7 +4918,7 @@ Depends from kind of Python shell."
                        ((buffer-live-p (get-buffer py-output-buffer))
                         py-output-buffer)
                        (py-last-exeption-buffer (buffer-name py-last-exeption-buffer))
-                       (t (error "Don't see exeption buffer")))))
+                       (t (error "Do not see exeption buffer")))))
     (when buffer (set-buffer (get-buffer buffer)))
     (if (eq direction 'up)
         (if (string= start "TOP")
@@ -4996,7 +5001,7 @@ Avoids ‘recenter’ calls until OUTPUT is completely sent."
        vec (format "unset %s" (mapconcat 'identity unset " ")) t))))
 
 (defun py-shell-calculate-pythonpath ()
-  "Calculate the PYTHONPATH using `python-shell-extra-pythonpaths'."
+  "Calculate the PYTHONPATH using ‘python-shell-extra-pythonpaths’."
   (let ((pythonpath
          (split-string
           (or (getenv "PYTHONPATH") "") path-separator 'omit)))
@@ -5109,7 +5114,7 @@ detection and just returns nil."
                     ;; The list must contain 3 strings, where the first
                     ;; is the input prompt, the second is the block
                     ;; prompt and the last one is the output prompt.  The
-                    ;; input prompt is the only one that can't be empty.
+                    ;; input prompt is the only one that can not be empty.
                     (when (and (= (length res) 3)
                                (cl-every #'stringp res)
                                (not (string= (car res) "")))
@@ -5127,7 +5132,7 @@ detection and just returns nil."
               "‘py-python-command-args’ or add regexps\n"
               "matching shell prompts in the directory-local friendly vars:\n"
               "  + ‘py-shell-prompt-regexp’\n"
-              "  + `py-shell-input-prompt-2-regexp'\n"
+              "  + ‘py-shell-input-prompt-2-regexp’\n"
               "  + ‘py-shell-prompt-output-regexp’\n"
               "Or alternatively in:\n"
               "  + ‘py-shell-input-prompt-regexps’\n"
@@ -5142,7 +5147,7 @@ detection and just returns nil."
   "Validate all user provided regexps for prompts.
 Signals ‘user-error’ if any of these vars contain invalid
 regexps: ‘py-shell-prompt-regexp’,
-`py-shell-input-prompt-2-regexp',
+‘py-shell-input-prompt-2-regexp’,
 ‘py-shell-prompt-pdb-regexp’,
 ‘py-shell-prompt-output-regexp’,
 ‘py-shell-input-prompt-regexps’,
@@ -5156,7 +5161,7 @@ regexps: ‘py-shell-prompt-regexp’,
                           regexps
                         (list regexps))))
       (when (not (python-util-valid-regexp-p regexp))
-        (user-error "Invalid regexp %s in `%s'"
+        (user-error "Invalid regexp %s in ‘%s’"
                     regexp symbol)))))
 
 (defun py-shell-prompt-set-calculated-regexps ()
@@ -5164,7 +5169,7 @@ regexps: ‘py-shell-prompt-regexp’,
 
 Build and set the values for input- and output-prompt regexp
 using the values from ‘py-shell-prompt-regexp’,
-`py-shell-input-prompt-2-regexp', ‘py-shell-prompt-pdb-regexp’,
+‘py-shell-input-prompt-2-regexp’, ‘py-shell-prompt-pdb-regexp’,
 ‘py-shell-prompt-output-regexp’, ‘py-shell-input-prompt-regexps’,
  and detected prompts from ‘py-shell-prompt-detect’."
   (when (not (and py-shell--prompt-calculated-input-regexp
@@ -5268,7 +5273,7 @@ detecting a prompt at the end of the buffer."
 
 With optional Arg PROCESS send to process.
 With optional Arg RESULT store result in var ‘py-result’, also return it.
-With optional Arg NO-OUTPUT don't display any output
+With optional Arg NO-OUTPUT do not display any output
 With optional Arg ORIG deliver original position.
 With optional Arg OUTPUT-BUFFER specify output-buffer"
   (interactive "sPython command: ")
@@ -5467,7 +5472,7 @@ according to ‘py-split-windows-on-execute-function’."
   (or
    ;; (split-window (selected-window) nil ’below)
    (ignore-errors (funcall py-split-windows-on-execute-function))
-   ;; If call didn't succeed according to settings of
+   ;; If call did not succeed according to settings of
    ;; ‘split-height-threshold’, ‘split-width-threshold’
    ;; resp. ‘window-min-height’, ‘window-min-width’
    ;; try alternative split
@@ -5690,7 +5695,7 @@ process buffer for a list of commands.)"
                                 (and (executable-find "python3") "python3")))
 	                   (_ (if (executable-find shell)
 	        	          shell
-	                        (error (concat "py-shell: Can't see an executable for `"shell "' on your system. Maybe needs a link?")))))
+	                        (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
 	               (py-choose-shell)))
 	      (args (or args (car (py--provide-command-args shell fast))))
               ;; Make sure a new one is created if required
@@ -5716,9 +5721,9 @@ process buffer for a list of commands.)"
           (setq py-shell-mode-syntax-table python-mode-syntax-table)
 	  (when interactivep
 	    (cond ((string-match "^.I" this-buffer-name)
-		   (message "Waiting according to `py-ipython-send-delay:' %s" delay))
+		   (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
 		  ((string-match "^.+3" this-buffer-name)
-		   (message "Waiting according to `py-python3-send-delay:' %s" delay))))
+		   (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
 	  (setq py-modeline-display (py--update-lighter this-buffer-name)))))
     (if (setq proc (get-buffer-process buffer))
 	(progn
@@ -5747,11 +5752,11 @@ process buffer for a list of commands.)"
           (set-buffer buffer)
           (set-buffer-modified-p 'nil)
           (kill-buffer (current-buffer)))
-      (message "Can't see a buffer %s" buffer))))
+      (message "Can not see a buffer %s" buffer))))
 
 ;; python-components-rx
 
-;; The `rx--translate...' functions below return (REGEXP . PRECEDENCE),
+;; The ‘rx--translate...’ functions below return (REGEXP . PRECEDENCE),
 ;; where REGEXP is a list of string expressions that will be
 ;; concatenated into a regexp, and PRECEDENCE is one of
 ;;
@@ -5903,7 +5908,7 @@ Each entry is:
                                 (cdr (memq entry rx-constituents))))))
                 entry)
               (cons (list (cdr entry)) nil))))
-      (t (error "Unknown rx symbol `%s'" sym))))))
+      (t (error "Unknown rx symbol ‘%s’" sym))))))
 
 (defun rx--enclose (left-str rexp right-str)
   "Bracket REXP by LEFT-STR and RIGHT-STR."
@@ -6379,11 +6384,11 @@ If NEGATED, negate the sense."
 
 (defun rx--check-repeat-arg (name min-args body)
   (unless (>= (length body) min-args)
-    (error "rx `%s' requires at least %d argument%s"
+    (error "rx ‘%s’ requires at least %d argument%s"
            name min-args (if (= min-args 1) "" "s")))
   ;; There seems to be no reason to disallow zero counts.
   (unless (natnump (car body))
-    (error "rx `%s' first argument must be nonnegative" name)))
+    (error "rx ‘%s’ first argument must be nonnegative" name)))
 
 (defun rx--translate-bounded-repetition (name body)
   (let ((min-count (car body))
@@ -6392,7 +6397,7 @@ If NEGATED, negate the sense."
     (unless (and (natnump min-count)
                  (natnump max-count)
                  (<= min-count max-count))
-      (error "rx `%s' range error" name))
+      (error "rx ‘%s’ range error" name))
     (rx--translate-counted-repetition min-count max-count items)))
 
 (defun rx--translate-repeat (body)
@@ -6490,7 +6495,7 @@ Return (REGEXP . PRECEDENCE)."
               (when (rassq char rx--syntax-codes)
                 (setq syntax char)))))))
       (unless syntax
-        (error "Unknown rx syntax name `%s'" sym)))
+        (error "Unknown rx syntax name ‘%s’" sym)))
     (cons (list (string ?\\ (if negated ?S ?s) syntax))
           t)))
 
@@ -6549,10 +6554,10 @@ Return (REGEXP . PRECEDENCE)."
           (cond ((symbolp arg)
                  (let ((cat (assq arg rx--categories)))
                    (unless cat
-                     (error "Unknown rx category `%s'" arg))
+                     (error "Unknown rx category ‘%s’" arg))
                    (cdr cat)))
                 ((characterp arg) arg)
-                (t (error "Invalid rx ‘category’ argument `%s'" arg)))))
+                (t (error "Invalid rx ‘category’ argument ‘%s’" arg)))))
     (cons (list (string ?\\ (if negated ?C ?c) category))
           t)))
 
@@ -6588,7 +6593,7 @@ Return (REGEXP . PRECEDENCE)."
     (error "rx ‘regexp’ form takes exactly one argument"))
   (let ((arg (car body)))
     (cond ((stringp arg)
-           ;; Generate the regexp when needed, since rx isn't
+           ;; Generate the regexp when needed, since rx is not
            ;; necessarily present in the byte-compilation environment.
            (unless rx--regexp-atomic-regexp
              (setq rx--regexp-atomic-regexp
@@ -6629,17 +6634,17 @@ DEF is the definition tuple.  Return (REGEXP . PRECEDENCE)."
          (predicate (nth 3 def))
          (nargs (1- (length form))))
     (when (< nargs min-args)
-      (error "The `%s' form takes at least %d argument(s)"
+      (error "The ‘%s’ form takes at least %d argument(s)"
              (car form) min-args))
     (when (and max-args (> nargs max-args))
-      (error "The `%s' form takes at most %d argument(s)"
+      (error "The ‘%s’ form takes at most %d argument(s)"
              (car form) max-args))
     (when (and predicate (not (rx--every predicate (cdr form))))
-      (error "The `%s' form requires arguments satisfying `%s'"
+      (error "The ‘%s’ form requires arguments satisfying ‘%s’"
              (car form) predicate))
     (let ((regexp (funcall fn form)))
       (unless (stringp regexp)
-        (error "The `%s' form did not expand to a string" (car form)))
+        (error "The ‘%s’ form did not expand to a string" (car form)))
       (cons (list regexp) nil))))
 
 (defun rx--substitute (bindings form)
@@ -6679,7 +6684,7 @@ can expand to any number of values."
 ;; =>
 ;;   "[0-7]"
 ;;
-;; While this would permit more powerful extensions, it's unclear just
+;; While this would permit more powerful extensions, it is unclear just
 ;; how often they would be used in practice.  Let's wait until there is
 ;; demand for it.
 
@@ -6691,9 +6696,9 @@ can expand to any number of values."
 ;;
 ;; which would have two minor advantages: multiple RXs with implicit
 ;; ‘seq’ in the definition, and the arglist is no longer an optional
-;; element in the middle of the list.  On the other hand, it's less
+;; element in the middle of the list.  On the other hand, it is less
 ;; like traditional lisp arglist constructs (defun, defmacro).
-;; Since it's a Scheme-like syntax, &rest parameters could be done using
+;; Since it is a Scheme-like syntax, &rest parameters could be done using
 ;; dotted lists:
 ;;  (rx-let (((name arg1 arg2 . rest) ...definition...)) ...)
 
@@ -6707,14 +6712,14 @@ can expand to any number of values."
         ('&rest
          (unless (cdr formals)
            (error
-            "Expanding rx def `%s': missing &rest parameter name" op))
+            "Expanding rx def ‘%s’: missing &rest parameter name" op))
          (push (cons (cadr formals) value-tail) bindings)
          (setq formals nil)
          (setq value-tail nil))
         (name
          (unless value-tail
            (error
-            "Expanding rx def `%s': too few arguments (got %d, need %s%d)"
+            "Expanding rx def ‘%s’: too few arguments (got %d, need %s%d)"
             op (length values)
             (if (memq '&rest arglist) "at least " "")
             (- (length arglist) (length (memq '&rest arglist)))))
@@ -6723,12 +6728,12 @@ can expand to any number of values."
       (setq formals (cdr formals)))
     (when value-tail
       (error
-       "Expanding rx def `%s': too many arguments (got %d, need %d)"
+       "Expanding rx def ‘%s’: too many arguments (got %d, need %d)"
        op (length values) (length arglist)))
     (let ((subst (rx--substitute bindings template)))
       (if (and subst (not (cdr subst)))
           (car subst)
-        (error "Expanding rx def `%s': must result in a single value" op)))))
+        (error "Expanding rx def ‘%s’: must result in a single value" op)))))
 
 (defun rx--translate-form (form)
   "Translate an rx form (list structure).  Return (REGEXP . PRECEDENCE)."
@@ -6775,7 +6780,7 @@ can expand to any number of values."
 
       (op
        (cond
-        ((not (symbolp op)) (error "Bad rx operator `%S'" op))
+        ((not (symbolp op)) (error "Bad rx operator ‘%S’" op))
 
         ((let ((expanded (rx--expand-def form)))
            (and expanded
@@ -6795,7 +6800,7 @@ can expand to any number of values."
                   entry)
                 (rx--translate-compat-form (cdr entry) form))))
 
-        (t (error "Unknown rx form `%s'" op)))))))
+        (t (error "Unknown rx form ‘%s’" op)))))))
 
 (defconst rx--builtin-forms
   '(seq sequence : and or | any in char not-char not intersection
@@ -6844,7 +6849,7 @@ can expand to any number of values."
   "Translate FORM from ‘rx’ sexp syntax into a string regexp.
 The arguments to ‘literal’ and ‘regexp’ forms inside FORM must be
 constant strings.
-If NO-GROUP is non-nil, don't bracket the result in a non-capturing
+If NO-GROUP is non-nil, do not bracket the result in a non-capturing
 group.
 
 For extending the ‘rx’ notation in FORM, use ‘rx-define’ or ‘rx-let-eval’."
@@ -6999,7 +7004,7 @@ TAIL is on the form ([ARGLIST] DEFINITION)."
     (error "Bad ‘rx’ definition name: %S" name))
   ;; FIXME: Consider using a hash table or symbol property, for speed.
   (when (memq name rx--builtin-names)
-    (error "Cannot redefine built-in rx name `%s'" name))
+    (error "Cannot redefine built-in rx name ‘%s’" name))
   (pcase tail
     (`(,def)
      (list def))
@@ -7031,7 +7036,7 @@ For bindings without an ARGS list, NAME is defined as an alias
 for the ‘rx’ expression RX.  Where ARGS is supplied, NAME is
 defined as an ‘rx’ form with ARGS as argument list.  The
 parameters are bound from the values in the (NAME ...) form and
-are substituted in RX.  ARGS can contain `&rest' parameters,
+are substituted in RX.  ARGS can contain ‘&rest’ parameters,
 whose values are spliced into RX where the parameter name occurs.
 
 Any previous definitions with the same names are shadowed during
@@ -7057,7 +7062,7 @@ For bindings without an ARGS list, NAME is defined as an alias
 for the ‘rx’ expression RX.  Where ARGS is supplied, NAME is
 defined as an ‘rx’ form with ARGS as argument list.  The
 parameters are bound from the values in the (NAME ...) form and
-are substituted in RX.  ARGS can contain `&rest' parameters,
+are substituted in RX.  ARGS can contain ‘&rest’ parameters,
 whose values are spliced into RX where the parameter name occurs.
 
 Any previous definitions with the same names are shadowed during
@@ -7082,7 +7087,7 @@ expression RX.
 If the ARGS list is supplied, define NAME as an ‘rx’ form with
 ARGS as argument list.  The parameters are bound from the values
 in the (NAME ...) form and are substituted in RX.
-ARGS can contain `&rest' parameters, whose values are spliced
+ARGS can contain ‘&rest’ parameters, whose values are spliced
 into RX where the parameter name occurs.
 
 Any previous global definition of NAME is overwritten with the new one.
@@ -7159,7 +7164,7 @@ following constructs:
              `(pred (string-match ,regexp)))
             (1
              ;; Create a match value that on a successful regexp match
-             ;; is the submatch value, 0 on failure.  We can't use nil
+             ;; is the submatch value, 0 on failure.  We can not use nil
              ;; for failure because it is a valid submatch value.
              `(app (lambda (s)
                      (if (string-match ,regexp s)
@@ -7489,7 +7494,7 @@ Setup code specific to ‘py-shell-mode’."
   ;; (setq py-python-command "ipython3"
   ;; 	py-ipython-command "ipython3"
   ;; 	py-python-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt")
-  ;; 	;; "-i" doesn't work with `isympy3'
+  ;; 	;; "-i" does not work with ‘isympy3’
   ;; 	py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
   )
 
@@ -7956,7 +7961,7 @@ Default is nil.
 
 Also used by navigation"
   :type 'boolean
-  :tag "py-mark-decorators")
+  :tag "ar-mark-decorators")
 
 (defun py-end-of-string ()
   "Go to end of string at point if any, if successful return position. "
@@ -8124,7 +8129,7 @@ DONE - transaktional argument
 LIMIT - honor limit
 IGNORE-IN-STRING-P - also much inside a string
 REPEAT - count and consider repeats
-Optional MAXINDENT: don't stop if indentation is larger"
+Optional MAXINDENT: do not stop if indentation is larger"
   (interactive)
   (save-restriction
     (unless (bobp)
@@ -8138,7 +8143,7 @@ Optional MAXINDENT: don't stop if indentation is larger"
  	;;        (setq pps (parse-partial-sexp (or limit (point-min))(point)))))
         (cond
 	 ((< py-max-specpdl-size repeat)
-	  (error "py-forward-statement reached loops max. If no error, customize ‘ar-max-specpdl-size’"))
+	  (error "ar-forward-statement reached loops max. If no error, customize ‘ar-max-specpdl-size’"))
          ((and (bolp) (eolp))
           (skip-chars-backward " \t\r\n\f")
           (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
@@ -8390,7 +8395,7 @@ SECONDVALUE: travel these expressions
 
 Argument REGEXP: a symbol.
 
-Return a list if found, whose car holds indentation, cdr position in buffer.
+Return position if successful, nil otherwise
 
 Keyword detected from REGEXP
 Honor MAXINDENT if provided
@@ -8406,22 +8411,21 @@ Optional IGNOREINDENT: find next keyword at any indentation"
 		9999
 	      (or maxindent
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
-           (allvalue (symbol-value (quote py-block-or-clause-re)))
-           erg)
+           (allvalue (symbol-value (quote py-block-or-clause-re))))
       (unless (py--beginning-of-statement-p)
 	(py-backward-statement))
       (when (and (not (string= "" py-block-closing-keywords-re))(looking-at py-block-closing-keywords-re))
         (setq maxindent (min maxindent (- (current-indentation) py-indent-offset))))
       (cond
        ((and (looking-at regexpvalue)(< (point) orig))
-        (setq erg (point)))
-        (t (while
+        (point))
+       (t (while
               (not (or (bobp) (and (looking-at regexpvalue)(< (point) orig) (not (nth 8 (parse-partial-sexp (point-min) (point)))))))
-             ;; search backward and reduce maxindent, if non-matching forms suggest it
-              (setq erg (py--backward-regexp regexp maxindent
-                                         (or condition '<=)
-                                         orig allvalue)))))
-      erg)))
+            ;; search backward and reduce maxindent, if non-matching forms suggest it
+            (py--backward-regexp regexp maxindent
+                                 (or condition '<=)
+                                 orig allvalue))))
+      (and (< (point) orig)(point)))))
 
 (defun py-up-base (regexp &optional indent)
   "Expects a symbol as REGEXP like `(quote py-clause-re)'
@@ -8574,7 +8578,7 @@ Arg REGEXP, a symbol"
 		 (when (py--down-according-to-indent regexp secondvalue nil t)
 		   (py--end-base regexp (point) bol (1+ repeat))))))))))
 
-;; python-components-start-Zf98zM.el ends here
+;; py-start-Zf98zM.el ends here
 ;; python-components-backward-forms
 
 (defun py-backward-region ()
@@ -8584,9 +8588,9 @@ Arg REGEXP, a symbol"
     (when beg (goto-char beg))))
 
 (defun py-backward-block ()
-  "Go to beginning of `block'.
+  "Go to beginning of ‘block’.
 
-If already at beginning, go one `block' backward.
+If already at beginning, go one ‘block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (if py-mark-decorators
@@ -8595,9 +8599,9 @@ Return position if successful, nil otherwise"
     (py--go-to-keyword 'py-block-re '<)))
 
 (defun py-backward-class ()
-  "Go to beginning of `class'.
+  "Go to beginning of ‘class’.
 
-If already at beginning, go one `class' backward.
+If already at beginning, go one ‘class’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (if py-mark-decorators
@@ -8606,9 +8610,9 @@ Return position if successful, nil otherwise"
     (py--go-to-keyword 'py-class-re '<)))
 
 (defun py-backward-def ()
-  "Go to beginning of `def'.
+  "Go to beginning of ‘def’.
 
-If already at beginning, go one `def' backward.
+If already at beginning, go one ‘def’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (if py-mark-decorators
@@ -8617,9 +8621,9 @@ Return position if successful, nil otherwise"
     (py--go-to-keyword 'py-def-re '<)))
 
 (defun py-backward-def-or-class ()
-  "Go to beginning of `def-or-class'.
+  "Go to beginning of ‘def-or-class’.
 
-If already at beginning, go one `def-or-class' backward.
+If already at beginning, go one ‘def-or-class’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (if py-mark-decorators
@@ -8628,193 +8632,193 @@ Return position if successful, nil otherwise"
     (py--go-to-keyword 'py-def-or-class-re '<)))
 
 (defun py-backward-block-bol ()
-  "Go to beginning of `block', go to BOL.
-If already at beginning, go one `block' backward.
-Return beginning of `block' if successful, nil otherwise"
+  "Go to beginning of ‘block’, go to BOL.
+If already at beginning, go one ‘block’ backward.
+Return beginning of ‘block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-class-bol ()
-  "Go to beginning of `class', go to BOL.
-If already at beginning, go one `class' backward.
-Return beginning of `class' if successful, nil otherwise"
+  "Go to beginning of ‘class’, go to BOL.
+If already at beginning, go one ‘class’ backward.
+Return beginning of ‘class’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-class)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-def-bol ()
-  "Go to beginning of `def', go to BOL.
-If already at beginning, go one `def' backward.
-Return beginning of `def' if successful, nil otherwise"
+  "Go to beginning of ‘def’, go to BOL.
+If already at beginning, go one ‘def’ backward.
+Return beginning of ‘def’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-def)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-def-or-class-bol ()
-  "Go to beginning of `def-or-class', go to BOL.
-If already at beginning, go one `def-or-class' backward.
-Return beginning of `def-or-class' if successful, nil otherwise"
+  "Go to beginning of ‘def-or-class’, go to BOL.
+If already at beginning, go one ‘def-or-class’ backward.
+Return beginning of ‘def-or-class’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-def-or-class)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-assignment ()
-  "Go to beginning of `assignment'.
+  "Go to beginning of ‘assignment’.
 
-If already at beginning, go one `assignment' backward.
+If already at beginning, go one ‘assignment’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-assignment-re '<))
 
 (defun py-backward-block-or-clause ()
-  "Go to beginning of `block-or-clause'.
+  "Go to beginning of ‘block-or-clause’.
 
-If already at beginning, go one `block-or-clause' backward.
+If already at beginning, go one ‘block-or-clause’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-block-or-clause-re '<))
 
 (defun py-backward-clause ()
-  "Go to beginning of `clause'.
+  "Go to beginning of ‘clause’.
 
-If already at beginning, go one `clause' backward.
+If already at beginning, go one ‘clause’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-clause-re '<))
 
 (defun py-backward-elif-block ()
-  "Go to beginning of `elif-block'.
+  "Go to beginning of ‘elif-block’.
 
-If already at beginning, go one `elif-block' backward.
+If already at beginning, go one ‘elif-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-elif-re '<))
 
 (defun py-backward-else-block ()
-  "Go to beginning of `else-block'.
+  "Go to beginning of ‘else-block’.
 
-If already at beginning, go one `else-block' backward.
+If already at beginning, go one ‘else-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-else-re '<))
 
 (defun py-backward-except-block ()
-  "Go to beginning of `except-block'.
+  "Go to beginning of ‘except-block’.
 
-If already at beginning, go one `except-block' backward.
+If already at beginning, go one ‘except-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-except-re '<))
 
 (defun py-backward-for-block ()
-  "Go to beginning of `for-block'.
+  "Go to beginning of ‘for-block’.
 
-If already at beginning, go one `for-block' backward.
+If already at beginning, go one ‘for-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-for-re '<))
 
 (defun py-backward-if-block ()
-  "Go to beginning of `if-block'.
+  "Go to beginning of ‘if-block’.
 
-If already at beginning, go one `if-block' backward.
+If already at beginning, go one ‘if-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-if-re '<))
 
 (defun py-backward-minor-block ()
-  "Go to beginning of `minor-block'.
+  "Go to beginning of ‘minor-block’.
 
-If already at beginning, go one `minor-block' backward.
+If already at beginning, go one ‘minor-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-minor-block-re '<))
 
 (defun py-backward-try-block ()
-  "Go to beginning of `try-block'.
+  "Go to beginning of ‘try-block’.
 
-If already at beginning, go one `try-block' backward.
+If already at beginning, go one ‘try-block’ backward.
 Return position if successful, nil otherwise"
   (interactive)
   (py--go-to-keyword 'py-try-re '<))
 
 (defun py-backward-assignment-bol ()
-  "Go to beginning of `assignment', go to BOL.
-If already at beginning, go one `assignment' backward.
-Return beginning of `assignment' if successful, nil otherwise"
+  "Go to beginning of ‘assignment’, go to BOL.
+If already at beginning, go one ‘assignment’ backward.
+Return beginning of ‘assignment’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-assignment)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-block-or-clause-bol ()
-  "Go to beginning of `block-or-clause', go to BOL.
-If already at beginning, go one `block-or-clause' backward.
-Return beginning of `block-or-clause' if successful, nil otherwise"
+  "Go to beginning of ‘block-or-clause’, go to BOL.
+If already at beginning, go one ‘block-or-clause’ backward.
+Return beginning of ‘block-or-clause’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-block-or-clause)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-clause-bol ()
-  "Go to beginning of `clause', go to BOL.
-If already at beginning, go one `clause' backward.
-Return beginning of `clause' if successful, nil otherwise"
+  "Go to beginning of ‘clause’, go to BOL.
+If already at beginning, go one ‘clause’ backward.
+Return beginning of ‘clause’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-clause)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-elif-block-bol ()
-  "Go to beginning of `elif-block', go to BOL.
-If already at beginning, go one `elif-block' backward.
-Return beginning of `elif-block' if successful, nil otherwise"
+  "Go to beginning of ‘elif-block’, go to BOL.
+If already at beginning, go one ‘elif-block’ backward.
+Return beginning of ‘elif-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-elif-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-else-block-bol ()
-  "Go to beginning of `else-block', go to BOL.
-If already at beginning, go one `else-block' backward.
-Return beginning of `else-block' if successful, nil otherwise"
+  "Go to beginning of ‘else-block’, go to BOL.
+If already at beginning, go one ‘else-block’ backward.
+Return beginning of ‘else-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-else-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-except-block-bol ()
-  "Go to beginning of `except-block', go to BOL.
-If already at beginning, go one `except-block' backward.
-Return beginning of `except-block' if successful, nil otherwise"
+  "Go to beginning of ‘except-block’, go to BOL.
+If already at beginning, go one ‘except-block’ backward.
+Return beginning of ‘except-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-except-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-for-block-bol ()
-  "Go to beginning of `for-block', go to BOL.
-If already at beginning, go one `for-block' backward.
-Return beginning of `for-block' if successful, nil otherwise"
+  "Go to beginning of ‘for-block’, go to BOL.
+If already at beginning, go one ‘for-block’ backward.
+Return beginning of ‘for-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-for-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-if-block-bol ()
-  "Go to beginning of `if-block', go to BOL.
-If already at beginning, go one `if-block' backward.
-Return beginning of `if-block' if successful, nil otherwise"
+  "Go to beginning of ‘if-block’, go to BOL.
+If already at beginning, go one ‘if-block’ backward.
+Return beginning of ‘if-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-if-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-minor-block-bol ()
-  "Go to beginning of `minor-block', go to BOL.
-If already at beginning, go one `minor-block' backward.
-Return beginning of `minor-block' if successful, nil otherwise"
+  "Go to beginning of ‘minor-block’, go to BOL.
+If already at beginning, go one ‘minor-block’ backward.
+Return beginning of ‘minor-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-minor-block)
        (progn (beginning-of-line)(point))))
 
 (defun py-backward-try-block-bol ()
-  "Go to beginning of `try-block', go to BOL.
-If already at beginning, go one `try-block' backward.
-Return beginning of `try-block' if successful, nil otherwise"
+  "Go to beginning of ‘try-block’, go to BOL.
+If already at beginning, go one ‘try-block’ backward.
+Return beginning of ‘try-block’ if successful, nil otherwise"
   (interactive)
   (and (py-backward-try-block)
        (progn (beginning-of-line)(point))))
@@ -8825,17 +8829,17 @@ Return beginning of `try-block' if successful, nil otherwise"
 (defun py-forward-assignment (&optional orig bol)
   "Go to end of assignment.
 
-Return end of `assignment' if successful, nil otherwise
+Return end of ‘assignment’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (py--end-base (quote py-assignment-re) orig bol))
 
 (defun py-forward-assignment-bol ()
-  "Goto beginning of line following end of `assignment'.
+  "Goto beginning of line following end of ‘assignment’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-assignment'."
+See also ‘ar-down-assignment’."
   (interactive)
   (py-forward-assignment nil t))
 
@@ -8848,7 +8852,7 @@ See also `ar-down-assignment'."
 (defun py-forward-block (&optional orig bol)
   "Go to end of block.
 
-Return end of `block' if successful, nil otherwise
+Return end of ‘block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8859,17 +8863,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-block-bol ()
-  "Goto beginning of line following end of `block'.
+  "Goto beginning of line following end of ‘block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-block'."
+See also ‘ar-down-block’."
   (interactive)
   (py-forward-block nil t))
 
 (defun py-forward-block-or-clause (&optional orig bol)
   "Go to end of block-or-clause.
 
-Return end of `block-or-clause' if successful, nil otherwise
+Return end of ‘block-or-clause’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8880,17 +8884,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-block-or-clause-bol ()
-  "Goto beginning of line following end of `block-or-clause'.
+  "Goto beginning of line following end of ‘block-or-clause’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-block-or-clause'."
+See also ‘ar-down-block-or-clause’."
   (interactive)
   (py-forward-block-or-clause nil t))
 
 (defun py-forward-class (&optional orig bol)
   "Go to end of class.
 
-Return end of `class' if successful, nil otherwise
+Return end of ‘class’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8901,17 +8905,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-class-bol ()
-  "Goto beginning of line following end of `class'.
+  "Goto beginning of line following end of ‘class’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-class'."
+See also ‘ar-down-class’."
   (interactive)
   (py-forward-class nil t))
 
 (defun py-forward-clause (&optional orig bol)
   "Go to end of clause.
 
-Return end of `clause' if successful, nil otherwise
+Return end of ‘clause’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8922,17 +8926,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-clause-bol ()
-  "Goto beginning of line following end of `clause'.
+  "Goto beginning of line following end of ‘clause’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-clause'."
+See also ‘ar-down-clause’."
   (interactive)
   (py-forward-clause nil t))
 
 (defun py-forward-def (&optional orig bol)
   "Go to end of def.
 
-Return end of `def' if successful, nil otherwise
+Return end of ‘def’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8943,17 +8947,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-def-bol ()
-  "Goto beginning of line following end of `def'.
+  "Goto beginning of line following end of ‘def’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-def'."
+See also ‘ar-down-def’."
   (interactive)
   (py-forward-def nil t))
 
 (defun py-forward-def-or-class (&optional orig bol)
   "Go to end of def-or-class.
 
-Return end of `def-or-class' if successful, nil otherwise
+Return end of ‘def-or-class’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8964,17 +8968,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-def-or-class-bol ()
-  "Goto beginning of line following end of `def-or-class'.
+  "Goto beginning of line following end of ‘def-or-class’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-def-or-class'."
+See also ‘ar-down-def-or-class’."
   (interactive)
   (py-forward-def-or-class nil t))
 
 (defun py-forward-elif-block (&optional orig bol)
   "Go to end of elif-block.
 
-Return end of `elif-block' if successful, nil otherwise
+Return end of ‘elif-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -8985,17 +8989,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-elif-block-bol ()
-  "Goto beginning of line following end of `elif-block'.
+  "Goto beginning of line following end of ‘elif-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-elif-block'."
+See also ‘ar-down-elif-block’."
   (interactive)
   (py-forward-elif-block nil t))
 
 (defun py-forward-else-block (&optional orig bol)
   "Go to end of else-block.
 
-Return end of `else-block' if successful, nil otherwise
+Return end of ‘else-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9006,17 +9010,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-else-block-bol ()
-  "Goto beginning of line following end of `else-block'.
+  "Goto beginning of line following end of ‘else-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-else-block'."
+See also ‘ar-down-else-block’."
   (interactive)
   (py-forward-else-block nil t))
 
 (defun py-forward-except-block (&optional orig bol)
   "Go to end of except-block.
 
-Return end of `except-block' if successful, nil otherwise
+Return end of ‘except-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9027,17 +9031,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-except-block-bol ()
-  "Goto beginning of line following end of `except-block'.
+  "Goto beginning of line following end of ‘except-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-except-block'."
+See also ‘ar-down-except-block’."
   (interactive)
   (py-forward-except-block nil t))
 
 (defun py-forward-for-block (&optional orig bol)
   "Go to end of for-block.
 
-Return end of `for-block' if successful, nil otherwise
+Return end of ‘for-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9048,17 +9052,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-for-block-bol ()
-  "Goto beginning of line following end of `for-block'.
+  "Goto beginning of line following end of ‘for-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-for-block'."
+See also ‘ar-down-for-block’."
   (interactive)
   (py-forward-for-block nil t))
 
 (defun py-forward-if-block (&optional orig bol)
   "Go to end of if-block.
 
-Return end of `if-block' if successful, nil otherwise
+Return end of ‘if-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9069,17 +9073,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-if-block-bol ()
-  "Goto beginning of line following end of `if-block'.
+  "Goto beginning of line following end of ‘if-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-if-block'."
+See also ‘ar-down-if-block’."
   (interactive)
   (py-forward-if-block nil t))
 
 (defun py-forward-minor-block (&optional orig bol)
   "Go to end of minor-block.
 
-Return end of `minor-block' if successful, nil otherwise
+Return end of ‘minor-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9090,17 +9094,17 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-minor-block-bol ()
-  "Goto beginning of line following end of `minor-block'.
+  "Goto beginning of line following end of ‘minor-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-minor-block'."
+See also ‘ar-down-minor-block’."
   (interactive)
   (py-forward-minor-block nil t))
 
 (defun py-forward-try-block (&optional orig bol)
   "Go to end of try-block.
 
-Return end of `try-block' if successful, nil otherwise
+Return end of ‘try-block’ if successful, nil otherwise
 Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
@@ -9111,14 +9115,14 @@ Optional BOL: go to beginning of line following end-position"
     erg))
 
 (defun py-forward-try-block-bol ()
-  "Goto beginning of line following end of `try-block'.
+  "Goto beginning of line following end of ‘try-block’.
 
 Return position reached, if successful, nil otherwise.
-See also `ar-down-try-block'."
+See also ‘ar-down-try-block’."
   (interactive)
   (py-forward-try-block nil t))
 
-;; python-components-forward-forms.el ends here
+;; py-forward-forms.el ends here
 ;; python-components-start2
 
 
@@ -9193,31 +9197,43 @@ This function does not modify point or mark."
   (save-excursion
     (progn
       (cond
-       ((eq position 'bol) (beginning-of-line))
-       ((eq position 'eol) (end-of-line))
-       ((eq position 'bod) (py-backward-def-or-class))
-       ((eq position 'eod) (py-forward-def-or-class))
+       ((eq position (quote bol)) (beginning-of-line))
+       ((eq position (quote eol)) (end-of-line))
+       ((eq position (quote bod)) (py-backward-def-or-class))
+       ((eq position (quote eod)) (py-forward-def-or-class))
        ;; Kind of funny, I know, but useful for py-up-exception.
-       ((eq position 'bob) (goto-char (point-min)))
-       ((eq position 'eob) (goto-char (point-max)))
-       ((eq position 'boi) (back-to-indentation))
-       ((eq position 'bos) (py-backward-statement))
+       ((eq position (quote bob)) (goto-char (point-min)))
+       ((eq position (quote eob)) (goto-char (point-max)))
+       ((eq position (quote boi)) (back-to-indentation))
+       ((eq position (quote bos)) (py-backward-statement))
        (t (error "Unknown buffer position requested: %s" position))))))
+
+;; (defun py-backward-top-level ()
+;;   "Go up to beginning of statments until level of indentation is null.
+
+;; Returns position if successful, nil otherwise "
+;;   (interactive)
+;;   (let (erg done)
+;;     (unless (bobp)
+;;       (while (and (not done)(not (bobp))
+;;                   (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1)))
+;;         (if
+;;             (nth 8 (parse-partial-sexp (point-min) (point)))
+;;             (setq erg nil)
+;;           (setq done t)))
+;;       erg)))
 
 (defun py-backward-top-level ()
   "Go up to beginning of statments until level of indentation is null.
 
 Returns position if successful, nil otherwise "
   (interactive)
-  (let (erg done)
-    (unless (bobp)
-      (while (and (not done)(not (bobp))
-                  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1)))
-        (if
-            (nth 8 (parse-partial-sexp (point-min) (point)))
-            (setq erg nil)
-          (setq done t)))
-      erg)))
+  (let ((orig (point)))
+    (while (and
+            (not (bobp))
+            (re-search-backward "^[[:alpha:]_'\"]" nil t 1)
+            (nth 8 (parse-partial-sexp (point-min) (point)))))
+    (and (< (point) orig)(point))))
 
 ;; might be slow due to repeated calls of ‘py-down-statement’
 (defun py-forward-top-level ()
@@ -9408,6 +9424,7 @@ Unless DIRECTION is symbol \\='forward, go backward first"
   (if (and filename wholebuf (not (buffer-modified-p)))
       (py--execute-file-base filename proc nil procbuf origline fast)
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
+      (sit-for 0.1) 
       (with-temp-buffer
 	(insert strg)
 	(write-file tempfile)
@@ -9424,7 +9441,7 @@ If an exception occurred return error-string,
 otherwise return nil.
 BUF must exist.
 
-Indicate LINE if code wasn't run from a file,
+Indicate LINE if code was not run from a file,
 thus remember line of source buffer"
   (save-excursion
     (with-current-buffer output-buffer
@@ -9621,7 +9638,7 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
 	 (proc (or proc-raw (get-buffer-process buffer-name)
 		   (prog1
 		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
-		     (sit-for 1))))
+		     (sit-for 0.1))))
 
          ;; (split (if python-mode-v5-behavior-p 'just-two split))
          )
@@ -11062,37 +11079,37 @@ If already at the beginning of a block, move these form upward."
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-ipython-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-ipython3 (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-ipython3-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-jython (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-jython-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter.
@@ -11100,7 +11117,7 @@ If already at the beginning of a block, move these form upward."
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter.
@@ -11108,91 +11125,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python2 (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python2-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python3 (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-python3-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-pypy (&optional dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-pypy-dedicated (&optional fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block (&optional shell dedicated fast split switch proc)
   "Send block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-dedicated (&optional shell fast split switch proc)
   "Send block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-ipython (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-ipython-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-ipython3 (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-ipython3-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-jython (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-jython-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter.
@@ -11200,7 +11217,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter.
@@ -11208,55 +11225,55 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python2 (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python2-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python3 (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-python3-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-pypy (&optional dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-pypy-dedicated (&optional fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause (&optional shell dedicated fast split switch proc)
   "Send block-or-clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-block-or-clause-dedicated (&optional shell fast split switch proc)
   "Send block-or-clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'block-or-clause shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote block-or-clause) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-ipython (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11269,7 +11286,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'ipython dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote ipython) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-ipython-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11282,7 +11299,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'ipython t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote ipython) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-ipython3 (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11295,7 +11312,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'ipython3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote ipython3) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-ipython3-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11308,7 +11325,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'ipython3 t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote ipython3) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-jython (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11321,7 +11338,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'jython dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote jython) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-jython-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11334,7 +11351,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'jython t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote jython) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter.
@@ -11349,7 +11366,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter.
@@ -11364,7 +11381,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python2 (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11377,7 +11394,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python2 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python2) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python2-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11390,7 +11407,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python2 t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python2) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python3 (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11403,7 +11420,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python3) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-python3-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11416,7 +11433,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'python3 t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote python3) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-pypy (&optional dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11429,7 +11446,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'pypy dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote pypy) dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-pypy-dedicated (&optional fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11442,7 +11459,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer 'pypy t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) (quote pypy) t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer (&optional shell dedicated fast split switch proc)
   "Send buffer at point to a python3 interpreter."
@@ -11455,7 +11472,7 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-buffer-dedicated (&optional shell fast split switch proc)
   "Send buffer at point to a python3 unique interpreter."
@@ -11468,43 +11485,43 @@ For ‘default’ see value of ‘py-shell-name’"
             buffer (or (get-file-buffer filename)
                        (find-file-noselect filename)))
       (set-buffer buffer))
-    (py--execute-prepare 'buffer shell t switch (point-min) (point-max) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote buffer) shell t switch (point-min) (point-max) nil fast proc wholebuf split)))
 
 (defun py-execute-class-ipython (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-ipython-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-ipython3 (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-ipython3-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-jython (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-jython-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter.
@@ -11512,7 +11529,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter.
@@ -11520,91 +11537,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python2 (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python2-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python3 (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-python3-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-pypy (&optional dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-pypy-dedicated (&optional fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class (&optional shell dedicated fast split switch proc)
   "Send class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-class-dedicated (&optional shell fast split switch proc)
   "Send class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'class shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote class) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-ipython (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-ipython-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-ipython3 (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-ipython3-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-jython (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-jython-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter.
@@ -11612,7 +11629,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter.
@@ -11620,91 +11637,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python2 (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python2-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python3 (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-python3-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-pypy (&optional dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-pypy-dedicated (&optional fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause (&optional shell dedicated fast split switch proc)
   "Send clause at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-clause-dedicated (&optional shell fast split switch proc)
   "Send clause at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'clause shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote clause) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-ipython (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-ipython-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-ipython3 (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-ipython3-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-jython (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-jython-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter.
@@ -11712,7 +11729,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter.
@@ -11720,91 +11737,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python2 (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python2-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python3 (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-python3-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-pypy (&optional dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-pypy-dedicated (&optional fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def (&optional shell dedicated fast split switch proc)
   "Send def at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-dedicated (&optional shell fast split switch proc)
   "Send def at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-ipython (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-ipython-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-ipython3 (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-ipython3-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-jython (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-jython-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter.
@@ -11812,7 +11829,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter.
@@ -11820,91 +11837,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python2 (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python2-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python3 (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-python3-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-pypy (&optional dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-pypy-dedicated (&optional fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class (&optional shell dedicated fast split switch proc)
   "Send def-or-class at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-def-or-class-dedicated (&optional shell fast split switch proc)
   "Send def-or-class at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'def-or-class shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote def-or-class) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-ipython (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-ipython-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-ipython3 (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-ipython3-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-jython (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-jython-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter.
@@ -11912,7 +11929,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter.
@@ -11920,91 +11937,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python2 (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python2-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python3 (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-python3-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-pypy (&optional dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-pypy-dedicated (&optional fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression (&optional shell dedicated fast split switch proc)
   "Send expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-expression-dedicated (&optional shell fast split switch proc)
   "Send expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'expression shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote expression) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-ipython (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-ipython-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-ipython3 (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-ipython3-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-jython (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-jython-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter.
@@ -12012,7 +12029,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter.
@@ -12020,91 +12037,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python2 (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python2-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python3 (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-python3-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-pypy (&optional dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-pypy-dedicated (&optional fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent (&optional shell dedicated fast split switch proc)
   "Send indent at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-indent-dedicated (&optional shell fast split switch proc)
   "Send indent at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'indent shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote indent) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-ipython (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-ipython-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-ipython3 (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-ipython3-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-jython (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-jython-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter.
@@ -12112,7 +12129,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter.
@@ -12120,91 +12137,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python2 (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python2-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python3 (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-python3-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-pypy (&optional dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-pypy-dedicated (&optional fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line (&optional shell dedicated fast split switch proc)
   "Send line at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-line-dedicated (&optional shell fast split switch proc)
   "Send line at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'line shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote line) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-ipython (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-ipython-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-ipython3 (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-ipython3-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-jython (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-jython-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter.
@@ -12212,7 +12229,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter.
@@ -12220,91 +12237,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python2 (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python2-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python3 (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-python3-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-pypy (&optional dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-pypy-dedicated (&optional fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block (&optional shell dedicated fast split switch proc)
   "Send minor-block at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-minor-block-dedicated (&optional shell fast split switch proc)
   "Send minor-block at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'minor-block shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote minor-block) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-ipython (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-ipython-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-ipython3 (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-ipython3-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-jython (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-jython-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter.
@@ -12312,7 +12329,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter.
@@ -12320,91 +12337,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python2 (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python2-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python3 (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-python3-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-pypy (&optional dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-pypy-dedicated (&optional fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph (&optional shell dedicated fast split switch proc)
   "Send paragraph at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-paragraph-dedicated (&optional shell fast split switch proc)
   "Send paragraph at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'paragraph shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote paragraph) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-ipython (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-ipython-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-ipython3 (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-ipython3-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-jython (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-jython-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter.
@@ -12412,7 +12429,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter.
@@ -12420,91 +12437,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python2 (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python2-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python3 (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-python3-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-pypy (&optional dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-pypy-dedicated (&optional fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression (&optional shell dedicated fast split switch proc)
   "Send partial-expression at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-partial-expression-dedicated (&optional shell fast split switch proc)
   "Send partial-expression at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'partial-expression shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote partial-expression) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-region-ipython (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'ipython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote ipython) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-ipython-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'ipython t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote ipython) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-ipython3 (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'ipython3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote ipython3) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-ipython3-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'ipython3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote ipython3) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-jython (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'jython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote jython) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-jython-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'jython t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote jython) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter.
@@ -12512,7 +12529,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter.
@@ -12520,91 +12537,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python2 (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python2 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python2) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python2-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python2 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python2) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python3 (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python3) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-python3-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'python3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote python3) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-pypy (beg end &optional dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'pypy dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote pypy) dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-pypy-dedicated (beg end &optional fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region 'pypy t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) (quote pypy) t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region (beg end &optional shell dedicated fast split switch proc)
   "Send region at point to a python3 interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region shell dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) shell dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-region-dedicated (beg end &optional shell fast split switch proc)
   "Send region at point to a python3 unique interpreter."
   (interactive "r")
   (let ((wholebuf nil))
-    (py--execute-prepare 'region shell t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
+    (py--execute-prepare (quote region) shell t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split)))
 
 (defun py-execute-statement-ipython (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-ipython-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-ipython3 (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-ipython3-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-jython (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-jython-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter.
@@ -12612,7 +12629,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter.
@@ -12620,91 +12637,91 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python2 (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python2-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python3 (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-python3-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-pypy (&optional dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-pypy-dedicated (&optional fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement (&optional shell dedicated fast split switch proc)
   "Send statement at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-statement-dedicated (&optional shell fast split switch proc)
   "Send statement at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'statement shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote statement) shell t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-ipython (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'ipython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote ipython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-ipython-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'ipython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote ipython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-ipython3 (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'ipython3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote ipython3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-ipython3-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'ipython3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote ipython3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-jython (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'jython dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote jython) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-jython-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'jython t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote jython) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter.
@@ -12712,7 +12729,7 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter.
@@ -12720,55 +12737,55 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python2 (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python2 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python2) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python2-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python2 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python2) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python3 (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python3 dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python3) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-python3-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'python3 t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote python3) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-pypy (&optional dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'pypy dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote pypy) dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-pypy-dedicated (&optional fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level 'pypy t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) (quote pypy) t switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level (&optional shell dedicated fast split switch proc)
   "Send top-level at point to a python3 interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level shell dedicated switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) shell dedicated switch nil nil nil fast proc wholebuf split)))
 
 (defun py-execute-top-level-dedicated (&optional shell fast split switch proc)
   "Send top-level at point to a python3 unique interpreter."
   (interactive)
   (let ((wholebuf nil))
-    (py--execute-prepare 'top-level shell t switch nil nil nil fast proc wholebuf split)))
+    (py--execute-prepare (quote top-level) shell t switch nil nil nil fast proc wholebuf split)))
 
 ;; python-components-execute
 
@@ -12847,7 +12864,7 @@ Returns value of ‘py-switch-buffers-on-execute-p’."
   py-switch-buffers-on-execute-p)
 
 (defun py-guess-default-python ()
-  "Defaults to \"python\", if guessing didn't succeed."
+  "Defaults to \"python\", if guessing did not succeed."
   (interactive)
   (let* ((ptn (or py-shell-name (py-choose-shell) "python"))
          (erg (if py-edit-only-p ptn (executable-find ptn))))
@@ -13113,9 +13130,9 @@ If the file local variable ‘py-master-file’ is non-nil, import or
 reload the named file instead of the buffer's file.  The file may be
 saved based on the value of ‘py-execute-import-or-reload-save-p’.
 
-See also `\\[py-execute-region]'.
+See also ‘\\[py-execute-region]’.
 
-This may be preferable to `\\[py-execute-buffer]' because:
+This may be preferable to ‘\\[py-execute-buffer]’ because:
 
  - Definitions stay in their module rather than appearing at top
    level, where they would clutter the global namespace and not affect
@@ -13476,21 +13493,21 @@ LIEP stores line-end-position at point-of-interest
                          (eq liep (line-end-position)))
 		    (cond
                      ((looking-at py-case-re)
-                      (and (py--backward-regexp (quote py-match-case-re) nil '>)
+                      (and (py--backward-regexp (quote py-match-case-re) nil (quote >))
                            ;; (+ (current-indentation) py-indent-offset)
                            (current-indentation)))
                      ((looking-at py-minor-clause-re)
 		      (and (py--backward-regexp (quote py-block-or-clause-re)
                                                 ;; an arbitray number, larger than an real expected indent
                                                 (* 99 py-indent-offset)
-                                                '<)
+                                                (quote <))
                            (current-indentation)))
 
                      ((looking-at py-outdent-re)
 		      (and (py--backward-regexp (quote py-block-or-clause-re)
                                                 ;; an arbitray number, larger than an real expected indent
                                                 (* 99 py-indent-offset)
-                                                '<)))
+                                                (quote <))))
 		     ((bobp) 0)
 		     (t (save-excursion
 			  ;; (skip-chars-backward " \t\r\n\f")
@@ -13615,7 +13632,7 @@ Calls ‘py-shell’
 (defun py-load-file (file-name)
   "Load a Python file FILE-NAME into the Python process.
 
-If the file has extension `.py' import or reload it as a module.
+If the file has extension ‘.py’ import or reload it as a module.
 Treating it as a module keeps the global namespace clean, provides
 function location information for debugging, and supports users of
 module-qualified names."
@@ -13629,7 +13646,7 @@ module-qualified names."
   (add-hook 'python-mode-hook (quote py--warn-tmp-files-left)))
 
 (defun py-guess-pdb-path ()
-  "If py-pdb-path isn't set, find location of pdb.py. "
+  "If py-pdb-path is not set, find location of pdb.py. "
   (interactive)
   (let ((ele (split-string (shell-command-to-string "whereis python")))
         erg)
@@ -13702,7 +13719,7 @@ module-qualified names."
   ;; disable company
   ;; (when company-mode (company-mode))
   (let ((modified (buffer-chars-modified-tick)))
-    ;; don't try completion if buffer wasn't modified
+    ;; do not try completion if buffer was not modified
     (unless (eq modified py-complete-last-modified)
       (if py-auto-completion-mode-p
           (if (string= "*PythonCompletions*" (buffer-name (current-buffer)))
@@ -14261,15 +14278,15 @@ If BOL is t, mark from beginning-of-line"
 	(or (setq beg (funcall begcheckform))
 	    (if (functionp begform)
 		(setq beg (funcall begform))
-	      (error (concat "py--mark-base-bol: " begform " don't exist!" ))))
-      (error (concat "py--mark-base-bol: " begcheckform " don't exist!" )))
+	      (error (concat "py--mark-base-bol: " begform " do not exist!" ))))
+      (error (concat "py--mark-base-bol: " begcheckform " do not exist!" )))
     (when mark-decorators
       (save-excursion
         (when (setq erg (py-backward-decorator))
           (setq beg erg))))
     (if (functionp endform)
 	(setq end (funcall endform))
-      (error (concat "py--mark-base-bol: " endform " don't exist!" )))
+      (error (concat "py--mark-base-bol: " endform " do not exist!" )))
     (push-mark beg t t)
     (unless end (when (< beg (point))
                   (setq end (point))))
@@ -14337,7 +14354,7 @@ Use current region unless optional args BEG END are delivered."
       (insert py-section-start)
       (goto-char end)
       (unless (py-empty-line-p) (newline 1))
-      (indent-according-to-mode) 
+      (indent-according-to-mode)
       (insert py-section-end))))
 
 (defun py-execute-section-prepare (&optional shell)
@@ -14355,7 +14372,7 @@ Use current region unless optional args BEG END are delivered."
             (if shell
                 (funcall (car (read-from-string (concat "py-execute-region-" shell))) start (point))
               (py-execute-region start (point))))
-        (error "Can't see ‘py-section-start’ resp. ‘py-section-end’")))))
+        (error "Can not see ‘py-section-start’ resp. ‘py-section-end’")))))
 
 (defun py--narrow-prepare (name)
   "Used internally. "
@@ -14367,6 +14384,7 @@ Use current region unless optional args BEG END are delivered."
                        ((funcall (car (read-from-string (concat "py--statement-opens-" name "-p")))))
                        (t (funcall (car (read-from-string (concat "py-backward-" name))))))))
       (funcall (car (read-from-string (concat "py-forward-" name))))
+      ;; (sit-for 1)
       (narrow-to-region (point) start))))
 
 (defun py--forms-report-result (erg &optional iact)
@@ -14396,7 +14414,8 @@ Use current region unless optional args BEG END are delivered."
   (let ((cui (and
               (or (and (looking-at (symbol-value regexp))
                        (not (nth 8 (parse-partial-sexp (point-min) (point)))))
-                  (py--go-to-keyword regexp))
+                       (py--go-to-keyword regexp)
+                       (current-indentation))
               (current-indentation))))
     (when py-verbose-p (message "%s" cui))
     (py--end-base regexp (point))
@@ -14461,7 +14480,7 @@ Optional END: used by tests
 Optional NO-CHECK: used by tests
 "
   (interactive "*")
-  (or no-check (use-region-p) (error "Don't see an active region"))
+  (or no-check (use-region-p) (error "Do not see an active region"))
   (let ((end (copy-marker (or end (region-end)))))
     (goto-char (or beg (region-beginning)))
     (beginning-of-line)
@@ -14662,7 +14681,7 @@ Store data in kill ring, so it might yanked back."
 (defun py-copy-block-bol ()
   "Delete block bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "block")))
@@ -14671,7 +14690,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-block-or-clause-bol ()
   "Delete block-or-clause bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "block-or-clause")))
@@ -14680,7 +14699,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-buffer-bol ()
   "Delete buffer bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "buffer")))
@@ -14689,7 +14708,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-class-bol ()
   "Delete class bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "class")))
@@ -14698,7 +14717,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-clause-bol ()
   "Delete clause bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "clause")))
@@ -14707,7 +14726,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-def-bol ()
   "Delete def bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "def")))
@@ -14716,7 +14735,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-def-or-class-bol ()
   "Delete def-or-class bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "def-or-class")))
@@ -14725,7 +14744,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-expression-bol ()
   "Delete expression bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "expression")))
@@ -14734,7 +14753,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-indent-bol ()
   "Delete indent bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "indent")))
@@ -14743,7 +14762,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-line-bol ()
   "Delete line bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "line")))
@@ -14752,7 +14771,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-minor-block-bol ()
   "Delete minor-block bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "minor-block")))
@@ -14761,7 +14780,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-paragraph-bol ()
   "Delete paragraph bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "paragraph")))
@@ -14770,7 +14789,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-partial-expression-bol ()
   "Delete partial-expression bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "partial-expression")))
@@ -14779,7 +14798,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-region-bol ()
   "Delete region bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "region")))
@@ -14788,7 +14807,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-statement-bol ()
   "Delete statement bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "statement")))
@@ -14797,7 +14816,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-copy-top-level-bol ()
   "Delete top-level bol at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (save-excursion
     (let ((erg (py--mark-base-bol "top-level")))
@@ -14809,7 +14828,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-delete-block ()
   "Delete BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "block")))
     (delete-region (car erg) (cdr erg))))
@@ -14817,7 +14836,7 @@ Don't store data in kill ring."
 (defun py-delete-block-or-clause ()
   "Delete BLOCK-OR-CLAUSE at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "block-or-clause")))
     (delete-region (car erg) (cdr erg))))
@@ -14825,7 +14844,7 @@ Don't store data in kill ring."
 (defun py-delete-class (&optional arg)
   "Delete CLASS at point until ‘beginning-of-line’.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorators’ are included."
   (interactive "P")
  (let* ((py-mark-decorators (or arg py-mark-decorators))
@@ -14835,7 +14854,7 @@ With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorat
 (defun py-delete-clause ()
   "Delete CLAUSE at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "clause")))
     (delete-region (car erg) (cdr erg))))
@@ -14843,7 +14862,7 @@ Don't store data in kill ring."
 (defun py-delete-def (&optional arg)
   "Delete DEF at point until ‘beginning-of-line’.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorators’ are included."
   (interactive "P")
  (let* ((py-mark-decorators (or arg py-mark-decorators))
@@ -14853,7 +14872,7 @@ With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorat
 (defun py-delete-def-or-class (&optional arg)
   "Delete DEF-OR-CLASS at point until ‘beginning-of-line’.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorators’ are included."
   (interactive "P")
  (let* ((py-mark-decorators (or arg py-mark-decorators))
@@ -14863,7 +14882,7 @@ With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, ‘decorat
 (defun py-delete-elif-block ()
   "Delete ELIF-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "elif-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14871,7 +14890,7 @@ Don't store data in kill ring."
 (defun py-delete-else-block ()
   "Delete ELSE-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "else-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14879,7 +14898,7 @@ Don't store data in kill ring."
 (defun py-delete-except-block ()
   "Delete EXCEPT-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "except-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14887,7 +14906,7 @@ Don't store data in kill ring."
 (defun py-delete-for-block ()
   "Delete FOR-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "for-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14895,7 +14914,7 @@ Don't store data in kill ring."
 (defun py-delete-if-block ()
   "Delete IF-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "if-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14903,7 +14922,7 @@ Don't store data in kill ring."
 (defun py-delete-indent ()
   "Delete INDENT at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "indent")))
     (delete-region (car erg) (cdr erg))))
@@ -14911,7 +14930,7 @@ Don't store data in kill ring."
 (defun py-delete-minor-block ()
   "Delete MINOR-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "minor-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14919,7 +14938,7 @@ Don't store data in kill ring."
 (defun py-delete-statement ()
   "Delete STATEMENT at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "statement")))
     (delete-region (car erg) (cdr erg))))
@@ -14927,7 +14946,7 @@ Don't store data in kill ring."
 (defun py-delete-try-block ()
   "Delete TRY-BLOCK at point until ‘beginning-of-line’.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base-bol "try-block")))
     (delete-region (car erg) (cdr erg))))
@@ -14935,7 +14954,7 @@ Don't store data in kill ring."
 (defun py-delete-comment ()
   "Delete COMMENT at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "comment")))
     (delete-region (car erg) (cdr erg))))
@@ -14943,7 +14962,7 @@ Don't store data in kill ring."
 (defun py-delete-line ()
   "Delete LINE at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "line")))
     (delete-region (car erg) (cdr erg))))
@@ -14951,7 +14970,7 @@ Don't store data in kill ring."
 (defun py-delete-paragraph ()
   "Delete PARAGRAPH at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "paragraph")))
     (delete-region (car erg) (cdr erg))))
@@ -14959,7 +14978,7 @@ Don't store data in kill ring."
 (defun py-delete-expression ()
   "Delete EXPRESSION at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "expression")))
     (delete-region (car erg) (cdr erg))))
@@ -14967,7 +14986,7 @@ Don't store data in kill ring."
 (defun py-delete-partial-expression ()
   "Delete PARTIAL-EXPRESSION at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "partial-expression")))
     (delete-region (car erg) (cdr erg))))
@@ -14975,7 +14994,7 @@ Don't store data in kill ring."
 (defun py-delete-section ()
   "Delete SECTION at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "section")))
     (delete-region (car erg) (cdr erg))))
@@ -14983,7 +15002,7 @@ Don't store data in kill ring."
 (defun py-delete-top-level ()
   "Delete TOP-LEVEL at point.
 
-Don't store data in kill ring."
+Do not store data in kill ring."
   (interactive)
   (let ((erg (py--mark-base "top-level")))
     (delete-region (car erg) (cdr erg))))
@@ -15055,7 +15074,7 @@ Return beginning and end positions of marked area, a cons."
   (cons (region-beginning) (region-end)))
 
 (defun py-mark-assignment ()
-  "Mark assignment, take beginning of line positions. 
+  "Mark assignment, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15063,7 +15082,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-block ()
-  "Mark block, take beginning of line positions. 
+  "Mark block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15071,7 +15090,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-block-or-clause ()
-  "Mark block-or-clause, take beginning of line positions. 
+  "Mark block-or-clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15079,7 +15098,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-class (&optional arg)
-  "Mark class, take beginning of line positions. 
+  "Mark class, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -15089,7 +15108,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-clause ()
-  "Mark clause, take beginning of line positions. 
+  "Mark clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15097,7 +15116,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-def (&optional arg)
-  "Mark def, take beginning of line positions. 
+  "Mark def, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -15107,7 +15126,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class, take beginning of line positions. 
+  "Mark def-or-class, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -15117,7 +15136,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-elif-block ()
-  "Mark elif-block, take beginning of line positions. 
+  "Mark elif-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15125,7 +15144,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-else-block ()
-  "Mark else-block, take beginning of line positions. 
+  "Mark else-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15133,7 +15152,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-except-block ()
-  "Mark except-block, take beginning of line positions. 
+  "Mark except-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15141,7 +15160,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-for-block ()
-  "Mark for-block, take beginning of line positions. 
+  "Mark for-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15149,7 +15168,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-if-block ()
-  "Mark if-block, take beginning of line positions. 
+  "Mark if-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15157,7 +15176,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-indent ()
-  "Mark indent, take beginning of line positions. 
+  "Mark indent, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15165,7 +15184,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-minor-block ()
-  "Mark minor-block, take beginning of line positions. 
+  "Mark minor-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15173,7 +15192,7 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-statement ()
-  "Mark statement, take beginning of line positions. 
+  "Mark statement, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -15181,13 +15200,14 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 (defun py-mark-try-block ()
-  "Mark try-block, take beginning of line positions. 
+  "Mark try-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "try-block")
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
+
 ;; python-components-close-forms
 
 
@@ -15196,7 +15216,7 @@ Return beginning and end positions of region, a cons."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15207,7 +15227,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15218,7 +15238,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15229,7 +15249,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15240,7 +15260,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15251,7 +15271,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15262,7 +15282,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15273,7 +15293,7 @@ insert a newline."
 
 Set indent level to that of beginning of function definition.
 
-If final line isn't empty
+If final line is not empty
 and ‘py-close-block-provides-newline’ non-nil,
 insert a newline."
   (interactive "*")
@@ -15341,7 +15361,7 @@ Stores data in kill ring"
 (defun py-kill-block ()
   "Delete block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "block")))
     (kill-region (car erg) (cdr erg))))
@@ -15349,7 +15369,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-block-or-clause ()
   "Delete block-or-clause at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "block-or-clause")))
     (kill-region (car erg) (cdr erg))))
@@ -15357,7 +15377,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-class ()
   "Delete class at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "class")))
     (kill-region (car erg) (cdr erg))))
@@ -15365,7 +15385,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-clause ()
   "Delete clause at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "clause")))
     (kill-region (car erg) (cdr erg))))
@@ -15373,7 +15393,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-def ()
   "Delete def at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "def")))
     (kill-region (car erg) (cdr erg))))
@@ -15381,7 +15401,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-def-or-class ()
   "Delete def-or-class at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "def-or-class")))
     (kill-region (car erg) (cdr erg))))
@@ -15389,7 +15409,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-elif-block ()
   "Delete elif-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "elif-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15397,7 +15417,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-else-block ()
   "Delete else-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "else-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15405,7 +15425,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-except-block ()
   "Delete except-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "except-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15413,7 +15433,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-for-block ()
   "Delete for-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "for-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15421,7 +15441,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-if-block ()
   "Delete if-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "if-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15429,7 +15449,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-indent ()
   "Delete indent at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "indent")))
     (kill-region (car erg) (cdr erg))))
@@ -15437,7 +15457,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-minor-block ()
   "Delete minor-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "minor-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15445,7 +15465,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-statement ()
   "Delete statement at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "statement")))
     (kill-region (car erg) (cdr erg))))
@@ -15453,7 +15473,7 @@ Stores data in kill ring. Might be yanked back using `C-y'."
 (defun py-kill-try-block ()
   "Delete try-block at point.
 
-Stores data in kill ring. Might be yanked back using `C-y'."
+Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
   (let ((erg (py--mark-base-bol "try-block")))
     (kill-region (car erg) (cdr erg))))
@@ -15468,7 +15488,7 @@ From a programm, return source of Block at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "block" (or decorators py-mark-decorators))
     (py--thing-at-point "block" (or decorators py-mark-decorators))))
 
@@ -15480,7 +15500,7 @@ From a programm, return source of Block-Or-Clause at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "block-or-clause" (or decorators py-mark-decorators))
     (py--thing-at-point "block-or-clause" (or decorators py-mark-decorators))))
 
@@ -15489,7 +15509,7 @@ Also honors setting of ‘py-mark-decorators’"
 
 From a programm, return source of Buffer at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "buffer")
     (py--thing-at-point "buffer")))
 
@@ -15501,7 +15521,7 @@ From a programm, return source of Class at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "class" (or decorators py-mark-decorators))
     (py--thing-at-point "class" (or decorators py-mark-decorators))))
 
@@ -15510,7 +15530,7 @@ Also honors setting of ‘py-mark-decorators’"
 
 From a programm, return source of Clause at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "clause")
     (py--thing-at-point "clause")))
 
@@ -15522,7 +15542,7 @@ From a programm, return source of Def at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "def" (or decorators py-mark-decorators))
     (py--thing-at-point "def" (or decorators py-mark-decorators))))
 
@@ -15534,7 +15554,7 @@ From a programm, return source of Def-Or-Class at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "def-or-class" (or decorators py-mark-decorators))
     (py--thing-at-point "def-or-class" (or decorators py-mark-decorators))))
 
@@ -15543,7 +15563,7 @@ Also honors setting of ‘py-mark-decorators’"
 
 From a programm, return source of Expression at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "expression")
     (py--thing-at-point "expression")))
 
@@ -15552,7 +15572,7 @@ From a programm, return source of Expression at point, a string."
 
 From a programm, return source of Indent at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "indent")
     (py--thing-at-point "indent")))
 
@@ -15561,7 +15581,7 @@ From a programm, return source of Indent at point, a string."
 
 From a programm, return source of Line at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "line")
     (py--thing-at-point "line")))
 
@@ -15570,7 +15590,7 @@ From a programm, return source of Line at point, a string."
 
 From a programm, return source of Minor-Block at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "minor-block")
     (py--thing-at-point "minor-block")))
 
@@ -15579,7 +15599,7 @@ From a programm, return source of Minor-Block at point, a string."
 
 From a programm, return source of Paragraph at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "paragraph")
     (py--thing-at-point "paragraph")))
 
@@ -15588,7 +15608,7 @@ From a programm, return source of Paragraph at point, a string."
 
 From a programm, return source of Partial-Expression at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "partial-expression")
     (py--thing-at-point "partial-expression")))
 
@@ -15597,7 +15617,7 @@ From a programm, return source of Partial-Expression at point, a string."
 
 From a programm, return source of Region at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "region")
     (py--thing-at-point "region")))
 
@@ -15606,7 +15626,7 @@ From a programm, return source of Region at point, a string."
 
 From a programm, return source of Statement at point, a string."
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "statement")
     (py--thing-at-point "statement")))
 
@@ -15618,7 +15638,7 @@ From a programm, return source of Top-Level at point, a string.
 Optional arg DECORATORS: include decorators when called at def or class.
 Also honors setting of ‘py-mark-decorators’"
   (interactive)
-  (if (called-interactively-p 'interactive)
+  (if (called-interactively-p (quote interactive))
       (py--mark-base "top-level" (or decorators py-mark-decorators))
     (py--thing-at-point "top-level" (or decorators py-mark-decorators))))
 
@@ -16182,9 +16202,9 @@ Returns value of ‘py-fontify-shell-buffer-p’."
 
 ;;  python-mode-v5-behavior-p forms
 (defun py-toggle-python-mode-v5-behavior-p (&optional arg)
-  "Toggle `python-mode-v5-behavior-p' according to ARG.
+  "Toggle ‘python-mode-v5-behavior-p’ according to ARG.
 
-  Returns value of `python-mode-v5-behavior-p' switched to."
+  Returns value of ‘python-mode-v5-behavior-p’ switched to."
   (interactive)
   (let ((arg (or arg (if python-mode-v5-behavior-p -1 1))))
     (if (< 0 arg)
@@ -16194,9 +16214,9 @@ Returns value of ‘py-fontify-shell-buffer-p’."
     python-mode-v5-behavior-p))
 
 (defun py-python-mode-v5-behavior-p-on (&optional arg)
-  "To `python-mode-v5-behavior-p' according to ARG.
+  "To ‘python-mode-v5-behavior-p’ according to ARG.
 
-Returns value of `python-mode-v5-behavior-p'."
+Returns value of ‘python-mode-v5-behavior-p’."
   (interactive)
   (let ((arg (or arg 1)))
     (py-toggle-python-mode-v5-behavior-p arg))
@@ -16204,9 +16224,9 @@ Returns value of `python-mode-v5-behavior-p'."
   python-mode-v5-behavior-p)
 
 (defun py-python-mode-v5-behavior-p-off ()
-  "Make sure, `python-mode-v5-behavior-p' is off.
+  "Make sure, ‘python-mode-v5-behavior-p’ is off.
 
-Returns value of `python-mode-v5-behavior-p'."
+Returns value of ‘python-mode-v5-behavior-p’."
   (interactive)
   (py-toggle-python-mode-v5-behavior-p -1)
   (when (or py-verbose-p (called-interactively-p 'any)) (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p))
@@ -16560,7 +16580,7 @@ OUTMOST-ONLY stops circling possible indent.
 When ‘py-tab-shifts-region-p’ is t, not just the current line,
 but the region is shiftet that way.
 
-If ‘py-tab-indents-region-p’ is t and first TAB doesn't shift
+If ‘py-tab-indents-region-p’ is t and first TAB does not shift
 --as indent is at outmost reasonable--, ‘indent-region’ is called.
 
 Optional arg DEDENT: force dedent.
@@ -16729,7 +16749,7 @@ If IACT is provided, message result"
 (defun py--bounds-of-declarations ()
   "Bounds of consecutive multitude of assigments resp. statements around point.
 
-Indented same level, which don't open blocks.
+Indented same level, which do not open blocks.
 Typically declarations resp. initialisations of variables following
 a class or function definition.
 See also ‘py--bounds-of-statements’"
@@ -16767,7 +16787,7 @@ See also ‘py--bounds-of-statements’"
 (defun py-backward-declarations ()
   "Got to the beginning of assigments resp. statements.
 
-Move in current level which don't open blocks."
+Move in current level which do not open blocks."
   (interactive)
   (let* ((bounds (py--bounds-of-declarations))
          (erg (car bounds)))
@@ -16777,7 +16797,7 @@ Move in current level which don't open blocks."
 (defun py-forward-declarations ()
   "Got to the end of assigments resp. statements.
 
-Move in current level which don't open blocks."
+Move in current level which do not open blocks."
   (interactive)
   (let* ((bounds (py--bounds-of-declarations))
          (erg (cdr bounds)))
@@ -16787,7 +16807,7 @@ Move in current level which don't open blocks."
 (defun py-declarations ()
   "Forms in current level.
 
-Forms don't open blocks or start with a keyword.
+Forms do not open blocks or start with a keyword.
 
 See also ‘py-statements’."
   (interactive)
@@ -16821,7 +16841,7 @@ Store deleted variables in ‘kill-ring’"
 (defun py--bounds-of-statements ()
   "Bounds of consecutive multitude of statements around point.
 
-Indented same level, which don't open blocks."
+Indented same level, which do not open blocks."
   (interactive)
   (let* ((orig-indent (progn
                         (back-to-indentation)
@@ -16837,7 +16857,7 @@ Indented same level, which don't open blocks."
                   (setq beg
                         (when (py-backward-statement)
                           (line-beginning-position)))
-		  ;; backward-statement shouldn't stop in string
+		  ;; backward-statement should not stop in string
                   ;; (not (py-in-string-p))
                   (not (py--beginning-of-block-p))
                   (eq (current-indentation) orig-indent)))
@@ -16860,7 +16880,7 @@ Indented same level, which don't open blocks."
         nil))))
 
 (defun py-backward-statements ()
-  "Got to the beginning of statements in current level which don't open blocks."
+  "Got to the beginning of statements in current level which do not open blocks."
   (interactive)
   (let* ((bounds (py--bounds-of-statements))
          (erg (car bounds)))
@@ -16868,7 +16888,7 @@ Indented same level, which don't open blocks."
     erg))
 
 (defun py-forward-statements ()
-  "Got to the end of statements in current level which don't open blocks."
+  "Got to the end of statements in current level which do not open blocks."
   (interactive)
   (let* ((bounds (py--bounds-of-statements))
          (erg (cdr bounds)))
@@ -16878,7 +16898,7 @@ Indented same level, which don't open blocks."
 (defun py-statements ()
   "Copy and mark simple statements level.
 
-These statements don't open blocks.
+These statements do not open blocks.
 
 More general than ‘py-declarations’."
   (interactive)
@@ -17425,10 +17445,10 @@ sign in chained assignment."
 Start an IPython interpreter."]
 
        ["Ipython2\.7" ipython2\.7
-	:help " `ipython2\.7'"]
+	:help " ‘ipython2\.7’"]
 
        ["Ipython3" ipython3
-	:help " `ipython3'
+	:help " ‘ipython3’
 Start an IPython3 interpreter."]
 
        ["Jython" jython
@@ -17440,14 +17460,14 @@ Start an Jython interpreter."]
 Start an Python interpreter."]
 
        ["Python2" python2
-	:help " `python2'
+	:help " ‘python2’
 Start an Python2 interpreter."]
 
        ["Python3" python3
-	:help " `python3'
+	:help " ‘python3’
 Start an Python3 interpreter."]
        ["SymPy" isympy3
-	:help " `isympy3'
+	:help " ‘isympy3’
 Start an SymPy interpreter."])
 
       ("Edit"
@@ -18207,7 +18227,7 @@ Send block-or-clause at point to interpreter."]
 
        ["Execute buffer" py-execute-buffer
 	:help " ‘py-execute-buffer’
-:around advice: `ad-Advice-py-execute-buffer'"]
+:around advice: ‘ad-Advice-py-execute-buffer’"]
 
        ["Execute class" py-execute-class
 	:help " ‘py-execute-class’
@@ -18327,115 +18347,115 @@ Send statement at point to IPython interpreter."]
 Send top-level at point to IPython interpreter."])
 	("IPython2"
 	 ["Execute block ipython2" py-execute-block-ipython2
-	  :help " `py-execute-block-ipython2'"]
+	  :help " ‘py-execute-block-ipython2’"]
 
 	 ["Execute block or clause ipython2" py-execute-block-or-clause-ipython2
-	  :help " `py-execute-block-or-clause-ipython2'"]
+	  :help " ‘py-execute-block-or-clause-ipython2’"]
 
 	 ["Execute buffer ipython2" py-execute-buffer-ipython2
-	  :help " `py-execute-buffer-ipython2'"]
+	  :help " ‘py-execute-buffer-ipython2’"]
 
 	 ["Execute class ipython2" py-execute-class-ipython2
-	  :help " `py-execute-class-ipython2'"]
+	  :help " ‘py-execute-class-ipython2’"]
 
 	 ["Execute clause ipython2" py-execute-clause-ipython2
-	  :help " `py-execute-clause-ipython2'"]
+	  :help " ‘py-execute-clause-ipython2’"]
 
 	 ["Execute def ipython2" py-execute-def-ipython2
-	  :help " `py-execute-def-ipython2'"]
+	  :help " ‘py-execute-def-ipython2’"]
 
 	 ["Execute def or class ipython2" py-execute-def-or-class-ipython2
-	  :help " `py-execute-def-or-class-ipython2'"]
+	  :help " ‘py-execute-def-or-class-ipython2’"]
 
 	 ["Execute expression ipython2" py-execute-expression-ipython2
-	  :help " `py-execute-expression-ipython2'"]
+	  :help " ‘py-execute-expression-ipython2’"]
 
 	 ["Execute indent ipython2" py-execute-indent-ipython2
-	  :help " `py-execute-indent-ipython2'"]
+	  :help " ‘py-execute-indent-ipython2’"]
 
 	 ["Execute line ipython2" py-execute-line-ipython2
-	  :help " `py-execute-line-ipython2'"]
+	  :help " ‘py-execute-line-ipython2’"]
 
 	 ["Execute minor block ipython2" py-execute-minor-block-ipython2
-	  :help " `py-execute-minor-block-ipython2'"]
+	  :help " ‘py-execute-minor-block-ipython2’"]
 
 	 ["Execute paragraph ipython2" py-execute-paragraph-ipython2
-	  :help " `py-execute-paragraph-ipython2'"]
+	  :help " ‘py-execute-paragraph-ipython2’"]
 
 	 ["Execute partial expression ipython2" py-execute-partial-expression-ipython2
-	  :help " `py-execute-partial-expression-ipython2'"]
+	  :help " ‘py-execute-partial-expression-ipython2’"]
 
 	 ["Execute region ipython2" py-execute-region-ipython2
-	  :help " `py-execute-region-ipython2'"]
+	  :help " ‘py-execute-region-ipython2’"]
 
 	 ["Execute statement ipython2" py-execute-statement-ipython2
-	  :help " `py-execute-statement-ipython2'"]
+	  :help " ‘py-execute-statement-ipython2’"]
 
 	 ["Execute top level ipython2" py-execute-top-level-ipython2
-	  :help " `py-execute-top-level-ipython2'"])
+	  :help " ‘py-execute-top-level-ipython2’"])
 	("IPython3"
 	 ["Execute block ipython3" py-execute-block-ipython3
-	  :help " `py-execute-block-ipython3'
+	  :help " ‘py-execute-block-ipython3’
 Send block at point to IPython interpreter."]
 
 	 ["Execute block or clause ipython3" py-execute-block-or-clause-ipython3
-	  :help " `py-execute-block-or-clause-ipython3'
+	  :help " ‘py-execute-block-or-clause-ipython3’
 Send block-or-clause at point to IPython interpreter."]
 
 	 ["Execute buffer ipython3" py-execute-buffer-ipython3
-	  :help " `py-execute-buffer-ipython3'
+	  :help " ‘py-execute-buffer-ipython3’
 Send buffer at point to IPython interpreter."]
 
 	 ["Execute class ipython3" py-execute-class-ipython3
-	  :help " `py-execute-class-ipython3'
+	  :help " ‘py-execute-class-ipython3’
 Send class at point to IPython interpreter."]
 
 	 ["Execute clause ipython3" py-execute-clause-ipython3
-	  :help " `py-execute-clause-ipython3'
+	  :help " ‘py-execute-clause-ipython3’
 Send clause at point to IPython interpreter."]
 
 	 ["Execute def ipython3" py-execute-def-ipython3
-	  :help " `py-execute-def-ipython3'
+	  :help " ‘py-execute-def-ipython3’
 Send def at point to IPython interpreter."]
 
 	 ["Execute def or class ipython3" py-execute-def-or-class-ipython3
-	  :help " `py-execute-def-or-class-ipython3'
+	  :help " ‘py-execute-def-or-class-ipython3’
 Send def-or-class at point to IPython interpreter."]
 
 	 ["Execute expression ipython3" py-execute-expression-ipython3
-	  :help " `py-execute-expression-ipython3'
+	  :help " ‘py-execute-expression-ipython3’
 Send expression at point to IPython interpreter."]
 
 	 ["Execute indent ipython3" py-execute-indent-ipython3
-	  :help " `py-execute-indent-ipython3'
+	  :help " ‘py-execute-indent-ipython3’
 Send indent at point to IPython interpreter."]
 
 	 ["Execute line ipython3" py-execute-line-ipython3
-	  :help " `py-execute-line-ipython3'
+	  :help " ‘py-execute-line-ipython3’
 Send line at point to IPython interpreter."]
 
 	 ["Execute minor block ipython3" py-execute-minor-block-ipython3
-	  :help " `py-execute-minor-block-ipython3'
+	  :help " ‘py-execute-minor-block-ipython3’
 Send minor-block at point to IPython interpreter."]
 
 	 ["Execute paragraph ipython3" py-execute-paragraph-ipython3
-	  :help " `py-execute-paragraph-ipython3'
+	  :help " ‘py-execute-paragraph-ipython3’
 Send paragraph at point to IPython interpreter."]
 
 	 ["Execute partial expression ipython3" py-execute-partial-expression-ipython3
-	  :help " `py-execute-partial-expression-ipython3'
+	  :help " ‘py-execute-partial-expression-ipython3’
 Send partial-expression at point to IPython interpreter."]
 
 	 ["Execute region ipython3" py-execute-region-ipython3
-	  :help " `py-execute-region-ipython3'
+	  :help " ‘py-execute-region-ipython3’
 Send region at point to IPython interpreter."]
 
 	 ["Execute statement ipython3" py-execute-statement-ipython3
-	  :help " `py-execute-statement-ipython3'
+	  :help " ‘py-execute-statement-ipython3’
 Send statement at point to IPython interpreter."]
 
 	 ["Execute top level ipython3" py-execute-top-level-ipython3
-	  :help " `py-execute-top-level-ipython3'
+	  :help " ‘py-execute-top-level-ipython3’
 Send top-level at point to IPython interpreter."])
 	("Jython"
 	 ["Execute block jython" py-execute-block-jython
@@ -18567,131 +18587,131 @@ Send statement at point to default interpreter."]
 Send top-level at point to default interpreter."])
 	("Python2"
 	 ["Execute block python2" py-execute-block-python2
-	  :help " `py-execute-block-python2'
+	  :help " ‘py-execute-block-python2’
 Send block at point to Python2 interpreter."]
 
 	 ["Execute block or clause python2" py-execute-block-or-clause-python2
-	  :help " `py-execute-block-or-clause-python2'
+	  :help " ‘py-execute-block-or-clause-python2’
 Send block-or-clause at point to Python2 interpreter."]
 
 	 ["Execute buffer python2" py-execute-buffer-python2
-	  :help " `py-execute-buffer-python2'
+	  :help " ‘py-execute-buffer-python2’
 Send buffer at point to Python2 interpreter."]
 
 	 ["Execute class python2" py-execute-class-python2
-	  :help " `py-execute-class-python2'
+	  :help " ‘py-execute-class-python2’
 Send class at point to Python2 interpreter."]
 
 	 ["Execute clause python2" py-execute-clause-python2
-	  :help " `py-execute-clause-python2'
+	  :help " ‘py-execute-clause-python2’
 Send clause at point to Python2 interpreter."]
 
 	 ["Execute def python2" py-execute-def-python2
-	  :help " `py-execute-def-python2'
+	  :help " ‘py-execute-def-python2’
 Send def at point to Python2 interpreter."]
 
 	 ["Execute def or class python2" py-execute-def-or-class-python2
-	  :help " `py-execute-def-or-class-python2'
+	  :help " ‘py-execute-def-or-class-python2’
 Send def-or-class at point to Python2 interpreter."]
 
 	 ["Execute expression python2" py-execute-expression-python2
-	  :help " `py-execute-expression-python2'
+	  :help " ‘py-execute-expression-python2’
 Send expression at point to Python2 interpreter."]
 
 	 ["Execute indent python2" py-execute-indent-python2
-	  :help " `py-execute-indent-python2'
+	  :help " ‘py-execute-indent-python2’
 Send indent at point to Python2 interpreter."]
 
 	 ["Execute line python2" py-execute-line-python2
-	  :help " `py-execute-line-python2'
+	  :help " ‘py-execute-line-python2’
 Send line at point to Python2 interpreter."]
 
 	 ["Execute minor block python2" py-execute-minor-block-python2
-	  :help " `py-execute-minor-block-python2'
+	  :help " ‘py-execute-minor-block-python2’
 Send minor-block at point to Python2 interpreter."]
 
 	 ["Execute paragraph python2" py-execute-paragraph-python2
-	  :help " `py-execute-paragraph-python2'
+	  :help " ‘py-execute-paragraph-python2’
 Send paragraph at point to Python2 interpreter."]
 
 	 ["Execute partial expression python2" py-execute-partial-expression-python2
-	  :help " `py-execute-partial-expression-python2'
+	  :help " ‘py-execute-partial-expression-python2’
 Send partial-expression at point to Python2 interpreter."]
 
 	 ["Execute region python2" py-execute-region-python2
-	  :help " `py-execute-region-python2'
+	  :help " ‘py-execute-region-python2’
 Send region at point to Python2 interpreter."]
 
 	 ["Execute statement python2" py-execute-statement-python2
-	  :help " `py-execute-statement-python2'
+	  :help " ‘py-execute-statement-python2’
 Send statement at point to Python2 interpreter."]
 
 	 ["Execute top level python2" py-execute-top-level-python2
-	  :help " `py-execute-top-level-python2'
+	  :help " ‘py-execute-top-level-python2’
 Send top-level at point to Python2 interpreter."])
 	("Python3"
 	 ["Execute block python3" py-execute-block-python3
-	  :help " `py-execute-block-python3'
+	  :help " ‘py-execute-block-python3’
 Send block at point to Python3 interpreter."]
 
 	 ["Execute block or clause python3" py-execute-block-or-clause-python3
-	  :help " `py-execute-block-or-clause-python3'
+	  :help " ‘py-execute-block-or-clause-python3’
 Send block-or-clause at point to Python3 interpreter."]
 
 	 ["Execute buffer python3" py-execute-buffer-python3
-	  :help " `py-execute-buffer-python3'
+	  :help " ‘py-execute-buffer-python3’
 Send buffer at point to Python3 interpreter."]
 
 	 ["Execute class python3" py-execute-class-python3
-	  :help " `py-execute-class-python3'
+	  :help " ‘py-execute-class-python3’
 Send class at point to Python3 interpreter."]
 
 	 ["Execute clause python3" py-execute-clause-python3
-	  :help " `py-execute-clause-python3'
+	  :help " ‘py-execute-clause-python3’
 Send clause at point to Python3 interpreter."]
 
 	 ["Execute def python3" py-execute-def-python3
-	  :help " `py-execute-def-python3'
+	  :help " ‘py-execute-def-python3’
 Send def at point to Python3 interpreter."]
 
 	 ["Execute def or class python3" py-execute-def-or-class-python3
-	  :help " `py-execute-def-or-class-python3'
+	  :help " ‘py-execute-def-or-class-python3’
 Send def-or-class at point to Python3 interpreter."]
 
 	 ["Execute expression python3" py-execute-expression-python3
-	  :help " `py-execute-expression-python3'
+	  :help " ‘py-execute-expression-python3’
 Send expression at point to Python3 interpreter."]
 
 	 ["Execute indent python3" py-execute-indent-python3
-	  :help " `py-execute-indent-python3'
+	  :help " ‘py-execute-indent-python3’
 Send indent at point to Python3 interpreter."]
 
 	 ["Execute line python3" py-execute-line-python3
-	  :help " `py-execute-line-python3'
+	  :help " ‘py-execute-line-python3’
 Send line at point to Python3 interpreter."]
 
 	 ["Execute minor block python3" py-execute-minor-block-python3
-	  :help " `py-execute-minor-block-python3'
+	  :help " ‘py-execute-minor-block-python3’
 Send minor-block at point to Python3 interpreter."]
 
 	 ["Execute paragraph python3" py-execute-paragraph-python3
-	  :help " `py-execute-paragraph-python3'
+	  :help " ‘py-execute-paragraph-python3’
 Send paragraph at point to Python3 interpreter."]
 
 	 ["Execute partial expression python3" py-execute-partial-expression-python3
-	  :help " `py-execute-partial-expression-python3'
+	  :help " ‘py-execute-partial-expression-python3’
 Send partial-expression at point to Python3 interpreter."]
 
 	 ["Execute region python3" py-execute-region-python3
-	  :help " `py-execute-region-python3'
+	  :help " ‘py-execute-region-python3’
 Send region at point to Python3 interpreter."]
 
 	 ["Execute statement python3" py-execute-statement-python3
-	  :help " `py-execute-statement-python3'
+	  :help " ‘py-execute-statement-python3’
 Send statement at point to Python3 interpreter."]
 
 	 ["Execute top level python3" py-execute-top-level-python3
-	  :help " `py-execute-top-level-python3'
+	  :help " ‘py-execute-top-level-python3’
 Send top-level at point to Python3 interpreter."])
 	("Ignoring defaults "
 	 :help "`M-x py-execute-statement- TAB' for example list commands ignoring defaults
@@ -18878,7 +18898,7 @@ Execute statement running pdb."]
 
        ["Pdb" pdb
 	:help " ‘pdb’
-Run pdb on program FILE in buffer `*gud-FILE*'."])
+Run pdb on program FILE in buffer ‘*gud-FILE*’."])
       ("Checks"
        ("Pylint"
 	["Pylint run" py-pylint-run
@@ -18894,15 +18914,15 @@ Display Pylint command line help messages."]
 Toggle ‘pylint’ ‘flymake-mode’."])
        ("Pep8"
 	["Pep8 run" py-pep8-run
-	 :help " `py-pep8-run'
+	 :help " ‘py-pep8-run’
 *Run pep8, check formatting - default on the file currently visited."]
 
 	["Pep8 help" py-pep8-help
-	 :help " `py-pep8-help'
+	 :help " ‘py-pep8-help’
 Display pep8 command line help messages."]
 
 	["Pep8 flymake mode" pep8-flymake-mode
-	 :help " `pep8-flymake-mode'
+	 :help " ‘pep8-flymake-mode’
 Toggle `pep8’ ‘flymake-mode’."])
        ("Pyflakes3"
 	["Pyflakes3 run" py-pyflakes3-run
@@ -18918,21 +18938,21 @@ Display Pyflakes3 command line help messages."]
 Toggle ‘pyflakes’ ‘flymake-mode’."])
        ("Flake8"
 	["Flake8 run" py-flake8-run
-	 :help " `py-flake8-run'
+	 :help " ‘py-flake8-run’
 Flake8 is a wrapper around these tools:"]
 
 	["Flake8 help" py-flake8-help
-	 :help " `py-flake8-help'
+	 :help " ‘py-flake8-help’
 Display flake8 command line help messages."]
 	("Pyflakes-pep8"
 	 ["Pyflakes pep8 run" py-pyflakes3-pep8-run
-	  :help " `py-pyflakes-pep8-run'"]
+	  :help " ‘py-pyflakes-pep8-run’"]
 
 	 ["Pyflakes pep8 help" py-pyflakes-pep8-help
-	  :help " `py-pyflakes-pep8-help'"]
+	  :help " ‘py-pyflakes-pep8-help’"]
 
 	 ["Pyflakes pep8 flymake mode" pyflakes-pep8-flymake-mode
-	  :help " `pyflakes-pep8-flymake-mode'"])
+	  :help " ‘pyflakes-pep8-flymake-mode’"])
         ))
       ("Customize"
 
@@ -18979,7 +18999,7 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 	 ["Enforce py-shell-name" force-py-shell-name-p-on
 	  :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
 
-	 ["Don't enforce default interpreter" force-py-shell-name-p-off
+	 ["Do not enforce default interpreter" force-py-shell-name-p-off
 	  :help "Make execute commands guess interpreter from environment"]
 	 )
 
@@ -19009,7 +19029,7 @@ Use `M-x customize-variable' to set it permanently"
 	 ["Force shell name "
 	  (setq py-force-py-shell-name-p
 		(not py-force-py-shell-name-p))
-	  :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang doesn't take precedence. Use `M-x customize-variable' to set it permanently"
+	  :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-force-py-shell-name-p]
 
 	 ["Execute \"if name == main\" blocks p"
@@ -19035,7 +19055,7 @@ Otherwise, all modified buffers are saved without asking.Use `M-x customize-vari
 		(not py-store-result-p))
 	  :help " ‘py-store-result-p’
 
-When non-nil, put resulting string of `py-execute-...' into kill-ring, so it might be yanked. "
+When non-nil, put resulting string of ‘py-execute-...’ into kill-ring, so it might be yanked. "
 	  :style toggle :selected py-store-result-p]
 
 	 ["Prompt on changed "
@@ -19075,7 +19095,7 @@ In experimental state yet "
 	  ["Set Pymacs-based complete keymap "
 	   (setq py-set-complete-keymap-p
 		 (not py-set-complete-keymap-p))
-	   :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load it's keys into ‘python-mode-map’
+	   :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
 
 Default is nil.
 See also resp. edit ‘py-complete-set-keymap’ Use `M-x customize-variable' to set it permanently"
@@ -19106,12 +19126,12 @@ Use `M-x customize-variable' to set it permanently"
 Set py-docstring-style to nil, format string normally. "]
 
 	   ["pep-257-nn" py-set-pep-257-nn-docstring-style
-	    :help " `py-set-pep-257-nn-docstring-style'
+	    :help " ‘py-set-pep-257-nn-docstring-style’
 
 Set py-docstring-style to 'pep-257-nn "]
 
 	   ["pep-257" py-set-pep-257-docstring-style
-	    :help " `py-set-pep-257-docstring-style'
+	    :help " ‘py-set-pep-257-docstring-style’
 
 Set py-docstring-style to 'pep-257 "]
 
@@ -19177,7 +19197,7 @@ Use `M-x customize-variable' to set it permanently"
 	   ["Tab indents region "
 	    (setq py-tab-indents-region-p
 		  (not py-tab-indents-region-p))
-	    :help "When ‘t’ and first TAB doesn't shift, indent-region is called.
+	    :help "When ‘t’ and first TAB does not shift, indent-region is called.
 
 Default is nil
 See also ‘py-tab-shifts-region-p’
@@ -19388,7 +19408,7 @@ mark-defun marks top-level form at point etc. "
 	 ["Close provides newline"
 	  (setq py-close-provides-newline
 		(not py-close-provides-newline))
-	  :help "If a newline is inserted, when line after block isn't empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
+	  :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-close-provides-newline]
 
 	 ["Block comment prefix "
@@ -19470,9 +19490,9 @@ Use `M-x customize-variable' to set it permanently"
 		(not py-keep-windows-configuration))
 	  :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
 
-Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it's displayed\.
+Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it is displayed\.
 
-To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set `py-keep-4windows-configuration' onto 'force
+To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set ‘py-keep-4windows-configuration’ onto 'force
 
 Default is nil Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-keep-windows-configuration]
@@ -19484,7 +19504,7 @@ Default is nil Use `M-x customize-variable' to set it permanently"
 	      (setq py-split-windows-on-execute-function 'split-window-vertically))
 	    (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
 
-	  :help "If ‘split-window-vertically’ or `...-horizontally'. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
+	  :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
 	  :style toggle :selected py-split-windows-on-execute-function]
 
 	 ["Modeline display full path "
@@ -19492,7 +19512,7 @@ Default is nil Use `M-x customize-variable' to set it permanently"
 		(not py-modeline-display-full-path-p))
 	  :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
 
-Default is nil. Note: when ‘py-shell-name’ is specified with path, it's shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
+Default is nil. Note: when ‘py-shell-name’ is specified with path, it is shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-modeline-display-full-path-p]
 
 	 ["Modeline acronym display home "
@@ -19586,7 +19606,7 @@ Use `M-x customize-variable' to set it permanently"
 	  ["Guess install directory "
 	   (setq py-guess-py-install-directory-p
 		 (not py-guess-py-install-directory-p))
-	   :help "If in cases, ‘py-install-directory’ isn't set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
+	   :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-guess-py-install-directory-p]
 
 	  ["Use local default"
@@ -19610,7 +19630,7 @@ See also ‘py-execute-directory’Use `M-x customize-variable' to set it perman
 	  ["Keep shell dir when execute "
 	   (setq py-keep-shell-dir-when-execute-p
 		 (not py-keep-shell-dir-when-execute-p))
-	   :help "Don't change Python shell's current working directory when sending code.
+	   :help "Do not change Python shell's current working directory when sending code.
 
 See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-keep-shell-dir-when-execute-p]
@@ -19797,10 +19817,10 @@ Delete the following character or all following whitespace"])
 	 :help " ‘py-fill-string-onetwo’"]
 
 	["Py fill string pep 257" py-fill-string-pep-257
-	 :help " `py-fill-string-pep-257'"]
+	 :help " ‘py-fill-string-pep-257’"]
 
 	["Py fill string pep 257 nn" py-fill-string-pep-257-nn
-	 :help " `py-fill-string-pep-257-nn'"]
+	 :help " ‘py-fill-string-pep-257-nn’"]
 
 	["Py fill string symmetric" py-fill-string-symmetric
 	 :help " ‘py-fill-string-symmetric’"])
@@ -19854,11 +19874,11 @@ Default is t")
         (define-key map [(control meta e)] (quote py-forward-def-or-class))
         ;; (define-key map [(meta i)] (quote py-indent-forward-line))
         ;; (define-key map [(control j)] (quote py-newline-and-indent))
-	(define-key map (kbd "C-j") 'newline)
+	(define-key map (kbd "C-j") (quote newline))
         ;; Most Pythoneers expect RET ‘py-newline-and-indent’
 	;; which is default of var py-return-key’
         (define-key map (kbd "RET") py-return-key)
-        ;; (define-key map (kbd "RET") 'newline)
+        ;; (define-key map (kbd "RET") (quote newline))
         ;; (define-key map (kbd "RET") (quote py-newline-and-dedent))
         (define-key map [(super backspace)] (quote py-dedent))
         ;; (define-key map [(control return)] (quote py-newline-and-dedent))
@@ -19904,11 +19924,11 @@ Default is t")
         ;;       (define-key map [(esc) (tab)] py-complete-function))
         ;;   (define-key map [(meta tab)] (quote py-shell-complete))
         ;;   (define-key map [(esc) (tab)] (quote py-shell-complete)))
-        (substitute-key-definition 'complete-symbol 'completion-at-point
+        (substitute-key-definition (quote complete-symbol) (quote completion-at-point)
                                    map global-map)
-        (substitute-key-definition 'backward-up-list (quote py-up)
+        (substitute-key-definition (quote backward-up-list) (quote py-up)
                                    map global-map)
-        (substitute-key-definition 'down-list (quote py-down)
+        (substitute-key-definition (quote down-list) (quote py-down)
                                    map global-map)
 	(when py-use-menu-p
 	  (setq map (py-define-menu map)))
@@ -19917,7 +19937,7 @@ Default is t")
 (defvar py-shell-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-c\C-r" 	  (quote py-nav-last-prompt))
-    (define-key map (kbd "RET") 'comint-send-input)
+    (define-key map (kbd "RET") (quote comint-send-input))
     (define-key map (kbd "TAB") (quote py-indent-line))
     (define-key map [(control c) (!)] (quote py-shell))
     (define-key map [(control c) (-)] (quote py-up-exception))
@@ -19932,7 +19952,7 @@ Default is t")
     (define-key map [(control c) (control d)] (quote py-pdbtrack-toggle-stack-tracking))
     (define-key map [(control c) (control e)] (quote py-help-at-point))
     (define-key map [(control c) (control k)] (quote py-mark-block-or-clause))
-    (define-key map [(control c) (control l)] 'comint-dynamic-list-input-ring)
+    (define-key map [(control c) (control l)] (quote comint-dynamic-list-input-ring))
     (define-key map [(control c) (control n)] (quote py-forward-statement))
     (define-key map [(control c) (control p)] (quote py-backward-statement))
     (define-key map [(control c) (control q)] (quote py-forward-block))
@@ -19948,13 +19968,13 @@ Default is t")
     (define-key map [(control x) (n) (d)] (quote py-narrow-to-def-or-class))
     (define-key map [(meta tab)] (quote py-shell-complete))
     (define-key map [(super backspace)] (quote py-dedent))
-    ;; (define-key map "\C-c\C-r" 	  'comint-show-output)
+    ;; (define-key map "\C-c\C-r" 	  (quote comint-show-output))
     ;; (define-key map [(control c)(control r)] (quote py-nav-last-prompt))
-    (substitute-key-definition 'complete-symbol 'completion-at-point
+    (substitute-key-definition (quote complete-symbol) (quote completion-at-point)
 			       map global-map)
-    (substitute-key-definition 'backward-up-list (quote py-up)
+    (substitute-key-definition (quote backward-up-list) (quote py-up)
 			       map global-map)
-    (substitute-key-definition 'down-list (quote py-down)
+    (substitute-key-definition (quote down-list) (quote py-down)
 			       map global-map)
     map)
   "Used inside a Python-shell.")
@@ -19964,7 +19984,7 @@ Default is t")
 
 ;; python-components-shell-menu
 
-(and (ignore-errors (require 'easymenu) t)
+(and (ignore-errors (require (quote easymenu)) t)
      ;; (easy-menu-define py-menu map "Python Tools"
      ;;           `("PyTools"
      (easy-menu-define
@@ -20406,26 +20426,26 @@ Stores data in kill ring"]
 	    :help " ‘py-delete-block’
 Delete BLOCK at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete block or clause" py-delete-block-or-clause
 	    :help " ‘py-delete-block-or-clause’
 Delete BLOCK-OR-CLAUSE at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete class" py-delete-class
 	    :help " ‘py-delete-class’
 Delete CLASS at point.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
 	   ["Delete clause" py-delete-clause
 	    :help " ‘py-delete-clause’
 Delete CLAUSE at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete comment" py-delete-comment
 	    :help " ‘py-delete-comment’"]
@@ -20434,21 +20454,21 @@ Don't store data in kill ring."]
 	    :help " ‘py-delete-def’
 Delete DEF at point.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
 	   ["Delete def or class" py-delete-def-or-class
 	    :help " ‘py-delete-def-or-class’
 Delete DEF-OR-CLASS at point.
 
-Don't store data in kill ring.
+Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
 	   ["Delete expression" py-delete-expression
 	    :help " ‘py-delete-expression’
 Delete EXPRESSION at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete line" py-delete-line
 	    :help " ‘py-delete-line’"]
@@ -20457,7 +20477,7 @@ Don't store data in kill ring."]
 	    :help " ‘py-delete-minor-block’
 Delete MINOR-BLOCK at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete paragraph" py-delete-paragraph
 	    :help " ‘py-delete-paragraph’"]
@@ -20466,68 +20486,68 @@ Don't store data in kill ring."]
 	    :help " ‘py-delete-partial-expression’
 Delete PARTIAL-EXPRESSION at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete statement" py-delete-statement
 	    :help " ‘py-delete-statement’
 Delete STATEMENT at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
 
 	   ["Delete top level" py-delete-top-level
 	    :help " ‘py-delete-top-level’
 Delete TOP-LEVEL at point.
 
-Don't store data in kill ring."]
+Do not store data in kill ring."]
            )
           ("Comment"
 	   ["Comment block" py-comment-block
 	    :help " ‘py-comment-block’
 Comments block at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment block or clause" py-comment-block-or-clause
 	    :help " ‘py-comment-block-or-clause’
 Comments block-or-clause at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment class" py-comment-class
 	    :help " ‘py-comment-class’
 Comments class at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment clause" py-comment-clause
 	    :help " ‘py-comment-clause’
 Comments clause at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment def" py-comment-def
 	    :help " ‘py-comment-def’
 Comments def at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment def or class" py-comment-def-or-class
 	    :help " ‘py-comment-def-or-class’
 Comments def-or-class at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
 	   ["Comment statement" py-comment-statement
 	    :help " ‘py-comment-statement’
 Comments statement at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
+Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
            ))
          ("Move"
@@ -21012,7 +21032,7 @@ Interactively, prompt for SYMBOL."]
 	   :help " ‘py-help-at-point’
 Print help on symbol at point.
 
-If symbol is defined in current buffer, jump to it's definition
+If symbol is defined in current buffer, jump to its definition
 Optional C-u used for debugging, will prevent deletion of temp file."]
 
           ["Info lookup symbol" py-info-lookup-symbol
@@ -21067,7 +21087,7 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 	    ["Enforce py-shell-name" force-py-shell-name-p-on
 	     :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
 
-	    ["Don't enforce default interpreter" force-py-shell-name-p-off
+	    ["Do not enforce default interpreter" force-py-shell-name-p-off
 	     :help "Make execute commands guess interpreter from environment"]
 
 	    )
@@ -21098,7 +21118,7 @@ Use `M-x customize-variable' to set it permanently"
 	    ["Force shell name "
 	     (setq py-force-py-shell-name-p
 		   (not py-force-py-shell-name-p))
-	     :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang doesn't take precedence. Use `M-x customize-variable' to set it permanently"
+	     :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
 	     :style toggle :selected py-force-py-shell-name-p]
 
 	    ["Execute \"if name == main\" blocks p"
@@ -21124,7 +21144,7 @@ Otherwise, all modified buffers are saved without asking.Use `M-x customize-vari
 		   (not py-store-result-p))
 	     :help " ‘py-store-result-p’
 
-When non-nil, put resulting string of `py-execute-...' into kill-ring, so it might be yanked. "
+When non-nil, put resulting string of ‘py-execute-...’ into kill-ring, so it might be yanked. "
 	     :style toggle :selected py-store-result-p]
 
 	    ["Prompt on changed "
@@ -21164,7 +21184,7 @@ In experimental state yet "
 	     ["Set Pymacs-based complete keymap "
 	      (setq py-set-complete-keymap-p
 		    (not py-set-complete-keymap-p))
-	      :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load it's keys into ‘python-mode-map’
+	      :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
 
 Default is nil.
 See also resp. edit ‘py-complete-set-keymap’ Use `M-x customize-variable' to set it permanently"
@@ -21195,12 +21215,12 @@ Use `M-x customize-variable' to set it permanently"
 Set py-docstring-style to nil, format string normally. "]
 
 	      ["pep-257-nn" py-set-pep-257-nn-docstring-style
-	       :help " `py-set-pep-257-nn-docstring-style'
+	       :help " ‘py-set-pep-257-nn-docstring-style’
 
 Set py-docstring-style to 'pep-257-nn "]
 
 	      ["pep-257" py-set-pep-257-docstring-style
-	       :help " `py-set-pep-257-docstring-style'
+	       :help " ‘py-set-pep-257-docstring-style’
 
 Set py-docstring-style to 'pep-257 "]
 
@@ -21266,7 +21286,7 @@ Use `M-x customize-variable' to set it permanently"
 	      ["Tab indents region "
 	       (setq py-tab-indents-region-p
 		     (not py-tab-indents-region-p))
-	       :help "When ‘t’ and first TAB doesn't shift, indent-region is called.
+	       :help "When ‘t’ and first TAB does not shift, indent-region is called.
 
 Default is nil
 See also ‘py-tab-shifts-region-p’
@@ -21501,7 +21521,7 @@ mark-defun marks top-level form at point etc. "
 	    ["Close provides newline"
 	     (setq py-close-provides-newline
 		   (not py-close-provides-newline))
-	     :help "If a newline is inserted, when line after block isn't empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
+	     :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
 	     :style toggle :selected py-close-provides-newline]
 
 	    ["Block comment prefix "
@@ -21583,9 +21603,9 @@ Use `M-x customize-variable' to set it permanently"
 		   (not py-keep-windows-configuration))
 	     :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
 
-Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it's displayed\.
+Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it is displayed\.
 
-To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set `py-keep-4windows-configuration' onto 'force
+To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set ‘py-keep-4windows-configuration’ onto 'force
 
 Default is nil Use `M-x customize-variable' to set it permanently"
 	     :style toggle :selected py-keep-windows-configuration]
@@ -21597,7 +21617,7 @@ Default is nil Use `M-x customize-variable' to set it permanently"
 		 (setq py-split-windows-on-execute-function 'split-window-vertically))
 	       (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
 
-	     :help "If ‘split-window-vertically’ or `...-horizontally'. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
+	     :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
 	     :style toggle :selected py-split-windows-on-execute-function]
 
 	    ["Modeline display full path "
@@ -21605,7 +21625,7 @@ Default is nil Use `M-x customize-variable' to set it permanently"
 		   (not py-modeline-display-full-path-p))
 	     :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
 
-Default is nil. Note: when ‘py-shell-name’ is specified with path, it's shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
+Default is nil. Note: when ‘py-shell-name’ is specified with path, it is shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
 	     :style toggle :selected py-modeline-display-full-path-p]
 
 	    ["Modeline acronym display home "
@@ -21699,7 +21719,7 @@ Use `M-x customize-variable' to set it permanently"
 	     ["Guess install directory "
 	      (setq py-guess-py-install-directory-p
 		    (not py-guess-py-install-directory-p))
-	      :help "If in cases, ‘py-install-directory’ isn't set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
+	      :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
 	      :style toggle :selected py-guess-py-install-directory-p]
 
 	     ["Use local default"
@@ -21723,7 +21743,7 @@ See also ‘py-execute-directory’Use `M-x customize-variable' to set it perman
 	     ["Keep shell dir when execute "
 	      (setq py-keep-shell-dir-when-execute-p
 		    (not py-keep-shell-dir-when-execute-p))
-	      :help "Don't change Python shell's current working directory when sending code.
+	      :help "Do not change Python shell's current working directory when sending code.
 
 See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
 	      :style toggle :selected py-keep-shell-dir-when-execute-p]
@@ -21907,7 +21927,7 @@ Reads the abbreviation in the minibuffer; with numeric arg it displays a proposa
 Proposal is composed from the initial character(s) of the
 expansion.
 
-Don't use this function in a Lisp program; use ‘define-abbrev’ instead."]
+Do not use this function in a Lisp program; use ‘define-abbrev’ instead."]
           ("Completion"
 	   ["Py indent or complete" py-indent-or-complete
 	    :help " ‘py-indent-or-complete’"]
@@ -21930,7 +21950,7 @@ completions on the current context."
 	 (py-send-string-no-output (format completion-code input) process)))
     (if (and erg (> (length erg) 2))
 	(setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
-      (and py-verbose-p (message "py--shell-completion-get-completions: %s" "Don't see a completion")))
+      (and py-verbose-p (message "py--shell-completion-get-completions: %s" "Do not see a completion")))
     erg))
 
 ;; post-command-hook
@@ -21941,16 +21961,16 @@ completions on the current context."
 Takes END"
   (when
       (and (or
-            (eq this-command 'completion-at-point)
-            (eq this-command 'choose-completion)
-            (eq this-command 'choose-completion)
+            (eq this-command (quote completion-at-point))
+            (eq this-command (quote choose-completion))
+            (eq this-command (quote choose-completion))
             (eq this-command (quote py-shell-complete))
             (and (or
-                  (eq last-command 'completion-at-point)
-                  (eq last-command 'choose-completion)
-                  (eq last-command 'choose-completion)
+                  (eq last-command (quote completion-at-point))
+                  (eq last-command (quote choose-completion))
+                  (eq last-command (quote choose-completion))
                   (eq last-command (quote py-shell-complete)))
-                 (eq this-command 'self-insert-command))))
+                 (eq this-command (quote self-insert-command)))))
     (py-restore-window-configuration)
     )
 
@@ -21960,7 +21980,7 @@ Takes END"
   (cond ((eq completion t)
 	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
 	((null completion)
-	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Don't see a completion")))
+	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Do not see a completion")))
 	((and completion
 	      (or (and (listp completion)
 		       (string= input (car completion)))
@@ -22051,7 +22071,7 @@ completions on the current context."
     (cond ((eq completion t)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
 	  ((null completion)
-	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Don't see a completion"))
+	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Do not see a completion"))
 	   (set-window-configuration py-last-window-configuration))
 	  ((and completion
 		(or (and (listp completion)
@@ -22136,7 +22156,7 @@ Use ‘py-fast-process’ "
 If cursor is at end of a symbol, try to complete
 Otherwise call ‘py-indent-line’
 
-If `(use-region-p)' returns t, indent region.
+If ‘(use-region-p)’ returns t, indent region.
 Use `C-q TAB' to insert a literally TAB-character
 
 In ‘python-mode’ ‘py-complete-function’ is called,
@@ -22224,7 +22244,7 @@ Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
 (declare-function gud-query-cmdline "gud" ())
 
 (defun py-pdb (command-line)
-  "Run pdb on program FILE in buffer `*gud-FILE*'.
+  "Run pdb on program FILE in buffer ‘*gud-FILE*’.
 The directory containing FILE becomes the initial working directory
 and source-file directory for your debugger.
 
@@ -22617,7 +22637,7 @@ Used with ‘eval-after-load’."
 	    ;; First look for Info files corresponding to the version
 	    ;; of the interpreter we're running.
 	    (condition-case ()
-		;; Don't use ‘info’ because it would pop-up a *info* buffer.
+		;; Do not use ‘info’ because it would pop-up a *info* buffer.
 		(progn
 		  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
 					  version))
@@ -22755,7 +22775,7 @@ not inside a defun."
 (defun py-help-at-point ()
   "Print help on symbol at point.
 
-If symbol is defined in current buffer, jump to it's definition"
+If symbol is defined in current buffer, jump to its definition"
   (interactive)
   (let* ((orig (point))
 	 (beg (and (use-region-p) (region-beginning)))
@@ -22821,7 +22841,7 @@ If symbol is defined in current buffer, jump to it's definition"
 Knows about Python indentation, tokens, comments and continuation lines.
 Paragraphs are separated by blank lines only.
 
-Major sections below begin with the string `@'; specific function and
+Major sections below begin with the string ‘@’; specific function and
 variable docs begin with ->.
 
 @EXECUTING PYTHON CODE
@@ -22874,7 +22894,7 @@ Although all comment lines are treated alike by Python, Python mode
 recognizes two kinds that act differently with respect to indentation.
 
 An `indenting comment line' is a comment line with a blank, tab or
-nothing after the initial `#'.  The indentation commands (see below)
+nothing after the initial ‘#’.  The indentation commands (see below)
 treat these exactly as if they were code lines: a line following an
 indenting comment line will be indented like the comment line.  All
 other comment lines (those with a non-whitespace character immediately
@@ -22893,7 +22913,7 @@ like these:
 \t\treturn a
 
 Since the `#...’ and ‘##' comment lines have a non-whitespace
-character following the initial `#', Python mode ignores them when
+character following the initial ‘#’, Python mode ignores them when
 computing the proper indentation for the next line.
 
 Continuation Lines and Statements
@@ -22932,7 +22952,7 @@ the indentation of preceding statements.  E.g., assuming
 py-indent-offset is 4, after you enter
 \tif a > 0: \\[py-newline-and-indent]
 the cursor will be moved to the position of the ‘_’ (_ is not a
-character in the file, it's just used here to indicate the location of
+character in the file, it is just used here to indicate the location of
 the cursor):
 \tif a > 0:
 \t _
@@ -22948,19 +22968,19 @@ to
 was your intent.  In general, ‘python-mode’ either reproduces the
 indentation of the (closest code or indenting-comment) preceding
 statement, or adds an extra py-indent-offset blanks if the preceding
-statement has `:' as its last significant (non-whitespace and non-
+statement has ‘:’ as its last significant (non-whitespace and non-
 comment) character.  If the suggested indentation is too much, use
 \\[py-electric-backspace] to reduce it.
 
-Continuation lines are given extra indentation.  If you don't like the
+Continuation lines are given extra indentation.  If you do not like the
 suggested indentation, change it to something you do like, and Python-
 mode will strive to indent later lines of the statement in the same way.
 
 If a line is a continuation line by virtue of being in an unclosed
 paren/bracket/brace structure (‘list’, for short), the suggested
 indentation depends on whether the current line contains the first item
-in the list.  If it does, it's indented py-indent-offset columns beyond
-the indentation of the line containing the open bracket.  If you don't
+in the list.  If it does, it is indented py-indent-offset columns beyond
+the indentation of the line containing the open bracket.  If you do not
 like that, change it by hand.  The remaining items in the list will mimic
 whatever indentation you give to the first item.
 
@@ -22969,19 +22989,19 @@ a backslash, the third and following lines of the statement inherit their
 indentation from the line preceding them.  The indentation of the second
 line in the statement depends on the form of the first (base) line:  if
 the base line is an assignment statement with anything more interesting
-than the backslash following the leftmost assigning `=', the second line
-is indented two columns beyond that `='.  Else it's indented to two
+than the backslash following the leftmost assigning ‘=’, the second line
+is indented two columns beyond that ‘=’.  Else it is indented to two
 columns beyond the leftmost solid chunk of non-whitespace characters on
 the base line.
 
 Warning:  indent-region should not normally be used!  It calls \\[indent-for-tab-command]
-repeatedly, and as explained above, \\[indent-for-tab-command] can't guess the block
+repeatedly, and as explained above, \\[indent-for-tab-command] can not guess the block
 structure you intend.
 %c:indent-for-tab-command
 %c:py-newline-and-indent
 %c:py-electric-backspace
 
-The next function may be handy when editing code you didn't write:
+The next function may be handy when editing code you did not write:
 %c:py-guess-indent-offset
 
 The remaining ‘indent’ functions apply to a region of Python code.  They
@@ -23034,22 +23054,22 @@ Or do \\[py-previous-statement] with a huge prefix argument.
 \\[set-selective-display] with a ‘small’ prefix arg is ideally suited for viewing the
 overall class and def structure of a module.
 
-`\\[back-to-indentation]' moves point to a line's first non-blank character.
+‘\\[back-to-indentation]’ moves point to a line's first non-blank character.
 
-`\\[indent-relative]' is handy for creating odd indentation.
+‘\\[indent-relative]’ is handy for creating odd indentation.
 
 @OTHER EMACS HINTS
 
-If you don't like the default value of a variable, change its value to
+If you do not like the default value of a variable, change its value to
 whatever you do like by putting a ‘setq’ line in your .emacs file.
 E.g., to set the indentation increment to 4, put this line in your
 .emacs:
 \t(setq py-indent-offset 4)
-To see the value of a variable, do `\\[describe-variable]' and enter the variable
+To see the value of a variable, do ‘\\[describe-variable]’ and enter the variable
 name at the prompt.
 
 When entering a key sequence like `C-c C-n', it is not necessary to
-release the CONTROL key after doing the `C-c' part -- it suffices to
+release the CONTROL key after doing the ‘C-c’ part -- it suffices to
 press the CONTROL key, press and release ‘c’ (while still holding down
 CONTROL), press and release ‘n’ (while still holding down CONTROL), &
 then release CONTROL.
@@ -23243,7 +23263,7 @@ Calls `pylint --full-documentation'"
    (let* ((py-pyflakes3-command
            (if (string= "" py-pyflakes3-command)
                (or (executable-find "pyflakes3")
-                   (error "Don't see \"pyflakes3\" on your system.
+                   (error "Do not see \"pyflakes3\" on your system.
 Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
              py-pyflakes3-command))
           (default
@@ -23411,7 +23431,7 @@ See ‘py-check-command’ for the default."
    (let* ((py-flake8-command
            (if (string= "" py-flake8-command)
                (or (executable-find "flake8")
-                   (error "Don't see \"flake8\" on your system.
+                   (error "Do not see \"flake8\" on your system.
 Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
              py-flake8-command))
           (default
@@ -23473,7 +23493,7 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
 Takes NAME COMMAND"
   (unless (string-match "pyflakespep8" name)
     (unless (executable-find name)
-      (when py-verbose-p (message "Don't see %s. Use ‘easy_install’ %s? " name name))))
+      (when py-verbose-p (message "Do not see %s. Use ‘easy_install’ %s? " name name))))
   (if (py--buffer-filename-remote-maybe)
       (let* ((temp-file (if (functionp 'flymake-proc-init-create-temp-buffer-copy)
 			    (flymake-proc-init-create-temp-buffer-copy 'flymake-create-temp-inplace)
@@ -23556,7 +23576,7 @@ Assumes vars are defined in current source buffer"
                   (prin1-to-string (symbol-value name)))))
           (if state
               (push (cons (prin1-to-string name) state) variableslist)
-            (message "don't see a state for %s" (prin1-to-string name))))
+            (message "do not see a state for %s" (prin1-to-string name))))
         (forward-line 1))
       (setq variableslist (nreverse variableslist))
       (set-buffer (get-buffer-create "State-of-Python-mode-variables.org"))
@@ -23799,7 +23819,7 @@ Matches lists, but also block, statement, string and comment. "
 	;; Python specific blocks
 	(py--match-paren-blocks))))))
 
-(unless (functionp 'in-string-p)
+(unless (functionp (quote in-string-p))
   (defun in-string-p (&optional pos)
     (interactive)
     (let ((orig (or pos (point))))
@@ -23809,7 +23829,7 @@ Matches lists, but also block, statement, string and comment. "
           (beginning-of-defun)
           (numberp
            (progn
-             (if (featurep 'xemacs)
+             (if (featurep (quote xemacs))
                  (nth 3 (parse-partial-sexp (point) orig)
                       (nth 3 (parse-partial-sexp (point-min) (point))))))))))))
 
@@ -23824,7 +23844,7 @@ Matches lists, but also block, statement, string and comment. "
                (if (not word) (error "No pydoc args given")
                  word) ;sinon word
              input)))) ;sinon input
-  (shell-command (concat py-shell-name " -c \"from pydoc import help;help(\'" w "\')\"") "*PYDOCS*")
+  (shell-command (concat py-shell-name " -c \"from pydoc import help;help('" w "')\"") "*PYDOCS*")
   (view-buffer-other-window "*PYDOCS*" t 'kill-buffer-and-window))
 
 (defun pst-here ()
@@ -23882,7 +23902,7 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
            (replace-match "False"))
           ((looking-at "False")
            (replace-match "True"))
-          (t (message "%s" "Can't see \"True or False\" here")))))
+          (t (message "%s" "Can not see \"True or False\" here")))))
 
 ;; python-components-imenu
 ;; Imenu definitions
@@ -24052,10 +24072,10 @@ of the first definition found."
       (setq def-pos
             (or (match-beginning class-paren)
                 (match-beginning def-paren)))
-      ;; if we don't have a starting indent level, take this one
+      ;; if we do not have a starting indent level, take this one
       (or start-indent
           (setq start-indent cur-indent))
-      ;; if we don't have class name yet, take this one
+      ;; if we do not have class name yet, take this one
       (or prev-name
           (setq prev-name def-name))
       ;; what level is the next definition on?  must be same, deeper
@@ -24072,7 +24092,7 @@ of the first definition found."
         ;; start on, so go back to the last expression. The recursive
         ;; call will find this place again and add it to the correct
         ;; list
-        (re-search-backward py-imenu-generic-regexp (point-min) 'move)
+        (re-search-backward py-imenu-generic-regexp (point-min) (quote move))
         (setq sub-method-alist (py--imenu-create-index-engine cur-indent))
         (if sub-method-alist
             ;; we put the last element on the index-alist on the start
@@ -24092,13 +24112,13 @@ of the first definition found."
       (and looking-p
            (setq looking-p
                  (re-search-forward py-imenu-generic-regexp
-                                    (point-max) 'move))))
+                                    (point-max) (quote move)))))
     (nreverse index-alist)))
 
 (defun py--imenu-create-index-new (&optional beg end)
   "‘imenu-create-index-function’ for Python. "
   (interactive)
-  (set (make-local-variable 'imenu-max-items) py-imenu-max-items)
+  (set (make-local-variable (quote imenu-max-items)) py-imenu-max-items)
   (let ((orig (point))
         (beg (or beg (point-min)))
         (end (or end (point-max)))
@@ -24111,7 +24131,7 @@ of the first definition found."
                   name (match-string-no-properties 2)
                   classname (concat "class " name)
                   thisend (save-match-data (py--end-of-def-or-class-position))
-                  sublist '())
+                  sublist (quote ()))
             (while (and (re-search-forward "^[ \t]*\\(def\\|class\\)[ \t]+\\(\\sw+\\)" (or thisend end) t 1)(not (nth 8 (parse-partial-sexp (point-min) (point)))))
               (let* ((pos (match-beginning 0))
                      (name (match-string-no-properties 2)))
@@ -24286,12 +24306,12 @@ See also ‘py-electric-colon-greedy-p’"
         (py-newline-and-indent))))))
 
 ;; TODO: PRouleau: I would like to better understand this.
-;;                 I don't understand the docstring.
+;;                 I do not understand the docstring.
 ;;                 What was the completion bug this is reacting to?
 (defun py-electric-close (arg)
   "Close completion buffer when no longer needed.
 
-It is it's sure, it's no longer needed, i.e. when inserting a space.
+It is its sure, its no longer needed, i.e. when inserting a space.
 
 Works around a bug in ‘choose-completion’."
 
@@ -24311,7 +24331,7 @@ Works around a bug in ‘choose-completion’."
 ;; TODO: PRouleau: describe the electric behavior of '#'.
 ;;       This description should be in docstring of the
 ;;       ‘py-electric-comment-p’ user option and be referred to here.
-;;       I currently don't understand what it should be and prefer not
+;;       I currently do not understand what it should be and prefer not
 ;;       having to infer it from code.
 ;;       - From what I saw, the intent is to align the comment being
 ;;         typed to the one on line above or at the indentation level.
@@ -24418,7 +24438,7 @@ At no-whitespace character, delete one before point.
        ((eq 4 (prefix-numeric-value arg))
 	(backward-delete-char-untabify 1))
        ((use-region-p)
-        ;; Emacs23 doesn't know that var
+        ;; Emacs23 does not know that var
         (if (boundp 'delete-active-region)
 	    (delete-active-region)
 	  (delete-region (region-beginning) (region-end))))
@@ -24486,7 +24506,7 @@ At no-whitespace char, delete one char at point.
 	(delete-char 1))
        ;; delete active region if one is active
        ((use-region-p)
-	;; Emacs23 doesn't know that var
+	;; Emacs23 does not know that var
 	(if (boundp 'delete-active-region)
             (delete-active-region)
 	  (delete-region (region-beginning) (region-end))))
@@ -24609,7 +24629,7 @@ Default nil"
 (defun virtualenv-filter (predicate sequence)
   "Return a list of each SEQUENCE element for which the PREDICATE is non-nil.
 The order of elements in SEQUENCE is retained."
-  (let ((retlist '()))
+  (let ((retlist (quote ())))
     (dolist (element sequence (nreverse retlist))
       (when (funcall predicate element)
         (push element retlist)))))
@@ -24674,10 +24694,10 @@ For example:
     ;; Get only the basename from the list of the virtual environments
     ;; paths
     (mapcar
-     'file-name-nondirectory
+     (quote file-name-nondirectory)
      ;; Filter the directories and then the virtual environments
-     (virtualenv-filter 'virtualenv-p
-                        (virtualenv-filter 'file-directory-p filelist)))))
+     (virtualenv-filter (quote virtualenv-p)
+                        (virtualenv-filter (quote file-directory-p) filelist)))))
 
 (defun virtualenv-workon (name)
   "Issue a virtualenvwrapper-like virtualenv-workon NAME command."
@@ -24804,7 +24824,7 @@ For example:
                                                     (match-end 0))))
 
        ;; A line with some code, followed by a comment? Remember that the hash
-       ;; which starts the comment shouldn't be part of a string or character.
+       ;; which starts the comment should not be part of a string or character.
        ((progn
           (while (not (looking-at "#\\|$"))
             (skip-chars-forward "^#\n\"'\\")
@@ -24951,7 +24971,7 @@ See lp:1066489 "
                                           (skip-syntax-forward "^|")
 		                          (1+ (point)))))))
     (save-restriction
-      ;; don't go backward beyond beginning of string
+      ;; do not go backward beyond beginning of string
       (narrow-to-region beg end)
       (let* (;; Paragraph starts with beginning of string, skip the fence-chars
 	     (innerbeg (copy-marker
@@ -25025,7 +25045,7 @@ Fill according to ‘py-docstring-style’ "
 				 (goto-char orig)
 				 (line-end-position))))))
     (save-restriction
-      ;; don't go backward beyond beginning of string
+      ;; do not go backward beyond beginning of string
       (narrow-to-region beg (point-max))
       (goto-char orig)
       (when beg
@@ -25235,7 +25255,7 @@ See available styles at ‘py-fill-paragraph’ or var ‘py-docstring-style’
 
 
 (defun py-comment-region (beg end &optional arg)
-  "Like `comment-region’ but uses double hash (`#') comment starter."
+  "Like `comment-region’ but uses double hash ‘#’ comment starter."
   (interactive "r\nP")
   (let ((comment-start (if py-block-comment-prefix-p
                              py-block-comment-prefix
@@ -25245,7 +25265,7 @@ See available styles at ‘py-fill-paragraph’ or var ‘py-docstring-style’
 (defun py-comment-block (&optional beg end arg)
   "Comments block at point.
 
-Uses double hash (`#') comment starter when ‘py-block-comment-prefix-p’ is  t,
+Uses double hash ‘#’ comment starter when ‘py-block-comment-prefix-p’ is  t,
 the default"
   (interactive "*")
   (save-excursion
@@ -25467,7 +25487,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'block shell dedicated switch beg end file t))
+  (py--execute-prepare (quote block) shell dedicated switch beg end file t))
 
 (defun py-execute-block-or-clause-fast (&optional shell dedicated switch beg end file)
   "Process block-or-clause at point by a Python interpreter.
@@ -25478,7 +25498,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'block-or-clause shell dedicated switch beg end file t))
+  (py--execute-prepare (quote block-or-clause) shell dedicated switch beg end file t))
 
 (defun py-execute-class-fast (&optional shell dedicated switch beg end file)
   "Process class at point by a Python interpreter.
@@ -25489,7 +25509,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'class shell dedicated switch beg end file t))
+  (py--execute-prepare (quote class) shell dedicated switch beg end file t))
 
 (defun py-execute-clause-fast (&optional shell dedicated switch beg end file)
   "Process clause at point by a Python interpreter.
@@ -25500,7 +25520,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'clause shell dedicated switch beg end file t))
+  (py--execute-prepare (quote clause) shell dedicated switch beg end file t))
 
 (defun py-execute-def-fast (&optional shell dedicated switch beg end file)
   "Process def at point by a Python interpreter.
@@ -25511,7 +25531,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'def shell dedicated switch beg end file t))
+  (py--execute-prepare (quote def) shell dedicated switch beg end file t))
 
 (defun py-execute-def-or-class-fast (&optional shell dedicated switch beg end file)
   "Process def-or-class at point by a Python interpreter.
@@ -25522,7 +25542,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'def-or-class shell dedicated switch beg end file t))
+  (py--execute-prepare (quote def-or-class) shell dedicated switch beg end file t))
 
 (defun py-execute-expression-fast (&optional shell dedicated switch beg end file)
   "Process expression at point by a Python interpreter.
@@ -25533,7 +25553,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'expression shell dedicated switch beg end file t))
+  (py--execute-prepare (quote expression) shell dedicated switch beg end file t))
 
 (defun py-execute-partial-expression-fast (&optional shell dedicated switch beg end file)
   "Process partial-expression at point by a Python interpreter.
@@ -25544,7 +25564,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'partial-expression shell dedicated switch beg end file t))
+  (py--execute-prepare (quote partial-expression) shell dedicated switch beg end file t))
 
 (defun py-execute-section-fast (&optional shell dedicated switch beg end file)
   "Process section at point by a Python interpreter.
@@ -25555,7 +25575,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'section shell dedicated switch beg end file t))
+  (py--execute-prepare (quote section) shell dedicated switch beg end file t))
 
 (defun py-execute-statement-fast (&optional shell dedicated switch beg end file)
   "Process statement at point by a Python interpreter.
@@ -25566,7 +25586,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'statement shell dedicated switch beg end file t))
+  (py--execute-prepare (quote statement) shell dedicated switch beg end file t))
 
 (defun py-execute-top-level-fast (&optional shell dedicated switch beg end file)
   "Process top-level at point by a Python interpreter.
@@ -25577,7 +25597,7 @@ Optional DEDICATED: run in a dedicated process
 Optional SWITCH: switch to output buffer after executing
 Optional File: execute through running a temp-file"
   (interactive)
-  (py--execute-prepare 'top-level shell dedicated switch beg end file t))
+  (py--execute-prepare (quote top-level) shell dedicated switch beg end file t))
 
 ;; python-components-narrow
 
@@ -25633,7 +25653,7 @@ Optional File: execute through running a temp-file"
            (inhibit-read-only t))
       (if (and beg end)
           (progn
-            (hs-make-overlay beg end 'code)
+            (hs-make-overlay beg end (quote code))
             (set-buffer-modified-p modified))
         (error (concat "No " (format "%s" form) " at point"))))))
 
@@ -25650,7 +25670,7 @@ Optional File: execute through running a temp-file"
       (if (and beg end)
           (if (overlays-in beg end)
               (hs-discard-overlays beg end)
-            (hs-make-overlay beg end 'code))
+            (hs-make-overlay beg end (quote code)))
         (error (concat "No " (format "%s" form) " at point")))
       (set-buffer-modified-p modified))))
 
@@ -25678,7 +25698,7 @@ Optional File: execute through running a temp-file"
   (interactive
    (list
     (and (use-region-p) (region-beginning))(and (use-region-p) (region-end))))
-  (py-hide-base 'region beg end))
+  (py-hide-base (quote region) beg end))
 
 (defun py-show-region (beg end)
   "Un-hide active region."
@@ -25690,107 +25710,107 @@ Optional File: execute through running a temp-file"
 (defun py-hide-block ()
   "Hide block at point."
   (interactive)
-  (py-hide-base 'block))
+  (py-hide-base (quote block)))
 
 (defun py-hide-block-or-clause ()
   "Hide block-or-clause at point."
   (interactive)
-  (py-hide-base 'block-or-clause))
+  (py-hide-base (quote block-or-clause)))
 
 (defun py-hide-class ()
   "Hide class at point."
   (interactive)
-  (py-hide-base 'class))
+  (py-hide-base (quote class)))
 
 (defun py-hide-clause ()
   "Hide clause at point."
   (interactive)
-  (py-hide-base 'clause))
+  (py-hide-base (quote clause)))
 
 (defun py-hide-comment ()
   "Hide comment at point."
   (interactive)
-  (py-hide-base 'comment))
+  (py-hide-base (quote comment)))
 
 (defun py-hide-def ()
   "Hide def at point."
   (interactive)
-  (py-hide-base 'def))
+  (py-hide-base (quote def)))
 
 (defun py-hide-def-or-class ()
   "Hide def-or-class at point."
   (interactive)
-  (py-hide-base 'def-or-class))
+  (py-hide-base (quote def-or-class)))
 
 (defun py-hide-elif-block ()
   "Hide elif-block at point."
   (interactive)
-  (py-hide-base 'elif-block))
+  (py-hide-base (quote elif-block)))
 
 (defun py-hide-else-block ()
   "Hide else-block at point."
   (interactive)
-  (py-hide-base 'else-block))
+  (py-hide-base (quote else-block)))
 
 (defun py-hide-except-block ()
   "Hide except-block at point."
   (interactive)
-  (py-hide-base 'except-block))
+  (py-hide-base (quote except-block)))
 
 (defun py-hide-expression ()
   "Hide expression at point."
   (interactive)
-  (py-hide-base 'expression))
+  (py-hide-base (quote expression)))
 
 (defun py-hide-for-block ()
   "Hide for-block at point."
   (interactive)
-  (py-hide-base 'for-block))
+  (py-hide-base (quote for-block)))
 
 (defun py-hide-if-block ()
   "Hide if-block at point."
   (interactive)
-  (py-hide-base 'if-block))
+  (py-hide-base (quote if-block)))
 
 (defun py-hide-indent ()
   "Hide indent at point."
   (interactive)
-  (py-hide-base 'indent))
+  (py-hide-base (quote indent)))
 
 (defun py-hide-line ()
   "Hide line at point."
   (interactive)
-  (py-hide-base 'line))
+  (py-hide-base (quote line)))
 
 (defun py-hide-minor-block ()
   "Hide minor-block at point."
   (interactive)
-  (py-hide-base 'minor-block))
+  (py-hide-base (quote minor-block)))
 
 (defun py-hide-paragraph ()
   "Hide paragraph at point."
   (interactive)
-  (py-hide-base 'paragraph))
+  (py-hide-base (quote paragraph)))
 
 (defun py-hide-partial-expression ()
   "Hide partial-expression at point."
   (interactive)
-  (py-hide-base 'partial-expression))
+  (py-hide-base (quote partial-expression)))
 
 (defun py-hide-section ()
   "Hide section at point."
   (interactive)
-  (py-hide-base 'section))
+  (py-hide-base (quote section)))
 
 (defun py-hide-statement ()
   "Hide statement at point."
   (interactive)
-  (py-hide-base 'statement))
+  (py-hide-base (quote statement)))
 
 (defun py-hide-top-level ()
   "Hide top-level at point."
   (interactive)
-  (py-hide-base 'top-level))
+  (py-hide-base (quote top-level)))
 
 (defun py-dynamically-hide-indent ()
   (interactive)
@@ -25907,11 +25927,11 @@ Optional File: execute through running a temp-file"
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
-To submit a report, enter `\\[py-submit-bug-report]'
+To submit a report, enter ‘\\[py-submit-bug-report]’
 from a‘python-mode’ buffer.
-Do `\\[py-describe-mode]' for detailed documentation.
+Do ‘\\[py-describe-mode]’ for detailed documentation.
 To see what version of ‘python-mode’ you are running,
-enter `\\[py-version]'.
+enter ‘\\[py-version]’.
 
 This mode knows about Python indentation,
 tokens, comments (and continuation lines.
@@ -26080,7 +26100,7 @@ VARIABLES
 Variables
 ‘py-shell-prompt-regexp’,
 ‘py-shell-prompt-output-regexp’,
-`py-shell-input-prompt-2-regexp',
+‘py-shell-input-prompt-2-regexp’,
 ‘py-shell-fontify-p’,
 ‘py-completion-setup-code’,
 ‘py-shell-completion-string-code’,
