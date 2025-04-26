@@ -120,13 +120,6 @@ Needed for completion and other environment stuff only."
   :tag "py-install-directory"
   :group 'python-mode)
 
-(or
- py-install-directory
- (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python--mode.el"))))
-      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))))
- (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python-components-mode.el"))))
-      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el")))))))
-
 (defcustom py-font-lock-defaults-p t
   "If fontification is not required, avoiding it might speed up things."
 
@@ -307,56 +300,6 @@ Default is t"
 (defvar py-chars-after " \t\n\r\f"
     "Used by ‘py--string-strip’.")
 
-(unless (functionp 'file-local-name)
-  (defun file-local-name (file)
-    "Return the local name component of FILE.
-This function removes from FILE the specification of the remote host
-and the method of accessing the host, leaving only the part that
-identifies FILE locally on the remote system.
-The returned file name can be used directly as argument of
-‘process-file’, ‘start-file-process’, or ‘shell-command’."
-    (or (file-remote-p file 'localname) file)))
-
-(defun py---emacs-version-greater-23 ()
-  "Return ‘t’ if emacs major version is above 23"
-  (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
-
-;; (format "execfile(r'%s')\n" file)
-(defun py-execute-file-command (filename)
-  "Return the command using FILENAME."
-  (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
-  )
-
-(defun py--beginning-of-buffer-p ()
-  "Returns position, if cursor is at the beginning of buffer.
-Return nil otherwise. "
-  (when (bobp)(point)))
-
-;;  (setq strip-chars-before  "[ \t\r\n]*")
-(defun py--string-strip (str &optional chars-before chars-after)
-  "Return a copy of STR, CHARS removed.
-
-Removed chars default to values of ‘py-chars-before’ and ‘py-chars-after’
-i.e. spaces, tabs, carriage returns, newlines and newpages
-
-Optional arguments ‘CHARS-BEFORE’ and ‘CHARS-AFTER’ override default"
-  (let ((s-c-b (or chars-before
-                   py-chars-before))
-        (s-c-a (or chars-after
-                   py-chars-after))
-        (erg str))
-    (setq erg (replace-regexp-in-string  s-c-b "" erg))
-    (setq erg (replace-regexp-in-string  s-c-a "" erg))
-    erg))
-
-(defun py-toggle-session-p (&optional arg)
-  "Switch boolean variable ‘py-session-p’.
-
-With optional ARG message state switched to"
-  (interactive "p")
-  (setq py-session-p (not py-session-p))
-  (when arg (message "py-session-p: %s" py-session-p)))
-
 (defcustom py-max-help-buffer-p nil
   "If \"\*Python-Help\*\"-buffer should appear as the only visible.
 
@@ -442,12 +385,6 @@ Default is nil"
 When non-nil, return resulting string of ‘py-execute-...’.
 Imports will use it with nil.
 Default is nil")
-
-(defun py-toggle-py-return-result-p ()
-  "Toggle value of ‘py-return-result-p’."
-  (interactive)
-  (setq py-return-result-p (not py-return-result-p))
-  (when (called-interactively-p 'interactive) (message "py-return-result-p: %s" py-return-result-p)))
 
 (defcustom py--execute-use-temp-file-p nil
  "Assume execution at a remote machine.
@@ -1288,19 +1225,6 @@ file heading imports to see if they look Java-like."
 "
   :group 'python-mode)
 
-;; (setq py-shells
-;; (list
-;; ""
-;; 'ipython
-;; 'ipython2.7
-;; 'ipython3
-;; 'jython
-;; 'python
-;; 'python2
-;; 'python3
-;; 'pypy
-;; ))
-
 (defcustom py-known-shells
   (list
    "ipython"
@@ -1334,16 +1258,6 @@ Edit for your needs."
   :type '(repeat string)
   :tag "py-shells"
   :group 'python-mode)
-
-(defun py-install-named-shells-fix-doc (ele)
-  "Internally used by ‘py-load-named-shells’.
-
-Argument ELE: a shell name, a string."
-  (cond ((string-match "^i" ele)
-	 (concat "I" (capitalize (substring ele 1))))
-	((string-match "^pypy" ele)
-	 "PyPy")
-	(t (capitalize ele))))
 
 (defcustom py-jython-packages
   '("java" "javax")
@@ -2035,23 +1949,6 @@ This might fail with certain chars - see UnicodeEncodeError lp:550661"
   :tag "python-mode-v5-behavior-p"
   :group 'python-mode)
 
-(defun py-toggle-python-mode-v5-behavior ()
-  "Switch the values of ‘python-mode-v5-behavior-p’."
-  (interactive)
-  (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
-  (when (called-interactively-p 'interactive)
-    (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
-
-(defun py-toggle-py-verbose-p ()
-  "Switch the values of ‘py-verbose-p’.
-
-Default is nil.
-If on, messages value of ‘py-result’ for instance."
-  (interactive)
-  (setq py-verbose-p (not py-verbose-p))
-  (when (called-interactively-p 'interactive)
-    (message "py-verbose-p: %s" py-verbose-p)))
-
 (defcustom py-trailing-whitespace-smart-delete-p nil
   "Default is nil.
 
@@ -2616,12 +2513,6 @@ some logging, etc.
 For normal operation, leave it set to nil, its default.
 Defined with a defvar form to allow testing the loading of new versions.")
 
-(defun py-toggle-py-debug-p ()
-  "Toggle value of ‘py-debug-p’."
-  (interactive)
-  (setq py-debug-p (not py-debug-p))
-  (when (called-interactively-p 'interactive) (message "py-debug-p: %s" py-debug-p)))
-
 (defcustom py-shell-complete-p nil
   "Enable native completion."
 
@@ -3039,18 +2930,6 @@ Second group grabs the name")
    "[( \t:]+")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
 
-(defun py--arglist-indent (nesting &optional indent-offset)
-  "Internally used by ‘py-compute-indentation’"
-  (if
-      (and (eq 1 nesting)
-           (save-excursion
-             (back-to-indentation)
-             (looking-at py-extended-block-or-clause-re)))
-      (progn
-        (back-to-indentation)
-        (1+ (+ (current-column) (* 2 (or indent-offset py-indent-offset)))))
-    (+ (current-indentation) (or indent-offset py-indent-offset))))
-
 (defconst py-clause-re py-extended-block-or-clause-re
   "See also py-minor-clause re.")
 
@@ -3122,45 +3001,6 @@ hooked into ‘compilation-error-regexp-alist’"
   :type '(alist string)
   :tag "py-compilation-regexp-alist"
   :group 'python-mode)
-
-(defun py--quote-syntax (n)
-  "Put ‘syntax-table’ property correctly on triple quote.
-Used for syntactic keywords.  N is the match number (1, 2 or 3)."
-  ;; Given a triple quote, we have to check the context to know
-  ;; whether this is an opening or closing triple or whether it is
-  ;; quoted anyhow, and should be ignored.  (For that we need to do
-  ;; the same job as ‘syntax-ppss’ to be correct and it seems to be OK
-  ;; to use it here despite initial worries.) We also have to sort
-  ;; out a possible prefix -- well, we do not _have_ to, but I think it
-  ;; should be treated as part of the string.
-
-  ;; Test cases:
-  ;;  ur"""ar""" x='"' # """
-  ;; x = ''' """ ' a
-  ;; '''
-  ;; x '"""' x """ \"""" x
-  (save-excursion
-    (goto-char (match-beginning 0))
-    (cond
-     ;; Consider property for the last char if in a fenced string.
-     ((= n 3)
-      (let* ((syntax (parse-partial-sexp (point-min) (point))))
-	(when (eq t (nth 3 syntax))	; after unclosed fence
-	  (goto-char (nth 8 syntax))	; fence position
-	  ;; (skip-chars-forward "uUrR")	; skip any prefix
-	  ;; Is it a matching sequence?
-	  (if (eq (char-after) (char-after (match-beginning 2)))
-	      (eval-when-compile (string-to-syntax "|"))))))
-     ;; Consider property for initial char, accounting for prefixes.
-     ((or (and (= n 2) ; leading quote (not prefix)
-	       (not (match-end 1)))     ; prefix is null
-	  (and (= n 1) ; prefix
-	       (match-end 1)))          ; non-empty
-      (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
-	(eval-when-compile (string-to-syntax "|"))))
-     ;; Otherwise (we're in a non-matching string) the property is
-     ;; nil, which is OK.
-     )))
 
 (defconst py-font-lock-syntactic-keywords
   ;; Make outer chars of matching triple-quote sequences into generic
@@ -3508,6 +3348,424 @@ commonly \"cls\" and \"self\""
   "Face for Python exceptions."
   :tag "py-exception-name-face"
   :group 'python-mode)
+
+;; subr-x.el might not exist yet
+;; #73, Byte compilation on Emacs 25.3 fails on different trim-right signature
+
+(defsubst py--string-trim-left (strg &optional regexp)
+  "Trim STRING of leading string matching REGEXP.
+
+REGEXP defaults to \"[ \\t\\n\\r]+\"."
+  (if (string-match (concat "\\`\\(?:" (or regexp "[ \t\n\r]+") "\\)") strg)
+      (replace-match "" t t strg)
+    strg))
+
+(defsubst py--string-trim-right (strg &optional regexp)
+  "Trim STRING of trailing string matching REGEXP.
+
+REGEXP defaults to \"[ \\t\\n\\r]+\"."
+  (if (string-match (concat "\\(?:" (or regexp "[ \t\n\r]+") "\\)\\'") strg)
+      (replace-match "" t t strg)
+    strg))
+
+(defsubst py--string-trim (strg &optional trim-left trim-right)
+  "Trim STRING of leading and trailing strings matching TRIM-LEFT and TRIM-RIGHT.
+
+TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\"."
+  (py--string-trim-left (py--string-trim-right strg trim-right) trim-left))
+
+(defcustom py-empty-line-p-chars "^[ \t\r]*$"
+  "Empty-line-p-chars."
+  :type 'regexp
+  :tag "py-empty-line-p-chars"
+  :group 'python-mode)
+
+(defcustom py-default-working-directory ""
+  "If not empty used by ‘py-set-current-working-directory’."
+  :type 'string
+  :tag "py-default-working-directory"
+  :group 'python-mode)
+
+(defcustom py-python-ffap-setup-code
+  "
+def __FFAP_get_module_path(objstr):
+    try:
+        import inspect
+        import os.path
+        # NameError exceptions are delayed until this point.
+        obj = eval(objstr)
+        module = inspect.getmodule(obj)
+        filename = module.__file__
+        ext = os.path.splitext(filename)[1]
+        if ext in ('.pyc', '.pyo'):
+            # Point to the source file.
+            filename = filename[:-1]
+        if os.path.exists(filename):
+            return filename
+        return ''
+    except:
+        return ''"
+  "Python code to get a module path."
+  :type 'string
+  :tag "py-python-ffap-setup-code"
+  :group 'python-mode)
+
+;; (defvar py-ffap-string-code
+;;   "__FFAP_get_module_path('''%s''')\n"
+;;   "Python code used to get a string with the path of a module.")
+
+(defcustom py-ffap-string-code
+  "__FFAP_get_module_path('''%s''')"
+  "Python code used to get a string with the path of a module."
+  :type 'string
+  :tag "py-python-ffap-string-code"
+  :group 'python-mode)
+
+(defvar python-mode-map nil)
+
+(defvar py-debug-p nil
+  "Used for development purposes.")
+
+;; This and other stuff from python.el
+
+(defvar py-last-exeption-buffer nil
+  "Internal use only - when ‘py-up-exception’ is called.
+
+In source-buffer, this will deliver the exception-buffer again.")
+
+;; python-components-start1
+
+(require 'ansi-color)
+(ignore-errors (require 'subr-x))
+(require 'cc-cmds)
+(require 'comint)
+(require 'compile)
+(require 'custom)
+(require 'ert)
+(require 'flymake)
+(require 'hippie-exp)
+(require 'hideshow)
+(require 'json)
+(require 'shell)
+(require 'thingatpt)
+(require 'which-func)
+(require 'tramp)
+(require 'tramp-sh)
+(require 'org-loaddefs)
+(unless (functionp 'mapcan)
+  (require 'cl-extra)
+  ;; mapcan does not exist in Emacs 25
+  (defalias 'mapcan 'cl-mapcan)
+  )
+
+;; (require 'org)
+
+(or
+ py-install-directory
+ (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python--mode.el"))))
+      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))))
+ (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python-components-mode.el"))))
+      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el")))))))
+
+;; credits to python.el
+
+(unless (functionp 'file-local-name)
+  (defun file-local-name (file)
+    "Return the local name component of FILE.
+This function removes from FILE the specification of the remote host
+and the method of accessing the host, leaving only the part that
+identifies FILE locally on the remote system.
+The returned file name can be used directly as argument of
+‘process-file’, ‘start-file-process’, or ‘shell-command’."
+    (or (file-remote-p file 'localname) file)))
+
+(defun py---emacs-version-greater-23 ()
+  "Return ‘t’ if emacs major version is above 23"
+  (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
+
+;; (format "execfile(r'%s')\n" file)
+(defun py-execute-file-command (filename)
+  "Return the command using FILENAME."
+  (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
+  )
+
+(defun py--beginning-of-buffer-p ()
+  "Returns position, if cursor is at the beginning of buffer.
+Return nil otherwise. "
+  (when (bobp)(point)))
+
+;;  (setq strip-chars-before  "[ \t\r\n]*")
+(defun py--string-strip (str &optional chars-before chars-after)
+  "Return a copy of STR, CHARS removed.
+
+Removed chars default to values of ‘py-chars-before’ and ‘py-chars-after’
+i.e. spaces, tabs, carriage returns, newlines and newpages
+
+Optional arguments ‘CHARS-BEFORE’ and ‘CHARS-AFTER’ override default"
+  (let ((s-c-b (or chars-before
+                   py-chars-before))
+        (s-c-a (or chars-after
+                   py-chars-after))
+        (erg str))
+    (setq erg (replace-regexp-in-string  s-c-b "" erg))
+    (setq erg (replace-regexp-in-string  s-c-a "" erg))
+    erg))
+
+(defun py-toggle-session-p (&optional arg)
+  "Switch boolean variable ‘py-session-p’.
+
+With optional ARG message state switched to"
+  (interactive "p")
+  (setq py-session-p (not py-session-p))
+  (when arg (message "py-session-p: %s" py-session-p)))
+
+(defun py-toggle-py-return-result-p ()
+  "Toggle value of ‘py-return-result-p’."
+  (interactive)
+  (setq py-return-result-p (not py-return-result-p))
+  (when (called-interactively-p 'interactive) (message "py-return-result-p: %s" py-return-result-p)))
+
+;; (defcustom py-autopair-mode nil
+;;   "If ‘python-mode’ calls (autopair-mode-on)
+
+;; Default is nil
+;; Load ‘autopair-mode’ written by Joao Tavora <joaotavora [at] gmail.com>
+;; URL: http://autopair.googlecode.com"
+;;   :type 'boolean
+;;   :tag "py-autopair-mode"
+;;   :group 'python-mode)
+
+(make-variable-buffer-local 'py-indent-list-style)
+
+(make-variable-buffer-local 'py-indent-offset)
+
+(and
+ ;; used as a string finally
+ ;; kept a character not to break existing customizations
+ (characterp py-separator-char)(setq py-separator-char (char-to-string py-separator-char)))
+
+;; (setq py-shells
+;; (list
+;; ""
+;; 'ipython
+;; 'ipython2.7
+;; 'ipython3
+;; 'jython
+;; 'python
+;; 'python2
+;; 'python3
+;; 'pypy
+;; ))
+
+(defun py-install-named-shells-fix-doc (ele)
+  "Internally used by ‘py-load-named-shells’.
+
+Argument ELE: a shell name, a string."
+  (cond ((string-match "^i" ele)
+	 (concat "I" (capitalize (substring ele 1))))
+	((string-match "^pypy" ele)
+	 "PyPy")
+	(t (capitalize ele))))
+
+(make-variable-buffer-local 'py-master-file)
+
+(setq py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *")
+
+;; (setq py-pdbtrack-input-prompt "^[(< \t]*[Ii]?[Pp]y?db[>)]*.*")
+
+(setq py-fast-filter-re
+  (concat "\\("
+	  (mapconcat 'identity
+		     (delq nil
+			   (list
+			    py-shell-input-prompt-1-regexp
+			    py-shell-input-prompt-2-regexp
+			    py-ipython-input-prompt-re
+			    py-ipython-output-prompt-re
+			    py-pdbtrack-input-prompt
+			    py-pydbtrack-input-prompt
+			    "[.]\\{3,\\}:? *"
+			    ))
+		     "\\|")
+	  "\\)"))
+
+;; made buffer-local as pdb might need t in all circumstances
+(make-variable-buffer-local 'py-switch-buffers-on-execute-p)
+
+;; (defcustom py-shell-name
+;;   (if (eq system-type 'windows-nt)
+;;       "C:/Python27/python"
+;;     "python")
+
+;;   "A PATH/TO/EXECUTABLE or default value ‘py-shell’ may look for.
+
+;; If no shell is specified by command.
+
+;; On Windows default is C:/Python27/python
+;; --there is no garantee it exists, please check your system--
+
+;; Else python"
+;;   :type 'string
+;;   :tag "py-shell-name
+;; "
+;;   :group 'python-mode)
+
+;; "/usr/bin/python3"
+
+(defun py-toggle-python-mode-v5-behavior ()
+  "Switch the values of ‘python-mode-v5-behavior-p’."
+  (interactive)
+  (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
+  (when (called-interactively-p 'interactive)
+    (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
+
+(defun py-toggle-py-verbose-p ()
+  "Switch the values of ‘py-verbose-p’.
+
+Default is nil.
+If on, messages value of ‘py-result’ for instance."
+  (interactive)
+  (setq py-verbose-p (not py-verbose-p))
+  (when (called-interactively-p 'interactive)
+    (message "py-verbose-p: %s" py-verbose-p)))
+
+(setq python-mode-message-string
+  (if (or (string= "python-mode.el" (buffer-name))
+	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
+      "python-mode.el"
+    "python-components-mode"))
+
+(setq python-mode-syntax-table
+      (let ((table (make-syntax-table)))
+        ;; Give punctuation syntax to ASCII that normally has symbol
+        ;; syntax or has word syntax and is not a letter.
+        (let ((symbol (string-to-syntax "_"))
+              (sst (standard-syntax-table)))
+          (dotimes (i 128)
+            (unless (= i ?_)
+              (if (equal symbol (aref sst i))
+                  (modify-syntax-entry i "." table)))))
+        (modify-syntax-entry ?$ "." table)
+        (modify-syntax-entry ?% "." table)
+        ;; exceptions
+        (modify-syntax-entry ?# "<" table)
+        (modify-syntax-entry ?\n ">" table)
+        (modify-syntax-entry ?' "\"" table)
+        (modify-syntax-entry ?` "$" table)
+        (if py-underscore-word-syntax-p
+            (modify-syntax-entry ?\_ "w" table)
+          (modify-syntax-entry ?\_ "_" table))
+        table))
+
+(defun py-toggle-py-debug-p ()
+  "Toggle value of ‘py-debug-p’."
+  (interactive)
+  (setq py-debug-p (not py-debug-p))
+  (when (called-interactively-p 'interactive) (message "py-debug-p: %s" py-debug-p)))
+
+(make-variable-buffer-local 'py-shell-complete-p)
+
+;; (setq py-colon-labelled-re "[ \\t]*[[:graph:]]* *: *[[:graph:]]+\\|[ \\t]*[\\*-] +[[:graph:]]")
+
+;; "[ \t]+\\c.+"
+
+(setq py-symbol-re "[ \t]*\\c.+[ \t]*")
+
+(setq py-expression-skip-chars "^ [{(=#\t\r\n\f")
+
+(setq py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars "]+"))
+
+(setq py-indent-re ".+")
+
+;; (setq py-operator-re "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*")
+
+(setq py-variable-name-face 'py-variable-name-face)
+
+;; (defvar python-font-lock-keywords nil)
+
+;; Constants
+
+(setq py-block-closing-keywords-re
+  "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]*")
+
+;; (defconst py-except-re
+;;   "[ \t]*\\_<except\\_>[:( \n\t]*"
+;;   "Regular expression matching keyword which composes a try-block.")
+
+;; 'name':
+
+(setq py-else-re "else")
+
+;; (defconst py-elif-block-re "[ \t]*\\_<elif\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
+;;   "Matches the beginning of an ‘elif’ block.")
+
+;; (setq py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]")
+
+;; (defconst py-def-re "[ \t]*\\_<\\(async def\\|def\\)\\_>[ \n\t]"
+
+(defun py--arglist-indent (nesting &optional indent-offset)
+  "Internally used by ‘py-compute-indentation’"
+  (if
+      (and (eq 1 nesting)
+           (save-excursion
+             (back-to-indentation)
+             (looking-at py-extended-block-or-clause-re)))
+      (progn
+        (back-to-indentation)
+        (1+ (+ (current-column) (* 2 (or indent-offset py-indent-offset)))))
+    (+ (current-indentation) (or indent-offset py-indent-offset))))
+
+(defun py--quote-syntax (n)
+  "Put ‘syntax-table’ property correctly on triple quote.
+Used for syntactic keywords.  N is the match number (1, 2 or 3)."
+  ;; Given a triple quote, we have to check the context to know
+  ;; whether this is an opening or closing triple or whether it is
+  ;; quoted anyhow, and should be ignored.  (For that we need to do
+  ;; the same job as ‘syntax-ppss’ to be correct and it seems to be OK
+  ;; to use it here despite initial worries.) We also have to sort
+  ;; out a possible prefix -- well, we do not _have_ to, but I think it
+  ;; should be treated as part of the string.
+
+  ;; Test cases:
+  ;;  ur"""ar""" x='"' # """
+  ;; x = ''' """ ' a
+  ;; '''
+  ;; x '"""' x """ \"""" x
+  (save-excursion
+    (goto-char (match-beginning 0))
+    (cond
+     ;; Consider property for the last char if in a fenced string.
+     ((= n 3)
+      (let* ((syntax (parse-partial-sexp (point-min) (point))))
+	(when (eq t (nth 3 syntax))	; after unclosed fence
+	  (goto-char (nth 8 syntax))	; fence position
+	  ;; (skip-chars-forward "uUrR")	; skip any prefix
+	  ;; Is it a matching sequence?
+	  (if (eq (char-after) (char-after (match-beginning 2)))
+	      (eval-when-compile (string-to-syntax "|"))))))
+     ;; Consider property for initial char, accounting for prefixes.
+     ((or (and (= n 2) ; leading quote (not prefix)
+	       (not (match-end 1)))     ; prefix is null
+	  (and (= n 1) ; prefix
+	       (match-end 1)))          ; non-empty
+      (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
+	(eval-when-compile (string-to-syntax "|"))))
+     ;; Otherwise (we're in a non-matching string) the property is
+     ;; nil, which is OK.
+     )))
+
+;; (setq py--windows-config-register 313;; 465889)
+
+(put 'py-indent-offset 'safe-local-variable 'integerp)
+
+;; testing
+
+;; Pdb
+;; #62, pdb-track in a shell buffer
+
+(make-variable-buffer-local 'py-pdbtrack-do-tracking-p)
+
+ ;; PEP 318 decorators
 
 ;; subr-x.el might not exist yet
 ;; #73, Byte compilation on Emacs 25.3 fails on different trim-right signature
@@ -3924,53 +4182,6 @@ Optional argument END specify end."
 
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
-(defcustom py-empty-line-p-chars "^[ \t\r]*$"
-  "Empty-line-p-chars."
-  :type 'regexp
-  :tag "py-empty-line-p-chars"
-  :group 'python-mode)
-
-(defcustom py-default-working-directory ""
-  "If not empty used by ‘py-set-current-working-directory’."
-  :type 'string
-  :tag "py-default-working-directory"
-  :group 'python-mode)
-
-(defcustom py-python-ffap-setup-code
-  "
-def __FFAP_get_module_path(objstr):
-    try:
-        import inspect
-        import os.path
-        # NameError exceptions are delayed until this point.
-        obj = eval(objstr)
-        module = inspect.getmodule(obj)
-        filename = module.__file__
-        ext = os.path.splitext(filename)[1]
-        if ext in ('.pyc', '.pyo'):
-            # Point to the source file.
-            filename = filename[:-1]
-        if os.path.exists(filename):
-            return filename
-        return ''
-    except:
-        return ''"
-  "Python code to get a module path."
-  :type 'string
-  :tag "py-python-ffap-setup-code"
-  :group 'python-mode)
-
-;; (defvar py-ffap-string-code
-;;   "__FFAP_get_module_path('''%s''')\n"
-;;   "Python code used to get a string with the path of a module.")
-
-(defcustom py-ffap-string-code
-  "__FFAP_get_module_path('''%s''')"
-  "Python code used to get a string with the path of a module."
-  :type 'string
-  :tag "py-python-ffap-string-code"
-  :group 'python-mode)
-
 (defun py-empty-line-p ()
   "Return t if cursor is at an empty line, nil otherwise."
   (save-excursion
@@ -4017,7 +4228,6 @@ Does not delete the prompt."
       (when (or (looking-at "\"") (looking-at "[ \t]*#[ \t]*"))
         (point))))
 
-(defvar python-mode-map nil)
 (when py-org-cycle-p
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
@@ -4553,9 +4763,6 @@ thus remember ORIGLINE of source buffer"
       (setq py-error (buffer-substring-no-properties (point) (point-max))))
         py-error))
 
-(defvar py-debug-p nil
-  "Used for development purposes.")
-
 (defun py--fetch-result (buffer limit &optional cmd)
   "CMD: some shells echo the command in output-buffer
 Delete it here"
@@ -4803,11 +5010,6 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given."
       (set-buffer (get-buffer-create output-buffer)))
     (shell-command (concat pcmd " " filename) output-buffer error-buffer)
     (when py-switch-buffers-on-execute-p (switch-to-buffer output-buffer))))
-
-(defvar py-last-exeption-buffer nil
-  "Internal use only - when ‘py-up-exception’ is called.
-
-In source-buffer, this will deliver the exception-buffer again.")
 
 (defun py-remove-overlays-at-point ()
   "Remove overlays as set when ‘py-highlight-error-source-p’ is non-nil."
@@ -7951,58 +8153,7 @@ Return position if minor-block found, nil otherwise "
   (progn (beginning-of-line)(point)))
 
 ;; python-components-down.el ends here
-;; python-components-start-Zf98zM
-
-(defcustom py-mark-decorators nil
-  "If decorators should be marked too.
-
-Default is nil.
-
-Also used by navigation"
-  :type 'boolean
-  :tag "ar-mark-decorators")
-
-(defun py-end-of-string ()
-  "Go to end of string at point if any, if successful return position. "
-  (interactive)
-  (let ((pps (parse-partial-sexp (point-min) (point)))
-        (sapo (car (syntax-after (point)))))
-    (if (and (nth 3 pps)(nth 8 pps))
-        (progn (goto-char (nth 8 pps))
-               (forward-sexp))
-      (if (or (eq sapo 7) (eq sapo 15))
-          (and (skip-syntax-forward "|\"")
-               (skip-syntax-forward "^|\""))))
-    (skip-syntax-forward "|\"")))
-
-(defun py-escaped-p (&optional pos)
-    "Return t if char at POS is preceded by an odd number of backslashes. "
-    (save-excursion
-      (when pos (goto-char pos))
-      (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
-
-(defmacro py-current-line-backslashed-p ()
-  "Return t if current line is a backslashed continuation line."
-  `(save-excursion
-     (end-of-line)
-     (skip-chars-backward " \t\r\n\f")
-     (and (eq (char-before (point)) ?\\ )
-          (py-escaped-p))))
-
-(defun py--skip-to-comment-or-semicolon ()
-  "Returns position if point was moved."
-  (let ((orig (point)))
-    (cond ((while (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
-                       ;; (sit-for 1)
-                       (and (nth 8 (parse-partial-sexp (point-min) (point))) (skip-chars-forward "#;" (line-end-position)))))))
-    (and (< orig (point))(point))))
-
-(defun py--end-of-comment-intern (pos)
-  (while (and (not (eobp))
-              (forward-comment 99999)))
-  ;; forward-comment fails sometimes
-  (and (eq pos (point)) (prog1 (forward-line 1) (back-to-indentation))
-       (while (member (char-after) (list  (string-to-char comment-start) 10))(forward-line 1)(back-to-indentation))))
+;; python-components-statement
 
 (defun py-forward-statement (&optional orig done repeat)
   "Go to the last char of current statement.
@@ -8215,6 +8366,60 @@ Optional MAXINDENT: do not stop if indentation is larger"
 	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
 	  (when (< (point) orig) (point)))))))
 
+;; python-components-statement.el ends here
+;; python-components-start-Zf98zM
+
+(defcustom py-mark-decorators nil
+  "If decorators should be marked too.
+
+Default is nil.
+
+Also used by navigation"
+  :type 'boolean
+  :tag "ar-mark-decorators")
+
+(defun py-end-of-string ()
+  "Go to end of string at point if any, if successful return position. "
+  (interactive)
+  (let ((pps (parse-partial-sexp (point-min) (point)))
+        (sapo (car (syntax-after (point)))))
+    (if (and (nth 3 pps)(nth 8 pps))
+        (progn (goto-char (nth 8 pps))
+               (forward-sexp))
+      (if (or (eq sapo 7) (eq sapo 15))
+          (and (skip-syntax-forward "|\"")
+               (skip-syntax-forward "^|\""))))
+    (skip-syntax-forward "|\"")))
+
+(defun py-escaped-p (&optional pos)
+    "Return t if char at POS is preceded by an odd number of backslashes. "
+    (save-excursion
+      (when pos (goto-char pos))
+      (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
+(defmacro py-current-line-backslashed-p ()
+  "Return t if current line is a backslashed continuation line."
+  `(save-excursion
+     (end-of-line)
+     (skip-chars-backward " \t\r\n\f")
+     (and (eq (char-before (point)) ?\\ )
+          (py-escaped-p))))
+
+(defun py--skip-to-comment-or-semicolon ()
+  "Returns position if point was moved."
+  (let ((orig (point)))
+    (cond ((while (and (< 0 (abs (skip-chars-forward "^#;" (line-end-position))))
+                       ;; (sit-for 1)
+                       (and (nth 8 (parse-partial-sexp (point-min) (point))) (skip-chars-forward "#;" (line-end-position)))))))
+    (and (< orig (point))(point))))
+
+(defun py--end-of-comment-intern (pos)
+  (while (and (not (eobp))
+              (forward-comment 99999)))
+  ;; forward-comment fails sometimes
+  (and (eq pos (point)) (prog1 (forward-line 1) (back-to-indentation))
+       (while (member (char-after) (list  (string-to-char comment-start) 10))(forward-line 1)(back-to-indentation))))
+
 (defun py-backward-statement-bol ()
   "Goto beginning of line where statement start.
 Returns position reached, if successful, nil otherwise.
@@ -8239,14 +8444,6 @@ See also ‘ar-up-statement’"
   (interactive)
   (py-forward-statement)
   (py--beginning-of-line-form))
-
-;; (defun py-beginning-of-statement-p ()
-;;   (interactive)
-;;   (save-restriction
-;;     (eq (point)
-;;     (save-excursion
-;;       (py-forward-statement)
-;;       (py-backward-statement)))))
 
 (defun py-up-statement ()
   "go to the beginning of next statement upwards in buffer.
@@ -8577,7 +8774,7 @@ Arg REGEXP, a symbol"
 		 (when (py--down-according-to-indent regexp secondvalue nil t)
 		   (py--end-base regexp (point) bol (1+ repeat))))))))))
 
-;; py-start-Zf98zM.el ends here
+;; python-components-start-Zf98zM.el ends here
 ;; python-components-backward-forms
 
 (defun py-backward-region ()
@@ -14330,7 +14527,7 @@ If no further element at same level, go one level up."
 ;; If no further element at same level, go one level up."
 ;;   (interactive)
 ;;   (let (erg)
-;;     (unless (py-beginning-of-statement-p)
+;;     (unless (py--beginning-of-statement-p)
 ;;       (py-backward-statement))
 ;;     (setq erg (py-down (current-indentation)))
 ;;     erg))
