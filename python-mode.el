@@ -6,7 +6,7 @@
 
 ;; Package-Requires: ((emacs "24"))
 
-;; Author: 2015-2023 https://gitlab.com/groups/python-mode-devs
+;; Author: 2015-2025 https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
@@ -13482,7 +13482,7 @@ See also py-closing-list-dedents-bos"
          (goto-char (nth 8 pps))
          (cond ((and line (eq (current-column) (current-indentation)))
                 (current-indentation))
-               ((and (eq liep (line-end-position))py-indent-honors-inline-comment)
+               ((and (eq liep (line-end-position)) py-indent-honors-inline-comment)
                 (current-column))
                ((py--line-backward-maybe)
                 (setq line t)
