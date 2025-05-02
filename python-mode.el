@@ -1802,7 +1802,6 @@ At GNU systems see /usr/bin/python3"
 
 (defcustom py-ipython-command
   (if (eq system-type 'windows-nt)
-      ;; "ipython"
     "C:\\Python27\\python"
     ;; "C:/Python33/Lib/site-packages/IPython"
     ;; "/usr/bin/ipython"
@@ -2249,7 +2248,7 @@ Default is nil"
   :tag "py-keep-windows-configuration"
   :group 'python-mode)
 
-(defvar py-output-buffer "*Python Output*"
+(defvar py-output-buffer ""
       "Used if ‘python-mode-v5-behavior-p’ is t.
 
 Otherwise output buffer is created dynamically according to version process.")
@@ -4773,16 +4772,16 @@ thus remember ORIGLINE of source buffer"
       (setq py-error (buffer-substring-no-properties (point) (point-max))))
         py-error))
 
-(defun py--fetch-result (buffer limit &optional cmd)
+(defun py--fetch-result (buffer  &optional limit cmd)
   "CMD: some shells echo the command in output-buffer
 Delete it here"
   (when py-debug-p (message "(current-buffer): %s" (current-buffer)))
   (cond (python-mode-v5-behavior-p
 	 (with-current-buffer buffer
 	   (py--string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n")))
-	((and cmd (< limit (point-max)))
+	((and cmd limit (< limit (point-max)))
 	 (replace-regexp-in-string cmd "" (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))
-	(t (when (< limit (point-max))
+	(t (when (and limit (< limit (point-max)))
 	     (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))))
 
 (defun py--postprocess (output-buffer origline limit &optional cmd filename)
@@ -8443,7 +8442,7 @@ Unless DIRECTION is symbol \\='forward, go backward first"
   (if (and filename wholebuf (not (buffer-modified-p)))
       (py--execute-file-base filename proc nil procbuf origline fast)
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
-      (sit-for 0.1) 
+      (sit-for 0.1)
       (with-temp-buffer
 	(insert strg)
 	(write-file tempfile)
@@ -8515,24 +8514,29 @@ thus remember line of source buffer"
 		  (push (quote py-error) ecode))))))
 	py-error))))
 
-(defun py-execute-python-mode-v5 (start end origline filename)
+(defun py-execute-python-mode-v5 (start end &optional origline filename)
   "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
-  (interactive "r")
-  (let ((output-buffer "*Python Output*")
+  (interactive
+   (list (region-beginning) (region-end) (py-count-lines)(and (buffer-file-name) (buffer-file-name))))
+  (let ((python-mode-v5-behavior-p t)
+        (output-buffer "*Python Output*")
 	(py-split-window-on-execute 'just-two)
 	(pcmd (concat py-shell-name (if (string-equal py-which-bufname
                                                       "Jython")
                                         " -"
                                       ;; " -c "
-                                      ""))))
+                                      "")))
+        ;; (filename (and (buffer-file-name) (buffer-file-name)))
+        )
     (save-excursion
       (shell-command-on-region start end
                                pcmd output-buffer))
     (if (not (get-buffer output-buffer))
-        (message "No output.")
-      (setq py-result (py--fetch-result (get-buffer  output-buffer) nil))
+        (message "py-execute-python-mode-v5: No output.")
+      (setq py-result (py--fetch-result (with-temp-buffer  (get-buffer output-buffer))))
       (if (string-match "Traceback" py-result)
 	  (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
+        (when py-verbose-p (message "%s" py-result))
 	py-result))))
 
 (defun py--execute-ge24.3 (start end execute-directory which-shell &optional exception-buffer proc file origline)
@@ -8661,7 +8665,8 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
 
          ;; (split (if python-mode-v5-behavior-p 'just-two split))
          )
-    (setq py-output-buffer (or (and python-mode-v5-behavior-p py-output-buffer) (and proc (buffer-name (process-buffer proc)))
+    (setq py-output-buffer (or (and python-mode-v5-behavior-p "*Python Output*")
+                               (and proc (buffer-name (process-buffer proc)))
 			       (py--choose-buffer-name shell dedicated fast)))
     (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)))
 
@@ -8820,10 +8825,21 @@ Optional MAXINDENT: do not stop if indentation is larger"
 	  ;; (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((nth 1 pps)
-          (goto-char (1- (nth 1 pps)))
+          (if (and
+               (< (nth 1 pps) (line-beginning-position))
+               (save-excursion
+                 (beginning-of-line)
+                 (skip-chars-backward ",] \t\r\n\f")
+                 (< (nth 1 pps) (nth 1 (parse-partial-sexp (point-min) (point))))))
+              (progn
+                (beginning-of-line)
+                (skip-chars-backward ",] \t\r\n\f")
+                (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
+            (goto-char (1- (nth 1 pps))))
 	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
 	    (setq done t))
-          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+          ;; (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)
+          )
          ((py-preceding-line-backslashed-p)
           (forward-line -1)
           (back-to-indentation)
