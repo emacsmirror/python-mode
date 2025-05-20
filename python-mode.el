@@ -3638,22 +3638,6 @@ Argument ELE: a shell name, a string."
 
 ;; "/usr/bin/python3"
 
-(defun py-toggle-python-mode-v5-behavior ()
-  "Switch the values of ‘python-mode-v5-behavior-p’."
-  (interactive)
-  (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
-  (when (called-interactively-p 'interactive)
-    (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
-
-(defun py-toggle-py-verbose-p ()
-  "Switch the values of ‘py-verbose-p’.
-
-Default is nil.
-If on, messages value of ‘py-result’ for instance."
-  (interactive)
-  (setq py-verbose-p (not py-verbose-p))
-  (when (called-interactively-p 'interactive)
-    (message "py-verbose-p: %s" py-verbose-p)))
 
 (setq python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
@@ -13356,10 +13340,11 @@ LIEP stores line-end-position at point-of-interest
 		     (and (eq 11 (syntax-after (point))) line py-indent-honors-inline-comment))
 		    (py-compute-comment-indentation pps iact orig origline closing line nesting repeat indent-offset liep))
 		   ;; lists
-		   ;; ((and line (nth 1 pps))
-		   ((nth 1 pps)
+                   ;; provide for a generic mode
+                   ((and (nth 1 pps) (or (< 1 (nth 0 pps))(eq major-mode 'python-mode)))
                     (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
-		   ;; (if (< (nth 1 pps) (line-beginning-position))
+		   ;; ((nth 1 pps)
+                    ;; (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
                    ;; Compute according to ‘py-indent-list-style’
 
                    ;; Choices are:
@@ -15971,6 +15956,34 @@ Return position, nil otherwise."
 
 ;; python-components-switches
 
+
+(defun py-toggle-python-mode-v5-behavior ()
+  "Switch the values of ‘python-mode-v5-behavior-p’."
+  (interactive)
+  (setq python-mode-v5-behavior-p (not python-mode-v5-behavior-p))
+  (when (called-interactively-p 'interactive)
+    (message "python-mode-v5-behavior-p: %s" python-mode-v5-behavior-p)))
+
+(defun py-toggle-py-verbose-p ()
+  "Switch the values of ‘py-verbose-p’.
+
+Default is nil.
+If on, messages value of ‘py-result’ for instance."
+  (interactive)
+  (setq py-verbose-p (not py-verbose-p))
+  (when (called-interactively-p 'interactive)
+    (message "py-verbose-p: %s" py-verbose-p)))
+
+(defun py-switch-py-verbose-on ()
+  "Switch the value of ‘py-verbose-p’."
+  (interactive)
+  (setq py-verbose-p t))
+
+(defun py-switch-py-verbose-off ()
+  "Switch the value of ‘py-verbose-p’"
+  (interactive)
+  (setq py-verbose-p nil))
+
 ;;  Smart indentation
 (defun py-toggle-smart-indentation (&optional arg)
   "Toggle ‘py-smart-indentation’ - on with positiv ARG.
@@ -16303,7 +16316,7 @@ See bug report at launchpad, lp:940812"
 
 Valid in current session only.
 At start may be set by custom-file"
-  (interactive) 
+  (interactive)
   (setq py-closing-list-dedents-bos
 	(not py-closing-list-dedents-bos))
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
