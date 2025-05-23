@@ -101,6 +101,15 @@ Default is nil"
         (keymap-local-unset "<backspace>")
       (local-unset-key "<backspace>"))))
 
+(defvar py-comment-start-re           "[ \t]*#"
+  "Beginning of a comment")
+
+(defvar py-comment-end-re "\n"
+  "Regexp to match the end of a comment.")
+
+(defvar py-comment-start-skip-re      "#+ *"
+"Regexp to match the start of a comment plus everything up to its body.")
+
 (defvar comint-mime-setup-script-dir nil
   "Avoid compiler warning")
 
@@ -1109,6 +1118,7 @@ you're editing someone else's Python code."
   :tag "py-indent-offset"
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-offset)
+(put 'py-indent-offset 'safe-local-variable 'integerp)
 
 (defcustom py-backslashed-lines-indent-offset 5
   "Amount of offset per level of indentation of backslashed.
@@ -3029,8 +3039,6 @@ hooked into ‘compilation-error-regexp-alist’"
 
 ;; (setq py--windows-config-register 313;; 465889)
 
-(put 'py-indent-offset 'safe-local-variable 'integerp)
-
 ;; testing
 (defvar py-ert-test-default-executables
   (list "python" "python3" "ipython")
@@ -3457,8 +3465,6 @@ Default nil"
          (set-default symbol value)
          (py-electric-backspace-mode (if value 1 0))))
 
-
-
 ;; python-components-start1
 
 (require 'ansi-color)
@@ -3638,7 +3644,6 @@ Argument ELE: a shell name, a string."
 
 ;; "/usr/bin/python3"
 
-
 (setq python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
 	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
@@ -3763,10 +3768,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
-
-;; (setq py--windows-config-register 313;; 465889)
-
-(put 'py-indent-offset 'safe-local-variable 'integerp)
 
 ;; testing
 
@@ -26197,8 +26198,10 @@ VARIABLES
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'comment-use-syntax) t)
-  (set (make-local-variable 'comment-start) "#")
-  (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
+  ;; (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-start) py-comment-start-re)
+  ;; (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
+  (set (make-local-variable 'comment-start-skip) py-comment-start-skip-re)
 
   (if py-empty-comment-line-separates-paragraph-p
       (progn
@@ -26409,9 +26412,6 @@ may want to re-add custom functions to it using the
 (puthash "python-"
          (append (gethash "python" definition-prefixes) '("python-mode"))
          definition-prefixes)
-(
-provide 'python-components-foot)
 
-;;; python-components-foot.el ends here
 (provide 'python-mode)
 ;;; python-mode.el ends here
