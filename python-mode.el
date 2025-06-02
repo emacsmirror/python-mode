@@ -2619,7 +2619,12 @@ stop at it.")
 (defvar py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars (substring py-partial-expression-forward-chars 1) "]+"))
 (setq py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars "]+"))
 
-(defvar py-statement-re py-partial-expression-re)
+
+;; (defvar py-statement-re py-partial-expression-re)
+(defvar py-statement-re "[^] .=,\"'()[{}:#	
+]+" "Match beginning of a statement")
+
+
 (defvar py-indent-re ".+"
   "This var is introduced for regularity only.")
 (setq py-indent-re ".+")
@@ -4662,6 +4667,7 @@ Return and move to match-beginning if successful"
 
 (defun py--beginning-of-statement-p (&optional pps)
   "Return ‘t’, if cursor is at the beginning of a ‘statement’, nil otherwise."
+  (interactive) 
   (save-excursion
     (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
       (and (not (or (nth 8 pps) (nth 1 pps)))
@@ -13341,11 +13347,8 @@ LIEP stores line-end-position at point-of-interest
 		     (and (eq 11 (syntax-after (point))) line py-indent-honors-inline-comment))
 		    (py-compute-comment-indentation pps iact orig origline closing line nesting repeat indent-offset liep))
 		   ;; lists
-                   ;; provide for a generic mode
-                   ((and (nth 1 pps) (or (< 1 (nth 0 pps))(eq major-mode 'python-mode)))
+		   ((nth 1 pps)
                     (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
-		   ;; ((nth 1 pps)
-                    ;; (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
                    ;; Compute according to ‘py-indent-list-style’
 
                    ;; Choices are:
@@ -15975,13 +15978,13 @@ If on, messages value of ‘py-result’ for instance."
   (when (called-interactively-p 'interactive)
     (message "py-verbose-p: %s" py-verbose-p)))
 
-(defun py-switch-py-verbose-on ()
-  "Switch the value of ‘py-verbose-p’."
+(defun py-verbose-on ()
+  "Switch the value of ‘py-verbose-p’ on."
   (interactive)
   (setq py-verbose-p t))
 
-(defun py-switch-py-verbose-off ()
-  "Switch the value of ‘py-verbose-p’"
+(defun py-verbose-off ()
+  "Switch the value of ‘py-verbose-p’ off."
   (interactive)
   (setq py-verbose-p nil))
 
