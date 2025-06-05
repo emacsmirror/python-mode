@@ -5931,12 +5931,10 @@ process buffer for a list of commands.)"
           (when py-register-shell-buffer-p
             (save-excursion
               (save-restriction
-                (delete-other-windows)
 	        (with-current-buffer buffer
-                  (switch-to-buffer (current-buffer))
+                  (switch-to-buffer (current-buffer)) 
                   (goto-char (point-max))
                   (sit-for 0.1) 
-                  ;; (funcall 'window-configuration-to-register 121)))))
                   (funcall 'window-configuration-to-register py-register-char)
                   ))))
 	  (unless fast (py-shell-mode))
@@ -8761,7 +8759,8 @@ REPEAT - count and consider repeats"
 	;; (setq done t)
 	(py-forward-statement orig done repeat))
        ((eq (current-indentation) (current-column))
-	(setq done (< 0 (abs (py--skip-to-comment-or-semicolon))))
+        ;; ‘py--skip-to-comment-or-semicolon’ may return nil
+	(setq done (ignore-errors (< 0 (ignore-errors (abs (py--skip-to-comment-or-semicolon))))))
         (and done (skip-chars-backward " \t\r\n\f"))
 	(setq pps (parse-partial-sexp orig (point)))
 	(if (nth 1 pps)
@@ -16333,6 +16332,16 @@ At start may be set by custom-file"
   (setq py-closing-list-dedents-bos
 	(not py-closing-list-dedents-bos))
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
+
+(defun py-toggle-py-register-shell-buffer-p ()
+  "Toggle var py-register-shell-buffer-p.
+
+Valid in current session only.
+At start may be set by custom-file"
+  (interactive)
+  (setq py-register-shell-buffer-p
+	(not py-register-shell-buffer-p))
+  (when (or py-verbose-p (called-interactively-p 'any)) (message "py-register-shell-buffer-p: %s" py-register-shell-buffer-p)))
 
 ;; python-components-edit
 
