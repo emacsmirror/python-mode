@@ -2473,8 +2473,8 @@ or ‘py-ipython0.11-completion-command-string’.
           (if (funcall ok py-custom-temp-directory)
               (setq erg (expand-file-name py-custom-temp-directory))
             (if (file-directory-p (expand-file-name py-custom-temp-directory))
-                (error "Py-custom-temp-directory set but not writable")
-              (error "Py-custom-temp-directory not an existing directory"))))
+                (error "py-custom-temp-directory set but not writable")
+              (error "py-custom-temp-directory not an existing directory"))))
      (and (funcall ok (getenv "TMPDIR"))
           (setq erg (getenv "TMPDIR")))
      (and (funcall ok (getenv "TEMP/TMP"))
@@ -3022,7 +3022,7 @@ Customizing ‘py-block-or-clause-re-raw’  will change values here")
     (,(rx line-start "> " (group (1+ (not (any "(\"<"))))
           "(" (group (1+ digit)) ")" (1+ (not (any "("))) "()")
      1 2))
-  "Fetch errors from Py-shell.
+  "Fetch errors from py-shell.
 hooked into ‘compilation-error-regexp-alist’"
   :type '(alist string)
   :tag "py-compilation-regexp-alist"
@@ -12839,7 +12839,7 @@ Receives a ‘buffer-name’ as argument"
   "Guess the ‘buffer-name’ core string according to ARGPROMPT DEDICATED."
   (when (and (not dedicated) argprompt
 	     (eq 4 (prefix-numeric-value argprompt)))
-    (read-buffer "Py-Shell buffer: "
+    (read-buffer "py-Shell buffer: "
 		 (generate-new-buffer-name (py--choose-buffer-name)))))
 
 (defun py--configured-shell (name)
@@ -19590,7 +19590,7 @@ See also ‘py-execute-directory’Use `M-x customize-variable' to set it perman
 		 (not py-fileless-buffer-use-default-directory-p))
 	   :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-fileless-buffer-use-default-directory-p])
-         ["Py-electric-backspace-mode" py-electric-backspace-mode
+         ["py-electric-backspace-mode" py-electric-backspace-mode
 	  :help " ‘py-electric-backspace-mode’
 If <backspace> key deletes one or more of whitespace chars left from point .
 Default is nil."
@@ -19695,7 +19695,7 @@ set it permanently"
 See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it permanently"
 	  :style toggle :selected py-edit-only-p])))
       ("Other"
-       ["Py-electric-backspace-mode" py-electric-backspace-mode
+       ["py-electric-backspace-mode" py-electric-backspace-mode
 	:help " ‘py-electric-backspace-mode’
 If <backspace> key deletes one or more of whitespace chars left from point ."]
        ["Boolswitch" py-boolswitch
@@ -19938,8 +19938,8 @@ Default is t")
      ;; (easy-menu-define py-menu map "Python Tools"
      ;;           `("PyTools"
      (easy-menu-define
-       py-shell-menu py-shell-mode-map "Py-Shell Mode menu"
-       `("Py-Shell"
+       py-shell-menu py-shell-mode-map "py-Shell Mode menu"
+       `("py-Shell"
          ("Edit"
           ("Shift"
            ("Shift right"
@@ -26137,54 +26137,6 @@ Setup code specific to ‘py-shell-mode’."
 
 (defun all-mode-setting ()
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
-  )
-
-(defun py--update-version-dependent-keywords ()
-  (let ((kw-py2 '(("\\<print\\>" . 'font-lock-keyword-face)
-                  ("\\<file\\>" . 'py-builtins-face)))
-        (kw-py3 '(("\\<print\\>" . 'py-builtins-face))))
-    (font-lock-remove-keywords 'python-mode kw-py3)
-    (font-lock-remove-keywords 'python-mode kw-py2)
-    ;; avoid to run py-choose-shell again from ‘py--fix-start’
-    (cond ((string-match "ython3" py-python-edit-version)
-           (font-lock-add-keywords 'python-mode kw-py3 t))
-          (t (font-lock-add-keywords 'python-mode kw-py2 t)))))
-
-(define-derived-mode python-mode prog-mode python-mode-modeline-display
-  "Major mode for editing Python files.
-
-To submit a report, enter ‘\\[py-submit-bug-report]’
-from a‘python-mode’ buffer.
-Do ‘\\[py-describe-mode]’ for detailed documentation.
-To see what version of ‘python-mode’ you are running,
-enter ‘\\[py-version]’.
-
-This mode knows about Python indentation,
-tokens, comments (and continuation lines.
-Paragraphs are separated by blank lines only.
-
-COMMANDS
-
-‘py-shell’\tStart an interactive Python interpreter in another window
-‘py-execute-statement’\tSend statement at point to Python default interpreter
-‘py-backward-statement’\tGo to the initial line of a simple statement
-
-etc.
-
-See available commands listed in files commands-python-mode at directory doc
-
-VARIABLES
-
-‘py-indent-offset’	indentation increment
-‘py-shell-name’		shell command to invoke Python interpreter
-‘py-split-window-on-execute’		When non-nil split windows
-‘py-switch-buffers-on-execute-p’	When non-nil switch to the Python output buffer
-
-\\{python-mode-map}"
-  :group 'python-mode
-  ;; load known shell listed in
-  ;; Local vars
-  (all-mode-setting)
   (set (make-local-variable 'electric-indent-inhibit) nil)
   (set (make-local-variable 'outline-regexp)
        (concat (mapconcat 'identity
@@ -26321,6 +26273,53 @@ VARIABLES
   (when py-use-menu-p
     (py-define-menu python-mode-map))
   (force-mode-line-update))
+
+(defun py--update-version-dependent-keywords ()
+  (let ((kw-py2 '(("\\<print\\>" . 'font-lock-keyword-face)
+                  ("\\<file\\>" . 'py-builtins-face)))
+        (kw-py3 '(("\\<print\\>" . 'py-builtins-face))))
+    (font-lock-remove-keywords 'python-mode kw-py3)
+    (font-lock-remove-keywords 'python-mode kw-py2)
+    ;; avoid to run py-choose-shell again from ‘py--fix-start’
+    (cond ((string-match "ython3" py-python-edit-version)
+           (font-lock-add-keywords 'python-mode kw-py3 t))
+          (t (font-lock-add-keywords 'python-mode kw-py2 t)))))
+
+(define-derived-mode python-mode prog-mode python-mode-modeline-display
+  "Major mode for editing Python files.
+
+To submit a report, enter ‘\\[py-submit-bug-report]’
+from a‘python-mode’ buffer.
+Do ‘\\[py-describe-mode]’ for detailed documentation.
+To see what version of ‘python-mode’ you are running,
+enter ‘\\[py-version]’.
+
+This mode knows about Python indentation,
+tokens, comments (and continuation lines.
+Paragraphs are separated by blank lines only.
+
+COMMANDS
+
+‘py-shell’\tStart an interactive Python interpreter in another window
+‘py-execute-statement’\tSend statement at point to Python default interpreter
+‘py-backward-statement’\tGo to the initial line of a simple statement
+
+etc.
+
+See available commands listed in files commands-python-mode at directory doc
+
+VARIABLES
+
+‘py-indent-offset’	indentation increment
+‘py-shell-name’		shell command to invoke Python interpreter
+‘py-split-window-on-execute’		When non-nil split windows
+‘py-switch-buffers-on-execute-p’	When non-nil switch to the Python output buffer
+
+\\{python-mode-map}"
+  :group 'python-mode
+  ;; load known shell listed in
+  ;; Local vars
+  (all-mode-setting))
 
 (define-derived-mode py-shell-mode comint-mode py-modeline-display
   "Major mode for Python shell process.
