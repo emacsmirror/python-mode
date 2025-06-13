@@ -552,7 +552,7 @@ Any non-integer value means do not use a different value of
 Any non-integer value means do not use a different value of
 ‘fill-column’ when filling docstrings."
   :type '(choice (integer)
-		 (const :tag "Use the current ‘fill-column’" t))
+                 (const :tag "Use the current ‘fill-column’" t))
   :tag "py-comment-fill-column"
   :group 'python-mode)
 
@@ -1008,7 +1008,7 @@ Normally ‘python-mode’ knows best which function to use."
           (const :tag "Pymacs and company based py-complete" py-complete)
           (const :tag "py-shell-complete" py-shell-complete)
           (const :tag "py-indent-or-complete" py-indent-or-complete)
-	  (const :tag "py-fast-complete" py-fast-complete)
+          (const :tag "py-fast-complete" py-fast-complete)
           )
   :tag "py-complete-function"
   :group 'python-mode)
@@ -1268,10 +1268,10 @@ Edit for your needs."
 
 (defcustom py-known-shells-extended-commands
   (list "ipython"
-	"python"
-	"python3"
-	"pypy"
-	)
+        "python"
+        "python3"
+        "pypy"
+        )
   "A list of shells for finer grained commands.
 like ‘py-execute-statement-ipython’
 Expects its executables installed
@@ -1496,38 +1496,38 @@ It should not contain a caret (^) at the beginning.")
 
 (defvar py-shell-prompt-regexp
   (concat "\\("
-	  (mapconcat 'identity
-		     (delq nil
-			   (list
-			    py-shell-input-prompt-1-regexp
-			    py-shell-input-prompt-2-regexp
-			    py-ipython-input-prompt-re
-			    py-ipython-output-prompt-re
-			    py-pdbtrack-input-prompt
-			    py-pydbtrack-input-prompt
-			    "[.]\\{3,\\}:? *"
-			    ))
-		     "\\|")
-	  "\\)")
+          (mapconcat 'identity
+                     (delq nil
+                           (list
+                            py-shell-input-prompt-1-regexp
+                            py-shell-input-prompt-2-regexp
+                            py-ipython-input-prompt-re
+                            py-ipython-output-prompt-re
+                            py-pdbtrack-input-prompt
+                            py-pydbtrack-input-prompt
+                            "[.]\\{3,\\}:? *"
+                            ))
+                     "\\|")
+          "\\)")
   "Internally used by ‘py-fast-filter’.
 ‘ansi-color-filter-apply’ might return
 Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
 
 (defvar py-fast-filter-re
   (concat "\\("
-	  (mapconcat 'identity
-		     (delq nil
-			   (list
-			    py-shell-input-prompt-1-regexp
-			    py-shell-input-prompt-2-regexp
-			    py-ipython-input-prompt-re
-			    py-ipython-output-prompt-re
-			    py-pdbtrack-input-prompt
-			    py-pydbtrack-input-prompt
-			    "[.]\\{3,\\}:? *"
-			    ))
-		     "\\|")
-	  "\\)")
+          (mapconcat 'identity
+                     (delq nil
+                           (list
+                            py-shell-input-prompt-1-regexp
+                            py-shell-input-prompt-2-regexp
+                            py-ipython-input-prompt-re
+                            py-ipython-output-prompt-re
+                            py-pdbtrack-input-prompt
+                            py-pydbtrack-input-prompt
+                            "[.]\\{3,\\}:? *"
+                            ))
+                     "\\|")
+          "\\)")
   "Internally used by ‘py-fast-filter’.
 ‘ansi-color-filter-apply’ might return
 Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"")
@@ -1550,19 +1550,19 @@ Setting this variable will only effect new shells."
 
 (setq py-fast-filter-re
   (concat "\\("
-	  (mapconcat 'identity
-		     (delq nil
-			   (list
-			    py-shell-input-prompt-1-regexp
-			    py-shell-input-prompt-2-regexp
-			    py-ipython-input-prompt-re
-			    py-ipython-output-prompt-re
-			    py-pdbtrack-input-prompt
-			    py-pydbtrack-input-prompt
-			    "[.]\\{3,\\}:? *"
-			    ))
-		     "\\|")
-	  "\\)"))
+          (mapconcat 'identity
+                     (delq nil
+                           (list
+                            py-shell-input-prompt-1-regexp
+                            py-shell-input-prompt-2-regexp
+                            py-ipython-input-prompt-re
+                            py-ipython-output-prompt-re
+                            py-pdbtrack-input-prompt
+                            py-pydbtrack-input-prompt
+                            "[.]\\{3,\\}:? *"
+                            ))
+                     "\\|")
+          "\\)"))
 
 (defcustom py-honor-IPYTHONDIR-p nil
   "When non-nil ipython-history file is constructed by $IPYTHONDIR.
@@ -1632,7 +1632,7 @@ visible, open them manually and set ‘py-keep-windows-configuration’ to t.
 See also ‘py-keep-windows-configuration’"
   :type `(choice
           (const :tag "default" just-two)
-	  (const :tag "reuse" t)
+          (const :tag "reuse" t)
           (const :tag "no split" nil)
           (const :tag "always" always))
   :tag "py-split-window-on-execute"
@@ -1663,7 +1663,7 @@ INPUT will leave output unfontified.
 At any case only current input gets fontified."
   :type '(choice (const :tag "Default" all)
                  (const :tag "Input" input)
-		 (const :tag "Nil" nil)
+                 (const :tag "Nil" nil)
                  )
   :tag "py-shell-fontify-p"
   :group 'python-mode)
@@ -1838,7 +1838,7 @@ Else /usr/bin/ipython"
       '("-i" "C:\\Python27\\Scripts\\ipython-script.py")
     ;; --simple-prompt seems to exist from IPython 5.
     (if (string-match "^[0-4]" (ignore-errors (shell-command-to-string (concat "ipython" " -V"))))
-	'("--pylab" "--automagic")
+        '("--pylab" "--automagic")
       '("--pylab" "--automagic" "--simple-prompt")))
   "String arguments to be used when starting a IPython shell.
 
@@ -2093,12 +2093,12 @@ Use the following as the value of this variable:
 (defcustom py--imenu-create-index-function 'py--imenu-index
   "Switch between ‘py--imenu-create-index-new’  and series 5. index-machine."
   :type '(choice
-	  (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
+          (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
 
-	  (const :tag "py--imenu-create-index, series 5. index-machine" py--imenu-create-index)
-	  (const :tag "py--imenu-index, honor type annotations" py--imenu-index)
+          (const :tag "py--imenu-create-index, series 5. index-machine" py--imenu-create-index)
+          (const :tag "py--imenu-index, honor type annotations" py--imenu-index)
 
-	  )
+          )
   :tag "py--imenu-create-index-function"
   :group 'python-mode)
 
@@ -2396,7 +2396,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
 ;; defvared value is not updated maybe
 (defvar python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
-	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
+          (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
     "python-components-mode")
   "Internally used. Reports the ‘python-mode’ branch.")
@@ -2404,7 +2404,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
 ;; defvared value is not updated maybe
 (setq python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
-	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
+          (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
     "python-components-mode"))
 
@@ -2621,7 +2621,7 @@ stop at it.")
 
 
 ;; (defvar py-statement-re py-partial-expression-re)
-(defvar py-statement-re "[^] .=,\"'()[{}:#	
+(defvar py-statement-re "[^] .=,\"'()[{}:#      
 ]+" "Match beginning of a statement")
 
 
@@ -2824,23 +2824,23 @@ See ‘py-no-outdent-re-raw’ for better readable content")
   :group 'python-mode)
 
 (defconst py-block-re (concat
-		       ;; "[ \t]*"
-		       (regexp-opt py-block-re-raw 'symbols)
-		       ".*[:( \n\t]"
-		       )
+                       ;; "[ \t]*"
+                       (regexp-opt py-block-re-raw 'symbols)
+                       ".*[:( \n\t]"
+                       )
   "Matches the beginning of a compound statement.")
 
 (defconst py-minor-block-re-raw (list
-				      "async for"
-				      "async with"
+                                      "async for"
+                                      "async with"
                                       "case"
-				      "except"
-				      "for"
-				      "if"
+                                      "except"
+                                      "for"
+                                      "if"
                                       "match"
-				      "try"
-				      "with"
-				      )
+                                      "try"
+                                      "with"
+                                      )
   "Matches the beginning of an case ‘for’, ‘if’, ‘try’, ‘except’ or ‘with’ block.")
 
 (defconst py-minor-block-re
@@ -3599,10 +3599,10 @@ With optional ARG message state switched to"
 
 Argument ELE: a shell name, a string."
   (cond ((string-match "^i" ele)
-	 (concat "I" (capitalize (substring ele 1))))
-	((string-match "^pypy" ele)
-	 "PyPy")
-	(t (capitalize ele))))
+         (concat "I" (capitalize (substring ele 1))))
+        ((string-match "^pypy" ele)
+         "PyPy")
+        (t (capitalize ele))))
 
 (make-variable-buffer-local 'py-master-file)
 
@@ -3612,19 +3612,19 @@ Argument ELE: a shell name, a string."
 
 (setq py-fast-filter-re
   (concat "\\("
-	  (mapconcat 'identity
-		     (delq nil
-			   (list
-			    py-shell-input-prompt-1-regexp
-			    py-shell-input-prompt-2-regexp
-			    py-ipython-input-prompt-re
-			    py-ipython-output-prompt-re
-			    py-pdbtrack-input-prompt
-			    py-pydbtrack-input-prompt
-			    "[.]\\{3,\\}:? *"
-			    ))
-		     "\\|")
-	  "\\)"))
+          (mapconcat 'identity
+                     (delq nil
+                           (list
+                            py-shell-input-prompt-1-regexp
+                            py-shell-input-prompt-2-regexp
+                            py-ipython-input-prompt-re
+                            py-ipython-output-prompt-re
+                            py-pdbtrack-input-prompt
+                            py-pydbtrack-input-prompt
+                            "[.]\\{3,\\}:? *"
+                            ))
+                     "\\|")
+          "\\)"))
 
 ;; made buffer-local as pdb might need t in all circumstances
 (make-variable-buffer-local 'py-switch-buffers-on-execute-p)
@@ -3651,7 +3651,7 @@ Argument ELE: a shell name, a string."
 
 (setq python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
-	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
+          (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
     "python-components-mode"))
 
@@ -3757,19 +3757,19 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
      ;; Consider property for the last char if in a fenced string.
      ((= n 3)
       (let* ((syntax (parse-partial-sexp (point-min) (point))))
-	(when (eq t (nth 3 syntax))	; after unclosed fence
-	  (goto-char (nth 8 syntax))	; fence position
-	  ;; (skip-chars-forward "uUrR")	; skip any prefix
-	  ;; Is it a matching sequence?
-	  (if (eq (char-after) (char-after (match-beginning 2)))
-	      (eval-when-compile (string-to-syntax "|"))))))
+        (when (eq t (nth 3 syntax))     ; after unclosed fence
+          (goto-char (nth 8 syntax))    ; fence position
+          ;; (skip-chars-forward "uUrR")        ; skip any prefix
+          ;; Is it a matching sequence?
+          (if (eq (char-after) (char-after (match-beginning 2)))
+              (eval-when-compile (string-to-syntax "|"))))))
      ;; Consider property for initial char, accounting for prefixes.
      ((or (and (= n 2) ; leading quote (not prefix)
-	       (not (match-end 1)))     ; prefix is null
-	  (and (= n 1) ; prefix
-	       (match-end 1)))          ; non-empty
+               (not (match-end 1)))     ; prefix is null
+          (and (= n 1) ; prefix
+               (match-end 1)))          ; non-empty
       (unless (eq 'string (syntax-ppss-context (parse-partial-sexp (point-min) (point))))
-	(eval-when-compile (string-to-syntax "|"))))
+        (eval-when-compile (string-to-syntax "|"))))
      ;; Otherwise (we're in a non-matching string) the property is
      ;; nil, which is OK.
      )))
@@ -3815,21 +3815,21 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 If succesful, returns beginning of docstring position in buffer"
   (save-excursion
     (let ((erg
-	   (progn
-	     (goto-char pos)
-	     (and (looking-at "\"\"\"\\|'''")
-		  ;; https://github.com/swig/swig/issues/889
-		  ;; def foo(rho, x):
-		  ;;     r"""Calculate :math:`D^\nu \rho(x)`."""
-		  ;;     return True
-		  (if (py--at-raw-string)
-		      (progn
-			(forward-char -1)
-			(point))
-		    (point))))))
+           (progn
+             (goto-char pos)
+             (and (looking-at "\"\"\"\\|'''")
+                  ;; https://github.com/swig/swig/issues/889
+                  ;; def foo(rho, x):
+                  ;;     r"""Calculate :math:`D^\nu \rho(x)`."""
+                  ;;     return True
+                  (if (py--at-raw-string)
+                      (progn
+                        (forward-char -1)
+                        (point))
+                    (point))))))
       (when (and erg (py-backward-statement))
-	(when (or (bobp) (looking-at py-def-or-class-re)(looking-at "\\_<__[[:alnum:]_]+__\\_>"))
-	  erg)))))
+        (when (or (bobp) (looking-at py-def-or-class-re)(looking-at "\\_<__[[:alnum:]_]+__\\_>"))
+          erg)))))
 
 (defun py--font-lock-syntactic-face-function (state)
   "STATE expected as result von (parse-partial-sexp (point-min) (point)."
@@ -3886,7 +3886,7 @@ Select Python executable according to version desplayed in path.
 Returns versioned string, nil if nothing appropriate found"
   (interactive)
   (let ((path (py--buffer-filename-remote-maybe))
-	(separator-char (or separator-char py-separator-char))
+        (separator-char (or separator-char py-separator-char))
                 erg)
     (when (and path separator-char
                (string-match (concat separator-char "[iI]?[pP]ython[0-9.]+" separator-char) path))
@@ -3900,7 +3900,7 @@ Returns versioned string, nil if nothing appropriate found"
 Optional argument SHELL selected shell."
   (interactive)
   (let* ((cmd (or shell (py-choose-shell)))
-	 (treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
+         (treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
          version erg)
     (if treffer
         ;; if a number if part of python name, assume its the version
@@ -3955,37 +3955,37 @@ Return nil, if no executable found."
   ;; org-babel uses ‘py-toggle-shells’ with arg, just return it
   (or shell
       (let* (done
-	     (erg
-	      (cond ((and py-shell-name (executable-find py-shell-name))
+             (erg
+              (cond ((and py-shell-name (executable-find py-shell-name))
                      py-shell-name)
                     (py-force-py-shell-name-p
-		     (default-value 'py-shell-name))
-		    (py-use-local-default
-		     (if (not (string= "" py-shell-local-path))
-			 (expand-file-name py-shell-local-path)
-		       (message "Abort: ‘py-use-local-default’ is set to ‘t’ but ‘py-shell-local-path’ is empty. Maybe call ‘py-toggle-local-default-use’")))
-		    ((and (not py-fast-process-p)
-			  (comint-check-proc (current-buffer))
-			  (setq done t)
-			  (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
-		     (py--cleanup-process-name (process-name (get-buffer-process (current-buffer)))))
-		    ((py-choose-shell-by-shebang))
-		    ((py--choose-shell-by-import))
-		    ((py-choose-shell-by-path))
-		    (t (or
+                     (default-value 'py-shell-name))
+                    (py-use-local-default
+                     (if (not (string= "" py-shell-local-path))
+                         (expand-file-name py-shell-local-path)
+                       (message "Abort: ‘py-use-local-default’ is set to ‘t’ but ‘py-shell-local-path’ is empty. Maybe call ‘py-toggle-local-default-use’")))
+                    ((and (not py-fast-process-p)
+                          (comint-check-proc (current-buffer))
+                          (setq done t)
+                          (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+                     (py--cleanup-process-name (process-name (get-buffer-process (current-buffer)))))
+                    ((py-choose-shell-by-shebang))
+                    ((py--choose-shell-by-import))
+                    ((py-choose-shell-by-path))
+                    (t (or
                         (and py-python-command (executable-find py-python-command) py-python-command)
-			"python3"))))
-	     (cmd (if (or
-		       ;; comint-check-proc was succesful
-		       done
-		       py-edit-only-p)
-		      erg
-		    (executable-find erg))))
-	(if cmd
-	    (when (called-interactively-p 'any)
-	      (message "%s" cmd))
-	  (when (called-interactively-p 'any) (message "%s" "Could not detect Python on your system. Maybe set ‘py-edit-only-p’?")))
-	erg)))
+                        "python3"))))
+             (cmd (if (or
+                       ;; comint-check-proc was succesful
+                       done
+                       py-edit-only-p)
+                      erg
+                    (executable-find erg))))
+        (if cmd
+            (when (called-interactively-p 'any)
+              (message "%s" cmd))
+          (when (called-interactively-p 'any) (message "%s" "Could not detect Python on your system. Maybe set ‘py-edit-only-p’?")))
+        erg)))
 
 (defun py--normalize-directory (directory)
   "Make sure DIRECTORY ends with a file-path separator char.
@@ -4004,7 +4004,7 @@ Returns PYTHONPATH"
                     pythonpath)
                    ((not (string= "" pythonpath))
                     (concat pythonpath path-separator))
-		   (t pythonpath))))
+                   (t pythonpath))))
     erg))
 
 (defun py-install-directory-check ()
@@ -4033,23 +4033,23 @@ Returns t if successful."
 Used only, if ‘py-install-directory’ is empty."
   (interactive)
   (cond (;; do not reset if it already exists
-	 py-install-directory)
+         py-install-directory)
         ;; ((locate-library "python-mode")
-	;;  (file-name-directory (locate-library "python-mode")))
-	((ignore-errors (string-match "python-mode" (py--buffer-filename-remote-maybe)))
-	 (file-name-directory (py--buffer-filename-remote-maybe)))
+        ;;  (file-name-directory (locate-library "python-mode")))
+        ((ignore-errors (string-match "python-mode" (py--buffer-filename-remote-maybe)))
+         (file-name-directory (py--buffer-filename-remote-maybe)))
         (t (if
-	       (and (get-buffer "python-mode.el")
-		    (set-buffer (get-buffer "python-mode.el"))
-		    ;; (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-mode.el")))))
-		    (buffer-file-name (get-buffer  "python-mode.el")))
-	       (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))
-	     (if
-		 (and (get-buffer "python-components-mode.el")
-		      (set-buffer (get-buffer "python-components-mode.el"))
-		      (buffer-file-name (get-buffer  "python-components-mode.el")))
-		 (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el"))))))
-	   )))
+               (and (get-buffer "python-mode.el")
+                    (set-buffer (get-buffer "python-mode.el"))
+                    ;; (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-mode.el")))))
+                    (buffer-file-name (get-buffer  "python-mode.el")))
+               (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))
+             (if
+                 (and (get-buffer "python-components-mode.el")
+                      (set-buffer (get-buffer "python-components-mode.el"))
+                      (buffer-file-name (get-buffer  "python-components-mode.el")))
+                 (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el"))))))
+           )))
 
 (defun py--fetch-pythonpath ()
   "Consider settings of ‘py-pythonpath’."
@@ -4115,7 +4115,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (interactive)
   (let ((install-directory (py--normalize-directory py-install-directory)))
     (if py-install-directory
-	(cond ((and (not (string= "" install-directory))(stringp install-directory))
+        (cond ((and (not (string= "" install-directory))(stringp install-directory))
                (push (expand-file-name install-directory) load-path)
                (push (concat (expand-file-name install-directory) "completion")  load-path)
                (push (concat (expand-file-name install-directory) "extensions")  load-path)
@@ -4134,17 +4134,17 @@ Optional argument END specify end."
   (interactive)
   (save-excursion
     (let ((count 0)
-	  (beg (or beg (point-min)))
-	  (end (or end (point))))
+          (beg (or beg (point-min)))
+          (end (or end (point))))
       (save-match-data
-	(if (or (eq major-mode 'comint-mode)
-		(eq major-mode 'py-shell-mode))
-	    (if
-		(re-search-backward py-shell-prompt-regexp nil t 1)
-		(goto-char (match-end 0))
-	      ;; (when py-debug-p (message "%s"  "py-count-lines: Do not see a prompt here"))
-	      (goto-char beg))
-	  (goto-char beg)))
+        (if (or (eq major-mode 'comint-mode)
+                (eq major-mode 'py-shell-mode))
+            (if
+                (re-search-backward py-shell-prompt-regexp nil t 1)
+                (goto-char (match-end 0))
+              ;; (when py-debug-p (message "%s"  "py-count-lines: Do not see a prompt here"))
+              (goto-char beg))
+          (goto-char beg)))
       (while (and (< (point) end)(not (eobp)) (skip-chars-forward "^\n" end))
         (setq count (1+ count))
         (unless (or (not (< (point) end)) (eobp)) (forward-char 1)
@@ -4159,10 +4159,10 @@ Optional argument END specify end."
     (save-excursion
       (goto-char start)
       (while (and (not (eobp)) (< 0 (abs (skip-chars-forward "^\"" end))))
-	(when (eq (char-after) ?\")
-	  (unless (py-escaped-p)
-	    (insert "\\")
-	    (forward-char 1)))))))
+        (when (eq (char-after) ?\")
+          (unless (py-escaped-p)
+            (insert "\\")
+            (forward-char 1)))))))
 
 (defun py--escape-open-paren-col1 (start end)
   "Start from position START until position END."
@@ -4192,17 +4192,17 @@ With optional ARG message state switched to"
 Does not delete the prompt."
   (interactive)
   (let ((proc (get-buffer-process (current-buffer)))
-	(replacement nil)
-	(inhibit-read-only t))
+        (replacement nil)
+        (inhibit-read-only t))
     (save-excursion
       (let ((pmark (progn (goto-char (process-mark proc))
-			  (forward-line 0)
-			  (point-marker))))
-	(delete-region comint-last-input-end pmark)
-	(goto-char (process-mark proc))
-	(setq replacement (concat "*** output flushed ***\n"
-				  (buffer-substring pmark (point))))
-	(delete-region pmark (point))))
+                          (forward-line 0)
+                          (point-marker))))
+        (delete-region comint-last-input-end pmark)
+        (goto-char (process-mark proc))
+        (setq replacement (concat "*** output flushed ***\n"
+                                  (buffer-substring pmark (point))))
+        (delete-region pmark (point))))
     ;; Output message and put back prompt
     (comint-output-filter proc replacement)))
 
@@ -4291,13 +4291,13 @@ Expects START position of string
 Return position of moved, nil otherwise."
   (let ((orig (point)))
     (when start (goto-char start)
-	  (when (looking-at "\"\"\"\\|'''")
-	    (goto-char (1- (match-end 0)))
-	    (forward-sexp))
-	  ;; maybe at the inner fence
-	  (when (looking-at "\"\"\\|''")
-	    (goto-char (match-end 0)))
-	  (and (< orig (point)) (point)))))
+          (when (looking-at "\"\"\"\\|'''")
+            (goto-char (1- (match-end 0)))
+            (forward-sexp))
+          ;; maybe at the inner fence
+          (when (looking-at "\"\"\\|''")
+            (goto-char (match-end 0)))
+          (and (< orig (point)) (point)))))
 
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
@@ -4329,19 +4329,19 @@ These are Python temporary files awaiting execution."
 (defun py--update-lighter (shell)
   "Select lighter for mode-line display"
   (setq py-modeline-display
-	(cond
-	 ;; ((eq 2 (prefix-numeric-value argprompt))
-	 ;; py-python2-command-args)
-	 ((string-match "^[^-]+3" shell)
-	  py-python3-modeline-display)
-	 ((string-match "^[^-]+2" shell)
-	  py-python2-modeline-display)
-	 ((string-match "^.[Ii]" shell)
-	  py-ipython-modeline-display)
-	 ((string-match "^.[Jj]" shell)
-	  py-jython-modeline-display)
-	 (t
-	  python-mode-modeline-display))))
+        (cond
+         ;; ((eq 2 (prefix-numeric-value argprompt))
+         ;; py-python2-command-args)
+         ((string-match "^[^-]+3" shell)
+          py-python3-modeline-display)
+         ((string-match "^[^-]+2" shell)
+          py-python2-modeline-display)
+         ((string-match "^.[Ii]" shell)
+          py-ipython-modeline-display)
+         ((string-match "^.[Jj]" shell)
+          py-jython-modeline-display)
+         (t
+          python-mode-modeline-display))))
 
 ;;  bottle.py
 ;;  py   = sys.version_info
@@ -4489,12 +4489,12 @@ as it leaves your system default unchanged."
 Start from POS if specified"
   (interactive)
   (let ((erg pos)
-	last)
+        last)
     (when erg (goto-char erg))
     (while (and (not (bobp)) (setq erg (py-in-comment-p)))
       (when (< erg (point))
-	(goto-char erg)
-	(setq last (point)))
+        (goto-char erg)
+        (setq last (point)))
       (skip-chars-backward " \t\r\n\f"))
     (when last (goto-char last))
     last))
@@ -4511,11 +4511,11 @@ From a programm use macro ‘py-backward-comment’ instead"
 (defun py--up-decorators-maybe (indent)
   (let ((last (point)))
     (while (and (not (bobp))
-		(py-backward-statement)
-		(eq (current-indentation) indent)
-		(if (looking-at py-decorator-re)
-		    (progn (setq last (point)) nil)
-		  t)))
+                (py-backward-statement)
+                (eq (current-indentation) indent)
+                (if (looking-at py-decorator-re)
+                    (progn (setq last (point)) nil)
+                  t)))
     (goto-char last)))
 
 (defun py-leave-comment-or-string-backward ()
@@ -4536,15 +4536,15 @@ Returns position if succesful"
   (interactive)
   (let ((orig (point)))
     (unless (bobp) (forward-line -1)
-	    (back-to-indentation)
-	    (while (and (progn (looking-at "@\\w+")(not (looking-at "\\w+")))
-			(not
-			 ;; (py-empty-line-p)
-			 (member (char-after) (list 9 10)))
-			(not (bobp))(forward-line -1))
-	      (back-to-indentation))
-	    (or (and (looking-at "@\\w+") (match-beginning 0))
-		(goto-char orig)))))
+            (back-to-indentation)
+            (while (and (progn (looking-at "@\\w+")(not (looking-at "\\w+")))
+                        (not
+                         ;; (py-empty-line-p)
+                         (member (char-after) (list 9 10)))
+                        (not (bobp))(forward-line -1))
+              (back-to-indentation))
+            (or (and (looking-at "@\\w+") (match-beginning 0))
+                (goto-char orig)))))
 
 (defun py-forward-decorator ()
   "Go to the end of a decorator.
@@ -4623,7 +4623,7 @@ Return and move to match-beginning if successful"
               (setq erg (re-search-forward regexp nil 'move 1))
               (nth 8 (parse-partial-sexp (point-min) (point)))))
       (unless
-	  (nth 8 (parse-partial-sexp (point-min) (point)))
+          (nth 8 (parse-partial-sexp (point-min) (point)))
         erg))))
 
 (defun py--forward-regexp-keep-indent-endform (last orig)
@@ -4642,24 +4642,24 @@ Return and move to match-beginning if successful"
           (regexp (if (stringp regexp)
                       regexp
                     (symbol-value regexp)))
-	  (orig (point))
+          (orig (point))
           last done)
       (forward-line 1)
       (beginning-of-line)
       (if (<= (current-indentation) indent)
           (py--forward-regexp-keep-indent-endform last orig)
           (while (and
-	          (not done)
+                  (not done)
                   (re-search-forward regexp nil 'move 1)
                   (or (nth 8 (parse-partial-sexp (point-min) (point)))
                       (or (< indent (current-indentation))(setq done t))
-		      (setq last (line-end-position)))))
+                      (setq last (line-end-position)))))
           (py--forward-regexp-keep-indent-endform last orig)))))
 
 (defun py-down-base (regexp &optional indent bol)
   (let ((indent (or indent (current-indentation))))
     (and (py--forward-regexp-keep-indent regexp indent)
-	 (progn
+         (progn
            (if bol
                (beginning-of-line)
              (back-to-indentation))
@@ -4674,7 +4674,7 @@ Return and move to match-beginning if successful"
            (looking-at py-statement-re)
            (looking-back "[^ \t]*" (line-beginning-position))
            (eq (current-column) (current-indentation))
-	   (eq (point) (progn (py-forward-statement) (py-backward-statement)))
+           (eq (point) (progn (py-forward-statement) (py-backward-statement)))
            ))))
 
 (defun py--beginning-of-statement-bol-p (&optional pps)
@@ -4685,23 +4685,23 @@ Return and move to match-beginning if successful"
            (not (or (nth 8 pps) (nth 1 pps)))
            (looking-at py-statement-re)
            (looking-back "[^ \t]*" (line-beginning-position))
-	   (eq (point) (progn (py-forward-statement-bol) (py-backward-statement-bol)))
+           (eq (point) (progn (py-forward-statement-bol) (py-backward-statement-bol)))
            (point)))))
 
 (defun py--refine-regexp-maybe (regexp)
   "Use a more specific regexp if possible. "
   (let ((regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp)))
     (if (looking-at regexpvalue)
-	(setq regexp
-	      (cond ((looking-at py-if-re)
-		     'py-if-re)
-		    ((looking-at py-try-re)
-		     'py-try-re)
-		    ((looking-at py-def-re)
-		     'py-def-re)
-		    ((looking-at py-class-re)
-		     'py-class-re)
-		    (t regexp)))
+        (setq regexp
+              (cond ((looking-at py-if-re)
+                     'py-if-re)
+                    ((looking-at py-try-re)
+                     'py-try-re)
+                    ((looking-at py-def-re)
+                     'py-def-re)
+                    ((looking-at py-class-re)
+                     'py-class-re)
+                    (t regexp)))
       regexp)))
 
 (defun py-forward-clause-intern (indent)
@@ -4718,12 +4718,12 @@ Return and move to match-beginning if successful"
   "Travel backward"
   (while
       (or (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-	  (py-backward-comment))))
+          (py-backward-comment))))
 
 (defun py--down-end-form ()
   "Return position."
   (progn (py--backward-empty-lines-or-comment)
-	 (point)))
+         (point)))
 
 (defun py--which-delay-process-dependent (buffer)
   "Call a ‘py-ipython-send-delay’ or ‘py-python-send-delay’ according to process"
@@ -4757,9 +4757,9 @@ thus remember ORIGLINE of source buffer"
     (goto-char (point-max))
     (when (re-search-backward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
       (when (and filename (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
-		 (replace-match filename nil nil nil 1))
-	(when (and origline (re-search-forward "line \\([0-9]+\\)\\(.*\\)$" (line-end-position) t 1))
-	  (replace-match origline nil nil nil 2)))
+                 (replace-match filename nil nil nil 1))
+        (when (and origline (re-search-forward "line \\([0-9]+\\)\\(.*\\)$" (line-end-position) t 1))
+          (replace-match origline nil nil nil 2)))
       (setq py-error (buffer-substring-no-properties (point) (point-max))))
         py-error))
 
@@ -4768,12 +4768,12 @@ thus remember ORIGLINE of source buffer"
 Delete it here"
   (when py-debug-p (message "(current-buffer): %s" (current-buffer)))
   (cond (python-mode-v5-behavior-p
-	 (with-current-buffer buffer
-	   (py--string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n")))
-	((and cmd limit (< limit (point-max)))
-	 (replace-regexp-in-string cmd "" (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))
-	(t (when (and limit (< limit (point-max)))
-	     (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))))
+         (with-current-buffer buffer
+           (py--string-trim (buffer-substring-no-properties (point-min) (point-max)) nil "\n")))
+        ((and cmd limit (< limit (point-max)))
+         (replace-regexp-in-string cmd "" (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))
+        (t (when (and limit (< limit (point-max)))
+             (py--string-trim (replace-regexp-in-string py-shell-prompt-regexp "" (buffer-substring-no-properties limit (point-max))))))))
 
 (defun py--postprocess (output-buffer origline limit &optional cmd filename)
   "Provide return values, check result for error, manage windows.
@@ -4789,19 +4789,19 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
       ;; (throw 'py--postprocess (error "py--postprocess failed"))
       ;;)
       (if (and py-result (not (string= "" py-result)))
-	  (if (string-match "^Traceback" py-result)
-	      (if filename
-		  (setq py-error py-result)
-		(progn
-		  (with-temp-buffer
-		    (insert py-result)
-		    (sit-for 0.1 t)
-		    (setq py-error (py--fetch-error origline filename)))))
-	    (when py-store-result-p
-	      (kill-new py-result))
-	    (when py-verbose-p (message "py-result: %s" py-result))
-	    py-result)
-	(when py-verbose-p (message "py--postprocess: %s" "Do not see any result"))))))
+          (if (string-match "^Traceback" py-result)
+              (if filename
+                  (setq py-error py-result)
+                (progn
+                  (with-temp-buffer
+                    (insert py-result)
+                    (sit-for 0.1 t)
+                    (setq py-error (py--fetch-error origline filename)))))
+            (when py-store-result-p
+              (kill-new py-result))
+            (when py-verbose-p (message "py-result: %s" py-result))
+            py-result)
+        (when py-verbose-p (message "py--postprocess: %s" "Do not see any result"))))))
 
 (defun py-fetch-py-master-file ()
   "Lookup if a ‘py-master-file’ is specified.
@@ -4826,24 +4826,24 @@ See also doku of variable ‘py-master-file’"
 (defun py--provide-command-args (shell fast-process)
   "Unbuffered WRT fast-process"
   (let ((erg
-	 (delq nil
-	       (cond
-		;; ((eq 2 (prefix-numeric-value argprompt))
-		;; py-python2-command-args)
-		((string-match "^[Ii]" shell)
-		 (if (string-match "^[0-4]" (py-ipython--which-version shell))
-		     (remove "--simple-prompt"  py-ipython-command-args)
-		   (if (member "--simple-prompt"  py-ipython-command-args)
-		       py-ipython-command-args
-		     (cons "--simple-prompt"  py-ipython-command-args))))
-		((string-match "^[^-]+3" shell)
-		 py-python3-command-args)
+         (delq nil
+               (cond
+                ;; ((eq 2 (prefix-numeric-value argprompt))
+                ;; py-python2-command-args)
+                ((string-match "^[Ii]" shell)
+                 (if (string-match "^[0-4]" (py-ipython--which-version shell))
+                     (remove "--simple-prompt"  py-ipython-command-args)
+                   (if (member "--simple-prompt"  py-ipython-command-args)
+                       py-ipython-command-args
+                     (cons "--simple-prompt"  py-ipython-command-args))))
+                ((string-match "^[^-]+3" shell)
+                 py-python3-command-args)
                 ((string-match "^[jy]" shell)
                  py-jython-command-args)
-		(t
-		 py-python-command-args)))))
+                (t
+                 py-python-command-args)))))
     (if (and fast-process (not (member "-u" erg)))
-	(cons "-u" erg)
+        (cons "-u" erg)
       erg)))
 
 ;; This and other stuff from python.el
@@ -4860,9 +4860,9 @@ Returns the encoding as a symbol."
               (point)
               (point-min))))))
     (when (string-match
-	   ;; (py-rx coding-cookie)
-	   "^#[[:space:]]*\\(?:coding[:=][[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)\\|-\\*-[[:space:]]*coding:[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*-\\*-\\|vim:[[:space:]]*set[[:space:]]+fileencoding[[:space:]]*=[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*:\\)"
-	   first-two-lines)
+           ;; (py-rx coding-cookie)
+           "^#[[:space:]]*\\(?:coding[:=][[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)\\|-\\*-[[:space:]]*coding:[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*-\\*-\\|vim:[[:space:]]*set[[:space:]]+fileencoding[[:space:]]*=[[:space:]]*\\(?1:\\(?:[[:word:]]\\|-\\)+\\)[[:space:]]*:\\)"
+           first-two-lines)
       (intern (match-string-no-properties 1 first-two-lines)))))
 
 (defun py-info-encoding ()
@@ -5077,10 +5077,10 @@ bottom) of the trackback stack is encountered."
   (let (file line)
     (save-excursion
       (with-current-buffer buffer
-	(goto-char start)
-	(if (funcall searchdir py-traceback-line-re nil t)
-	    (setq file (match-string 1)
-		  line (string-to-number (match-string 2))))))
+        (goto-char start)
+        (if (funcall searchdir py-traceback-line-re nil t)
+            (setq file (match-string 1)
+                  line (string-to-number (match-string 2))))))
     (if (and file line)
         (py-goto-exception file line)
       (error "%s of traceback" errwhere))))
@@ -5133,16 +5133,16 @@ Depends from kind of Python shell."
 (defun py-shell-comint-end-of-output-p (output)
   "Return non-nil if OUTPUT ends with input prompt."
   (ignore-errors (string-match
-		  ;; XXX: It seems on macOS an extra carriage return is attached
-		  ;; at the end of output, this handles that too.
-		  (concat
-		   "\r?\n?"
-		   ;; Remove initial caret from calculated regexp
-		   (ignore-errors (replace-regexp-in-string
-				   (rx string-start ?^) ""
-				   py-shell--prompt-calculated-input-regexp))
-		   (rx eos))
-		  output)))
+                  ;; XXX: It seems on macOS an extra carriage return is attached
+                  ;; at the end of output, this handles that too.
+                  (concat
+                   "\r?\n?"
+                   ;; Remove initial caret from calculated regexp
+                   (ignore-errors (replace-regexp-in-string
+                                   (rx string-start ?^) ""
+                                   py-shell--prompt-calculated-input-regexp))
+                   (rx eos))
+                  output)))
 
 (defun py-comint-postoutput-scroll-to-bottom (output)
   "Faster version of ‘comint-postoutput-scroll-to-bottom’.
@@ -5177,26 +5177,26 @@ Avoids ‘recenter’ calls until OUTPUT is completely sent."
   (let ((env (append (when (fboundp 'tramp-get-remote-locale)
                        ;; Emacs<24.4 compat.
                        (list (tramp-get-remote-locale vec)))
-		     (copy-sequence env)))
+                     (copy-sequence env)))
         (tramp-end-of-heredoc
          (if (boundp 'tramp-end-of-heredoc)
              tramp-end-of-heredoc
            (md5 tramp-end-of-output)))
-	unset vars item)
+        unset vars item)
     (while env
       (setq item (split-string (car env) "=" 'omit))
       (setcdr item (mapconcat 'identity (cdr item) "="))
       (if (and (stringp (cdr item)) (not (string-equal (cdr item) "")))
-	  (push (format "%s %s" (car item) (cdr item)) vars)
-	(push (car item) unset))
+          (push (format "%s %s" (car item) (cdr item)) vars)
+        (push (car item) unset))
       (setq env (cdr env)))
     (when vars
       (tramp-send-command
        vec
        (format "while read var val; do export $var=$val; done <<'%s'\n%s\n%s"
-	       tramp-end-of-heredoc
-	       (mapconcat 'identity vars "\n")
-	       tramp-end-of-heredoc)
+               tramp-end-of-heredoc
+               (mapconcat 'identity vars "\n")
+               tramp-end-of-heredoc)
        t))
     (when unset
       (tramp-send-command
@@ -5425,26 +5425,26 @@ This filter saves received output from the process in
 ‘py-shell-output-filter-buffer’ and stops receiving it after
 detecting a prompt at the end of the buffer."
   (let ((py-shell--prompt-calculated-output-regexp
-	 (or py-shell--prompt-calculated-output-regexp (py-shell-prompt-set-calculated-regexps))))
+         (or py-shell--prompt-calculated-output-regexp (py-shell-prompt-set-calculated-regexps))))
     (setq
      strg (ansi-color-filter-apply strg)
      py-shell-output-filter-buffer
      (concat py-shell-output-filter-buffer strg))
     (when (py-shell-comint-end-of-output-p
-	   py-shell-output-filter-buffer)
+           py-shell-output-filter-buffer)
       ;; Output ends when ‘py-shell-output-filter-buffer’ contains
       ;; the prompt attached at the end of it.
       (setq py-shell-output-filter-in-progress nil
-	    py-shell-output-filter-buffer
-	    (substring py-shell-output-filter-buffer
-		       0 (match-beginning 0)))
+            py-shell-output-filter-buffer
+            (substring py-shell-output-filter-buffer
+                       0 (match-beginning 0)))
       (when (string-match
-	     py-shell--prompt-calculated-output-regexp
-	     py-shell-output-filter-buffer)
-	;; Some shells, like IPython might append a prompt before the
-	;; output, clean that.
-	(setq py-shell-output-filter-buffer
-	      (substring py-shell-output-filter-buffer (match-end 0)))))
+             py-shell--prompt-calculated-output-regexp
+             py-shell-output-filter-buffer)
+        ;; Some shells, like IPython might append a prompt before the
+        ;; output, clean that.
+        (setq py-shell-output-filter-buffer
+              (substring py-shell-output-filter-buffer (match-end 0)))))
     ""))
 
 (defun py--fast-send-string-no-output-intern (strg proc limit output-buffer no-output)
@@ -5454,21 +5454,21 @@ detecting a prompt at the end of the buffer."
       ;; (erase-buffer)
       (process-send-string proc strg)
       (or (string-match "\n$" strg)
-	  (process-send-string proc "\n")
-	  (goto-char (point-max))
-	  )
+          (process-send-string proc "\n")
+          (goto-char (point-max))
+          )
       (cond (no-output
-	     (delete-region (field-beginning) (field-end))
-	     ;; (erase-buffer)
-	     ;; (delete-region (point-min) (line-beginning-position))
-	     )
-	    (t
-	     (if
-		 (setq erg (py--fetch-result output-buffer limit strg))
-		 (setq py-result (py--filter-result erg))
-	       (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer limit))(sit-for 1 t)))
-	       (or (py--fetch-result output-buffer limit))
-	       (error "py--fast-send-string-no-output-intern: py--fetch-result: no result")))))))
+             (delete-region (field-beginning) (field-end))
+             ;; (erase-buffer)
+             ;; (delete-region (point-min) (line-beginning-position))
+             )
+            (t
+             (if
+                 (setq erg (py--fetch-result output-buffer limit strg))
+                 (setq py-result (py--filter-result erg))
+               (dotimes (_ 3) (unless (setq erg (py--fetch-result output-buffer limit))(sit-for 1 t)))
+               (or (py--fetch-result output-buffer limit))
+               (error "py--fast-send-string-no-output-intern: py--fetch-result: no result")))))))
 
 (defun py-execute-string (strg &optional process result no-output orig output-buffer fast argprompt args dedicated shell exception-buffer split switch internal)
   "Evaluate STRG in Python PROCESS.
@@ -5484,32 +5484,32 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
                        (and process (buffer-name (process-buffer process)))
                        (buffer-name
                         (py-shell argprompt args dedicated shell output-buffer fast exception-buffer split switch internal))))
-	   (proc (or process (get-buffer-process buffer)))
-	   (orig (or orig (point)))
-   	   (limit (ignore-errors (marker-position (process-mark proc)))))
+           (proc (or process (get-buffer-process buffer)))
+           (orig (or orig (point)))
+           (limit (ignore-errors (marker-position (process-mark proc)))))
       (unless (eq 1 (length (window-list))) (window-configuration-to-register py--windows-config-register))
       (cond ((and no-output fast)
-	     (py--fast-send-string-no-output-intern strg proc limit buffer no-output))
-	    (no-output
-	     (py-send-string-no-output strg proc))
-	    ((and (string-match ".\n+." strg) (string-match "^[Ii]"
-							    ;; (buffer-name buffer)
-							    buffer
-							    ))  ;; multiline
-	     (let* ((temp-file-name (py-temp-file-name strg))
-		    (file-name (or (buffer-file-name) temp-file-name)))
-	       (py-execute-file file-name proc)))
-	    (t
-	     (comint-send-string proc strg)
-	     (when (or (not (string-match "\n\\'" strg))
-		       (string-match "\n[ \t].*\n?\\'" strg))
-	       (comint-send-string proc "\n"))
-	     (cond (result
+             (py--fast-send-string-no-output-intern strg proc limit buffer no-output))
+            (no-output
+             (py-send-string-no-output strg proc))
+            ((and (string-match ".\n+." strg) (string-match "^[Ii]"
+                                                            ;; (buffer-name buffer)
+                                                            buffer
+                                                            ))  ;; multiline
+             (let* ((temp-file-name (py-temp-file-name strg))
+                    (file-name (or (buffer-file-name) temp-file-name)))
+               (py-execute-file file-name proc)))
+            (t
+             (comint-send-string proc strg)
+             (when (or (not (string-match "\n\\'" strg))
+                       (string-match "\n[ \t].*\n?\\'" strg))
+               (comint-send-string proc "\n"))
+             (cond (result
                     ;; (sit-for py-python-send-delay)
                     (sit-for py-python-send-delay)
-		    (setq py-result (py--fetch-result buffer limit strg)))
-	           (no-output
-	            (and orig (py--cleanup-shell orig buffer))))))
+                    (setq py-result (py--fetch-result buffer limit strg)))
+                   (no-output
+                    (and orig (py--cleanup-shell orig buffer))))))
       ;; (message "py-execute-string; current-buffer: %s" (current-buffer))
       (if (eq 1 (length (window-list)))
           (py--shell-manage-windows buffer)
@@ -5522,11 +5522,11 @@ With optional Arg OUTPUT-BUFFER specify output-buffer"
 Optional EXCEPTION-BUFFER SPLIT SWITCH
 Return nil."
   (let* ((exception-buffer (or exception-buffer (other-buffer)))
-	 (old-window-list (window-list))
-	 (number-of-windows (length old-window-list))
-	 (split (or split py-split-window-on-execute))
-	 (switch
-	  (or py-switch-buffers-on-execute-p switch py-pdbtrack-tracked-buffer)))
+         (old-window-list (window-list))
+         (number-of-windows (length old-window-list))
+         (split (or split py-split-window-on-execute))
+         (switch
+          (or py-switch-buffers-on-execute-p switch py-pdbtrack-tracked-buffer)))
     ;; (output-buffer-displayed-p)
     (cond
      (py-keep-windows-configuration
@@ -5534,24 +5534,24 @@ Return nil."
       (set-buffer output-buffer)
       (goto-char (point-max)))
      ((and (eq split 'always)
-	   switch)
+           switch)
       (if (member (get-buffer-window output-buffer) (window-list))
-	  ;; (delete-window (get-buffer-window output-buffer))
-	  (select-window (get-buffer-window output-buffer))
-	(py--manage-windows-split exception-buffer)
-	;; otherwise new window appears above
-	(save-excursion
-	  (other-window 1)
-	  (switch-to-buffer output-buffer))
-	(display-buffer exception-buffer)))
+          ;; (delete-window (get-buffer-window output-buffer))
+          (select-window (get-buffer-window output-buffer))
+        (py--manage-windows-split exception-buffer)
+        ;; otherwise new window appears above
+        (save-excursion
+          (other-window 1)
+          (switch-to-buffer output-buffer))
+        (display-buffer exception-buffer)))
      ((and
        (eq split 'always)
        (not switch))
       (if (member (get-buffer-window output-buffer) (window-list))
-	  (select-window (get-buffer-window output-buffer))
-	(py--manage-windows-split exception-buffer)
-	(display-buffer output-buffer)
-	(pop-to-buffer exception-buffer)))
+          (select-window (get-buffer-window output-buffer))
+        (py--manage-windows-split exception-buffer)
+        (display-buffer output-buffer)
+        (pop-to-buffer exception-buffer)))
      ((and
        (eq split 'just-two)
        switch)
@@ -5568,13 +5568,13 @@ Return nil."
       (switch-to-buffer exception-buffer)
       (delete-other-windows)
       (unless
-	  (member (get-buffer-window output-buffer) (window-list))
-	(py--manage-windows-split exception-buffer))
+          (member (get-buffer-window output-buffer) (window-list))
+        (py--manage-windows-split exception-buffer))
       (save-excursion
-	(other-window 1)
-	(pop-to-buffer output-buffer)
-	(goto-char (point-max))
-	(other-window 1)))
+        (other-window 1)
+        (pop-to-buffer output-buffer)
+        (goto-char (point-max))
+        (other-window 1)))
      ((and
        split
        (not switch))
@@ -5584,14 +5584,14 @@ Return nil."
       (py--split-t-not-switch-wm output-buffer number-of-windows exception-buffer))
      ((and split switch)
       (unless
-	  (member (get-buffer-window output-buffer) (window-list))
-	(py--manage-windows-split exception-buffer))
+          (member (get-buffer-window output-buffer) (window-list))
+        (py--manage-windows-split exception-buffer))
       (set-buffer output-buffer)
       (switch-to-buffer output-buffer)
       (goto-char (point-max)))
      ((not switch)
       (let (pop-up-windows)
-	(py-restore-window-configuration))))))
+        (py-restore-window-configuration))))))
 
 (defun py--execute-file-base (filename &optional proc cmd procbuf origline fast)
   "Send to Python interpreter process PROC.
@@ -5605,20 +5605,20 @@ comint believe the user typed this string so that
 ‘kill-output-from-shell’ does The Right Thing.
 Returns position where output starts."
   (let* ((filename (expand-file-name filename))
-	 (buffer (or procbuf (and proc (process-buffer proc)) (py-shell nil nil nil nil nil fast)))
-	 (proc (or proc (get-buffer-process buffer)))
-	 (limit (marker-position (process-mark proc)))
-	 (cmd (or cmd (py-execute-file-command filename)))
-	 erg)
+         (buffer (or procbuf (and proc (process-buffer proc)) (py-shell nil nil nil nil nil fast)))
+         (proc (or proc (get-buffer-process buffer)))
+         (limit (marker-position (process-mark proc)))
+         (cmd (or cmd (py-execute-file-command filename)))
+         erg)
     (if fast
-	(process-send-string proc cmd)
+        (process-send-string proc cmd)
       (py-execute-string cmd proc))
     (with-current-buffer buffer
       (when (or py-return-result-p py-store-result-p)
-	(setq erg (py--postprocess buffer origline limit cmd filename))
-	(if py-error
-	    (setq py-error (prin1-to-string py-error))
-	  erg)))))
+        (setq erg (py--postprocess buffer origline limit cmd filename))
+        (if py-error
+            (setq py-error (prin1-to-string py-error))
+          erg)))))
 
 (defun py-restore-window-configuration (&optional register)
   "Restore ‘py-restore-window-configuration’."
@@ -5628,7 +5628,7 @@ Returns position where output starts."
       (and (setq val (get-register py--windows-config-register))
            (consp val) (window-configuration-p (car val))
            (markerp (cadr val))(marker-buffer (cadr val))
-	   (jump-to-register py--windows-config-register)))))
+           (jump-to-register py--windows-config-register)))))
 
 (defun py-toggle-split-window-function ()
   "If window is splitted vertically or horizontally.
@@ -5693,9 +5693,9 @@ according to ‘py-split-windows-on-execute-function’."
     (with-current-buffer (get-buffer exception-buffer)
 
       (when (< number-of-windows py-split-window-on-execute-threshold)
-	(unless
-	    (member (get-buffer-window output-buffer) (window-list))
-	  (py--manage-windows-split exception-buffer)))
+        (unless
+            (member (get-buffer-window output-buffer) (window-list))
+          (py--manage-windows-split exception-buffer)))
       (display-buffer output-buffer t)
       (switch-to-buffer exception-buffer)
       )))
@@ -5720,20 +5720,20 @@ according to ‘py-split-windows-on-execute-function’."
 
 Return the output."
   (let* ((proc (or process (py--get-process)))
-	 (buffer (or buffer-name (if proc (buffer-name (process-buffer proc)) (py-shell))))
+         (buffer (or buffer-name (if proc (buffer-name (process-buffer proc)) (py-shell))))
          (comint-preoutput-filter-functions
           '(py-shell-output-filter))
          (py-shell-output-filter-in-progress t)
          (inhibit-quit t)
-	 (delay (py--which-delay-process-dependent buffer))
-	 temp-file-name)
+         (delay (py--which-delay-process-dependent buffer))
+         temp-file-name)
     (or
      (with-local-quit
        (if (and (string-match ".\n+." strg) (string-match "^\*[Ii]" buffer))  ;; IPython or multiline
            (let ((file-name (or (buffer-file-name) (setq temp-file-name (py-temp-file-name strg)))))
-	     (py-execute-file file-name proc)
-	     (when temp-file-name (delete-file temp-file-name)))
-	 (py-shell-send-string strg proc))
+             (py-execute-file file-name proc)
+             (when temp-file-name (delete-file temp-file-name)))
+         (py-shell-send-string strg proc))
        ;; (switch-to-buffer buffer)
        ;; (accept-process-output proc 9)
        (while py-shell-output-filter-in-progress
@@ -5763,7 +5763,7 @@ Return the output."
     (if (string-match "[0-9]" ipython-version)
         (setq py-ipython-completion-command-string
               (cond ((string-match "^[^0].+" ipython-version)
-		     py-ipython0.11-completion-command-string)
+                     py-ipython0.11-completion-command-string)
                     ((string-match "^0.1[1-3]" ipython-version)
                      py-ipython0.11-completion-command-string)
                     ((string= "^0.10" ipython-version)
@@ -5782,38 +5782,38 @@ Return the output."
   (let (erg)
     (dolist (ele liste)
       (unless (string= "" ele)
-	(setq erg (concat erg (char-to-string (aref ele 0))))))
+        (setq erg (concat erg (char-to-string (aref ele 0))))))
     erg))
 
 (defun py--remove-home-directory-from-list (liste)
   "Prepare for compose-buffer-name-initials according to LISTE."
   (let ((case-fold-search t)
-	(liste liste)
-	erg)
+        (liste liste)
+        erg)
     (if (listp (setq erg (split-string (expand-file-name "~") "\/")))
-	erg
+        erg
       (setq erg (split-string (expand-file-name "~") "\\\\")))
      (while erg
       (when (member (car erg) liste)
-	(setq liste (cdr (member (car erg) liste))))
+        (setq liste (cdr (member (car erg) liste))))
       (setq erg (cdr erg)))
     (butlast liste)))
 
 (defun py--prepare-shell-name (erg)
   "Provide a readable shell name by capitalizing etc."
   (cond ((string-match "^ipython" erg)
-	 (replace-regexp-in-string "ipython" "IPython" erg))
-	((string-match "^jython" erg)
-	 (replace-regexp-in-string "jython" "Jython" erg))
-	((string-match "^python" erg)
-	 (replace-regexp-in-string "python" "Python" erg))
-	((string-match "^python2" erg)
-	 (replace-regexp-in-string "python2" "Python2" erg))
-	((string-match "^python3" erg)
-	 (replace-regexp-in-string "python3" "Python3" erg))
-	((string-match "^pypy" erg)
-	 (replace-regexp-in-string "pypy" "PyPy" erg))
-	(t erg)))
+         (replace-regexp-in-string "ipython" "IPython" erg))
+        ((string-match "^jython" erg)
+         (replace-regexp-in-string "jython" "Jython" erg))
+        ((string-match "^python" erg)
+         (replace-regexp-in-string "python" "Python" erg))
+        ((string-match "^python2" erg)
+         (replace-regexp-in-string "python2" "Python2" erg))
+        ((string-match "^python3" erg)
+         (replace-regexp-in-string "python3" "Python3" erg))
+        ((string-match "^pypy" erg)
+         (replace-regexp-in-string "pypy" "PyPy" erg))
+        (t erg)))
 
 (defun py--choose-buffer-name (&optional name dedicated fast-process)
   "Return an appropriate NAME to display in modeline.
@@ -5821,28 +5821,28 @@ Return the output."
 Optional DEDICATED FAST-PROCESS
 SEPCHAR is the file-path separator of your system."
   (let* ((name-first (or name py-shell-name))
-	 (erg (when name-first (if (stringp name-first) name-first (prin1-to-string name-first))))
-	 (fast-process (or fast-process py-fast-process-p))
-	 prefix)
+         (erg (when name-first (if (stringp name-first) name-first (prin1-to-string name-first))))
+         (fast-process (or fast-process py-fast-process-p))
+         prefix)
     (when (string-match "^py-" erg)
       (setq erg (nth 1 (split-string erg "-"))))
     ;; remove home-directory from prefix to display
     (unless py-modeline-acronym-display-home-p
       (save-match-data
-	(let ((case-fold-search t))
-	  (when (string-match (concat ".*" (expand-file-name "~")) erg)
-	    (setq erg (replace-regexp-in-string (concat "^" (expand-file-name "~")) "" erg))))))
+        (let ((case-fold-search t))
+          (when (string-match (concat ".*" (expand-file-name "~")) erg)
+            (setq erg (replace-regexp-in-string (concat "^" (expand-file-name "~")) "" erg))))))
     (if (or (and (setq prefix (split-string erg "\\\\"))
-		 (< 1 (length prefix)))
-	    (and (setq prefix (split-string erg "\/"))
-		 (< 1 (length prefix))))
-	(progn
-	  ;; exect something like default py-shell-name
-	  (setq erg (car (last prefix)))
-	  (unless py-modeline-acronym-display-home-p
-	    ;; home-directory may still inside
-	    (setq prefix (py--remove-home-directory-from-list prefix))
-	    (setq prefix (py--compose-buffer-name-initials prefix))))
+                 (< 1 (length prefix)))
+            (and (setq prefix (split-string erg "\/"))
+                 (< 1 (length prefix))))
+        (progn
+          ;; exect something like default py-shell-name
+          (setq erg (car (last prefix)))
+          (unless py-modeline-acronym-display-home-p
+            ;; home-directory may still inside
+            (setq prefix (py--remove-home-directory-from-list prefix))
+            (setq prefix (py--compose-buffer-name-initials prefix))))
       (setq erg (or erg py-shell-name))
       (setq prefix nil))
     (when fast-process (setq erg (concat erg " Fast")))
@@ -5886,27 +5886,27 @@ process buffer for a list of commands.)"
   ;; Let's use python.el's ‘python-shell-with-environment’
   (require 'python)
   (let* ((interactivep (and argprompt (eq 1 (prefix-numeric-value argprompt))))
-	 (fast (unless (eq major-mode 'org-mode)
-	         (or fast py-fast-process-p)))
-	 (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
-	 (shell (if shell
-	            (pcase shell
+         (fast (unless (eq major-mode 'org-mode)
+                 (or fast py-fast-process-p)))
+         (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
+         (shell (if shell
+                    (pcase shell
                       ("python"
                        (or (and (executable-find shell) shell)
                            (and (executable-find "python3") "python3")))
-	              (_ (if (executable-find shell)
-	        	     shell
-	                   (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
-	          (py-choose-shell)))
-	 (args (or args (car (py--provide-command-args shell fast))))
+                      (_ (if (executable-find shell)
+                             shell
+                           (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
+                  (py-choose-shell)))
+         (args (or args (car (py--provide-command-args shell fast))))
          ;; Make sure a new one is created if required
-	 (this-buffer
+         (this-buffer
           (or (and buffer (stringp buffer) buffer)
               (and buffer (buffer-name buffer))
               (and python-mode-v5-behavior-p (get-buffer-create "*Python Output*"))
               (py--choose-buffer-name shell dedicated fast)))
-	 (proc (get-buffer-process this-buffer))
-	 (buffer (or (ignore-errors (process-buffer proc))
+         (proc (get-buffer-process this-buffer))
+         (buffer (or (ignore-errors (process-buffer proc))
                      ;; Use python.el's provision here
                      (python-shell-with-environment
                        (apply #'make-comint-in-buffer shell
@@ -5920,29 +5920,29 @@ process buffer for a list of commands.)"
       (setq delay (py--which-delay-process-dependent this-buffer-name))
       (unless fast
         (setq py-shell-mode-syntax-table python-mode-syntax-table)
-	(when interactivep
-	  (cond ((string-match "^.I" this-buffer-name)
-		 (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
-		((string-match "^.+3" this-buffer-name)
-		 (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
-	(setq py-modeline-display (py--update-lighter this-buffer-name))))
+        (when interactivep
+          (cond ((string-match "^.I" this-buffer-name)
+                 (message "Waiting according to ‘py-ipython-send-delay:’ %s" delay))
+                ((string-match "^.+3" this-buffer-name)
+                 (message "Waiting according to ‘py-python3-send-delay:’ %s" delay))))
+        (setq py-modeline-display (py--update-lighter this-buffer-name))))
     (if (setq proc (get-buffer-process buffer))
-	(progn
+        (progn
           (when py-register-shell-buffer-p
             (save-excursion
               (save-restriction
-	        (with-current-buffer buffer
+                (with-current-buffer buffer
                   (switch-to-buffer (current-buffer)) 
                   (goto-char (point-max))
                   (sit-for 0.1) 
                   (funcall 'window-configuration-to-register py-register-char)
                   ))))
-	  (unless fast (py-shell-mode))
-	  (and internal (set-process-query-on-exit-flag proc nil))
-	  (when (or interactivep
-		    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-	    (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
-	  buffer)
+          (unless fast (py-shell-mode))
+          (and internal (set-process-query-on-exit-flag proc nil))
+          (when (or interactivep
+                    (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
+            (py--shell-manage-windows buffer exception-buffer split (or interactivep switch)))
+          buffer)
       (error (concat "py-shell:" (py--fetch-error py-output-buffer))))))
 
 (defun py-kill-buffer-unconditional (&optional buffer)
@@ -5950,8 +5950,8 @@ process buffer for a list of commands.)"
   (interactive
    (list (current-buffer)))
   (let ((buffer (or (and (bufferp buffer) buffer)
-		    (get-buffer (current-buffer))))
-	proc kill-buffer-query-functions)
+                    (get-buffer (current-buffer))))
+        proc kill-buffer-query-functions)
     (if (buffer-live-p buffer)
         (progn
           (setq proc (get-buffer-process buffer))
@@ -7793,13 +7793,13 @@ See also ‘py-up-statement’"
          erg)
     (unless (bobp)
       (cond ((bolp)
-	     (and (py-backward-statement orig)
-		  (progn (beginning-of-line)
-			 (setq erg (point)))))
-	    (t (setq erg
-		     (and
-		      (py-backward-statement)
-		      (progn (beginning-of-line) (point)))))))
+             (and (py-backward-statement orig)
+                  (progn (beginning-of-line)
+                         (setq erg (point)))))
+            (t (setq erg
+                     (and
+                      (py-backward-statement)
+                      (progn (beginning-of-line) (point)))))))
     erg))
 
 (defun py-forward-statement-bol ()
@@ -7834,16 +7834,16 @@ Return position if statement found, nil otherwise."
   (interactive)
   (let* ((orig (point)))
     (cond ((py--end-of-statement-p)
-	   (progn
-	     (and
-	      (py-forward-statement)
-	      (py-backward-statement)
-	      (< orig (point))
-	      (point))))
-	  ((ignore-errors (< orig (and (py-forward-statement) (py-backward-statement))))
-	   (point))
-	  ((ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))
-	     (point)))))
+           (progn
+             (and
+              (py-forward-statement)
+              (py-backward-statement)
+              (< orig (point))
+              (point))))
+          ((ignore-errors (< orig (and (py-forward-statement) (py-backward-statement))))
+           (point))
+          ((ignore-errors (< orig (and (py-forward-statement) (py-forward-statement)(py-backward-statement))))
+             (point)))))
 
 (defun py--fetch-indent-statement-above (orig)
   "Report the preceding indent. "
@@ -7865,29 +7865,29 @@ REGEXP: a symbol"
   (cond
    ((eq regexp (quote py-minor-block-re))
     (cond ((looking-at py-else-re)
-	   nil)
-	  ((or (looking-at (concat py-try-re)))
-	   (concat py-elif-re "\\|" py-else-re "\\|" py-except-re))
-	  ((or (looking-at (concat py-except-re "\\|" py-elif-re "\\|" py-if-re)))
-	   (concat py-elif-re "\\|" py-else-re))))
+           nil)
+          ((or (looking-at (concat py-try-re)))
+           (concat py-elif-re "\\|" py-else-re "\\|" py-except-re))
+          ((or (looking-at (concat py-except-re "\\|" py-elif-re "\\|" py-if-re)))
+           (concat py-elif-re "\\|" py-else-re))))
    ((member regexp
-	    (list
-	     (quote py-block-re)
-	     (quote py-block-or-clause-re)
-	     (quote py-clause-re)
-	     (quote py-if-re)
-	     ))
+            (list
+             (quote py-block-re)
+             (quote py-block-or-clause-re)
+             (quote py-clause-re)
+             (quote py-if-re)
+             ))
     (cond ((looking-at py-if-re)
-	   (concat py-elif-re "\\|" py-else-re))
-	  ((looking-at py-elif-re)
-	   (concat py-elif-re "\\|" py-else-re))
-	  ((looking-at py-else-re))
-	  ((looking-at py-try-re)
-	   (concat py-except-re "\\|" py-else-re "\\|" py-finally-re))
-	  ((looking-at py-except-re)
-	   (concat py-else-re "\\|" py-finally-re))
-	  ((looking-at py-finally-re)
-	   nil)))
+           (concat py-elif-re "\\|" py-else-re))
+          ((looking-at py-elif-re)
+           (concat py-elif-re "\\|" py-else-re))
+          ((looking-at py-else-re))
+          ((looking-at py-try-re)
+           (concat py-except-re "\\|" py-else-re "\\|" py-finally-re))
+          ((looking-at py-except-re)
+           (concat py-else-re "\\|" py-finally-re))
+          ((looking-at py-finally-re)
+           nil)))
    ((eq regexp (quote py-for-re)) nil)
    ((eq regexp (quote py-try-re))
     (cond
@@ -7909,22 +7909,22 @@ SECONDVALUE: travel these expressions
   (unless (bobp)
     (save-match-data
       (unless (py--beginning-of-statement-p) (skip-chars-backward " \t\r\n\f")
-	      (py-backward-comment (point)))
+              (py-backward-comment (point)))
       (let* (pps
              (regexpvalue (symbol-value regexp))
-	     (secondvalue (or secondvalue (symbol-value regexp)))
-	     (indent (or indent (current-indentation)))
+             (secondvalue (or secondvalue (symbol-value regexp)))
+             (indent (or indent (current-indentation)))
              (condition (or condition '<=))
-	     (orig (or orig (point)))
+             (orig (or orig (point)))
              (allvalue-raw (if (member regexp (list (quote py-block-re) (quote py-clause-re) (quote py-def-or-class-re) (quote py-def-re) (quote py-class-re))) secondvalue (symbol-value (quote py-block-or-clause-re))))
              (allvalue (substring allvalue-raw (string-match "\\\\" allvalue-raw))))
         (if (eq (current-indentation) (current-column))
-	    (while (and (not (bobp))
+            (while (and (not (bobp))
                         (re-search-backward (concat "^ \\{0,"(format "%s" indent) "\\}\\(" allvalue "\\)") nil 'move 1)
                         (goto-char (match-beginning 1))
-		        (not (and (looking-back "async *" (line-beginning-position))
-			          (goto-char (match-beginning 0))))
-		        (or (and
+                        (not (and (looking-back "async *" (line-beginning-position))
+                                  (goto-char (match-beginning 0))))
+                        (or (and
                              (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
                              (goto-char pps))
                             ;; (not (looking-at secondvalue))
@@ -7932,20 +7932,20 @@ SECONDVALUE: travel these expressions
                                  (not (looking-at regexpvalue))
                                  (looking-at secondvalue)
                                  indent
-		      	         ;; (or
+                                 ;; (or
                                   ;; (funcall condition (current-indentation) indent)
                                   ;; (looking-at regexpvalue))
                                   ))
                         (prog1 t
                           (when (< (current-indentation) indent)
                             (setq indent (current-indentation))))))
-	  (unless (bobp)
+          (unless (bobp)
             (back-to-indentation)
-	    (and
+            (and
              (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
              (goto-char pps))
-	    (unless (and (< (point) orig) (not (looking-at regexpvalue)) (looking-at secondvalue))
-	      (py--backward-regexp regexp (current-indentation) condition orig))
+            (unless (and (< (point) orig) (not (looking-at regexpvalue)) (looking-at secondvalue))
+              (py--backward-regexp regexp (current-indentation) condition orig))
             (unless (or (eq (point) orig)(bobp)) (back-to-indentation))))
         (and (looking-at secondvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point))))))
 
@@ -7962,17 +7962,17 @@ Optional IGNOREINDENT: find next keyword at any indentation"
   (unless (bobp)
     ;;    (when (py-empty-line-p) (skip-chars-backward " \t\r\n\f"))
     (let* ((orig (point))
-	   (regexp (if (eq regexp (quote py-clause-re)) (quote py-extended-block-or-clause-re) regexp))
-	   (regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp))
-	   (maxindent
-	    (if ignoreindent
-		;; just a big value
-		9999
-	      (or maxindent
+           (regexp (if (eq regexp (quote py-clause-re)) (quote py-extended-block-or-clause-re) regexp))
+           (regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp))
+           (maxindent
+            (if ignoreindent
+                ;; just a big value
+                9999
+              (or maxindent
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
            (allvalue (symbol-value (quote py-block-or-clause-re))))
       (unless (py--beginning-of-statement-p)
-	(py-backward-statement))
+        (py-backward-statement))
       (when (and (not (string= "" py-block-closing-keywords-re))(looking-at py-block-closing-keywords-re))
         (setq maxindent (min maxindent (- (current-indentation) py-indent-offset))))
       (cond
@@ -8020,33 +8020,33 @@ Argument REGEXP determined by form"
 Optional ENFORCE-REGEXP: search for regexp only."
   (unless (eobp)
     (let* ((orig (point))
-	   (indent (or indent 0))
-	   done
-	   (regexpvalue (if (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
-			    (concat (symbol-value regexp) "\\|" (symbol-value (quote py-decorator-re)))
-			  (symbol-value regexp)))
-	   (lastvalue (and secondvalue
-			   (pcase regexp
-			     (`ar-try-re (concat py-finally-re "\\|" py-except-re "\\|" py-else-re))
-			     (`ar-if-re py-else-re))))
+           (indent (or indent 0))
+           done
+           (regexpvalue (if (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
+                            (concat (symbol-value regexp) "\\|" (symbol-value (quote py-decorator-re)))
+                          (symbol-value regexp)))
+           (lastvalue (and secondvalue
+                           (pcase regexp
+                             (`ar-try-re (concat py-finally-re "\\|" py-except-re "\\|" py-else-re))
+                             (`ar-if-re py-else-re))))
            last)
       (if (eq regexp (quote py-clause-re))
           (py-forward-clause-intern indent)
         (while
-	    (and
-	     (not done)
-	     (progn (end-of-line)
-		    (cond (use-regexp
-			   ;; using regexpvalue might stop behind global settings, missing the end of form
-			   (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
-			  (t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
-	     (or (nth 8 (parse-partial-sexp (point-min) (point)))
-	         (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
-	         (and secondvalue (looking-at secondvalue) (setq last (point)))
-	         (and lastvalue (looking-at lastvalue)(setq last (point)))
-	         (and (looking-at regexpvalue) (setq done t) (setq last (point)))
-	         ;; py-forward-def-or-class-test-3JzvVW
-	         ;; (setq done t)
+            (and
+             (not done)
+             (progn (end-of-line)
+                    (cond (use-regexp
+                           ;; using regexpvalue might stop behind global settings, missing the end of form
+                           (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
+                          (t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
+             (or (nth 8 (parse-partial-sexp (point-min) (point)))
+                 (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
+                 (and secondvalue (looking-at secondvalue) (setq last (point)))
+                 (and lastvalue (looking-at lastvalue)(setq last (point)))
+                 (and (looking-at regexpvalue) (setq done t) (setq last (point)))
+                 ;; py-forward-def-or-class-test-3JzvVW
+                 ;; (setq done t)
                  ))))
       (when last (goto-char last))
       (and (< orig (point)) (point)))))
@@ -8058,84 +8058,84 @@ Returns the indentation of FORM-start
 Arg REGEXP, a symbol"
   (unless (eobp)
     (let (;; not looking for an assignment
-	  (use-regexp (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))))
-	  (orig (or orig (point))))
+          (use-regexp (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))))
+          (orig (or orig (point))))
       (unless (eobp)
-	(unless (py--beginning-of-statement-p)
-	  (py-backward-statement))
-	(let* (;; when at block-start, be specific
-	       ;; (regexp (py--refine-regexp-maybe regexp))
+        (unless (py--beginning-of-statement-p)
+          (py-backward-statement))
+        (let* (;; when at block-start, be specific
+               ;; (regexp (py--refine-regexp-maybe regexp))
                (regexpvalue (if (symbolp regexp)(symbol-value regexp) regexp))
                ;; (regexp (or regexp (symbol-value (quote py-extended-block-or-clause-re))))
-	       (repeat (if repeat (1+ repeat) 0))
-	       (indent (current-indentation))
+               (repeat (if repeat (1+ repeat) 0))
+               (indent (current-indentation))
                (secondvalue (py--end-base-determine-secondvalue regexp))
-	       ;; when at block-start, be specific
-	       ;; return current-indentation, position and possibly needed clause-regexps (secondvalue)
-	       (res
-		(cond
-		 ((and (py--beginning-of-statement-p)
-		       ;; (eq 0 (current-column))
-		       (or (looking-at regexpvalue)
-			   (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
-				(looking-at py-decorator-re)
-				(py-down-def-or-class indent))
-			   (and (member regexp (list (quote py-minor-block-re) (quote py-if-re) (quote py-for-re) (quote py-try-re)))
-				(looking-at py-minor-clause-re))))
-		  (list (current-indentation) (point) secondvalue))
-		 ((looking-at regexpvalue)
-		  (list (current-indentation) (point) secondvalue))
-		 ((eq 0 (current-indentation))
-		  (py--down-according-to-indent regexp nil 0 use-regexp))
-		 ;; look upward
-		 (t (py--go-to-keyword regexp (if (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))) '< '<=))))))
-	  (cond
-	   (res
-	    (and
-	     (py--down-according-to-indent regexp secondvalue (current-indentation))
+               ;; when at block-start, be specific
+               ;; return current-indentation, position and possibly needed clause-regexps (secondvalue)
+               (res
+                (cond
+                 ((and (py--beginning-of-statement-p)
+                       ;; (eq 0 (current-column))
+                       (or (looking-at regexpvalue)
+                           (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
+                                (looking-at py-decorator-re)
+                                (py-down-def-or-class indent))
+                           (and (member regexp (list (quote py-minor-block-re) (quote py-if-re) (quote py-for-re) (quote py-try-re)))
+                                (looking-at py-minor-clause-re))))
+                  (list (current-indentation) (point) secondvalue))
+                 ((looking-at regexpvalue)
+                  (list (current-indentation) (point) secondvalue))
+                 ((eq 0 (current-indentation))
+                  (py--down-according-to-indent regexp nil 0 use-regexp))
+                 ;; look upward
+                 (t (py--go-to-keyword regexp (if (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))) '< '<=))))))
+          (cond
+           (res
+            (and
+             (py--down-according-to-indent regexp secondvalue (current-indentation))
              (progn
                (when (and secondvalue (looking-at secondvalue))
                  ;; (when (looking-at py-else-re)
                  (py--down-according-to-indent regexp secondvalue (current-indentation)))
-	       (if (>= indent (current-indentation))
-	           (py--down-end-form)
+               (if (>= indent (current-indentation))
+                   (py--down-end-form)
                  (end-of-line)
                  (skip-chars-backward " \t\r\n\f")))
-	     ;; (py--end-base regexp orig bol repeat)
-	     ;; )
-	     ))
-	   (t (unless (< 0 repeat) (goto-char orig))
-	      (py--forward-regexp (symbol-value regexp))
-	      (beginning-of-line)
-	      (and
-	       (py--down-according-to-indent regexp secondvalue (current-indentation) t)
-	       (py--down-end-form))))
-	  (cond ((< orig (point))
-		 (if bol
+             ;; (py--end-base regexp orig bol repeat)
+             ;; )
+             ))
+           (t (unless (< 0 repeat) (goto-char orig))
+              (py--forward-regexp (symbol-value regexp))
+              (beginning-of-line)
+              (and
+               (py--down-according-to-indent regexp secondvalue (current-indentation) t)
+               (py--down-end-form))))
+          (cond ((< orig (point))
+                 (if bol
                      (py--beginning-of-line-form)
-		   (point)))
-		((eq (point) orig)
-		 (unless (eobp)
-		   (cond
-		    ((and (< repeat 1)
-			  (or
-			   ;; looking next indent as part of body
-			   (py--down-according-to-indent regexp secondvalue
-							 indent
-							 ;; if expected indent is 0,
-							 ;; search for new start,
-							 ;; search for regexp only
-							 (eq 0 indent))
-			   (and
-			    ;; next block-start downwards, reduce expected indent maybe
-			    (setq indent (or (and (< 0 indent) (- indent py-indent-offset)) indent))
-			    (py--down-according-to-indent regexp secondvalue
-							  indent t))))
-		     (py--end-base regexp orig bol (1+ repeat))))))
-		((< (point) orig)
-		 (goto-char orig)
-		 (when (py--down-according-to-indent regexp secondvalue nil t)
-		   (py--end-base regexp (point) bol (1+ repeat))))))))))
+                   (point)))
+                ((eq (point) orig)
+                 (unless (eobp)
+                   (cond
+                    ((and (< repeat 1)
+                          (or
+                           ;; looking next indent as part of body
+                           (py--down-according-to-indent regexp secondvalue
+                                                         indent
+                                                         ;; if expected indent is 0,
+                                                         ;; search for new start,
+                                                         ;; search for regexp only
+                                                         (eq 0 indent))
+                           (and
+                            ;; next block-start downwards, reduce expected indent maybe
+                            (setq indent (or (and (< 0 indent) (- indent py-indent-offset)) indent))
+                            (py--down-according-to-indent regexp secondvalue
+                                                          indent t))))
+                     (py--end-base regexp orig bol (1+ repeat))))))
+                ((< (point) orig)
+                 (goto-char orig)
+                 (when (py--down-according-to-indent regexp secondvalue nil t)
+                   (py--end-base regexp (point) bol (1+ repeat))))))))))
 
 ;; python-components-start-Zf98zM.el ends here
 ;; python-components-start2
@@ -8148,31 +8148,31 @@ Takes STRG
 Avoid empty lines at the beginning."
   ;; (when py-debug-p (message "py--fix-start:"))
   (let (py--imenu-create-index-p
-	py-guess-py-install-directory-p
-	;; py-autopair-mode
-	py-complete-function
-	py-load-pymacs-p
-	py-load-skeletons-p
-	erg)
+        py-guess-py-install-directory-p
+        ;; py-autopair-mode
+        py-complete-function
+        py-load-pymacs-p
+        py-load-skeletons-p
+        erg)
     (with-temp-buffer
       (with-current-buffer (current-buffer)
         (python-mode)
-	(when py-debug-p
-	  (switch-to-buffer (current-buffer)))
-	;; (python-mode)
-	(insert strg)
-	(goto-char (point-min))
-	(when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
-	  (dotimes (_ erg)
-	    (indent-rigidly-left (point-min) (point-max))))
-	(unless (py--beginning-of-statement-p)
-	  (py-forward-statement))
-	(while (not (eq (current-indentation) 0))
-	  (py-shift-left py-indent-offset))
-	(goto-char (point-max))
-	(unless (py-empty-line-p)
-	  (newline 1))
-	(buffer-substring-no-properties 1 (point-max))))))
+        (when py-debug-p
+          (switch-to-buffer (current-buffer)))
+        ;; (python-mode)
+        (insert strg)
+        (goto-char (point-min))
+        (when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
+          (dotimes (_ erg)
+            (indent-rigidly-left (point-min) (point-max))))
+        (unless (py--beginning-of-statement-p)
+          (py-forward-statement))
+        (while (not (eq (current-indentation) 0))
+          (py-shift-left py-indent-offset))
+        (goto-char (point-max))
+        (unless (py-empty-line-p)
+          (newline 1))
+        (buffer-substring-no-properties 1 (point-max))))))
 
 (defun py-fast-send-string (strg  &optional proc output-buffer result no-output argprompt args dedicated shell exception-buffer)
   (interactive
@@ -8187,13 +8187,13 @@ Avoid empty lines at the beginning."
 
 Optional STRG PROC OUTPUT-BUFFER RETURN"
   (let ((output-buffer (or output-buffer (process-buffer proc)))
-	(inhibit-read-only t))
+        (inhibit-read-only t))
     ;; (switch-to-buffer (current-buffer))
     (with-current-buffer output-buffer
       ;; (erase-buffer)
       (py-fast-send-string strg
-			   proc
-			   output-buffer result))))
+                           proc
+                           output-buffer result))))
 
 (defun py--point (position)
   "Returns the value of point at certain commonly referenced POSITIONs.
@@ -8326,10 +8326,10 @@ Returns value of ‘py-force-py-shell-name-p’."
 
 See ‘py-if-name-main-permission-p’"
   (let ((strg (if py-if-name-main-permission-p strg
-		(replace-regexp-in-string
-		 "if[( ]*__name__[) ]*==[( ]*['\"]\\{1,3\\}__main__['\"]\\{1,3\\}[) ]*:"
-		 ;; space after __main__, i.e. will not be executed
-		 "if __name__ == '__main__ ':" strg))))
+                (replace-regexp-in-string
+                 "if[( ]*__name__[) ]*==[( ]*['\"]\\{1,3\\}__main__['\"]\\{1,3\\}[) ]*:"
+                 ;; space after __main__, i.e. will not be executed
+                 "if __name__ == '__main__ ':" strg))))
     strg))
 
 (defun py-symbol-at-point ()
@@ -8341,7 +8341,7 @@ When interactively called, copy and message it"
                  py-dotted-expression-syntax-table
                (current-word))))
     (when (called-interactively-p 'interactive) (kill-new erg)
-	  (message "%s" erg))
+          (message "%s" erg))
     erg))
 
 (defun py--line-backward-maybe ()
@@ -8441,12 +8441,12 @@ Unless DIRECTION is symbol \\='forward, go backward first"
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
       (sit-for 0.1)
       (with-temp-buffer
-	(insert strg)
-	(write-file tempfile)
+        (insert strg)
+        (write-file tempfile)
         (sit-for 0.1))
       (unwind-protect
-	  (py--execute-file-base tempfile proc nil procbuf origline fast)
-	(and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
+          (py--execute-file-base tempfile proc nil procbuf origline fast)
+        (and (file-readable-p tempfile) (delete-file tempfile py-debug-p))))))
 
 (defun py--postprocess-intern (&optional origline exception-buffer output-buffer)
   "Highlight exceptions found in BUF.
@@ -8461,55 +8461,55 @@ thus remember line of source buffer"
   (save-excursion
     (with-current-buffer output-buffer
       (let* (estring ecode erg)
-	;; (switch-to-buffer (current-buffer))
-	(goto-char (point-max))
-	(sit-for 0.1)
-	(save-excursion
-	  (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
-	    (forward-line -1)
-	    (end-of-line)
-	    (when (re-search-backward py-shell-prompt-regexp t 1)
-		;; (or (re-search-backward py-shell-prompt-regexp nil t 1)
-		;; (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
-	      (save-excursion
-		(when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
-		  (setq erg (copy-marker (point)))
-		  (delete-region (progn (beginning-of-line)
-					(save-match-data
-					  (when (looking-at
-						 ;; all prompt-regexp known
-						 py-shell-prompt-regexp)
-					    (goto-char (match-end 0)))))
+        ;; (switch-to-buffer (current-buffer))
+        (goto-char (point-max))
+        (sit-for 0.1)
+        (save-excursion
+          (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
+            (forward-line -1)
+            (end-of-line)
+            (when (re-search-backward py-shell-prompt-regexp t 1)
+                ;; (or (re-search-backward py-shell-prompt-regexp nil t 1)
+                ;; (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
+              (save-excursion
+                (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
+                  (setq erg (copy-marker (point)))
+                  (delete-region (progn (beginning-of-line)
+                                        (save-match-data
+                                          (when (looking-at
+                                                 ;; all prompt-regexp known
+                                                 py-shell-prompt-regexp)
+                                            (goto-char (match-end 0)))))
 
-					(progn (skip-chars-forward " \t\r\n\f"   (line-end-position))(point)))
-		  (insert (concat "    File " (buffer-name exception-buffer) ", line "
-				  (prin1-to-string origline)))))
-	      ;; these are let-bound as ‘tempbuf’
-	      ;; (and (boundp 'tempbuf)
-	      ;;      (search-forward (buffer-name tempbuf) nil t)
-	      ;;      (delete-region (line-beginning-position) (1+ (line-end-position))))
-	      ;; if no buffer-file exists, signal "Buffer", not "File(when
-	      (when erg
-		(goto-char erg)
-		;; (forward-char -1)
-		;; (skip-chars-backward "^\t\r\n\f")
-		;; (skip-chars-forward " \t")
-		(save-match-data
-		  (and (not (py--buffer-filename-remote-maybe
-			     (or
-			      (get-buffer exception-buffer)
-			      (get-buffer (file-name-nondirectory exception-buffer)))))
-		       (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
-		       (looking-at "[ \t]*File")
-		       (replace-match " Buffer")))
-		(push origline py-error)
-		(push (buffer-name exception-buffer) py-error)
-		(forward-line 1)
-		(when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
-		  (setq estring (match-string-no-properties 1))
-		  (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
-		  (push (quote py-error) ecode))))))
-	py-error))))
+                                        (progn (skip-chars-forward " \t\r\n\f"   (line-end-position))(point)))
+                  (insert (concat "    File " (buffer-name exception-buffer) ", line "
+                                  (prin1-to-string origline)))))
+              ;; these are let-bound as ‘tempbuf’
+              ;; (and (boundp 'tempbuf)
+              ;;      (search-forward (buffer-name tempbuf) nil t)
+              ;;      (delete-region (line-beginning-position) (1+ (line-end-position))))
+              ;; if no buffer-file exists, signal "Buffer", not "File(when
+              (when erg
+                (goto-char erg)
+                ;; (forward-char -1)
+                ;; (skip-chars-backward "^\t\r\n\f")
+                ;; (skip-chars-forward " \t")
+                (save-match-data
+                  (and (not (py--buffer-filename-remote-maybe
+                             (or
+                              (get-buffer exception-buffer)
+                              (get-buffer (file-name-nondirectory exception-buffer)))))
+                       (string-match "^[ \t]*File" (buffer-substring-no-properties (point) (line-end-position)))
+                       (looking-at "[ \t]*File")
+                       (replace-match " Buffer")))
+                (push origline py-error)
+                (push (buffer-name exception-buffer) py-error)
+                (forward-line 1)
+                (when (looking-at "[ \t]*\\([^\t\n\r\f]+\\)[ \t]*$")
+                  (setq estring (match-string-no-properties 1))
+                  (setq ecode (replace-regexp-in-string "[ \n\t\f\r^]+" " " estring))
+                  (push (quote py-error) ecode))))))
+        py-error))))
 
 (defun py-execute-python-mode-v5 (start end &optional origline filename)
   "Take START END &optional EXCEPTION-BUFFER ORIGLINE."
@@ -8517,8 +8517,8 @@ thus remember line of source buffer"
    (list (region-beginning) (region-end) (py-count-lines)(and (buffer-file-name) (buffer-file-name))))
   (let ((python-mode-v5-behavior-p t)
         (output-buffer "*Python Output*")
-	(py-split-window-on-execute 'just-two)
-	(pcmd (concat py-shell-name (if (string-equal py-which-bufname
+        (py-split-window-on-execute 'just-two)
+        (pcmd (concat py-shell-name (if (string-equal py-which-bufname
                                                       "Jython")
                                         " -"
                                       ;; " -c "
@@ -8532,9 +8532,9 @@ thus remember line of source buffer"
         (message "py-execute-python-mode-v5: No output.")
       (setq py-result (py--fetch-result (with-temp-buffer  (get-buffer output-buffer))))
       (if (string-match "Traceback" py-result)
-	  (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
+          (message "%s" (setq py-error (py--fetch-error output-buffer origline filename)))
         (when py-verbose-p (message "%s" py-result))
-	py-result))))
+        py-result))))
 
 (defun py--execute-ge24.3 (start end execute-directory which-shell &optional exception-buffer proc file origline)
   "An alternative way to do it.
@@ -8611,60 +8611,60 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
   (when py-debug-p (message "py--execute-base: (current-buffer): %s" (current-buffer)))
   ;; (when (or fast py-fast-process-p) (ignore-errors (py-kill-buffer-unconditional py-output-buffer)))
   (let* ((orig (point))
-	 (fast (or fast py-fast-process-p))
-	 (exception-buffer (current-buffer))
-	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
-	 (end (or end (and (use-region-p) (region-end)) (point-max)))
-	 (strg-raw (if py-if-name-main-permission-p
-		       (buffer-substring-no-properties start end)
-		     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
-	 (strg (py--fix-start strg-raw))
-	 (wholebuf (unless filename (or wholebuf (and (eq (buffer-size) (- end start))))))
-	 ;; error messages may mention differently when running from a temp-file
-	 (origline
-	  (format "%s" (save-restriction
-			 (widen)
-			 (py-count-lines (point-min) orig))))
-	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
-	 (shell (or
-		 (and shell
-		      ;; shell might be specified in different ways
-		      (or (and (stringp shell) shell)
-			  (ignore-errors (eval shell))
-			  (and (symbolp shell) (format "%s" shell))))
-		 ;; (save-excursion
-		 (py-choose-shell)
-		 ;;)
-		 ))
-	 (shell (or shell (py-choose-shell)))
-	 (buffer-name
-	  (py--choose-buffer-name shell dedicated fast))
-	 (execute-directory
-	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
-		((and py-use-current-dir-when-execute-p (buffer-file-name))
-		 (file-name-directory (buffer-file-name)))
-		((and py-use-current-dir-when-execute-p
-		      py-fileless-buffer-use-default-directory-p)
-		 (expand-file-name default-directory))
-		((stringp py-execute-directory)
-		 py-execute-directory)
-		((getenv "VIRTUAL_ENV"))
-		(t (getenv "HOME"))))
-	 (filename (or (and filename (expand-file-name filename))
-		       (py--buffer-filename-remote-maybe)))
-	 (py-orig-buffer-or-file (or filename (current-buffer)))
-	 (proc-raw (or proc (get-buffer-process buffer-name)))
+         (fast (or fast py-fast-process-p))
+         (exception-buffer (current-buffer))
+         (start (or start (and (use-region-p) (region-beginning)) (point-min)))
+         (end (or end (and (use-region-p) (region-end)) (point-max)))
+         (strg-raw (if py-if-name-main-permission-p
+                       (buffer-substring-no-properties start end)
+                     (py--fix-if-name-main-permission (buffer-substring-no-properties start end))))
+         (strg (py--fix-start strg-raw))
+         (wholebuf (unless filename (or wholebuf (and (eq (buffer-size) (- end start))))))
+         ;; error messages may mention differently when running from a temp-file
+         (origline
+          (format "%s" (save-restriction
+                         (widen)
+                         (py-count-lines (point-min) orig))))
+         ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
+         (shell (or
+                 (and shell
+                      ;; shell might be specified in different ways
+                      (or (and (stringp shell) shell)
+                          (ignore-errors (eval shell))
+                          (and (symbolp shell) (format "%s" shell))))
+                 ;; (save-excursion
+                 (py-choose-shell)
+                 ;;)
+                 ))
+         (shell (or shell (py-choose-shell)))
+         (buffer-name
+          (py--choose-buffer-name shell dedicated fast))
+         (execute-directory
+          (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
+                ((and py-use-current-dir-when-execute-p (buffer-file-name))
+                 (file-name-directory (buffer-file-name)))
+                ((and py-use-current-dir-when-execute-p
+                      py-fileless-buffer-use-default-directory-p)
+                 (expand-file-name default-directory))
+                ((stringp py-execute-directory)
+                 py-execute-directory)
+                ((getenv "VIRTUAL_ENV"))
+                (t (getenv "HOME"))))
+         (filename (or (and filename (expand-file-name filename))
+                       (py--buffer-filename-remote-maybe)))
+         (py-orig-buffer-or-file (or filename (current-buffer)))
+         (proc-raw (or proc (get-buffer-process buffer-name)))
 
-	 (proc (or proc-raw (get-buffer-process buffer-name)
-		   (prog1
-		       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
-		     (sit-for 0.1))))
+         (proc (or proc-raw (get-buffer-process buffer-name)
+                   (prog1
+                       (get-buffer-process (py-shell nil nil dedicated shell buffer-name fast exception-buffer split switch))
+                     (sit-for 0.1))))
 
          ;; (split (if python-mode-v5-behavior-p 'just-two split))
          )
     (setq py-output-buffer (or (and python-mode-v5-behavior-p "*Python Output*")
                                (and proc (buffer-name (process-buffer proc)))
-			       (py--choose-buffer-name shell dedicated fast)))
+                               (py--choose-buffer-name shell dedicated fast)))
     (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)))
 
 ;; python-components-statement
@@ -8678,37 +8678,37 @@ REPEAT - count and consider repeats"
   (interactive)
   (unless (eobp)
     (let ((repeat (or (and repeat (1+ repeat)) 0))
-	  (orig (or orig (point)))
-	  erg last
-	  ;; use by scan-lists
-	  forward-sexp-function pps err)
+          (orig (or orig (point)))
+          erg last
+          ;; use by scan-lists
+          forward-sexp-function pps err)
       (setq pps (parse-partial-sexp (point-min) (point)))
       ;; (origline (or origline (py-count-lines)))
       (cond
        ;; which-function-mode, lp:1235375
        ((< py-max-specpdl-size repeat)
-	(error "forward-statement reached loops max. If no error, customize ‘max-specpdl-size’"))
+        (error "forward-statement reached loops max. If no error, customize ‘max-specpdl-size’"))
        ((looking-at (symbol-value (quote py-def-or-class-re)))
         (end-of-line)
         (skip-chars-backward " \t\r\n\f"))
        ;; list
        ((nth 1 pps)
-	(if (<= orig (point))
-	    (progn
-	      (setq orig (point))
-	      ;; do not go back at a possible unclosed list
-	      (goto-char (nth 1 pps))
-	      (if
-		  (ignore-errors (forward-list))
-		  (progn
-		    (when (looking-at ":[ \t]*$")
-		      (forward-char 1))
-		    (setq done t)
-		    (skip-chars-forward "^#" (line-end-position))
-		    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		    (py-forward-statement orig done repeat))
-		(setq err (py--record-list-error pps))
-		(goto-char orig)))))
+        (if (<= orig (point))
+            (progn
+              (setq orig (point))
+              ;; do not go back at a possible unclosed list
+              (goto-char (nth 1 pps))
+              (if
+                  (ignore-errors (forward-list))
+                  (progn
+                    (when (looking-at ":[ \t]*$")
+                      (forward-char 1))
+                    (setq done t)
+                    (skip-chars-forward "^#" (line-end-position))
+                    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+                    (py-forward-statement orig done repeat))
+                (setq err (py--record-list-error pps))
+                (goto-char orig)))))
        ;; in comment
        ((and comment-start (looking-at (concat " *" comment-start)))
         (py--end-of-comment-intern (point))
@@ -8716,65 +8716,65 @@ REPEAT - count and consider repeats"
        ;; (goto-char (match-end 0))
        ;; (py-forward-statement orig done repeat))
        ((nth 4 pps)
-	(py--end-of-comment-intern (point))
-	(py--skip-to-comment-or-semicolon)
-	(while (and (eq (char-before (point)) ?\\)
-		    (py-escaped-p) (setq last (point)))
-	  (forward-line 1) (end-of-line))
-	(and last (goto-char last)
-	     (forward-line 1)
-	     (back-to-indentation))
-	;; py-forward-statement-test-3JzvVW
-	(unless (or (looking-at (concat " *" comment-start))(eolp))
-	  (py-forward-statement orig done repeat)))
+        (py--end-of-comment-intern (point))
+        (py--skip-to-comment-or-semicolon)
+        (while (and (eq (char-before (point)) ?\\)
+                    (py-escaped-p) (setq last (point)))
+          (forward-line 1) (end-of-line))
+        (and last (goto-char last)
+             (forward-line 1)
+             (back-to-indentation))
+        ;; py-forward-statement-test-3JzvVW
+        (unless (or (looking-at (concat " *" comment-start))(eolp))
+          (py-forward-statement orig done repeat)))
        ;; string
        ((looking-at py-string-delim-re)
-	(goto-char (match-end 0))
-	(py-forward-statement (match-beginning 0) done repeat))
+        (goto-char (match-end 0))
+        (py-forward-statement (match-beginning 0) done repeat))
        ((nth 3 pps)
-	(when (py-end-of-string)
-	  (end-of-line)
-	  (skip-chars-forward " \t\r\n\f")
-	  (setq pps (parse-partial-sexp (point-min) (point)))
-	  (unless (and done (not (or (nth 1 pps) (nth 8 pps))) (eolp)) (py-forward-statement orig done repeat))))
+        (when (py-end-of-string)
+          (end-of-line)
+          (skip-chars-forward " \t\r\n\f")
+          (setq pps (parse-partial-sexp (point-min) (point)))
+          (unless (and done (not (or (nth 1 pps) (nth 8 pps))) (eolp)) (py-forward-statement orig done repeat))))
        ((py-current-line-backslashed-p)
-	(end-of-line)
-	(skip-chars-backward " \t\r\n\f" (line-beginning-position))
-	(while (and (eq (char-before (point)) ?\\)
-		    (py-escaped-p))
-	  (forward-line 1)
-	  (end-of-line)
-	  (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
-	(unless (eobp)
-	  (py-forward-statement orig done repeat)))
+        (end-of-line)
+        (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+        (while (and (eq (char-before (point)) ?\\)
+                    (py-escaped-p))
+          (forward-line 1)
+          (end-of-line)
+          (skip-chars-backward " \t\r\n\f" (line-beginning-position)))
+        (unless (eobp)
+          (py-forward-statement orig done repeat)))
        ((eq orig (point))
-	(if (eolp)
-	    ;; (skip-chars-forward " \t\r\n\f#'\"")
-	    (skip-chars-forward " \t\r\n\f")
-	  (end-of-line)
-	  (skip-chars-backward " \t\r\n\f" orig))
-	;; point at orig due to a trailing whitespace
-	(and (eq (point) orig) (skip-chars-forward " \t\r\n\f"))
-	;; (setq done t)
-	(py-forward-statement orig done repeat))
+        (if (eolp)
+            ;; (skip-chars-forward " \t\r\n\f#'\"")
+            (skip-chars-forward " \t\r\n\f")
+          (end-of-line)
+          (skip-chars-backward " \t\r\n\f" orig))
+        ;; point at orig due to a trailing whitespace
+        (and (eq (point) orig) (skip-chars-forward " \t\r\n\f"))
+        ;; (setq done t)
+        (py-forward-statement orig done repeat))
        ((eq (current-indentation) (current-column))
         ;; ‘py--skip-to-comment-or-semicolon’ may return nil
-	(setq done (ignore-errors (< 0 (ignore-errors (abs (py--skip-to-comment-or-semicolon))))))
+        (setq done (ignore-errors (< 0 (ignore-errors (abs (py--skip-to-comment-or-semicolon))))))
         (and done (skip-chars-backward " \t\r\n\f"))
-	(setq pps (parse-partial-sexp orig (point)))
-	(if (nth 1 pps)
-	    (py-forward-statement orig done repeat)
-	  (unless done
-	    (py-forward-statement orig done repeat))))
+        (setq pps (parse-partial-sexp orig (point)))
+        (if (nth 1 pps)
+            (py-forward-statement orig done repeat)
+          (unless done
+            (py-forward-statement orig done repeat))))
        ((and (looking-at "[[:print:]]+$") (not done) (py--skip-to-comment-or-semicolon))
-	(py-forward-statement orig done repeat)))
+        (py-forward-statement orig done repeat)))
       (unless
-	  (or
-	   (eq (point) orig)
-	   (member (char-before) (list 10 32 9 ?#)))
-	(setq erg (point)))
+          (or
+           (eq (point) orig)
+           (member (char-before) (list 10 32 9 ?#)))
+        (setq erg (point)))
       (if (and py-verbose-p err)
-	  (py--message-error err))
+          (py--message-error err))
       erg)))
 
 (defun py-backward-statement (&optional orig done limit ignore-in-string-p repeat maxindent)
@@ -8798,29 +8798,29 @@ Optional MAXINDENT: do not stop if indentation is larger"
   (save-restriction
     (unless (bobp)
       (let ((repeat (or (and repeat (1+ repeat)) 0))
-	    (orig (or orig (point)))
+            (orig (or orig (point)))
             (pps (parse-partial-sexp (or limit (point-min))(point)))
             (done done))
-	;; lp:1382788
-	;; (unless done
-	;;   (and (< 0 (abs (skip-chars-backward " \t\r\n\f")))
- 	;;        (setq pps (parse-partial-sexp (or limit (point-min))(point)))))
+        ;; lp:1382788
+        ;; (unless done
+        ;;   (and (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+        ;;        (setq pps (parse-partial-sexp (or limit (point-min))(point)))))
         (cond
-	 ((< py-max-specpdl-size repeat)
-	  (error "py-forward-statement reached loops max. If no error, customize ‘ar-max-specpdl-size’"))
+         ((< py-max-specpdl-size repeat)
+          (error "py-forward-statement reached loops max. If no error, customize ‘ar-max-specpdl-size’"))
          ((and (bolp) (eolp))
           (skip-chars-backward " \t\r\n\f")
           (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; inside string
+         ;; inside string
          ((and (nth 3 pps) (not ignore-in-string-p))
-	  (setq done t)
-	  (goto-char (nth 8 pps))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+          (setq done t)
+          (goto-char (nth 8 pps))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((nth 4 pps)
-	  (goto-char (nth 8 pps))
-	  (skip-chars-backward " \t\r\n\f")
-	  ;; (setq pps (parse-partial-sexp (line-beginning-position) (point)))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+          (goto-char (nth 8 pps))
+          (skip-chars-backward " \t\r\n\f")
+          ;; (setq pps (parse-partial-sexp (line-beginning-position) (point)))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((nth 1 pps)
           (if (and
                (< (nth 1 pps) (line-beginning-position))
@@ -8833,8 +8833,8 @@ Optional MAXINDENT: do not stop if indentation is larger"
                 (skip-chars-backward ",] \t\r\n\f")
                 (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
             (goto-char (1- (nth 1 pps))))
-	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
-	    (setq done t))
+          (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
+            (setq done t))
           ;; (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)
           )
          ((py-preceding-line-backslashed-p)
@@ -8843,53 +8843,53 @@ Optional MAXINDENT: do not stop if indentation is larger"
           (setq done t)
           (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((looking-at comment-start-skip)
-	  (setq done t)
-	  (forward-char -1)
+          (setq done t)
+          (forward-char -1)
           (skip-chars-backward " \t\r\n\f")
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at raw-string
-	 ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
-	 ((and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
-	  (forward-char -1)
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; BOL or at space before comment
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ;; at raw-string
+         ;; (and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+         ((and (looking-at "\"\"\"\\|'''") (member (char-before) (list ?u ?U ?r ?R)))
+          (forward-char -1)
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ;; BOL or at space before comment
          ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
           (forward-comment -1)
           (while (and (not (bobp)) (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
             (forward-comment -1))
           (unless (bobp)
             (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
-	 ;; at inline comment
+         ;; at inline comment
          ((looking-at "[ \t]*#")
-	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
-	    (setq done t))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at beginning of string
-	 ;; ((looking-at py-string-delim-re)
+          (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation) (point)))
+            (setq done t))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ;; at beginning of string
+         ;; ((looking-at py-string-delim-re)
          ;;  (py-end-of-string))
-	 ((and (not done) (eq (char-before) ?\;))
-	  (skip-chars-backward ";")
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; travel until indentation or semicolon
-	 ((and (not done) (py--skip-to-semicolon-backward))
-	  (unless (and maxindent (< maxindent (current-indentation)))
-	    (setq done t))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ;; at current indent
-	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
-	 ((and maxindent (< maxindent (current-indentation)))
-	  (forward-line -1)
-	  (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ((and (not done) (eq (char-before) ?\;))
+          (skip-chars-backward ";")
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ;; travel until indentation or semicolon
+         ((and (not done) (py--skip-to-semicolon-backward))
+          (unless (and maxindent (< maxindent (current-indentation)))
+            (setq done t))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ;; at current indent
+         ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
+         ((and maxindent (< maxindent (current-indentation)))
+          (forward-line -1)
+          (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((eq orig (point))
           (skip-chars-backward " \t\r\n\f")
           (py-backward-statement orig done limit ignore-in-string-p repeat maxindent))
          ((not (eq (current-indentation) (current-column)))
           (back-to-indentation)
           (py-backward-statement orig done limit ignore-in-string-p repeat maxindent)))
-	;; return nil when before comment
-	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
-	  (when (< (point) orig) (point)))))))
+        ;; return nil when before comment
+        (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
+          (when (< (point) orig) (point)))))))
 
 ;; python-components-statement.el ends here
 ;; python-components-down
@@ -9558,7 +9558,6 @@ See also ‘py-down-try-block’."
   (interactive)
   (py-forward-try-block nil t))
 
-;; py-forward-forms.el ends here
 ;; python-components-execute-file
 
 (defun py-execute-file-ipython (filename)
@@ -10154,11 +10153,11 @@ If already at end, go to end of next paragraph downwards"
 
 With optional INDENT travel bigger or equal indentation"
   (let ((indent (or indent (current-indentation)))
-	last)
+        last)
     (while (and (not (bobp))
-		(py-backward-statement)
-		(<= indent (current-indentation))
-		(setq last (point))))
+                (py-backward-statement)
+                (<= indent (current-indentation))
+                (setq last (point))))
     (when last (goto-char last))
     last))
 
@@ -10180,8 +10179,8 @@ Returns final position when called from inside section, nil otherwise"
 Travel this INDENT backward until bol"
   (let (erg)
     (while (and (py-backward-statement-bol)
-		(or indent (setq indent (current-indentation)))
-		(eq indent (current-indentation))(setq erg (point)) (not (bobp))))
+                (or indent (setq indent (current-indentation)))
+                (eq indent (current-indentation))(setq erg (point)) (not (bobp))))
     (when erg (goto-char erg))))
 
 (defun py-backward-indent-bol ()
@@ -10193,7 +10192,7 @@ Returns final position when called from inside section, nil otherwise"
   (interactive)
   (unless (bobp)
     (let ((indent (when (eq (current-indentation) (current-column)) (current-column)))
-	  erg)
+          erg)
       (setq erg (py--travel-this-indent-backward-bol indent))
       erg)))
 
@@ -10203,8 +10202,8 @@ Returns final position when called from inside section, nil otherwise"
 Travel this INDENT forward"
   (let (last erg)
     (while (and (py-down-statement)
-		(eq indent (current-indentation))
-		(setq last (point))))
+                (eq indent (current-indentation))
+                (setq last (point))))
     (when last (goto-char last))
     (setq erg (py-forward-statement))
     erg))
@@ -10217,11 +10216,11 @@ Returns final position when moved, nil otherwise"
   (interactive "P")
   (skip-chars-forward " \t\r\n\f")
   (let (done
-	(orig (line-beginning-position))
-	(indent (current-indentation))
-	(last (progn (back-to-indentation) (point))))
+        (orig (line-beginning-position))
+        (indent (current-indentation))
+        (last (progn (back-to-indentation) (point))))
     (while (and (not (eobp)) (not done)
-		(progn (forward-line 1) (back-to-indentation) (or (and (py-empty-line-p)(not stop-at-empty-line)) (and (<= indent (current-indentation))(< last (point))))))
+                (progn (forward-line 1) (back-to-indentation) (or (and (py-empty-line-p)(not stop-at-empty-line)) (and (<= indent (current-indentation))(< last (point))))))
       (unless (py-empty-line-p) (skip-chars-forward " \t\r\n\f")(setq last (point)))
       (when (or (and (py-empty-line-p)stop-at-empty-line) (and (not (py-empty-line-p))(< (current-indentation) indent)))
                  (setq done t))
@@ -10251,10 +10250,10 @@ Returns final position when called from inside section, nil otherwise"
 ;;     (let (erg indent)
 ;;       ;; (when (py-forward-statement)
 ;;       (when (py-forward-indent)
-;; 	;; (save-excursion
-;;       	;; (setq indent (and (py-backward-statement)(current-indentation))))
-;; 	;; (setq erg (py--travel-this-indent-forward indent))
-;; 	(unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
+;;      ;; (save-excursion
+;;              ;; (setq indent (and (py-backward-statement)(current-indentation))))
+;;      ;; (setq erg (py--travel-this-indent-forward indent))
+;;      (unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
 ;;       erg)))
 
 (defun py-backward-expression (&optional orig done repeat)
@@ -10270,35 +10269,35 @@ REPEAT - count and consider repeats"
   (unless (bobp)
     (unless done (skip-chars-backward " \t\r\n\f"))
     (let ((repeat (or (and repeat (1+ repeat)) 0))
-	  (pps (parse-partial-sexp (point-min) (point)))
+          (pps (parse-partial-sexp (point-min) (point)))
           (orig (or orig (point)))
           erg)
       (if (< py-max-specpdl-size repeat)
-	  (error "‘py-backward-expression’ reached loops max")
-	(cond
-	 ;; comments
-	 ((nth 8 pps)
-	  (goto-char (nth 8 pps))
-	  (py-backward-expression orig done repeat))
-	 ;; lists
-	 ((nth 1 pps)
-	  (goto-char (nth 1 pps))
-	  (skip-chars-backward py-expression-skip-chars)
-	  )
-	 ;; in string
-	 ((nth 3 pps)
-	  (goto-char (nth 8 pps)))
-	 ;; after operator
-	 ((and (not done) (looking-back py-operator-re (line-beginning-position)))
-	  (skip-chars-backward "^ \t\r\n\f")
-	  (skip-chars-backward " \t\r\n\f")
-	  (py-backward-expression orig done repeat))
-	 ((and (not done)
-	       (< 0 (abs (skip-chars-backward py-expression-skip-chars))))
-	  (setq done t)
-	  (py-backward-expression orig done repeat))))
+          (error "‘py-backward-expression’ reached loops max")
+        (cond
+         ;; comments
+         ((nth 8 pps)
+          (goto-char (nth 8 pps))
+          (py-backward-expression orig done repeat))
+         ;; lists
+         ((nth 1 pps)
+          (goto-char (nth 1 pps))
+          (skip-chars-backward py-expression-skip-chars)
+          )
+         ;; in string
+         ((nth 3 pps)
+          (goto-char (nth 8 pps)))
+         ;; after operator
+         ((and (not done) (looking-back py-operator-re (line-beginning-position)))
+          (skip-chars-backward "^ \t\r\n\f")
+          (skip-chars-backward " \t\r\n\f")
+          (py-backward-expression orig done repeat))
+         ((and (not done)
+               (< 0 (abs (skip-chars-backward py-expression-skip-chars))))
+          (setq done t)
+          (py-backward-expression orig done repeat))))
       (unless (or (eq (point) orig)(and (bobp)(eolp)))
-	(setq erg (point)))
+        (setq erg (point)))
       erg)))
 
 (defun py-forward-expression (&optional orig done repeat)
@@ -10312,55 +10311,55 @@ REPEAT - count and consider repeats"
   (unless done (skip-chars-forward " \t\r\n\f"))
   (unless (eobp)
     (let ((repeat (or (and repeat (1+ repeat)) 0))
-	  (pps (parse-partial-sexp (point-min) (point)))
+          (pps (parse-partial-sexp (point-min) (point)))
           (orig (or orig (point)))
           erg)
       (if (< py-max-specpdl-size repeat)
-	  (error "‘py-forward-expression’ reached loops max")
-	(cond
-	 ;; in comment
-	 ((nth 4 pps)
-	  (or (< (point) (progn (forward-comment 1) (point)))(forward-line 1))
-	  (py-forward-expression orig done repeat))
-	 ;; empty before comment
-	 ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
-	  (while (and (looking-at "[ \t]*#") (not (eobp)))
-	    (forward-line 1))
-	  (py-forward-expression orig done repeat))
-	 ;; inside string
-	 ((nth 3 pps)
-	  (goto-char (nth 8 pps))
-	  (goto-char (scan-sexps (point) 1))
-	  (setq done t)
-	  (py-forward-expression orig done repeat))
-	 ((looking-at "\"\"\"\\|'''\\|\"\\|'")
-	  (goto-char (scan-sexps (point) 1))
-	  (setq done t)
-	  (py-forward-expression orig done repeat))
-	 ;; looking at opening delimiter
-	 ((eq 4 (car-safe (syntax-after (point))))
-	  (goto-char (scan-sexps (point) 1))
-	  (skip-chars-forward py-expression-skip-chars)
-	  (setq done t))
-	 ((nth 1 pps)
-	  (goto-char (nth 1 pps))
-	  (goto-char (scan-sexps (point) 1))
-	  (skip-chars-forward py-expression-skip-chars)
-	  (setq done t)
-	  (py-forward-expression orig done repeat))
-	 ((and (eq orig (point)) (looking-at py-operator-re))
-	  (goto-char (match-end 0))
-	  (py-forward-expression orig done repeat))
-	 ((and (not done)
-	       (< 0 (skip-chars-forward py-expression-skip-chars)))
-	  (setq done t)
-	  (py-forward-expression orig done repeat))
-	 ;; at colon following arglist
-	 ((looking-at ":[ \t]*$")
-	  (forward-char 1)))
-	(unless (or (eq (point) orig)(and (eobp) (bolp)))
-	  (setq erg (point)))
-	erg))))
+          (error "‘py-forward-expression’ reached loops max")
+        (cond
+         ;; in comment
+         ((nth 4 pps)
+          (or (< (point) (progn (forward-comment 1) (point)))(forward-line 1))
+          (py-forward-expression orig done repeat))
+         ;; empty before comment
+         ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
+          (while (and (looking-at "[ \t]*#") (not (eobp)))
+            (forward-line 1))
+          (py-forward-expression orig done repeat))
+         ;; inside string
+         ((nth 3 pps)
+          (goto-char (nth 8 pps))
+          (goto-char (scan-sexps (point) 1))
+          (setq done t)
+          (py-forward-expression orig done repeat))
+         ((looking-at "\"\"\"\\|'''\\|\"\\|'")
+          (goto-char (scan-sexps (point) 1))
+          (setq done t)
+          (py-forward-expression orig done repeat))
+         ;; looking at opening delimiter
+         ((eq 4 (car-safe (syntax-after (point))))
+          (goto-char (scan-sexps (point) 1))
+          (skip-chars-forward py-expression-skip-chars)
+          (setq done t))
+         ((nth 1 pps)
+          (goto-char (nth 1 pps))
+          (goto-char (scan-sexps (point) 1))
+          (skip-chars-forward py-expression-skip-chars)
+          (setq done t)
+          (py-forward-expression orig done repeat))
+         ((and (eq orig (point)) (looking-at py-operator-re))
+          (goto-char (match-end 0))
+          (py-forward-expression orig done repeat))
+         ((and (not done)
+               (< 0 (skip-chars-forward py-expression-skip-chars)))
+          (setq done t)
+          (py-forward-expression orig done repeat))
+         ;; at colon following arglist
+         ((looking-at ":[ \t]*$")
+          (forward-char 1)))
+        (unless (or (eq (point) orig)(and (eobp) (bolp)))
+          (setq erg (point)))
+        erg))))
 
 (defun py-backward-partial-expression ()
   "Backward partial-expression."
@@ -10378,8 +10377,8 @@ REPEAT - count and consider repeats"
       (while (and (not (bobp)) (py--in-comment-p) (< 0 (abs (skip-chars-backward py-partial-expression-stop-backward-chars))))))
     (when (< (point) orig)
       (unless
-	  (and (bobp) (member (char-after) (list ?\ ?\t ?\r ?\n ?\f)))
-	(point)))))
+          (and (bobp) (member (char-after) (list ?\ ?\t ?\r ?\n ?\f)))
+        (point)))))
 
 (defun py-forward-partial-expression ()
   "Forward partial-expression.
@@ -10516,7 +10515,7 @@ Return position if successful"
   (interactive)
   (let ((orig (point)))
     (while (and (re-search-backward py-section-start nil t 1)
-		(nth 8 (parse-partial-sexp (point-min) (point)))))
+                (nth 8 (parse-partial-sexp (point-min) (point)))))
     (when (and (looking-at py-section-start)(< (point) orig))
       (point))))
 
@@ -10526,12 +10525,12 @@ Return position if successful"
 Return position if successful"
   (interactive)
   (let ((orig (point))
-	last)
+        last)
     (while (and (re-search-forward py-section-end nil t 1)
-		(setq last (point))
-		(goto-char (match-beginning 0))
-		(nth 8 (parse-partial-sexp (point-min) (point)))
-		(goto-char (match-end 0))))
+                (setq last (point))
+                (goto-char (match-beginning 0))
+                (nth 8 (parse-partial-sexp (point-min) (point)))
+                (goto-char (match-end 0))))
     (and last (goto-char last))
     (when (and (looking-back py-section-end (line-beginning-position))(< orig (point)))
       (point))))
@@ -10542,14 +10541,14 @@ Return position if successful"
 Return position of successful, nil of not started from inside."
   (interactive)
   (let* (last
-	 (erg
-	  (or (py--beginning-of-assignment-p)
-	      (progn
-		(while (and (setq last (py-backward-statement))
-			    (not (looking-at py-assignment-re))
-			    ;; (not (bolp))
-			    ))
-		(and (looking-at py-assignment-re) last)))))
+         (erg
+          (or (py--beginning-of-assignment-p)
+              (progn
+                (while (and (setq last (py-backward-statement))
+                            (not (looking-at py-assignment-re))
+                            ;; (not (bolp))
+                            ))
+                (and (looking-at py-assignment-re) last)))))
     erg))
 
 ;; (defun py--forward-assignment-intern ()
@@ -10566,21 +10565,21 @@ Return position of successful, nil of not started from inside."
 ;;   (interactive)
 ;;   (unless (eobp)
 ;;     (if (eq last-command (quote py-backward-assignment))
-;; 	;; assume at start of an assignment
-;; 	(py--forward-assignment-intern)
+;;      ;; assume at start of an assignment
+;;      (py--forward-assignment-intern)
 ;;       ;; ‘py-backward-assignment’ here, avoid ‘py--beginning-of-assignment-p’ a second time
 ;;       (let* (last
-;; 	     (beg
-;; 	      (or (py--beginning-of-assignment-p)
-;; 		  (progn
-;; 		    (while (and (setq last (py-backward-statement))
-;; 				(not (looking-at py-assignment-re))
-;; 				;; (not (bolp))
-;; 				))
-;; 		    (and (looking-at py-assignment-re) last))))
-;; 	     erg)
-;; 	(and beg (setq erg (py--forward-assignment-intern)))
-;; 	erg))))
+;;           (beg
+;;            (or (py--beginning-of-assignment-p)
+;;                (progn
+;;                  (while (and (setq last (py-backward-statement))
+;;                              (not (looking-at py-assignment-re))
+;;                              ;; (not (bolp))
+;;                              ))
+;;                  (and (looking-at py-assignment-re) last))))
+;;           erg)
+;;      (and beg (setq erg (py--forward-assignment-intern)))
+;;      erg))))
 
 (defun py-up ()
   "Go to the beginning of current syntactic form in buffer.
@@ -12838,23 +12837,23 @@ Receives a ‘buffer-name’ as argument"
 (defun py--guess-buffer-name (argprompt dedicated)
   "Guess the ‘buffer-name’ core string according to ARGPROMPT DEDICATED."
   (when (and (not dedicated) argprompt
-	     (eq 4 (prefix-numeric-value argprompt)))
+             (eq 4 (prefix-numeric-value argprompt)))
     (read-buffer "py-Shell buffer: "
-		 (generate-new-buffer-name (py--choose-buffer-name)))))
+                 (generate-new-buffer-name (py--choose-buffer-name)))))
 
 (defun py--configured-shell (name)
   "Return the configured PATH/TO/STRING if any according to NAME."
   (if (string-match "//\\|\\\\" name)
       name
     (cond ((string-match "^[Ii]" name)
-	   (or py-ipython-command name))
-	  ((string-match "[Pp]ython3" name)
-	   (or py-python3-command name))
-	  ((string-match "[Pp]ython2" name)
-	   (or py-python2-command name))
-	  ((string-match "[Jj]ython" name)
-	   (or py-jython-command name))
-	  (t (or py-python-command name)))))
+           (or py-ipython-command name))
+          ((string-match "[Pp]ython3" name)
+           (or py-python3-command name))
+          ((string-match "[Pp]ython2" name)
+           (or py-python2-command name))
+          ((string-match "[Jj]ython" name)
+           (or py-jython-command name))
+          (t (or py-python-command name)))))
 
 (defun py--determine-local-default ()
   (if (not (string= "" py-shell-local-path))
@@ -12877,9 +12876,9 @@ Receives a ‘buffer-name’ as argument"
   "Return the directory of current python SHELL."
   (interactive)
   (let* ((proc (get-buffer-process (current-buffer)))
-	 erg)
+         erg)
     (if proc
-	(setq erg (py-execute-string (concat "import os\;os.getcwd()") proc nil t))
+        (setq erg (py-execute-string (concat "import os\;os.getcwd()") proc nil t))
       (setq erg (replace-regexp-in-string "\n" "" (shell-command-to-string (concat py-shell-name " -c \"import os; print(os.getcwd())\"")))))
     (when (called-interactively-p 'interactive)
       (message "CWD: %s" erg))
@@ -12891,8 +12890,8 @@ Receives a ‘buffer-name’ as argument"
 When given, to value of ‘py-default-working-directory’ otherwise"
   (interactive)
   (let* ((proc (get-buffer-process (current-buffer)))
-	 (dir (or directory py-default-working-directory))
-	 erg)
+         (dir (or directory py-default-working-directory))
+         erg)
     ;; (py-execute-string (concat "import os\;os.chdir(\"" dir "\")") proc nil t)
     (py-execute-string (concat "import os\;os.chdir(\"" dir "\")") proc nil t)
     (setq erg (py-execute-string "os.getcwd()" proc nil t))
@@ -12903,7 +12902,7 @@ When given, to value of ‘py-default-working-directory’ otherwise"
 (defun py--update-execute-directory-intern (dir proc procbuf fast)
   (let ((strg (concat "import os\;os.chdir(\"" dir "\")")))
     (if fast
-	(py-fast-send-string strg proc procbuf t t)
+        (py-fast-send-string strg proc procbuf t t)
       (py-execute-string strg proc nil t))))
 ;; (comint-send-string proc (concat "import os;os.chdir(\"" dir "\")\n")))
 
@@ -12911,7 +12910,7 @@ When given, to value of ‘py-default-working-directory’ otherwise"
   (with-current-buffer procbuf
     (let ((cwd (py-current-working-directory)))
       (unless (string= execute-directory (concat cwd "/"))
-	(py--update-execute-directory-intern (or py-execute-directory execute-directory) proc procbuf fast)))))
+        (py--update-execute-directory-intern (or py-execute-directory execute-directory) proc procbuf fast)))))
 
 (defun py--close-execution (tempbuf tempfile)
   "Delete TEMPBUF and TEMPFILE."
@@ -12922,11 +12921,11 @@ When given, to value of ‘py-default-working-directory’ otherwise"
   "Send setup code to BUFFER according to NAME, a string."
   (save-excursion
     (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
-	  py-return-result-p py-store-result-p)
+          py-return-result-p py-store-result-p)
       (unless (file-readable-p setup-file)
-	(with-temp-buffer
-	  (insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
-	  (write-file setup-file)))
+        (with-temp-buffer
+          (insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
+          (write-file setup-file)))
       (py--execute-file-base setup-file (get-buffer-process buffer) nil buffer)
       )))
 
@@ -12942,8 +12941,8 @@ Used by ‘py-ipython-module-completion-string’"
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-ipython-module-completion.py")))
     (unless (file-readable-p setup-file)
       (with-temp-buffer
-	(insert py-ipython-module-completion-code)
-	(write-file setup-file)))
+        (insert py-ipython-module-completion-code)
+        (write-file setup-file)))
     (py--execute-file-base setup-file nil nil (current-buffer) nil t)))
 
 (defun py-delete-temporary (&optional file filebuf)
@@ -12992,11 +12991,11 @@ See also ‘py-execute-region’."
 (or (functionp 'indent-rigidly-left)
     (defun indent-rigidly--pop-undo ()
       (and (memq last-command '(indent-rigidly-left indent-rigidly-right
-						    indent-rigidly-left-to-tab-stop
-						    indent-rigidly-right-to-tab-stop))
-	   (consp buffer-undo-list)
-	   (eq (car buffer-undo-list) nil)
-	   (pop buffer-undo-list)))
+                                                    indent-rigidly-left-to-tab-stop
+                                                    indent-rigidly-right-to-tab-stop))
+           (consp buffer-undo-list)
+           (eq (car buffer-undo-list) nil)
+           (pop buffer-undo-list)))
 
     (defun indent-rigidly-left (beg end)
       "Indent all lines between BEG and END leftward by one space."
@@ -13528,7 +13527,7 @@ If region is active, restrict uncommenting at region "
   (dolist (ele py-known-shells)
     (let ((erg (py-install-named-shells-fix-doc ele)))
       (eval (fset (car (read-from-string ele)) (car
-						(read-from-string (concat "(lambda (&optional dedicated args) \"Start a `" erg "' interpreter.
+                                                (read-from-string (concat "(lambda (&optional dedicated args) \"Start a `" erg "' interpreter.
 Optional DEDICATED: with \\\\[universal-argument] start in a new
 dedicated shell.
 Optional ARGS overriding `py-" ele "-command-args'.
@@ -13587,7 +13586,7 @@ module-qualified names."
   "Toggles comment-auto-fill mode"
   (interactive "P")
   (if (or (and arg (< 0 (prefix-numeric-value arg)))
-	  (and (boundp (quote py-comment-auto-fill-p))(not py-comment-auto-fill-p)))
+          (and (boundp (quote py-comment-auto-fill-p))(not py-comment-auto-fill-p)))
       (progn
         (set (make-local-variable (quote py-comment-auto-fill-p)) t)
         (setq fill-column py-comment-fill-column)
@@ -13700,11 +13699,11 @@ Return ‘t’, nil otherwise. "
 When already at end, go to EOB."
   (end-of-line)
   (while (and (py--forward-regexp (or regexp "^[[:graph:]]"))
-	      (save-excursion
-		(beginning-of-line)
-		(or
-		 (looking-at py-clause-re)
-		 (looking-at comment-start)))))
+              (save-excursion
+                (beginning-of-line)
+                (or
+                 (looking-at py-clause-re)
+                 (looking-at comment-start)))))
   (beginning-of-line)
   (and (looking-at regexp) (point)))
 
@@ -13903,15 +13902,15 @@ Eval resulting buffer to install it, see customizable ‘py-extensions’. "
   ;; (message "py--report-end-marker in %s" (current-buffer))
   (if (derived-mode-p 'comint-mode)
       (if (bound-and-true-p comint-last-prompt)
-	  (car-safe comint-last-prompt)
-	(dotimes (_ 3) (when (not (bound-and-true-p comint-last-prompt))(sit-for 1 t)))
-	(and (bound-and-true-p comint-last-prompt)
-	     (car-safe comint-last-prompt)))
+          (car-safe comint-last-prompt)
+        (dotimes (_ 3) (when (not (bound-and-true-p comint-last-prompt))(sit-for 1 t)))
+        (and (bound-and-true-p comint-last-prompt)
+             (car-safe comint-last-prompt)))
     (if (markerp (process-mark process))
-	(process-mark process)
+        (process-mark process)
       (progn
-	(dotimes (_ 3) (when (not (markerp (process-mark process)))(sit-for 1 t)))
-	(process-mark process)))))
+        (dotimes (_ 3) (when (not (markerp (process-mark process)))(sit-for 1 t)))
+        (process-mark process)))))
 
 (defun py-which-def-or-class (&optional orig)
   "Returns concatenated ‘def’ and ‘class’ names.
@@ -14177,8 +14176,8 @@ If BOL is t, mark from beginning-of-line"
                   (setq end (point))))
     (if (and beg end (<= beg orig) (<= orig end))
         (progn
-	  (cons beg end)
-	  (exchange-point-and-mark))
+          (cons beg end)
+          (exchange-point-and-mark))
       nil)))
 
 (defun py--mark-base-bol (form &optional mark-decorators)
@@ -14187,17 +14186,17 @@ If BOL is t, mark from beginning-of-line"
          (begcheckform (intern-soft (concat "py--beginning-of-" form "-bol-p")))
          beg end erg)
     (if (functionp begcheckform)
-	(or (setq beg (funcall begcheckform))
-	    (if (functionp begform)
-		(setq beg (funcall begform))
-	      (error (concat "py--mark-base-bol: " begform " do not exist!" ))))
+        (or (setq beg (funcall begcheckform))
+            (if (functionp begform)
+                (setq beg (funcall begform))
+              (error (concat "py--mark-base-bol: " begform " do not exist!" ))))
       (error (concat "py--mark-base-bol: " begcheckform " do not exist!" )))
     (when mark-decorators
       (save-excursion
         (when (setq erg (py-backward-decorator))
           (setq beg erg))))
     (if (functionp endform)
-	(setq end (funcall endform))
+        (setq end (funcall endform))
       (error (concat "py--mark-base-bol: " endform " do not exist!" )))
     (push-mark beg t t)
     (unless end (when (< beg (point))
@@ -14313,7 +14312,7 @@ Use current region unless optional args BEG END are delivered."
 
   (if (setq py-shell-fontify-p (not py-shell-fontify-p))
       (progn
-	(py-shell-font-lock-turn-on))
+        (py-shell-font-lock-turn-on))
     (py-shell-font-lock-turn-off))
     (when msg (message "py-shell-fontify-p set to: %s" py-shell-fontify-p)))
 
@@ -14373,7 +14372,7 @@ BEG END deliver the boundaries of region to work within"
   ;; (forward-line 1)
   (while (< (line-end-position) end)
     (if (py-empty-line-p)
-	(forward-line 1)
+        (forward-line 1)
       (py-indent-and-forward)))
   (unless (py-empty-line-p) (py-indent-and-forward)))
 
@@ -14408,36 +14407,36 @@ Returns imports"
   (let (imports erg)
     (save-excursion
       (if (eq major-mode 'comint-mode)
-	  (progn
-	    (re-search-backward comint-prompt-regexp nil t 1)
-	    (goto-char (match-end 0))
-	    (while (re-search-forward
-		    "import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
-	      (setq imports
-		    (concat
-		     imports
-		     (replace-regexp-in-string
-		      "[\\]\r?\n?\s*" ""
-		      (buffer-substring-no-properties (match-beginning 0) (point))) ";")))
-	    (when (ignore-errors (string-match ";" imports))
-	      (setq imports (split-string imports ";" t))
-	      (dolist (ele imports)
-		(and (string-match "import" ele)
-		     (if erg
-			 (setq erg (concat erg ";" ele))
-		       (setq erg ele)))
-		(setq imports erg))))
-	(goto-char (point-min))
-	(while (re-search-forward
-		"^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
-	  (unless (py--end-of-statement-p)
-	    (py-forward-statement))
-	  (setq imports
-		(concat
-		 imports
-		 (replace-regexp-in-string
-		  "[\\]\r*\n*\s*" ""
-		  (buffer-substring-no-properties (match-beginning 0) (point))) ";")))))
+          (progn
+            (re-search-backward comint-prompt-regexp nil t 1)
+            (goto-char (match-end 0))
+            (while (re-search-forward
+                    "import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
+              (setq imports
+                    (concat
+                     imports
+                     (replace-regexp-in-string
+                      "[\\]\r?\n?\s*" ""
+                      (buffer-substring-no-properties (match-beginning 0) (point))) ";")))
+            (when (ignore-errors (string-match ";" imports))
+              (setq imports (split-string imports ";" t))
+              (dolist (ele imports)
+                (and (string-match "import" ele)
+                     (if erg
+                         (setq erg (concat erg ";" ele))
+                       (setq erg ele)))
+                (setq imports erg))))
+        (goto-char (point-min))
+        (while (re-search-forward
+                "^import *[A-Za-z_][A-Za-z_0-9].*\\|^from +[A-Za-z_][A-Za-z_0-9.]+ +import .*" nil t)
+          (unless (py--end-of-statement-p)
+            (py-forward-statement))
+          (setq imports
+                (concat
+                 imports
+                 (replace-regexp-in-string
+                  "[\\]\r*\n*\s*" ""
+                  (buffer-substring-no-properties (match-beginning 0) (point))) ";")))))
     ;; (and imports
     ;; (setq imports (replace-regexp-in-string ";$" "" imports)))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" imports))
@@ -16329,7 +16328,7 @@ Valid in current session only.
 At start may be set by custom-file"
   (interactive)
   (setq py-closing-list-dedents-bos
-	(not py-closing-list-dedents-bos))
+        (not py-closing-list-dedents-bos))
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-closing-list-dedents-bos: %s" py-closing-list-dedents-bos)))
 
 (defun py-toggle-py-register-shell-buffer-p ()
@@ -16339,7 +16338,7 @@ Valid in current session only.
 At start may be set by custom-file"
   (interactive)
   (setq py-register-shell-buffer-p
-	(not py-register-shell-buffer-p))
+        (not py-register-shell-buffer-p))
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-register-shell-buffer-p: %s" py-register-shell-buffer-p)))
 
 ;; python-components-edit
@@ -16358,14 +16357,14 @@ At start may be set by custom-file"
   (save-excursion
     (beginning-of-line)
     (unless
-	;; in string
-	(nth 3 (parse-partial-sexp (point-min) (point)))
+        ;; in string
+        (nth 3 (parse-partial-sexp (point-min) (point)))
       (and (eq (current-indentation)  0)
-	   (looking-at "[[:alpha:]_]+")
-	   ;; (or (looking-at py-def-or-class-re)
+           (looking-at "[[:alpha:]_]+")
+           ;; (or (looking-at py-def-or-class-re)
            ;;     (looking-at py-block-or-clause-re)
-	   ;;     (looking-at py-assignment-re))
-	   ))))
+           ;;     (looking-at py-assignment-re))
+           ))))
 
 (defun py-indent-line-outmost (&optional arg)
   "Indent the current line to the outmost reasonable indent.
@@ -16410,10 +16409,10 @@ Requires BEG, END as the boundery of region"
       (narrow-to-region beg end)
       (goto-char beg)
       (let ((end (copy-marker end)))
-	(forward-line 1)
-	(narrow-to-region (line-beginning-position) end)
-	(py--re-indent-line)
-	(while (< (line-end-position) end)
+        (forward-line 1)
+        (narrow-to-region (line-beginning-position) end)
+        (py--re-indent-line)
+        (while (< (line-end-position) end)
           (forward-line 1)
           (py--re-indent-line))))))
 
@@ -16429,44 +16428,44 @@ Requires BEG, END as the boundery of region"
 (defun py--indent-line-intern (need cui indent col &optional beg end region dedent)
   (let (erg)
     (if py-tab-indent
-	(progn
-	  (and py-tab-indents-region-p region
-	       (py--indent-fix-region-intern beg end))
-	  (cond
-	   ((bolp)
-	    (if (and py-tab-shifts-region-p region)
+        (progn
+          (and py-tab-indents-region-p region
+               (py--indent-fix-region-intern beg end))
+          (cond
+           ((bolp)
+            (if (and py-tab-shifts-region-p region)
                 (while (< (current-indentation) need)
                   (py-shift-region-right 1))
-	      (beginning-of-line)
-	      (delete-horizontal-space)
-	      (indent-to need)))
+              (beginning-of-line)
+              (delete-horizontal-space)
+              (indent-to need)))
            ;;
-	   ((< need cui)
-	    (if (and py-tab-shifts-region-p region)
-		(progn
-		  (when (eq (point) (region-end))
-		    (exchange-point-and-mark))
-		  (while (< 0 (current-indentation))
-		    (py-shift-region-left 1)))
-	      (beginning-of-line)
-	      (delete-horizontal-space)
-	      (indent-to need)))
+           ((< need cui)
+            (if (and py-tab-shifts-region-p region)
+                (progn
+                  (when (eq (point) (region-end))
+                    (exchange-point-and-mark))
+                  (while (< 0 (current-indentation))
+                    (py-shift-region-left 1)))
+              (beginning-of-line)
+              (delete-horizontal-space)
+              (indent-to need)))
            ;;
-	   ((eq need cui)
-	    (if (or dedent
-		    (eq this-command last-command)
-		    (eq this-command (quote py-indent-line)))
-		(if (and py-tab-shifts-region-p region)
-		    (while (and (goto-char beg) (< 0 (current-indentation)))
-		      (py-shift-region-left 1))
-		  (beginning-of-line)
-		  (delete-horizontal-space)
-		  (if (<= (line-beginning-position) (+ (point) (- col cui)))
-		      (forward-char (- col cui))
-		    (beginning-of-line)))))
+           ((eq need cui)
+            (if (or dedent
+                    (eq this-command last-command)
+                    (eq this-command (quote py-indent-line)))
+                (if (and py-tab-shifts-region-p region)
+                    (while (and (goto-char beg) (< 0 (current-indentation)))
+                      (py-shift-region-left 1))
+                  (beginning-of-line)
+                  (delete-horizontal-space)
+                  (if (<= (line-beginning-position) (+ (point) (- col cui)))
+                      (forward-char (- col cui))
+                    (beginning-of-line)))))
            ;;
-	   ((< cui need)
-	    (if (and py-tab-shifts-region-p region)
+           ((< cui need)
+            (if (and py-tab-shifts-region-p region)
                 (py-shift-region-right 1)
               (beginning-of-line)
               (delete-horizontal-space)
@@ -16477,31 +16476,31 @@ Requires BEG, END as the boundery of region"
                 (indent-to erg))
               (forward-char (- col cui))))
            ;;
-	   (t
-	    (if (and py-tab-shifts-region-p region)
+           (t
+            (if (and py-tab-shifts-region-p region)
                 (while (< (current-indentation) need)
                   (py-shift-region-right 1))
-	      (beginning-of-line)
-	      (delete-horizontal-space)
-	      (indent-to need)
-	      (back-to-indentation)
-	      (if (<= (line-beginning-position) (+ (point) (- col cui)))
-		  (forward-char (- col cui))
-		(beginning-of-line))))))
+              (beginning-of-line)
+              (delete-horizontal-space)
+              (indent-to need)
+              (back-to-indentation)
+              (if (<= (line-beginning-position) (+ (point) (- col cui)))
+                  (forward-char (- col cui))
+                (beginning-of-line))))))
       (insert-tab))))
 
 (defun py--indent-line-or-region-base (beg end region cui need arg this-indent-offset col &optional dedent)
   (cond ((eq 4 (prefix-numeric-value arg))
-	 (if (and (eq cui (current-indentation))
-		  (<= need cui))
-	     (if indent-tabs-mode (insert "\t")(insert (make-string py-indent-offset 32)))
-	   (beginning-of-line)
-	   (delete-horizontal-space)
-	   (indent-to (+ need py-indent-offset))))
-	((not (eq 1 (prefix-numeric-value arg)))
-	 (py-smart-indentation-off)
-	 (py--indent-line-intern need cui this-indent-offset col beg end region dedent))
-	(t (py--indent-line-intern need cui this-indent-offset col beg end region dedent))))
+         (if (and (eq cui (current-indentation))
+                  (<= need cui))
+             (if indent-tabs-mode (insert "\t")(insert (make-string py-indent-offset 32)))
+           (beginning-of-line)
+           (delete-horizontal-space)
+           (indent-to (+ need py-indent-offset))))
+        ((not (eq 1 (prefix-numeric-value arg)))
+         (py-smart-indentation-off)
+         (py--indent-line-intern need cui this-indent-offset col beg end region dedent))
+        (t (py--indent-line-intern need cui this-indent-offset col beg end region dedent))))
 
 (defun py--calculate-indent-backwards (cui indent-offset)
   "Return the next reasonable indent lower than current indentation.
@@ -16540,45 +16539,45 @@ Optional arg DEDENT: force dedent.
   (unless (eq this-command last-command)
     (setq py-already-guessed-indent-offset nil))
   (let ((orig (copy-marker (point)))
-	;; TAB-leaves-point-in-the-wrong-lp-1178453-test
-	(region (use-region-p))
+        ;; TAB-leaves-point-in-the-wrong-lp-1178453-test
+        (region (use-region-p))
         cui
-	outmost
-	col
-	beg
-	end
-	need
-	this-indent-offset)
+        outmost
+        col
+        beg
+        end
+        need
+        this-indent-offset)
     (and region
-	 (setq beg (region-beginning))
-	 (setq end (region-end))
-	 (goto-char beg))
+         (setq beg (region-beginning))
+         (setq end (region-end))
+         (goto-char beg))
     (setq cui (current-indentation))
     (setq col (current-column))
     (setq this-indent-offset
-	  (cond ((and py-smart-indentation (not (eq this-command last-command)))
-		 (py-guess-indent-offset))
-		((and py-smart-indentation (eq this-command last-command) py-already-guessed-indent-offset)
-		 py-already-guessed-indent-offset)
-		(t py-indent-offset)))
+          (cond ((and py-smart-indentation (not (eq this-command last-command)))
+                 (py-guess-indent-offset))
+                ((and py-smart-indentation (eq this-command last-command) py-already-guessed-indent-offset)
+                 py-already-guessed-indent-offset)
+                (t py-indent-offset)))
     (setq outmost (py-compute-indentation nil nil nil nil nil nil nil this-indent-offset))
     ;; now choose the indent
     (unless (and (not dedent)(not (eq this-command last-command))(eq outmost (current-indentation)))
       (setq need
-	    (cond ((eq this-command last-command)
-		   (if (bolp)
-		       ;; jump forward to max indent
-		       outmost
-		     (py--calculate-indent-backwards cui this-indent-offset)))
-		  ;; (py--calculate-indent-backwards cui this-indent-offset)))))
-		  (t
-		   outmost
-		   )))
+            (cond ((eq this-command last-command)
+                   (if (bolp)
+                       ;; jump forward to max indent
+                       outmost
+                     (py--calculate-indent-backwards cui this-indent-offset)))
+                  ;; (py--calculate-indent-backwards cui this-indent-offset)))))
+                  (t
+                   outmost
+                   )))
       (py--indent-line-or-region-base beg end region cui need arg this-indent-offset col dedent)
       (and region (or py-tab-shifts-region-p
-		      py-tab-indents-region-p)
-	   (not (eq (point) orig))
-	   (exchange-point-and-mark))
+                      py-tab-indents-region-p)
+           (not (eq (point) orig))
+           (exchange-point-and-mark))
       (current-indentation))))
 
 (defun py--delete-trailing-whitespace (orig)
@@ -16592,42 +16591,42 @@ Start from position ORIG"
   (when (or py-newline-delete-trailing-whitespace-p py-trailing-whitespace-smart-delete-p)
     (let ((pos (copy-marker (point))))
       (save-excursion
-	(goto-char orig)
-	(if (py-empty-line-p)
-	    (if (py---emacs-version-greater-23)
-		(delete-trailing-whitespace (line-beginning-position) pos)
-	      (save-restriction
-		(narrow-to-region (line-beginning-position) pos)
-		(delete-trailing-whitespace)))
-	  (skip-chars-backward " \t")
-	  (if (py---emacs-version-greater-23)
-	      (delete-trailing-whitespace (line-beginning-position) pos)
-	    (save-restriction
-	      (narrow-to-region (point) pos)
-	      (delete-trailing-whitespace))))))))
+        (goto-char orig)
+        (if (py-empty-line-p)
+            (if (py---emacs-version-greater-23)
+                (delete-trailing-whitespace (line-beginning-position) pos)
+              (save-restriction
+                (narrow-to-region (line-beginning-position) pos)
+                (delete-trailing-whitespace)))
+          (skip-chars-backward " \t")
+          (if (py---emacs-version-greater-23)
+              (delete-trailing-whitespace (line-beginning-position) pos)
+            (save-restriction
+              (narrow-to-region (point) pos)
+              (delete-trailing-whitespace))))))))
 
 (defun py-newline-and-indent ()
   "Add a newline and indent to outmost reasonable indent.
 When indent is set back manually, this is honoured in following lines."
   (interactive "*")
   (let* ((orig (point))
-	 ;; lp:1280982, deliberatly dedented by user
-	 (this-dedent
-	  (when
-	      ;; (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*" (line-beginning-position)))
-	      (looking-back "^[ \t]+" (line-beginning-position))
-	    (current-column)))
-	 erg)
+         ;; lp:1280982, deliberatly dedented by user
+         (this-dedent
+          (when
+              ;; (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*" (line-beginning-position)))
+              (looking-back "^[ \t]+" (line-beginning-position))
+            (current-column)))
+         erg)
     (newline 1)
     (py--delete-trailing-whitespace orig)
     (setq erg
-	  (cond (this-dedent
-		 (indent-to-column this-dedent))
-		((and py-empty-line-closes-p (or (eq this-command last-command)(py--after-empty-line)))
-		 (indent-to-column (save-excursion (py-backward-statement)(- (current-indentation) py-indent-offset))))
-		(t
-		 (fixup-whitespace)
-		 (indent-to-column (py-compute-indentation)))))
+          (cond (this-dedent
+                 (indent-to-column this-dedent))
+                ((and py-empty-line-closes-p (or (eq this-command last-command)(py--after-empty-line)))
+                 (indent-to-column (save-excursion (py-backward-statement)(- (current-indentation) py-indent-offset))))
+                (t
+                 (fixup-whitespace)
+                 (indent-to-column (py-compute-indentation)))))
     erg))
 
 (defun py-newline-and-dedent ()
@@ -16807,7 +16806,7 @@ Indented same level, which do not open blocks."
                   (setq beg
                         (when (py-backward-statement)
                           (line-beginning-position)))
-		  ;; backward-statement should not stop in string
+                  ;; backward-statement should not stop in string
                   ;; (not (py-in-string-p))
                   (not (py--beginning-of-block-p))
                   (eq (current-indentation) orig-indent)))
@@ -16953,16 +16952,16 @@ Returns the string inserted."
 (defun py--edit-set-vars ()
   (save-excursion
     (let ((py--editbeg (when (use-region-p) (region-beginning)))
-	  (py--editend (when (use-region-p) (region-end)))
-	  (pps (parse-partial-sexp (point-min) (point))))
+          (py--editend (when (use-region-p) (region-end)))
+          (pps (parse-partial-sexp (point-min) (point))))
       (when (nth 3 pps)
-	(setq py--editbeg (or py--editbeg (progn (goto-char (nth 8 pps))
-						 (skip-chars-forward (char-to-string (char-after)))(push-mark) (point))))
-	(setq py--editend (or py--editend
-			      (progn (goto-char (nth 8 pps))
-				     (forward-sexp)
-				     (skip-chars-backward (char-to-string (char-before)))
-				     (point)))))
+        (setq py--editbeg (or py--editbeg (progn (goto-char (nth 8 pps))
+                                                 (skip-chars-forward (char-to-string (char-after)))(push-mark) (point))))
+        (setq py--editend (or py--editend
+                              (progn (goto-char (nth 8 pps))
+                                     (forward-sexp)
+                                     (skip-chars-backward (char-to-string (char-before)))
+                                     (point)))))
       (cons (copy-marker py--editbeg) (copy-marker py--editend)))))
 
 (defun py--write-edit ()
@@ -16971,7 +16970,7 @@ Returns the string inserted."
   (goto-char (point-min))
   (while (re-search-forward "[\"']" nil t 1)
     (or (py-escaped-p)
-	(replace-match (concat "\\\\" (match-string-no-properties 0)))))
+        (replace-match (concat "\\\\" (match-string-no-properties 0)))))
   (jump-to-register py--edit-register)
   ;; (py-restore-window-configuration)
   (delete-region py--docbeg py--docend)
@@ -16988,23 +16987,23 @@ arg MODE: which buffer-mode used in edit-buffer"
       (window-configuration-to-register py--edit-register)
       (setq py--oldbuf (current-buffer))
       (let* ((orig (point))
-	     (bounds (or (and beg end) (py--edit-set-vars)))
-	     relpos editstrg)
-	(setq py--docbeg (or beg (car bounds)))
-	(setq py--docend (or end (cdr bounds)))
-	;; store relative position in editstrg
-	(setq relpos (1+ (- orig py--docbeg)))
-	(setq editstrg (buffer-substring py--docbeg py--docend))
-	(set-buffer (get-buffer-create buffer-name))
-	(erase-buffer)
-	(switch-to-buffer (current-buffer))
-	(when prefix (insert prefix))
-	(insert editstrg)
-	(when suffix (insert suffix))
-	(funcall mode)
-	(local-set-key [(control c) (control c)] (quote py--write-edit))
-	(goto-char relpos)
-	(message "%s" "Type C-c C-c writes contents back")))))
+             (bounds (or (and beg end) (py--edit-set-vars)))
+             relpos editstrg)
+        (setq py--docbeg (or beg (car bounds)))
+        (setq py--docend (or end (cdr bounds)))
+        ;; store relative position in editstrg
+        (setq relpos (1+ (- orig py--docbeg)))
+        (setq editstrg (buffer-substring py--docbeg py--docend))
+        (set-buffer (get-buffer-create buffer-name))
+        (erase-buffer)
+        (switch-to-buffer (current-buffer))
+        (when prefix (insert prefix))
+        (insert editstrg)
+        (when suffix (insert suffix))
+        (funcall mode)
+        (local-set-key [(control c) (control c)] (quote py--write-edit))
+        (goto-char relpos)
+        (message "%s" "Type C-c C-c writes contents back")))))
 
 (defun py-edit-docstring ()
   "Edit docstring or active region in ‘python-mode’."
@@ -17016,17 +17015,17 @@ arg MODE: which buffer-mode used in edit-buffer"
   (interactive "*")
   (save-excursion
     (let* ((beg (py-beginning-of-assignment))
-	   (end (copy-marker (py-forward-assignment)))
-	   last)
+           (end (copy-marker (py-forward-assignment)))
+           last)
       (goto-char beg)
       (while (and (not (eobp))(re-search-forward "^\\([ \t]*\\)\[\]\"'{}]" end t 1) (setq last (copy-marker (point))))
-	(save-excursion (goto-char (match-end 1))
-			(when (eq (current-column) (current-indentation)) (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point)))))
-	(when last (goto-char last))))))
+        (save-excursion (goto-char (match-end 1))
+                        (when (eq (current-column) (current-indentation)) (delete-region (point) (progn (skip-chars-backward " \t\r\n\f") (point)))))
+        (when last (goto-char last))))))
 
 (defun py--prettyprint-assignment-intern (beg end name buffer)
   (let ((proc (get-buffer-process buffer))
-	erg)
+        erg)
     ;; (py-send-string "import pprint" proc nil t)
     (py-fast-send-string "import json" proc buffer)
     ;; send the dict/assigment
@@ -17045,9 +17044,9 @@ arg MODE: which buffer-mode used in edit-buffer"
   (window-configuration-to-register py--windows-config-register)
   (save-excursion
     (let* ((beg (py-beginning-of-assignment))
-	   (name (py-expression))
-	   (end (py-forward-assignment))
-	   (proc-buf (py-shell nil nil "Fast Intern Utility Re-Use")))
+           (name (py-expression))
+           (end (py-forward-assignment))
+           (proc-buf (py-shell nil nil "Fast Intern Utility Re-Use")))
       (py--prettyprint-assignment-intern beg end name proc-buf)))
   (py-restore-window-configuration))
 
@@ -17391,1436 +17390,1436 @@ sign in chained assignment."
     `("Python"
       ("Interpreter"
        ["Ipython" ipython
-	:help " ‘ipython’
+        :help " ‘ipython’
 Start an IPython interpreter."]
 
        ["Ipython2\.7" ipython2\.7
-	:help " ‘ipython2\.7’"]
+        :help " ‘ipython2\.7’"]
 
        ["Ipython3" ipython3
-	:help " ‘ipython3’
+        :help " ‘ipython3’
 Start an IPython3 interpreter."]
 
        ["Jython" jython
-	:help " ‘jython’
+        :help " ‘jython’
 Start an Jython interpreter."]
 
        ["Python" python
-	:help " ‘python’
+        :help " ‘python’
 Start an Python interpreter."]
 
        ["Python2" python2
-	:help " ‘python2’
+        :help " ‘python2’
 Start an Python2 interpreter."]
 
        ["Python3" python3
-	:help " ‘python3’
+        :help " ‘python3’
 Start an Python3 interpreter."]
        ["SymPy" isympy3
-	:help " ‘isympy3’
+        :help " ‘isympy3’
 Start an SymPy interpreter."])
 
       ("Edit"
        ("Shift"
-	("Shift right"
-	 ["Shift block right" py-shift-block-right
-	  :help " ‘py-shift-block-right’
+        ("Shift right"
+         ["Shift block right" py-shift-block-right
+          :help " ‘py-shift-block-right’
 Indent block by COUNT spaces."]
 
-	 ["Shift block or clause right" py-shift-block-or-clause-right
-	  :help " ‘py-shift-block-or-clause-right’
+         ["Shift block or clause right" py-shift-block-or-clause-right
+          :help " ‘py-shift-block-or-clause-right’
 Indent block-or-clause by COUNT spaces."]
 
-	 ["Shift class right" py-shift-class-right
-	  :help " ‘py-shift-class-right’
+         ["Shift class right" py-shift-class-right
+          :help " ‘py-shift-class-right’
 Indent class by COUNT spaces."]
 
-	 ["Shift clause right" py-shift-clause-right
-	  :help " ‘py-shift-clause-right’
+         ["Shift clause right" py-shift-clause-right
+          :help " ‘py-shift-clause-right’
 Indent clause by COUNT spaces."]
 
-	 ["Shift comment right" py-shift-comment-right
-	  :help " ‘py-shift-comment-right’
+         ["Shift comment right" py-shift-comment-right
+          :help " ‘py-shift-comment-right’
 Indent comment by COUNT spaces."]
 
-	 ["Shift def right" py-shift-def-right
-	  :help " ‘py-shift-def-right’
+         ["Shift def right" py-shift-def-right
+          :help " ‘py-shift-def-right’
 Indent def by COUNT spaces."]
 
-	 ["Shift def or class right" py-shift-def-or-class-right
-	  :help " ‘py-shift-def-or-class-right’
+         ["Shift def or class right" py-shift-def-or-class-right
+          :help " ‘py-shift-def-or-class-right’
 Indent def-or-class by COUNT spaces."]
 
-	 ["Shift indent right" py-shift-indent-right
-	  :help " ‘py-shift-indent-right’
+         ["Shift indent right" py-shift-indent-right
+          :help " ‘py-shift-indent-right’
 Indent indent by COUNT spaces."]
 
-	 ["Shift minor block right" py-shift-minor-block-right
-	  :help " ‘py-shift-minor-block-right’
+         ["Shift minor block right" py-shift-minor-block-right
+          :help " ‘py-shift-minor-block-right’
 Indent minor-block by COUNT spaces."]
 
-	 ["Shift paragraph right" py-shift-paragraph-right
-	  :help " ‘py-shift-paragraph-right’
+         ["Shift paragraph right" py-shift-paragraph-right
+          :help " ‘py-shift-paragraph-right’
 Indent paragraph by COUNT spaces."]
 
-	 ["Shift region right" py-shift-region-right
-	  :help " ‘py-shift-region-right’
+         ["Shift region right" py-shift-region-right
+          :help " ‘py-shift-region-right’
 Indent region by COUNT spaces."]
 
-	 ["Shift statement right" py-shift-statement-right
-	  :help " ‘py-shift-statement-right’
+         ["Shift statement right" py-shift-statement-right
+          :help " ‘py-shift-statement-right’
 Indent statement by COUNT spaces."]
 
-	 ["Shift top level right" py-shift-top-level-right
-	  :help " ‘py-shift-top-level-right’
+         ["Shift top level right" py-shift-top-level-right
+          :help " ‘py-shift-top-level-right’
 Indent top-level by COUNT spaces."])
-	("Shift left"
-	 ["Shift block left" py-shift-block-left
-	  :help " ‘py-shift-block-left’
+        ("Shift left"
+         ["Shift block left" py-shift-block-left
+          :help " ‘py-shift-block-left’
 Dedent block by COUNT spaces."]
 
-	 ["Shift block or clause left" py-shift-block-or-clause-left
-	  :help " ‘py-shift-block-or-clause-left’
+         ["Shift block or clause left" py-shift-block-or-clause-left
+          :help " ‘py-shift-block-or-clause-left’
 Dedent block-or-clause by COUNT spaces."]
 
-	 ["Shift class left" py-shift-class-left
-	  :help " ‘py-shift-class-left’
+         ["Shift class left" py-shift-class-left
+          :help " ‘py-shift-class-left’
 Dedent class by COUNT spaces."]
 
-	 ["Shift clause left" py-shift-clause-left
-	  :help " ‘py-shift-clause-left’
+         ["Shift clause left" py-shift-clause-left
+          :help " ‘py-shift-clause-left’
 Dedent clause by COUNT spaces."]
 
-	 ["Shift comment left" py-shift-comment-left
-	  :help " ‘py-shift-comment-left’
+         ["Shift comment left" py-shift-comment-left
+          :help " ‘py-shift-comment-left’
 Dedent comment by COUNT spaces."]
 
-	 ["Shift def left" py-shift-def-left
-	  :help " ‘py-shift-def-left’
+         ["Shift def left" py-shift-def-left
+          :help " ‘py-shift-def-left’
 Dedent def by COUNT spaces."]
 
-	 ["Shift def or class left" py-shift-def-or-class-left
-	  :help " ‘py-shift-def-or-class-left’
+         ["Shift def or class left" py-shift-def-or-class-left
+          :help " ‘py-shift-def-or-class-left’
 Dedent def-or-class by COUNT spaces."]
 
-	 ["Shift indent left" py-shift-indent-left
-	  :help " ‘py-shift-indent-left’
+         ["Shift indent left" py-shift-indent-left
+          :help " ‘py-shift-indent-left’
 Dedent indent by COUNT spaces."]
 
-	 ["Shift minor block left" py-shift-minor-block-left
-	  :help " ‘py-shift-minor-block-left’
+         ["Shift minor block left" py-shift-minor-block-left
+          :help " ‘py-shift-minor-block-left’
 Dedent minor-block by COUNT spaces."]
 
-	 ["Shift paragraph left" py-shift-paragraph-left
-	  :help " ‘py-shift-paragraph-left’
+         ["Shift paragraph left" py-shift-paragraph-left
+          :help " ‘py-shift-paragraph-left’
 Dedent paragraph by COUNT spaces."]
 
-	 ["Shift region left" py-shift-region-left
-	  :help " ‘py-shift-region-left’
+         ["Shift region left" py-shift-region-left
+          :help " ‘py-shift-region-left’
 Dedent region by COUNT spaces."]
 
-	 ["Shift statement left" py-shift-statement-left
-	  :help " ‘py-shift-statement-left’
+         ["Shift statement left" py-shift-statement-left
+          :help " ‘py-shift-statement-left’
 Dedent statement by COUNT spaces."]))
        ("Mark"
-	["Mark block" py-mark-block
-	 :help " ‘py-mark-block’
+        ["Mark block" py-mark-block
+         :help " ‘py-mark-block’
 Mark block, take beginning of line positions."]
 
-	["Mark block or clause" py-mark-block-or-clause
-	 :help " ‘py-mark-block-or-clause’
+        ["Mark block or clause" py-mark-block-or-clause
+         :help " ‘py-mark-block-or-clause’
 Mark block-or-clause, take beginning of line positions."]
 
-	["Mark class" py-mark-class
-	 :help " ‘py-mark-class’
+        ["Mark class" py-mark-class
+         :help " ‘py-mark-class’
 Mark class, take beginning of line positions."]
 
-	["Mark clause" py-mark-clause
-	 :help " ‘py-mark-clause’
+        ["Mark clause" py-mark-clause
+         :help " ‘py-mark-clause’
 Mark clause, take beginning of line positions."]
 
-	["Mark comment" py-mark-comment
-	 :help " ‘py-mark-comment’
+        ["Mark comment" py-mark-comment
+         :help " ‘py-mark-comment’
 Mark comment at point."]
 
-	["Mark def" py-mark-def
-	 :help " ‘py-mark-def’
+        ["Mark def" py-mark-def
+         :help " ‘py-mark-def’
 Mark def, take beginning of line positions."]
 
-	["Mark def or class" py-mark-def-or-class
-	 :help " ‘py-mark-def-or-class’
+        ["Mark def or class" py-mark-def-or-class
+         :help " ‘py-mark-def-or-class’
 Mark def-or-class, take beginning of line positions."]
 
-	["Mark expression" py-mark-expression
-	 :help " ‘py-mark-expression’
+        ["Mark expression" py-mark-expression
+         :help " ‘py-mark-expression’
 Mark expression at point."]
 
-	["Mark except block" py-mark-except-block
-	 :help " ‘py-mark-except-block’
+        ["Mark except block" py-mark-except-block
+         :help " ‘py-mark-except-block’
 Mark except-block, take beginning of line positions."]
 
-	["Mark if block" py-mark-if-block
-	 :help " ‘py-mark-if-block’
+        ["Mark if block" py-mark-if-block
+         :help " ‘py-mark-if-block’
 Mark if-block, take beginning of line positions."]
 
-	["Mark indent" py-mark-indent
-	 :help " ‘py-mark-indent’
+        ["Mark indent" py-mark-indent
+         :help " ‘py-mark-indent’
 Mark indent, take beginning of line positions."]
 
-	["Mark line" py-mark-line
-	 :help " ‘py-mark-line’
+        ["Mark line" py-mark-line
+         :help " ‘py-mark-line’
 Mark line at point."]
 
-	["Mark minor block" py-mark-minor-block
-	 :help " ‘py-mark-minor-block’
+        ["Mark minor block" py-mark-minor-block
+         :help " ‘py-mark-minor-block’
 Mark minor-block, take beginning of line positions."]
 
-	["Mark partial expression" py-mark-partial-expression
-	 :help " ‘py-mark-partial-expression’
+        ["Mark partial expression" py-mark-partial-expression
+         :help " ‘py-mark-partial-expression’
 Mark partial-expression at point."]
 
-	["Mark paragraph" py-mark-paragraph
-	 :help " ‘py-mark-paragraph’
+        ["Mark paragraph" py-mark-paragraph
+         :help " ‘py-mark-paragraph’
 Mark paragraph at point."]
 
-	["Mark section" py-mark-section
-	 :help " ‘py-mark-section’
+        ["Mark section" py-mark-section
+         :help " ‘py-mark-section’
 Mark section at point."]
 
-	["Mark statement" py-mark-statement
-	 :help " ‘py-mark-statement’
+        ["Mark statement" py-mark-statement
+         :help " ‘py-mark-statement’
 Mark statement, take beginning of line positions."]
 
-	["Mark top level" py-mark-top-level
-	 :help " ‘py-mark-top-level’
+        ["Mark top level" py-mark-top-level
+         :help " ‘py-mark-top-level’
 Mark top-level, take beginning of line positions."]
 
-	["Mark try block" py-mark-try-block
-	 :help " ‘py-mark-try-block’
+        ["Mark try block" py-mark-try-block
+         :help " ‘py-mark-try-block’
 Mark try-block, take beginning of line positions."])
        ("Copy"
-	["Copy block" py-copy-block
-	 :help " ‘py-copy-block’
+        ["Copy block" py-copy-block
+         :help " ‘py-copy-block’
 Copy block at point."]
 
-	["Copy block or clause" py-copy-block-or-clause
-	 :help " ‘py-copy-block-or-clause’
+        ["Copy block or clause" py-copy-block-or-clause
+         :help " ‘py-copy-block-or-clause’
 Copy block-or-clause at point."]
 
-	["Copy class" py-copy-class
-	 :help " ‘py-copy-class’
+        ["Copy class" py-copy-class
+         :help " ‘py-copy-class’
 Copy class at point."]
 
-	["Copy clause" py-copy-clause
-	 :help " ‘py-copy-clause’
+        ["Copy clause" py-copy-clause
+         :help " ‘py-copy-clause’
 Copy clause at point."]
 
-	["Copy comment" py-copy-comment
-	 :help " ‘py-copy-comment’"]
+        ["Copy comment" py-copy-comment
+         :help " ‘py-copy-comment’"]
 
-	["Copy def" py-copy-def
-	 :help " ‘py-copy-def’
+        ["Copy def" py-copy-def
+         :help " ‘py-copy-def’
 Copy def at point."]
 
-	["Copy def or class" py-copy-def-or-class
-	 :help " ‘py-copy-def-or-class’
+        ["Copy def or class" py-copy-def-or-class
+         :help " ‘py-copy-def-or-class’
 Copy def-or-class at point."]
 
-	["Copy expression" py-copy-expression
-	 :help " ‘py-copy-expression’
+        ["Copy expression" py-copy-expression
+         :help " ‘py-copy-expression’
 Copy expression at point."]
 
-	["Copy except block" py-copy-except-block
-	 :help " ‘py-copy-except-block’"]
+        ["Copy except block" py-copy-except-block
+         :help " ‘py-copy-except-block’"]
 
-	["Copy if block" py-copy-if-block
-	 :help " ‘py-copy-if-block’"]
+        ["Copy if block" py-copy-if-block
+         :help " ‘py-copy-if-block’"]
 
-	["Copy indent" py-copy-indent
-	 :help " ‘py-copy-indent’
+        ["Copy indent" py-copy-indent
+         :help " ‘py-copy-indent’
 Copy indent at point."]
 
-	["Copy line" py-copy-line
-	 :help " ‘py-copy-line’
+        ["Copy line" py-copy-line
+         :help " ‘py-copy-line’
 Copy line at point."]
 
-	["Copy minor block" py-copy-minor-block
-	 :help " ‘py-copy-minor-block’
+        ["Copy minor block" py-copy-minor-block
+         :help " ‘py-copy-minor-block’
 Copy minor-block at point."]
 
-	["Copy partial expression" py-copy-partial-expression
-	 :help " ‘py-copy-partial-expression’
+        ["Copy partial expression" py-copy-partial-expression
+         :help " ‘py-copy-partial-expression’
 Copy partial-expression at point."]
 
-	["Copy paragraph" py-copy-paragraph
-	 :help " ‘py-copy-paragraph’
+        ["Copy paragraph" py-copy-paragraph
+         :help " ‘py-copy-paragraph’
 Copy paragraph at point."]
 
-	["Copy section" py-copy-section
-	 :help " ‘py-copy-section’"]
+        ["Copy section" py-copy-section
+         :help " ‘py-copy-section’"]
 
-	["Copy statement" py-copy-statement
-	 :help " ‘py-copy-statement’
+        ["Copy statement" py-copy-statement
+         :help " ‘py-copy-statement’
 Copy statement at point."]
 
-	["Copy top level" py-copy-top-level
-	 :help " ‘py-copy-top-level’
+        ["Copy top level" py-copy-top-level
+         :help " ‘py-copy-top-level’
 Copy top-level at point."])
        ("Kill"
-	["Kill block" py-kill-block
-	 :help " ‘py-kill-block’
+        ["Kill block" py-kill-block
+         :help " ‘py-kill-block’
 Delete block at point."]
 
-	["Kill block or clause" py-kill-block-or-clause
-	 :help " ‘py-kill-block-or-clause’
+        ["Kill block or clause" py-kill-block-or-clause
+         :help " ‘py-kill-block-or-clause’
 Delete block-or-clause at point."]
 
-	["Kill class" py-kill-class
-	 :help " ‘py-kill-class’
+        ["Kill class" py-kill-class
+         :help " ‘py-kill-class’
 Delete class at point."]
 
-	["Kill clause" py-kill-clause
-	 :help " ‘py-kill-clause’
+        ["Kill clause" py-kill-clause
+         :help " ‘py-kill-clause’
 Delete clause at point."]
 
-	["Kill comment" py-kill-comment
-	 :help " ‘py-kill-comment’
+        ["Kill comment" py-kill-comment
+         :help " ‘py-kill-comment’
 Delete comment at point."]
 
-	["Kill def" py-kill-def
-	 :help " ‘py-kill-def’
+        ["Kill def" py-kill-def
+         :help " ‘py-kill-def’
 Delete def at point."]
 
-	["Kill def or class" py-kill-def-or-class
-	 :help " ‘py-kill-def-or-class’
+        ["Kill def or class" py-kill-def-or-class
+         :help " ‘py-kill-def-or-class’
 Delete def-or-class at point."]
 
-	["Kill expression" py-kill-expression
-	 :help " ‘py-kill-expression’
+        ["Kill expression" py-kill-expression
+         :help " ‘py-kill-expression’
 Delete expression at point."]
 
-	["Kill except block" py-kill-except-block
-	 :help " ‘py-kill-except-block’
+        ["Kill except block" py-kill-except-block
+         :help " ‘py-kill-except-block’
 Delete except-block at point."]
 
-	["Kill if block" py-kill-if-block
-	 :help " ‘py-kill-if-block’
+        ["Kill if block" py-kill-if-block
+         :help " ‘py-kill-if-block’
 Delete if-block at point."]
 
-	["Kill indent" py-kill-indent
-	 :help " ‘py-kill-indent’
+        ["Kill indent" py-kill-indent
+         :help " ‘py-kill-indent’
 Delete indent at point."]
 
-	["Kill line" py-kill-line
-	 :help " ‘py-kill-line’
+        ["Kill line" py-kill-line
+         :help " ‘py-kill-line’
 Delete line at point."]
 
-	["Kill minor block" py-kill-minor-block
-	 :help " ‘py-kill-minor-block’
+        ["Kill minor block" py-kill-minor-block
+         :help " ‘py-kill-minor-block’
 Delete minor-block at point."]
 
-	["Kill partial expression" py-kill-partial-expression
-	 :help " ‘py-kill-partial-expression’
+        ["Kill partial expression" py-kill-partial-expression
+         :help " ‘py-kill-partial-expression’
 Delete partial-expression at point."]
 
-	["Kill paragraph" py-kill-paragraph
-	 :help " ‘py-kill-paragraph’
+        ["Kill paragraph" py-kill-paragraph
+         :help " ‘py-kill-paragraph’
 Delete paragraph at point."]
 
-	["Kill section" py-kill-section
-	 :help " ‘py-kill-section’
+        ["Kill section" py-kill-section
+         :help " ‘py-kill-section’
 Delete section at point."]
 
-	["Kill statement" py-kill-statement
-	 :help " ‘py-kill-statement’
+        ["Kill statement" py-kill-statement
+         :help " ‘py-kill-statement’
 Delete statement at point."]
 
-	["Kill top level" py-kill-top-level
-	 :help " ‘py-kill-top-level’
+        ["Kill top level" py-kill-top-level
+         :help " ‘py-kill-top-level’
 Delete top-level at point."]
 
-	["Kill try block" py-kill-try-block
-	 :help " ‘py-kill-try-block’
+        ["Kill try block" py-kill-try-block
+         :help " ‘py-kill-try-block’
 Delete try-block at point."])
        ("Delete"
-	["Delete block" py-delete-block
-	 :help " ‘py-delete-block’
+        ["Delete block" py-delete-block
+         :help " ‘py-delete-block’
 Delete BLOCK at point until beginning-of-line."]
 
-	["Delete block or clause" py-delete-block-or-clause
-	 :help " ‘py-delete-block-or-clause’
+        ["Delete block or clause" py-delete-block-or-clause
+         :help " ‘py-delete-block-or-clause’
 Delete BLOCK-OR-CLAUSE at point until beginning-of-line."]
 
-	["Delete class" py-delete-class
-	 :help " ‘py-delete-class’
+        ["Delete class" py-delete-class
+         :help " ‘py-delete-class’
 Delete CLASS at point until beginning-of-line."]
 
-	["Delete clause" py-delete-clause
-	 :help " ‘py-delete-clause’
+        ["Delete clause" py-delete-clause
+         :help " ‘py-delete-clause’
 Delete CLAUSE at point until beginning-of-line."]
 
-	["Delete comment" py-delete-comment
-	 :help " ‘py-delete-comment’
+        ["Delete comment" py-delete-comment
+         :help " ‘py-delete-comment’
 Delete COMMENT at point."]
 
-	["Delete def" py-delete-def
-	 :help " ‘py-delete-def’
+        ["Delete def" py-delete-def
+         :help " ‘py-delete-def’
 Delete DEF at point until beginning-of-line."]
 
-	["Delete def or class" py-delete-def-or-class
-	 :help " ‘py-delete-def-or-class’
+        ["Delete def or class" py-delete-def-or-class
+         :help " ‘py-delete-def-or-class’
 Delete DEF-OR-CLASS at point until beginning-of-line."]
 
-	["Delete expression" py-delete-expression
-	 :help " ‘py-delete-expression’
+        ["Delete expression" py-delete-expression
+         :help " ‘py-delete-expression’
 Delete EXPRESSION at point."]
 
-	["Delete except block" py-delete-except-block
-	 :help " ‘py-delete-except-block’
+        ["Delete except block" py-delete-except-block
+         :help " ‘py-delete-except-block’
 Delete EXCEPT-BLOCK at point until beginning-of-line."]
 
-	["Delete if block" py-delete-if-block
-	 :help " ‘py-delete-if-block’
+        ["Delete if block" py-delete-if-block
+         :help " ‘py-delete-if-block’
 Delete IF-BLOCK at point until beginning-of-line."]
 
-	["Delete indent" py-delete-indent
-	 :help " ‘py-delete-indent’
+        ["Delete indent" py-delete-indent
+         :help " ‘py-delete-indent’
 Delete INDENT at point until beginning-of-line."]
 
-	["Delete line" py-delete-line
-	 :help " ‘py-delete-line’
+        ["Delete line" py-delete-line
+         :help " ‘py-delete-line’
 Delete LINE at point."]
 
-	["Delete minor block" py-delete-minor-block
-	 :help " ‘py-delete-minor-block’
+        ["Delete minor block" py-delete-minor-block
+         :help " ‘py-delete-minor-block’
 Delete MINOR-BLOCK at point until beginning-of-line."]
 
-	["Delete partial expression" py-delete-partial-expression
-	 :help " ‘py-delete-partial-expression’
+        ["Delete partial expression" py-delete-partial-expression
+         :help " ‘py-delete-partial-expression’
 Delete PARTIAL-EXPRESSION at point."]
 
-	["Delete paragraph" py-delete-paragraph
-	 :help " ‘py-delete-paragraph’
+        ["Delete paragraph" py-delete-paragraph
+         :help " ‘py-delete-paragraph’
 Delete PARAGRAPH at point."]
 
-	["Delete section" py-delete-section
-	 :help " ‘py-delete-section’
+        ["Delete section" py-delete-section
+         :help " ‘py-delete-section’
 Delete SECTION at point."]
 
-	["Delete statement" py-delete-statement
-	 :help " ‘py-delete-statement’
+        ["Delete statement" py-delete-statement
+         :help " ‘py-delete-statement’
 Delete STATEMENT at point until beginning-of-line."]
 
-	["Delete top level" py-delete-top-level
-	 :help " ‘py-delete-top-level’
+        ["Delete top level" py-delete-top-level
+         :help " ‘py-delete-top-level’
 Delete TOP-LEVEL at point."]
 
-	["Delete try block" py-delete-try-block
-	 :help " ‘py-delete-try-block’
+        ["Delete try block" py-delete-try-block
+         :help " ‘py-delete-try-block’
 Delete TRY-BLOCK at point until beginning-of-line."])
        ("Comment"
-	["Comment block" py-comment-block
-	 :help " ‘py-comment-block’
+        ["Comment block" py-comment-block
+         :help " ‘py-comment-block’
 Comments block at point."]
 
-	["Comment block or clause" py-comment-block-or-clause
-	 :help " ‘py-comment-block-or-clause’
+        ["Comment block or clause" py-comment-block-or-clause
+         :help " ‘py-comment-block-or-clause’
 Comments block-or-clause at point."]
 
-	["Comment class" py-comment-class
-	 :help " ‘py-comment-class’
+        ["Comment class" py-comment-class
+         :help " ‘py-comment-class’
 Comments class at point."]
 
-	["Comment clause" py-comment-clause
-	 :help " ‘py-comment-clause’
+        ["Comment clause" py-comment-clause
+         :help " ‘py-comment-clause’
 Comments clause at point."]
 
-	["Comment def" py-comment-def
-	 :help " ‘py-comment-def’
+        ["Comment def" py-comment-def
+         :help " ‘py-comment-def’
 Comments def at point."]
 
-	["Comment def or class" py-comment-def-or-class
-	 :help " ‘py-comment-def-or-class’
+        ["Comment def or class" py-comment-def-or-class
+         :help " ‘py-comment-def-or-class’
 Comments def-or-class at point."]
 
-	["Comment indent" py-comment-indent
-	 :help " ‘py-comment-indent’
+        ["Comment indent" py-comment-indent
+         :help " ‘py-comment-indent’
 Comments indent at point."]
 
-	["Comment minor block" py-comment-minor-block
-	 :help " ‘py-comment-minor-block’
+        ["Comment minor block" py-comment-minor-block
+         :help " ‘py-comment-minor-block’
 Comments minor-block at point."]
 
-	["Comment section" py-comment-section
-	 :help " ‘py-comment-section’
+        ["Comment section" py-comment-section
+         :help " ‘py-comment-section’
 Comments section at point."]
 
-	["Comment statement" py-comment-statement
-	 :help " ‘py-comment-statement’
+        ["Comment statement" py-comment-statement
+         :help " ‘py-comment-statement’
 Comments statement at point."]
 
-	["Comment top level" py-comment-top-level
-	 :help " ‘py-comment-top-level’
+        ["Comment top level" py-comment-top-level
+         :help " ‘py-comment-top-level’
 Comments top-level at point."]))
       ("Move"
        ("Backward"
 
-	["Backward def or class" py-backward-def-or-class
-	 :help " ‘py-backward-def-or-class’
+        ["Backward def or class" py-backward-def-or-class
+         :help " ‘py-backward-def-or-class’
 Go to beginning of def-or-class."]
 
-	["Backward class" py-backward-class
-	 :help " ‘py-backward-class’
+        ["Backward class" py-backward-class
+         :help " ‘py-backward-class’
 Go to beginning of class."]
 
-	["Backward def" py-backward-def
-	 :help " ‘py-backward-def’
+        ["Backward def" py-backward-def
+         :help " ‘py-backward-def’
 Go to beginning of def."]
 
-	["Backward block" py-backward-block
-	 :help " ‘py-backward-block’
+        ["Backward block" py-backward-block
+         :help " ‘py-backward-block’
 Go to beginning of ‘block’."]
 
-	["Backward statement" py-backward-statement
-	 :help " ‘py-backward-statement’
+        ["Backward statement" py-backward-statement
+         :help " ‘py-backward-statement’
 Go to the initial line of a simple statement."]
 
-	["Backward indent" py-backward-indent
-	 :help " ‘py-backward-indent’
+        ["Backward indent" py-backward-indent
+         :help " ‘py-backward-indent’
 Go to the beginning of a section of equal indent."]
 
-	["Backward top level" py-backward-top-level
-	 :help " ‘py-backward-top-level’
+        ["Backward top level" py-backward-top-level
+         :help " ‘py-backward-top-level’
 Go up to beginning of statments until level of indentation is null."]
 
-	("Other"
-	 ["Backward section" py-backward-section
-	  :help " ‘py-backward-section’
+        ("Other"
+         ["Backward section" py-backward-section
+          :help " ‘py-backward-section’
 Go to next section start upward in buffer."]
 
-	 ["Backward expression" py-backward-expression
-	  :help " ‘py-backward-expression’"]
+         ["Backward expression" py-backward-expression
+          :help " ‘py-backward-expression’"]
 
-	 ["Backward partial expression" py-backward-partial-expression
-	  :help " ‘py-backward-partial-expression’"]
+         ["Backward partial expression" py-backward-partial-expression
+          :help " ‘py-backward-partial-expression’"]
 
-	 ["Backward assignment" py-backward-assignment
-	  :help " ‘py-backward-assignment’"]
+         ["Backward assignment" py-backward-assignment
+          :help " ‘py-backward-assignment’"]
 
-	 ["Backward block or clause" py-backward-block-or-clause
-	  :help " ‘py-backward-block-or-clause’
+         ["Backward block or clause" py-backward-block-or-clause
+          :help " ‘py-backward-block-or-clause’
 Go to beginning of ‘block-or-clause’."]
 
-	 ["Backward clause" py-backward-clause
-	  :help " ‘py-backward-clause’
+         ["Backward clause" py-backward-clause
+          :help " ‘py-backward-clause’
 Go to beginning of ‘clause’."]
 
-	 ["Backward elif block" py-backward-elif-block
-	  :help " ‘py-backward-elif-block’
+         ["Backward elif block" py-backward-elif-block
+          :help " ‘py-backward-elif-block’
 Go to beginning of ‘elif-block’."]
 
-	 ["Backward else block" py-backward-else-block
-	  :help " ‘py-backward-else-block’
+         ["Backward else block" py-backward-else-block
+          :help " ‘py-backward-else-block’
 Go to beginning of ‘else-block’."]
 
-	 ["Backward except block" py-backward-except-block
-	  :help " ‘py-backward-except-block’
+         ["Backward except block" py-backward-except-block
+          :help " ‘py-backward-except-block’
 Go to beginning of ‘except-block’."]
 
-	 ["Backward if block" py-backward-if-block
-	  :help " ‘py-backward-if-block’
+         ["Backward if block" py-backward-if-block
+          :help " ‘py-backward-if-block’
 Go to beginning of ‘if-block’."]
 
-	 ["Backward minor block" py-backward-minor-block
-	  :help " ‘py-backward-minor-block’
+         ["Backward minor block" py-backward-minor-block
+          :help " ‘py-backward-minor-block’
 Go to beginning of ‘minor-block’."]
 
-	 ["Backward try block" py-backward-try-block
-	  :help " ‘py-backward-try-block’
+         ["Backward try block" py-backward-try-block
+          :help " ‘py-backward-try-block’
 Go to beginning of ‘try-block’."]))
        ("Forward"
-	["Forward def or class" py-forward-def-or-class
-	 :help " ‘py-forward-def-or-class’
+        ["Forward def or class" py-forward-def-or-class
+         :help " ‘py-forward-def-or-class’
 Go to end of def-or-class."]
 
-	["Forward class" py-forward-class
-	 :help " ‘py-forward-class’
+        ["Forward class" py-forward-class
+         :help " ‘py-forward-class’
 Go to end of class."]
 
-	["Forward def" py-forward-def
-	 :help " ‘py-forward-def’
+        ["Forward def" py-forward-def
+         :help " ‘py-forward-def’
 Go to end of def."]
 
-	["Forward block" py-forward-block
-	 :help " ‘py-forward-block’
+        ["Forward block" py-forward-block
+         :help " ‘py-forward-block’
 Go to end of block."]
 
-	["Forward statement" py-forward-statement
-	 :help " ‘py-forward-statement’
+        ["Forward statement" py-forward-statement
+         :help " ‘py-forward-statement’
 Go to the last char of current statement."]
 
-	["Forward indent" py-forward-indent
-	 :help " ‘py-forward-indent’
+        ["Forward indent" py-forward-indent
+         :help " ‘py-forward-indent’
 Go to the end of a section of equal indentation."]
 
-	["Forward top level" py-forward-top-level
-	 :help " ‘py-forward-top-level’
+        ["Forward top level" py-forward-top-level
+         :help " ‘py-forward-top-level’
 Go to end of top-level form at point."]
 
-	("Other"
-	 ["Forward section" py-forward-section
-	  :help " ‘py-forward-section’
+        ("Other"
+         ["Forward section" py-forward-section
+          :help " ‘py-forward-section’
 Go to next section end downward in buffer."]
 
-	 ["Forward expression" py-forward-expression
-	  :help " ‘py-forward-expression’"]
+         ["Forward expression" py-forward-expression
+          :help " ‘py-forward-expression’"]
 
-	 ["Forward partial expression" py-forward-partial-expression
-	  :help " ‘py-forward-partial-expression’"]
+         ["Forward partial expression" py-forward-partial-expression
+          :help " ‘py-forward-partial-expression’"]
 
-	 ["Forward assignment" py-forward-assignment
-	  :help " ‘py-forward-assignment’"]
+         ["Forward assignment" py-forward-assignment
+          :help " ‘py-forward-assignment’"]
 
-	 ["Forward block or clause" py-forward-block-or-clause
-	  :help " ‘py-forward-block-or-clause’
+         ["Forward block or clause" py-forward-block-or-clause
+          :help " ‘py-forward-block-or-clause’
 Go to end of block-or-clause."]
 
-	 ["Forward clause" py-forward-clause
-	  :help " ‘py-forward-clause’
+         ["Forward clause" py-forward-clause
+          :help " ‘py-forward-clause’
 Go to end of clause."]
 
-	 ["Forward for block" py-forward-for-block
-	 :help " ‘py-forward-for-block’
+         ["Forward for block" py-forward-for-block
+         :help " ‘py-forward-for-block’
 Go to end of for-block."]
 
-	 ["Forward elif block" py-forward-elif-block
-	  :help " ‘py-forward-elif-block’
+         ["Forward elif block" py-forward-elif-block
+          :help " ‘py-forward-elif-block’
 Go to end of elif-block."]
 
-	 ["Forward else block" py-forward-else-block
-	  :help " ‘py-forward-else-block’
+         ["Forward else block" py-forward-else-block
+          :help " ‘py-forward-else-block’
 Go to end of else-block."]
 
-	 ["Forward except block" py-forward-except-block
-	  :help " ‘py-forward-except-block’
+         ["Forward except block" py-forward-except-block
+          :help " ‘py-forward-except-block’
 Go to end of except-block."]
 
-	 ["Forward if block" py-forward-if-block
-	  :help " ‘py-forward-if-block’
+         ["Forward if block" py-forward-if-block
+          :help " ‘py-forward-if-block’
 Go to end of if-block."]
 
-	 ["Forward minor block" py-forward-minor-block
-	  :help " ‘py-forward-minor-block’
+         ["Forward minor block" py-forward-minor-block
+          :help " ‘py-forward-minor-block’
 Go to end of minor-block."]
-	 ["Forward try block" py-forward-try-block
-	  :help " ‘py-forward-try-block’
+         ["Forward try block" py-forward-try-block
+          :help " ‘py-forward-try-block’
 Go to end of try-block."]))
        ("BOL-forms"
-	("Backward"
-	 ["Backward block bol" py-backward-block-bol
-	  :help " ‘py-backward-block-bol’
+        ("Backward"
+         ["Backward block bol" py-backward-block-bol
+          :help " ‘py-backward-block-bol’
 Go to beginning of ‘block’, go to BOL."]
 
-	 ["Backward block or clause bol" py-backward-block-or-clause-bol
-	  :help " ‘py-backward-block-or-clause-bol’
+         ["Backward block or clause bol" py-backward-block-or-clause-bol
+          :help " ‘py-backward-block-or-clause-bol’
 Go to beginning of ‘block-or-clause’, go to BOL."]
 
-	 ["Backward class bol" py-backward-class-bol
-	  :help " ‘py-backward-class-bol’
+         ["Backward class bol" py-backward-class-bol
+          :help " ‘py-backward-class-bol’
 Go to beginning of class, go to BOL."]
 
-	 ["Backward clause bol" py-backward-clause-bol
-	  :help " ‘py-backward-clause-bol’
+         ["Backward clause bol" py-backward-clause-bol
+          :help " ‘py-backward-clause-bol’
 Go to beginning of ‘clause’, go to BOL."]
 
-	 ["Backward def bol" py-backward-def-bol
-	  :help " ‘py-backward-def-bol’
+         ["Backward def bol" py-backward-def-bol
+          :help " ‘py-backward-def-bol’
 Go to beginning of def, go to BOL."]
 
-	 ["Backward def or class bol" py-backward-def-or-class-bol
-	  :help " ‘py-backward-def-or-class-bol’
+         ["Backward def or class bol" py-backward-def-or-class-bol
+          :help " ‘py-backward-def-or-class-bol’
 Go to beginning of def-or-class, go to BOL."]
 
-	 ["Backward elif block bol" py-backward-elif-block-bol
-	  :help " ‘py-backward-elif-block-bol’
+         ["Backward elif block bol" py-backward-elif-block-bol
+          :help " ‘py-backward-elif-block-bol’
 Go to beginning of ‘elif-block’, go to BOL."]
 
-	 ["Backward else block bol" py-backward-else-block-bol
-	  :help " ‘py-backward-else-block-bol’
+         ["Backward else block bol" py-backward-else-block-bol
+          :help " ‘py-backward-else-block-bol’
 Go to beginning of ‘else-block’, go to BOL."]
 
-	 ["Backward except block bol" py-backward-except-block-bol
-	  :help " ‘py-backward-except-block-bol’
+         ["Backward except block bol" py-backward-except-block-bol
+          :help " ‘py-backward-except-block-bol’
 Go to beginning of ‘except-block’, go to BOL."]
 
-	 ["Backward expression bol" py-backward-expression-bol
-	  :help " ‘py-backward-expression-bol’"]
+         ["Backward expression bol" py-backward-expression-bol
+          :help " ‘py-backward-expression-bol’"]
 
-	 ["Backward for block bol" py-backward-for-block-bol
-	  :help " ‘py-backward-for-block-bol’
+         ["Backward for block bol" py-backward-for-block-bol
+          :help " ‘py-backward-for-block-bol’
 Go to beginning of ‘for-block’, go to BOL."]
 
-	 ["Backward if block bol" py-backward-if-block-bol
-	  :help " ‘py-backward-if-block-bol’
+         ["Backward if block bol" py-backward-if-block-bol
+          :help " ‘py-backward-if-block-bol’
 Go to beginning of ‘if-block’, go to BOL."]
 
-	 ["Backward indent bol" py-backward-indent-bol
-	  :help " ‘py-backward-indent-bol’
+         ["Backward indent bol" py-backward-indent-bol
+          :help " ‘py-backward-indent-bol’
 Go to the beginning of line of a section of equal indent."]
 
-	 ["Backward minor block bol" py-backward-minor-block-bol
-	  :help " ‘py-backward-minor-block-bol’
+         ["Backward minor block bol" py-backward-minor-block-bol
+          :help " ‘py-backward-minor-block-bol’
 Go to beginning of ‘minor-block’, go to BOL."]
 
-	 ["Backward partial expression bol" py-backward-partial-expression-bol
-	  :help " ‘py-backward-partial-expression-bol’"]
+         ["Backward partial expression bol" py-backward-partial-expression-bol
+          :help " ‘py-backward-partial-expression-bol’"]
 
-	 ["Backward section bol" py-backward-section-bol
-	  :help " ‘py-backward-section-bol’"]
+         ["Backward section bol" py-backward-section-bol
+          :help " ‘py-backward-section-bol’"]
 
-	 ["Backward statement bol" py-backward-statement-bol
-	  :help " ‘py-backward-statement-bol’
+         ["Backward statement bol" py-backward-statement-bol
+          :help " ‘py-backward-statement-bol’
 Goto beginning of line where statement starts."]
 
-	 ["Backward try block bol" py-backward-try-block-bol
-	  :help " ‘py-backward-try-block-bol’
+         ["Backward try block bol" py-backward-try-block-bol
+          :help " ‘py-backward-try-block-bol’
 Go to beginning of ‘try-block’, go to BOL."])
-	("Forward"
-	 ["Forward block bol" py-forward-block-bol
-	  :help " ‘py-forward-block-bol’
+        ("Forward"
+         ["Forward block bol" py-forward-block-bol
+          :help " ‘py-forward-block-bol’
 Goto beginning of line following end of block."]
 
-	 ["Forward block or clause bol" py-forward-block-or-clause-bol
-	  :help " ‘py-forward-block-or-clause-bol’
+         ["Forward block or clause bol" py-forward-block-or-clause-bol
+          :help " ‘py-forward-block-or-clause-bol’
 Goto beginning of line following end of block-or-clause."]
 
-	 ["Forward class bol" py-forward-class-bol
-	  :help " ‘py-forward-class-bol’
+         ["Forward class bol" py-forward-class-bol
+          :help " ‘py-forward-class-bol’
 Goto beginning of line following end of class."]
 
-	 ["Forward clause bol" py-forward-clause-bol
-	  :help " ‘py-forward-clause-bol’
+         ["Forward clause bol" py-forward-clause-bol
+          :help " ‘py-forward-clause-bol’
 Goto beginning of line following end of clause."]
 
-	 ["Forward def bol" py-forward-def-bol
-	  :help " ‘py-forward-def-bol’
+         ["Forward def bol" py-forward-def-bol
+          :help " ‘py-forward-def-bol’
 Goto beginning of line following end of def."]
 
-	 ["Forward def or class bol" py-forward-def-or-class-bol
-	  :help " ‘py-forward-def-or-class-bol’
+         ["Forward def or class bol" py-forward-def-or-class-bol
+          :help " ‘py-forward-def-or-class-bol’
 Goto beginning of line following end of def-or-class."]
 
-	 ["Forward elif block bol" py-forward-elif-block-bol
-	  :help " ‘py-forward-elif-block-bol’
+         ["Forward elif block bol" py-forward-elif-block-bol
+          :help " ‘py-forward-elif-block-bol’
 Goto beginning of line following end of elif-block."]
 
-	 ["Forward else block bol" py-forward-else-block-bol
-	  :help " ‘py-forward-else-block-bol’
+         ["Forward else block bol" py-forward-else-block-bol
+          :help " ‘py-forward-else-block-bol’
 Goto beginning of line following end of else-block."]
 
-	 ["Forward except block bol" py-forward-except-block-bol
-	  :help " ‘py-forward-except-block-bol’
+         ["Forward except block bol" py-forward-except-block-bol
+          :help " ‘py-forward-except-block-bol’
 Goto beginning of line following end of except-block."]
 
-	 ["Forward expression bol" py-forward-expression-bol
-	  :help " ‘py-forward-expression-bol’"]
+         ["Forward expression bol" py-forward-expression-bol
+          :help " ‘py-forward-expression-bol’"]
 
-	 ["Forward for block bol" py-forward-for-block-bol
-	  :help " ‘py-forward-for-block-bol’
+         ["Forward for block bol" py-forward-for-block-bol
+          :help " ‘py-forward-for-block-bol’
 Goto beginning of line following end of for-block."]
 
-	 ["Forward if block bol" py-forward-if-block-bol
-	  :help " ‘py-forward-if-block-bol’
+         ["Forward if block bol" py-forward-if-block-bol
+          :help " ‘py-forward-if-block-bol’
 Goto beginning of line following end of if-block."]
 
-	 ["Forward indent bol" py-forward-indent-bol
-	  :help " ‘py-forward-indent-bol’
+         ["Forward indent bol" py-forward-indent-bol
+          :help " ‘py-forward-indent-bol’
 Go to beginning of line following of a section of equal indentation."]
 
-	 ["Forward minor block bol" py-forward-minor-block-bol
-	  :help " ‘py-forward-minor-block-bol’
+         ["Forward minor block bol" py-forward-minor-block-bol
+          :help " ‘py-forward-minor-block-bol’
 Goto beginning of line following end of minor-block."]
 
-	 ["Forward partial expression bol" py-forward-partial-expression-bol
-	  :help " ‘py-forward-partial-expression-bol’"]
+         ["Forward partial expression bol" py-forward-partial-expression-bol
+          :help " ‘py-forward-partial-expression-bol’"]
 
-	 ["Forward section bol" py-forward-section-bol
-	  :help " ‘py-forward-section-bol’"]
+         ["Forward section bol" py-forward-section-bol
+          :help " ‘py-forward-section-bol’"]
 
-	 ["Forward statement bol" py-forward-statement-bol
-	  :help " ‘py-forward-statement-bol’
+         ["Forward statement bol" py-forward-statement-bol
+          :help " ‘py-forward-statement-bol’
 Go to the beginning-of-line following current statement."]
 
-	 ["Forward top level bol" py-forward-top-level-bol
-	  :help " ‘py-forward-top-level-bol’
+         ["Forward top level bol" py-forward-top-level-bol
+          :help " ‘py-forward-top-level-bol’
 Go to end of top-level form at point, stop at next beginning-of-line."]
 
-	 ["Forward try block bol" py-forward-try-block-bol
-	  :help " ‘py-forward-try-block-bol’
+         ["Forward try block bol" py-forward-try-block-bol
+          :help " ‘py-forward-try-block-bol’
 Goto beginning of line following end of try-block."]))
        ("Up/Down"
-	["Up" py-up
-	 :help " ‘py-up’
+        ["Up" py-up
+         :help " ‘py-up’
 Go up or to beginning of form if inside."]
 
-	["Down" py-down
-	 :help " ‘py-down’
+        ["Down" py-down
+         :help " ‘py-down’
 Go to beginning one level below of compound statement or definition at point."]))
       ("Send"
        ["Execute block" py-execute-block
-	:help " ‘py-execute-block’
+        :help " ‘py-execute-block’
 Send block at point to interpreter."]
 
        ["Execute block or clause" py-execute-block-or-clause
-	:help " ‘py-execute-block-or-clause’
+        :help " ‘py-execute-block-or-clause’
 Send block-or-clause at point to interpreter."]
 
        ["Execute buffer" py-execute-buffer
-	:help " ‘py-execute-buffer’
+        :help " ‘py-execute-buffer’
 :around advice: ‘ad-Advice-py-execute-buffer’"]
 
        ["Execute class" py-execute-class
-	:help " ‘py-execute-class’
+        :help " ‘py-execute-class’
 Send class at point to interpreter."]
 
        ["Execute clause" py-execute-clause
-	:help " ‘py-execute-clause’
+        :help " ‘py-execute-clause’
 Send clause at point to interpreter."]
 
        ["Execute def" py-execute-def
-	:help " ‘py-execute-def’
+        :help " ‘py-execute-def’
 Send def at point to interpreter."]
 
        ["Execute def or class" py-execute-def-or-class
-	:help " ‘py-execute-def-or-class’
+        :help " ‘py-execute-def-or-class’
 Send def-or-class at point to interpreter."]
 
        ["Execute expression" py-execute-expression
-	:help " ‘py-execute-expression’
+        :help " ‘py-execute-expression’
 Send expression at point to interpreter."]
 
        ["Execute indent" py-execute-indent
-	:help " ‘py-execute-indent’
+        :help " ‘py-execute-indent’
 Send indent at point to interpreter."]
 
        ["Execute line" py-execute-line
-	:help " ‘py-execute-line’
+        :help " ‘py-execute-line’
 Send line at point to interpreter."]
 
        ["Execute minor block" py-execute-minor-block
-	:help " ‘py-execute-minor-block’
+        :help " ‘py-execute-minor-block’
 Send minor-block at point to interpreter."]
 
        ["Execute paragraph" py-execute-paragraph
-	:help " ‘py-execute-paragraph’
+        :help " ‘py-execute-paragraph’
 Send paragraph at point to interpreter."]
 
        ["Execute partial expression" py-execute-partial-expression
-	:help " ‘py-execute-partial-expression’
+        :help " ‘py-execute-partial-expression’
 Send partial-expression at point to interpreter."]
 
        ["Execute region" py-execute-region
-	:help " ‘py-execute-region’
+        :help " ‘py-execute-region’
 Send region at point to interpreter."]
 
        ["Execute statement" py-execute-statement
-	:help " ‘py-execute-statement’
+        :help " ‘py-execute-statement’
 Send statement at point to interpreter."]
 
        ["Execute top level" py-execute-top-level
-	:help " ‘py-execute-top-level’
+        :help " ‘py-execute-top-level’
 Send top-level at point to interpreter."]
        ("Other"
-	("IPython"
-	 ["Execute block ipython" py-execute-block-ipython
-	  :help " ‘py-execute-block-ipython’
+        ("IPython"
+         ["Execute block ipython" py-execute-block-ipython
+          :help " ‘py-execute-block-ipython’
 Send block at point to IPython interpreter."]
 
-	 ["Execute block or clause ipython" py-execute-block-or-clause-ipython
-	  :help " ‘py-execute-block-or-clause-ipython’
+         ["Execute block or clause ipython" py-execute-block-or-clause-ipython
+          :help " ‘py-execute-block-or-clause-ipython’
 Send block-or-clause at point to IPython interpreter."]
 
-	 ["Execute buffer ipython" py-execute-buffer-ipython
-	  :help " ‘py-execute-buffer-ipython’
+         ["Execute buffer ipython" py-execute-buffer-ipython
+          :help " ‘py-execute-buffer-ipython’
 Send buffer at point to IPython interpreter."]
 
-	 ["Execute class ipython" py-execute-class-ipython
-	  :help " ‘py-execute-class-ipython’
+         ["Execute class ipython" py-execute-class-ipython
+          :help " ‘py-execute-class-ipython’
 Send class at point to IPython interpreter."]
 
-	 ["Execute clause ipython" py-execute-clause-ipython
-	  :help " ‘py-execute-clause-ipython’
+         ["Execute clause ipython" py-execute-clause-ipython
+          :help " ‘py-execute-clause-ipython’
 Send clause at point to IPython interpreter."]
 
-	 ["Execute def ipython" py-execute-def-ipython
-	  :help " ‘py-execute-def-ipython’
+         ["Execute def ipython" py-execute-def-ipython
+          :help " ‘py-execute-def-ipython’
 Send def at point to IPython interpreter."]
 
-	 ["Execute def or class ipython" py-execute-def-or-class-ipython
-	  :help " ‘py-execute-def-or-class-ipython’
+         ["Execute def or class ipython" py-execute-def-or-class-ipython
+          :help " ‘py-execute-def-or-class-ipython’
 Send def-or-class at point to IPython interpreter."]
 
-	 ["Execute expression ipython" py-execute-expression-ipython
-	  :help " ‘py-execute-expression-ipython’
+         ["Execute expression ipython" py-execute-expression-ipython
+          :help " ‘py-execute-expression-ipython’
 Send expression at point to IPython interpreter."]
 
-	 ["Execute indent ipython" py-execute-indent-ipython
-	  :help " ‘py-execute-indent-ipython’
+         ["Execute indent ipython" py-execute-indent-ipython
+          :help " ‘py-execute-indent-ipython’
 Send indent at point to IPython interpreter."]
 
-	 ["Execute line ipython" py-execute-line-ipython
-	  :help " ‘py-execute-line-ipython’
+         ["Execute line ipython" py-execute-line-ipython
+          :help " ‘py-execute-line-ipython’
 Send line at point to IPython interpreter."]
 
-	 ["Execute minor block ipython" py-execute-minor-block-ipython
-	  :help " ‘py-execute-minor-block-ipython’
+         ["Execute minor block ipython" py-execute-minor-block-ipython
+          :help " ‘py-execute-minor-block-ipython’
 Send minor-block at point to IPython interpreter."]
 
-	 ["Execute paragraph ipython" py-execute-paragraph-ipython
-	  :help " ‘py-execute-paragraph-ipython’
+         ["Execute paragraph ipython" py-execute-paragraph-ipython
+          :help " ‘py-execute-paragraph-ipython’
 Send paragraph at point to IPython interpreter."]
 
-	 ["Execute partial expression ipython" py-execute-partial-expression-ipython
-	  :help " ‘py-execute-partial-expression-ipython’
+         ["Execute partial expression ipython" py-execute-partial-expression-ipython
+          :help " ‘py-execute-partial-expression-ipython’
 Send partial-expression at point to IPython interpreter."]
 
-	 ["Execute region ipython" py-execute-region-ipython
-	  :help " ‘py-execute-region-ipython’
+         ["Execute region ipython" py-execute-region-ipython
+          :help " ‘py-execute-region-ipython’
 Send region at point to IPython interpreter."]
 
-	 ["Execute statement ipython" py-execute-statement-ipython
-	  :help " ‘py-execute-statement-ipython’
+         ["Execute statement ipython" py-execute-statement-ipython
+          :help " ‘py-execute-statement-ipython’
 Send statement at point to IPython interpreter."]
 
-	 ["Execute top level ipython" py-execute-top-level-ipython
-	  :help " ‘py-execute-top-level-ipython’
+         ["Execute top level ipython" py-execute-top-level-ipython
+          :help " ‘py-execute-top-level-ipython’
 Send top-level at point to IPython interpreter."])
-	("IPython2"
-	 ["Execute block ipython2" py-execute-block-ipython2
-	  :help " ‘py-execute-block-ipython2’"]
+        ("IPython2"
+         ["Execute block ipython2" py-execute-block-ipython2
+          :help " ‘py-execute-block-ipython2’"]
 
-	 ["Execute block or clause ipython2" py-execute-block-or-clause-ipython2
-	  :help " ‘py-execute-block-or-clause-ipython2’"]
+         ["Execute block or clause ipython2" py-execute-block-or-clause-ipython2
+          :help " ‘py-execute-block-or-clause-ipython2’"]
 
-	 ["Execute buffer ipython2" py-execute-buffer-ipython2
-	  :help " ‘py-execute-buffer-ipython2’"]
+         ["Execute buffer ipython2" py-execute-buffer-ipython2
+          :help " ‘py-execute-buffer-ipython2’"]
 
-	 ["Execute class ipython2" py-execute-class-ipython2
-	  :help " ‘py-execute-class-ipython2’"]
+         ["Execute class ipython2" py-execute-class-ipython2
+          :help " ‘py-execute-class-ipython2’"]
 
-	 ["Execute clause ipython2" py-execute-clause-ipython2
-	  :help " ‘py-execute-clause-ipython2’"]
+         ["Execute clause ipython2" py-execute-clause-ipython2
+          :help " ‘py-execute-clause-ipython2’"]
 
-	 ["Execute def ipython2" py-execute-def-ipython2
-	  :help " ‘py-execute-def-ipython2’"]
+         ["Execute def ipython2" py-execute-def-ipython2
+          :help " ‘py-execute-def-ipython2’"]
 
-	 ["Execute def or class ipython2" py-execute-def-or-class-ipython2
-	  :help " ‘py-execute-def-or-class-ipython2’"]
+         ["Execute def or class ipython2" py-execute-def-or-class-ipython2
+          :help " ‘py-execute-def-or-class-ipython2’"]
 
-	 ["Execute expression ipython2" py-execute-expression-ipython2
-	  :help " ‘py-execute-expression-ipython2’"]
+         ["Execute expression ipython2" py-execute-expression-ipython2
+          :help " ‘py-execute-expression-ipython2’"]
 
-	 ["Execute indent ipython2" py-execute-indent-ipython2
-	  :help " ‘py-execute-indent-ipython2’"]
+         ["Execute indent ipython2" py-execute-indent-ipython2
+          :help " ‘py-execute-indent-ipython2’"]
 
-	 ["Execute line ipython2" py-execute-line-ipython2
-	  :help " ‘py-execute-line-ipython2’"]
+         ["Execute line ipython2" py-execute-line-ipython2
+          :help " ‘py-execute-line-ipython2’"]
 
-	 ["Execute minor block ipython2" py-execute-minor-block-ipython2
-	  :help " ‘py-execute-minor-block-ipython2’"]
+         ["Execute minor block ipython2" py-execute-minor-block-ipython2
+          :help " ‘py-execute-minor-block-ipython2’"]
 
-	 ["Execute paragraph ipython2" py-execute-paragraph-ipython2
-	  :help " ‘py-execute-paragraph-ipython2’"]
+         ["Execute paragraph ipython2" py-execute-paragraph-ipython2
+          :help " ‘py-execute-paragraph-ipython2’"]
 
-	 ["Execute partial expression ipython2" py-execute-partial-expression-ipython2
-	  :help " ‘py-execute-partial-expression-ipython2’"]
+         ["Execute partial expression ipython2" py-execute-partial-expression-ipython2
+          :help " ‘py-execute-partial-expression-ipython2’"]
 
-	 ["Execute region ipython2" py-execute-region-ipython2
-	  :help " ‘py-execute-region-ipython2’"]
+         ["Execute region ipython2" py-execute-region-ipython2
+          :help " ‘py-execute-region-ipython2’"]
 
-	 ["Execute statement ipython2" py-execute-statement-ipython2
-	  :help " ‘py-execute-statement-ipython2’"]
+         ["Execute statement ipython2" py-execute-statement-ipython2
+          :help " ‘py-execute-statement-ipython2’"]
 
-	 ["Execute top level ipython2" py-execute-top-level-ipython2
-	  :help " ‘py-execute-top-level-ipython2’"])
-	("IPython3"
-	 ["Execute block ipython3" py-execute-block-ipython3
-	  :help " ‘py-execute-block-ipython3’
+         ["Execute top level ipython2" py-execute-top-level-ipython2
+          :help " ‘py-execute-top-level-ipython2’"])
+        ("IPython3"
+         ["Execute block ipython3" py-execute-block-ipython3
+          :help " ‘py-execute-block-ipython3’
 Send block at point to IPython interpreter."]
 
-	 ["Execute block or clause ipython3" py-execute-block-or-clause-ipython3
-	  :help " ‘py-execute-block-or-clause-ipython3’
+         ["Execute block or clause ipython3" py-execute-block-or-clause-ipython3
+          :help " ‘py-execute-block-or-clause-ipython3’
 Send block-or-clause at point to IPython interpreter."]
 
-	 ["Execute buffer ipython3" py-execute-buffer-ipython3
-	  :help " ‘py-execute-buffer-ipython3’
+         ["Execute buffer ipython3" py-execute-buffer-ipython3
+          :help " ‘py-execute-buffer-ipython3’
 Send buffer at point to IPython interpreter."]
 
-	 ["Execute class ipython3" py-execute-class-ipython3
-	  :help " ‘py-execute-class-ipython3’
+         ["Execute class ipython3" py-execute-class-ipython3
+          :help " ‘py-execute-class-ipython3’
 Send class at point to IPython interpreter."]
 
-	 ["Execute clause ipython3" py-execute-clause-ipython3
-	  :help " ‘py-execute-clause-ipython3’
+         ["Execute clause ipython3" py-execute-clause-ipython3
+          :help " ‘py-execute-clause-ipython3’
 Send clause at point to IPython interpreter."]
 
-	 ["Execute def ipython3" py-execute-def-ipython3
-	  :help " ‘py-execute-def-ipython3’
+         ["Execute def ipython3" py-execute-def-ipython3
+          :help " ‘py-execute-def-ipython3’
 Send def at point to IPython interpreter."]
 
-	 ["Execute def or class ipython3" py-execute-def-or-class-ipython3
-	  :help " ‘py-execute-def-or-class-ipython3’
+         ["Execute def or class ipython3" py-execute-def-or-class-ipython3
+          :help " ‘py-execute-def-or-class-ipython3’
 Send def-or-class at point to IPython interpreter."]
 
-	 ["Execute expression ipython3" py-execute-expression-ipython3
-	  :help " ‘py-execute-expression-ipython3’
+         ["Execute expression ipython3" py-execute-expression-ipython3
+          :help " ‘py-execute-expression-ipython3’
 Send expression at point to IPython interpreter."]
 
-	 ["Execute indent ipython3" py-execute-indent-ipython3
-	  :help " ‘py-execute-indent-ipython3’
+         ["Execute indent ipython3" py-execute-indent-ipython3
+          :help " ‘py-execute-indent-ipython3’
 Send indent at point to IPython interpreter."]
 
-	 ["Execute line ipython3" py-execute-line-ipython3
-	  :help " ‘py-execute-line-ipython3’
+         ["Execute line ipython3" py-execute-line-ipython3
+          :help " ‘py-execute-line-ipython3’
 Send line at point to IPython interpreter."]
 
-	 ["Execute minor block ipython3" py-execute-minor-block-ipython3
-	  :help " ‘py-execute-minor-block-ipython3’
+         ["Execute minor block ipython3" py-execute-minor-block-ipython3
+          :help " ‘py-execute-minor-block-ipython3’
 Send minor-block at point to IPython interpreter."]
 
-	 ["Execute paragraph ipython3" py-execute-paragraph-ipython3
-	  :help " ‘py-execute-paragraph-ipython3’
+         ["Execute paragraph ipython3" py-execute-paragraph-ipython3
+          :help " ‘py-execute-paragraph-ipython3’
 Send paragraph at point to IPython interpreter."]
 
-	 ["Execute partial expression ipython3" py-execute-partial-expression-ipython3
-	  :help " ‘py-execute-partial-expression-ipython3’
+         ["Execute partial expression ipython3" py-execute-partial-expression-ipython3
+          :help " ‘py-execute-partial-expression-ipython3’
 Send partial-expression at point to IPython interpreter."]
 
-	 ["Execute region ipython3" py-execute-region-ipython3
-	  :help " ‘py-execute-region-ipython3’
+         ["Execute region ipython3" py-execute-region-ipython3
+          :help " ‘py-execute-region-ipython3’
 Send region at point to IPython interpreter."]
 
-	 ["Execute statement ipython3" py-execute-statement-ipython3
-	  :help " ‘py-execute-statement-ipython3’
+         ["Execute statement ipython3" py-execute-statement-ipython3
+          :help " ‘py-execute-statement-ipython3’
 Send statement at point to IPython interpreter."]
 
-	 ["Execute top level ipython3" py-execute-top-level-ipython3
-	  :help " ‘py-execute-top-level-ipython3’
+         ["Execute top level ipython3" py-execute-top-level-ipython3
+          :help " ‘py-execute-top-level-ipython3’
 Send top-level at point to IPython interpreter."])
-	("Jython"
-	 ["Execute block jython" py-execute-block-jython
-	  :help " ‘py-execute-block-jython’
+        ("Jython"
+         ["Execute block jython" py-execute-block-jython
+          :help " ‘py-execute-block-jython’
 Send block at point to Jython interpreter."]
 
-	 ["Execute block or clause jython" py-execute-block-or-clause-jython
-	  :help " ‘py-execute-block-or-clause-jython’
+         ["Execute block or clause jython" py-execute-block-or-clause-jython
+          :help " ‘py-execute-block-or-clause-jython’
 Send block-or-clause at point to Jython interpreter."]
 
-	 ["Execute buffer jython" py-execute-buffer-jython
-	  :help " ‘py-execute-buffer-jython’
+         ["Execute buffer jython" py-execute-buffer-jython
+          :help " ‘py-execute-buffer-jython’
 Send buffer at point to Jython interpreter."]
 
-	 ["Execute class jython" py-execute-class-jython
-	  :help " ‘py-execute-class-jython’
+         ["Execute class jython" py-execute-class-jython
+          :help " ‘py-execute-class-jython’
 Send class at point to Jython interpreter."]
 
-	 ["Execute clause jython" py-execute-clause-jython
-	  :help " ‘py-execute-clause-jython’
+         ["Execute clause jython" py-execute-clause-jython
+          :help " ‘py-execute-clause-jython’
 Send clause at point to Jython interpreter."]
 
-	 ["Execute def jython" py-execute-def-jython
-	  :help " ‘py-execute-def-jython’
+         ["Execute def jython" py-execute-def-jython
+          :help " ‘py-execute-def-jython’
 Send def at point to Jython interpreter."]
 
-	 ["Execute def or class jython" py-execute-def-or-class-jython
-	  :help " ‘py-execute-def-or-class-jython’
+         ["Execute def or class jython" py-execute-def-or-class-jython
+          :help " ‘py-execute-def-or-class-jython’
 Send def-or-class at point to Jython interpreter."]
 
-	 ["Execute expression jython" py-execute-expression-jython
-	  :help " ‘py-execute-expression-jython’
+         ["Execute expression jython" py-execute-expression-jython
+          :help " ‘py-execute-expression-jython’
 Send expression at point to Jython interpreter."]
 
-	 ["Execute indent jython" py-execute-indent-jython
-	  :help " ‘py-execute-indent-jython’
+         ["Execute indent jython" py-execute-indent-jython
+          :help " ‘py-execute-indent-jython’
 Send indent at point to Jython interpreter."]
 
-	 ["Execute line jython" py-execute-line-jython
-	  :help " ‘py-execute-line-jython’
+         ["Execute line jython" py-execute-line-jython
+          :help " ‘py-execute-line-jython’
 Send line at point to Jython interpreter."]
 
-	 ["Execute minor block jython" py-execute-minor-block-jython
-	  :help " ‘py-execute-minor-block-jython’
+         ["Execute minor block jython" py-execute-minor-block-jython
+          :help " ‘py-execute-minor-block-jython’
 Send minor-block at point to Jython interpreter."]
 
-	 ["Execute paragraph jython" py-execute-paragraph-jython
-	  :help " ‘py-execute-paragraph-jython’
+         ["Execute paragraph jython" py-execute-paragraph-jython
+          :help " ‘py-execute-paragraph-jython’
 Send paragraph at point to Jython interpreter."]
 
-	 ["Execute partial expression jython" py-execute-partial-expression-jython
-	  :help " ‘py-execute-partial-expression-jython’
+         ["Execute partial expression jython" py-execute-partial-expression-jython
+          :help " ‘py-execute-partial-expression-jython’
 Send partial-expression at point to Jython interpreter."]
 
-	 ["Execute region jython" py-execute-region-jython
-	  :help " ‘py-execute-region-jython’
+         ["Execute region jython" py-execute-region-jython
+          :help " ‘py-execute-region-jython’
 Send region at point to Jython interpreter."]
 
-	 ["Execute statement jython" py-execute-statement-jython
-	  :help " ‘py-execute-statement-jython’
+         ["Execute statement jython" py-execute-statement-jython
+          :help " ‘py-execute-statement-jython’
 Send statement at point to Jython interpreter."]
 
-	 ["Execute top level jython" py-execute-top-level-jython
-	  :help " ‘py-execute-top-level-jython’
+         ["Execute top level jython" py-execute-top-level-jython
+          :help " ‘py-execute-top-level-jython’
 Send top-level at point to Jython interpreter."])
-	("Python"
-	 ["Execute block python" py-execute-block-python
-	  :help " ‘py-execute-block-python’
+        ("Python"
+         ["Execute block python" py-execute-block-python
+          :help " ‘py-execute-block-python’
 Send block at point to default interpreter."]
 
-	 ["Execute block or clause python" py-execute-block-or-clause-python
-	  :help " ‘py-execute-block-or-clause-python’
+         ["Execute block or clause python" py-execute-block-or-clause-python
+          :help " ‘py-execute-block-or-clause-python’
 Send block-or-clause at point to default interpreter."]
 
-	 ["Execute buffer python" py-execute-buffer-python
-	  :help " ‘py-execute-buffer-python’
+         ["Execute buffer python" py-execute-buffer-python
+          :help " ‘py-execute-buffer-python’
 Send buffer at point to default interpreter."]
 
-	 ["Execute class python" py-execute-class-python
-	  :help " ‘py-execute-class-python’
+         ["Execute class python" py-execute-class-python
+          :help " ‘py-execute-class-python’
 Send class at point to default interpreter."]
 
-	 ["Execute clause python" py-execute-clause-python
-	  :help " ‘py-execute-clause-python’
+         ["Execute clause python" py-execute-clause-python
+          :help " ‘py-execute-clause-python’
 Send clause at point to default interpreter."]
 
-	 ["Execute def python" py-execute-def-python
-	  :help " ‘py-execute-def-python’
+         ["Execute def python" py-execute-def-python
+          :help " ‘py-execute-def-python’
 Send def at point to default interpreter."]
 
-	 ["Execute def or class python" py-execute-def-or-class-python
-	  :help " ‘py-execute-def-or-class-python’
+         ["Execute def or class python" py-execute-def-or-class-python
+          :help " ‘py-execute-def-or-class-python’
 Send def-or-class at point to default interpreter."]
 
-	 ["Execute expression python" py-execute-expression-python
-	  :help " ‘py-execute-expression-python’
+         ["Execute expression python" py-execute-expression-python
+          :help " ‘py-execute-expression-python’
 Send expression at point to default interpreter."]
 
-	 ["Execute indent python" py-execute-indent-python
-	  :help " ‘py-execute-indent-python’
+         ["Execute indent python" py-execute-indent-python
+          :help " ‘py-execute-indent-python’
 Send indent at point to default interpreter."]
 
-	 ["Execute line python" py-execute-line-python
-	  :help " ‘py-execute-line-python’
+         ["Execute line python" py-execute-line-python
+          :help " ‘py-execute-line-python’
 Send line at point to default interpreter."]
 
-	 ["Execute minor block python" py-execute-minor-block-python
-	  :help " ‘py-execute-minor-block-python’
+         ["Execute minor block python" py-execute-minor-block-python
+          :help " ‘py-execute-minor-block-python’
 Send minor-block at point to default interpreter."]
 
-	 ["Execute paragraph python" py-execute-paragraph-python
-	  :help " ‘py-execute-paragraph-python’
+         ["Execute paragraph python" py-execute-paragraph-python
+          :help " ‘py-execute-paragraph-python’
 Send paragraph at point to default interpreter."]
 
-	 ["Execute partial expression python" py-execute-partial-expression-python
-	  :help " ‘py-execute-partial-expression-python’
+         ["Execute partial expression python" py-execute-partial-expression-python
+          :help " ‘py-execute-partial-expression-python’
 Send partial-expression at point to default interpreter."]
 
-	 ["Execute region python" py-execute-region-python
-	  :help " ‘py-execute-region-python’
+         ["Execute region python" py-execute-region-python
+          :help " ‘py-execute-region-python’
 Send region at point to default interpreter."]
 
-	 ["Execute statement python" py-execute-statement-python
-	  :help " ‘py-execute-statement-python’
+         ["Execute statement python" py-execute-statement-python
+          :help " ‘py-execute-statement-python’
 Send statement at point to default interpreter."]
 
-	 ["Execute top level python" py-execute-top-level-python
-	  :help " ‘py-execute-top-level-python’
+         ["Execute top level python" py-execute-top-level-python
+          :help " ‘py-execute-top-level-python’
 Send top-level at point to default interpreter."])
-	("Python2"
-	 ["Execute block python2" py-execute-block-python2
-	  :help " ‘py-execute-block-python2’
+        ("Python2"
+         ["Execute block python2" py-execute-block-python2
+          :help " ‘py-execute-block-python2’
 Send block at point to Python2 interpreter."]
 
-	 ["Execute block or clause python2" py-execute-block-or-clause-python2
-	  :help " ‘py-execute-block-or-clause-python2’
+         ["Execute block or clause python2" py-execute-block-or-clause-python2
+          :help " ‘py-execute-block-or-clause-python2’
 Send block-or-clause at point to Python2 interpreter."]
 
-	 ["Execute buffer python2" py-execute-buffer-python2
-	  :help " ‘py-execute-buffer-python2’
+         ["Execute buffer python2" py-execute-buffer-python2
+          :help " ‘py-execute-buffer-python2’
 Send buffer at point to Python2 interpreter."]
 
-	 ["Execute class python2" py-execute-class-python2
-	  :help " ‘py-execute-class-python2’
+         ["Execute class python2" py-execute-class-python2
+          :help " ‘py-execute-class-python2’
 Send class at point to Python2 interpreter."]
 
-	 ["Execute clause python2" py-execute-clause-python2
-	  :help " ‘py-execute-clause-python2’
+         ["Execute clause python2" py-execute-clause-python2
+          :help " ‘py-execute-clause-python2’
 Send clause at point to Python2 interpreter."]
 
-	 ["Execute def python2" py-execute-def-python2
-	  :help " ‘py-execute-def-python2’
+         ["Execute def python2" py-execute-def-python2
+          :help " ‘py-execute-def-python2’
 Send def at point to Python2 interpreter."]
 
-	 ["Execute def or class python2" py-execute-def-or-class-python2
-	  :help " ‘py-execute-def-or-class-python2’
+         ["Execute def or class python2" py-execute-def-or-class-python2
+          :help " ‘py-execute-def-or-class-python2’
 Send def-or-class at point to Python2 interpreter."]
 
-	 ["Execute expression python2" py-execute-expression-python2
-	  :help " ‘py-execute-expression-python2’
+         ["Execute expression python2" py-execute-expression-python2
+          :help " ‘py-execute-expression-python2’
 Send expression at point to Python2 interpreter."]
 
-	 ["Execute indent python2" py-execute-indent-python2
-	  :help " ‘py-execute-indent-python2’
+         ["Execute indent python2" py-execute-indent-python2
+          :help " ‘py-execute-indent-python2’
 Send indent at point to Python2 interpreter."]
 
-	 ["Execute line python2" py-execute-line-python2
-	  :help " ‘py-execute-line-python2’
+         ["Execute line python2" py-execute-line-python2
+          :help " ‘py-execute-line-python2’
 Send line at point to Python2 interpreter."]
 
-	 ["Execute minor block python2" py-execute-minor-block-python2
-	  :help " ‘py-execute-minor-block-python2’
+         ["Execute minor block python2" py-execute-minor-block-python2
+          :help " ‘py-execute-minor-block-python2’
 Send minor-block at point to Python2 interpreter."]
 
-	 ["Execute paragraph python2" py-execute-paragraph-python2
-	  :help " ‘py-execute-paragraph-python2’
+         ["Execute paragraph python2" py-execute-paragraph-python2
+          :help " ‘py-execute-paragraph-python2’
 Send paragraph at point to Python2 interpreter."]
 
-	 ["Execute partial expression python2" py-execute-partial-expression-python2
-	  :help " ‘py-execute-partial-expression-python2’
+         ["Execute partial expression python2" py-execute-partial-expression-python2
+          :help " ‘py-execute-partial-expression-python2’
 Send partial-expression at point to Python2 interpreter."]
 
-	 ["Execute region python2" py-execute-region-python2
-	  :help " ‘py-execute-region-python2’
+         ["Execute region python2" py-execute-region-python2
+          :help " ‘py-execute-region-python2’
 Send region at point to Python2 interpreter."]
 
-	 ["Execute statement python2" py-execute-statement-python2
-	  :help " ‘py-execute-statement-python2’
+         ["Execute statement python2" py-execute-statement-python2
+          :help " ‘py-execute-statement-python2’
 Send statement at point to Python2 interpreter."]
 
-	 ["Execute top level python2" py-execute-top-level-python2
-	  :help " ‘py-execute-top-level-python2’
+         ["Execute top level python2" py-execute-top-level-python2
+          :help " ‘py-execute-top-level-python2’
 Send top-level at point to Python2 interpreter."])
-	("Python3"
-	 ["Execute block python3" py-execute-block-python3
-	  :help " ‘py-execute-block-python3’
+        ("Python3"
+         ["Execute block python3" py-execute-block-python3
+          :help " ‘py-execute-block-python3’
 Send block at point to Python3 interpreter."]
 
-	 ["Execute block or clause python3" py-execute-block-or-clause-python3
-	  :help " ‘py-execute-block-or-clause-python3’
+         ["Execute block or clause python3" py-execute-block-or-clause-python3
+          :help " ‘py-execute-block-or-clause-python3’
 Send block-or-clause at point to Python3 interpreter."]
 
-	 ["Execute buffer python3" py-execute-buffer-python3
-	  :help " ‘py-execute-buffer-python3’
+         ["Execute buffer python3" py-execute-buffer-python3
+          :help " ‘py-execute-buffer-python3’
 Send buffer at point to Python3 interpreter."]
 
-	 ["Execute class python3" py-execute-class-python3
-	  :help " ‘py-execute-class-python3’
+         ["Execute class python3" py-execute-class-python3
+          :help " ‘py-execute-class-python3’
 Send class at point to Python3 interpreter."]
 
-	 ["Execute clause python3" py-execute-clause-python3
-	  :help " ‘py-execute-clause-python3’
+         ["Execute clause python3" py-execute-clause-python3
+          :help " ‘py-execute-clause-python3’
 Send clause at point to Python3 interpreter."]
 
-	 ["Execute def python3" py-execute-def-python3
-	  :help " ‘py-execute-def-python3’
+         ["Execute def python3" py-execute-def-python3
+          :help " ‘py-execute-def-python3’
 Send def at point to Python3 interpreter."]
 
-	 ["Execute def or class python3" py-execute-def-or-class-python3
-	  :help " ‘py-execute-def-or-class-python3’
+         ["Execute def or class python3" py-execute-def-or-class-python3
+          :help " ‘py-execute-def-or-class-python3’
 Send def-or-class at point to Python3 interpreter."]
 
-	 ["Execute expression python3" py-execute-expression-python3
-	  :help " ‘py-execute-expression-python3’
+         ["Execute expression python3" py-execute-expression-python3
+          :help " ‘py-execute-expression-python3’
 Send expression at point to Python3 interpreter."]
 
-	 ["Execute indent python3" py-execute-indent-python3
-	  :help " ‘py-execute-indent-python3’
+         ["Execute indent python3" py-execute-indent-python3
+          :help " ‘py-execute-indent-python3’
 Send indent at point to Python3 interpreter."]
 
-	 ["Execute line python3" py-execute-line-python3
-	  :help " ‘py-execute-line-python3’
+         ["Execute line python3" py-execute-line-python3
+          :help " ‘py-execute-line-python3’
 Send line at point to Python3 interpreter."]
 
-	 ["Execute minor block python3" py-execute-minor-block-python3
-	  :help " ‘py-execute-minor-block-python3’
+         ["Execute minor block python3" py-execute-minor-block-python3
+          :help " ‘py-execute-minor-block-python3’
 Send minor-block at point to Python3 interpreter."]
 
-	 ["Execute paragraph python3" py-execute-paragraph-python3
-	  :help " ‘py-execute-paragraph-python3’
+         ["Execute paragraph python3" py-execute-paragraph-python3
+          :help " ‘py-execute-paragraph-python3’
 Send paragraph at point to Python3 interpreter."]
 
-	 ["Execute partial expression python3" py-execute-partial-expression-python3
-	  :help " ‘py-execute-partial-expression-python3’
+         ["Execute partial expression python3" py-execute-partial-expression-python3
+          :help " ‘py-execute-partial-expression-python3’
 Send partial-expression at point to Python3 interpreter."]
 
-	 ["Execute region python3" py-execute-region-python3
-	  :help " ‘py-execute-region-python3’
+         ["Execute region python3" py-execute-region-python3
+          :help " ‘py-execute-region-python3’
 Send region at point to Python3 interpreter."]
 
-	 ["Execute statement python3" py-execute-statement-python3
-	  :help " ‘py-execute-statement-python3’
+         ["Execute statement python3" py-execute-statement-python3
+          :help " ‘py-execute-statement-python3’
 Send statement at point to Python3 interpreter."]
 
-	 ["Execute top level python3" py-execute-top-level-python3
-	  :help " ‘py-execute-top-level-python3’
+         ["Execute top level python3" py-execute-top-level-python3
+          :help " ‘py-execute-top-level-python3’
 Send top-level at point to Python3 interpreter."])
-	("Ignoring defaults "
-	 :help "`M-x py-execute-statement- TAB' for example list commands ignoring defaults
+        ("Ignoring defaults "
+         :help "`M-x py-execute-statement- TAB' for example list commands ignoring defaults
 
  of ‘py-switch-buffers-on-execute-p’ and ‘py-split-window-on-execute’")))
       ("Hide-Show"
        ("Hide"
-	["Hide block" py-hide-block
-	 :help " ‘py-hide-block’
+        ["Hide block" py-hide-block
+         :help " ‘py-hide-block’
 Hide block at point."]
 
-	["Hide top level" py-hide-top-level
-	 :help " ‘py-hide-top-level’
+        ["Hide top level" py-hide-top-level
+         :help " ‘py-hide-top-level’
 Hide top-level at point."]
 
-	["Hide def" py-hide-def
-	 :help " ‘py-hide-def’
+        ["Hide def" py-hide-def
+         :help " ‘py-hide-def’
 Hide def at point."]
 
-	["Hide def or class" py-hide-def-or-class
-	 :help " ‘py-hide-def-or-class’
+        ["Hide def or class" py-hide-def-or-class
+         :help " ‘py-hide-def-or-class’
 Hide def-or-class at point."]
 
-	["Hide statement" py-hide-statement
-	 :help " ‘py-hide-statement’
+        ["Hide statement" py-hide-statement
+         :help " ‘py-hide-statement’
 Hide statement at point."]
 
-	["Hide class" py-hide-class
-	 :help " ‘py-hide-class’
+        ["Hide class" py-hide-class
+         :help " ‘py-hide-class’
 Hide class at point."]
 
-	["Hide clause" py-hide-clause
-	 :help " ‘py-hide-clause’
+        ["Hide clause" py-hide-clause
+         :help " ‘py-hide-clause’
 Hide clause at point."]
 
-	["Hide block or clause" py-hide-block-or-clause
-	 :help " ‘py-hide-block-or-clause’
+        ["Hide block or clause" py-hide-block-or-clause
+         :help " ‘py-hide-block-or-clause’
 Hide block-or-clause at point."]
 
-	["Hide comment" py-hide-comment
-	 :help " ‘py-hide-comment’
+        ["Hide comment" py-hide-comment
+         :help " ‘py-hide-comment’
 Hide comment at point."]
 
-	["Hide indent" py-hide-indent
-	 :help " ‘py-hide-indent’
+        ["Hide indent" py-hide-indent
+         :help " ‘py-hide-indent’
 Hide indent at point."]
 
-	["Hide expression" py-hide-expression
-	 :help " ‘py-hide-expression’
+        ["Hide expression" py-hide-expression
+         :help " ‘py-hide-expression’
 Hide expression at point."]
 
-	["Hide line" py-hide-line
-	 :help " ‘py-hide-line’
+        ["Hide line" py-hide-line
+         :help " ‘py-hide-line’
 Hide line at point."]
 
-	["Hide for-block" py-hide-for-block
-	 :help " ‘py-hide-for-block’
+        ["Hide for-block" py-hide-for-block
+         :help " ‘py-hide-for-block’
 Hide for-block at point."]
 
-	["Hide if-block" py-hide-if-block
-	 :help " ‘py-hide-if-block’
+        ["Hide if-block" py-hide-if-block
+         :help " ‘py-hide-if-block’
 Hide if-block at point."]
 
-	["Hide elif-block" py-hide-elif-block
-	 :help " ‘py-hide-elif-block’
+        ["Hide elif-block" py-hide-elif-block
+         :help " ‘py-hide-elif-block’
 Hide elif-block at point."]
 
-	["Hide else-block" py-hide-else-block
-	 :help " ‘py-hide-else-block’
+        ["Hide else-block" py-hide-else-block
+         :help " ‘py-hide-else-block’
 Hide else-block at point."]
 
-	["Hide except-block" py-hide-except-block
-	 :help " ‘py-hide-except-block’
+        ["Hide except-block" py-hide-except-block
+         :help " ‘py-hide-except-block’
 Hide except-block at point."]
 
-	["Hide minor-block" py-hide-minor-block
-	 :help " ‘py-hide-minor-block’
+        ["Hide minor-block" py-hide-minor-block
+         :help " ‘py-hide-minor-block’
 Hide minor-block at point."]
 
-	["Hide paragraph" py-hide-paragraph
-	 :help " ‘py-hide-paragraph’
+        ["Hide paragraph" py-hide-paragraph
+         :help " ‘py-hide-paragraph’
 Hide paragraph at point."]
 
-	["Hide partial expression" py-hide-partial-expression
-	 :help " ‘py-hide-partial-expression’
+        ["Hide partial expression" py-hide-partial-expression
+         :help " ‘py-hide-partial-expression’
 Hide partial-expression at point."]
 
-	["Hide section" py-hide-section
-	 :help " ‘py-hide-section’
+        ["Hide section" py-hide-section
+         :help " ‘py-hide-section’
 Hide section at point."])
        ("Show"
-	["Show all" py-show-all
-	 :help " ‘py-show-all’
+        ["Show all" py-show-all
+         :help " ‘py-show-all’
 Show all in buffer."]
 
-	["Show" py-show
-	 :help " ‘py-show’
+        ["Show" py-show
+         :help " ‘py-show’
 Show hidden code at point."]))
       ("Fast process"
        ["Execute block fast" py-execute-block-fast
-	:help " ‘py-execute-block-fast’
+        :help " ‘py-execute-block-fast’
 Process block at point by a Python interpreter."]
 
        ["Execute block or clause fast" py-execute-block-or-clause-fast
-	:help " ‘py-execute-block-or-clause-fast’
+        :help " ‘py-execute-block-or-clause-fast’
 Process block-or-clause at point by a Python interpreter."]
 
        ["Execute class fast" py-execute-class-fast
-	:help " ‘py-execute-class-fast’
+        :help " ‘py-execute-class-fast’
 Process class at point by a Python interpreter."]
 
        ["Execute clause fast" py-execute-clause-fast
-	:help " ‘py-execute-clause-fast’
+        :help " ‘py-execute-clause-fast’
 Process clause at point by a Python interpreter."]
 
        ["Execute def fast" py-execute-def-fast
-	:help " ‘py-execute-def-fast’
+        :help " ‘py-execute-def-fast’
 Process def at point by a Python interpreter."]
 
        ["Execute def or class fast" py-execute-def-or-class-fast
-	:help " ‘py-execute-def-or-class-fast’
+        :help " ‘py-execute-def-or-class-fast’
 Process def-or-class at point by a Python interpreter."]
 
        ["Execute expression fast" py-execute-expression-fast
-	:help " ‘py-execute-expression-fast’
+        :help " ‘py-execute-expression-fast’
 Process expression at point by a Python interpreter."]
 
        ["Execute partial expression fast" py-execute-partial-expression-fast
-	:help " ‘py-execute-partial-expression-fast’
+        :help " ‘py-execute-partial-expression-fast’
 Process partial-expression at point by a Python interpreter."]
 
        ["Execute region fast" py-execute-region-fast
-	:help " ‘py-execute-region-fast’"]
+        :help " ‘py-execute-region-fast’"]
 
        ["Execute statement fast" py-execute-statement-fast
-	:help " ‘py-execute-statement-fast’
+        :help " ‘py-execute-statement-fast’
 Process statement at point by a Python interpreter."]
 
        ["Execute string fast" py-execute-string-fast
-	:help " ‘py-execute-string-fast’"]
+        :help " ‘py-execute-string-fast’"]
 
        ["Execute top level fast" py-execute-top-level-fast
-	:help " ‘py-execute-top-level-fast’
+        :help " ‘py-execute-top-level-fast’
 Process top-level at point by a Python interpreter."])
       ("Virtualenv"
        ["Virtualenv activate" virtualenv-activate
-	:help " ‘virtualenv-activate’
+        :help " ‘virtualenv-activate’
 Activate the virtualenv located in DIR"]
 
        ["Virtualenv deactivate" virtualenv-deactivate
-	:help " ‘virtualenv-deactivate’
+        :help " ‘virtualenv-deactivate’
 Deactivate the current virtual enviroment"]
 
        ["Virtualenv p" virtualenv-p
-	:help " ‘virtualenv-p’
+        :help " ‘virtualenv-p’
 Check if a directory is a virtualenv"]
 
        ["Virtualenv workon" virtualenv-workon
-	:help " ‘virtualenv-workon’
+        :help " ‘virtualenv-workon’
 Issue a virtualenvwrapper-like virtualenv-workon command"])
 
       ["Execute import or reload" py-execute-import-or-reload
@@ -18828,135 +18827,135 @@ Issue a virtualenvwrapper-like virtualenv-workon command"])
 Import the current buffer’s file in a Python interpreter."]
       ("Help"
        ["Find definition" py-find-definition
-	:help " ‘py-find-definition’
+        :help " ‘py-find-definition’
 Find source of definition of SYMBOL."]
 
        ["Help at point" py-help-at-point
-	:help " ‘py-help-at-point’
+        :help " ‘py-help-at-point’
 Print help on symbol at point."]
 
        ["Info lookup symbol" py-info-lookup-symbol
-	:help " ‘py-info-lookup-symbol’"]
+        :help " ‘py-info-lookup-symbol’"]
 
        ["Symbol at point" py-symbol-at-point
-	:help " ‘py-symbol-at-point’
+        :help " ‘py-symbol-at-point’
 Return the current Python symbol."])
       ("Debugger"
        ["Execute statement pdb" py-execute-statement-pdb
-	:help " ‘py-execute-statement-pdb’
+        :help " ‘py-execute-statement-pdb’
 Execute statement running pdb."]
 
        ["Pdb" pdb
-	:help " ‘pdb’
+        :help " ‘pdb’
 Run pdb on program FILE in buffer ‘*gud-FILE*’."])
       ("Checks"
        ("Pylint"
-	["Pylint run" py-pylint-run
-	 :help " ‘py-pylint-run’
+        ["Pylint run" py-pylint-run
+         :help " ‘py-pylint-run’
 *Run pylint (default on the file currently visited)."]
 
-	["Pylint help" py-pylint-help
-	 :help " ‘py-pylint-help’
+        ["Pylint help" py-pylint-help
+         :help " ‘py-pylint-help’
 Display Pylint command line help messages."]
 
-	["Pylint flymake mode" pylint-flymake-mode
-	 :help " ‘pylint-flymake-mode’
+        ["Pylint flymake mode" pylint-flymake-mode
+         :help " ‘pylint-flymake-mode’
 Toggle ‘pylint’ ‘flymake-mode’."])
        ("Pep8"
-	["Pep8 run" py-pep8-run
-	 :help " ‘py-pep8-run’
+        ["Pep8 run" py-pep8-run
+         :help " ‘py-pep8-run’
 *Run pep8, check formatting - default on the file currently visited."]
 
-	["Pep8 help" py-pep8-help
-	 :help " ‘py-pep8-help’
+        ["Pep8 help" py-pep8-help
+         :help " ‘py-pep8-help’
 Display pep8 command line help messages."]
 
-	["Pep8 flymake mode" pep8-flymake-mode
-	 :help " ‘pep8-flymake-mode’
+        ["Pep8 flymake mode" pep8-flymake-mode
+         :help " ‘pep8-flymake-mode’
 Toggle `pep8’ ‘flymake-mode’."])
        ("Pyflakes3"
-	["Pyflakes3 run" py-pyflakes3-run
-	 :help " ‘py-pyflakes3-run’
+        ["Pyflakes3 run" py-pyflakes3-run
+         :help " ‘py-pyflakes3-run’
 *Run pyflakes (default on the file currently visited)."]
 
-	["Pyflakes3 help" py-pyflakes3-help
-	 :help " ‘py-pyflakes3-help’
+        ["Pyflakes3 help" py-pyflakes3-help
+         :help " ‘py-pyflakes3-help’
 Display Pyflakes3 command line help messages."]
 
-	["Pyflakes3 flymake mode" pyflakes-flymake-mode
-	 :help " ‘pyflakes-flymake-mode’
+        ["Pyflakes3 flymake mode" pyflakes-flymake-mode
+         :help " ‘pyflakes-flymake-mode’
 Toggle ‘pyflakes’ ‘flymake-mode’."])
        ("Flake8"
-	["Flake8 run" py-flake8-run
-	 :help " ‘py-flake8-run’
+        ["Flake8 run" py-flake8-run
+         :help " ‘py-flake8-run’
 Flake8 is a wrapper around these tools:"]
 
-	["Flake8 help" py-flake8-help
-	 :help " ‘py-flake8-help’
+        ["Flake8 help" py-flake8-help
+         :help " ‘py-flake8-help’
 Display flake8 command line help messages."]
-	("Pyflakes-pep8"
-	 ["Pyflakes pep8 run" py-pyflakes3-pep8-run
-	  :help " ‘py-pyflakes-pep8-run’"]
+        ("Pyflakes-pep8"
+         ["Pyflakes pep8 run" py-pyflakes3-pep8-run
+          :help " ‘py-pyflakes-pep8-run’"]
 
-	 ["Pyflakes pep8 help" py-pyflakes-pep8-help
-	  :help " ‘py-pyflakes-pep8-help’"]
+         ["Pyflakes pep8 help" py-pyflakes-pep8-help
+          :help " ‘py-pyflakes-pep8-help’"]
 
-	 ["Pyflakes pep8 flymake mode" pyflakes-pep8-flymake-mode
-	  :help " ‘pyflakes-pep8-flymake-mode’"])
+         ["Pyflakes pep8 flymake mode" pyflakes-pep8-flymake-mode
+          :help " ‘pyflakes-pep8-flymake-mode’"])
         ))
       ("Customize"
 
        ["Python-mode customize group" (customize-group 'python-mode)
-	:help "Open the customization buffer for Python mode"]
+        :help "Open the customization buffer for Python mode"]
        ("Switches"
-	:help "Toggle useful modes"
-	("Interpreter"
+        :help "Toggle useful modes"
+        ("Interpreter"
 
-	 ["Shell prompt read only"
-	  (setq py-shell-prompt-read-only
-		(not py-shell-prompt-read-only))
-	  :help "If non-nil, the python prompt is read only.  Setting this variable will only effect new shells.Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-shell-prompt-read-only]
+         ["Shell prompt read only"
+          (setq py-shell-prompt-read-only
+                (not py-shell-prompt-read-only))
+          :help "If non-nil, the python prompt is read only.  Setting this variable will only effect new shells.Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-shell-prompt-read-only]
 
-	 ["Remove cwd from path"
-	  (setq py-remove-cwd-from-path
-		(not py-remove-cwd-from-path))
-	  :help "Whether to allow loading of Python modules from the current directory.
+         ["Remove cwd from path"
+          (setq py-remove-cwd-from-path
+                (not py-remove-cwd-from-path))
+          :help "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
 a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion).Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-remove-cwd-from-path]
+          :style toggle :selected py-remove-cwd-from-path]
 
-	 ["Honor IPYTHONDIR "
-	  (setq py-honor-IPYTHONDIR-p
-		(not py-honor-IPYTHONDIR-p))
-	  :help "When non-nil ipython-history file is constructed by \$IPYTHONDIR
+         ["Honor IPYTHONDIR "
+          (setq py-honor-IPYTHONDIR-p
+                (not py-honor-IPYTHONDIR-p))
+          :help "When non-nil ipython-history file is constructed by \$IPYTHONDIR
 followed by "/history". Default is nil.
 
 Otherwise value of py-ipython-history is used. Use `M-x customize-variable' to set it permanently"
 :style toggle :selected py-honor-IPYTHONDIR-p]
 
-	 ["Honor PYTHONHISTORY "
-	  (setq py-honor-PYTHONHISTORY-p
-		(not py-honor-PYTHONHISTORY-p))
-	  :help "When non-nil python-history file is set by \$PYTHONHISTORY
+         ["Honor PYTHONHISTORY "
+          (setq py-honor-PYTHONHISTORY-p
+                (not py-honor-PYTHONHISTORY-p))
+          :help "When non-nil python-history file is set by \$PYTHONHISTORY
 Default is nil.
 
 Otherwise value of py-python-history is used. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-honor-PYTHONHISTORY-p]
+          :style toggle :selected py-honor-PYTHONHISTORY-p]
 
-	 ["Enforce py-shell-name" force-py-shell-name-p-on
-	  :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
+         ["Enforce py-shell-name" force-py-shell-name-p-on
+          :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
 
-	 ["Do not enforce default interpreter" force-py-shell-name-p-off
-	  :help "Make execute commands guess interpreter from environment"]
-	 )
+         ["Do not enforce default interpreter" force-py-shell-name-p-off
+          :help "Make execute commands guess interpreter from environment"]
+         )
 
-	("Execute"
+        ("Execute"
 
-	 ["Fast process" py-fast-process-p
-	  :help " ‘py-fast-process-p’
+         ["Fast process" py-fast-process-p
+          :help " ‘py-fast-process-p’
 
 Use ‘py-fast-process’\.
 
@@ -18965,200 +18964,200 @@ Commands prefixed \"py-fast-...\" suitable for large output
 See: large output makes Emacs freeze, lp:1253907
 
 Output-buffer is not in comint-mode"
-	  :style toggle :selected py-fast-process-p]
+          :style toggle :selected py-fast-process-p]
 
-	 ["Python mode v5 behavior"
-	  (setq python-mode-v5-behavior-p
-		(not python-mode-v5-behavior-p))
-	  :help "Execute region through ‘shell-command-on-region’ as
+         ["Python mode v5 behavior"
+          (setq python-mode-v5-behavior-p
+                (not python-mode-v5-behavior-p))
+          :help "Execute region through ‘shell-command-on-region’ as
 v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncodeError lp:550661
 
 Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected python-mode-v5-behavior-p]
+          :style toggle :selected python-mode-v5-behavior-p]
 
-	 ["Force shell name "
-	  (setq py-force-py-shell-name-p
-		(not py-force-py-shell-name-p))
-	  :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-force-py-shell-name-p]
+         ["Force shell name "
+          (setq py-force-py-shell-name-p
+                (not py-force-py-shell-name-p))
+          :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-force-py-shell-name-p]
 
-	 ["Execute \"if name == main\" blocks p"
-	  (setq py-if-name-main-permission-p
-		(not py-if-name-main-permission-p))
-	  :help " ‘py-if-name-main-permission-p’
+         ["Execute \"if name == main\" blocks p"
+          (setq py-if-name-main-permission-p
+                (not py-if-name-main-permission-p))
+          :help " ‘py-if-name-main-permission-p’
 
 Allow execution of code inside blocks delimited by
 if __name__ == '__main__'
 
 Default is non-nil. "
-	  :style toggle :selected py-if-name-main-permission-p]
+          :style toggle :selected py-if-name-main-permission-p]
 
-	 ["Ask about save"
-	  (setq py-ask-about-save
-		(not py-ask-about-save))
-	  :help "If not nil, ask about which buffers to save before executing some code.
+         ["Ask about save"
+          (setq py-ask-about-save
+                (not py-ask-about-save))
+          :help "If not nil, ask about which buffers to save before executing some code.
 Otherwise, all modified buffers are saved without asking.Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-ask-about-save]
+          :style toggle :selected py-ask-about-save]
 
-	 ["Store result"
-	  (setq py-store-result-p
-		(not py-store-result-p))
-	  :help " ‘py-store-result-p’
+         ["Store result"
+          (setq py-store-result-p
+                (not py-store-result-p))
+          :help " ‘py-store-result-p’
 
 When non-nil, put resulting string of ‘py-execute-...’ into kill-ring, so it might be yanked. "
-	  :style toggle :selected py-store-result-p]
+          :style toggle :selected py-store-result-p]
 
-	 ["Prompt on changed "
-	  (setq py-prompt-on-changed-p
-		(not py-prompt-on-changed-p))
-	  :help "When called interactively, ask for save before a changed buffer is sent to interpreter.
+         ["Prompt on changed "
+          (setq py-prompt-on-changed-p
+                (not py-prompt-on-changed-p))
+          :help "When called interactively, ask for save before a changed buffer is sent to interpreter.
 
 Default is ‘t’Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-prompt-on-changed-p]
+          :style toggle :selected py-prompt-on-changed-p]
 
-	 ["Dedicated process "
-	  (setq py-dedicated-process-p
-		(not py-dedicated-process-p))
-	  :help "If commands executing code use a dedicated shell.
+         ["Dedicated process "
+          (setq py-dedicated-process-p
+                (not py-dedicated-process-p))
+          :help "If commands executing code use a dedicated shell.
 
 Default is nilUse `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-dedicated-process-p]
+          :style toggle :selected py-dedicated-process-p]
 
-	 ["Execute without temporary file"
-	  (setq py-execute-no-temp-p
-		(not py-execute-no-temp-p))
-	  :help " ‘py-execute-no-temp-p’
+         ["Execute without temporary file"
+          (setq py-execute-no-temp-p
+                (not py-execute-no-temp-p))
+          :help " ‘py-execute-no-temp-p’
 Seems Emacs-24.3 provided a way executing stuff without temporary files.
 In experimental state yet "
-	  :style toggle :selected py-execute-no-temp-p]
+          :style toggle :selected py-execute-no-temp-p]
 
-	 ["Warn tmp files left "
-	  (setq py--warn-tmp-files-left-p
-		(not py--warn-tmp-files-left-p))
-	  :help "Messages a warning, when ‘py-temp-directory’ contains files susceptible being left by previous Python-mode sessions. See also lp:987534 Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py--warn-tmp-files-left-p])
+         ["Warn tmp files left "
+          (setq py--warn-tmp-files-left-p
+                (not py--warn-tmp-files-left-p))
+          :help "Messages a warning, when ‘py-temp-directory’ contains files susceptible being left by previous Python-mode sessions. See also lp:987534 Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py--warn-tmp-files-left-p])
 
-	("Edit"
+        ("Edit"
 
-	 ("Completion"
+         ("Completion"
 
-	  ["Set Pymacs-based complete keymap "
-	   (setq py-set-complete-keymap-p
-		 (not py-set-complete-keymap-p))
-	   :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
+          ["Set Pymacs-based complete keymap "
+           (setq py-set-complete-keymap-p
+                 (not py-set-complete-keymap-p))
+           :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
 
 Default is nil.
 See also resp. edit ‘py-complete-set-keymap’ Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-set-complete-keymap-p]
+           :style toggle :selected py-set-complete-keymap-p]
 
-	  ["Indent no completion "
-	   (setq py-indent-no-completion-p
-		 (not py-indent-no-completion-p))
-	   :help "If completion function should indent when no completion found. Default is ‘t’
+          ["Indent no completion "
+           (setq py-indent-no-completion-p
+                 (not py-indent-no-completion-p))
+           :help "If completion function should indent when no completion found. Default is ‘t’
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-indent-no-completion-p]
+           :style toggle :selected py-indent-no-completion-p]
 
-	  ["Company pycomplete "
-	   (setq py-company-pycomplete-p
-		 (not py-company-pycomplete-p))
-	   :help "Load company-pycomplete stuff. Default is nilUse `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-company-pycomplete-p])
+          ["Company pycomplete "
+           (setq py-company-pycomplete-p
+                 (not py-company-pycomplete-p))
+           :help "Load company-pycomplete stuff. Default is nilUse `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-company-pycomplete-p])
 
-	 ("Filling"
+         ("Filling"
 
-	  ("Docstring styles"
-	   :help "Switch docstring-style"
+          ("Docstring styles"
+           :help "Switch docstring-style"
 
-	   ["Nil" py-set-nil-docstring-style
-	    :help " ‘py-set-nil-docstring-style’
+           ["Nil" py-set-nil-docstring-style
+            :help " ‘py-set-nil-docstring-style’
 
 Set py-docstring-style to nil, format string normally. "]
 
-	   ["pep-257-nn" py-set-pep-257-nn-docstring-style
-	    :help " ‘py-set-pep-257-nn-docstring-style’
+           ["pep-257-nn" py-set-pep-257-nn-docstring-style
+            :help " ‘py-set-pep-257-nn-docstring-style’
 
 Set py-docstring-style to 'pep-257-nn "]
 
-	   ["pep-257" py-set-pep-257-docstring-style
-	    :help " ‘py-set-pep-257-docstring-style’
+           ["pep-257" py-set-pep-257-docstring-style
+            :help " ‘py-set-pep-257-docstring-style’
 
 Set py-docstring-style to 'pep-257 "]
 
-	   ["django" py-set-django-docstring-style
-	    :help " ‘py-set-django-docstring-style’
+           ["django" py-set-django-docstring-style
+            :help " ‘py-set-django-docstring-style’
 
 Set py-docstring-style to 'django "]
 
-	   ["onetwo" py-set-onetwo-docstring-style
-	    :help " ‘py-set-onetwo-docstring-style’
+           ["onetwo" py-set-onetwo-docstring-style
+            :help " ‘py-set-onetwo-docstring-style’
 
 Set py-docstring-style to 'onetwo "]
 
-	   ["symmetric" py-set-symmetric-docstring-style
-	    :help " ‘py-set-symmetric-docstring-style’
+           ["symmetric" py-set-symmetric-docstring-style
+            :help " ‘py-set-symmetric-docstring-style’
 
 Set py-docstring-style to 'symmetric "])
 
-	  ["Auto-fill mode"
-	   (setq py-auto-fill-mode
-		 (not py-auto-fill-mode))
-	   :help "Fill according to ‘py-docstring-fill-column’ and ‘py-comment-fill-column’
+          ["Auto-fill mode"
+           (setq py-auto-fill-mode
+                 (not py-auto-fill-mode))
+           :help "Fill according to ‘py-docstring-fill-column’ and ‘py-comment-fill-column’
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-auto-fill-mode])
+           :style toggle :selected py-auto-fill-mode])
 
-	 ["Use current dir when execute"
-	  (setq py-use-current-dir-when-execute-p
-		(not py-use-current-dir-when-execute-p))
-	  :help " ‘py-toggle-use-current-dir-when-execute-p’
-
-Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-use-current-dir-when-execute-p]
-
-	 ("Indent"
-	  ("TAB related"
-
-	   ["indent-tabs-mode"
-	    (setq indent-tabs-mode
-		  (not indent-tabs-mode))
-	    :help "Indentation can insert tabs if this is non-nil.
+         ["Use current dir when execute"
+          (setq py-use-current-dir-when-execute-p
+                (not py-use-current-dir-when-execute-p))
+          :help " ‘py-toggle-use-current-dir-when-execute-p’
 
 Use `M-x customize-variable' to set it permanently"
-	    :style toggle :selected indent-tabs-mode]
+          :style toggle :selected py-use-current-dir-when-execute-p]
 
-	   ["Tab indent"
-	    (setq py-tab-indent
-		  (not py-tab-indent))
-	    :help "Non-nil means TAB in Python mode calls ‘py-indent-line’.Use `M-x customize-variable' to set it permanently"
-	    :style toggle :selected py-tab-indent]
+         ("Indent"
+          ("TAB related"
 
-	   ["Tab shifts region "
-	    (setq py-tab-shifts-region-p
-		  (not py-tab-shifts-region-p))
-	    :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
+           ["indent-tabs-mode"
+            (setq indent-tabs-mode
+                  (not indent-tabs-mode))
+            :help "Indentation can insert tabs if this is non-nil.
+
+Use `M-x customize-variable' to set it permanently"
+            :style toggle :selected indent-tabs-mode]
+
+           ["Tab indent"
+            (setq py-tab-indent
+                  (not py-tab-indent))
+            :help "Non-nil means TAB in Python mode calls ‘py-indent-line’.Use `M-x customize-variable' to set it permanently"
+            :style toggle :selected py-tab-indent]
+
+           ["Tab shifts region "
+            (setq py-tab-shifts-region-p
+                  (not py-tab-shifts-region-p))
+            :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
 
 Default is nil
 See also ‘py-tab-indents-region-p’
 
 Use `M-x customize-variable' to set it permanently"
-	    :style toggle :selected py-tab-shifts-region-p]
+            :style toggle :selected py-tab-shifts-region-p]
 
-	   ["Tab indents region "
-	    (setq py-tab-indents-region-p
-		  (not py-tab-indents-region-p))
-	    :help "When ‘t’ and first TAB does not shift, indent-region is called.
+           ["Tab indents region "
+            (setq py-tab-indents-region-p
+                  (not py-tab-indents-region-p))
+            :help "When ‘t’ and first TAB does not shift, indent-region is called.
 
 Default is nil
 See also ‘py-tab-shifts-region-p’
 
 Use `M-x customize-variable' to set it permanently"
-	    :style toggle :selected py-tab-indents-region-p])
+            :style toggle :selected py-tab-indents-region-p])
 
-	  ["Close at start column"
-	   (setq py-closing-list-dedents-bos
-		 (not py-closing-list-dedents-bos))
-	   :help "When non-nil, indent list's closing delimiter like start-column.
+          ["Close at start column"
+           (setq py-closing-list-dedents-bos
+                 (not py-closing-list-dedents-bos))
+           :help "When non-nil, indent list's closing delimiter like start-column.
 
 It will be lined up under the first character of
  the line that starts the multi-line construct, as in:
@@ -19168,171 +19167,171 @@ my_list = \[
     4, 5, 6,]
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-closing-list-dedents-bos]
+           :style toggle :selected py-closing-list-dedents-bos]
 
-	  ["Closing list keeps space"
-	   (setq py-closing-list-keeps-space
-		 (not py-closing-list-keeps-space))
-	   :help "If non-nil, closing parenthesis dedents onto column of opening plus ‘py-closing-list-space’, default is nil Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-closing-list-keeps-space]
+          ["Closing list keeps space"
+           (setq py-closing-list-keeps-space
+                 (not py-closing-list-keeps-space))
+           :help "If non-nil, closing parenthesis dedents onto column of opening plus ‘py-closing-list-space’, default is nil Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-closing-list-keeps-space]
 
-	  ["Closing list space"
-	   (setq py-closing-list-space
-		 (not py-closing-list-space))
-	   :help "Number of chars, closing parenthesis outdent from opening, default is 1 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-closing-list-space]
+          ["Closing list space"
+           (setq py-closing-list-space
+                 (not py-closing-list-space))
+           :help "Number of chars, closing parenthesis outdent from opening, default is 1 Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-closing-list-space]
 
-	  ["Tab shifts region "
-	   (setq py-tab-shifts-region-p
-		 (not py-tab-shifts-region-p))
-	   :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
+          ["Tab shifts region "
+           (setq py-tab-shifts-region-p
+                 (not py-tab-shifts-region-p))
+           :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
 
 Default is nil
 See also ‘py-tab-indents-region-p’Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-tab-shifts-region-p]
+           :style toggle :selected py-tab-shifts-region-p]
 
-	  ["Lhs inbound indent"
-	   (setq py-lhs-inbound-indent
-		 (not py-lhs-inbound-indent))
-	   :help "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-lhs-inbound-indent]
+          ["Lhs inbound indent"
+           (setq py-lhs-inbound-indent
+                 (not py-lhs-inbound-indent))
+           :help "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-lhs-inbound-indent]
 
-	  ["Continuation offset"
-	   (setq py-continuation-offset
-		 (not py-continuation-offset))
-	   :help "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-continuation-offset]
+          ["Continuation offset"
+           (setq py-continuation-offset
+                 (not py-continuation-offset))
+           :help "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-continuation-offset]
 
-	  ["Electric colon"
-	   (setq py-electric-colon-active-p
-		 (not py-electric-colon-active-p))
-	   :help " ‘py-electric-colon-active-p’
+          ["Electric colon"
+           (setq py-electric-colon-active-p
+                 (not py-electric-colon-active-p))
+           :help " ‘py-electric-colon-active-p’
 
 ‘py-electric-colon’ feature.  Default is ‘nil’. See lp:837065 for discussions. "
-	   :style toggle :selected py-electric-colon-active-p]
+           :style toggle :selected py-electric-colon-active-p]
 
-	  ["Electric colon at beginning of block only"
-	   (setq py-electric-colon-bobl-only
-		 (not py-electric-colon-bobl-only))
-	   :help "When inserting a colon, do not indent lines unless at beginning of block.
+          ["Electric colon at beginning of block only"
+           (setq py-electric-colon-bobl-only
+                 (not py-electric-colon-bobl-only))
+           :help "When inserting a colon, do not indent lines unless at beginning of block.
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-electric-colon-bobl-only]
+           :style toggle :selected py-electric-colon-bobl-only]
 
-	  ["Electric yank active "
-	   (setq py-electric-yank-active-p
-		 (not py-electric-yank-active-p))
-	   :help " When non-nil, ‘yank’ will be followed by an ‘indent-according-to-mode’.
+          ["Electric yank active "
+           (setq py-electric-yank-active-p
+                 (not py-electric-yank-active-p))
+           :help " When non-nil, ‘yank’ will be followed by an ‘indent-according-to-mode’.
 
 Default is nilUse `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-electric-yank-active-p]
+           :style toggle :selected py-electric-yank-active-p]
 
 
 
-	  ["Trailing whitespace smart delete "
-	   (setq py-trailing-whitespace-smart-delete-p
-		 (not py-trailing-whitespace-smart-delete-p))
-	   :help "Default is nil. When t, python-mode calls
+          ["Trailing whitespace smart delete "
+           (setq py-trailing-whitespace-smart-delete-p
+                 (not py-trailing-whitespace-smart-delete-p))
+           :help "Default is nil. When t, python-mode calls
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local)
 
 Also commands may delete trailing whitespace by the way.
 When editing other peoples code, this may produce a larger diff than expected Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-trailing-whitespace-smart-delete-p]
+           :style toggle :selected py-trailing-whitespace-smart-delete-p]
 
-	  ["Newline delete trailing whitespace "
-	   (setq py-newline-delete-trailing-whitespace-p
-		 (not py-newline-delete-trailing-whitespace-p))
-	   :help "Delete trailing whitespace maybe left by ‘py-newline-and-indent’.
+          ["Newline delete trailing whitespace "
+           (setq py-newline-delete-trailing-whitespace-p
+                 (not py-newline-delete-trailing-whitespace-p))
+           :help "Delete trailing whitespace maybe left by ‘py-newline-and-indent’.
 
 Default is ‘t’. See lp:1100892 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-newline-delete-trailing-whitespace-p]
+           :style toggle :selected py-newline-delete-trailing-whitespace-p]
 
-	  ["Dedent keep relative column"
-	   (setq py-dedent-keep-relative-column
-		 (not py-dedent-keep-relative-column))
-	   :help "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-dedent-keep-relative-column]
+          ["Dedent keep relative column"
+           (setq py-dedent-keep-relative-column
+                 (not py-dedent-keep-relative-column))
+           :help "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-dedent-keep-relative-column]
 
-	  ["Indent comment "
-	   (setq py-indent-comments
-		 (not py-indent-comments))
-	   :help "If comments should be indented like code. Default is ‘nil’.
+          ["Indent comment "
+           (setq py-indent-comments
+                 (not py-indent-comments))
+           :help "If comments should be indented like code. Default is ‘nil’.
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-indent-comments]
+           :style toggle :selected py-indent-comments]
 
-	  ["Uncomment indents "
-	   (setq py-uncomment-indents-p
-		 (not py-uncomment-indents-p))
-	   :help "When non-nil, after uncomment indent lines. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-uncomment-indents-p]
+          ["Uncomment indents "
+           (setq py-uncomment-indents-p
+                 (not py-uncomment-indents-p))
+           :help "When non-nil, after uncomment indent lines. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-uncomment-indents-p]
 
-	  ["Indent honors inline comment"
-	   (setq py-indent-honors-inline-comment
-		 (not py-indent-honors-inline-comment))
-	   :help "If non-nil, indents to column of inlined comment start.
+          ["Indent honors inline comment"
+           (setq py-indent-honors-inline-comment
+                 (not py-indent-honors-inline-comment))
+           :help "If non-nil, indents to column of inlined comment start.
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-indent-honors-inline-comment]
+           :style toggle :selected py-indent-honors-inline-comment]
 
-	  ["Kill empty line"
-	   (setq py-kill-empty-line
-		 (not py-kill-empty-line))
-	   :help "If t, py-indent-forward-line kills empty lines. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-kill-empty-line]
+          ["Kill empty line"
+           (setq py-kill-empty-line
+                 (not py-kill-empty-line))
+           :help "If t, py-indent-forward-line kills empty lines. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-kill-empty-line]
 
-	  ("Smart indentation"
-	   :help "Toggle py-smart-indentation'
+          ("Smart indentation"
+           :help "Toggle py-smart-indentation'
 
 Use `M-x customize-variable' to set it permanently"
 
-	   ["Toggle py-smart-indentation" py-toggle-smart-indentation
-	    :help "Toggles py-smart-indentation
+           ["Toggle py-smart-indentation" py-toggle-smart-indentation
+            :help "Toggles py-smart-indentation
 
 Use `M-x customize-variable' to set it permanently"]
 
-	   ["py-smart-indentation on" py-smart-indentation-on
-	    :help "Switches py-smart-indentation on
+           ["py-smart-indentation on" py-smart-indentation-on
+            :help "Switches py-smart-indentation on
 
 Use `M-x customize-variable' to set it permanently"]
 
-	   ["py-smart-indentation off" py-smart-indentation-off
-	    :help "Switches py-smart-indentation off
+           ["py-smart-indentation off" py-smart-indentation-off
+            :help "Switches py-smart-indentation off
 
 Use `M-x customize-variable' to set it permanently"])
 
-	  ["Beep if tab change"
-	   (setq py-beep-if-tab-change
-		 (not py-beep-if-tab-change))
-	   :help "Ring the bell if ‘tab-width’ is changed.
+          ["Beep if tab change"
+           (setq py-beep-if-tab-change
+                 (not py-beep-if-tab-change))
+           :help "Ring the bell if ‘tab-width’ is changed.
 If a comment of the form
 
-                           	# vi:set tabsize=<number>:
+                                # vi:set tabsize=<number>:
 
 is found before the first code line when the file is entered, and the
 current value of (the general Emacs variable) ‘tab-width’ does not
 equal <number>, ‘tab-width’ is set to <number>, a message saying so is
 displayed in the echo area, and if ‘py-beep-if-tab-change’ is non-nil
 the Emacs bell is also rung as a warning.Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-beep-if-tab-change]
+           :style toggle :selected py-beep-if-tab-change]
 
-	  ["Electric comment "
-	   (setq py-electric-comment-p
-		 (not py-electric-comment-p))
-	   :help "If \"#\" should call ‘py-electric-comment’. Default is ‘nil’.
+          ["Electric comment "
+           (setq py-electric-comment-p
+                 (not py-electric-comment-p))
+           :help "If \"#\" should call ‘py-electric-comment’. Default is ‘nil’.
 
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-electric-comment-p]
+           :style toggle :selected py-electric-comment-p]
 
-	  ["Electric comment add space "
-	   (setq py-electric-comment-add-space-p
-		 (not py-electric-comment-add-space-p))
-	   :help "If py-electric-comment should add a space.  Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-electric-comment-add-space-p]
+          ["Electric comment add space "
+           (setq py-electric-comment-add-space-p
+                 (not py-electric-comment-add-space-p))
+           :help "If py-electric-comment should add a space.  Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-electric-comment-add-space-p]
 
-	  ["Empty line closes "
-	   (setq py-empty-line-closes-p
-		 (not py-empty-line-closes-p))
-	   :help "When non-nil, dedent after empty line following block
+          ["Empty line closes "
+           (setq py-empty-line-closes-p
+                 (not py-empty-line-closes-p))
+           :help "When non-nil, dedent after empty line following block
 
 if True:
     print(\"Part of the if-statement\")
@@ -19343,262 +19342,262 @@ Default is nil
 
 If non-nil, a C-j from empty line dedents.
 Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-empty-line-closes-p])
-	 ["Defun use top level "
-	  (setq py-defun-use-top-level-p
-		(not py-defun-use-top-level-p))
-	  :help "When non-nil, keys C-M-a, C-M-e address top-level form.
+           :style toggle :selected py-empty-line-closes-p])
+         ["Defun use top level "
+          (setq py-defun-use-top-level-p
+                (not py-defun-use-top-level-p))
+          :help "When non-nil, keys C-M-a, C-M-e address top-level form.
 
 Beginning- end-of-defun forms use
 commands ‘py-backward-top-level’, ‘py-forward-top-level’
 
 mark-defun marks top-level form at point etc. "
-	  :style toggle :selected py-defun-use-top-level-p]
+          :style toggle :selected py-defun-use-top-level-p]
 
-	 ["Close provides newline"
-	  (setq py-close-provides-newline
-		(not py-close-provides-newline))
-	  :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-close-provides-newline]
+         ["Close provides newline"
+          (setq py-close-provides-newline
+                (not py-close-provides-newline))
+          :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-close-provides-newline]
 
-	 ["Block comment prefix "
-	  (setq py-block-comment-prefix-p
-		(not py-block-comment-prefix-p))
-	  :help "If py-comment inserts py-block-comment-prefix.
+         ["Block comment prefix "
+          (setq py-block-comment-prefix-p
+                (not py-block-comment-prefix-p))
+          :help "If py-comment inserts py-block-comment-prefix.
 
 Default is tUse `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-block-comment-prefix-p])
+          :style toggle :selected py-block-comment-prefix-p])
 
-	("Display"
+        ("Display"
 
-	 ("Index"
+         ("Index"
 
-	  ["Imenu create index "
-	   (setq py--imenu-create-index-p
-		 (not py--imenu-create-index-p))
-	   :help "Non-nil means Python mode creates and displays an index menu of functions and global variables. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py--imenu-create-index-p]
+          ["Imenu create index "
+           (setq py--imenu-create-index-p
+                 (not py--imenu-create-index-p))
+           :help "Non-nil means Python mode creates and displays an index menu of functions and global variables. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py--imenu-create-index-p]
 
-	  ["Imenu show method args "
-	   (setq py-imenu-show-method-args-p
-		 (not py-imenu-show-method-args-p))
-	   :help "Controls echoing of arguments of functions & methods in the Imenu buffer.
+          ["Imenu show method args "
+           (setq py-imenu-show-method-args-p
+                 (not py-imenu-show-method-args-p))
+           :help "Controls echoing of arguments of functions & methods in the Imenu buffer.
 When non-nil, arguments are printed.Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-imenu-show-method-args-p]
-	  ["Switch index-function" py-switch-imenu-index-function
-	   :help "‘py-switch-imenu-index-function’
+           :style toggle :selected py-imenu-show-method-args-p]
+          ["Switch index-function" py-switch-imenu-index-function
+           :help "‘py-switch-imenu-index-function’
 Switch between ‘py--imenu-create-index’ from 5.1 series and ‘py--imenu-create-index-new’."])
 
-	 ("Fontification"
+         ("Fontification"
 
-	  ["Mark decorators"
-	   (setq py-mark-decorators
-		 (not py-mark-decorators))
-	   :help "If py-mark-def-or-class functions should mark decorators too. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-mark-decorators]
+          ["Mark decorators"
+           (setq py-mark-decorators
+                 (not py-mark-decorators))
+           :help "If py-mark-def-or-class functions should mark decorators too. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-mark-decorators]
 
-	  ["Fontify shell buffer "
-	   (setq py-fontify-shell-buffer-p
-		 (not py-fontify-shell-buffer-p))
-	   :help "If code in Python shell should be highlighted as in script buffer.
+          ["Fontify shell buffer "
+           (setq py-fontify-shell-buffer-p
+                 (not py-fontify-shell-buffer-p))
+           :help "If code in Python shell should be highlighted as in script buffer.
 
 Default is nil.
 
 If ‘t’, related vars like ‘comment-start’ will be set too.
 Seems convenient when playing with stuff in IPython shell
 Might not be TRT when a lot of output arrives Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-fontify-shell-buffer-p]
+           :style toggle :selected py-fontify-shell-buffer-p]
 
-	  ["Use font lock doc face "
-	   (setq py-use-font-lock-doc-face-p
-		 (not py-use-font-lock-doc-face-p))
-	   :help "If documention string inside of def or class get ‘font-lock-doc-face’.
+          ["Use font lock doc face "
+           (setq py-use-font-lock-doc-face-p
+                 (not py-use-font-lock-doc-face-p))
+           :help "If documention string inside of def or class get ‘font-lock-doc-face’.
 
 ‘font-lock-doc-face’ inherits ‘font-lock-string-face’.
 
 Call M-x ‘customize-face’ in order to have a visible effect. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-use-font-lock-doc-face-p])
+           :style toggle :selected py-use-font-lock-doc-face-p])
 
-	 ["Switch buffers on execute"
-	  (setq py-switch-buffers-on-execute-p
-		(not py-switch-buffers-on-execute-p))
-	  :help "When non-nil switch to the Python output buffer.
-
-Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-switch-buffers-on-execute-p]
-
-	 ["Split windows on execute"
-	  (setq py-split-window-on-execute
-		(not py-split-window-on-execute))
-	  :help "When non-nil split windows.
+         ["Switch buffers on execute"
+          (setq py-switch-buffers-on-execute-p
+                (not py-switch-buffers-on-execute-p))
+          :help "When non-nil switch to the Python output buffer.
 
 Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-split-window-on-execute]
+          :style toggle :selected py-switch-buffers-on-execute-p]
 
-	 ["Keep windows configuration"
-	  (setq py-keep-windows-configuration
-		(not py-keep-windows-configuration))
-	  :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
+         ["Split windows on execute"
+          (setq py-split-window-on-execute
+                (not py-split-window-on-execute))
+          :help "When non-nil split windows.
+
+Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-split-window-on-execute]
+
+         ["Keep windows configuration"
+          (setq py-keep-windows-configuration
+                (not py-keep-windows-configuration))
+          :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
 
 Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it is displayed\.
 
 To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set ‘py-keep-4windows-configuration’ onto 'force
 
 Default is nil Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-keep-windows-configuration]
+          :style toggle :selected py-keep-windows-configuration]
 
-	 ["Which split windows on execute function"
-	  (progn
-	    (if (eq 'split-window-vertically py-split-windows-on-execute-function)
-		(setq py-split-windows-on-execute-function'split-window-horizontally)
-	      (setq py-split-windows-on-execute-function 'split-window-vertically))
-	    (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
+         ["Which split windows on execute function"
+          (progn
+            (if (eq 'split-window-vertically py-split-windows-on-execute-function)
+                (setq py-split-windows-on-execute-function'split-window-horizontally)
+              (setq py-split-windows-on-execute-function 'split-window-vertically))
+            (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
 
-	  :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
-	  :style toggle :selected py-split-windows-on-execute-function]
+          :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
+          :style toggle :selected py-split-windows-on-execute-function]
 
-	 ["Modeline display full path "
-	  (setq py-modeline-display-full-path-p
-		(not py-modeline-display-full-path-p))
-	  :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
+         ["Modeline display full path "
+          (setq py-modeline-display-full-path-p
+                (not py-modeline-display-full-path-p))
+          :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
 
 Default is nil. Note: when ‘py-shell-name’ is specified with path, it is shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-modeline-display-full-path-p]
+          :style toggle :selected py-modeline-display-full-path-p]
 
-	 ["Modeline acronym display home "
-	  (setq py-modeline-acronym-display-home-p
-		(not py-modeline-acronym-display-home-p))
-	  :help "If the modeline acronym should contain chars indicating the home-directory.
+         ["Modeline acronym display home "
+          (setq py-modeline-acronym-display-home-p
+                (not py-modeline-acronym-display-home-p))
+          :help "If the modeline acronym should contain chars indicating the home-directory.
 
 Default is nil Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-modeline-acronym-display-home-p]
+          :style toggle :selected py-modeline-acronym-display-home-p]
 
-	 ["Hide show hide docstrings"
-	  (setq py-hide-show-hide-docstrings
-		(not py-hide-show-hide-docstrings))
-	  :help "Controls if doc strings can be hidden by hide-showUse `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-hide-show-hide-docstrings]
+         ["Hide show hide docstrings"
+          (setq py-hide-show-hide-docstrings
+                (not py-hide-show-hide-docstrings))
+          :help "Controls if doc strings can be hidden by hide-showUse `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-hide-show-hide-docstrings]
 
-	 ["Hide comments when hiding all"
-	  (setq py-hide-comments-when-hiding-all
-		(not py-hide-comments-when-hiding-all))
-	  :help "Hide the comments too when you do ‘hs-hide-all’. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-hide-comments-when-hiding-all]
+         ["Hide comments when hiding all"
+          (setq py-hide-comments-when-hiding-all
+                (not py-hide-comments-when-hiding-all))
+          :help "Hide the comments too when you do ‘hs-hide-all’. Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-hide-comments-when-hiding-all]
 
-	 ["Max help buffer "
-	  (setq py-max-help-buffer-p
-		(not py-max-help-buffer-p))
-	  :help "If \"\*Python-Help\*\"-buffer should appear as the only visible.
+         ["Max help buffer "
+          (setq py-max-help-buffer-p
+                (not py-max-help-buffer-p))
+          :help "If \"\*Python-Help\*\"-buffer should appear as the only visible.
 
 Default is nil. In help-buffer, \"q\" will close it.  Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-max-help-buffer-p]
+          :style toggle :selected py-max-help-buffer-p]
 
-	 ["Current defun show"
-	  (setq py-current-defun-show
-		(not py-current-defun-show))
-	  :help "If ‘py-current-defun’ should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
+         ["Current defun show"
+          (setq py-current-defun-show
+                (not py-current-defun-show))
+          :help "If ‘py-current-defun’ should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
 
 Default is ‘t’.Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-current-defun-show]
+          :style toggle :selected py-current-defun-show]
 
-	 ["Match paren mode"
-	  (setq py-match-paren-mode
-		(not py-match-paren-mode))
-	  :help "Non-nil means, cursor will jump to beginning or end of a block.
+         ["Match paren mode"
+          (setq py-match-paren-mode
+                (not py-match-paren-mode))
+          :help "Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
 Sets ‘py-match-paren-key’ in python-mode-map.
 Customize ‘py-match-paren-key’ which key to use. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-match-paren-mode])
+          :style toggle :selected py-match-paren-mode])
 
-	("Debug"
+        ("Debug"
 
-	 ["py-debug-p"
-	  (setq py-debug-p
-		(not py-debug-p))
-	  :help "When non-nil, keep resp\. store information useful for debugging\.
+         ["py-debug-p"
+          (setq py-debug-p
+                (not py-debug-p))
+          :help "When non-nil, keep resp\. store information useful for debugging\.
 
 Temporary files are not deleted\. Other functions might implement
 some logging etc\. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-debug-p]
+          :style toggle :selected py-debug-p]
 
-	 ["Pdbtrack do tracking "
-	  (setq py-pdbtrack-do-tracking-p
-		(not py-pdbtrack-do-tracking-p))
-	  :help "Controls whether the pdbtrack feature is enabled or not.
+         ["Pdbtrack do tracking "
+          (setq py-pdbtrack-do-tracking-p
+                (not py-pdbtrack-do-tracking-p))
+          :help "Controls whether the pdbtrack feature is enabled or not.
 When non-nil, pdbtrack is enabled in all comint-based buffers,
 e.g. shell buffers and the \*Python\* buffer.  When using pdb to debug a
 Python program, pdbtrack notices the pdb prompt and displays the
 source file and line that the program is stopped at, much the same way
 as gud-mode does for debugging C programs with gdb.Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-pdbtrack-do-tracking-p]
+          :style toggle :selected py-pdbtrack-do-tracking-p]
 
-	 ["Jump on exception"
-	  (setq py-jump-on-exception
-		(not py-jump-on-exception))
-	  :help "Jump to innermost exception frame in Python output buffer.
+         ["Jump on exception"
+          (setq py-jump-on-exception
+                (not py-jump-on-exception))
+          :help "Jump to innermost exception frame in Python output buffer.
 When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame.
 
 Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-jump-on-exception]
+          :style toggle :selected py-jump-on-exception]
 
-	 ["Highlight error in source "
-	  (setq py-highlight-error-source-p
-		(not py-highlight-error-source-p))
-	  :help "Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-highlight-error-source-p])
+         ["Highlight error in source "
+          (setq py-highlight-error-source-p
+                (not py-highlight-error-source-p))
+          :help "Use `M-x customize-variable' to set it permanently"
+          :style toggle :selected py-highlight-error-source-p])
 
-	("Other"
+        ("Other"
 
-	 ("Directory"
+         ("Directory"
 
-	  ["Guess install directory "
-	   (setq py-guess-py-install-directory-p
-		 (not py-guess-py-install-directory-p))
-	   :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-guess-py-install-directory-p]
+          ["Guess install directory "
+           (setq py-guess-py-install-directory-p
+                 (not py-guess-py-install-directory-p))
+           :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-guess-py-install-directory-p]
 
-	  ["Use local default"
-	   (setq py-use-local-default
-		 (not py-use-local-default))
-	   :help "If ‘t’, py-shell will use ‘py-shell-local-path’ instead
+          ["Use local default"
+           (setq py-use-local-default
+                 (not py-use-local-default))
+           :help "If ‘t’, py-shell will use ‘py-shell-local-path’ instead
 of default Python.
 
 Making switch between several virtualenv's easier,
                                ‘python-mode’ should deliver an installer, so named-shells pointing to virtualenv's will be available. Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-use-local-default]
+           :style toggle :selected py-use-local-default]
 
-	  ["Use current dir when execute "
-	   (setq py-use-current-dir-when-execute-p
-		 (not py-use-current-dir-when-execute-p))
-	   :help "When ‘t’, current directory is used by Python-shell for output of ‘py-execute-buffer’ and related commands.
-
-See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-use-current-dir-when-execute-p]
-
-	  ["Keep shell dir when execute "
-	   (setq py-keep-shell-dir-when-execute-p
-		 (not py-keep-shell-dir-when-execute-p))
-	   :help "Do not change Python shell's current working directory when sending code.
+          ["Use current dir when execute "
+           (setq py-use-current-dir-when-execute-p
+                 (not py-use-current-dir-when-execute-p))
+           :help "When ‘t’, current directory is used by Python-shell for output of ‘py-execute-buffer’ and related commands.
 
 See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-keep-shell-dir-when-execute-p]
+           :style toggle :selected py-use-current-dir-when-execute-p]
 
-	  ["Fileless buffer use default directory "
-	   (setq py-fileless-buffer-use-default-directory-p
-		 (not py-fileless-buffer-use-default-directory-p))
-	   :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
-	   :style toggle :selected py-fileless-buffer-use-default-directory-p])
+          ["Keep shell dir when execute "
+           (setq py-keep-shell-dir-when-execute-p
+                 (not py-keep-shell-dir-when-execute-p))
+           :help "Do not change Python shell's current working directory when sending code.
+
+See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-keep-shell-dir-when-execute-p]
+
+          ["Fileless buffer use default directory "
+           (setq py-fileless-buffer-use-default-directory-p
+                 (not py-fileless-buffer-use-default-directory-p))
+           :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
+           :style toggle :selected py-fileless-buffer-use-default-directory-p])
          ["py-electric-backspace-mode" py-electric-backspace-mode
-	  :help " ‘py-electric-backspace-mode’
+          :help " ‘py-electric-backspace-mode’
 If <backspace> key deletes one or more of whitespace chars left from point .
 Default is nil."
-	  :style toggle :selected py-electric-backspace-mode]
-	 ("Underscore word syntax"
-	  :help "Toggle ‘py-underscore-word-syntax-p’"
-	  ["Toggle underscore word syntax" py-toggle-underscore-word-syntax-p
-	   :help " ‘py-toggle-underscore-word-syntax-p’
+          :style toggle :selected py-electric-backspace-mode]
+         ("Underscore word syntax"
+          :help "Toggle ‘py-underscore-word-syntax-p’"
+          ["Toggle underscore word syntax" py-toggle-underscore-word-syntax-p
+           :help " ‘py-toggle-underscore-word-syntax-p’
 
 If ‘py-underscore-word-syntax-p’ should be on or off.
 
@@ -19606,8 +19605,8 @@ If ‘py-underscore-word-syntax-p’ should be on or off.
 
 Use `M-x customize-variable' to set it permanently"]
 
-	  ["Underscore word syntax on" py-underscore-word-syntax-p-on
-	   :help " ‘py-underscore-word-syntax-p-on’
+          ["Underscore word syntax on" py-underscore-word-syntax-p-on
+           :help " ‘py-underscore-word-syntax-p-on’
 
 Make sure, py-underscore-word-syntax-p' is on.
 
@@ -19615,8 +19614,8 @@ Returns value of ‘py-underscore-word-syntax-p’. .
 
 Use `M-x customize-variable' to set it permanently"]
 
-	  ["Underscore word syntax off" py-underscore-word-syntax-p-off
-	   :help " ‘py-underscore-word-syntax-p-off’
+          ["Underscore word syntax off" py-underscore-word-syntax-p-off
+           :help " ‘py-underscore-word-syntax-p-off’
 
 Make sure, ‘py-underscore-word-syntax-p’ is off.
 
@@ -19624,60 +19623,60 @@ Returns value of ‘py-underscore-word-syntax-p’. .
 
 Use `M-x customize-variable' to set it permanently"])
 
-	 ["Load pymacs "
-	  (setq py-load-pymacs-p
-		(not py-load-pymacs-p))
-	  :help "If Pymacs related stuff should be loaded.
+         ["Load pymacs "
+          (setq py-load-pymacs-p
+                (not py-load-pymacs-p))
+          :help "If Pymacs related stuff should be loaded.
 
 Default is nil.
 
 Pymacs has been written by François Pinard and many others.
 See original source: http://pymacs.progiciels-bpi.caUse `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-load-pymacs-p]
+          :style toggle :selected py-load-pymacs-p]
 
          ["Register shell buffer"
-	  (setq py-register-shell-buffer-p
-		(not py-register-shell-buffer-p))
-	  :help "If py-shell buffer should be registerd at start.
+          (setq py-register-shell-buffer-p
+                (not py-register-shell-buffer-p))
+          :help "If py-shell buffer should be registerd at start.
 
 Default is nil."
-	  :style toggle :selected py-register-shell-buffer-p]
+          :style toggle :selected py-register-shell-buffer-p]
 
-	 ["Verbose "
-	  (setq py-verbose-p
-		(not py-verbose-p))
-	  :help "If functions should report results.
+         ["Verbose "
+          (setq py-verbose-p
+                (not py-verbose-p))
+          :help "If functions should report results.
 
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-verbose-p]
-	 ;; ["No session mode "
-	 ;; 	  (setq py-no-session-p
-	 ;; 		(not py-no-session-p))
-	 ;; 	  :help "If shell should be in session-mode.
+          :style toggle :selected py-verbose-p]
+         ;; ["No session mode "
+         ;;       (setq py-no-session-p
+         ;;             (not py-no-session-p))
+         ;;       :help "If shell should be in session-mode.
 
-	 ;; Default is nil. Use `M-x customize-variable' to set it permanently"
-	 ;; 	  :style toggle :selected py-no-session-p]
+         ;; Default is nil. Use `M-x customize-variable' to set it permanently"
+         ;;       :style toggle :selected py-no-session-p]
 
-	 ["Empty comment line separates paragraph "
-	  (setq py-empty-comment-line-separates-paragraph-p
-		(not py-empty-comment-line-separates-paragraph-p))
-	  :help "Consider paragraph start/end lines with nothing inside but comment sign.
+         ["Empty comment line separates paragraph "
+          (setq py-empty-comment-line-separates-paragraph-p
+                (not py-empty-comment-line-separates-paragraph-p))
+          :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-empty-comment-line-separates-paragraph-p]
+          :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
-	 ["Org cycle "
-	  (setq py-org-cycle-p
-		(not py-org-cycle-p))
-	  :help "When non-nil, command ‘org-cycle’ is available at shift-TAB, <backtab>
+         ["Org cycle "
+          (setq py-org-cycle-p
+                (not py-org-cycle-p))
+          :help "When non-nil, command ‘org-cycle’ is available at shift-TAB, <backtab>
 
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-org-cycle-p]
+          :style toggle :selected py-org-cycle-p]
 
-	 ["Set pager cat"
-	  (setq py-set-pager-cat-p
-		(not py-set-pager-cat-p))
-	  :help "If the shell environment variable \$PAGER should set to ‘cat’.
+         ["Set pager cat"
+          (setq py-set-pager-cat-p
+                (not py-set-pager-cat-p))
+          :help "If the shell environment variable \$PAGER should set to ‘cat’.
 
 If ‘t’, use `C-c C-r' to jump to beginning of output. Then scroll normally.
 
@@ -19685,114 +19684,114 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 
 When non-nil, imports module ‘os’ Use `M-x customize-variable' to
 set it permanently"
-	  :style toggle :selected py-set-pager-cat-p]
+          :style toggle :selected py-set-pager-cat-p]
 
-	 ["Edit only "
-	  (setq py-edit-only-p
-		(not py-edit-only-p))
-	  :help "When ‘t’ ‘python-mode’ will not take resort nor check for installed Python executables. Default is nil.
+         ["Edit only "
+          (setq py-edit-only-p
+                (not py-edit-only-p))
+          :help "When ‘t’ ‘python-mode’ will not take resort nor check for installed Python executables. Default is nil.
 
 See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it permanently"
-	  :style toggle :selected py-edit-only-p])))
+          :style toggle :selected py-edit-only-p])))
       ("Other"
        ["py-electric-backspace-mode" py-electric-backspace-mode
-	:help " ‘py-electric-backspace-mode’
+        :help " ‘py-electric-backspace-mode’
 If <backspace> key deletes one or more of whitespace chars left from point ."]
        ["Boolswitch" py-boolswitch
-	:help " ‘py-boolswitch’
+        :help " ‘py-boolswitch’
 Edit the assignment of a boolean variable, revert them."]
 
        ["Empty out list backward" py-empty-out-list-backward
-	:help " ‘py-empty-out-list-backward’
+        :help " ‘py-empty-out-list-backward’
 Deletes all elements from list before point."]
 
        ["Kill buffer unconditional" py-kill-buffer-unconditional
-	:help " ‘py-kill-buffer-unconditional’
+        :help " ‘py-kill-buffer-unconditional’
 Kill buffer unconditional, kill buffer-process if existing."]
 
        ["Remove overlays at point" py-remove-overlays-at-point
-	:help " ‘py-remove-overlays-at-point’
+        :help " ‘py-remove-overlays-at-point’
 Remove overlays as set when ‘py-highlight-error-source-p’ is non-nil."]
        ("Electric"
-	["Complete electric comma" py-complete-electric-comma
-	 :help " ‘py-complete-electric-comma’"]
+        ["Complete electric comma" py-complete-electric-comma
+         :help " ‘py-complete-electric-comma’"]
 
-	["Complete electric lparen" py-complete-electric-lparen
-	 :help " ‘py-complete-electric-lparen’"]
+        ["Complete electric lparen" py-complete-electric-lparen
+         :help " ‘py-complete-electric-lparen’"]
 
-	["Electric backspace" py-electric-backspace
-	 :help " ‘py-electric-backspace’
+        ["Electric backspace" py-electric-backspace
+         :help " ‘py-electric-backspace’
 Delete preceding character or level of indentation."]
 
-	["Electric colon" py-electric-colon
-	 :help " ‘py-electric-colon’
+        ["Electric colon" py-electric-colon
+         :help " ‘py-electric-colon’
 Insert a colon and indent accordingly."]
 
-	["Electric comment" py-electric-comment
-	 :help " ‘py-electric-comment’
+        ["Electric comment" py-electric-comment
+         :help " ‘py-electric-comment’
 Insert a comment. If starting a comment, indent accordingly."]
 
-	["Electric delete" py-electric-delete
-	 :help " ‘py-electric-delete’
+        ["Electric delete" py-electric-delete
+         :help " ‘py-electric-delete’
 Delete following character or levels of whitespace."]
 
-	["Electric yank" py-electric-yank
-	 :help " ‘py-electric-yank’
+        ["Electric yank" py-electric-yank
+         :help " ‘py-electric-yank’
 Perform command ‘yank’ followed by an ‘indent-according-to-mode’"]
 
-	["Hungry delete backwards" py-hungry-delete-backwards
-	 :help " ‘py-hungry-delete-backwards’
+        ["Hungry delete backwards" py-hungry-delete-backwards
+         :help " ‘py-hungry-delete-backwards’
 Delete the preceding character or all preceding whitespace"]
 
-	["Hungry delete forward" py-hungry-delete-forward
-	 :help " ‘py-hungry-delete-forward’
+        ["Hungry delete forward" py-hungry-delete-forward
+         :help " ‘py-hungry-delete-forward’
 Delete the following character or all following whitespace"])
        ("Filling"
-	["Py docstring style" py-docstring-style
-	 :help " ‘py-docstring-style’"]
+        ["Py docstring style" py-docstring-style
+         :help " ‘py-docstring-style’"]
 
-	["Py fill comment" py-fill-comment
-	 :help " ‘py-fill-comment’"]
+        ["Py fill comment" py-fill-comment
+         :help " ‘py-fill-comment’"]
 
-	["Py fill paragraph" py-fill-paragraph
-	 :help " ‘py-fill-paragraph’"]
+        ["Py fill paragraph" py-fill-paragraph
+         :help " ‘py-fill-paragraph’"]
 
-	["Py fill string" py-fill-string
-	 :help " ‘py-fill-string’"]
+        ["Py fill string" py-fill-string
+         :help " ‘py-fill-string’"]
 
-	["Py fill string django" py-fill-string-django
-	 :help " ‘py-fill-string-django’"]
+        ["Py fill string django" py-fill-string-django
+         :help " ‘py-fill-string-django’"]
 
-	["Py fill string onetwo" py-fill-string-onetwo
-	 :help " ‘py-fill-string-onetwo’"]
+        ["Py fill string onetwo" py-fill-string-onetwo
+         :help " ‘py-fill-string-onetwo’"]
 
-	["Py fill string pep 257" py-fill-string-pep-257
-	 :help " ‘py-fill-string-pep-257’"]
+        ["Py fill string pep 257" py-fill-string-pep-257
+         :help " ‘py-fill-string-pep-257’"]
 
-	["Py fill string pep 257 nn" py-fill-string-pep-257-nn
-	 :help " ‘py-fill-string-pep-257-nn’"]
+        ["Py fill string pep 257 nn" py-fill-string-pep-257-nn
+         :help " ‘py-fill-string-pep-257-nn’"]
 
-	["Py fill string symmetric" py-fill-string-symmetric
-	 :help " ‘py-fill-string-symmetric’"])
-       ("Abbrevs"	   :help "see also ‘py-add-abbrev’"
-	:filter (lambda (&rest junk)
-		  (abbrev-table-menu python-mode-abbrev-table)))
+        ["Py fill string symmetric" py-fill-string-symmetric
+         :help " ‘py-fill-string-symmetric’"])
+       ("Abbrevs"          :help "see also ‘py-add-abbrev’"
+        :filter (lambda (&rest junk)
+                  (abbrev-table-menu python-mode-abbrev-table)))
 
        ["Add abbrev" py-add-abbrev
-	:help " ‘py-add-abbrev’
+        :help " ‘py-add-abbrev’
 Defines python-mode specific abbrev for last expressions before point."]
        ("Completion"
-	["Py indent or complete" py-indent-or-complete
-	 :help " ‘py-indent-or-complete’"]
+        ["Py indent or complete" py-indent-or-complete
+         :help " ‘py-indent-or-complete’"]
 
-	["Py shell complete" py-shell-complete
-	 :help " ‘py-shell-complete’"]
+        ["Py shell complete" py-shell-complete
+         :help " ‘py-shell-complete’"]
 
-	["Py complete" py-complete
-	 :help " ‘py-complete’"])
+        ["Py complete" py-complete
+         :help " ‘py-complete’"])
 
        ["Find function" py-find-function
-	:help " ‘py-find-function’
+        :help " ‘py-find-function’
 Find source of definition of SYMBOL."])))
   map)
 
@@ -19824,9 +19823,9 @@ Default is t")
         (define-key map [(control meta e)] (quote py-forward-def-or-class))
         ;; (define-key map [(meta i)] (quote py-indent-forward-line))
         ;; (define-key map [(control j)] (quote py-newline-and-indent))
-	(define-key map (kbd "C-j") (quote newline))
+        (define-key map (kbd "C-j") (quote newline))
         ;; Most Pythoneers expect RET ‘py-newline-and-indent’
-	;; which is default of var py-return-key’
+        ;; which is default of var py-return-key’
         (define-key map (kbd "RET") py-return-key)
         ;; (define-key map (kbd "RET") (quote newline))
         ;; (define-key map (kbd "RET") (quote py-newline-and-dedent))
@@ -19838,7 +19837,7 @@ Default is t")
         (define-key map [(control c) (<)] (quote py-shift-left))
         (define-key map [(control c) (>)] (quote py-shift-right))
         ;; (define-key map [(control c) (tab)] (quote py-indent-region))
-	(define-key map (kbd "C-c TAB") (quote py-indent-region))
+        (define-key map (kbd "C-c TAB") (quote py-indent-region))
         (define-key map [(control c) (:)] (quote py-guess-indent-offset))
         ;; subprocess commands
         (define-key map [(control c) (control c)] (quote py-execute-buffer))
@@ -19868,7 +19867,7 @@ Default is t")
         (define-key map [(control c) (control w)] (quote py-pychecker-run))
         ;; (define-key map (kbd "TAB") (quote py-indent-line))
         (define-key map (kbd "TAB") (quote py-indent-line))
-	;; (if py-complete-function
+        ;; (if py-complete-function
         ;;     (progn
         ;;       (define-key map [(meta tab)] py-complete-function)
         ;;       (define-key map [(esc) (tab)] py-complete-function))
@@ -19880,13 +19879,13 @@ Default is t")
                                    map global-map)
         (substitute-key-definition (quote down-list) (quote py-down)
                                    map global-map)
-	(when py-use-menu-p
-	  (setq map (py-define-menu map)))
+        (when py-use-menu-p
+          (setq map (py-define-menu map)))
         map))
 
 (defvar py-shell-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-r" 	  (quote py-nav-last-prompt))
+    (define-key map "\C-c\C-r"            (quote py-nav-last-prompt))
     (define-key map (kbd "RET") (quote comint-send-input))
     (define-key map (kbd "TAB") (quote py-indent-line))
     (define-key map [(control c) (!)] (quote py-shell))
@@ -19918,14 +19917,14 @@ Default is t")
     (define-key map [(control x) (n) (d)] (quote py-narrow-to-def-or-class))
     (define-key map [(meta tab)] (quote py-shell-complete))
     (define-key map [(super backspace)] (quote py-dedent))
-    ;; (define-key map "\C-c\C-r" 	  (quote comint-show-output))
+    ;; (define-key map "\C-c\C-r"         (quote comint-show-output))
     ;; (define-key map [(control c)(control r)] (quote py-nav-last-prompt))
     (substitute-key-definition (quote complete-symbol) (quote completion-at-point)
-			       map global-map)
+                               map global-map)
     (substitute-key-definition (quote backward-up-list) (quote py-up)
-			       map global-map)
+                               map global-map)
     (substitute-key-definition (quote down-list) (quote py-down)
-			       map global-map)
+                               map global-map)
     map)
   "Used inside a Python-shell.")
 
@@ -19943,8 +19942,8 @@ Default is t")
          ("Edit"
           ("Shift"
            ("Shift right"
-	    ["Shift block right" py-shift-block-right
-	     :help " ‘py-shift-block-right’
+            ["Shift block right" py-shift-block-right
+             :help " ‘py-shift-block-right’
 Indent block by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -19952,8 +19951,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift block or clause right" py-shift-block-or-clause-right
-	     :help " ‘py-shift-block-or-clause-right’
+            ["Shift block or clause right" py-shift-block-or-clause-right
+             :help " ‘py-shift-block-or-clause-right’
 Indent block-or-clause by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -19961,8 +19960,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift class right" py-shift-class-right
-	     :help " ‘py-shift-class-right’
+            ["Shift class right" py-shift-class-right
+             :help " ‘py-shift-class-right’
 Indent class by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -19970,8 +19969,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift clause right" py-shift-clause-right
-	     :help " ‘py-shift-clause-right’
+            ["Shift clause right" py-shift-clause-right
+             :help " ‘py-shift-clause-right’
 Indent clause by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -19979,11 +19978,11 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift comment right" py-shift-comment-right
-	     :help " ‘py-shift-comment-right’"]
+            ["Shift comment right" py-shift-comment-right
+             :help " ‘py-shift-comment-right’"]
 
-	    ["Shift def right" py-shift-def-right
-	     :help " ‘py-shift-def-right’
+            ["Shift def right" py-shift-def-right
+             :help " ‘py-shift-def-right’
 Indent def by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -19991,8 +19990,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift def or class right" py-shift-def-or-class-right
-	     :help " ‘py-shift-def-or-class-right’
+            ["Shift def or class right" py-shift-def-or-class-right
+             :help " ‘py-shift-def-or-class-right’
 Indent def-or-class by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20000,8 +19999,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift minor block right" py-shift-minor-block-right
-	     :help " ‘py-shift-minor-block-right’
+            ["Shift minor block right" py-shift-minor-block-right
+             :help " ‘py-shift-minor-block-right’
 Indent minor-block by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20010,8 +20009,8 @@ use [universal-argument] to specify a different value.
 Returns outmost indentation reached.
 A minor block is started by a ‘for’, ‘if’, ‘try’ or ‘with’."]
 
-	    ["Shift paragraph right" py-shift-paragraph-right
-	     :help " ‘py-shift-paragraph-right’
+            ["Shift paragraph right" py-shift-paragraph-right
+             :help " ‘py-shift-paragraph-right’
 Indent paragraph by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20019,15 +20018,15 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift region right" py-shift-region-right
-	     :help " ‘py-shift-region-right’
+            ["Shift region right" py-shift-region-right
+             :help " ‘py-shift-region-right’
 Indent region according to ‘py-indent-offset’ by COUNT times.
 
 If no region is active, current line is indented.
 Returns indentation reached."]
 
-	    ["Shift statement right" py-shift-statement-right
-	     :help " ‘py-shift-statement-right’
+            ["Shift statement right" py-shift-statement-right
+             :help " ‘py-shift-statement-right’
 Indent statement by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20035,12 +20034,12 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift top level right" py-shift-top-level-right
-	     :help " ‘py-shift-top-level-right’"]
+            ["Shift top level right" py-shift-top-level-right
+             :help " ‘py-shift-top-level-right’"]
             )
            ("Shift left"
-	    ["Shift block left" py-shift-block-left
-	     :help " ‘py-shift-block-left’
+            ["Shift block left" py-shift-block-left
+             :help " ‘py-shift-block-left’
 Dedent block by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20048,8 +20047,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift block or clause left" py-shift-block-or-clause-left
-	     :help " ‘py-shift-block-or-clause-left’
+            ["Shift block or clause left" py-shift-block-or-clause-left
+             :help " ‘py-shift-block-or-clause-left’
 Dedent block-or-clause by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20057,8 +20056,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift class left" py-shift-class-left
-	     :help " ‘py-shift-class-left’
+            ["Shift class left" py-shift-class-left
+             :help " ‘py-shift-class-left’
 Dedent class by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20066,8 +20065,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift clause left" py-shift-clause-left
-	     :help " ‘py-shift-clause-left’
+            ["Shift clause left" py-shift-clause-left
+             :help " ‘py-shift-clause-left’
 Dedent clause by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20075,11 +20074,11 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift comment left" py-shift-comment-left
-	     :help " ‘py-shift-comment-left’"]
+            ["Shift comment left" py-shift-comment-left
+             :help " ‘py-shift-comment-left’"]
 
-	    ["Shift def left" py-shift-def-left
-	     :help " ‘py-shift-def-left’
+            ["Shift def left" py-shift-def-left
+             :help " ‘py-shift-def-left’
 Dedent def by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20087,8 +20086,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift def or class left" py-shift-def-or-class-left
-	     :help " ‘py-shift-def-or-class-left’
+            ["Shift def or class left" py-shift-def-or-class-left
+             :help " ‘py-shift-def-or-class-left’
 Dedent def-or-class by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20096,8 +20095,8 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift minor block left" py-shift-minor-block-left
-	     :help " ‘py-shift-minor-block-left’
+            ["Shift minor block left" py-shift-minor-block-left
+             :help " ‘py-shift-minor-block-left’
 Dedent minor-block by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20106,8 +20105,8 @@ use [universal-argument] to specify a different value.
 Returns outmost indentation reached.
 A minor block is started by a ‘for’, ‘if’, ‘try’ or ‘with’."]
 
-	    ["Shift paragraph left" py-shift-paragraph-left
-	     :help " ‘py-shift-paragraph-left’
+            ["Shift paragraph left" py-shift-paragraph-left
+             :help " ‘py-shift-paragraph-left’
 Dedent paragraph by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20115,15 +20114,15 @@ use [universal-argument] to specify a different value.
 
 Returns outmost indentation reached."]
 
-	    ["Shift region left" py-shift-region-left
-	     :help " ‘py-shift-region-left’
+            ["Shift region left" py-shift-region-left
+             :help " ‘py-shift-region-left’
 Dedent region according to ‘py-indent-offset’ by COUNT times.
 
 If no region is active, current line is dedented.
 Returns indentation reached."]
 
-	    ["Shift statement left" py-shift-statement-left
-	     :help " ‘py-shift-statement-left’
+            ["Shift statement left" py-shift-statement-left
+             :help " ‘py-shift-statement-left’
 Dedent statement by COUNT spaces.
 
 COUNT defaults to ‘py-indent-offset’,
@@ -20132,369 +20131,369 @@ use [universal-argument] to specify a different value.
 Returns outmost indentation reached."]
             ))
           ("Mark"
-	   ["Mark block" py-mark-block
-	    :help " ‘py-mark-block’
+           ["Mark block" py-mark-block
+            :help " ‘py-mark-block’
 Mark block at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark block or clause" py-mark-block-or-clause
-	    :help " ‘py-mark-block-or-clause’
+           ["Mark block or clause" py-mark-block-or-clause
+            :help " ‘py-mark-block-or-clause’
 Mark block-or-clause at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark class" py-mark-class
-	    :help " ‘py-mark-class’
+           ["Mark class" py-mark-class
+            :help " ‘py-mark-class’
 Mark class at point.
 
 With C-u or ‘py-mark-decorators’ set to ‘t’, decorators are marked too.
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark clause" py-mark-clause
-	    :help " ‘py-mark-clause’
+           ["Mark clause" py-mark-clause
+            :help " ‘py-mark-clause’
 Mark clause at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark comment" py-mark-comment
-	    :help " ‘py-mark-comment’
+           ["Mark comment" py-mark-comment
+            :help " ‘py-mark-comment’
 Mark comment at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark def" py-mark-def
-	    :help " ‘py-mark-def’
+           ["Mark def" py-mark-def
+            :help " ‘py-mark-def’
 Mark def at point.
 
 With C-u or ‘py-mark-decorators’ set to ‘t’, decorators are marked too.
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark def or class" py-mark-def-or-class
-	    :help " ‘py-mark-def-or-class’
+           ["Mark def or class" py-mark-def-or-class
+            :help " ‘py-mark-def-or-class’
 Mark def-or-class at point.
 
 With C-u or ‘py-mark-decorators’ set to ‘t’, decorators are marked too.
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark expression" py-mark-expression
-	    :help " ‘py-mark-expression’
+           ["Mark expression" py-mark-expression
+            :help " ‘py-mark-expression’
 Mark expression at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark line" py-mark-line
-	    :help " ‘py-mark-line’
+           ["Mark line" py-mark-line
+            :help " ‘py-mark-line’
 Mark line at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark minor block" py-mark-minor-block
-	    :help " ‘py-mark-minor-block’
+           ["Mark minor block" py-mark-minor-block
+            :help " ‘py-mark-minor-block’
 Mark minor-block at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark paragraph" py-mark-paragraph
-	    :help " ‘py-mark-paragraph’
+           ["Mark paragraph" py-mark-paragraph
+            :help " ‘py-mark-paragraph’
 Mark paragraph at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark partial expression" py-mark-partial-expression
-	    :help " ‘py-mark-partial-expression’
+           ["Mark partial expression" py-mark-partial-expression
+            :help " ‘py-mark-partial-expression’
 Mark partial-expression at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark statement" py-mark-statement
-	    :help " ‘py-mark-statement’
+           ["Mark statement" py-mark-statement
+            :help " ‘py-mark-statement’
 Mark statement at point.
 
 Returns beginning and end positions of marked area, a cons."]
 
-	   ["Mark top level" py-mark-top-level
-	    :help " ‘py-mark-top-level’
+           ["Mark top level" py-mark-top-level
+            :help " ‘py-mark-top-level’
 Mark top-level at point.
 
 Returns beginning and end positions of marked area, a cons."]
            )
           ("Copy"
-	   ["Copy block" py-copy-block
-	    :help " ‘py-copy-block’
+           ["Copy block" py-copy-block
+            :help " ‘py-copy-block’
 Copy block at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy block or clause" py-copy-block-or-clause
-	    :help " ‘py-copy-block-or-clause’
+           ["Copy block or clause" py-copy-block-or-clause
+            :help " ‘py-copy-block-or-clause’
 Copy block-or-clause at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy class" py-copy-class
-	    :help " ‘py-copy-class’
+           ["Copy class" py-copy-class
+            :help " ‘py-copy-class’
 Copy class at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy clause" py-copy-clause
-	    :help " ‘py-copy-clause’
+           ["Copy clause" py-copy-clause
+            :help " ‘py-copy-clause’
 Copy clause at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy comment" py-copy-comment
-	    :help " ‘py-copy-comment’"]
+           ["Copy comment" py-copy-comment
+            :help " ‘py-copy-comment’"]
 
-	   ["Copy def" py-copy-def
-	    :help " ‘py-copy-def’
+           ["Copy def" py-copy-def
+            :help " ‘py-copy-def’
 Copy def at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy def or class" py-copy-def-or-class
-	    :help " ‘py-copy-def-or-class’
+           ["Copy def or class" py-copy-def-or-class
+            :help " ‘py-copy-def-or-class’
 Copy def-or-class at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy expression" py-copy-expression
-	    :help " ‘py-copy-expression’
+           ["Copy expression" py-copy-expression
+            :help " ‘py-copy-expression’
 Copy expression at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy line" py-copy-line
-	    :help " ‘py-copy-line’"]
+           ["Copy line" py-copy-line
+            :help " ‘py-copy-line’"]
 
-	   ["Copy minor block" py-copy-minor-block
-	    :help " ‘py-copy-minor-block’
+           ["Copy minor block" py-copy-minor-block
+            :help " ‘py-copy-minor-block’
 Copy minor-block at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy paragraph" py-copy-paragraph
-	    :help " ‘py-copy-paragraph’"]
+           ["Copy paragraph" py-copy-paragraph
+            :help " ‘py-copy-paragraph’"]
 
-	   ["Copy partial expression" py-copy-partial-expression
-	    :help " ‘py-copy-partial-expression’
+           ["Copy partial expression" py-copy-partial-expression
+            :help " ‘py-copy-partial-expression’
 Copy partial-expression at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy statement" py-copy-statement
-	    :help " ‘py-copy-statement’
+           ["Copy statement" py-copy-statement
+            :help " ‘py-copy-statement’
 Copy statement at point.
 
 Store data in kill ring, so it might yanked back."]
 
-	   ["Copy top level" py-copy-top-level
-	    :help " ‘py-copy-top-level’
+           ["Copy top level" py-copy-top-level
+            :help " ‘py-copy-top-level’
 Copy top-level at point.
 
 Store data in kill ring, so it might yanked back."]
            )
           ("Kill"
-	   ["Kill block" py-kill-block
-	    :help " ‘py-kill-block’
+           ["Kill block" py-kill-block
+            :help " ‘py-kill-block’
 Delete ‘block’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill block or clause" py-kill-block-or-clause
-	    :help " ‘py-kill-block-or-clause’
+           ["Kill block or clause" py-kill-block-or-clause
+            :help " ‘py-kill-block-or-clause’
 Delete ‘block-or-clause’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill class" py-kill-class
-	    :help " ‘py-kill-class’
+           ["Kill class" py-kill-class
+            :help " ‘py-kill-class’
 Delete ‘class’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill clause" py-kill-clause
-	    :help " ‘py-kill-clause’
+           ["Kill clause" py-kill-clause
+            :help " ‘py-kill-clause’
 Delete ‘clause’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill comment" py-kill-comment
-	    :help " ‘py-kill-comment’"]
+           ["Kill comment" py-kill-comment
+            :help " ‘py-kill-comment’"]
 
-	   ["Kill def" py-kill-def
-	    :help " ‘py-kill-def’
+           ["Kill def" py-kill-def
+            :help " ‘py-kill-def’
 Delete ‘def’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill def or class" py-kill-def-or-class
-	    :help " ‘py-kill-def-or-class’
+           ["Kill def or class" py-kill-def-or-class
+            :help " ‘py-kill-def-or-class’
 Delete ‘def-or-class’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill expression" py-kill-expression
-	    :help " ‘py-kill-expression’
+           ["Kill expression" py-kill-expression
+            :help " ‘py-kill-expression’
 Delete ‘expression’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill line" py-kill-line
-	    :help " ‘py-kill-line’"]
+           ["Kill line" py-kill-line
+            :help " ‘py-kill-line’"]
 
-	   ["Kill minor block" py-kill-minor-block
-	    :help " ‘py-kill-minor-block’
+           ["Kill minor block" py-kill-minor-block
+            :help " ‘py-kill-minor-block’
 Delete ‘minor-block’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill paragraph" py-kill-paragraph
-	    :help " ‘py-kill-paragraph’"]
+           ["Kill paragraph" py-kill-paragraph
+            :help " ‘py-kill-paragraph’"]
 
-	   ["Kill partial expression" py-kill-partial-expression
-	    :help " ‘py-kill-partial-expression’
+           ["Kill partial expression" py-kill-partial-expression
+            :help " ‘py-kill-partial-expression’
 Delete ‘partial-expression’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill statement" py-kill-statement
-	    :help " ‘py-kill-statement’
+           ["Kill statement" py-kill-statement
+            :help " ‘py-kill-statement’
 Delete ‘statement’ at point.
 
 Stores data in kill ring"]
 
-	   ["Kill top level" py-kill-top-level
-	    :help " ‘py-kill-top-level’
+           ["Kill top level" py-kill-top-level
+            :help " ‘py-kill-top-level’
 Delete ‘top-level’ at point.
 
 Stores data in kill ring"]
            )
           ("Delete"
-	   ["Delete block" py-delete-block
-	    :help " ‘py-delete-block’
+           ["Delete block" py-delete-block
+            :help " ‘py-delete-block’
 Delete BLOCK at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete block or clause" py-delete-block-or-clause
-	    :help " ‘py-delete-block-or-clause’
+           ["Delete block or clause" py-delete-block-or-clause
+            :help " ‘py-delete-block-or-clause’
 Delete BLOCK-OR-CLAUSE at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete class" py-delete-class
-	    :help " ‘py-delete-class’
+           ["Delete class" py-delete-class
+            :help " ‘py-delete-class’
 Delete CLASS at point.
 
 Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
-	   ["Delete clause" py-delete-clause
-	    :help " ‘py-delete-clause’
+           ["Delete clause" py-delete-clause
+            :help " ‘py-delete-clause’
 Delete CLAUSE at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete comment" py-delete-comment
-	    :help " ‘py-delete-comment’"]
+           ["Delete comment" py-delete-comment
+            :help " ‘py-delete-comment’"]
 
-	   ["Delete def" py-delete-def
-	    :help " ‘py-delete-def’
+           ["Delete def" py-delete-def
+            :help " ‘py-delete-def’
 Delete DEF at point.
 
 Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
-	   ["Delete def or class" py-delete-def-or-class
-	    :help " ‘py-delete-def-or-class’
+           ["Delete def or class" py-delete-def-or-class
+            :help " ‘py-delete-def-or-class’
 Delete DEF-OR-CLASS at point.
 
 Do not store data in kill ring.
 With C-u or ‘py-mark-decorators’ set to ‘t’, ‘decorators’ are included."]
 
-	   ["Delete expression" py-delete-expression
-	    :help " ‘py-delete-expression’
+           ["Delete expression" py-delete-expression
+            :help " ‘py-delete-expression’
 Delete EXPRESSION at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete line" py-delete-line
-	    :help " ‘py-delete-line’"]
+           ["Delete line" py-delete-line
+            :help " ‘py-delete-line’"]
 
-	   ["Delete minor block" py-delete-minor-block
-	    :help " ‘py-delete-minor-block’
+           ["Delete minor block" py-delete-minor-block
+            :help " ‘py-delete-minor-block’
 Delete MINOR-BLOCK at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete paragraph" py-delete-paragraph
-	    :help " ‘py-delete-paragraph’"]
+           ["Delete paragraph" py-delete-paragraph
+            :help " ‘py-delete-paragraph’"]
 
-	   ["Delete partial expression" py-delete-partial-expression
-	    :help " ‘py-delete-partial-expression’
+           ["Delete partial expression" py-delete-partial-expression
+            :help " ‘py-delete-partial-expression’
 Delete PARTIAL-EXPRESSION at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete statement" py-delete-statement
-	    :help " ‘py-delete-statement’
+           ["Delete statement" py-delete-statement
+            :help " ‘py-delete-statement’
 Delete STATEMENT at point.
 
 Do not store data in kill ring."]
 
-	   ["Delete top level" py-delete-top-level
-	    :help " ‘py-delete-top-level’
+           ["Delete top level" py-delete-top-level
+            :help " ‘py-delete-top-level’
 Delete TOP-LEVEL at point.
 
 Do not store data in kill ring."]
            )
           ("Comment"
-	   ["Comment block" py-comment-block
-	    :help " ‘py-comment-block’
+           ["Comment block" py-comment-block
+            :help " ‘py-comment-block’
 Comments block at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment block or clause" py-comment-block-or-clause
-	    :help " ‘py-comment-block-or-clause’
+           ["Comment block or clause" py-comment-block-or-clause
+            :help " ‘py-comment-block-or-clause’
 Comments block-or-clause at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment class" py-comment-class
-	    :help " ‘py-comment-class’
+           ["Comment class" py-comment-class
+            :help " ‘py-comment-class’
 Comments class at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment clause" py-comment-clause
-	    :help " ‘py-comment-clause’
+           ["Comment clause" py-comment-clause
+            :help " ‘py-comment-clause’
 Comments clause at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment def" py-comment-def
-	    :help " ‘py-comment-def’
+           ["Comment def" py-comment-def
+            :help " ‘py-comment-def’
 Comments def at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment def or class" py-comment-def-or-class
-	    :help " ‘py-comment-def-or-class’
+           ["Comment def or class" py-comment-def-or-class
+            :help " ‘py-comment-def-or-class’
 Comments def-or-class at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
 the default"]
 
-	   ["Comment statement" py-comment-statement
-	    :help " ‘py-comment-statement’
+           ["Comment statement" py-comment-statement
+            :help " ‘py-comment-statement’
 Comments statement at point.
 
 Uses double hash (‘#’) comment starter when ‘py-block-comment-prefix-p’ is  ‘t’,
@@ -20502,72 +20501,72 @@ the default"]
            ))
          ("Move"
           ("Backward"
-	   ["Go backward one prompt" py-nav-last-prompt
-	    :help " ‘py-nav-last-prompt’
+           ["Go backward one prompt" py-nav-last-prompt
+            :help " ‘py-nav-last-prompt’
 Like ‘comint-show-output’ known from in shell-mode"]
 
            ["Beginning of block" py-beginning-of-block
-	    :help " ‘py-beginning-of-block’
+            :help " ‘py-beginning-of-block’
 Go to beginning block, skip whitespace at BOL.
 
 Returns beginning of block if successful, nil otherwise"]
 
-	   ["Beginning of block or clause" py-beginning-of-block-or-clause
-	    :help " ‘py-beginning-of-block-or-clause’
+           ["Beginning of block or clause" py-beginning-of-block-or-clause
+            :help " ‘py-beginning-of-block-or-clause’
 Go to beginning block-or-clause, skip whitespace at BOL.
 
 Returns beginning of block-or-clause if successful, nil otherwise"]
 
-	   ["Beginning of class" py-beginning-of-class
-	    :help " ‘py-beginning-of-class’
+           ["Beginning of class" py-beginning-of-class
+            :help " ‘py-beginning-of-class’
 Go to beginning class, skip whitespace at BOL.
 
 Returns beginning of class if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	   ["Beginning of clause" py-beginning-of-clause
-	    :help " ‘py-beginning-of-clause’
+           ["Beginning of clause" py-beginning-of-clause
+            :help " ‘py-beginning-of-clause’
 Go to beginning clause, skip whitespace at BOL.
 
 Returns beginning of clause if successful, nil otherwise"]
 
-	   ["Beginning of def" py-beginning-of-def
-	    :help " ‘py-beginning-of-def’
+           ["Beginning of def" py-beginning-of-def
+            :help " ‘py-beginning-of-def’
 Go to beginning def, skip whitespace at BOL.
 
 Returns beginning of def if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	   ["Beginning of def or class" py-backward-def-or-class
-	    :help " ‘py-backward-def-or-class’
+           ["Beginning of def or class" py-backward-def-or-class
+            :help " ‘py-backward-def-or-class’
 Go to beginning def-or-class, skip whitespace at BOL.
 
 Returns beginning of def-or-class if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	   ["Beginning of elif block" py-beginning-of-elif-block
-	    :help " ‘py-beginning-of-elif-block’
+           ["Beginning of elif block" py-beginning-of-elif-block
+            :help " ‘py-beginning-of-elif-block’
 Go to beginning elif-block, skip whitespace at BOL.
 
 Returns beginning of elif-block if successful, nil otherwise"]
 
-	   ["Beginning of else block" py-beginning-of-else-block
-	    :help " ‘py-beginning-of-else-block’
+           ["Beginning of else block" py-beginning-of-else-block
+            :help " ‘py-beginning-of-else-block’
 Go to beginning else-block, skip whitespace at BOL.
 
 Returns beginning of else-block if successful, nil otherwise"]
 
-	   ["Beginning of except block" py-beginning-of-except-block
-	    :help " ‘py-beginning-of-except-block’
+           ["Beginning of except block" py-beginning-of-except-block
+            :help " ‘py-beginning-of-except-block’
 Go to beginning except-block, skip whitespace at BOL.
 
 Returns beginning of except-block if successful, nil otherwise"]
 
-	   ["Beginning of expression" py-beginning-of-expression
-	    :help " ‘py-beginning-of-expression’
+           ["Beginning of expression" py-beginning-of-expression
+            :help " ‘py-beginning-of-expression’
 Go to the beginning of a compound python expression.
 
 With numeric ARG do it that many times.
@@ -20579,91 +20578,91 @@ If already at the beginning or before a expression, go to next expression in buf
 Expression here is conceived as the syntactical component of a statement in Python. See http://docs.python.org/reference
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
 
-	   ["Beginning of if block" py-beginning-of-if-block
-	    :help " ‘py-beginning-of-if-block’
+           ["Beginning of if block" py-beginning-of-if-block
+            :help " ‘py-beginning-of-if-block’
 Go to beginning if-block, skip whitespace at BOL.
 
 Returns beginning of if-block if successful, nil otherwise"]
 
-	   ["Beginning of partial expression" py-backward-partial-expression
-	    :help " ‘py-backward-partial-expression’"]
+           ["Beginning of partial expression" py-backward-partial-expression
+            :help " ‘py-backward-partial-expression’"]
 
-	   ["Beginning of statement" py-backward-statement
-	    :help " ‘py-backward-statement’
+           ["Beginning of statement" py-backward-statement
+            :help " ‘py-backward-statement’
 Go to the initial line of a simple statement.
 
 For beginning of compound statement use py-beginning-of-block.
 For beginning of clause py-beginning-of-clause."]
 
-	   ["Beginning of top level" py-backward-top-level
-	    :help " ‘py-backward-top-level’
+           ["Beginning of top level" py-backward-top-level
+            :help " ‘py-backward-top-level’
 Go up to beginning of statments until level of indentation is null.
 
 Returns position if successful, nil otherwise"]
 
-	   ["Beginning of try block" py-beginning-of-try-block
-	    :help " ‘py-beginning-of-try-block’
+           ["Beginning of try block" py-beginning-of-try-block
+            :help " ‘py-beginning-of-try-block’
 Go to beginning try-block, skip whitespace at BOL.
 
 Returns beginning of try-block if successful, nil otherwise"]
            )
           ("Forward"
-	   ["End of block" py-forward-block
-	    :help " ‘py-forward-block’
+           ["End of block" py-forward-block
+            :help " ‘py-forward-block’
 Go to end of block.
 
 Returns end of block if successful, nil otherwise"]
 
-	   ["End of block or clause" py-forward-block-or-clause
-	    :help " ‘py-forward-block-or-clause’
+           ["End of block or clause" py-forward-block-or-clause
+            :help " ‘py-forward-block-or-clause’
 Go to end of block-or-clause.
 
 Returns end of block-or-clause if successful, nil otherwise"]
 
-	   ["End of class" py-forward-class
-	    :help " ‘py-forward-class’
+           ["End of class" py-forward-class
+            :help " ‘py-forward-class’
 Go to end of class.
 
 Returns end of class if successful, nil otherwise"]
 
-	   ["End of clause" py-forward-clause
-	    :help " ‘py-forward-clause’
+           ["End of clause" py-forward-clause
+            :help " ‘py-forward-clause’
 Go to end of clause.
 
 Returns end of clause if successful, nil otherwise"]
 
-	   ["End of def" py-forward-def
-	    :help " ‘py-forward-def’
+           ["End of def" py-forward-def
+            :help " ‘py-forward-def’
 Go to end of def.
 
 Returns end of def if successful, nil otherwise"]
 
-	   ["End of def or class" py-forward-def-or-class
-	    :help " ‘py-forward-def-or-class’
+           ["End of def or class" py-forward-def-or-class
+            :help " ‘py-forward-def-or-class’
 Go to end of def-or-class.
 
 Returns end of def-or-class if successful, nil otherwise"]
 
-	   ["End of elif block" py-forward-elif-block
-	    :help " ‘py-forward-elif-block’
+           ["End of elif block" py-forward-elif-block
+            :help " ‘py-forward-elif-block’
 Go to end of elif-block.
 
 Returns end of elif-block if successful, nil otherwise"]
 
-	   ["End of else block" py-forward-else-block
-	    :help " ‘py-forward-else-block’
+           ["End of else block" py-forward-else-block
+            :help " ‘py-forward-else-block’
 Go to end of else-block.
 
 Returns end of else-block if successful, nil otherwise"]
 
-	   ["End of except block" py-forward-except-block
-	    :help " ‘py-forward-except-block’
+           ["End of except block" py-forward-except-block
+            :help " ‘py-forward-except-block’
 Go to end of except-block.
 
 Returns end of except-block if successful, nil otherwise"]
 
-	   ["End of expression" py-forward-expression
-	    :help " ‘py-forward-expression’
+           ["End of expression" py-forward-expression
+            :help " ‘py-forward-expression’
 Go to the end of a compound python expression.
 
 With numeric ARG do it that many times.
@@ -20674,225 +20673,225 @@ Expression here is conceived as the syntactical component of a statement in Pyth
 
 Operators however are left aside resp. limit py-expression designed for edit-purposes."]
 
-	   ["End of if block" py-forward-if-block
-	    :help " ‘py-forward-if-block’
+           ["End of if block" py-forward-if-block
+            :help " ‘py-forward-if-block’
 Go to end of if-block.
 
 Returns end of if-block if successful, nil otherwise"]
 
-	   ["End of partial expression" py-forward-partial-expression
-	    :help " ‘py-forward-partial-expression’"]
+           ["End of partial expression" py-forward-partial-expression
+            :help " ‘py-forward-partial-expression’"]
 
-	   ["End of statement" py-forward-statement
-	    :help " ‘py-forward-statement’
+           ["End of statement" py-forward-statement
+            :help " ‘py-forward-statement’
 Go to the last char of current statement.
 
 Optional argument REPEAT, the number of loops done already, is checked for py-max-specpdl-size error. Avoid eternal loops due to missing string delimters etc."]
 
-	   ["End of top level" py-forward-top-level
-	    :help " ‘py-forward-top-level’
+           ["End of top level" py-forward-top-level
+            :help " ‘py-forward-top-level’
 Go to end of top-level form at point.
 
 Returns position if successful, nil otherwise"]
 
-	   ["End of try block" py-forward-try-block
-	    :help " ‘py-forward-try-block’
+           ["End of try block" py-forward-try-block
+            :help " ‘py-forward-try-block’
 Go to end of try-block.
 
 Returns end of try-block if successful, nil otherwise"]
            )
           ("BOL-forms"
            ("Backward"
-	    ["Beginning of block bol" py-beginning-of-block-bol
-	     :help " ‘py-beginning-of-block-bol’
+            ["Beginning of block bol" py-beginning-of-block-bol
+             :help " ‘py-beginning-of-block-bol’
 Go to beginning block, go to BOL.
 
 Returns beginning of block if successful, nil otherwise"]
 
-	    ["Beginning of block or clause bol" py-beginning-of-block-or-clause-bol
-	     :help " ‘py-beginning-of-block-or-clause-bol’
+            ["Beginning of block or clause bol" py-beginning-of-block-or-clause-bol
+             :help " ‘py-beginning-of-block-or-clause-bol’
 Go to beginning block-or-clause, go to BOL.
 
 Returns beginning of block-or-clause if successful, nil otherwise"]
 
-	    ["Beginning of class bol" py-beginning-of-class-bol
-	     :help " ‘py-beginning-of-class-bol’
+            ["Beginning of class bol" py-beginning-of-class-bol
+             :help " ‘py-beginning-of-class-bol’
 Go to beginning class, go to BOL.
 
 Returns beginning of class if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	    ["Beginning of clause bol" py-beginning-of-clause-bol
-	     :help " ‘py-beginning-of-clause-bol’
+            ["Beginning of clause bol" py-beginning-of-clause-bol
+             :help " ‘py-beginning-of-clause-bol’
 Go to beginning clause, go to BOL.
 
 Returns beginning of clause if successful, nil otherwise"]
 
-	    ["Beginning of def bol" py-beginning-of-def-bol
-	     :help " ‘py-beginning-of-def-bol’
+            ["Beginning of def bol" py-beginning-of-def-bol
+             :help " ‘py-beginning-of-def-bol’
 Go to beginning def, go to BOL.
 
 Returns beginning of def if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	    ["Beginning of def or class bol" py-backward-def-or-class-bol
-	     :help " ‘py-backward-def-or-class-bol’
+            ["Beginning of def or class bol" py-backward-def-or-class-bol
+             :help " ‘py-backward-def-or-class-bol’
 Go to beginning def-or-class, go to BOL.
 
 Returns beginning of def-or-class if successful, nil otherwise
 
 When ‘py-mark-decorators’ is non-nil, decorators are considered too."]
 
-	    ["Beginning of elif block bol" py-beginning-of-elif-block-bol
-	     :help " ‘py-beginning-of-elif-block-bol’
+            ["Beginning of elif block bol" py-beginning-of-elif-block-bol
+             :help " ‘py-beginning-of-elif-block-bol’
 Go to beginning elif-block, go to BOL.
 
 Returns beginning of elif-block if successful, nil otherwise"]
 
-	    ["Beginning of else block bol" py-beginning-of-else-block-bol
-	     :help " ‘py-beginning-of-else-block-bol’
+            ["Beginning of else block bol" py-beginning-of-else-block-bol
+             :help " ‘py-beginning-of-else-block-bol’
 Go to beginning else-block, go to BOL.
 
 Returns beginning of else-block if successful, nil otherwise"]
 
-	    ["Beginning of except block bol" py-beginning-of-except-block-bol
-	     :help " ‘py-beginning-of-except-block-bol’
+            ["Beginning of except block bol" py-beginning-of-except-block-bol
+             :help " ‘py-beginning-of-except-block-bol’
 Go to beginning except-block, go to BOL.
 
 Returns beginning of except-block if successful, nil otherwise"]
 
-	    ["Beginning of expression bol" py-beginning-of-expression-bol
-	     :help " ‘py-beginning-of-expression-bol’"]
+            ["Beginning of expression bol" py-beginning-of-expression-bol
+             :help " ‘py-beginning-of-expression-bol’"]
 
-	    ["Beginning of if block bol" py-beginning-of-if-block-bol
-	     :help " ‘py-beginning-of-if-block-bol’
+            ["Beginning of if block bol" py-beginning-of-if-block-bol
+             :help " ‘py-beginning-of-if-block-bol’
 Go to beginning if-block, go to BOL.
 
 Returns beginning of if-block if successful, nil otherwise"]
 
-	    ["Beginning of partial expression bol" py-backward-partial-expression-bol
-	     :help " ‘py-backward-partial-expression-bol’"]
+            ["Beginning of partial expression bol" py-backward-partial-expression-bol
+             :help " ‘py-backward-partial-expression-bol’"]
 
-	    ["Beginning of statement bol" py-backward-statement-bol
-	     :help " ‘py-backward-statement-bol’
+            ["Beginning of statement bol" py-backward-statement-bol
+             :help " ‘py-backward-statement-bol’
 Goto beginning of line where statement starts.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-up-statement’: up from current definition to next beginning of statement above."]
 
-	    ["Beginning of try block bol" py-beginning-of-try-block-bol
-	     :help " ‘py-beginning-of-try-block-bol’
+            ["Beginning of try block bol" py-beginning-of-try-block-bol
+             :help " ‘py-beginning-of-try-block-bol’
 Go to beginning try-block, go to BOL.
 
 Returns beginning of try-block if successful, nil otherwise"]
             )
            ("Forward"
-	    ["End of block bol" py-forward-block-bol
-	     :help " ‘py-forward-block-bol’
+            ["End of block bol" py-forward-block-bol
+             :help " ‘py-forward-block-bol’
 Goto beginning of line following end of block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-block’: down from current definition to next beginning of block below."]
 
-	    ["End of block or clause bol" py-forward-block-or-clause-bol
-	     :help " ‘py-forward-block-or-clause-bol’
+            ["End of block or clause bol" py-forward-block-or-clause-bol
+             :help " ‘py-forward-block-or-clause-bol’
 Goto beginning of line following end of block-or-clause.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-block-or-clause’: down from current definition to next beginning of block-or-clause below."]
 
-	    ["End of class bol" py-forward-class-bol
-	     :help " ‘py-forward-class-bol’
+            ["End of class bol" py-forward-class-bol
+             :help " ‘py-forward-class-bol’
 Goto beginning of line following end of class.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-class’: down from current definition to next beginning of class below."]
 
-	    ["End of clause bol" py-forward-clause-bol
-	     :help " ‘py-forward-clause-bol’
+            ["End of clause bol" py-forward-clause-bol
+             :help " ‘py-forward-clause-bol’
 Goto beginning of line following end of clause.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-clause’: down from current definition to next beginning of clause below."]
 
-	    ["End of def bol" py-forward-def-bol
-	     :help " ‘py-forward-def-bol’
+            ["End of def bol" py-forward-def-bol
+             :help " ‘py-forward-def-bol’
 Goto beginning of line following end of def.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-def’: down from current definition to next beginning of def below."]
 
-	    ["End of def or class bol" py-forward-def-or-class-bol
-	     :help " ‘py-forward-def-or-class-bol’
+            ["End of def or class bol" py-forward-def-or-class-bol
+             :help " ‘py-forward-def-or-class-bol’
 Goto beginning of line following end of def-or-class.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-def-or-class’: down from current definition to next beginning of def-or-class below."]
 
-	    ["End of elif block bol" py-forward-elif-block-bol
-	     :help " ‘py-forward-elif-block-bol’
+            ["End of elif block bol" py-forward-elif-block-bol
+             :help " ‘py-forward-elif-block-bol’
 Goto beginning of line following end of elif-block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-elif-block’: down from current definition to next beginning of elif-block below."]
 
-	    ["End of else block bol" py-forward-else-block-bol
-	     :help " ‘py-forward-else-block-bol’
+            ["End of else block bol" py-forward-else-block-bol
+             :help " ‘py-forward-else-block-bol’
 Goto beginning of line following end of else-block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-else-block’: down from current definition to next beginning of else-block below."]
 
-	    ["End of except block bol" py-forward-except-block-bol
-	     :help " ‘py-forward-except-block-bol’
+            ["End of except block bol" py-forward-except-block-bol
+             :help " ‘py-forward-except-block-bol’
 Goto beginning of line following end of except-block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-except-block’: down from current definition to next beginning of except-block below."]
 
-	    ["End of expression bol" py-forward-expression-bol
-	     :help " ‘py-forward-expression-bol’"]
+            ["End of expression bol" py-forward-expression-bol
+             :help " ‘py-forward-expression-bol’"]
 
-	    ["End of if block bol" py-forward-if-block-bol
-	     :help " ‘py-forward-if-block-bol’
+            ["End of if block bol" py-forward-if-block-bol
+             :help " ‘py-forward-if-block-bol’
 Goto beginning of line following end of if-block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-if-block’: down from current definition to next beginning of if-block below."]
 
-	    ["End of partial expression bol" py-forward-partial-expression-bol
-	     :help " ‘py-forward-partial-expression-bol’"]
+            ["End of partial expression bol" py-forward-partial-expression-bol
+             :help " ‘py-forward-partial-expression-bol’"]
 
-	    ["End of statement bol" py-forward-statement-bol
-	     :help " ‘py-forward-statement-bol’
+            ["End of statement bol" py-forward-statement-bol
+             :help " ‘py-forward-statement-bol’
 Go to the beginning-of-line following current statement."]
 
-	    ["End of top level bol" py-forward-top-level-bol
-	     :help " ‘py-forward-top-level-bol’
+            ["End of top level bol" py-forward-top-level-bol
+             :help " ‘py-forward-top-level-bol’
 Go to end of top-level form at point, stop at next beginning-of-line.
 
 Returns position successful, nil otherwise"]
 
-	    ["End of try block bol" py-forward-try-block-bol
-	     :help " ‘py-forward-try-block-bol’
+            ["End of try block bol" py-forward-try-block-bol
+             :help " ‘py-forward-try-block-bol’
 Goto beginning of line following end of try-block.
   Returns position reached, if successful, nil otherwise.
 
 See also ‘py-down-try-block’: down from current definition to next beginning of try-block below."]
             ))
           ("Up/Down"
-	   ["Up" py-up
-	    :help " ‘py-up’
+           ["Up" py-up
+            :help " ‘py-up’
 Go up or to beginning of form if inside.
 
 If inside a delimited form --string or list-- go to its beginning.
 If not at beginning of a statement or block, go to its beginning.
 If at beginning of a statement or block, go to beginning one level above of compound statement or definition at point."]
 
-	   ["Down" py-down
-	    :help " ‘py-down’
+           ["Down" py-down
+            :help " ‘py-down’
 Go to beginning one level below of compound statement or definition at point.
 
 If no statement or block below, but a delimited form --string or list-- go to its beginning. Repeated call from there will behave like down-list.
@@ -20901,151 +20900,151 @@ Returns position if successful, nil otherwise"]
            ))
          ("Hide-Show"
           ("Hide"
-	   ["Hide region" py-hide-region
-	    :help " ‘py-hide-region’
+           ["Hide region" py-hide-region
+            :help " ‘py-hide-region’
 Hide active region."]
 
-	   ["Hide statement" py-hide-statement
-	    :help " ‘py-hide-statement’
+           ["Hide statement" py-hide-statement
+            :help " ‘py-hide-statement’
 Hide statement at point."]
 
-	   ["Hide block" py-hide-block
-	    :help " ‘py-hide-block’
+           ["Hide block" py-hide-block
+            :help " ‘py-hide-block’
 Hide block at point."]
 
-	   ["Hide clause" py-hide-clause
-	    :help " ‘py-hide-clause’
+           ["Hide clause" py-hide-clause
+            :help " ‘py-hide-clause’
 Hide clause at point."]
 
-	   ["Hide block or clause" py-hide-block-or-clause
-	    :help " ‘py-hide-block-or-clause’
+           ["Hide block or clause" py-hide-block-or-clause
+            :help " ‘py-hide-block-or-clause’
 Hide block-or-clause at point."]
 
-	   ["Hide def" py-hide-def
-	    :help " ‘py-hide-def’
+           ["Hide def" py-hide-def
+            :help " ‘py-hide-def’
 Hide def at point."]
 
-	   ["Hide class" py-hide-class
-	    :help " ‘py-hide-class’
+           ["Hide class" py-hide-class
+            :help " ‘py-hide-class’
 Hide class at point."]
 
-	   ["Hide expression" py-hide-expression
-	    :help " ‘py-hide-expression’
+           ["Hide expression" py-hide-expression
+            :help " ‘py-hide-expression’
 Hide expression at point."]
 
-	   ["Hide partial expression" py-hide-partial-expression
-	    :help " ‘py-hide-partial-expression’
+           ["Hide partial expression" py-hide-partial-expression
+            :help " ‘py-hide-partial-expression’
 Hide partial-expression at point."]
 
-	   ["Hide line" py-hide-line
-	    :help " ‘py-hide-line’
+           ["Hide line" py-hide-line
+            :help " ‘py-hide-line’
 Hide line at point."]
 
-	   ["Hide top level" py-hide-top-level
-	    :help " ‘py-hide-top-level’
+           ["Hide top level" py-hide-top-level
+            :help " ‘py-hide-top-level’
 Hide top-level at point."]
            )
           ("Show"
-	   ["Show" py-show
-	    :help " ‘py-show’
+           ["Show" py-show
+            :help " ‘py-show’
 Un-hide at point."]
 
-	   ["Show all" py-show-all
-	    :help " ‘py-show-all’
+           ["Show all" py-show-all
+            :help " ‘py-show-all’
 Un-hide all in buffer."]
            ))
          ("Virtualenv"
           ["Virtualenv activate" virtualenv-activate
-	   :help " ‘virtualenv-activate’
+           :help " ‘virtualenv-activate’
 Activate the virtualenv located in DIR"]
 
           ["Virtualenv deactivate" virtualenv-deactivate
-	   :help " ‘virtualenv-deactivate’
+           :help " ‘virtualenv-deactivate’
 Deactivate the current virtual enviroment"]
 
           ["Virtualenv p" virtualenv-p
-	   :help " ‘virtualenv-p’
+           :help " ‘virtualenv-p’
 Check if a directory is a virtualenv"]
 
           ["Virtualenv workon" virtualenv-workon
-	   :help " ‘virtualenv-workon’
+           :help " ‘virtualenv-workon’
 Issue a virtualenvwrapper-like virtualenv-workon command"]
           )
          ("Help"
           ["Find definition" py-find-definition
-	   :help " ‘py-find-definition’
+           :help " ‘py-find-definition’
 Find source of definition of SYMBOL.
 
 Interactively, prompt for SYMBOL."]
 
           ["Help at point" py-help-at-point
-	   :help " ‘py-help-at-point’
+           :help " ‘py-help-at-point’
 Print help on symbol at point.
 
 If symbol is defined in current buffer, jump to its definition
 Optional C-u used for debugging, will prevent deletion of temp file."]
 
           ["Info lookup symbol" py-info-lookup-symbol
-	   :help " ‘py-info-lookup-symbol’"]
+           :help " ‘py-info-lookup-symbol’"]
 
           ["Symbol at point" py-symbol-at-point
-	   :help " ‘py-symbol-at-point’
+           :help " ‘py-symbol-at-point’
 Return the current Python symbol."]
           )
          ("Customize"
 
-	  ["Python-mode customize group" (customize-group 'python-mode)
-	   :help "Open the customization buffer for Python mode"]
-	  ("Switches"
-	   :help "Toggle useful modes"
-	   ("Interpreter"
+          ["Python-mode customize group" (customize-group 'python-mode)
+           :help "Open the customization buffer for Python mode"]
+          ("Switches"
+           :help "Toggle useful modes"
+           ("Interpreter"
 
-	    ["Shell prompt read only"
-	     (setq py-shell-prompt-read-only
-		   (not py-shell-prompt-read-only))
-	     :help "If non-nil, the python prompt is read only.  Setting this variable will only effect new shells.Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-shell-prompt-read-only]
+            ["Shell prompt read only"
+             (setq py-shell-prompt-read-only
+                   (not py-shell-prompt-read-only))
+             :help "If non-nil, the python prompt is read only.  Setting this variable will only effect new shells.Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-shell-prompt-read-only]
 
-	    ["Remove cwd from path"
-	     (setq py-remove-cwd-from-path
-		   (not py-remove-cwd-from-path))
-	     :help "Whether to allow loading of Python modules from the current directory.
+            ["Remove cwd from path"
+             (setq py-remove-cwd-from-path
+                   (not py-remove-cwd-from-path))
+             :help "Whether to allow loading of Python modules from the current directory.
 If this is non-nil, Emacs removes '' from sys.path when starting
 a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion).Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-remove-cwd-from-path]
+             :style toggle :selected py-remove-cwd-from-path]
 
-	    ["Honor IPYTHONDIR "
-	     (setq py-honor-IPYTHONDIR-p
-		   (not py-honor-IPYTHONDIR-p))
-	     :help "When non-nil ipython-history file is constructed by \$IPYTHONDIR
+            ["Honor IPYTHONDIR "
+             (setq py-honor-IPYTHONDIR-p
+                   (not py-honor-IPYTHONDIR-p))
+             :help "When non-nil ipython-history file is constructed by \$IPYTHONDIR
 followed by "/history". Default is nil.
 
 Otherwise value of py-ipython-history is used. Use `M-x customize-variable' to set it permanently"
 :style toggle :selected py-honor-IPYTHONDIR-p]
 
-	    ["Honor PYTHONHISTORY "
-	     (setq py-honor-PYTHONHISTORY-p
-		   (not py-honor-PYTHONHISTORY-p))
-	     :help "When non-nil python-history file is set by \$PYTHONHISTORY
+            ["Honor PYTHONHISTORY "
+             (setq py-honor-PYTHONHISTORY-p
+                   (not py-honor-PYTHONHISTORY-p))
+             :help "When non-nil python-history file is set by \$PYTHONHISTORY
 Default is nil.
 
 Otherwise value of py-python-history is used. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-honor-PYTHONHISTORY-p]
+             :style toggle :selected py-honor-PYTHONHISTORY-p]
 
-	    ["Enforce py-shell-name" force-py-shell-name-p-on
-	     :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
+            ["Enforce py-shell-name" force-py-shell-name-p-on
+             :help "Enforce customized default ‘py-shell-name’ should upon execution. "]
 
-	    ["Do not enforce default interpreter" force-py-shell-name-p-off
-	     :help "Make execute commands guess interpreter from environment"]
+            ["Do not enforce default interpreter" force-py-shell-name-p-off
+             :help "Make execute commands guess interpreter from environment"]
 
-	    )
+            )
 
-	   ("Execute"
+           ("Execute"
 
-	    ["Fast process" py-fast-process-p
-	     :help " ‘py-fast-process-p’
+            ["Fast process" py-fast-process-p
+             :help " ‘py-fast-process-p’
 
 Use ‘py-fast-process’\.
 
@@ -21054,200 +21053,200 @@ Commands prefixed \"py-fast-...\" suitable for large output
 See: large output makes Emacs freeze, lp:1253907
 
 Output-buffer is not in comint-mode"
-	     :style toggle :selected py-fast-process-p]
+             :style toggle :selected py-fast-process-p]
 
-	    ["Python mode v5 behavior"
-	     (setq python-mode-v5-behavior-p
-		   (not python-mode-v5-behavior-p))
-	     :help "Execute region through ‘shell-command-on-region’ as
+            ["Python mode v5 behavior"
+             (setq python-mode-v5-behavior-p
+                   (not python-mode-v5-behavior-p))
+             :help "Execute region through ‘shell-command-on-region’ as
 v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncodeError lp:550661
 
 Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected python-mode-v5-behavior-p]
+             :style toggle :selected python-mode-v5-behavior-p]
 
-	    ["Force shell name "
-	     (setq py-force-py-shell-name-p
-		   (not py-force-py-shell-name-p))
-	     :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-force-py-shell-name-p]
+            ["Force shell name "
+             (setq py-force-py-shell-name-p
+                   (not py-force-py-shell-name-p))
+             :help "When ‘t’, execution with kind of Python specified in ‘py-shell-name’ is enforced, possibly shebang does not take precedence. Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-force-py-shell-name-p]
 
-	    ["Execute \"if name == main\" blocks p"
-	     (setq py-if-name-main-permission-p
-		   (not py-if-name-main-permission-p))
-	     :help " ‘py-if-name-main-permission-p’
+            ["Execute \"if name == main\" blocks p"
+             (setq py-if-name-main-permission-p
+                   (not py-if-name-main-permission-p))
+             :help " ‘py-if-name-main-permission-p’
 
 Allow execution of code inside blocks delimited by
 if __name__ == '__main__'
 
 Default is non-nil. "
-	     :style toggle :selected py-if-name-main-permission-p]
+             :style toggle :selected py-if-name-main-permission-p]
 
-	    ["Ask about save"
-	     (setq py-ask-about-save
-		   (not py-ask-about-save))
-	     :help "If not nil, ask about which buffers to save before executing some code.
+            ["Ask about save"
+             (setq py-ask-about-save
+                   (not py-ask-about-save))
+             :help "If not nil, ask about which buffers to save before executing some code.
 Otherwise, all modified buffers are saved without asking.Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-ask-about-save]
+             :style toggle :selected py-ask-about-save]
 
-	    ["Store result"
-	     (setq py-store-result-p
-		   (not py-store-result-p))
-	     :help " ‘py-store-result-p’
+            ["Store result"
+             (setq py-store-result-p
+                   (not py-store-result-p))
+             :help " ‘py-store-result-p’
 
 When non-nil, put resulting string of ‘py-execute-...’ into kill-ring, so it might be yanked. "
-	     :style toggle :selected py-store-result-p]
+             :style toggle :selected py-store-result-p]
 
-	    ["Prompt on changed "
-	     (setq py-prompt-on-changed-p
-		   (not py-prompt-on-changed-p))
-	     :help "When called interactively, ask for save before a changed buffer is sent to interpreter.
+            ["Prompt on changed "
+             (setq py-prompt-on-changed-p
+                   (not py-prompt-on-changed-p))
+             :help "When called interactively, ask for save before a changed buffer is sent to interpreter.
 
 Default is ‘t’Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-prompt-on-changed-p]
+             :style toggle :selected py-prompt-on-changed-p]
 
-	    ["Dedicated process "
-	     (setq py-dedicated-process-p
-		   (not py-dedicated-process-p))
-	     :help "If commands executing code use a dedicated shell.
+            ["Dedicated process "
+             (setq py-dedicated-process-p
+                   (not py-dedicated-process-p))
+             :help "If commands executing code use a dedicated shell.
 
 Default is nilUse `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-dedicated-process-p]
+             :style toggle :selected py-dedicated-process-p]
 
-	    ["Execute without temporary file"
-	     (setq py-execute-no-temp-p
-		   (not py-execute-no-temp-p))
-	     :help " ‘py-execute-no-temp-p’
+            ["Execute without temporary file"
+             (setq py-execute-no-temp-p
+                   (not py-execute-no-temp-p))
+             :help " ‘py-execute-no-temp-p’
 Seems Emacs-24.3 provided a way executing stuff without temporary files.
 In experimental state yet "
-	     :style toggle :selected py-execute-no-temp-p]
+             :style toggle :selected py-execute-no-temp-p]
 
-	    ["Warn tmp files left "
-	     (setq py--warn-tmp-files-left-p
-		   (not py--warn-tmp-files-left-p))
-	     :help "Messages a warning, when ‘py-temp-directory’ contains files susceptible being left by previous Python-mode sessions. See also lp:987534 Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py--warn-tmp-files-left-p])
+            ["Warn tmp files left "
+             (setq py--warn-tmp-files-left-p
+                   (not py--warn-tmp-files-left-p))
+             :help "Messages a warning, when ‘py-temp-directory’ contains files susceptible being left by previous Python-mode sessions. See also lp:987534 Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py--warn-tmp-files-left-p])
 
-	   ("Edit"
+           ("Edit"
 
-	    ("Completion"
+            ("Completion"
 
-	     ["Set Pymacs-based complete keymap "
-	      (setq py-set-complete-keymap-p
-		    (not py-set-complete-keymap-p))
-	      :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
+             ["Set Pymacs-based complete keymap "
+              (setq py-set-complete-keymap-p
+                    (not py-set-complete-keymap-p))
+              :help "If ‘py-complete-initialize’, which sets up enviroment for Pymacs based py-complete, should load its keys into ‘python-mode-map’
 
 Default is nil.
 See also resp. edit ‘py-complete-set-keymap’ Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-set-complete-keymap-p]
+              :style toggle :selected py-set-complete-keymap-p]
 
-	     ["Indent no completion "
-	      (setq py-indent-no-completion-p
-		    (not py-indent-no-completion-p))
-	      :help "If completion function should indent when no completion found. Default is ‘t’
+             ["Indent no completion "
+              (setq py-indent-no-completion-p
+                    (not py-indent-no-completion-p))
+              :help "If completion function should indent when no completion found. Default is ‘t’
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-indent-no-completion-p]
+              :style toggle :selected py-indent-no-completion-p]
 
-	     ["Company pycomplete "
-	      (setq py-company-pycomplete-p
-		    (not py-company-pycomplete-p))
-	      :help "Load company-pycomplete stuff. Default is nilUse `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-company-pycomplete-p])
+             ["Company pycomplete "
+              (setq py-company-pycomplete-p
+                    (not py-company-pycomplete-p))
+              :help "Load company-pycomplete stuff. Default is nilUse `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-company-pycomplete-p])
 
-	    ("Filling"
+            ("Filling"
 
-	     ("Docstring styles"
-	      :help "Switch docstring-style"
+             ("Docstring styles"
+              :help "Switch docstring-style"
 
-	      ["Nil" py-set-nil-docstring-style
-	       :help " ‘py-set-nil-docstring-style’
+              ["Nil" py-set-nil-docstring-style
+               :help " ‘py-set-nil-docstring-style’
 
 Set py-docstring-style to nil, format string normally. "]
 
-	      ["pep-257-nn" py-set-pep-257-nn-docstring-style
-	       :help " ‘py-set-pep-257-nn-docstring-style’
+              ["pep-257-nn" py-set-pep-257-nn-docstring-style
+               :help " ‘py-set-pep-257-nn-docstring-style’
 
 Set py-docstring-style to 'pep-257-nn "]
 
-	      ["pep-257" py-set-pep-257-docstring-style
-	       :help " ‘py-set-pep-257-docstring-style’
+              ["pep-257" py-set-pep-257-docstring-style
+               :help " ‘py-set-pep-257-docstring-style’
 
 Set py-docstring-style to 'pep-257 "]
 
-	      ["django" py-set-django-docstring-style
-	       :help " ‘py-set-django-docstring-style’
+              ["django" py-set-django-docstring-style
+               :help " ‘py-set-django-docstring-style’
 
 Set py-docstring-style to 'django "]
 
-	      ["onetwo" py-set-onetwo-docstring-style
-	       :help " ‘py-set-onetwo-docstring-style’
+              ["onetwo" py-set-onetwo-docstring-style
+               :help " ‘py-set-onetwo-docstring-style’
 
 Set py-docstring-style to 'onetwo "]
 
-	      ["symmetric" py-set-symmetric-docstring-style
-	       :help " ‘py-set-symmetric-docstring-style’
+              ["symmetric" py-set-symmetric-docstring-style
+               :help " ‘py-set-symmetric-docstring-style’
 
 Set py-docstring-style to 'symmetric "])
 
-	     ["Auto-fill mode"
-	      (setq py-auto-fill-mode
-		    (not py-auto-fill-mode))
-	      :help "Fill according to ‘py-docstring-fill-column’ and ‘py-comment-fill-column’
+             ["Auto-fill mode"
+              (setq py-auto-fill-mode
+                    (not py-auto-fill-mode))
+              :help "Fill according to ‘py-docstring-fill-column’ and ‘py-comment-fill-column’
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-auto-fill-mode])
+              :style toggle :selected py-auto-fill-mode])
 
-	    ["Use current dir when execute"
-	     (setq py-use-current-dir-when-execute-p
-		   (not py-use-current-dir-when-execute-p))
-	     :help " ‘py-toggle-use-current-dir-when-execute-p’
-
-Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-use-current-dir-when-execute-p]
-
-	    ("Indent"
-	     ("TAB related"
-
-	      ["indent-tabs-mode"
-	       (setq indent-tabs-mode
-		     (not indent-tabs-mode))
-	       :help "Indentation can insert tabs if this is non-nil.
+            ["Use current dir when execute"
+             (setq py-use-current-dir-when-execute-p
+                   (not py-use-current-dir-when-execute-p))
+             :help " ‘py-toggle-use-current-dir-when-execute-p’
 
 Use `M-x customize-variable' to set it permanently"
-	       :style toggle :selected indent-tabs-mode]
+             :style toggle :selected py-use-current-dir-when-execute-p]
 
-	      ["Tab indent"
-	       (setq py-tab-indent
-		     (not py-tab-indent))
-	       :help "Non-nil means TAB in Python mode calls ‘py-indent-line’.Use `M-x customize-variable' to set it permanently"
-	       :style toggle :selected py-tab-indent]
+            ("Indent"
+             ("TAB related"
 
-	      ["Tab shifts region "
-	       (setq py-tab-shifts-region-p
-		     (not py-tab-shifts-region-p))
-	       :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
+              ["indent-tabs-mode"
+               (setq indent-tabs-mode
+                     (not indent-tabs-mode))
+               :help "Indentation can insert tabs if this is non-nil.
+
+Use `M-x customize-variable' to set it permanently"
+               :style toggle :selected indent-tabs-mode]
+
+              ["Tab indent"
+               (setq py-tab-indent
+                     (not py-tab-indent))
+               :help "Non-nil means TAB in Python mode calls ‘py-indent-line’.Use `M-x customize-variable' to set it permanently"
+               :style toggle :selected py-tab-indent]
+
+              ["Tab shifts region "
+               (setq py-tab-shifts-region-p
+                     (not py-tab-shifts-region-p))
+               :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
 
 Default is nil
 See also ‘py-tab-indents-region-p’
 
 Use `M-x customize-variable' to set it permanently"
-	       :style toggle :selected py-tab-shifts-region-p]
+               :style toggle :selected py-tab-shifts-region-p]
 
-	      ["Tab indents region "
-	       (setq py-tab-indents-region-p
-		     (not py-tab-indents-region-p))
-	       :help "When ‘t’ and first TAB does not shift, indent-region is called.
+              ["Tab indents region "
+               (setq py-tab-indents-region-p
+                     (not py-tab-indents-region-p))
+               :help "When ‘t’ and first TAB does not shift, indent-region is called.
 
 Default is nil
 See also ‘py-tab-shifts-region-p’
 
 Use `M-x customize-variable' to set it permanently"
-	       :style toggle :selected py-tab-indents-region-p])
+               :style toggle :selected py-tab-indents-region-p])
 
-	     ["Close at start column"
-	      (setq py-closing-list-dedents-bos
-		    (not py-closing-list-dedents-bos))
-	      :help "When non-nil, indent list's closing delimiter like start-column.
+             ["Close at start column"
+              (setq py-closing-list-dedents-bos
+                    (not py-closing-list-dedents-bos))
+              :help "When non-nil, indent list's closing delimiter like start-column.
 
 It will be lined up under the first character of
  the line that starts the multi-line construct, as in:
@@ -21258,93 +21257,93 @@ my_list = \[
 ]
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-closing-list-dedents-bos]
+              :style toggle :selected py-closing-list-dedents-bos]
 
-	     ["Closing list keeps space"
-	      (setq py-closing-list-keeps-space
-		    (not py-closing-list-keeps-space))
-	      :help "If non-nil, closing parenthesis dedents onto column of opening plus ‘py-closing-list-space’, default is nil Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-closing-list-keeps-space]
+             ["Closing list keeps space"
+              (setq py-closing-list-keeps-space
+                    (not py-closing-list-keeps-space))
+              :help "If non-nil, closing parenthesis dedents onto column of opening plus ‘py-closing-list-space’, default is nil Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-closing-list-keeps-space]
 
-	     ["Closing list space"
-	      (setq py-closing-list-space
-		    (not py-closing-list-space))
-	      :help "Number of chars, closing parenthesis outdent from opening, default is 1 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-closing-list-space]
+             ["Closing list space"
+              (setq py-closing-list-space
+                    (not py-closing-list-space))
+              :help "Number of chars, closing parenthesis outdent from opening, default is 1 Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-closing-list-space]
 
-	     ["Tab shifts region "
-	      (setq py-tab-shifts-region-p
-		    (not py-tab-shifts-region-p))
-	      :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
+             ["Tab shifts region "
+              (setq py-tab-shifts-region-p
+                    (not py-tab-shifts-region-p))
+              :help "If ‘t’, TAB will indent/cycle the region, not just the current line.
 
 Default is nil
 See also ‘py-tab-indents-region-p’Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-tab-shifts-region-p]
+              :style toggle :selected py-tab-shifts-region-p]
 
-	     ["Lhs inbound indent"
-	      (setq py-lhs-inbound-indent
-		    (not py-lhs-inbound-indent))
-	      :help "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-lhs-inbound-indent]
+             ["Lhs inbound indent"
+              (setq py-lhs-inbound-indent
+                    (not py-lhs-inbound-indent))
+              :help "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-lhs-inbound-indent]
 
-	     ["Continuation offset"
-	      (setq py-continuation-offset
-		    (not py-continuation-offset))
-	      :help "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-continuation-offset]
+             ["Continuation offset"
+              (setq py-continuation-offset
+                    (not py-continuation-offset))
+              :help "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-continuation-offset]
 
-	     ["Electric colon"
-	      (setq py-electric-colon-active-p
-		    (not py-electric-colon-active-p))
-	      :help " ‘py-electric-colon-active-p’
+             ["Electric colon"
+              (setq py-electric-colon-active-p
+                    (not py-electric-colon-active-p))
+              :help " ‘py-electric-colon-active-p’
 
 ‘py-electric-colon’ feature.  Default is ‘nil’. See lp:837065 for discussions. "
-	      :style toggle :selected py-electric-colon-active-p]
+              :style toggle :selected py-electric-colon-active-p]
 
-	     ["Electric colon at beginning of block only"
-	      (setq py-electric-colon-bobl-only
-		    (not py-electric-colon-bobl-only))
-	      :help "When inserting a colon, do not indent lines unless at beginning of block.
+             ["Electric colon at beginning of block only"
+              (setq py-electric-colon-bobl-only
+                    (not py-electric-colon-bobl-only))
+              :help "When inserting a colon, do not indent lines unless at beginning of block.
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-electric-colon-bobl-only]
+              :style toggle :selected py-electric-colon-bobl-only]
 
-	     ["Electric yank active "
-	      (setq py-electric-yank-active-p
-		    (not py-electric-yank-active-p))
-	      :help " When non-nil, ‘yank’ will be followed by an ‘indent-according-to-mode’.
+             ["Electric yank active "
+              (setq py-electric-yank-active-p
+                    (not py-electric-yank-active-p))
+              :help " When non-nil, ‘yank’ will be followed by an ‘indent-according-to-mode’.
 
 Default is nilUse `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-electric-yank-active-p]
+              :style toggle :selected py-electric-yank-active-p]
 
-	     ["Trailing whitespace smart delete "
-	      (setq py-trailing-whitespace-smart-delete-p
-		    (not py-trailing-whitespace-smart-delete-p))
-	      :help "Default is nil. When t, python-mode calls
+             ["Trailing whitespace smart delete "
+              (setq py-trailing-whitespace-smart-delete-p
+                    (not py-trailing-whitespace-smart-delete-p))
+              :help "Default is nil. When t, python-mode calls
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local)
 
 Also commands may delete trailing whitespace by the way.
 When editing other peoples code, this may produce a larger diff than expected Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-trailing-whitespace-smart-delete-p]
+              :style toggle :selected py-trailing-whitespace-smart-delete-p]
 
-	     ["Newline delete trailing whitespace "
-	      (setq py-newline-delete-trailing-whitespace-p
-		    (not py-newline-delete-trailing-whitespace-p))
-	      :help "Delete trailing whitespace maybe left by ‘py-newline-and-indent’.
+             ["Newline delete trailing whitespace "
+              (setq py-newline-delete-trailing-whitespace-p
+                    (not py-newline-delete-trailing-whitespace-p))
+              :help "Delete trailing whitespace maybe left by ‘py-newline-and-indent’.
 
 Default is ‘t’. See lp:1100892 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-newline-delete-trailing-whitespace-p]
+              :style toggle :selected py-newline-delete-trailing-whitespace-p]
 
-	     ["Dedent keep relative column"
-	      (setq py-dedent-keep-relative-column
-		    (not py-dedent-keep-relative-column))
-	      :help "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-dedent-keep-relative-column]
+             ["Dedent keep relative column"
+              (setq py-dedent-keep-relative-column
+                    (not py-dedent-keep-relative-column))
+              :help "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-dedent-keep-relative-column]
 
-;; 	     ["Indent paren spanned multilines "
-;; 	      (setq py-indent-paren-spanned-multilines-p
-;; 		    (not py-indent-paren-spanned-multilines-p))
-;; 	      :help "If non-nil, indents elements of list a value of ‘py-indent-offset’ to first element:
+;;           ["Indent paren spanned multilines "
+;;            (setq py-indent-paren-spanned-multilines-p
+;;                  (not py-indent-paren-spanned-multilines-p))
+;;            :help "If non-nil, indents elements of list a value of ‘py-indent-offset’ to first element:
 
 ;; def foo():
 ;;     if (foo &&
@@ -21358,94 +21357,94 @@ Default is ‘t’. See lp:1100892 Use `M-x customize-variable' to set it perman
 ;;         baz):
 ;;         bar()
 ;; Use `M-x customize-variable' to set it permanently"
-;; 	      :style toggle :selected py-indent-paren-spanned-multilines-p]
+;;            :style toggle :selected py-indent-paren-spanned-multilines-p]
 
-	     ;; ["Indent honors multiline listing"
-	     ;;  (setq py-indent-honors-multiline-listing
-	     ;; 	    (not py-indent-honors-multiline-listing))
-	     ;;  :help "If ‘t’, indents to 1\+ column of opening delimiter. If ‘nil’, indent adds one level to the beginning of statement. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
-	     ;;  :style toggle :selected py-indent-honors-multiline-listing]
+             ;; ["Indent honors multiline listing"
+             ;;  (setq py-indent-honors-multiline-listing
+             ;;             (not py-indent-honors-multiline-listing))
+             ;;  :help "If ‘t’, indents to 1\+ column of opening delimiter. If ‘nil’, indent adds one level to the beginning of statement. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
+             ;;  :style toggle :selected py-indent-honors-multiline-listing]
 
-	     ["Indent comment "
-	      (setq py-indent-comments
-		    (not py-indent-comments))
-	      :help "If comments should be indented like code. Default is ‘nil’.
+             ["Indent comment "
+              (setq py-indent-comments
+                    (not py-indent-comments))
+              :help "If comments should be indented like code. Default is ‘nil’.
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-indent-comments]
+              :style toggle :selected py-indent-comments]
 
-	     ["Uncomment indents "
-	      (setq py-uncomment-indents-p
-		    (not py-uncomment-indents-p))
-	      :help "When non-nil, after uncomment indent lines. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-uncomment-indents-p]
+             ["Uncomment indents "
+              (setq py-uncomment-indents-p
+                    (not py-uncomment-indents-p))
+              :help "When non-nil, after uncomment indent lines. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-uncomment-indents-p]
 
-	     ["Indent honors inline comment"
-	      (setq py-indent-honors-inline-comment
-		    (not py-indent-honors-inline-comment))
-	      :help "If non-nil, indents to column of inlined comment start.
+             ["Indent honors inline comment"
+              (setq py-indent-honors-inline-comment
+                    (not py-indent-honors-inline-comment))
+              :help "If non-nil, indents to column of inlined comment start.
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-indent-honors-inline-comment]
+              :style toggle :selected py-indent-honors-inline-comment]
 
-	     ["Kill empty line"
-	      (setq py-kill-empty-line
-		    (not py-kill-empty-line))
-	      :help "If t, py-indent-forward-line kills empty lines. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-kill-empty-line]
+             ["Kill empty line"
+              (setq py-kill-empty-line
+                    (not py-kill-empty-line))
+              :help "If t, py-indent-forward-line kills empty lines. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-kill-empty-line]
 
-	     ("Smart indentation"
-	      :help "Toggle py-smart-indentation'
+             ("Smart indentation"
+              :help "Toggle py-smart-indentation'
 
 Use `M-x customize-variable' to set it permanently"
 
-	      ["Toggle py-smart-indentation" py-toggle-smart-indentation
-	       :help "Toggles py-smart-indentation
+              ["Toggle py-smart-indentation" py-toggle-smart-indentation
+               :help "Toggles py-smart-indentation
 
 Use `M-x customize-variable' to set it permanently"]
 
-	      ["py-smart-indentation on" py-smart-indentation-on
-	       :help "Switches py-smart-indentation on
+              ["py-smart-indentation on" py-smart-indentation-on
+               :help "Switches py-smart-indentation on
 
 Use `M-x customize-variable' to set it permanently"]
 
-	      ["py-smart-indentation off" py-smart-indentation-off
-	       :help "Switches py-smart-indentation off
+              ["py-smart-indentation off" py-smart-indentation-off
+               :help "Switches py-smart-indentation off
 
 Use `M-x customize-variable' to set it permanently"])
 
-	     ["Beep if tab change"
-	      (setq py-beep-if-tab-change
-		    (not py-beep-if-tab-change))
-	      :help "Ring the bell if ‘tab-width’ is changed.
+             ["Beep if tab change"
+              (setq py-beep-if-tab-change
+                    (not py-beep-if-tab-change))
+              :help "Ring the bell if ‘tab-width’ is changed.
 If a comment of the form
 
-                           	# vi:set tabsize=<number>:
+                                # vi:set tabsize=<number>:
 
 is found before the first code line when the file is entered, and the
 current value of (the general Emacs variable) ‘tab-width’ does not
 equal <number>, ‘tab-width’ is set to <number>, a message saying so is
 displayed in the echo area, and if ‘py-beep-if-tab-change’ is non-nil
 the Emacs bell is also rung as a warning.Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-beep-if-tab-change]
+              :style toggle :selected py-beep-if-tab-change]
 
-	     ["Electric comment "
-	      (setq py-electric-comment-p
-		    (not py-electric-comment-p))
-	      :help "If \"#\" should call ‘py-electric-comment’. Default is ‘nil’.
+             ["Electric comment "
+              (setq py-electric-comment-p
+                    (not py-electric-comment-p))
+              :help "If \"#\" should call ‘py-electric-comment’. Default is ‘nil’.
 
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-electric-comment-p]
+              :style toggle :selected py-electric-comment-p]
 
-	     ["Electric comment add space "
-	      (setq py-electric-comment-add-space-p
-		    (not py-electric-comment-add-space-p))
-	      :help "If py-electric-comment should add a space.  Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-electric-comment-add-space-p]
+             ["Electric comment add space "
+              (setq py-electric-comment-add-space-p
+                    (not py-electric-comment-add-space-p))
+              :help "If py-electric-comment should add a space.  Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-electric-comment-add-space-p]
 
-	     ["Empty line closes "
-	      (setq py-empty-line-closes-p
-		    (not py-empty-line-closes-p))
-	      :help "When non-nil, dedent after empty line following block
+             ["Empty line closes "
+              (setq py-empty-line-closes-p
+                    (not py-empty-line-closes-p))
+              :help "When non-nil, dedent after empty line following block
 
 if True:
     print(\"Part of the if-statement\")
@@ -21456,259 +21455,259 @@ Default is nil
 
 If non-nil, a C-j from empty line dedents.
 Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-empty-line-closes-p])
-	    ["Defun use top level "
-	     (setq py-defun-use-top-level-p
-		   (not py-defun-use-top-level-p))
-	     :help "When non-nil, keys C-M-a, C-M-e address top-level form.
+              :style toggle :selected py-empty-line-closes-p])
+            ["Defun use top level "
+             (setq py-defun-use-top-level-p
+                   (not py-defun-use-top-level-p))
+             :help "When non-nil, keys C-M-a, C-M-e address top-level form.
 
 Beginning- end-of-defun forms use
 commands ‘py-backward-top-level’, ‘py-forward-top-level’
 
 mark-defun marks top-level form at point etc. "
-	     :style toggle :selected py-defun-use-top-level-p]
+             :style toggle :selected py-defun-use-top-level-p]
 
-	    ["Close provides newline"
-	     (setq py-close-provides-newline
-		   (not py-close-provides-newline))
-	     :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-close-provides-newline]
+            ["Close provides newline"
+             (setq py-close-provides-newline
+                   (not py-close-provides-newline))
+             :help "If a newline is inserted, when line after block is not empty. Default is non-nil. Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-close-provides-newline]
 
-	    ["Block comment prefix "
-	     (setq py-block-comment-prefix-p
-		   (not py-block-comment-prefix-p))
-	     :help "If py-comment inserts py-block-comment-prefix.
+            ["Block comment prefix "
+             (setq py-block-comment-prefix-p
+                   (not py-block-comment-prefix-p))
+             :help "If py-comment inserts py-block-comment-prefix.
 
 Default is tUse `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-block-comment-prefix-p])
+             :style toggle :selected py-block-comment-prefix-p])
 
-	   ("Display"
+           ("Display"
 
-	    ("Index"
+            ("Index"
 
-	     ["Imenu create index "
-	      (setq py--imenu-create-index-p
-		    (not py--imenu-create-index-p))
-	      :help "Non-nil means Python mode creates and displays an index menu of functions and global variables. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py--imenu-create-index-p]
+             ["Imenu create index "
+              (setq py--imenu-create-index-p
+                    (not py--imenu-create-index-p))
+              :help "Non-nil means Python mode creates and displays an index menu of functions and global variables. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py--imenu-create-index-p]
 
-	     ["Imenu show method args "
-	      (setq py-imenu-show-method-args-p
-		    (not py-imenu-show-method-args-p))
-	      :help "Controls echoing of arguments of functions & methods in the Imenu buffer.
+             ["Imenu show method args "
+              (setq py-imenu-show-method-args-p
+                    (not py-imenu-show-method-args-p))
+              :help "Controls echoing of arguments of functions & methods in the Imenu buffer.
 When non-nil, arguments are printed.Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-imenu-show-method-args-p]
-	     ["Switch index-function" py-switch-imenu-index-function
-	      :help "‘py-switch-imenu-index-function’
+              :style toggle :selected py-imenu-show-method-args-p]
+             ["Switch index-function" py-switch-imenu-index-function
+              :help "‘py-switch-imenu-index-function’
 Switch between ‘py--imenu-create-index’ from 5.1 series and ‘py--imenu-create-index-new’."])
 
-	    ("Fontification"
+            ("Fontification"
 
-	     ["Mark decorators"
-	      (setq py-mark-decorators
-		    (not py-mark-decorators))
-	      :help "If py-mark-def-or-class functions should mark decorators too. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-mark-decorators]
+             ["Mark decorators"
+              (setq py-mark-decorators
+                    (not py-mark-decorators))
+              :help "If py-mark-def-or-class functions should mark decorators too. Default is ‘nil’. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-mark-decorators]
 
-	     ["Fontify shell buffer "
-	      (setq py-fontify-shell-buffer-p
-		    (not py-fontify-shell-buffer-p))
-	      :help "If code in Python shell should be highlighted as in script buffer.
+             ["Fontify shell buffer "
+              (setq py-fontify-shell-buffer-p
+                    (not py-fontify-shell-buffer-p))
+              :help "If code in Python shell should be highlighted as in script buffer.
 
 Default is nil.
 
 If ‘t’, related vars like ‘comment-start’ will be set too.
 Seems convenient when playing with stuff in IPython shell
 Might not be TRT when a lot of output arrives Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-fontify-shell-buffer-p]
+              :style toggle :selected py-fontify-shell-buffer-p]
 
-	     ["Use font lock doc face "
-	      (setq py-use-font-lock-doc-face-p
-		    (not py-use-font-lock-doc-face-p))
-	      :help "If documention string inside of def or class get ‘font-lock-doc-face’.
+             ["Use font lock doc face "
+              (setq py-use-font-lock-doc-face-p
+                    (not py-use-font-lock-doc-face-p))
+              :help "If documention string inside of def or class get ‘font-lock-doc-face’.
 
 ‘font-lock-doc-face’ inherits ‘font-lock-string-face’.
 
 Call M-x ‘customize-face’ in order to have a visible effect. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-use-font-lock-doc-face-p])
+              :style toggle :selected py-use-font-lock-doc-face-p])
 
-	    ["Switch buffers on execute"
-	     (setq py-switch-buffers-on-execute-p
-		   (not py-switch-buffers-on-execute-p))
-	     :help "When non-nil switch to the Python output buffer.
-
-Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-switch-buffers-on-execute-p]
-
-	    ["Split windows on execute"
-	     (setq py-split-window-on-execute
-		   (not py-split-window-on-execute))
-	     :help "When non-nil split windows.
+            ["Switch buffers on execute"
+             (setq py-switch-buffers-on-execute-p
+                   (not py-switch-buffers-on-execute-p))
+             :help "When non-nil switch to the Python output buffer.
 
 Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-split-window-on-execute]
+             :style toggle :selected py-switch-buffers-on-execute-p]
 
-	    ["Keep windows configuration"
-	     (setq py-keep-windows-configuration
-		   (not py-keep-windows-configuration))
-	     :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
+            ["Split windows on execute"
+             (setq py-split-window-on-execute
+                   (not py-split-window-on-execute))
+             :help "When non-nil split windows.
+
+Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-split-window-on-execute]
+
+            ["Keep windows configuration"
+             (setq py-keep-windows-configuration
+                   (not py-keep-windows-configuration))
+             :help "If a windows is splitted displaying results, this is directed by variable ‘py-split-window-on-execute’\. Also setting ‘py-switch-buffers-on-execute-p’ affects window-configuration\. While commonly a screen splitted into source and Python-shell buffer is assumed, user may want to keep a different config\.
 
 Setting ‘py-keep-windows-configuration’ to ‘t’ will restore windows-config regardless of settings mentioned above\. However, if an error occurs, it is displayed\.
 
 To suppres window-changes due to error-signaling also: M-x customize-variable RET. Set ‘py-keep-4windows-configuration’ onto 'force
 
 Default is nil Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-keep-windows-configuration]
+             :style toggle :selected py-keep-windows-configuration]
 
-	    ["Which split windows on execute function"
-	     (progn
-	       (if (eq 'split-window-vertically py-split-windows-on-execute-function)
-		   (setq py-split-windows-on-execute-function'split-window-horizontally)
-		 (setq py-split-windows-on-execute-function 'split-window-vertically))
-	       (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
+            ["Which split windows on execute function"
+             (progn
+               (if (eq 'split-window-vertically py-split-windows-on-execute-function)
+                   (setq py-split-windows-on-execute-function'split-window-horizontally)
+                 (setq py-split-windows-on-execute-function 'split-window-vertically))
+               (message "py-split-windows-on-execute-function set to: %s" py-split-windows-on-execute-function))
 
-	     :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
-	     :style toggle :selected py-split-windows-on-execute-function]
+             :help "If ‘split-window-vertically’ or ‘...-horizontally’. Use `M-x customize-variable' RET ‘py-split-windows-on-execute-function’ RET to set it permanently"
+             :style toggle :selected py-split-windows-on-execute-function]
 
-	    ["Modeline display full path "
-	     (setq py-modeline-display-full-path-p
-		   (not py-modeline-display-full-path-p))
-	     :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
+            ["Modeline display full path "
+             (setq py-modeline-display-full-path-p
+                   (not py-modeline-display-full-path-p))
+             :help "If the full PATH/TO/PYTHON should be displayed in shell modeline.
 
 Default is nil. Note: when ‘py-shell-name’ is specified with path, it is shown as an acronym in buffer-name already. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-modeline-display-full-path-p]
+             :style toggle :selected py-modeline-display-full-path-p]
 
-	    ["Modeline acronym display home "
-	     (setq py-modeline-acronym-display-home-p
-		   (not py-modeline-acronym-display-home-p))
-	     :help "If the modeline acronym should contain chars indicating the home-directory.
+            ["Modeline acronym display home "
+             (setq py-modeline-acronym-display-home-p
+                   (not py-modeline-acronym-display-home-p))
+             :help "If the modeline acronym should contain chars indicating the home-directory.
 
 Default is nil Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-modeline-acronym-display-home-p]
+             :style toggle :selected py-modeline-acronym-display-home-p]
 
-	    ["Hide show hide docstrings"
-	     (setq py-hide-show-hide-docstrings
-		   (not py-hide-show-hide-docstrings))
-	     :help "Controls if doc strings can be hidden by hide-showUse `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-hide-show-hide-docstrings]
+            ["Hide show hide docstrings"
+             (setq py-hide-show-hide-docstrings
+                   (not py-hide-show-hide-docstrings))
+             :help "Controls if doc strings can be hidden by hide-showUse `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-hide-show-hide-docstrings]
 
-	    ["Hide comments when hiding all"
-	     (setq py-hide-comments-when-hiding-all
-		   (not py-hide-comments-when-hiding-all))
-	     :help "Hide the comments too when you do ‘hs-hide-all’. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-hide-comments-when-hiding-all]
+            ["Hide comments when hiding all"
+             (setq py-hide-comments-when-hiding-all
+                   (not py-hide-comments-when-hiding-all))
+             :help "Hide the comments too when you do ‘hs-hide-all’. Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-hide-comments-when-hiding-all]
 
-	    ["Max help buffer "
-	     (setq py-max-help-buffer-p
-		   (not py-max-help-buffer-p))
-	     :help "If \"\*Python-Help\*\"-buffer should appear as the only visible.
+            ["Max help buffer "
+             (setq py-max-help-buffer-p
+                   (not py-max-help-buffer-p))
+             :help "If \"\*Python-Help\*\"-buffer should appear as the only visible.
 
 Default is nil. In help-buffer, \"q\" will close it.  Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-max-help-buffer-p]
+             :style toggle :selected py-max-help-buffer-p]
 
-	    ["Current defun show"
-	     (setq py-current-defun-show
-		   (not py-current-defun-show))
-	     :help "If ‘py-current-defun’ should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
+            ["Current defun show"
+             (setq py-current-defun-show
+                   (not py-current-defun-show))
+             :help "If ‘py-current-defun’ should jump to the definition, highlight it while waiting PY-WHICH-FUNC-DELAY seconds, before returning to previous position.
 
 Default is ‘t’.Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-current-defun-show]
+             :style toggle :selected py-current-defun-show]
 
-	    ["Match paren mode"
-	     (setq py-match-paren-mode
-		   (not py-match-paren-mode))
-	     :help "Non-nil means, cursor will jump to beginning or end of a block.
+            ["Match paren mode"
+             (setq py-match-paren-mode
+                   (not py-match-paren-mode))
+             :help "Non-nil means, cursor will jump to beginning or end of a block.
 This vice versa, to beginning first.
 Sets ‘py-match-paren-key’ in python-mode-map.
 Customize ‘py-match-paren-key’ which key to use. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-match-paren-mode])
+             :style toggle :selected py-match-paren-mode])
 
-	   ("Debug"
+           ("Debug"
 
-	    ["py-debug-p"
-	     (setq py-debug-p
-		   (not py-debug-p))
-	     :help "When non-nil, keep resp\. store information useful for debugging\.
+            ["py-debug-p"
+             (setq py-debug-p
+                   (not py-debug-p))
+             :help "When non-nil, keep resp\. store information useful for debugging\.
 
 Temporary files are not deleted\. Other functions might implement
 some logging etc\. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-debug-p]
+             :style toggle :selected py-debug-p]
 
-	    ["Pdbtrack do tracking "
-	     (setq py-pdbtrack-do-tracking-p
-		   (not py-pdbtrack-do-tracking-p))
-	     :help "Controls whether the pdbtrack feature is enabled or not.
+            ["Pdbtrack do tracking "
+             (setq py-pdbtrack-do-tracking-p
+                   (not py-pdbtrack-do-tracking-p))
+             :help "Controls whether the pdbtrack feature is enabled or not.
 When non-nil, pdbtrack is enabled in all comint-based buffers,
 e.g. shell buffers and the \*Python\* buffer.  When using pdb to debug a
 Python program, pdbtrack notices the pdb prompt and displays the
 source file and line that the program is stopped at, much the same way
 as gud-mode does for debugging C programs with gdb.Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-pdbtrack-do-tracking-p]
+             :style toggle :selected py-pdbtrack-do-tracking-p]
 
-	    ["Jump on exception"
-	     (setq py-jump-on-exception
-		   (not py-jump-on-exception))
-	     :help "Jump to innermost exception frame in Python output buffer.
+            ["Jump on exception"
+             (setq py-jump-on-exception
+                   (not py-jump-on-exception))
+             :help "Jump to innermost exception frame in Python output buffer.
 When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame.
 
 Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-jump-on-exception]
+             :style toggle :selected py-jump-on-exception]
 
-	    ["Highlight error in source "
-	     (setq py-highlight-error-source-p
-		   (not py-highlight-error-source-p))
-	     :help "Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-highlight-error-source-p])
+            ["Highlight error in source "
+             (setq py-highlight-error-source-p
+                   (not py-highlight-error-source-p))
+             :help "Use `M-x customize-variable' to set it permanently"
+             :style toggle :selected py-highlight-error-source-p])
 
-	   ("Other"
+           ("Other"
 
-	    ("Directory"
+            ("Directory"
 
-	     ["Guess install directory "
-	      (setq py-guess-py-install-directory-p
-		    (not py-guess-py-install-directory-p))
-	      :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-guess-py-install-directory-p]
+             ["Guess install directory "
+              (setq py-guess-py-install-directory-p
+                    (not py-guess-py-install-directory-p))
+              :help "If in cases, ‘py-install-directory’ is not set,  ‘py-set-load-path’should guess it from ‘buffer-file-name’. Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-guess-py-install-directory-p]
 
-	     ["Use local default"
-	      (setq py-use-local-default
-		    (not py-use-local-default))
-	      :help "If ‘t’, py-shell will use ‘py-shell-local-path’ instead
+             ["Use local default"
+              (setq py-use-local-default
+                    (not py-use-local-default))
+              :help "If ‘t’, py-shell will use ‘py-shell-local-path’ instead
 of default Python.
 
 Making switch between several virtualenv's easier,
                                ‘python-mode’ should deliver an installer, so named-shells pointing to virtualenv's will be available. Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-use-local-default]
+              :style toggle :selected py-use-local-default]
 
-	     ["Use current dir when execute "
-	      (setq py-use-current-dir-when-execute-p
-		    (not py-use-current-dir-when-execute-p))
-	      :help "When ‘t’, current directory is used by Python-shell for output of ‘py-execute-buffer’ and related commands.
-
-See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-use-current-dir-when-execute-p]
-
-	     ["Keep shell dir when execute "
-	      (setq py-keep-shell-dir-when-execute-p
-		    (not py-keep-shell-dir-when-execute-p))
-	      :help "Do not change Python shell's current working directory when sending code.
+             ["Use current dir when execute "
+              (setq py-use-current-dir-when-execute-p
+                    (not py-use-current-dir-when-execute-p))
+              :help "When ‘t’, current directory is used by Python-shell for output of ‘py-execute-buffer’ and related commands.
 
 See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-keep-shell-dir-when-execute-p]
+              :style toggle :selected py-use-current-dir-when-execute-p]
 
-	     ["Fileless buffer use default directory "
-	      (setq py-fileless-buffer-use-default-directory-p
-		    (not py-fileless-buffer-use-default-directory-p))
-	      :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
-	      :style toggle :selected py-fileless-buffer-use-default-directory-p])
+             ["Keep shell dir when execute "
+              (setq py-keep-shell-dir-when-execute-p
+                    (not py-keep-shell-dir-when-execute-p))
+              :help "Do not change Python shell's current working directory when sending code.
 
-	    ("Underscore word syntax"
-	     :help "Toggle ‘py-underscore-word-syntax-p’"
+See also ‘py-execute-directory’Use `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-keep-shell-dir-when-execute-p]
 
-	     ["Toggle underscore word syntax" py-toggle-underscore-word-syntax-p
-	      :help " ‘py-toggle-underscore-word-syntax-p’
+             ["Fileless buffer use default directory "
+              (setq py-fileless-buffer-use-default-directory-p
+                    (not py-fileless-buffer-use-default-directory-p))
+              :help "When ‘py-use-current-dir-when-execute-p’ is non-nil and no buffer-file exists, value of ‘default-directory’ sets current working directory of Python output shellUse `M-x customize-variable' to set it permanently"
+              :style toggle :selected py-fileless-buffer-use-default-directory-p])
+
+            ("Underscore word syntax"
+             :help "Toggle ‘py-underscore-word-syntax-p’"
+
+             ["Toggle underscore word syntax" py-toggle-underscore-word-syntax-p
+              :help " ‘py-toggle-underscore-word-syntax-p’
 
 If ‘py-underscore-word-syntax-p’ should be on or off.
 
@@ -21716,8 +21715,8 @@ If ‘py-underscore-word-syntax-p’ should be on or off.
 
 Use `M-x customize-variable' to set it permanently"]
 
-	     ["Underscore word syntax on" py-underscore-word-syntax-p-on
-	      :help " ‘py-underscore-word-syntax-p-on’
+             ["Underscore word syntax on" py-underscore-word-syntax-p-on
+              :help " ‘py-underscore-word-syntax-p-on’
 
 Make sure, py-underscore-word-syntax-p' is on.
 
@@ -21725,8 +21724,8 @@ Returns value of ‘py-underscore-word-syntax-p’. .
 
 Use `M-x customize-variable' to set it permanently"]
 
-	     ["Underscore word syntax off" py-underscore-word-syntax-p-off
-	      :help " ‘py-underscore-word-syntax-p-off’
+             ["Underscore word syntax off" py-underscore-word-syntax-p-off
+              :help " ‘py-underscore-word-syntax-p-off’
 
 Make sure, ‘py-underscore-word-syntax-p’ is off.
 
@@ -21734,45 +21733,45 @@ Returns value of ‘py-underscore-word-syntax-p’. .
 
 Use `M-x customize-variable' to set it permanently"])
 
-	    ["Load pymacs "
-	     (setq py-load-pymacs-p
-		   (not py-load-pymacs-p))
-	     :help "If Pymacs related stuff should be loaded.
+            ["Load pymacs "
+             (setq py-load-pymacs-p
+                   (not py-load-pymacs-p))
+             :help "If Pymacs related stuff should be loaded.
 
 Default is nil.
 
 Pymacs has been written by François Pinard and many others.
 See original source: http://pymacs.progiciels-bpi.caUse `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-load-pymacs-p]
+             :style toggle :selected py-load-pymacs-p]
 
-	    ["Verbose "
-	     (setq py-verbose-p
-		   (not py-verbose-p))
-	     :help "If functions should report results.
+            ["Verbose "
+             (setq py-verbose-p
+                   (not py-verbose-p))
+             :help "If functions should report results.
 
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-verbose-p]
+             :style toggle :selected py-verbose-p]
 
-	    ["Empty comment line separates paragraph "
-	     (setq py-empty-comment-line-separates-paragraph-p
-		   (not py-empty-comment-line-separates-paragraph-p))
-	     :help "Consider paragraph start/end lines with nothing inside but comment sign.
+            ["Empty comment line separates paragraph "
+             (setq py-empty-comment-line-separates-paragraph-p
+                   (not py-empty-comment-line-separates-paragraph-p))
+             :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-empty-comment-line-separates-paragraph-p]
+             :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
-	    ["Org cycle "
-	     (setq py-org-cycle-p
-		   (not py-org-cycle-p))
-	     :help "When non-nil, command ‘org-cycle’ is available at shift-TAB, <backtab>
+            ["Org cycle "
+             (setq py-org-cycle-p
+                   (not py-org-cycle-p))
+             :help "When non-nil, command ‘org-cycle’ is available at shift-TAB, <backtab>
 
 Default is nil. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-org-cycle-p]
+             :style toggle :selected py-org-cycle-p]
 
-	    ["Set pager cat"
-	     (setq py-set-pager-cat-p
-		   (not py-set-pager-cat-p))
-	     :help "If the shell environment variable \$PAGER should set to ‘cat’.
+            ["Set pager cat"
+             (setq py-set-pager-cat-p
+                   (not py-set-pager-cat-p))
+             :help "If the shell environment variable \$PAGER should set to ‘cat’.
 
 If ‘t’, use `C-c C-r' to jump to beginning of output. Then scroll normally.
 
@@ -21780,49 +21779,49 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 
 When non-nil, imports module ‘os’ Use `M-x customize-variable' to
 set it permanently"
-	     :style toggle :selected py-set-pager-cat-p]
+             :style toggle :selected py-set-pager-cat-p]
 
-	    ["Edit only "
-	     (setq py-edit-only-p
-		   (not py-edit-only-p))
-	     :help "When ‘t’ ‘python-mode’ will not take resort nor check for installed Python executables. Default is nil.
+            ["Edit only "
+             (setq py-edit-only-p
+                   (not py-edit-only-p))
+             :help "When ‘t’ ‘python-mode’ will not take resort nor check for installed Python executables. Default is nil.
 
 See bug report at launchpad, lp:944093. Use `M-x customize-variable' to set it permanently"
-	     :style toggle :selected py-edit-only-p])))
+             :style toggle :selected py-edit-only-p])))
          ("Other"
           ["Boolswitch" py-boolswitch
-	   :help " ‘py-boolswitch’
+           :help " ‘py-boolswitch’
 Edit the assignment of a boolean variable, revert them.
 
 I.e. switch it from \"True\" to \"False\" and vice versa"]
 
           ["Empty out list backward" py-empty-out-list-backward
-	   :help " ‘py-empty-out-list-backward’
+           :help " ‘py-empty-out-list-backward’
 Deletes all elements from list before point."]
 
           ["Kill buffer unconditional" py-kill-buffer-unconditional
-	   :help " ‘py-kill-buffer-unconditional’
+           :help " ‘py-kill-buffer-unconditional’
 Kill buffer unconditional, kill buffer-process if existing."]
 
           ["Remove overlays at point" py-remove-overlays-at-point
-	   :help " ‘py-remove-overlays-at-point’
+           :help " ‘py-remove-overlays-at-point’
 Remove overlays as set when ‘py-highlight-error-source-p’ is non-nil."]
           ("Electric"
-	   ["Complete electric comma" py-complete-electric-comma
-	    :help " ‘py-complete-electric-comma’"]
+           ["Complete electric comma" py-complete-electric-comma
+            :help " ‘py-complete-electric-comma’"]
 
-	   ["Complete electric lparen" py-complete-electric-lparen
-	    :help " ‘py-complete-electric-lparen’"]
+           ["Complete electric lparen" py-complete-electric-lparen
+            :help " ‘py-complete-electric-lparen’"]
 
-	   ["Electric backspace" py-electric-backspace
-	    :help " ‘py-electric-backspace’
+           ["Electric backspace" py-electric-backspace
+            :help " ‘py-electric-backspace’
 Delete preceding character or level of indentation.
 
 With ARG do that ARG times.
 Returns column reached."]
 
-	   ["Electric colon" py-electric-colon
-	    :help " ‘py-electric-colon’
+           ["Electric colon" py-electric-colon
+            :help " ‘py-electric-colon’
 Insert a colon and indent accordingly.
 
 If a numeric argument ARG is provided, that many colons are inserted
@@ -21834,42 +21833,42 @@ comment or by universal prefix C-u.
 Switched by ‘py-electric-colon-active-p’, default is nil
 See also ‘py-electric-colon-greedy-p’"]
 
-	   ["Electric comment" py-electric-comment
-	    :help " ‘py-electric-comment’
+           ["Electric comment" py-electric-comment
+            :help " ‘py-electric-comment’
 Insert a comment. If starting a comment, indent accordingly.
 
 If a numeric argument ARG is provided, that many \"#\" are inserted
 non-electrically.
 With C-u \"#\" electric behavior is inhibited inside a string or comment."]
 
-	   ["Electric delete" py-electric-delete
-	    :help " ‘py-electric-delete’
+           ["Electric delete" py-electric-delete
+            :help " ‘py-electric-delete’
 Delete following character or levels of whitespace.
 
 With ARG do that ARG times."]
 
-	   ["Electric yank" py-electric-yank
-	    :help " ‘py-electric-yank’
+           ["Electric yank" py-electric-yank
+            :help " ‘py-electric-yank’
 Perform command ‘yank’ followed by an ‘indent-according-to-mode’"]
 
-	   ["Hungry delete backwards" py-hungry-delete-backwards
-	    :help " ‘py-hungry-delete-backwards’
+           ["Hungry delete backwards" py-hungry-delete-backwards
+            :help " ‘py-hungry-delete-backwards’
 Delete the preceding character or all preceding whitespace
 back to the previous non-whitespace character.
 See also C-c <delete>."]
 
-	   ["Hungry delete forward" py-hungry-delete-forward
-	    :help " ‘py-hungry-delete-forward’
+           ["Hungry delete forward" py-hungry-delete-forward
+            :help " ‘py-hungry-delete-forward’
 Delete the following character or all following whitespace
 up to the next non-whitespace character.
 See also C-c <C-backspace>."]
             )
-          ("Abbrevs"	   :help "see also ‘py-add-abbrev’"
-	   :filter (lambda (&rest junk)
-		     (abbrev-table-menu python-mode-abbrev-table))            )
+          ("Abbrevs"       :help "see also ‘py-add-abbrev’"
+           :filter (lambda (&rest junk)
+                     (abbrev-table-menu python-mode-abbrev-table))            )
 
           ["Add abbrev" py-add-abbrev
-	   :help " ‘py-add-abbrev’
+           :help " ‘py-add-abbrev’
 Defines python-mode specific abbrev for last expressions before point.
 Argument is how many ‘py-partial-expression’s form the expansion; or zero means the region is the expansion.
 
@@ -21879,14 +21878,14 @@ expansion.
 
 Do not use this function in a Lisp program; use ‘define-abbrev’ instead."]
           ("Completion"
-	   ["Py indent or complete" py-indent-or-complete
-	    :help " ‘py-indent-or-complete’"]
+           ["Py indent or complete" py-indent-or-complete
+            :help " ‘py-indent-or-complete’"]
 
-	   ["Py shell complete" py-shell-complete
-	    :help " ‘py-shell-complete’"]
+           ["Py shell complete" py-shell-complete
+            :help " ‘py-shell-complete’"]
 
-	   ["Py complete" py-complete
-	    :help " ‘py-complete’"]
+           ["Py complete" py-complete
+            :help " ‘py-complete’"]
             )))))
 
 ;; python-components-complete
@@ -21897,9 +21896,9 @@ Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (py-send-string-no-output py-shell-completion-setup-code process)
   (let ((erg
-	 (py-send-string-no-output (format completion-code input) process)))
+         (py-send-string-no-output (format completion-code input) process)))
     (if (and erg (> (length erg) 2))
-	(setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
+        (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t))
       (and py-verbose-p (message "py--shell-completion-get-completions: %s" "Do not see a completion")))
     erg))
 
@@ -21928,19 +21927,19 @@ Takes END"
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
-	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
-	((null completion)
-	 (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Do not see a completion")))
-	((and completion
-	      (or (and (listp completion)
-		       (string= input (car completion)))
-		  (and (stringp completion)
-		       (string= input completion)))))
-	((and completion (stringp completion)(or (string= input completion) (string= "''" completion))))
-	((and completion (stringp completion))
-	 (progn (delete-char (- (length input)))
-		(insert completion)))
-	(t (py--try-completion input completion)))
+         (and py-verbose-p (message "py--shell-do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
+        ((null completion)
+         (and py-verbose-p (message "py--shell-do-completion-at-point %s" "Do not see a completion")))
+        ((and completion
+              (or (and (listp completion)
+                       (string= input (car completion)))
+                  (and (stringp completion)
+                       (string= input completion)))))
+        ((and completion (stringp completion)(or (string= input completion) (string= "''" completion))))
+        ((and completion (stringp completion))
+         (progn (delete-char (- (length input)))
+                (insert completion)))
+        (t (py--try-completion input completion)))
   )
 
 (defun py--shell-do-completion-at-point (process imports input exception-buffer code)
@@ -21951,35 +21950,35 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
     (py-execute-string imports process))
   (sit-for 0.1 t)
   (let* ((completion
-	  (py--shell-completion-get-completions
-	   input process code)))
+          (py--shell-completion-get-completions
+           input process code)))
     (set-buffer exception-buffer)
     (when completion
       (py--shell-insert-completion-maybe completion input))))
 
 (defun py--complete-base (shell word imports buffer)
   (let* ((proc (or
-		;; completing inside a shell
-		(get-buffer-process buffer)
-		(and (comint-check-proc shell)
-		     (get-process shell))
-		(prog1
-		    (get-buffer-process (py-shell nil nil nil shell))
-		  (sit-for py-new-shell-delay t))))
-	 ;; (buffer (process-buffer proc))
-	 (code (if (string-match "[Ii][Pp]ython*" shell)
-		   (py-set-ipython-completion-command-string shell)
-		 py-shell-module-completion-code)))
+                ;; completing inside a shell
+                (get-buffer-process buffer)
+                (and (comint-check-proc shell)
+                     (get-process shell))
+                (prog1
+                    (get-buffer-process (py-shell nil nil nil shell))
+                  (sit-for py-new-shell-delay t))))
+         ;; (buffer (process-buffer proc))
+         (code (if (string-match "[Ii][Pp]ython*" shell)
+                   (py-set-ipython-completion-command-string shell)
+                 py-shell-module-completion-code)))
     (py--shell-do-completion-at-point proc imports word buffer code)))
 
 (defun py--try-completion-intern (input completion buffer)
   (with-current-buffer buffer
     (let ((erg nil))
       (and (setq erg (try-completion input completion))
-	   (sit-for 0.1)
-	   (looking-back input (line-beginning-position))
-	   (not (string= input erg))
-	   (setq erg (completion-in-region (match-beginning 0) (match-end 0) completion)))))
+           (sit-for 0.1)
+           (looking-back input (line-beginning-position))
+           (not (string= input erg))
+           (setq erg (completion-in-region (match-beginning 0) (match-end 0) completion)))))
   ;; (set-window-configuration py-last-window-configuration)
   )
 
@@ -21988,23 +21987,23 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 
 Interal used. Takes INPUT COMPLETION"
   (let ((erg nil)
-	(newlist nil))
+        (newlist nil))
     (unless (py--try-completion-intern input completion (current-buffer))
       (dolist (elt completion)
-	(unless (string= erg elt)
-	  (push elt newlist)))
+        (unless (string= erg elt)
+          (push elt newlist)))
       (if (< 1 (length newlist))
-	  (with-output-to-temp-buffer py-python-completions
-	    (display-completion-list
-	     (all-completions input (or newlist completion))))))))
+          (with-output-to-temp-buffer py-python-completions
+            (display-completion-list
+             (all-completions input (or newlist completion))))))))
 
 (defun py--fast-completion-get-completions (input process completion-code buffer)
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
   (let ((completions
-	 (py-fast-send-string
-	  (format completion-code input) process buffer t)))
+         (py-fast-send-string
+          (format completion-code input) process buffer t)))
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
@@ -22016,76 +22015,76 @@ completions on the current context."
       ;; (message "%s" imports)
       (py-fast-send-string imports process buffer nil t)))
   (let* ((completion
-	  (py--fast-completion-get-completions input process code buffer)))
+          (py--fast-completion-get-completions input process code buffer)))
     (sit-for 0.1)
     (cond ((eq completion t)
-	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
-	  ((null completion)
-	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Do not see a completion"))
-	   (set-window-configuration py-last-window-configuration))
-	  ((and completion
-		(or (and (listp completion)
-			 (string= input (car completion)))
-		    (and (stringp completion)
-			 (string= input completion))))
-	   (set-window-configuration py-last-window-configuration))
-	  ((and completion (stringp completion) (not (string= input completion)))
-	   (progn (delete-char (- (length input)))
-		  (insert completion)
-		  ;; (move-marker orig (point))
-		  ;; minibuffer.el expects a list
-		  ))
-	  (t (py--try-completion input completion)))))
+           (and py-verbose-p (message "py--fast--do-completion-at-point %s" "‘t’ is returned, not completion. Might be a bug.")))
+          ((null completion)
+           (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Do not see a completion"))
+           (set-window-configuration py-last-window-configuration))
+          ((and completion
+                (or (and (listp completion)
+                         (string= input (car completion)))
+                    (and (stringp completion)
+                         (string= input completion))))
+           (set-window-configuration py-last-window-configuration))
+          ((and completion (stringp completion) (not (string= input completion)))
+           (progn (delete-char (- (length input)))
+                  (insert completion)
+                  ;; (move-marker orig (point))
+                  ;; minibuffer.el expects a list
+                  ))
+          (t (py--try-completion input completion)))))
 
 (defun py--fast-complete-base (shell word imports)
   (let* (py-split-window-on-execute py-switch-buffers-on-execute-p
-	 (shell (or shell py-shell-name))
-	 (buffer (py-shell nil nil nil shell nil t))
- 	 (proc (get-buffer-process buffer))
-	 (code (if (string-match "[Ii][Pp]ython*" shell)
-		   (py-set-ipython-completion-command-string shell)
-		 py-shell-module-completion-code)))
+         (shell (or shell py-shell-name))
+         (buffer (py-shell nil nil nil shell nil t))
+         (proc (get-buffer-process buffer))
+         (code (if (string-match "[Ii][Pp]ython*" shell)
+                   (py-set-ipython-completion-command-string shell)
+                 py-shell-module-completion-code)))
     (py--python-send-completion-setup-code buffer)
     (py--fast--do-completion-at-point proc imports word code buffer)))
 
 (defun py-shell-complete (&optional shell beg end word fast imports)
   (interactive)
   (let* ((exception-buffer (current-buffer))
-	 (pps (parse-partial-sexp
-	       (or
-		(ignore-errors (cdr-safe comint-last-prompt))
-		(ignore-errors comint-last-prompt)
-		(line-beginning-position))
-	       (point)))
-	 (in-string (when (nth 3 pps) (nth 8 pps)))
+         (pps (parse-partial-sexp
+               (or
+                (ignore-errors (cdr-safe comint-last-prompt))
+                (ignore-errors comint-last-prompt)
+                (line-beginning-position))
+               (point)))
+         (in-string (when (nth 3 pps) (nth 8 pps)))
          (beg
-	  (save-excursion
-	    (or beg
-	 	(and in-string
-	 	     ;; possible completion of filenames
-	 	     (progn
-	 	       (goto-char in-string)
-	 	       (and
-	 		(save-excursion
-	 		  (skip-chars-backward "^ \t\r\n\f") (looking-at "open")))
+          (save-excursion
+            (or beg
+                (and in-string
+                     ;; possible completion of filenames
+                     (progn
+                       (goto-char in-string)
+                       (and
+                        (save-excursion
+                          (skip-chars-backward "^ \t\r\n\f") (looking-at "open")))
 
-	 	       (skip-chars-forward "\"'") (point)))
-	 	(progn (and (eq (char-before) ?\()(forward-char -1))
-	 	       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
+                       (skip-chars-forward "\"'") (point)))
+                (progn (and (eq (char-before) ?\()(forward-char -1))
+                       (skip-chars-backward "a-zA-Z0-9_.'") (point)))))
          (end (or end (point)))
-	 (word (or word (buffer-substring-no-properties beg end)))
-	 (ausdruck (and (string-match "^/" word) (setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
-	 ;; when in string, assume looking for filename
-	 (filenames (and in-string ausdruck
-			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
+         (word (or word (buffer-substring-no-properties beg end)))
+         (ausdruck (and (string-match "^/" word) (setq word (substring-no-properties word 1))(concat "\"" word "*\"")))
+         ;; when in string, assume looking for filename
+         (filenames (and in-string ausdruck
+                         (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (or imports (py-find-imports)))
          py-fontify-shell-buffer-p erg)
     (cond ;; (fast (py--fast-complete-base shell word imports))
-	  ((and in-string filenames)
-	   (when (setq erg (try-completion (concat "/" word) filenames))
-	     (delete-region beg end)
-	     (insert erg)))
-	  (t (py--complete-base (or shell (py-choose-shell))  word imports exception-buffer)))
+          ((and in-string filenames)
+           (when (setq erg (try-completion (concat "/" word) filenames))
+             (delete-region beg end)
+             (insert erg)))
+          (t (py--complete-base (or shell (py-choose-shell))  word imports exception-buffer)))
     nil))
 
 (defun py-fast-complete (&optional shell word imports)
@@ -22095,7 +22094,7 @@ Use ‘py-fast-process’ "
   (interactive "*")
   (window-configuration-to-register py--windows-config-register)
   (setq py-last-window-configuration
-  	(current-window-configuration))
+        (current-window-configuration))
   (py-shell-complete shell nil nil word 1 imports)
   (py-restore-window-configuration)
   )
@@ -22116,24 +22115,24 @@ in (I)Python shell-modes ‘py-shell-complete’"
   ;; (setq py-last-window-configuration
   ;;       (current-window-configuration))
   (cond ((use-region-p)
-	 (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘use-region-p’-clause"))
-	 (py-indent-region (region-beginning) (region-end)))
-	((or (bolp)
-	     (member (char-before) (list 9 10 12 13 32 ?: ?\) ?\] ?\}))
+         (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘use-region-p’-clause"))
+         (py-indent-region (region-beginning) (region-end)))
+        ((or (bolp)
+             (member (char-before) (list 9 10 12 13 32 ?: ?\) ?\] ?\}))
              (eq (current-column) (current-indentation))
-	     (not (looking-at "[ \t]*$")))
-	 (py-indent-line))
+             (not (looking-at "[ \t]*$")))
+         (py-indent-line))
         ;; (;; in comment
         ;;  (or (nth 4 (parse-partial-sexp (point-min) (point)))
         ;;      (looking-at py-comment-re))
         ;;  (goto-char (nth 8 (parse-partial-sexp (point-min) (point))))
-	((and py-do-completion-p (comint-check-proc (current-buffer)))
-	 ;; (let* ((shell (process-name (get-buffer-process (current-buffer)))))
-	 (ignore-errors (completion-at-point)))
-	(py-do-completion-p
-	 (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘(completion-at-point)’"))
-	 ;; (py-fast-complete)
-	 (completion-at-point)
+        ((and py-do-completion-p (comint-check-proc (current-buffer)))
+         ;; (let* ((shell (process-name (get-buffer-process (current-buffer)))))
+         (ignore-errors (completion-at-point)))
+        (py-do-completion-p
+         (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘(completion-at-point)’"))
+         ;; (py-fast-complete)
+         (completion-at-point)
          (skip-chars-forward "^ \t\r\n\f") )))
 
 ;; python-components-pdb
@@ -22181,14 +22180,14 @@ Optional LINE FILE CONDITION"
 Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
   (interactive)
   (let ((erg (when (string-match "[23]" py-shell-name)
-	       ;; versions-part
-	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
+               ;; versions-part
+               (substring py-shell-name (string-match "[23]" py-shell-name)))))
     (if erg
-	(cond ((executable-find (concat "pdb" erg))
-	       (concat "pdb" erg))
-	      ((and (string-match "\\." erg)
-		    (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
-	       (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+        (cond ((executable-find (concat "pdb" erg))
+               (concat "pdb" erg))
+              ((and (string-match "\\." erg)
+                    (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+               (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
       "pdb")))
 
 (declare-function gud-query-cmdline "gud" ())
@@ -22207,12 +22206,12 @@ Argument COMMAND-LINE TBD."
    (progn
      (require 'gud)
      (list (gud-query-cmdline
-	    (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-		(car (read-from-string py-python-ms-pdb-command))
-	      ;; sys.version_info[0]
-	      ;; (car (read-from-string (py--pdb-version)))
-	      'pdb)
-	    (py--buffer-filename-remote-maybe)))))
+            (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+                (car (read-from-string py-python-ms-pdb-command))
+              ;; sys.version_info[0]
+              ;; (car (read-from-string (py--pdb-version)))
+              'pdb)
+            (py--buffer-filename-remote-maybe)))))
   (pdb command-line))
 
 (defun py--pdb-current-executable ()
@@ -22228,21 +22227,21 @@ Otherwise return resuslt from ‘executable-find’"
 If pdb is called at a Python buffer."
   (interactive)
   (let* (;; PATH/TO/pdb
-	 (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
-		       (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
-		      (py-pdb-executable
-		       py-pdb-executable)
-		      ((or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-		       ;; lp:963253
-		       "c:/python27/python\ -i\ c:/python27/Lib/pdb.py")
-		      (t
-		       (py--pdb-current-executable))))
-	 ;; file to debug
+         (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
+                       (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
+                      (py-pdb-executable
+                       py-pdb-executable)
+                      ((or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+                       ;; lp:963253
+                       "c:/python27/python\ -i\ c:/python27/Lib/pdb.py")
+                      (t
+                       (py--pdb-current-executable))))
+         ;; file to debug
          (second (cond ((not (ignore-errors
-			       (py--buffer-filename-remote-maybe)))
-			(error "%s" "Buffer must be saved first."))
-		       ((py--buffer-filename-remote-maybe))
-		       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
+                               (py--buffer-filename-remote-maybe)))
+                        (error "%s" "Buffer must be saved first."))
+                       ((py--buffer-filename-remote-maybe))
+                       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
          (erg (and first second (concat first " " second))))
     (when erg
       (push erg gud-pdb-history))))
@@ -22252,7 +22251,7 @@ If pdb is called at a Python buffer."
   (interactive
    (list (gud-query-cmdline py-pdb-path
                             ;; (file-name-nondirectory buffer-file-name)
-			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) ))))
+                            (file-name-nondirectory (py--buffer-filename-remote-maybe)) ))))
 
 ;; tbreak [ ([filename:]lineno | function) [, condition] ]
 ;;         Same arguments as break, but sets a temporary breakpoint: it
@@ -22264,9 +22263,9 @@ If pdb is called at a Python buffer."
   "Insert a temporary break."
   (interactive)
   (let (
-	(py-python-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
-	(py-python3-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
-	)
+        (py-python-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
+        (py-python3-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
+        )
     (py-execute-buffer)))
 
 
@@ -22331,7 +22330,7 @@ script, and set to python-mode, and pdbtrack will find it.)"
             (setq target_lineno (car target))
             (setq target_buffer (cadr target))
             (setq target_fname
-		  (py--buffer-filename-remote-maybe target_buffer))
+                  (py--buffer-filename-remote-maybe target_buffer))
             (switch-to-buffer-other-window target_buffer)
             (goto-char (point-min))
             (forward-line (1- target_lineno))
@@ -22367,10 +22366,10 @@ problem as best as we can determine."
   (if (and (not (string-match py-pdbtrack-stack-entry-regexp block))
            ;; pydb integration still to be done
            ;; (not (string-match py-pydbtrack-stack-entry-regexp block))
-	   )
+           )
       (prog1
-	  "Traceback cue not found"
-	(message "Block: %s" block))
+          "Traceback cue not found"
+        (message "Block: %s" block))
     (let* ((remote-prefix (or (file-remote-p default-directory) ""))
            (filename (concat remote-prefix
                              (match-string
@@ -22398,12 +22397,12 @@ problem as best as we can determine."
                        (+ lineno
                           (save-excursion
                             (with-current-buffer funcbuffer
-			      (count-lines
-			       (point-min)
-			       (max (point-min)
-				    (string-match "^\\([^#]\\|#[^#]\\|#$\\)"
-						  (buffer-substring (point-min)
-								    (point-max))))))))))
+                              (count-lines
+                               (point-min)
+                               (max (point-min)
+                                    (string-match "^\\([^#]\\|#[^#]\\|#$\\)"
+                                                  (buffer-substring (point-min)
+                                                                    (point-max))))))))))
              (list lineno funcbuffer))
 
             ((= (elt filename 0) ?\<)
@@ -22423,8 +22422,8 @@ named for funcname or define a function funcname."
       (setq buf (car buffers)
             buffers (cdr buffers))
       (if (and (save-excursion
-		 (with-current-buffer buf
-		   (string= major-mode "python-mode")))
+                 (with-current-buffer buf
+                   (string= major-mode "python-mode")))
                (or (string-match funcname (buffer-name buf))
                    (string-match (concat "^\\s-*\\(def\\|class\\)\\s-+"
                                          funcname "\\s-*(")
@@ -22577,46 +22576,46 @@ Tries to take account of versioned Python Info files, e.g. Debian's
 python2.5-ref.info.gz.
 Used with ‘eval-after-load’."
   (let* ((version (let ((s (shell-command-to-string (concat py-python-command
-							    " -V"))))
-		    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
-		    (match-string 1 s)))
-	 ;; Whether info files have a Python version suffix, e.g. in Debian.
-	 (versioned
-	  (with-temp-buffer
-	    (Info-mode)
-	    ;; First look for Info files corresponding to the version
-	    ;; of the interpreter we're running.
-	    (condition-case ()
-		;; Do not use ‘info’ because it would pop-up a *info* buffer.
-		(progn
-		  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
-					  version))
-		  t)
-	      (error
-	       ;; Otherwise see if we actually have an un-versioned one.
-	       (condition-case ()
-		   (progn
-		     (Info-goto-node
-		      (format "(python%s-lib)Miscellaneous Index" version))
-		     nil)
-		 (error
-		  ;; Otherwise look for any versioned Info file.
-		  (condition-case ()
-		      (let (found)
-			(dolist (dir (or Info-directory-list
-					 Info-default-directory-list))
-			  (unless found
-			    (let ((file (car (file-expand-wildcards
-					      (expand-file-name "python*-lib*"
-								dir)))))
-			      (if (and file
-				       (string-match
-					"\\<python\\([0-9]+\\.[0-9]+\\>\\)-"
-					file))
-				  (setq version (match-string 1 file)
-					found t)))))
-			found)
-		    (error)))))))))
+                                                            " -V"))))
+                    (string-match "^Python \\([0-9]+\\.[0-9]+\\>\\)" s)
+                    (match-string 1 s)))
+         ;; Whether info files have a Python version suffix, e.g. in Debian.
+         (versioned
+          (with-temp-buffer
+            (Info-mode)
+            ;; First look for Info files corresponding to the version
+            ;; of the interpreter we're running.
+            (condition-case ()
+                ;; Do not use ‘info’ because it would pop-up a *info* buffer.
+                (progn
+                  (Info-goto-node (format "(python%s-lib)Miscellaneous Index"
+                                          version))
+                  t)
+              (error
+               ;; Otherwise see if we actually have an un-versioned one.
+               (condition-case ()
+                   (progn
+                     (Info-goto-node
+                      (format "(python%s-lib)Miscellaneous Index" version))
+                     nil)
+                 (error
+                  ;; Otherwise look for any versioned Info file.
+                  (condition-case ()
+                      (let (found)
+                        (dolist (dir (or Info-directory-list
+                                         Info-default-directory-list))
+                          (unless found
+                            (let ((file (car (file-expand-wildcards
+                                              (expand-file-name "python*-lib*"
+                                                                dir)))))
+                              (if (and file
+                                       (string-match
+                                        "\\<python\\([0-9]+\\.[0-9]+\\>\\)-"
+                                        file))
+                                  (setq version (match-string 1 file)
+                                        found t)))))
+                        found)
+                    (error)))))))))
     (info-lookup-maybe-add-help
      :mode 'python-mode
      :regexp "[[:alnum:]_]+"
@@ -22626,23 +22625,23 @@ Used with ‘eval-after-load’."
      ;; (Miscellaneous in -ref first prefers lookup of keywords, for
      ;; instance.)
      (if versioned
-	 ;; The empty prefix just gets us highlighted terms.
-	 `((,(concat "(python" version "-ref)Miscellaneous Index"))
-	   (,(concat "(python" version "-ref)Module Index"))
-	   (,(concat "(python" version "-ref)Function-Method-Variable Index"))
-	   (,(concat "(python" version "-ref)Class-Exception-Object Index"))
-	   (,(concat "(python" version "-lib)Module Index"))
-	   (,(concat "(python" version "-lib)Class-Exception-Object Index"))
-	   (,(concat "(python" version "-lib)Function-Method-Variable Index"))
-	   (,(concat "(python" version "-lib)Miscellaneous Index")))
+         ;; The empty prefix just gets us highlighted terms.
+         `((,(concat "(python" version "-ref)Miscellaneous Index"))
+           (,(concat "(python" version "-ref)Module Index"))
+           (,(concat "(python" version "-ref)Function-Method-Variable Index"))
+           (,(concat "(python" version "-ref)Class-Exception-Object Index"))
+           (,(concat "(python" version "-lib)Module Index"))
+           (,(concat "(python" version "-lib)Class-Exception-Object Index"))
+           (,(concat "(python" version "-lib)Function-Method-Variable Index"))
+           (,(concat "(python" version "-lib)Miscellaneous Index")))
        '(("(python-ref)Miscellaneous Index")
-	 ("(python-ref)Module Index")
-	 ("(python-ref)Function-Method-Variable Index")
-	 ("(python-ref)Class-Exception-Object Index")
-	 ("(python-lib)Module Index")
-	 ("(python-lib)Class-Exception-Object Index")
-	 ("(python-lib)Function-Method-Variable Index")
-	 ("(python-lib)Miscellaneous Index"))))))
+         ("(python-ref)Module Index")
+         ("(python-ref)Function-Method-Variable Index")
+         ("(python-ref)Class-Exception-Object Index")
+         ("(python-lib)Module Index")
+         ("(python-lib)Class-Exception-Object Index")
+         ("(python-lib)Function-Method-Variable Index")
+         ("(python-lib)Miscellaneous Index"))))))
 
 ;;  (if (featurep 'info-look)
 ;;      (python-after-info-look))
@@ -22710,13 +22709,13 @@ not inside a defun."
 (defalias (quote py-describe-symbol) (quote py-help-at-point))
 (defun py--help-at-point-intern (sym orig)
   (let* ((origfile (py--buffer-filename-remote-maybe))
-	 (cmd (py-find-imports))
-	 (oldbuf (current-buffer))
-	 )
+         (cmd (py-find-imports))
+         (oldbuf (current-buffer))
+         )
     (when (not py-remove-cwd-from-path)
       (setq cmd (concat cmd "import sys\n"
-			"sys.path.insert(0, '"
-			(file-name-directory origfile) "')\n")))
+                        "sys.path.insert(0, '"
+                        (file-name-directory origfile) "')\n")))
     ;; (setq cmd (concat cmd "pydoc.help('" sym "')\n"))
     (py-execute-string (concat cmd "help('" sym "')\n") nil t nil orig nil nil nil nil nil nil oldbuf t)
     (display-buffer oldbuf)))
@@ -22728,16 +22727,16 @@ not inside a defun."
 If symbol is defined in current buffer, jump to its definition"
   (interactive)
   (let* ((orig (point))
-	 (beg (and (use-region-p) (region-beginning)))
-	 (end (and (use-region-p) (region-end)))
-	 (symbol
-	  (or (and beg end
-		   (buffer-substring-no-properties beg end))
-	      ;; (thing-at-point 'symbol t)
-	      (py-symbol-at-point))))
+         (beg (and (use-region-p) (region-beginning)))
+         (end (and (use-region-p) (region-end)))
+         (symbol
+          (or (and beg end
+                   (buffer-substring-no-properties beg end))
+              ;; (thing-at-point 'symbol t)
+              (py-symbol-at-point))))
     (and symbol (unless (string= "" symbol)
-		  (py--help-at-point-intern symbol orig))
-	 )))
+                  (py--help-at-point-intern symbol orig))
+         )))
 
 (defun py--dump-help-string (str)
   (with-output-to-temp-buffer "*Help*"
@@ -23050,11 +23049,11 @@ local bindings to py-newline-and-indent."))
   (when (find-file sourcefile)
     (goto-char (point-min))
     (when
-	(or (re-search-forward (concat py-def-or-class-re symbol) nil t 1)
-	    (progn
-	      ;; maybe a variable definition?
-	      (goto-char (point-min))
-	      (re-search-forward (concat "^.+ " symbol) nil t 1)))
+        (or (re-search-forward (concat py-def-or-class-re symbol) nil t 1)
+            (progn
+              ;; maybe a variable definition?
+              (goto-char (point-min))
+              (re-search-forward (concat "^.+ " symbol) nil t 1)))
       (push-mark)
       (goto-char (match-beginning 0))
       (exchange-point-and-mark))))
@@ -23064,7 +23063,7 @@ local bindings to py-newline-and-indent."))
 (defun py--find-definition-question-type (symbol imports)
   (let (erg)
     (cond ((setq erg (py-execute-string (concat "import inspect;inspect.isbuiltin(\"" symbol "\")"))))
-	  (t (setq erg (py-execute-string (concat imports "import inspect;inspect.getmodule(\"" symbol "\")")))))
+          (t (setq erg (py-execute-string (concat imports "import inspect;inspect.getmodule(\"" symbol "\")")))))
     erg))
 
 (defun py-find-definition (&optional symbol)
@@ -23074,33 +23073,33 @@ Interactively, prompt for SYMBOL."
   (interactive)
   ;; (set-register 98888888 (list (current-window-configuration) (point-marker)))
   (let* (;; end
-	 ;; (last-window-configuration
+         ;; (last-window-configuration
          ;;  (current-window-configuration))
-	 (orig (point))
+         (orig (point))
          ;; (exception-buffer (current-buffer))
          (imports (py-find-imports))
          (symbol-raw (or symbol (with-syntax-table py-dotted-expression-syntax-table
-				  (current-word))))
+                                  (current-word))))
          ;; (enable-recursive-minibuffers t)
          (symbol (if (called-interactively-p 'interactive)
-		     (read-string (format "Find location of (default %s): " symbol-raw)
-		                  symbol-raw nil symbol-raw)
-		   symbol-raw))
+                     (read-string (format "Find location of (default %s): " symbol-raw)
+                                  symbol-raw nil symbol-raw)
+                   symbol-raw))
          (local (progn (goto-char (point-min)) (re-search-forward (concat "^[ \t]*" "\\(def\\|class\\)" "[ \t]" symbol) orig t))))
     ;; ismethod(), isclass(), isfunction() or isbuiltin()
     ;; ismethod isclass isfunction isbuiltin)
     (if local
         (progn
-	  (goto-char orig)
-	  (split-window-vertically)
-	  (other-buffer)
-	  (goto-char local)
-	  (beginning-of-line)
+          (goto-char orig)
+          (split-window-vertically)
+          (other-buffer)
+          (goto-char local)
+          (beginning-of-line)
           (push-mark)
-	  (message "%s" (current-buffer))
-	  (exchange-point-and-mark))
+          (message "%s" (current-buffer))
+          (exchange-point-and-mark))
       (with-help-window (help-buffer)
-	(princ (py--find-definition-question-type symbol imports))))))
+        (princ (py--find-definition-question-type symbol imports))))))
 
 (defun py-update-imports ()
   "Return imports.
@@ -23171,14 +23170,14 @@ For help see \\[pylint-help] resp. \\[pylint-long-help].
 Home-page: http://www.logilab.org/project/pylint"
   (interactive
    (let ((default (format "%s %s %s" py-pylint-command
-			  (mapconcat 'identity py-pylint-command-args " ")
-			  (py--buffer-filename-remote-maybe)))
+                          (mapconcat 'identity py-pylint-command-args " ")
+                          (py--buffer-filename-remote-maybe)))
          (last (and py-pylint-history (car py-pylint-history))))
      (list (funcall (if (fboundp 'read-shell-command)
-			'read-shell-command 'read-string)
-		    "Run pylint like this: "
-		    (or default last)
-		    (quote py-pylint-history)))))
+                        'read-shell-command 'read-string)
+                    "Run pylint like this: "
+                    (or default last)
+                    (quote py-pylint-history)))))
     (save-some-buffers (not py-ask-about-save))
   (set-buffer (get-buffer-create "*Pylint*"))
   (erase-buffer)
@@ -23314,8 +23313,8 @@ Default on the file currently visited."
    (let ((default
            (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pychecker-command
-		       py-pychecker-command-args
-		       (py--buffer-filename-remote-maybe))
+                       py-pychecker-command-args
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pychecker-command py-pychecker-command-args)))
          (last (when py-pychecker-history
                  (let* ((lastcmd (car py-pychecker-history))
@@ -23357,9 +23356,9 @@ See ‘py-check-command’ for the default."
   (require 'compile)                    ;To define compilation-* variables.
   (save-some-buffers (not compilation-ask-about-save) nil)
   (let ((compilation-error-regexp-alist py-compilation-regexp-alist)
-	;; (cons '("(\\([^,]+\\), line \\([0-9]+\\))" 1)
-	;; compilation-error-regexp-alist)
-	)
+        ;; (cons '("(\\([^,]+\\), line \\([0-9]+\\))" 1)
+        ;; compilation-error-regexp-alist)
+        )
     (compilation-start command)))
 
 ;;  flake8
@@ -23446,15 +23445,15 @@ Takes NAME COMMAND"
       (when py-verbose-p (message "Do not see %s. Use ‘easy_install’ %s? " name name))))
   (if (py--buffer-filename-remote-maybe)
       (let* ((temp-file (if (functionp 'flymake-proc-init-create-temp-buffer-copy)
-			    (flymake-proc-init-create-temp-buffer-copy 'flymake-create-temp-inplace)
-			  (flymake-proc-init-create-temp-buffer-copy 'flymake-create-temp-inplace)
-			  ))
+                            (flymake-proc-init-create-temp-buffer-copy 'flymake-create-temp-inplace)
+                          (flymake-proc-init-create-temp-buffer-copy 'flymake-create-temp-inplace)
+                          ))
              (local-file (file-relative-name
                           temp-file
                           (file-name-directory (py--buffer-filename-remote-maybe)))))
-	(if (boundp 'flymake-proc-allowed-file-name-masks)
+        (if (boundp 'flymake-proc-allowed-file-name-masks)
             (push (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))) flymake-proc-allowed-file-name-masks)
-	  (push (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))) flymake-proc-allowed-file-name-masks))
+          (push (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))) flymake-proc-allowed-file-name-masks))
         (list command (list local-file)))
     (message "%s" "flymake needs a ‘file-name’. Please save before calling.")))
 
@@ -23615,8 +23614,8 @@ Affected by ‘py-dedent-keep-relative-column’. "
   (interactive)
   (save-excursion
     (let* ((beg (py-backward-class))
-	   (end (py-forward-class))
-	   (res (when (and (numberp beg)(numberp end)(< beg end)) (buffer-substring-no-properties beg end))))
+           (end (py-forward-class))
+           (res (when (and (numberp beg)(numberp end)(< beg end)) (buffer-substring-no-properties beg end))))
       res)))
 
 (defun py-backward-function ()
@@ -23638,7 +23637,7 @@ Returns position."
   (interactive)
   (save-excursion
     (let* ((beg (py-backward-function))
-	   (end (py-forward-function)))
+           (end (py-forward-function)))
       (when (and (numberp beg)(numberp end)(< beg end)) (buffer-substring-no-properties beg end)))))
 
 ;; Functions for marking regions
@@ -23647,7 +23646,7 @@ Returns position."
   "Return line as string. "
   (interactive)
   (let* ((beg (line-beginning-position))
-	 (end (line-end-position)))
+         (end (line-end-position)))
     (when (and (numberp beg)(numberp end)(< beg end)) (buffer-substring-no-properties beg end))))
 
 (defun py-match-paren-mode (&optional arg)
@@ -23655,22 +23654,22 @@ Returns position."
   (interactive "P")
   (if (or arg (not py-match-paren-mode))
       (progn
-	(setq py-match-paren-mode t)
+        (setq py-match-paren-mode t)
         (setq py-match-paren-mode nil))))
 
 (defun py--match-end-finish (cui)
   (let (skipped)
     (unless (eq (current-column) cui)
       (when (< (current-column) cui)
-	(setq skipped (skip-chars-forward " \t" (line-end-position)))
-	(setq cui (- cui skipped))
-	;; may current-column greater as needed indent?
-	(if (< 0 cui)
-	    (progn
-	      (unless (py-empty-line-p) (split-line))
-	      (indent-to cui))
-	  (forward-char cui))
-	(unless (eq (char-before) 32)(insert 32)(forward-char -1))))))
+        (setq skipped (skip-chars-forward " \t" (line-end-position)))
+        (setq cui (- cui skipped))
+        ;; may current-column greater as needed indent?
+        (if (< 0 cui)
+            (progn
+              (unless (py-empty-line-p) (split-line))
+              (indent-to cui))
+          (forward-char cui))
+        (unless (eq (char-before) 32)(insert 32)(forward-char -1))))))
 
 (defun py--match-paren-forward ()
   (setq py--match-paren-forward-p t)
@@ -23704,27 +23703,27 @@ Returns position."
       (py-forward-statement-bol)
       (py--match-end-finish cui))
      (t (py-forward-statement)
-	(py--match-end-finish cui)))))
+        (py--match-end-finish cui)))))
 
 (defun py--match-paren-backward ()
   (setq py--match-paren-forward-p nil)
   (let* ((cui (current-indentation))
-	 (cuc (current-column))
-	 (cui (min cuc cui)))
+         (cuc (current-column))
+         (cui (min cuc cui)))
     (if (eq 0 cui)
-	(py-backward-top-level)
+        (py-backward-top-level)
       (when (py-empty-line-p) (delete-region (line-beginning-position) (point)))
       (py-backward-statement)
       (unless (< (current-column) cuc)
       (while (and (not (bobp))
-		  (< cui (current-column))
-		  (py-backward-statement)))))))
+                  (< cui (current-column))
+                  (py-backward-statement)))))))
 
 (defun py--match-paren-blocks ()
   (cond
    ((and (looking-back "^[ \t]*" (line-beginning-position))(if (eq last-command (quote py-match-paren))(not py--match-paren-forward-p)t)
-	 ;; (looking-at py-extended-block-or-clause-re)
-	 (looking-at "[[:alpha:]_]"))
+         ;; (looking-at py-extended-block-or-clause-re)
+         (looking-at "[[:alpha:]_]"))
     ;; from beginning of top-level, block, clause, statement
     (py--match-paren-forward))
    (t
@@ -23742,32 +23741,32 @@ Matches lists, but also block, statement, string and comment. "
       (cond
        ;; if inside string, go to beginning
        ((nth 3 pps)
-	(goto-char (nth 8 pps)))
+        (goto-char (nth 8 pps)))
        ;; if inside comment, go to beginning
        ((nth 4 pps)
-	(py-backward-comment))
+        (py-backward-comment))
        ;; at comment start, go to end of commented section
        ((and
-	 ;; unless comment starts where jumped to some end
-	 (not py--match-paren-forward-p)
-	 (eq 11 (car-safe (syntax-after (point)))))
-	(py-forward-comment))
+         ;; unless comment starts where jumped to some end
+         (not py--match-paren-forward-p)
+         (eq 11 (car-safe (syntax-after (point)))))
+        (py-forward-comment))
        ;; at string start, go to end
        ((or (eq 15 (car-safe (syntax-after (point))))
-	    (eq 7 (car (syntax-after (point)))))
-	(goto-char (scan-sexps (point) 1))
-	(forward-char -1))
+            (eq 7 (car (syntax-after (point)))))
+        (goto-char (scan-sexps (point) 1))
+        (forward-char -1))
        ;; open paren
        ((eq 4 (car (syntax-after (point))))
-	(goto-char (scan-sexps (point) 1))
-	(forward-char -1))
+        (goto-char (scan-sexps (point) 1))
+        (forward-char -1))
        ((eq 5 (car (syntax-after (point))))
-	(goto-char (scan-sexps (1+ (point)) -1)))
+        (goto-char (scan-sexps (1+ (point)) -1)))
        ((nth 1 pps)
-	(goto-char (nth 1 pps)))
+        (goto-char (nth 1 pps)))
        (t
-	;; Python specific blocks
-	(py--match-paren-blocks))))))
+        ;; Python specific blocks
+        (py--match-paren-blocks))))))
 
 (unless (functionp (quote in-string-p))
   (defun in-string-p (&optional pos)
@@ -23817,8 +23816,8 @@ With optional \\[universal-argument] print as string"
          ;; guess if doublequotes or parentheses are needed
          (numbered (not (eq 4 (prefix-numeric-value arg))))
          (form (if numbered
-		   (concat "print(\"" name ": %s \" % (" name "))")
-		 (concat "print(\"" name ": %s \" % \"" name "\")"))))
+                   (concat "print(\"" name ": %s \" % (" name "))")
+                 (concat "print(\"" name ": %s \" % \"" name "\")"))))
     (insert form)))
 
 (defun py-print-formatform-insert (&optional strg)
@@ -23951,9 +23950,9 @@ of how this works."
   (let (index-alist)
     (save-excursion
       (setq py-imenu-generic-regexp (car py-imenu-generic-expression)
-	    py-imenu-generic-parens (if py-imenu-show-method-args-p
-				        py-imenu-method-arg-parens
-				      py-imenu-method-no-arg-parens))
+            py-imenu-generic-parens (if py-imenu-show-method-args-p
+                                        py-imenu-method-arg-parens
+                                      py-imenu-method-no-arg-parens))
       (goto-char (point-min))
       ;; Warning: When the buffer has no classes or functions, this will
       ;; return nil, which seems proper according to the Imenu API, but
@@ -24085,7 +24084,7 @@ of the first definition found."
             (while (and (re-search-forward "^[ \t]*\\(def\\|class\\)[ \t]+\\(\\sw+\\)" (or thisend end) t 1)(not (nth 8 (parse-partial-sexp (point-min) (point)))))
               (let* ((pos (match-beginning 0))
                      (name (match-string-no-properties 2)))
-		(push (cons (concat " " name) pos) sublist)))
+                (push (cons (concat " " name) pos) sublist)))
             (if classname
                 (progn
                   (setq sublist (nreverse sublist))
@@ -24147,11 +24146,11 @@ It must be a function with two arguments: TYPE and NAME.")
   (let* ((label
          (funcall py-imenu-format-item-label-function type name))
         ;; (jump-label
-	;; (funcall py-imenu-format-parent-item-jump-label-function type name))
-	(jump-label label
+        ;; (funcall py-imenu-format-parent-item-jump-label-function type name))
+        (jump-label label
          ;; (funcall py-imenu-format-parent-item-jump-label-function type name)
-	 )
-	)
+         )
+        )
     (if (not tree)
         (cons label pos)
       (cons label (cons (cons jump-label pos) tree)))))
@@ -24165,48 +24164,48 @@ not be passed explicitly unless you know what you are doing."
   (save-restriction
     (narrow-to-region (point-min) (point))
     (let* ((pos
-	    (progn
-	      ;; finds a top-level class
-	      (py-backward-def-or-class)
-	      ;; stops behind the indented form at EOL
-	      (py-forward-def-or-class)
-	      ;; may find an inner def-or-class
-	      (py-backward-def-or-class)))
-	   type
-	   (name (when (and pos (looking-at py-def-or-class-re))
-		   (let ((split (split-string (match-string-no-properties 0))))
-		     (setq type (car split))
-		     (cadr split))))
-	   (label (when name
-		    (funcall py-imenu-format-item-label-function type name)))
-	   (indent (current-indentation))
-	   (children-indent-limit (+ py-indent-offset min-indent)))
+            (progn
+              ;; finds a top-level class
+              (py-backward-def-or-class)
+              ;; stops behind the indented form at EOL
+              (py-forward-def-or-class)
+              ;; may find an inner def-or-class
+              (py-backward-def-or-class)))
+           type
+           (name (when (and pos (looking-at py-def-or-class-re))
+                   (let ((split (split-string (match-string-no-properties 0))))
+                     (setq type (car split))
+                     (cadr split))))
+           (label (when name
+                    (funcall py-imenu-format-item-label-function type name)))
+           (indent (current-indentation))
+           (children-indent-limit (+ py-indent-offset min-indent)))
       (cond ((not pos)
-	     ;; Nothing found, probably near to bobp.
-	     nil)
-	    ((<= indent min-indent)
-	     ;; The current indentation points that this is a parent
-	     ;; node, add it to the tree and stop recursing.
-	     (py-imenu--put-parent type name pos tree))
-	    (t
-	     (py-imenu--build-tree
-	      min-indent
-	      indent
-	      (if (<= indent children-indent-limit)
-		  (cons (cons label pos) tree)
-		(cons
-		 (py-imenu--build-tree
-		  prev-indent indent (list (cons label pos)))
-		 tree))))))))
+             ;; Nothing found, probably near to bobp.
+             nil)
+            ((<= indent min-indent)
+             ;; The current indentation points that this is a parent
+             ;; node, add it to the tree and stop recursing.
+             (py-imenu--put-parent type name pos tree))
+            (t
+             (py-imenu--build-tree
+              min-indent
+              indent
+              (if (<= indent children-indent-limit)
+                  (cons (cons label pos) tree)
+                (cons
+                 (py-imenu--build-tree
+                  prev-indent indent (list (cons label pos)))
+                 tree))))))))
 
 (defun py--imenu-index ()
   "Return tree Imenu alist for the current Python buffer. "
   (save-excursion
     (goto-char (point-max))
     (let ((index)
-	  (tree))
+          (tree))
       (while (setq tree (py-imenu--build-tree))
-	(setq index (cons tree index)))
+        (setq index (cons tree index)))
       index)))
 
 ;; python-components-electric
@@ -24371,8 +24370,8 @@ At no-whitespace character, delete one before point.
   (interactive "*P")
   (unless (bobp)
     (let ((backward-delete-char-untabify-method 'untabify)
-	  indent
-	  done)
+          indent
+          done)
       (cond
        ;; electric-pair-mode
        ((and electric-pair-mode
@@ -24386,46 +24385,46 @@ At no-whitespace character, delete one before point.
       (delete-char 1)
       (backward-delete-char-untabify 1))
        ((eq 4 (prefix-numeric-value arg))
-	(backward-delete-char-untabify 1))
+        (backward-delete-char-untabify 1))
        ((use-region-p)
         ;; Emacs23 does not know that var
         (if (boundp 'delete-active-region)
-	    (delete-active-region)
-	  (delete-region (region-beginning) (region-end))))
+            (delete-active-region)
+          (delete-region (region-beginning) (region-end))))
        ((looking-back "[[:graph:]]" (line-beginning-position))
-	(backward-delete-char-untabify 1))
+        (backward-delete-char-untabify 1))
        ;; before code
        ((looking-back "^[ \t]+" (line-beginning-position))
         (setq indent (py-compute-indentation))
-	(cond ((< indent (current-indentation))
-	       (back-to-indentation)
-	       (delete-region (line-beginning-position) (point))
-	       (indent-to indent))
-	      ((<=  (current-column) py-indent-offset)
-	       (delete-region (line-beginning-position) (point)))
-	      ((eq 0 (% (current-column) py-indent-offset))
-	       (delete-region (point) (progn (backward-char py-indent-offset) (point))))
-	      (t (delete-region
-		  (point)
-		  (progn
-		    ;; go backward the remainder
-		    (backward-char (% (current-column) py-indent-offset))
-		    (point))))))
+        (cond ((< indent (current-indentation))
+               (back-to-indentation)
+               (delete-region (line-beginning-position) (point))
+               (indent-to indent))
+              ((<=  (current-column) py-indent-offset)
+               (delete-region (line-beginning-position) (point)))
+              ((eq 0 (% (current-column) py-indent-offset))
+               (delete-region (point) (progn (backward-char py-indent-offset) (point))))
+              (t (delete-region
+                  (point)
+                  (progn
+                    ;; go backward the remainder
+                    (backward-char (% (current-column) py-indent-offset))
+                    (point))))))
        ((looking-back "[[:graph:]][ \t]+" (line-beginning-position))
-	;; in the middle fixup-whitespace
-	(setq done (line-end-position))
-	(fixup-whitespace)
-	;; if just one whitespace at point, delete that one
-	(or (< (line-end-position) done) (delete-char 1)))
+        ;; in the middle fixup-whitespace
+        (setq done (line-end-position))
+        (fixup-whitespace)
+        ;; if just one whitespace at point, delete that one
+        (or (< (line-end-position) done) (delete-char 1)))
 
        ;; (if (< 1 (abs (skip-chars-backward " \t")))
-       ;; 		 (delete-region (point) (progn (skip-chars-forward " \t") (point)))
-       ;; 	       (delete-char 1))
+       ;;                (delete-region (point) (progn (skip-chars-forward " \t") (point)))
+       ;;              (delete-char 1))
 
        ((bolp)
-	(delete-char -1))
+        (delete-char -1))
        (t
-	(py-indent-line nil t))))))
+        (py-indent-line nil t))))))
 
 (defun py-electric-delete (&optional arg)
   "Delete one or more of whitespace chars right from point.
@@ -24443,55 +24442,55 @@ At no-whitespace char, delete one char at point.
   (interactive "P*")
   (unless (eobp)
     (let* (;; py-ert-deletes-too-much-lp:1300270-dMegYd
-	   ;; x = {'abc':'def',
+           ;; x = {'abc':'def',
            ;;     'ghi':'jkl'}
-	   (backward-delete-char-untabify-method 'untabify)
-	   (indent (py-compute-indentation))
-	   ;; (delpos (+ (line-beginning-position) indent))
-	   ;; (line-end-pos (line-end-position))
-	   ;; (orig (point))
-	   done)
+           (backward-delete-char-untabify-method 'untabify)
+           (indent (py-compute-indentation))
+           ;; (delpos (+ (line-beginning-position) indent))
+           ;; (line-end-pos (line-end-position))
+           ;; (orig (point))
+           done)
       (cond
        ((eq 4 (prefix-numeric-value arg))
-	(delete-char 1))
+        (delete-char 1))
        ;; delete active region if one is active
        ((use-region-p)
-	;; Emacs23 does not know that var
-	(if (boundp 'delete-active-region)
+        ;; Emacs23 does not know that var
+        (if (boundp 'delete-active-region)
             (delete-active-region)
-	  (delete-region (region-beginning) (region-end))))
+          (delete-region (region-beginning) (region-end))))
        ;; ((looking-at "[[:graph:]]")
        ;;  (delete-char 1))
        ((or (eolp) (looking-at "[ \t]+$"))
-	(cond
-	 ((eolp) (delete-char 1))
-	 ((< (+ indent (line-beginning-position)) (line-end-position))
-	  (end-of-line)
-	  (while (and (member (char-before) (list 9 32 ?\r))
-		      (< indent (current-column)))
-	    (backward-delete-char-untabify 1)))))
+        (cond
+         ((eolp) (delete-char 1))
+         ((< (+ indent (line-beginning-position)) (line-end-position))
+          (end-of-line)
+          (while (and (member (char-before) (list 9 32 ?\r))
+                      (< indent (current-column)))
+            (backward-delete-char-untabify 1)))))
        (;; before code
-	(looking-at "[ \t]+[[:graph:]]")
-	;; before indent
-	(if (looking-back "^[ \t]*" (line-beginning-position))
-	    (cond ((< indent (current-indentation))
-		   (back-to-indentation)
-		   (delete-region (line-beginning-position) (point))
-		   (indent-to indent))
-		  ((< 0 (% (current-indentation) py-indent-offset))
-		   (back-to-indentation)
-		   (delete-region (point) (progn (backward-char (% (current-indentation) py-indent-offset)) (point))))
-		  ((eq 0 (% (current-indentation) py-indent-offset))
-		   (back-to-indentation)
-		   (delete-region (point) (progn (backward-char py-indent-offset) (point))))
-		  (t
-		   (skip-chars-forward " \t")
-		   (delete-region (line-beginning-position) (point))))
-	  ;; in the middle fixup-whitespace
-	  (setq done (line-end-position))
-	  (fixup-whitespace)
-	  ;; if just one whitespace at point, delete that one
-	  (or (< (line-end-position) done) (delete-char 1))))
+        (looking-at "[ \t]+[[:graph:]]")
+        ;; before indent
+        (if (looking-back "^[ \t]*" (line-beginning-position))
+            (cond ((< indent (current-indentation))
+                   (back-to-indentation)
+                   (delete-region (line-beginning-position) (point))
+                   (indent-to indent))
+                  ((< 0 (% (current-indentation) py-indent-offset))
+                   (back-to-indentation)
+                   (delete-region (point) (progn (backward-char (% (current-indentation) py-indent-offset)) (point))))
+                  ((eq 0 (% (current-indentation) py-indent-offset))
+                   (back-to-indentation)
+                   (delete-region (point) (progn (backward-char py-indent-offset) (point))))
+                  (t
+                   (skip-chars-forward " \t")
+                   (delete-region (line-beginning-position) (point))))
+          ;; in the middle fixup-whitespace
+          (setq done (line-end-position))
+          (fixup-whitespace)
+          ;; if just one whitespace at point, delete that one
+          (or (< (line-end-position) done) (delete-char 1))))
        (t (delete-char 1))))))
 
 ;; TODO: PRouleau: the electric yank mechanism is currently commented out.
@@ -24630,7 +24629,7 @@ For example:
                           (py--normalize-directory virtualenv-workon-home)
                           name))))
 
-;; python-abbrev-propose
+;; python-components-abbrev-propose
 
 (defun py-edit-abbrevs ()
   "Jumps to ‘python-mode-abbrev-table’."
@@ -24791,13 +24790,13 @@ For example:
   (interactive "*")
   (save-excursion
     (let* ((strg-start-pos (when (nth 3 pps) (nth 8 pps)))
-	   (n8pps (or strg-start-pos
-		      (when
-			  (equal (string-to-syntax "|")
-				 (syntax-after (point)))
-			(and
-			 (< 0 (skip-chars-forward "\"'"))
-			 (nth 3 (parse-partial-sexp (point-min) (point))))))))
+           (n8pps (or strg-start-pos
+                      (when
+                          (equal (string-to-syntax "|")
+                                 (syntax-after (point)))
+                        (and
+                         (< 0 (skip-chars-forward "\"'"))
+                         (nth 3 (parse-partial-sexp (point-min) (point))))))))
       (and n8pps (py--docstring-p n8pps)))))
 
 (defun py--string-fence-delete-spaces (&optional start)
@@ -24851,7 +24850,7 @@ For example:
     (forward-line 1)
     (back-to-indentation)
     (unless (or (< end (point)) (py-empty-line-p))
-	  (split-line))))
+          (split-line))))
 
 (defun py-travel-single-words-and-symbols (beg end)
   (skip-chars-forward " \t\r\n\f" end)
@@ -24889,24 +24888,24 @@ See lp:1066489 "
                                           (skip-chars-forward " \t\r\n\f")
                                           (py--skip-raw-string-front-fence)
                                           (skip-syntax-forward "^|")
-		                          (1+ (point)))))))
+                                          (1+ (point)))))))
     (save-restriction
       ;; do not go backward beyond beginning of string
       (narrow-to-region beg end)
       (let* (;; Paragraph starts with beginning of string, skip the fence-chars
-	     (innerbeg (copy-marker
+             (innerbeg (copy-marker
                         (progn (goto-char docstring)
                                ;; (max
                                ;;  (py--skip-raw-string-front-fence)
-		               ;;  (progn (unless (looking-at paragraph-start)
-		               ;;           (backward-paragraph))
+                               ;;  (progn (unless (looking-at paragraph-start)
+                               ;;           (backward-paragraph))
                                ;;         (skip-chars-forward " \t\r\n\f")
-		               ;;         (point)))
+                               ;;         (point)))
                                ;; (max
                                (py--skip-raw-string-front-fence)
                                (point))))
-	     (innerend (copy-marker (progn (goto-char end) (skip-chars-backward "\\'\"") (skip-chars-backward " \t\r\n\f") (point))))
-	     (multi-line-p (string-match "\n" (buffer-substring-no-properties innerbeg innerend)))
+             (innerend (copy-marker (progn (goto-char end) (skip-chars-backward "\\'\"") (skip-chars-backward " \t\r\n\f") (point))))
+             (multi-line-p (string-match "\n" (buffer-substring-no-properties innerbeg innerend)))
              ;; (paragraph-separate (concat py-symbol-re "\\|" py-star-labelled-re "\\|" py-colon-labelled-re "\\|" paragraph-separate))
              ;; (paragraph-start (concat py-symbol-re "\\|" py-star-labelled-re "\\|" py-colon-labelled-re "\\|"  paragraph-start))
              parabeg paraend on-first-line)
@@ -24945,47 +24944,47 @@ JUSTIFY should be used (if applicable) as in ‘fill-paragraph’.
 Fill according to ‘py-docstring-style’ "
   (interactive "*")
   (let* ((justify (or justify (if current-prefix-arg 'full t)))
-	 ;; (style (or style py-docstring-style))
-	 (pps (or pps (parse-partial-sexp (point-min) (point))))
-	 (orig (copy-marker (point)))
-	 ;; (docstring (or docstring (py--in-or-behind-or-before-a-docstring pps)))
-	 (docstring (cond (docstring
-			   (if (not (number-or-marker-p docstring))
-			       (py--in-or-behind-or-before-a-docstring pps))
-			   docstring)
-			  (t (py--in-or-behind-or-before-a-docstring pps))))
-	 (beg (and (nth 3 pps) (nth 8 pps)))
-	 (tqs (progn (and beg (goto-char beg) (looking-at "\"\"\"\\|'''"))))
-	 (end (copy-marker (if tqs
-			       (or
-				(progn (ignore-errors (forward-sexp))(and (< orig (point)) (point)))
-				(goto-char orig)
-				(line-end-position))
-			     (or (progn (goto-char beg) (ignore-errors (forward-sexp))(and (< orig (point)) (point)))
-				 (goto-char orig)
-				 (line-end-position))))))
+         ;; (style (or style py-docstring-style))
+         (pps (or pps (parse-partial-sexp (point-min) (point))))
+         (orig (copy-marker (point)))
+         ;; (docstring (or docstring (py--in-or-behind-or-before-a-docstring pps)))
+         (docstring (cond (docstring
+                           (if (not (number-or-marker-p docstring))
+                               (py--in-or-behind-or-before-a-docstring pps))
+                           docstring)
+                          (t (py--in-or-behind-or-before-a-docstring pps))))
+         (beg (and (nth 3 pps) (nth 8 pps)))
+         (tqs (progn (and beg (goto-char beg) (looking-at "\"\"\"\\|'''"))))
+         (end (copy-marker (if tqs
+                               (or
+                                (progn (ignore-errors (forward-sexp))(and (< orig (point)) (point)))
+                                (goto-char orig)
+                                (line-end-position))
+                             (or (progn (goto-char beg) (ignore-errors (forward-sexp))(and (< orig (point)) (point)))
+                                 (goto-char orig)
+                                 (line-end-position))))))
     (save-restriction
       ;; do not go backward beyond beginning of string
       (narrow-to-region beg (point-max))
       (goto-char orig)
       (when beg
         (if docstring
-	    (py--fill-docstring docstring beg end)
-	  (if (not tqs)
-	      (if (py-preceding-line-backslashed-p)
-		  (progn
-		    (setq end (copy-marker (line-end-position)))
-		    (narrow-to-region (line-beginning-position) end)
-		    (fill-region (line-beginning-position) end justify t)
-		    (when (< 1 (py-count-lines))
-		      (py--continue-lines-region (point-min) end)))
-		(narrow-to-region beg end)
-		(fill-region beg end justify t)
-		(when
-		    ;; counting in narrowed buffer
-		    (< 1 (py-count-lines))
-		  (py--continue-lines-region beg end)))
-	    (fill-region beg end justify)))))))
+            (py--fill-docstring docstring beg end)
+          (if (not tqs)
+              (if (py-preceding-line-backslashed-p)
+                  (progn
+                    (setq end (copy-marker (line-end-position)))
+                    (narrow-to-region (line-beginning-position) end)
+                    (fill-region (line-beginning-position) end justify t)
+                    (when (< 1 (py-count-lines))
+                      (py--continue-lines-region (point-min) end)))
+                (narrow-to-region beg end)
+                (fill-region beg end justify t)
+                (when
+                    ;; counting in narrowed buffer
+                    (< 1 (py-count-lines))
+                  (py--continue-lines-region beg end)))
+            (fill-region beg end justify)))))))
 
 (defun py--continue-lines-region (beg end)
   (save-excursion
@@ -24999,42 +24998,42 @@ Fill according to ‘py-docstring-style’ "
   (interactive "*")
   (window-configuration-to-register py--windows-config-register)
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
-	 (docstring (unless (not py-docstring-style) (py--in-or-behind-or-before-a-docstring pps)))
-	 (fill-column py-comment-fill-column)
-	 (in-string (nth 3 pps)))
+         (docstring (unless (not py-docstring-style) (py--in-or-behind-or-before-a-docstring pps)))
+         (fill-column py-comment-fill-column)
+         (in-string (nth 3 pps)))
     (cond ((or (nth 4 pps)
-	       (and (bolp) (looking-at "[ \t]*#[# \t]*")))
-	   (py-fill-comment))
-	  (docstring
-	   (setq fill-column py-docstring-fill-column)
-	   (py--fill-docstring docstring
-			       ;; current indentation
-			       ;; (save-excursion (and (nth 3 pps) (goto-char (nth 8 pps)) (current-indentation)))
+               (and (bolp) (looking-at "[ \t]*#[# \t]*")))
+           (py-fill-comment))
+          (docstring
+           (setq fill-column py-docstring-fill-column)
+           (py--fill-docstring docstring
+                               ;; current indentation
+                               ;; (save-excursion (and (nth 3 pps) (goto-char (nth 8 pps)) (current-indentation)))
                                ))
-	  (t
-	   (let* ((beg (or beg (save-excursion
-				 (if (looking-at paragraph-start)
-				     (point)
-				   (backward-paragraph)
-				   (when (looking-at paragraph-start)
-				     (point))))
-			   (and (nth 3 pps) (nth 8 pps))))
-		  (end (or end
-			   (when beg
-			     (save-excursion
-			       (or
-				(and in-string
-				     (progn
-				       (goto-char (nth 8 pps))
-				       (setq tqs (looking-at "\"\"\"\\|'''"))
-				       (forward-sexp) (point)))
-				(progn
-				  (forward-paragraph)
-				  (when (looking-at paragraph-separate)
-				    (point)))))))))
-	     (and beg end (fill-region beg end))
-	     (when (and in-string (not tqs))
-	       (py--continue-lines-region beg end))))))
+          (t
+           (let* ((beg (or beg (save-excursion
+                                 (if (looking-at paragraph-start)
+                                     (point)
+                                   (backward-paragraph)
+                                   (when (looking-at paragraph-start)
+                                     (point))))
+                           (and (nth 3 pps) (nth 8 pps))))
+                  (end (or end
+                           (when beg
+                             (save-excursion
+                               (or
+                                (and in-string
+                                     (progn
+                                       (goto-char (nth 8 pps))
+                                       (setq tqs (looking-at "\"\"\"\\|'''"))
+                                       (forward-sexp) (point)))
+                                (progn
+                                  (forward-paragraph)
+                                  (when (looking-at paragraph-separate)
+                                    (point)))))))))
+             (and beg end (fill-region beg end))
+             (when (and in-string (not tqs))
+               (py--continue-lines-region beg end))))))
   (jump-to-register py--windows-config-register))
 
 (defun py-fill-string-or-comment ()
@@ -25042,7 +25041,7 @@ Fill according to ‘py-docstring-style’ "
   (unless (< (current-column) fill-column)
   (let ((pps (parse-partial-sexp (point-min) (point))))
     (if (nth 3 pps)
-	(py-fill-string nil nil pps)
+        (py-fill-string nil nil pps)
       ;; (py-fill-comment pps)
       (do-auto-fill)
       ))))
@@ -25601,7 +25600,7 @@ Optional File: execute through running a temp-file"
     (save-excursion
       (back-to-indentation)
       (let ((end (next-overlay-change (point))))
-	(hs-discard-overlays (point) end)))))
+        (hs-discard-overlays (point) end)))))
 
 (defun py-show-all ()
   "Remove invisibility of hidden forms in buffer."
@@ -25610,8 +25609,8 @@ Optional File: execute through running a temp-file"
     (goto-char (point-min))
     (let (end)
       (while (and (not (eobp))  (setq end (next-overlay-change (point))))
-	(hs-discard-overlays (point) end)
-	(goto-char end)))))
+        (hs-discard-overlays (point) end)
+        (goto-char end)))))
 
 (defun py-hide-region (beg end)
   "Hide active region."
@@ -25788,12 +25787,12 @@ completion."
   (with-current-buffer (process-buffer process)
     (let ((completions
            (ignore-errors
-	     (py--string-trim
-	      (py-send-string-no-output
-	       (format
-		(concat py-completion-setup-code
-			"\nprint (" py-shell-completion-string-code ")")
-		input)
+             (py--string-trim
+              (py-send-string-no-output
+               (format
+                (concat py-completion-setup-code
+                        "\nprint (" py-shell-completion-string-code ")")
+                input)
                process (buffer-name (current-buffer)))))))
       (when (> (length completions) 2)
         (split-string completions
@@ -25807,30 +25806,30 @@ using that one instead of current buffer's process."
   (let*
       ((process (or process (get-buffer-process (current-buffer))))
        (line-start (if (derived-mode-p 'py-shell-mode)
-		       ;; Working on a shell buffer: use prompt end.
-		       (or (cdr (py-util-comint-last-prompt))
-			   (line-beginning-position))
-		     (line-beginning-position)))
+                       ;; Working on a shell buffer: use prompt end.
+                       (or (cdr (py-util-comint-last-prompt))
+                           (line-beginning-position))
+                     (line-beginning-position)))
        (import-statement
-	(when (string-match-p
-	       (rx (* space) word-start (or "from" "import") word-end space)
-	       (buffer-substring-no-properties line-start (point)))
-	  (buffer-substring-no-properties line-start (point))))
+        (when (string-match-p
+               (rx (* space) word-start (or "from" "import") word-end space)
+               (buffer-substring-no-properties line-start (point)))
+          (buffer-substring-no-properties line-start (point))))
        (start
-	(save-excursion
-	  (if (not (re-search-backward
-		    ;; (py-rx
-		    ;;  (or whitespace open-paren close-paren string-delimiter simple-operator))
-		    "[[:space:]]\\|[([{]\\|[])}]\\|\\(?:[^\"'\\]\\|\\=\\|\\(?:[^\\]\\|\\=\\)\\\\\\(?:\\\\\\\\\\)*[\"']\\)\\(?:\\\\\\\\\\)*\\(\\(?:\"\"\"\\|'''\\|[\"']\\)\\)\\|[%&*+/<->^|~-]"
-		    line-start
-		    t 1))
-	      line-start
-	    (forward-char (length (match-string-no-properties 0)))
-	    (point))))
+        (save-excursion
+          (if (not (re-search-backward
+                    ;; (py-rx
+                    ;;  (or whitespace open-paren close-paren string-delimiter simple-operator))
+                    "[[:space:]]\\|[([{]\\|[])}]\\|\\(?:[^\"'\\]\\|\\=\\|\\(?:[^\\]\\|\\=\\)\\\\\\(?:\\\\\\\\\\)*[\"']\\)\\(?:\\\\\\\\\\)*\\(\\(?:\"\"\"\\|'''\\|[\"']\\)\\)\\|[%&*+/<->^|~-]"
+                    line-start
+                    t 1))
+              line-start
+            (forward-char (length (match-string-no-properties 0)))
+            (point))))
        (end (point))
               (completion-fn
-	(with-current-buffer (process-buffer process)
-	  #'py-shell-completion-get-completions)))
+        (with-current-buffer (process-buffer process)
+          #'py-shell-completion-get-completions)))
     (list start end
           (completion-table-dynamic
            (apply-partially
@@ -25882,16 +25881,16 @@ also ‘with-current-buffer’."
   (declare (indent 0) (debug t))
   `(save-current-buffer
      (when (not (and py-shell--font-lock-buffer
-		     (get-buffer py-shell--font-lock-buffer)))
+                     (get-buffer py-shell--font-lock-buffer)))
        (setq py-shell--font-lock-buffer
-	     (py-shell-font-lock-get-or-create-buffer)))
+             (py-shell-font-lock-get-or-create-buffer)))
      (set-buffer py-shell--font-lock-buffer)
      (when (not font-lock-mode)
        (font-lock-mode 1))
      (set (make-local-variable 'delay-mode-hooks) t)
      (let (py-smart-indentation)
        (when (not (derived-mode-p 'python-mode))
-	 (python-mode))
+         (python-mode))
        ,@body)))
 
 (defun py-shell-font-lock-cleanup-buffer ()
@@ -25923,9 +25922,9 @@ goes wrong and syntax highlighting in the shell gets messed up."
 (defun py-font-lock-post-command-hook ()
   "Fontifies current line in shell buffer."
   (let ((prompt-end
-	 (or (cdr (py-util-comint-last-prompt))
-	     (progn (sit-for 0.1)
-		    (cdr (py-util-comint-last-prompt))))))
+         (or (cdr (py-util-comint-last-prompt))
+             (progn (sit-for 0.1)
+                    (cdr (py-util-comint-last-prompt))))))
     (when (and prompt-end (> (point) prompt-end)
                (process-live-p (get-buffer-process (current-buffer))))
       (let* ((input (buffer-substring-no-properties
@@ -25942,10 +25941,10 @@ goes wrong and syntax highlighting in the shell gets messed up."
                 (insert input)
                 ;; Ensure buffer is fontified, keeping it
                 ;; compatible with Emacs < 24.4.
-		(when py-shell-fontify-p
-		    (if (fboundp 'font-lock-ensure)
-			(funcall 'font-lock-ensure)
-		      (font-lock-default-fontify-buffer)))
+                (when py-shell-fontify-p
+                    (if (fboundp 'font-lock-ensure)
+                        (funcall 'font-lock-ensure)
+                      (font-lock-default-fontify-buffer)))
                 (buffer-substring font-lock-buffer-pos
                                   (point-max))))
              (replacement-length (length replacement))
@@ -25974,7 +25973,7 @@ With argument MSG show activation message."
     (py-font-lock-kill-buffer)
     (set (make-local-variable 'py-shell--font-lock-buffer) nil)
     (add-hook 'post-command-hook
-	      #'py-font-lock-post-command-hook nil 'local)
+              #'py-font-lock-post-command-hook nil 'local)
     (add-hook 'kill-buffer-hook
               #'py-font-lock-kill-buffer nil 'local)
     (add-hook 'comint-output-filter-functions
@@ -26044,12 +26043,12 @@ Setup code specific to ‘py-shell-mode’."
 
   (add-hook 'py-shell-mode-hook 'comint-mime-setup-py-shell)
   (push '(py-shell-mode . comint-mime-setup-py-shell)
-	comint-mime-setup-function-alist)
+        comint-mime-setup-function-alist)
   ;; (setq py-python-command "ipython3"
-  ;; 	py-ipython-command "ipython3"
-  ;; 	py-python-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt")
-  ;; 	;; "-i" does not work with ‘isympy3’
-  ;; 	py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
+  ;;    py-ipython-command "ipython3"
+  ;;    py-python-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt")
+  ;;    ;; "-i" does not work with ‘isympy3’
+  ;;    py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
   )
 
 ;; python-components-foot
@@ -26061,48 +26060,48 @@ Setup code specific to ‘py-shell-mode’."
   ;; (unless (and (eq last-command 'self-insert-command) (eq (char-before) 32))
   ;; (< (abs (save-excursion (skip-chars-backward "^ \t\r\n\f"))) 2))
   (let* ((pps (parse-partial-sexp (line-beginning-position) (point)))
-	 (start (if (and (nth 8 pps) (nth 1 pps))
-		    (max (nth 1 pps) (nth 8 pps))
-		  (or (nth 1 pps) (nth 8 pps)))))
+         (start (if (and (nth 8 pps) (nth 1 pps))
+                    (max (nth 1 pps) (nth 8 pps))
+                  (or (nth 1 pps) (nth 8 pps)))))
     (when (or start
-	      (setq start (ignore-errors (cdr comint-last-prompt))))
+              (setq start (ignore-errors (cdr comint-last-prompt))))
       (let* ((input (buffer-substring-no-properties
-		     start (point-max)))
-	     (buffer-undo-list t)
-	     (replacement
-	      (save-current-buffer
-		(set-buffer py-shell--font-lock-buffer)
-		(erase-buffer)
-		(insert input)
-		;; Ensure buffer is fontified, keeping it
-		;; compatible with Emacs < 24.4.
-		(if (fboundp 'font-lock-ensure)
-		    (funcall 'font-lock-ensure)
-		  (font-lock-default-fontify-buffer))
-		(buffer-substring (point-min) (point-max))))
-	     (replacement-length (length replacement))
-	     (i 0))
-	;; Inject text properties to get input fontified.
-	(while (not (= i replacement-length))
-	  (let* ((plist (text-properties-at i replacement))
-		 (next-change (or (next-property-change i replacement)
-				  replacement-length))
-		 (plist (let ((face (plist-get plist 'face)))
-			  (if (not face)
-			      plist
-			    ;; Replace FACE text properties with
-			    ;; FONT-LOCK-FACE so input is fontified.
-			    (plist-put plist 'face nil)
-			    (plist-put plist 'font-lock-face face)))))
-	    (set-text-properties
-	     (+ start i) (+ start next-change) plist)
-	    (setq i next-change)))))))
+                     start (point-max)))
+             (buffer-undo-list t)
+             (replacement
+              (save-current-buffer
+                (set-buffer py-shell--font-lock-buffer)
+                (erase-buffer)
+                (insert input)
+                ;; Ensure buffer is fontified, keeping it
+                ;; compatible with Emacs < 24.4.
+                (if (fboundp 'font-lock-ensure)
+                    (funcall 'font-lock-ensure)
+                  (font-lock-default-fontify-buffer))
+                (buffer-substring (point-min) (point-max))))
+             (replacement-length (length replacement))
+             (i 0))
+        ;; Inject text properties to get input fontified.
+        (while (not (= i replacement-length))
+          (let* ((plist (text-properties-at i replacement))
+                 (next-change (or (next-property-change i replacement)
+                                  replacement-length))
+                 (plist (let ((face (plist-get plist 'face)))
+                          (if (not face)
+                              plist
+                            ;; Replace FACE text properties with
+                            ;; FONT-LOCK-FACE so input is fontified.
+                            (plist-put plist 'face nil)
+                            (plist-put plist 'font-lock-face face)))))
+            (set-text-properties
+             (+ start i) (+ start next-change) plist)
+            (setq i next-change)))))))
 
 (defun py-message-which-python-mode ()
   (if (buffer-file-name)
       (if (string= "python-mode-el" (buffer-file-name))
-	  (message "%s" "python-mode loaded from python-mode-el")
-	(message "%s" "python-mode loaded from python-components-mode"))
+          (message "%s" "python-mode loaded from python-mode-el")
+        (message "%s" "python-mode loaded from python-components-mode"))
     (message "python-mode loaded from: %s" python-mode-message-string)))
 
 (defalias 'py-next-statement 'py-forward-statement)
@@ -26120,17 +26119,17 @@ Setup code specific to ‘py-shell-mode’."
   ;; (when company-mode (company-mode))
   (if py-auto-completion-mode-p
       (progn
-	(setq py-auto-completion-mode-p nil
-	      py-auto-completion-buffer nil)
-	(when (timerp py--auto-complete-timer)(cancel-timer py--auto-complete-timer)))
+        (setq py-auto-completion-mode-p nil
+              py-auto-completion-buffer nil)
+        (when (timerp py--auto-complete-timer)(cancel-timer py--auto-complete-timer)))
     (setq py-auto-completion-mode-p t
-	  py-auto-completion-buffer (current-buffer))
+          py-auto-completion-buffer (current-buffer))
     (setq py--auto-complete-timer
-	  (run-with-idle-timer
-	   py--auto-complete-timer-delay
-	   ;; 1
-	   t
-	   #'py-complete-auto)))
+          (run-with-idle-timer
+           py--auto-complete-timer-delay
+           ;; 1
+           t
+           #'py-complete-auto)))
   (force-mode-line-update))
 
 (autoload 'python-mode "python-mode" "Python Mode." t)
@@ -26145,24 +26144,24 @@ Setup code specific to ‘py-shell-mode’."
                           "\\|")))
   (when py-font-lock-defaults-p
     (if py-use-font-lock-doc-face-p
-	(set (make-local-variable 'font-lock-defaults)
+        (set (make-local-variable 'font-lock-defaults)
              '(python-font-lock-keywords nil nil nil nil
-					 (font-lock-syntactic-keywords
-					  . py-font-lock-syntactic-keywords)
-					 (font-lock-syntactic-face-function
-					  . py--font-lock-syntactic-face-function)))
+                                         (font-lock-syntactic-keywords
+                                          . py-font-lock-syntactic-keywords)
+                                         (font-lock-syntactic-face-function
+                                          . py--font-lock-syntactic-face-function)))
       (set (make-local-variable 'font-lock-defaults)
            '(python-font-lock-keywords nil nil nil nil
-				       (font-lock-syntactic-keywords
-					. py-font-lock-syntactic-keywords)))))
+                                       (font-lock-syntactic-keywords
+                                        . py-font-lock-syntactic-keywords)))))
   (py--update-version-dependent-keywords)
   ;; (cond ((string-match "ython3" py-python-edit-version)
   ;;        (font-lock-add-keywords 'python-mode
-  ;;       			 '(("\\<print\\>" . 'py-builtins-face)
-  ;;       			   ("\\<file\\>" . nil))))
+  ;;                             '(("\\<print\\>" . 'py-builtins-face)
+  ;;                               ("\\<file\\>" . nil))))
   ;;       (t (font-lock-add-keywords 'python-mode
-  ;;       			   '(("\\<print\\>" . 'font-lock-keyword-face)
-  ;;       			     ("\\<file\\>" . 'py-builtins-face)))))
+  ;;                               '(("\\<print\\>" . 'font-lock-keyword-face)
+  ;;                                 ("\\<file\\>" . 'py-builtins-face)))))
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'comment-use-syntax) t)
@@ -26175,9 +26174,9 @@ Setup code specific to ‘py-shell-mode’."
       (progn
         (set (make-local-variable 'paragraph-separate) (concat "\f\\|^[\t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[\t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
         (set (make-local-variable 'paragraph-start)
-	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
-	(set (make-local-variable 'paragraph-separate)
-	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")))
+             (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
+        (set (make-local-variable 'paragraph-separate)
+             (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")))
     (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[\t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
     (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[\t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
   (set (make-local-variable 'comment-column) 40)
@@ -26310,10 +26309,10 @@ See available commands listed in files commands-python-mode at directory doc
 
 VARIABLES
 
-‘py-indent-offset’	indentation increment
-‘py-shell-name’		shell command to invoke Python interpreter
-‘py-split-window-on-execute’		When non-nil split windows
-‘py-switch-buffers-on-execute-p’	When non-nil switch to the Python output buffer
+‘py-indent-offset’ indentation increment
+‘py-shell-name’ shell command to invoke Python interpreter
+‘py-split-window-on-execute’ When non-nil split windowas
+‘py-switch-buffers-on-execute-p’ When non-nil switch to the Python output buffer
 
 \\{python-mode-map}"
   :group 'python-mode
@@ -26356,7 +26355,7 @@ may want to re-add custom functions to it using the
        py-shell-compilation-regexp-alist)
   (compilation-shell-minor-mode 1)
   (add-hook 'completion-at-point-functions
-	    #'py-shell-completion-at-point nil 'local)
+            #'py-shell-completion-at-point nil 'local)
   (define-key py-shell-mode-map [(control c) (control r)] 'py-nav-last-prompt)
   (make-local-variable 'py-pdbtrack-buffers-to-kill)
   ;; (make-local-variable 'py-shell-fast-last-output)
@@ -26365,7 +26364,7 @@ may want to re-add custom functions to it using the
   (py-shell-prompt-set-calculated-regexps)
   (if py-shell-fontify-p
       (progn
-  	(py-shell-font-lock-turn-on))
+        (py-shell-font-lock-turn-on))
     (py-shell-font-lock-turn-off)))
 
 (make-obsolete 'jpython-mode 'jython-mode nil)
