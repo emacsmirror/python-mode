@@ -2398,7 +2398,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
   (if (or (string= "python-mode.el" (buffer-name))
           (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
-    "python-components-mode")
+    "python-components-mode") ;; generic mark
   "Internally used. Reports the ‘python-mode’ branch.")
 
 ;; defvared value is not updated maybe
@@ -2406,7 +2406,7 @@ See also command ‘py-toggle-underscore-word-syntax-p’")
   (if (or (string= "python-mode.el" (buffer-name))
           (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
-    "python-components-mode"))
+    "python-components-mode")) ;; generic mark
 
 (defvar python-mode-syntax-table nil
   "Give punctuation syntax to ASCII that normally has symbol.
@@ -3499,10 +3499,10 @@ Default nil"
 
 (or
  py-install-directory
- (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python--mode.el"))))
-      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))))
+ (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python-mode.el")))) ;; mark for a generic mode
+      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer "python-mode.el"))))))
  (and (buffer-live-p (ignore-errors (set-buffer (get-buffer "python-components-mode.el"))))
-      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el")))))))
+      (setq py-install-directory (ignore-errors (file-name-directory (buffer-file-name (get-buffer "python-components-mode.el")))))))
 
 ;; credits to python.el
 
@@ -3648,12 +3648,6 @@ Argument ELE: a shell name, a string."
 ;;   :group 'python-mode)
 
 ;; "/usr/bin/python3"
-
-(setq python-mode-message-string
-  (if (or (string= "python-mode.el" (buffer-name))
-          (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
-      "python-mode.el"
-    "python-components-mode"))
 
 (setq python-mode-syntax-table
       (let ((table (make-syntax-table)))
@@ -10607,7 +10601,7 @@ If already at the beginning of a block, move these form upward."
      (t (py-backward-statement)))))
 
 (defun py-nav-last-prompt ()
-  "Move to previous prompt in py-shell."
+  "Move to previous prompt."
   (interactive)
   (goto-char (pos-bol))
   (when
@@ -22461,22 +22455,12 @@ Returns the tracked buffer."
 (defun py-pdbtrack-toggle-stack-tracking (arg)
   "Set variable ‘py-pdbtrack-do-tracking-p’. "
   (interactive "P")
-  ;; (if (not (get-buffer-process (current-buffer)))
-  ;; (error "No process associated with buffer '%s'" (current-buffer)))
-
-  ;; missing or 0 is toggle, >0 turn on, <0 turn off
   (cond ((not arg)
          (setq py-pdbtrack-do-tracking-p (not py-pdbtrack-do-tracking-p)))
         ((zerop (prefix-numeric-value arg))
          (setq py-pdbtrack-do-tracking-p nil))
         ((> (prefix-numeric-value arg) 0)
          (setq py-pdbtrack-do-tracking-p t)))
-  ;; (if py-pdbtrack-do-tracking-p
-  ;;     (progn
-  ;;       (add-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file))
-  ;;       (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file))
-  ;;   (remove-hook 'comint-output-filter-functions (quote py--pdbtrack-track-stack-file))
-  ;;   )
   (message "%sabled Python's pdbtrack"
            (if py-pdbtrack-do-tracking-p "En" "Dis")))
 
@@ -26232,14 +26216,6 @@ Setup code specific to ‘py-shell-mode’."
    (py-do-completion-p
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)))
-  ;; #'python-shell-completion-at-point nil 'local)))
-  ;; (if py-auto-complete-p
-  ;; (add-hook 'python-mode-hook 'py--run-completion-timer)
-  ;; (remove-hook 'python-mode-hook 'py--run-completion-timer))
-  ;; (when py-auto-complete-p
-  ;; (add-hook 'python-mode-hook
-  ;; (lambda ()
-  ;; (run-with-idle-timer 1 t 'py-shell-complete))))
   (add-hook 'python-mode-hook
             (lambda ()
               (if py-electric-backspace-p (py-electric-backspace-mode 1)
