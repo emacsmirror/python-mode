@@ -2619,11 +2619,9 @@ stop at it.")
 (defvar py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars (substring py-partial-expression-forward-chars 1) "]+"))
 (setq py-partial-expression-re (concat "[" py-partial-expression-stop-backward-chars "]+"))
 
-
 ;; (defvar py-statement-re py-partial-expression-re)
-(defvar py-statement-re "[^] .=,\"'()[{}:#      
+(defvar py-statement-re "[^] .=,\"'()[{}:#
 ]+" "Match beginning of a statement")
-
 
 (defvar py-indent-re ".+"
   "This var is introduced for regularity only.")
@@ -3470,7 +3468,15 @@ Default nil"
          (set-default symbol value)
          (py-electric-backspace-mode (if value 1 0))))
 
-;; python-components-start1
+(defcustom py-mark-decorators nil
+  "If decorators should be marked too.
+
+Default is nil.
+
+Also used by navigation"
+  :type 'boolean
+  :tag "py-mark-decorators")
+
 
 (require 'ansi-color)
 (ignore-errors (require 'subr-x))
@@ -4039,11 +4045,11 @@ Used only, if ‘py-install-directory’ is empty."
                     (buffer-file-name (get-buffer  "python-mode.el")))
                (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-mode.el"))))
              (if
-                 (and (get-buffer "python-components-mode.el")
-                      (set-buffer (get-buffer "python-components-mode.el"))
-                      (buffer-file-name (get-buffer  "python-components-mode.el")))
-                 (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer  "python-components-mode.el"))))))
-           )))
+                 (and
+                  (get-buffer "python-components-mode.el")
+                  (set-buffer (get-buffer "python-components-mode.el"))
+                  (buffer-file-name (get-buffer "python-components-mode.el")))
+                 (setq py-install-directory (file-name-directory (buffer-file-name (get-buffer "python-components-mode.el")))))))))
 
 (defun py--fetch-pythonpath ()
   "Consider settings of ‘py-pythonpath’."
@@ -5926,9 +5932,9 @@ process buffer for a list of commands.)"
             (save-excursion
               (save-restriction
                 (with-current-buffer buffer
-                  (switch-to-buffer (current-buffer)) 
+                  (switch-to-buffer (current-buffer))
                   (goto-char (point-max))
-                  (sit-for 0.1) 
+                  (sit-for 0.1)
                   (funcall 'window-configuration-to-register py-register-char)
                   ))))
           (unless fast (py-shell-mode))
@@ -5954,28 +5960,6 @@ process buffer for a list of commands.)"
           (set-buffer-modified-p 'nil)
           (kill-buffer (current-buffer)))
       (message "Can not see a buffer %s" buffer))))
-
-;; python-components-rx
-
-;; The ‘rx--translate...’ functions below return (REGEXP . PRECEDENCE),
-;; where REGEXP is a list of string expressions that will be
-;; concatenated into a regexp, and PRECEDENCE is one of
-;;
-;;  t    -- can be used as argument to postfix operators (eg. "a")
-;;  seq  -- can be concatenated in sequence with other seq or higher (eg. "ab")
-;;  lseq -- can be concatenated to the left of rseq or higher (eg. "^a")
-;;  rseq -- can be concatenated to the right of lseq or higher (eg. "a$")
-;;  nil  -- can only be used in alternatives (eg. "a\\|b")
-;;
-;; They form a lattice:
-;;
-;;           t          highest precedence
-;;           |
-;;          seq
-;;         /   \
-;;      lseq   rseq
-;;         \   /
-;;          nil         lowest precedence
 
 
 (defconst rx--char-classes
@@ -7045,7 +7029,6 @@ can expand to any number of values."
     (rx--translate-form item))
    (t (error "Bad rx expression: %S" item))))
 
-
 (defun rx-to-string (form &optional no-group)
   "Translate FORM from ‘rx’ sexp syntax into a string regexp.
 The arguments to ‘literal’ and ‘regexp’ forms inside FORM must be
@@ -7080,7 +7063,6 @@ For extending the ‘rx’ notation in FORM, use ‘rx-define’ or ‘rx-let-ev
     (cond ((null args) "")                             ; 0 args
           ((cdr args) (cons 'concat (nreverse args)))  ; ≥2 args
           (t (car args)))))                            ; 1 arg
-
 
 (defmacro rx (&rest regexps)
   "Translate regular expressions REGEXPS in sexp form to a regexp string.
@@ -7393,7 +7375,6 @@ following constructs:
 ;; Obsolete internal symbol, used in old versions of the ‘flycheck’ package.
 (define-obsolete-function-alias 'rx-submatch-n 'rx-to-string "27.1")
 
-;; python-components-shift-forms
 
 (defun py-shift-left (&optional count start end)
   "Dedent region according to ‘py-indent-offset’ by COUNT times.
@@ -7724,16 +7705,6 @@ Return outmost indentation reached."
   (interactive "*P")
   (py--shift-forms-base "top-level" (- (or arg py-indent-offset))))
 
-;; python-components-start-Zf98zM
-
-(defcustom py-mark-decorators nil
-  "If decorators should be marked too.
-
-Default is nil.
-
-Also used by navigation"
-  :type 'boolean
-  :tag "py-mark-decorators")
 
 (defun py-end-of-string ()
   "Go to end of string at point if any, if successful return position. "
@@ -8132,7 +8103,6 @@ Arg REGEXP, a symbol"
                    (py--end-base regexp (point) bol (1+ repeat))))))))))
 
 ;; python-components-start-Zf98zM.el ends here
-;; python-components-start2
 
 
 (defun py--fix-start (strg)
@@ -8271,7 +8241,6 @@ Returns position if successful, nil otherwise"
           (setq erg (py-forward-statement))))
       erg)))
 
-;; python-components-start3
 
 (defun toggle-force-py-shell-name-p (&optional arg)
   "If customized default ‘py-shell-name’ should be enforced upon execution.
@@ -8661,7 +8630,6 @@ START END SHELL FILENAME PROC FILE WHOLEBUF FAST DEDICATED SPLIT SWITCH."
                                (py--choose-buffer-name shell dedicated fast)))
     (py--execute-base-intern strg filename proc wholebuf py-output-buffer origline execute-directory start end fast)))
 
-;; python-components-statement
 
 (defun py-forward-statement (&optional orig done repeat)
   "Go to the last char of current statement.
@@ -8886,7 +8854,6 @@ Optional MAXINDENT: do not stop if indentation is larger"
           (when (< (point) orig) (point)))))))
 
 ;; python-components-statement.el ends here
-;; python-components-down
 
 
 (defun py-down-block (&optional indent)
@@ -9009,7 +8976,6 @@ Return position if minor-block found, nil otherwise "
   (progn (beginning-of-line)(point)))
 
 ;; python-components-down.el ends here
-;; python-components-backward-forms
 
 (defun py-backward-region ()
   "Go to the beginning of current region."
@@ -9253,7 +9219,6 @@ Return beginning of ‘try-block’ if successful, nil otherwise"
   (and (py-backward-try-block)
        (progn (beginning-of-line)(point))))
 
-;; python-components-forward-forms
 
 
 (defun py-forward-assignment (&optional orig bol)
@@ -9552,7 +9517,6 @@ See also ‘py-down-try-block’."
   (interactive)
   (py-forward-try-block nil t))
 
-;; python-components-execute-file
 
 (defun py-execute-file-ipython (filename)
   "Send file to IPython interpreter"
@@ -9650,7 +9614,6 @@ See also ‘py-down-try-block’."
   (let ((buffer (py-shell nil nil t "" nil t)))
     (py--execute-file-base filename (get-buffer-process buffer) nil buffer nil t)))
 
-;; python-components-up
 
 
 (defun py-up-block ()
@@ -9766,7 +9729,6 @@ Return position if minor-block found, nil otherwise."
     (progn (beginning-of-line)(point))))
 
 ;; python-components-up.el ends here
-;; python-components-booleans-beginning-forms
 
 (defun py--beginning-of-comment-p (&optional pps)
   "If cursor is at the beginning of a ‘comment’.
@@ -10124,7 +10086,6 @@ Return position, nil otherwise."
          (looking-back "[^ \t]*" (line-beginning-position))
          (point))))
 
-;; python-components-move
 
 (defun py-backward-paragraph ()
   "Go to beginning of current paragraph.
@@ -10608,7 +10569,6 @@ If already at the beginning of a block, move these form upward."
       (re-search-backward comint-prompt-regexp nil t 1)
     (comint-skip-prompt)))
 
-;; python-components-end-position-forms
 
 
 (defun py--end-of-block-position ()
@@ -10747,7 +10707,6 @@ If already at the beginning of a block, move these form upward."
   "Return end of try-block position at ‘beginning-of-line’."
   (save-excursion (py-forward-try-block-bol)))
 
-;; python-components-beginning-position-forms
 
 
 (defun py--beginning-of-block-position ()
@@ -10954,7 +10913,6 @@ If already at the beginning of a block, move these form upward."
     (or (py--beginning-of-try-block-bol-p)
         (py-backward-try-block-bol))))
 
-;; python-components-extended-executes
 
 (defun py--execute-prepare (form shell &optional dedicated switch beg end filename fast proc wholebuf split)
   "Update some vars."
@@ -12693,7 +12651,6 @@ For ‘default’ see value of ‘py-shell-name’"
   (let ((wholebuf nil))
     (py--execute-prepare (quote top-level) shell t switch nil nil nil fast proc wholebuf split)))
 
-;; python-components-execute
 
 (defun py-switch-to-python (eob-p)
   "Switch to the Python process buffer, maybe starting new process.
@@ -13074,7 +13031,6 @@ This may be preferable to ‘\\[py-execute-buffer]’ because:
                                   (py-execute-file-command file))))
       (py-execute-buffer))))
 
-;; python-components-compute-indentation
 
 ;;  Keymap
 
@@ -13349,7 +13305,7 @@ LIEP stores line-end-position at point-of-interest
                      (and (eq 11 (syntax-after (point))) line py-indent-honors-inline-comment))
                     (py-compute-comment-indentation pps iact orig origline closing line nesting repeat indent-offset liep))
                    ;; lists
-                   ((nth 1 pps) ;; Mark provided for extended modes
+                   ((and (nth 1 pps)(or (< 1 (nth 0 pps))(eq major-mode (quote python-mode))))
                     (py-compute-indentation-according-to-list-style pps (line-beginning-position)))
                    ;; Compute according to ‘py-indent-list-style’
 
@@ -13492,7 +13448,6 @@ LIEP stores line-end-position at point-of-interest
             (when (or iact py-verbose-p) (message "%s" indent))
             indent))))))
 
-;; python-components-intern
 
 ;;  Keymap
 
@@ -14439,7 +14394,6 @@ Returns imports"
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" imports))
     imports))
 
-;; python-components-copy-forms
 
 
 (defun py-copy-block ()
@@ -14730,7 +14684,6 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
     (let ((erg (py--mark-base-bol "top-level")))
       (copy-region-as-kill (car erg) (cdr erg)))))
 
-;; python-components-delete-forms
 
 
 (defun py-delete-block ()
@@ -14915,7 +14868,6 @@ Do not store data in kill ring."
   (let ((erg (py--mark-base "top-level")))
     (delete-region (car erg) (cdr erg))))
 
-;; python-components-mark-forms
 
 
 (defun py-mark-comment ()
@@ -15116,7 +15068,6 @@ Return beginning and end positions of region, a cons."
   (exchange-point-and-mark)
   (cons (region-beginning) (region-end)))
 
-;; python-components-close-forms
 
 
 (defun py-close-block ()
@@ -15207,7 +15158,6 @@ insert a newline."
   (interactive "*")
   (py--close-intern (quote py-statement-re)))
 
-;; python-components-kill-forms
 
 
 (defun py-kill-comment ()
@@ -15386,7 +15336,6 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
   (let ((erg (py--mark-base-bol "try-block")))
     (kill-region (car erg) (cdr erg))))
 
-;; python-components-forms-code
 
 (defun py-block (&optional decorators)
   "When called interactively, mark Block at point.
@@ -15551,7 +15500,6 @@ Also honors setting of ‘py-mark-decorators’"
     (py--thing-at-point "top-level" (or decorators py-mark-decorators))))
 
 ;; python-components-forms-code.el ends here
-;; python-components-booleans-end-forms
 
 
 (defun py--end-of-comment-p ()
@@ -15924,7 +15872,6 @@ Return position, nil otherwise."
       (when (eq orig (point))
         orig))))
 
-;; python-components-exec-forms
 
 ;; Execute forms at point
 
@@ -15961,7 +15908,6 @@ Return position, nil otherwise."
                (py-forward-for-block))))
     (py-execute-region beg end)))
 
-;; python-components-switches
 
 
 (defun py-toggle-python-mode-v5-behavior ()
@@ -16338,7 +16284,6 @@ At start may be set by custom-file"
         (not py-register-shell-buffer-p))
   (when (or py-verbose-p (called-interactively-p 'any)) (message "py-register-shell-buffer-p: %s" py-register-shell-buffer-p)))
 
-;; python-components-edit
 
 (defun py-insert-default-shebang ()
   "Insert in buffer shebang of installed default Python."
@@ -17047,7 +16992,6 @@ arg MODE: which buffer-mode used in edit-buffer"
       (py--prettyprint-assignment-intern beg end name proc-buf)))
   (py-restore-window-configuration))
 
-;; python-components-named-shells
 
 (defun ipython (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython interpreter.
@@ -17119,7 +17063,6 @@ With optional \\[universal-argument] get a new dedicated shell."
     (goto-char (point-max)) 
     buffer))
 
-;; python-components-font-lock
 
 (defmacro py-rx (&rest regexps)
   "Python mode specialized rx macro.
@@ -17381,7 +17324,6 @@ sign in chained assignment."
 
   "Keywords matching font-lock")
 
-;; python-components-menu
 (defun py-define-menu (map)
   (easy-menu-define py-menu map "Py"
     `("Python"
@@ -19792,7 +19734,6 @@ Defines python-mode specific abbrev for last expressions before point."]
 Find source of definition of SYMBOL."])))
   map)
 
-;; python-components-map
 
 (defvar py-use-menu-p t
   "If the menu should be loaded.
@@ -19928,7 +19869,6 @@ Default is t")
 (defvar py-ipython-shell-mode-map py-shell-mode-map
   "Copy ‘py-shell-mode-map’ here.")
 
-;; python-components-shell-menu
 
 (and (ignore-errors (require (quote easymenu)) t)
      ;; (easy-menu-define py-menu map "Python Tools"
@@ -21885,7 +21825,6 @@ Do not use this function in a Lisp program; use ‘define-abbrev’ instead."]
             :help " ‘py-complete’"]
             )))))
 
-;; python-components-complete
 
 (defun py--shell-completion-get-completions (input process completion-code)
   "Retrieve available completions for INPUT using PROCESS.
@@ -22132,7 +22071,6 @@ in (I)Python shell-modes ‘py-shell-complete’"
          (completion-at-point)
          (skip-chars-forward "^ \t\r\n\f") )))
 
-;; python-components-pdb
 
 (defun py-execute-statement-pdb ()
   "Execute statement running pdb."
@@ -22532,10 +22470,8 @@ Argument OUTPUT is a string with the output from the comint process."
                 py-pdbtrack-buffers-to-kill nil)))))
   output)
 
-;; python-components-pdbtrack
 
 
-;; python-components-help
 
 ;;  Info-look functionality.
 (require 'info-look)
@@ -23535,7 +23471,6 @@ Assumes vars are defined in current source buffer"
 (defalias 'iypthon 'ipython)
 (defalias 'pyhton 'python)
 
-;; python-components-extensions
 
 (defun py-indent-forward-line (&optional arg)
   "Indent and move line forward to next indentation.
@@ -23840,7 +23775,6 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
            (replace-match "True"))
           (t (message "%s" "Can not see \"True or False\" here")))))
 
-;; python-components-imenu
 ;; Imenu definitions
 
 (defvar py-imenu-class-regexp
@@ -24195,7 +24129,6 @@ not be passed explicitly unless you know what you are doing."
         (setq index (cons tree index)))
       index)))
 
-;; python-components-electric
 (defun py-electric-colon (arg)
   "Insert a colon and indent accordingly.
 
@@ -24517,7 +24450,6 @@ Pass ARG to the command ‘yank’."
 
 
 
-;; python-components-virtualenv
 
 (defvar virtualenv-workon-home nil)
 
@@ -24616,7 +24548,6 @@ For example:
                           (py--normalize-directory virtualenv-workon-home)
                           name))))
 
-;; python-components-abbrev-propose
 
 (defun py-edit-abbrevs ()
   "Jumps to ‘python-mode-abbrev-table’."
@@ -24664,7 +24595,6 @@ For example:
            (error "No per-mode abbrev table")))
      "Mode" arg)))
 
-;; python-components-paragraph
 
 
 
@@ -25115,7 +25045,6 @@ See available styles at ‘py-fill-paragraph’ or var ‘py-docstring-style’
   (interactive "*P")
   (py-fill-string justify 'symmetric t))
 
-;; python-components-section-forms
 
 (defun py-execute-section ()
   "Execute section at point."
@@ -25157,7 +25086,6 @@ See available styles at ‘py-fill-paragraph’ or var ‘py-docstring-style’
   (interactive)
   (py-execute-section-prepare "jython"))
 
-;; python-components-comment
 
 
 (defun py-comment-region (beg end &optional arg)
@@ -25357,7 +25285,6 @@ the default"
 
 
 ;; python-components-comment ends here
-;; python-components-fast-forms
 
 ;; Process forms fast
 
@@ -25505,7 +25432,6 @@ Optional File: execute through running a temp-file"
   (interactive)
   (py--execute-prepare (quote top-level) shell dedicated switch beg end file t))
 
-;; python-components-narrow
 
 (defun py-narrow-to-block ()
   "Narrow to block at point."
@@ -25542,7 +25468,6 @@ Optional File: execute through running a temp-file"
   (interactive)
   (py--narrow-prepare "statement"))
 
-;; python-components-hide-show
 
 ;; (setq hs-block-start-regexp (quote py-extended-block-or-clause-re))
 ;; (setq hs-forward-sexp-func (quote py-forward-block))
@@ -25731,8 +25656,6 @@ Optional File: execute through running a temp-file"
   (py-forward-indent)
   (py-hide-indent)))
 
-;; python-components-hide-show.el ends here
-;; python-components-extra
 
 (defun py-util-comint-last-prompt ()
   "Return comint last prompt overlay start and end.
@@ -26038,7 +25961,6 @@ Setup code specific to ‘py-shell-mode’."
   ;;    py-ipython-command-args '("--pylab" "--matplotlib=inline" "--automagic" "--simple-prompt"))
   )
 
-;; python-components-foot
 
 (defun py-shell-fontify ()
   "Fontifies input in shell buffer. "
