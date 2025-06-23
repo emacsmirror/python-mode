@@ -7909,7 +7909,8 @@ SECONDVALUE: travel these expressions
             (and
              (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
              (goto-char pps))
-            (unless (and (< (point) orig) (not (looking-at regexpvalue)) (looking-at secondvalue))
+            ;; (unless (and (< (point) orig) (not (looking-at regexpvalue)) (looking-at secondvalue))
+            (unless (and (< (point) orig) (or (looking-at regexpvalue) (looking-at secondvalue)))
               (py--backward-regexp regexp (current-indentation) condition orig))
             (unless (or (eq (point) orig)(bobp)) (back-to-indentation))))
         (and (looking-at secondvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point))))))
@@ -13380,8 +13381,8 @@ LIEP stores line-end-position at point-of-interest
                    ((looking-at py-extended-block-or-clause-re)
                     (cond ((and (not line)
                                 (eq liep (line-end-position)))
-                           (when (py--line-backward-maybe) (setq line t))
-                           (py-compute-indentation iact orig origline closing line nesting (+ repeat 1) indent-offset liep beg))
+                           (when (py--line-backward-maybe)
+                             (py-compute-indentation iact orig origline closing t nesting (+ repeat 1) indent-offset liep beg)))
                           (t (+
                               (cond (indent-offset)
                                     (py-smart-indentation
