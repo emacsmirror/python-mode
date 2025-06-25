@@ -5932,11 +5932,12 @@ process buffer for a list of commands.)"
             (save-excursion
               (save-restriction
                 (with-current-buffer buffer
-                  (switch-to-buffer (current-buffer))
+                  (when (or switch py-switch-buffers-on-execute-p py-split-window-on-execute)
+                    (switch-to-buffer (current-buffer))
                   (goto-char (point-max))
                   (sit-for 0.1)
                   (funcall 'window-configuration-to-register py-register-char)
-                  ))))
+                  )))))
           (unless fast (py-shell-mode))
           (and internal (set-process-query-on-exit-flag proc nil))
           (when (or interactivep
@@ -22053,6 +22054,7 @@ in (I)Python shell-modes ‘py-shell-complete’"
   (window-configuration-to-register py--windows-config-register)
   ;; (setq py-last-window-configuration
   ;;       (current-window-configuration))
+  (let (py-switch-buffers-on-execute-p py-split-window-on-execute)
   (cond ((use-region-p)
          (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘use-region-p’-clause"))
          (py-indent-region (region-beginning) (region-end)))
@@ -22072,7 +22074,9 @@ in (I)Python shell-modes ‘py-shell-complete’"
          (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘(completion-at-point)’"))
          ;; (py-fast-complete)
          (completion-at-point)
-         (skip-chars-forward "^ \t\r\n\f") )))
+         (skip-chars-forward "^ \t\r\n\f") ))
+  (jump-to-register py--windows-config-register)
+  ))
 
 
 (defun py-execute-statement-pdb ()
@@ -25717,7 +25721,8 @@ Optional argument PROCESS forces completions to be retrieved
 using that one instead of current buffer's process."
   ;; (setq process (or process (get-buffer-process (current-buffer))))
   (let*
-      ((process (or process (get-buffer-process (current-buffer))))
+      (py-switch-buffers-on-execute-p py-split-window-on-execute
+       (process (or process (get-buffer-process (current-buffer)) (get-buffer-process (py-shell))))
        (line-start (if (derived-mode-p 'py-shell-mode)
                        ;; Working on a shell buffer: use prompt end.
                        (or (cdr (py-util-comint-last-prompt))
