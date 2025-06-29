@@ -3814,25 +3814,22 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 
 If succesful, returns beginning of docstring position in buffer"
   (save-excursion
-    (and
-     (progn
-       (goto-char pos)
-       (and (looking-at "\"\"\"\\|'''")
-            ;; https://github.com/swig/swig/issues/889
-            ;; def foo(rho, x):
-            ;;     r"""Calculate :math:`D^\nu \rho(x)`."""
-            ;;     return True
-            (if (py--at-raw-string)
-                (progn
-                  (forward-char -1)
-                  (point))
-              (point))))
-     (or (bobp) (py-backward-statement))
-     (or (bobp)
-         ;;  the core thing
-         (looking-at py-def-or-class-re)
-         (looking-at "\\_<__[[:alnum:]_]+__\\_>"))
-     (list erg (progn (goto-char erg) (forward-sexp) (point))))))
+    (let ((erg
+           (progn
+             (goto-char pos)
+             (and (looking-at "\"\"\"\\|'''")
+                  ;; https://github.com/swig/swig/issues/889
+                  ;; def foo(rho, x):
+                  ;;     r"""Calculate :math:`D^\nu \rho(x)`."""
+                  ;;     return True
+                  (if (py--at-raw-string)
+                      (progn
+                        (forward-char -1)
+                        (point))
+                    (point))))))
+      (when (and erg (or (bobp) (py-backward-statement)))
+        (when (or (bobp) (looking-at py-def-or-class-re)(looking-at "\\_<__[[:alnum:]_]+__\\_>"))
+          (list erg (progn (goto-char erg) (forward-sexp) (point))))))))
 
 (defun py--font-lock-syntactic-face-function (state)
   "STATE expected as result von (parse-partial-sexp (point-min) (point)."
@@ -8735,14 +8732,11 @@ REPEAT - count and consider repeats"
             (py-forward-statement orig done repeat))))
        ((and (looking-at "[[:print:]]+$") (not done) (py--skip-to-comment-or-semicolon))
         (py-forward-statement orig done repeat)))
-      (unless
-          (or
-           (eq (point) orig)
-           (member (char-before) (list 10 32 9 ?#)))
-        (setq erg (point)))
-      (if (and py-verbose-p err)
-          (py--message-error err))
-      erg)))
+      (or err
+          (and (< orig (point))
+               (not (member (char-before) (list 10 32 9 ?#)))
+               (point))))))
+
 
 (defun py-backward-statement (&optional orig done limit ignore-in-string-p repeat maxindent)
   "Go to the initial line of a simple statement.
@@ -12846,8 +12840,8 @@ Receives a ‘buffer-name’ as argument"
 When given, to value of ‘py-default-working-directory’ otherwise"
   (interactive)
   (let* ((proc (get-buffer-process (current-buffer)))
-         (dir (or directory py-default-working-directory))
-         erg)
+        (dir (or directory py-default-working-directory))
+        erg)
     ;; (py-execute-string (concat "import os\;os.chdir(\"" dir "\")") proc nil t)
     (py-execute-string (concat "import os\;os.chdir(\"" dir "\")") proc nil t)
     (setq erg (py-execute-string "os.getcwd()" proc nil t))
