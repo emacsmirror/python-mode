@@ -2822,7 +2822,14 @@ See ‘py-no-outdent-re-raw’ for better readable content")
   :group 'python-mode)
 
 (defconst py-block-re (concat
-                       ;; "[ \t]*"
+                       ;; def main():
+                       ;; |   if len(sys.argv) == 1:
+                       ;;         usage()
+                       ;;         # sys.exit()
+
+                       ;;     class asdf(object):
+
+                       "[ \t]*"
                        (regexp-opt py-block-re-raw 'symbols)
                        ".*[:( \n\t]"
                        )
@@ -4483,21 +4490,18 @@ as it leaves your system default unchanged."
   "Provided for abstract reasons."
   (point-max))
 
-(defun py-backward-comment (&optional pos)
+(defun py-backward-comment ()
   "Got to beginning of a commented section.
 
 Start from POS if specified"
   (interactive)
-  (let ((erg pos)
-        last)
-    (when erg (goto-char erg))
-    (while (and (not (bobp)) (setq erg (py-in-comment-p)))
-      (when (< erg (point))
-        (goto-char erg)
-        (setq last (point)))
+  (let ((last (point))
+        (orig (point)))
+    (while (and (not (bobp))
+                (ignore-errors (< (ignore-errors (goto-char (py-in-comment-p))) last)))
+      (setq last (point))
       (skip-chars-backward " \t\r\n\f"))
-    (when last (goto-char last))
-    last))
+    (and (< (point) orig) (< (point)  last) (goto-char last))))
 
 (defun py-go-to-beginning-of-comment ()
   "Go to the beginning of current line's comment, if any.
@@ -4665,17 +4669,17 @@ Return and move to match-beginning if successful"
              (back-to-indentation))
            (point)))))
 
-(defun py--beginning-of-statement-p (&optional pps)
+(defun py--beginning-of-statement-p (&optional pps bol)
   "Return ‘t’, if cursor is at the beginning of a ‘statement’, nil otherwise."
   (interactive)
   (save-excursion
+    (when (or bol (bolp)) (back-to-indentation))
     (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
       (and (not (or (nth 8 pps) (nth 1 pps)))
            (looking-at py-statement-re)
            (looking-back "[^ \t]*" (line-beginning-position))
            (eq (current-column) (current-indentation))
-           (eq (point) (progn (py-forward-statement) (py-backward-statement)))
-           ))))
+           (eq (point) (progn (py-forward-statement) (py-backward-statement)))))))
 
 (defun py--beginning-of-statement-bol-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘statement’, nil otherwise."
@@ -7875,7 +7879,7 @@ SECONDVALUE: travel these expressions
   (unless (bobp)
     (save-match-data
       (unless (py--beginning-of-statement-p) (skip-chars-backward " \t\r\n\f")
-              (py-backward-comment (point)))
+              (py-backward-comment))
       (let* (pps
              (regexpvalue (symbol-value regexp))
              (secondvalue (or secondvalue (symbol-value regexp)))
@@ -8003,10 +8007,15 @@ Optional ENFORCE-REGEXP: search for regexp only."
             (and
              (not done)
              (progn (end-of-line)
-                    (cond (use-regexp
-                           ;; using regexpvalue might stop behind global settings, missing the end of form
-                           (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
-                          (t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))
+                    (pcase indent
+                      (0
+                       (cond (use-regexp
+                              (re-search-forward (concat "^" regexpvalue) nil 'move 1))
+                             (t (re-search-forward "^[[:alnum:]_@]+" nil 'move 1))))
+                      (_
+                       (cond (use-regexp
+                              (re-search-forward (concat "^ \\{0,"(format "%s" indent) "\\}"regexpvalue) nil 'move 1))
+                             (t (re-search-forward (concat "^ \\{"(format "0,%s" indent) "\\}[[:alnum:]_@]+") nil 'move 1))))))
              (or (nth 8 (parse-partial-sexp (point-min) (point)))
                  (progn (back-to-indentation) (py--forward-string-maybe (nth 8 (parse-partial-sexp orig (point)))))
                  (and secondvalue (looking-at secondvalue) (setq last (point)))
@@ -8028,7 +8037,7 @@ Arg REGEXP, a symbol"
           (use-regexp (member regexp (list (quote py-def-re) (quote py-class-re) (quote py-def-or-class-re))))
           (orig (or orig (point))))
       (unless (eobp)
-        (unless (py--beginning-of-statement-p)
+        (unless (py--beginning-of-statement-p nil bol)
           (py-backward-statement))
         (let* (;; when at block-start, be specific
                ;; (regexp (py--refine-regexp-maybe regexp))
@@ -8041,7 +8050,7 @@ Arg REGEXP, a symbol"
                ;; return current-indentation, position and possibly needed clause-regexps (secondvalue)
                (res
                 (cond
-                 ((and (py--beginning-of-statement-p)
+                 ((and ;; (py--beginning-of-statement-p)
                        ;; (eq 0 (current-column))
                        (or (looking-at regexpvalue)
                            (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
@@ -9251,9 +9260,9 @@ Optional ORIG: start position
 Optional BOL: go to beginning of line following end-position"
   (interactive)
   (let (erg)
-    (unless (setq erg (py--end-base (quote py-block-re) orig bol))
+    (unless (setq erg (py--end-base (quote py-block-re) orig (or bol (bolp))))
       (skip-chars-forward " \t\r\n\f")
-      (setq erg (py--end-base (quote py-block-re) orig bol)))
+      (setq erg (py--end-base (quote py-block-re) orig (or bol (bolp)))))
     erg))
 
 (defun py-forward-block-bol ()
@@ -21889,7 +21898,7 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
   (let* ((completion
           (py--shell-completion-get-completions
            input process code)))
-    (set-buffer exception-buffer)
+    ;; (set-buffer exception-buffer)
     (when completion
       (py--shell-insert-completion-maybe completion input))))
 
