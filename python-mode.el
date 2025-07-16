@@ -2754,47 +2754,69 @@ for options to pass to the DOCNAME interpreter. \"
   "Regular expression matching keyword which typically closes a function.")
 
 (defcustom py-outdent-re-raw
-  (list
-   "case"
-   "elif"
-   "else"
-   "except"
-   "finally"
-   )
+  (regexp-opt (list
+               "case"
+               "elif"
+               "else"
+               "except"
+               "finally"
+               )
+              'symbols)
   "Used by ‘py-outdent-re’."
   :type '(repeat string)
   :tag "py-outdent-re-raw"
-  :group 'python-mode
-  )
+  :group 'python-mode)
 
 (defconst py-outdent-re
-  (concat
-   "[ \t]*"
-   (regexp-opt py-outdent-re-raw 'symbols)
-   "[)\t]*")
+  (concat "\\(" (mapconcat 'identity
+                           '(
+	                     "case"
+                             "else:"
+                             "except\\(\\s +.*\\)?:"
+                             "finally:"
+                             "elif\\s +.*:")
+                           "\\|")
+          "\\)")
   "Regular expression matching statements to be dedented one level.")
-
-(defcustom py-no-outdent-re-raw
-  (list
-   "break"
-   "continue"
-   "import"
-   "pass"
-   "raise"
-   "return")
-  "Uused by ‘py-no-outdent-re’."
-  :type '(repeat string)
-  :tag "py-no-outdent-re-raw"
-  :group 'python-mode)
 
 (defconst py-no-outdent-re
   (concat
-   "[ \t]*"
-   (regexp-opt py-no-outdent-re-raw 'symbols)
-   "[)\t]*$")
-"Regular expression matching lines not to augment indent after.
+   "\\("
+   (mapconcat 'identity
+              (list "try:"
+                    "except\\(\\s +.*\\)?:"
+                    "while\\s +.*:"
+                    "for\\s +.*:"
+                    "if\\s +.*:"
+                    "elif\\s +.*:"
+                    (concat py-block-closing-keywords-re "[ \t\n]")
+                    )
+              "\\|")
+          "\\)")
+  "Regular expression matching lines not to dedent after.")
 
-See ‘py-no-outdent-re-raw’ for better readable content")
+;; (defcustom py-no-outdent-re-raw
+;;   (regexp-opt (list
+;;                "break"
+;;                "continue"
+;;                "import"
+;;                "pass"
+;;                "raise"
+;;                "return")
+;;               'symbols)
+;;   "Uused by ‘py-no-outdent-re’."
+;;   :type '(repeat string)
+;;   :tag "py-no-outdent-re-raw"
+;;   :group 'python-mode)
+
+;; (defconst py-no-outdent-re
+;;   (concat
+;;    "[ \t]*"
+;;    py-no-outdent-re-raw
+;;    "[)\t]*$")
+;; "Regular expression matching lines not to augment indent after.
+
+;; See ‘py-no-outdent-re-raw’ for better readable content")
 
 (defconst py-assignment-re "\\(\\_<\\w+\\_>[[:alnum:]:, \t]*[ \t]*\\)\\(=\\|+=\\|*=\\|%=\\|&=\\|^=\\|<<=\\|-=\\|/=\\|**=\\||=\\|>>=\\|//=\\)\\(.*\\)"
   "If looking at the beginning of an assignment.")
@@ -2803,19 +2825,20 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 (defconst py-dict-re "'\\_<\\w+\\_>':")
 
 (defcustom py-block-re-raw
-  (list
-   "async def"
-   "async for"
-   "async with"
-   "class"
-   "def"
-   "for"
-   "if"
-   "match"
-   "try"
-   "while"
-   "with"
-   )
+  (regexp-opt (list
+               "async def"
+               "async for"
+               "async with"
+               "class"
+               "def"
+               "for"
+               "if"
+               "match"
+               "try"
+               "while"
+               "with"
+               )
+              'symbols)
   "Matches the beginning of a compound statement but not its clause."
   :type '(repeat string)
   :tag "py-block-re-raw"
@@ -2828,14 +2851,13 @@ See ‘py-no-outdent-re-raw’ for better readable content")
                        ;;         # sys.exit()
 
                        ;;     class asdf(object):
-
-                       "[ \t]*"
-                       (regexp-opt py-block-re-raw 'symbols)
+                       py-block-re-raw
                        ".*[:( \n\t]"
                        )
   "Matches the beginning of a compound statement.")
 
-(defconst py-minor-block-re-raw (list
+(defconst py-minor-block-re-raw (regexp-opt
+                                 (list
                                       "async for"
                                       "async with"
                                       "case"
@@ -2846,19 +2868,22 @@ See ‘py-no-outdent-re-raw’ for better readable content")
                                       "try"
                                       "with"
                                       )
+                                 'symbols)
   "Matches the beginning of an case ‘for’, ‘if’, ‘try’, ‘except’ or ‘with’ block.")
 
 (defconst py-minor-block-re
   (concat
-   "[ \t]*"
-   (regexp-opt py-minor-block-re-raw 'symbols)
+   py-minor-block-re-raw
    "[:( \n\t]")
 
   "Regular expression matching lines not to augment indent after.
 
 See ‘py-minor-block-re-raw’ for better readable content")
 
-(defconst py-try-re "[ \t]*\\_<try\\_>[: \n\t]"
+(defconst py-try-re-raw (regexp-opt (list "try") 'symbols)
+  "Matches the beginning of a ‘try’ block.")
+
+(defconst py-try-re (concat py-try-re-raw "[: \n\t]")
   "Matches the beginning of a ‘try’ block.")
 
 (defconst py-case-re "[ \t]*\\_<case\\_>[: \t][^:]*:"
@@ -2884,10 +2909,23 @@ See ‘py-minor-block-re-raw’ for better readable content")
 ;; (defconst py-elif-block-re "[ \t]*\\_<elif\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
 ;;   "Matches the beginning of an ‘elif’ block.")
 
-(defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
+(defconst py-class-re-raw  (regexp-opt (list "class") 'symbol)
   "Matches the beginning of a class definition.")
 
-(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]+\\([[:alnum:]_]*\\)"
+(defconst py-class-re (concat py-class-re-raw "[ \n\t]")
+  "Matches the beginning of a class definition.")
+
+(defconst py-def-or-class-re-raw (regexp-opt
+                                  (list
+                                  "async def"
+                                  "class"
+                                  "def")
+  'symbol)
+"Matches the beginning of a class- or functions definition.")
+
+;; (defconst py-def-or-class-re (concat py-def-or-class-re-raw
+(defconst py-def-or-class-re (concat py-def-or-class-re-raw
+                                     "[ \n\t]+\\([[:alnum:]_]*\\)")
   "Matches the beginning of a class- or functions definition.
 
 Second group grabs the name")
@@ -2895,29 +2933,38 @@ Second group grabs the name")
 ;; (setq py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]")
 
 ;; (defconst py-def-re "[ \t]*\\_<\\(async def\\|def\\)\\_>[ \n\t]"
-(defconst py-def-re "[ \t]*\\_<\\(def\\|async def\\)\\_>[ \n\t]"
+
+(defvar py-def-re-raw (regexp-opt (list
+                                   "def"
+                                   "async def"
+                                   )
+                                  'symbol)
+  "Matches the beginning of a functions definition.")
+
+(defconst py-def-re (concat py-def-re-raw "[ \n\t]")
   "Matches the beginning of a functions definition.")
 
 (defcustom py-block-or-clause-re-raw
-  (list
-   "async for"
-   "async with"
-   "async def"
-   "async class"
-   "class"
-   "def"
-   "elif"
-   "else"
-   "except"
-   "finally"
-   "for"
-   "if"
-   "try"
-   "while"
-   "with"
-   "match"
-   "case"
-   )
+  (regexp-opt (list
+               "async for"
+               "async with"
+               "async def"
+               "async class"
+               "class"
+               "def"
+               "elif"
+               "else"
+               "except"
+               "finally"
+               "for"
+               "if"
+               "try"
+               "while"
+               "with"
+               "match"
+               "case"
+               )
+              'symbols)
   "Matches the beginning of a compound statement or its clause."
   :type '(repeat string)
   :tag "py-block-or-clause-re-raw"
@@ -2925,8 +2972,7 @@ Second group grabs the name")
 
 (defvar py-block-or-clause-re
   (concat
-   "[ \t]*"
-   (regexp-opt  py-block-or-clause-re-raw 'symbols)
+   py-block-or-clause-re-raw
    "[( \t]*.*:?")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
 
@@ -2956,7 +3002,6 @@ Second group grabs the name")
 
 (defconst py-extended-block-or-clause-re
   (concat
-   "[ \t]*"
    (regexp-opt  py-extended-block-or-clause-re-raw 'symbols)
    "[( \t:]+")
   "See ‘py-block-or-clause-re-raw’, which it reads.")
@@ -2979,7 +3024,6 @@ Second group grabs the name")
 
 (defconst py-minor-clause-re
   (concat
-   "[ \t]*"
    (regexp-opt  py-minor-clause-re-raw 'symbols)
    "[( \t]*.*:")
   "See ‘py-minor-clause-re-raw’, which it reads.")
@@ -2998,11 +3042,34 @@ Second group grabs the name")
 (defvar py-comment-re "#[ \t]*"
   "Needed for normalized processing.")
 
+(defcustom py-block-re-raw
+  (regexp-opt (list
+               "async for"
+               "async with"
+               "async def"
+               "async class"
+               "class"
+               "def"
+               "for"
+               "if"
+               "try"
+               "while"
+               "with"
+               "match"
+               )
+              'symbols)
+  "Matches the beginning of a compound statement or its clause."
+  :type '(repeat string)
+  :tag "py-block-or-clause-re-raw"
+  :group 'python-mode)
+
 (defconst py-block-keywords
-   (regexp-opt py-block-or-clause-re-raw 'symbols)
+  (concat "[ \t]*"
+          py-block-or-clause-re-raw
+          "[( \t]*.*:")
   "Matches known keywords opening a block.
 
-Customizing ‘py-block-or-clause-re-raw’  will change values here")
+Customizing ‘py-block-re-raw’  will change values here")
 
 (defconst py-try-clause-re
   (concat
@@ -7874,7 +7941,7 @@ REGEXP: a symbol"
      (t
       (concat py-except-re "\\|" py-else-re "\\|" py-finally-re))))))
 
-(defun py--backward-regexp (regexp &optional indent condition orig secondvalue)
+(defun py--backward-regexp (regexp &optional indent condition orig)
   "Search backward next regexp not in string or comment.
 
 Return position if successful
@@ -7887,43 +7954,63 @@ SECONDVALUE: travel these expressions
               (py-backward-comment))
       (let* (pps
              (regexpvalue (symbol-value regexp))
-             (secondvalue (or secondvalue (symbol-value regexp)))
+             (secondvalue (pcase regexp
+                            (py-def-re py-block-re)
+                            ;; (unless (member regexp (list 'py-def-re 'py-class-re))
+                            ;; (or secondvalue (symbol-value regexp))))
+                            ))
              (indent (or indent (current-indentation)))
              (condition (or condition '<=))
-             (orig (or orig (point)))
-             (allvalue-raw (if (member regexp (list (quote py-block-re) (quote py-clause-re) (quote py-def-or-class-re) (quote py-def-re) (quote py-class-re))) secondvalue (symbol-value (quote py-block-or-clause-re))))
-             (allvalue (substring allvalue-raw (string-match "\\\\" allvalue-raw))))
+             (orig (or orig (point))))
         (if (eq (current-indentation) (current-column))
             (while (and (not (bobp))
-                        (re-search-backward (concat "^ \\{0,"(format "%s" indent) "\\}\\(" allvalue "\\)") nil 'move 1)
+                        ;; def foo():
+                        ;;     if True:
+                        ;;         def bar():
+                        ;;             pass
+                        ;;     elif False:
+                        ;;         def baz():
+                        ;;             pass
+                        ;;     else:
+                        ;;         try:
+                        ;;             1 == 1
+                        ;;         except:
+                        ;;             pass
+
+                        ;; When looking for beginning-of-def from EOB,
+                        ;; make sure, the further indented ‘def
+                        ;; baz():’ in the middle isn't matched, but
+                        ;; BOB. Therefor the ‘secondvalue’, which may
+                        ;; correct the required indent
+                        (re-search-backward (concat "^ \\{0,"(format "%s" indent) "\\}\\(" regexpvalue "\\|" secondvalue "\\)") nil 'move 1)
                         (goto-char (match-beginning 1))
                         (not (and (looking-back "async *" (line-beginning-position))
                                   (goto-char (match-beginning 0))))
                         (or (and
                              (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
                              (goto-char pps))
-                            ;; (not (looking-at secondvalue))
                             (and (not (eq (current-column) 0))
                                  (not (looking-at regexpvalue))
                                  (looking-at secondvalue)
                                  indent
-                                 ;; (or
-                                  ;; (funcall condition (current-indentation) indent)
-                                  ;; (looking-at regexpvalue))
-                                  ))
+                                 ))
                         (prog1 t
-                          (when (< (current-indentation) indent)
-                            (setq indent (current-indentation))))))
+                          (cond ((< (current-indentation) indent)
+                                 (setq indent (current-indentation)))
+                                ((and (not (looking-at regexpvalue))
+                                      (member regexp (list 'py-def-re 'py-class-re 'py-def-or-class-re)) )
+                                 (setq indent (- (current-indentation) py-indent-offset)))))
+                        ))
           (unless (bobp)
             (back-to-indentation)
             (and
              (setq pps (nth 8 (parse-partial-sexp (point-min) (point))))
              (goto-char pps))
             ;; (unless (and (< (point) orig) (not (looking-at regexpvalue)) (looking-at secondvalue))
-            (unless (and (< (point) orig) (or (looking-at regexpvalue) (looking-at secondvalue)))
+            (unless (and (< (point) orig) (or (looking-at regexpvalue) (and secondvalue (looking-at secondvalue))))
               (py--backward-regexp regexp (current-indentation) condition orig))
             (unless (or (eq (point) orig)(bobp)) (back-to-indentation))))
-        (and (looking-at secondvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point))))))
+        (and (looking-at regexpvalue) (not (nth 8 (parse-partial-sexp (point-min) (point))))(point))))))
 
 (defun py--go-to-keyword (regexp &optional condition maxindent ignoreindent)
   "Expects being called from beginning of a statement.
@@ -7946,7 +8033,9 @@ Optional IGNOREINDENT: find next keyword at any indentation"
                 9999
               (or maxindent
                   (if (py-empty-line-p) (current-column) (current-indentation)))))
-           (allvalue (symbol-value (quote py-block-or-clause-re))))
+
+           ;; (allvalue (symbol-value (quote py-block-or-clause-re)))
+           )
       (unless (py--beginning-of-statement-p)
         (py-backward-statement))
       (when (and (not (string= "" py-block-closing-keywords-re))(looking-at py-block-closing-keywords-re))
@@ -7959,7 +8048,7 @@ Optional IGNOREINDENT: find next keyword at any indentation"
             ;; search backward and reduce maxindent, if non-matching forms suggest it
             (py--backward-regexp regexp maxindent
                                  (or condition '<=)
-                                 orig allvalue))))
+                                 orig))))
       (and (< (point) orig)(looking-at regexpvalue)(point)))))
 
 (defun py-up-base (regexp &optional indent)
@@ -8057,7 +8146,7 @@ Arg REGEXP, a symbol"
                 (cond
                  ((and ;; (py--beginning-of-statement-p)
                        ;; (eq 0 (current-column))
-                       (or (looking-at regexpvalue)
+                       (or (looking-at (concat "[ \\ŧ]*" regexpvalue))
                            (and (member regexp (list (quote py-def-re) (quote py-def-or-class-re) (quote py-class-re)))
                                 (looking-at py-decorator-re)
                                 (py-down-def-or-class indent))
@@ -14363,12 +14452,16 @@ Optional END: used by tests
 Optional NO-CHECK: used by tests
 "
   (interactive "*")
-  (or no-check (use-region-p) (error "Do not see an active region"))
-  (let ((end (copy-marker (or end (region-end)))))
-    (goto-char (or beg (region-beginning)))
-    (beginning-of-line)
-    (setq beg (point))
-    (skip-chars-forward " \t\r\n\f")
+
+  (let ((end
+         ;; work around a bug in Emacs' ‘end-of-defun’, which fiddles
+         ;; after ‘end-of-defun-function’ is called
+         ;; See ‘py-ert-borks-all-lp-1294820-sIKMyz’ test
+         (if (and (and end (save-excursion (goto-char end) (looking-at py-block-or-clause-re))))
+             (copy-marker (- end 1))
+           (copy-marker (or end (region-end) (line-end-position)))))
+        (beg (or beg (region-beginning) (line-beginning-position))))
+    (goto-char beg)
     (py--indent-line-by-line beg end)))
 
 (defun py-find-imports ()
@@ -24732,12 +24825,14 @@ For example:
 Nil otherwise"
   (interactive "*")
   (save-excursion
-    (py--docstring-p (or (and (nth 3 pps) (nth 8 pps))
-                         (and
-                          (equal (string-to-syntax "|")
-                                 (syntax-after (point)))
-                          (< 0 (skip-chars-forward "\"'"))
-                          (nth 3 (parse-partial-sexp (point-min) (point))))))))
+    (py--docstring-p
+     (ignore-errors
+       (or (and (nth 3 pps) (nth 8 pps))
+                        (and
+                         (equal (string-to-syntax "|")
+                                (syntax-after (point)))
+                         (< 0 (skip-chars-forward "\"'"))
+                         (nth 3 (parse-partial-sexp (point-min) (point)))))))))
 
 (defun py--string-fence-delete-spaces (&optional start)
   "Delete spaces following or preceding delimiters of string at point. "
@@ -24895,7 +24990,7 @@ Fill according to ‘py-docstring-style’ "
                            (if (not (number-or-marker-p docstring))
                                (py--in-or-behind-or-before-a-docstring pps))
                            docstring)
-                          (t (py--in-or-behind-or-before-a-docstring pps))))
+                          (t (and (nth 3 pps) (nth 8 pps) (py--in-or-behind-or-before-a-docstring pps)))))
          (beg (and (nth 3 pps) (nth 8 pps)))
          (tqs (progn (and beg (goto-char beg) (looking-at "\"\"\"\\|'''"))))
          (end (copy-marker (if tqs
@@ -24942,7 +25037,7 @@ Fill according to ‘py-docstring-style’ "
   (interactive "*")
   (window-configuration-to-register py--windows-config-register)
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
-         (docstring (unless (not py-docstring-style) (py--in-or-behind-or-before-a-docstring pps)))
+         (docstring (unless (not py-docstring-style) (and (nth 3 pps) (nth 8 pps) (py--in-or-behind-or-before-a-docstring pps))))
          (fill-column py-comment-fill-column)
          (in-string (nth 3 pps)))
     (cond ((or (nth 4 pps)
