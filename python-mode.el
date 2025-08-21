@@ -4914,6 +4914,7 @@ See also doku of variable ‘py-master-file’"
                 (t
                  py-python-command-args)))))
     (if (and fast-process (not (member "-u" erg)))
+        ;;  unbuffered output
         (cons "-u" erg)
       erg)))
 
@@ -5967,14 +5968,22 @@ process buffer for a list of commands.)"
          (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
          (shell (if shell
                     (pcase shell
+                      ;; systems are not consistent WRT python binary
                       ("python"
                        (or (and (executable-find shell) shell)
-                           (and (executable-find "python3") "python3")))
-                      (_ (if (executable-find shell)
-                             shell
-                           (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
+                           (and (executable-find "python3") "python3")
+                           (and (executable-find "python") "python")))
+                      ("python3"
+                       (or (and (executable-find shell) shell)
+                           (and (executable-find "python3") "python3")
+                           (and (executable-find "python") "python")))
+                      (_ (or
+                          (and (executable-find shell) shell)
+                          (and (executable-find "python3") "python3")
+                          (and (executable-find "python") "python")
+                          (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
                   (py-choose-shell)))
-         (args (or args (car (py--provide-command-args shell fast))))
+         (args (or args (and shell (car (py--provide-command-args shell fast)))))
          ;; Make sure a new one is created if required
          (this-buffer
           (or (and buffer (stringp buffer) buffer)
@@ -6010,10 +6019,9 @@ process buffer for a list of commands.)"
                 (with-current-buffer buffer
                   (when (or switch py-switch-buffers-on-execute-p py-split-window-on-execute)
                     (switch-to-buffer (current-buffer))
-                  (goto-char (point-max))
-                  (sit-for 0.1)
-                  (funcall 'window-configuration-to-register py-register-char)
-                  )))))
+                    (goto-char (point-max))
+                    (sit-for 0.1)
+                    (funcall 'window-configuration-to-register py-register-char))))))
           (unless fast (py-shell-mode))
           (and internal (set-process-query-on-exit-flag proc nil))
           (when (or interactivep
@@ -26197,11 +26205,8 @@ Setup code specific to ‘py-shell-mode’."
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'comment-use-syntax) t)
-  ;; (set (make-local-variable 'comment-start) "#")
-  (set (make-local-variable 'comment-start) py-comment-start-re)
-  ;; (set (make-local-variable 'comment-start-skip) "^[ \t]*#+ *")
-  (set (make-local-variable 'comment-start-skip) py-comment-start-skip-re)
-
+  (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
   (if py-empty-comment-line-separates-paragraph-p
       (progn
         (set (make-local-variable 'paragraph-separate) (concat "\f\\|^[\t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[\t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
