@@ -14659,7 +14659,7 @@ Store data in kill ring, so it might yanked back."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-block-bol ()
-  "Delete block bol at point.
+  "Copy block bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14668,7 +14668,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-block-or-clause-bol ()
-  "Delete block-or-clause bol at point.
+  "Copy block-or-clause bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14677,7 +14677,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-buffer-bol ()
-  "Delete buffer bol at point.
+  "Copy buffer bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14686,7 +14686,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-class-bol ()
-  "Delete class bol at point.
+  "Copy class bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14695,7 +14695,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-clause-bol ()
-  "Delete clause bol at point.
+  "Copy clause bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14704,7 +14704,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-def-bol ()
-  "Delete def bol at point.
+  "Copy def bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14713,7 +14713,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-def-or-class-bol ()
-  "Delete def-or-class bol at point.
+  "Copy def-or-class bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14722,7 +14722,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-expression-bol ()
-  "Delete expression bol at point.
+  "Copy expression bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14731,7 +14731,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-indent-bol ()
-  "Delete indent bol at point.
+  "Copy indent bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14740,7 +14740,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-line-bol ()
-  "Delete line bol at point.
+  "Copy line bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14749,7 +14749,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-minor-block-bol ()
-  "Delete minor-block bol at point.
+  "Copy minor-block bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14758,7 +14758,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-paragraph-bol ()
-  "Delete paragraph bol at point.
+  "Copy paragraph bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14767,7 +14767,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-partial-expression-bol ()
-  "Delete partial-expression bol at point.
+  "Copy partial-expression bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14776,7 +14776,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-region-bol ()
-  "Delete region bol at point.
+  "Copy region bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14785,7 +14785,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-statement-bol ()
-  "Delete statement bol at point.
+  "Copy statement bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -14794,7 +14794,7 @@ Stores data in kill ring. Might be yanked back using ‘C-y’."
       (copy-region-as-kill (car erg) (cdr erg)))))
 
 (defun py-copy-top-level-bol ()
-  "Delete top-level bol at point.
+  "Copy top-level bol at point.
 
 Stores data in kill ring. Might be yanked back using ‘C-y’."
   (interactive "*")
@@ -24903,10 +24903,9 @@ See lp:1066489 "
             (narrow-to-region thisbeg thisend)
             (fill-region thisbeg thisend))))))
 
-(defun py--fill-docstring (beg end fill-prefix)
+(defun py--fill-docstring (beg end)
   "Fills paragraph in docstring below or at cursor position."
-  (let ((fill-prefix fill-prefix)
-        (orig (point)))
+  (let ((orig (point)))
     ;; do not go backward beyond beginning of string
     (let* (;; Paragraph starts with beginning of string, skip the fence-chars
            (innerbeg (copy-marker
@@ -24986,7 +24985,7 @@ Fill according to ‘py-docstring-style’ "
       (goto-char orig)
       (when beg
         (if docstring
-            (py--fill-docstring beg end fill-prefix)
+            (py--fill-docstring beg end)
           (if (not tqs)
               (if (py-preceding-line-backslashed-p)
                   (progn
@@ -25046,7 +25045,7 @@ Fill according to ‘py-docstring-style’ "
            (py-fill-comment))
           (docstring
            ;; (setq fill-column py-docstring-fill-colum;; n)
-           (py--fill-docstring beg end fill-prefix))
+           (py--fill-docstring beg end))
           (t
            (and beg end (fill-region beg end))
            (when (and in-string (not tqs))
