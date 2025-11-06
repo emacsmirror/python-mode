@@ -3029,10 +3029,11 @@ Second group grabs the name")
   "See ‘py-minor-clause-re-raw’, which it reads.")
 
 (defcustom py-top-level-re
-  (concat
-   "^[a-zA-Z_]"
-   (regexp-opt  py-extended-block-or-clause-re-raw)
-   "[( \t]*.*:?")
+  ;; (concat
+   ;; "^[a-zA-Z_]"
+   "^[[:alpha:]_'\"]"
+   ;; (regexp-opt  py-extended-block-or-clause-re-raw)
+   ;; "[( \t]*.*:?")
   "A form which starts at zero indent level, but is not a comment."
   :type '(regexp)
   :tag "py-top-level-re"
@@ -8294,21 +8295,6 @@ This function does not modify point or mark."
        ((eq position (quote bos)) (py-backward-statement))
        (t (error "Unknown buffer position requested: %s" position))))))
 
-;; (defun py-backward-top-level ()
-;;   "Go up to beginning of statments until level of indentation is null.
-
-;; Returns position if successful, nil otherwise "
-;;   (interactive)
-;;   (let (erg done)
-;;     (unless (bobp)
-;;       (while (and (not done)(not (bobp))
-;;                   (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1)))
-;;         (if
-;;             (nth 8 (parse-partial-sexp (point-min) (point)))
-;;             (setq erg nil)
-;;           (setq done t)))
-;;       erg)))
-
 (defun py-backward-top-level ()
   "Go up to beginning of statments until level of indentation is null.
 
@@ -8317,7 +8303,7 @@ Returns position if successful, nil otherwise "
   (let ((orig (point)))
     (while (and
             (not (bobp))
-            (re-search-backward "^[[:alpha:]_'\"]" nil t 1)
+            (re-search-backward py-top-level-re nil t 1)
             (nth 8 (parse-partial-sexp (point-min) (point)))))
     (and (< (point) orig)(point))))
 
