@@ -25562,9 +25562,11 @@ Optional File: execute through running a temp-file"
   (hs-minor-mode 1)
   (save-excursion
     (let* ((form (prin1-to-string form))
-           (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
-                            (funcall (intern-soft (concat "py-backward-" form))))))
-           (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
+           (beg (or beg (progn
+                          (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
+                              (funcall (intern-soft (concat "py-backward-" form))))
+                          (line-end-position))))
+                (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
            (modified (buffer-modified-p))
            (inhibit-read-only t))
       (if (and beg end)
@@ -25573,11 +25575,15 @@ Optional File: execute through running a temp-file"
             (set-buffer-modified-p modified))
         (error (concat "No " (format "%s" form) " at point"))))))
 
+(defalias 'py-show 'py-hide-show)
 (defun py-hide-show (&optional form beg end)
-  "Toggle visibility of existing forms at point."
+  "Toggle visibility of existing forms at point.
+
+Optional argument FORM: a string
+Optional arguments beg, end: numbers"
   (interactive)
   (save-excursion
-    (let* ((form (prin1-to-string form))
+    (let* ((form (or form "block"))
            (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
                             (funcall (intern-soft (concat "py-backward-" form))))))
            (end (or end (funcall (intern-soft (concat "py-forward-" form)))))
