@@ -3553,6 +3553,14 @@ Also used by navigation"
   :tag "py-mark-decorators")
 
 
+
+(defun py-empty-line-p ()
+  "Return t if cursor is at an empty line, nil otherwise."
+  (save-excursion
+    (beginning-of-line)
+    (save-match-data (looking-at py-empty-line-p-chars))))
+
+
 (require 'ansi-color)
 (ignore-errors (require 'subr-x))
 (require 'cc-cmds)
@@ -4247,12 +4255,6 @@ Optional argument END specify end."
     (end-of-line)))
 
 (and py-company-pycomplete-p (require 'company-pycomplete))
-
-(defun py-empty-line-p ()
-  "Return t if cursor is at an empty line, nil otherwise."
-  (save-excursion
-    (beginning-of-line)
-    (looking-at py-empty-line-p-chars)))
 
 (defun py-toggle-closing-list-dedents-bos (&optional arg)
   "Switch boolean variable ‘py-closing-list-dedents-bos’.
