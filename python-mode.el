@@ -4333,7 +4333,7 @@ Returns ‘t’ if point was moved"
   (let ((orig (point)))
     (skip-chars-backward "^;" (or limit (line-beginning-position)))
     (skip-chars-forward " \t" (line-end-position))
-    (< (point) orig))) 
+    (< (point) orig)))
 
 ;; (defun py-forward-comment ()
 ;;   "Go to the end of comment at point."
@@ -6046,9 +6046,7 @@ process buffer for a list of commands.)"
                            (and (executable-find "python") "python")))
                       (_ (or
                           (and (executable-find shell) shell)
-                          (and (executable-find "python3") "python3")
-                          (and (executable-find "python") "python")
-                          (error (concat "py-shell: Can not see an executable for `"shell "' on your system. Maybe needs a link?")))))
+                          (error (concat "py-shell: Can not see an executable for ‘"shell"’")))))
                   (py-choose-shell)))
          (args (or args (and shell (car (py--provide-command-args shell fast)))))
          ;; Make sure a new one is created if required
@@ -22274,8 +22272,10 @@ in (I)Python shell-modes ‘py-shell-complete’"
         (py-do-completion-p
          (when py-debug-p (message "py-indent-or-complete: %s" "calling ‘(completion-at-point)’"))
          ;; (py-fast-complete)
-         (completion-at-point)
-         (setq done (< 0 (skip-chars-forward "^ \t\r\n\f"))))
+         (setq done (completion-at-point))
+         (when py-verbose-p (message "%s" done))
+         (setq done (< 0 (skip-chars-forward "^ \t\r\n\f")))
+         )
          )
   (unless done (jump-to-register py--windows-config-register))
   ))
