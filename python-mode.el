@@ -318,9 +318,6 @@ Default is t"
 (defvar py-chars-before " \t\n\r\f"
   "Used by ‘py--string-strip’.")
 
-(defvar py-chars-after " \t\n\r\f"
-    "Used by ‘py--string-strip’.")
-
 (defcustom py-max-help-buffer-p nil
   "If \"\*Python-Help\*\"-buffer should appear as the only visible.
 
@@ -3619,23 +3616,6 @@ The returned file name can be used directly as argument of
 Return nil otherwise. "
   (when (bobp)(point)))
 
-;;  (setq strip-chars-before  "[ \t\r\n]*")
-(defun py--string-strip (str &optional chars-before chars-after)
-  "Return a copy of STR, CHARS removed.
-
-Removed chars default to values of ‘py-chars-before’ and ‘py-chars-after’
-i.e. spaces, tabs, carriage returns, newlines and newpages
-
-Optional arguments ‘CHARS-BEFORE’ and ‘CHARS-AFTER’ override default"
-  (let ((s-c-b (or chars-before
-                   py-chars-before))
-        (s-c-a (or chars-after
-                   py-chars-after))
-        (erg str))
-    (setq erg (replace-regexp-in-string  s-c-b "" erg))
-    (setq erg (replace-regexp-in-string  s-c-a "" erg))
-    erg))
-
 (defun py-toggle-session-p (&optional arg)
   "Switch boolean variable ‘py-session-p’.
 
@@ -4436,7 +4416,7 @@ If no EXECUTABLE given, ‘py-shell-name’ is used.
 Interactively output of ‘--version’ is displayed. "
   (interactive)
   (let* ((executable (or executable py-shell-name))
-         (erg (py--string-strip (shell-command-to-string (concat executable " --version")))))
+         (erg (string-trim (shell-command-to-string (concat executable " --version")))))
     (when (called-interactively-p 'any) (message "%s" erg))
     (unless verbose (setq erg (cadr (split-string erg))))
     erg))
@@ -23943,7 +23923,7 @@ Matches lists, but also block, statement, string and comment. "
 
 With optional \\[universal-argument] print as string"
   (interactive "*P")
-  (let* ((name (py--string-strip (or strg (car kill-ring))))
+  (let* ((name (string-trim (or strg (car kill-ring))))
          ;; guess if doublequotes or parentheses are needed
          (numbered (not (eq 4 (prefix-numeric-value arg))))
          (form (if numbered
@@ -23956,7 +23936,7 @@ With optional \\[universal-argument] print as string"
 
 print(\"\\nfoo: {}\"\.format(foo))"
   (interactive "*")
-  (let ((name (py--string-strip (or strg (car kill-ring)))))
+  (let ((name (string-trim (or strg (car kill-ring)))))
     (insert (concat "print(\"" name ": {}\\n\".format(" name "))"))))
 
 (defun py-line-to-printform-python2 ()
