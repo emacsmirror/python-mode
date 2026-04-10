@@ -13566,8 +13566,8 @@ module-qualified names."
     (cond ((and (nth 4 pps)(numberp py-comment-fill-column))
            (setq fill-column py-comment-fill-column))
           ((and (nth 3 pps)(numberp py-docstring-fill-column))
-           (setq fill-column py-docstring-fill-column))
-          (t (setq fill-column py-fill-column-orig)))))
+           (setq-local fill-column py-docstring-fill-column))
+          (t (setq-local fill-column py-fill-column-orig)))))
 
 (defun py--run-auto-fill-timer ()
   "Set fill-column to values according to environment.
