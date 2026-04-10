@@ -13547,7 +13547,7 @@ module-qualified names."
           (and (boundp (quote py-comment-auto-fill-p))(not py-comment-auto-fill-p)))
       (progn
         (set (make-local-variable (quote py-comment-auto-fill-p)) t)
-        (setq fill-column py-comment-fill-column)
+        (setq-local fill-column py-comment-fill-column)
         (auto-fill-mode 1))
     (set (make-local-variable (quote py-comment-auto-fill-p)) nil)
     (auto-fill-mode -1)))
@@ -13564,7 +13564,7 @@ module-qualified names."
   "Internal use by ‘py--run-auto-fill-timer’"
   (let ((pps (parse-partial-sexp (point-min) (point))))
     (cond ((and (nth 4 pps)(numberp py-comment-fill-column))
-           (setq fill-column py-comment-fill-column))
+           (setq-local fill-column py-comment-fill-column))
           ((and (nth 3 pps)(numberp py-docstring-fill-column))
            (setq-local fill-column py-docstring-fill-column))
           (t (setq-local fill-column py-fill-column-orig)))))
@@ -24997,7 +24997,7 @@ Fill according to ‘py-docstring-style’ "
             (and (bolp) (looking-at "[ \t]*#[# \t]*")))
            (py-fill-comment))
           (docstring
-           ;; (setq fill-column py-docstring-fill-colum;; n)
+           ;; (setq-local fill-column py-docstring-fill-colum;; n)
            (py--fill-docstring beg end justify)
            )
           (t
